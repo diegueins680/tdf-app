@@ -1,0 +1,87 @@
+
+> tdf-app@0.2.0 test:e2e:web
+> playwright test --grep PW-PER-(LOCALE|POLICY)
+
+[WebServer] (node:38626) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] [plugin vite:reporter]
+[WebServer] (!) /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/analytics/onboardingProgress.ts is dynamically imported by /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/session/OnboardingRecovery.tsx but also statically imported by /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/pages/AccessRequestsPage.tsx, /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/pages/ArtistPublicPage.tsx, /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/pages/DirectorySearchPage.tsx, /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/pages/FanHubPage.tsx, /Users/diegosaa/GitHub/tdf-app-ux-continuation/tdf-hq-ui/src/session/SessionContext.tsx, dynamic import will not move module into another chunk.
+[WebServer]
+
+[WebServer]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+[WebServer] (node:38756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:38776) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 20 tests using 2 workers
+
+(node:38780) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:38779) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:38780) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:38779) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/20] [chromium-desktop] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+[2/20] [chromium-phone] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+[3/20] [chromium-desktop] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+[4/20] [chromium-phone] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+[5/20] [chromium-desktop] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY es policy documents retain language and version
+[6/20] [chromium-desktop] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY en policy documents retain language and version
+[7/20] [chromium-phone] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY es policy documents retain language and version
+(node:38974) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[8/20] [chromium-phone] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY en policy documents retain language and version
+(node:38974) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[9/20] [chromium-tablet] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+(node:38985) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:38985) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[10/20] [firefox-critical] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+[11/20] [chromium-tablet] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+[12/20] [firefox-critical] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+[13/20] [chromium-tablet] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY es policy documents retain language and version
+[14/20] [chromium-tablet] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY en policy documents retain language and version
+(node:39046) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:39046) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[15/20] [webkit-critical] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+[16/20] [firefox-critical] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY es policy documents retain language and version
+[17/20] [firefox-critical] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY en policy documents retain language and version
+[18/20] [webkit-critical] › e2e/web/persona-public.spec.mjs:681:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+[19/20] [webkit-critical] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY es policy documents retain language and version
+[20/20] [webkit-critical] › e2e/web/persona-public.spec.mjs:736:3 › @critical PW-PER-POLICY en policy documents retain language and version
+  20 passed (1.4m)

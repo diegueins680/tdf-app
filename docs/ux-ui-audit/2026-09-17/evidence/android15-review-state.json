@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-09-18T16:57:08.827259+00:00",
+  "package": "com.tdf.records",
+  "track": "alpha",
+  "version": "1.0.1",
+  "build": 15,
+  "uiState": "in review",
+  "availableToTesters": false,
+  "publicProduction": false,
+  "countries": 177,
+  "evidence": "Authenticated Play Console closed-testing track read in owned browser window; personal/account details excluded"
+}

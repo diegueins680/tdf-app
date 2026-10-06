@@ -1,17 +1,72 @@
+import { parse as parseYaml } from 'yaml';
+import { classifyChangedFiles } from '../ci-change-scope.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+test('PostgreSQL runner uses the CI service and deletes only its newly created test database', () => {
+  const script = `
+    . "$1"
+    createdb() { test "$PGPASSWORD" = "$TDF_TEST_POSTGRES_PASSWORD"; echo "createdb $*"; return "$CREATE_RESULT"; }
+    psql() { echo "psql $*"; }
+    dropdb() { echo "dropdb $*"; }
+    docker() { echo unexpected-docker; exit 97; }
+    tdf_test_db_init tdf_owned_test
+    tdf_test_db_cleanup
+  `;
+  const invoke = (createResult) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
+    encoding: 'utf8',
+    env: { PATH: process.env.PATH, GITHUB_ACTIONS: 'true', TDF_TEST_POSTGRES_HOST: 'postgres', TDF_TEST_POSTGRES_PASSWORD: 'synthetic-test-only', CREATE_RESULT: createResult },
+  });
+  const owned = invoke('0');
+  assert.equal(owned.status, 0, owned.stderr);
+  assert.match(owned.stdout, /createdb -h postgres -U postgres tdf_owned_test/);
+  assert.equal((owned.stdout.match(/dropdb/g) ?? []).length, 1);
+  assert.doesNotMatch(owned.stdout, /unexpected-docker/);
+  const existing = invoke('17');
+  assert.equal(existing.status, 17);
+  assert.doesNotMatch(existing.stdout, /dropdb|unexpected-docker/);
+});
 
 async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
 
+test('API drift gate inspects the pinned Mobile repository rather than a root pathspec', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const job = workflow.split('  api-contract-tests:')[1].split('\n  api-contracts:')[0];
+  assert.match(job, /run: npm run generate:api/);
+  assert.match(job, /run: node scripts\/check-generated-api\.mjs/);
+  assert.doesNotMatch(job, /git diff[^\n]*tdf-mobile\//);
+  assert.match(await source('scripts/quality-repo.sh'), /generated-api-conformance\.test\.mjs/);
+});
+
+test('UI quality keeps the lazy-validation regression and production artifact gate', async () => {
+  const quality = await source('scripts/quality-ui.sh');
+  assert.match(quality, /node --test "\$ROOT\/scripts\/__tests__\/ui-validation-bundle\.test\.mjs"/);
+  assert.match(quality, /run_npm run build --workspace=tdf-hq-ui/);
+  const ui = JSON.parse(await source('tdf-hq-ui/package.json'));
+  assert.match(ui.scripts.build, /node scripts\/check-initial-bundle\.mjs/);
+});
+
+test('backend CI retains event operations HTTP and runner-safety checks', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const backendJob = workflow.split('  backend-quality:')[1].split('\n  quality:')[0];
+  assert.match(backendJob, /run: sh scripts\/test-event-operations-http-ci\.sh/);
+  assert.match(backendJob, /run: node --test scripts\/__tests__\/event-operations-http-runner\.test\.mjs/);
+  assert.doesNotMatch(backendJob, /continue-on-error: true/);
+});
+
 test('CI splits component checks and preserves Stack build caches', async () => {
   const workflow = await source('.github/workflows/ci.yml');
+  // General config tests must not inherit the runtime fixture's libpq password.
+  assert.doesNotMatch(workflow, /^      PGPASSWORD:/m);
+  assert.match(workflow, /^      TDF_TEST_POSTGRES_PASSWORD: postgres$/m);
   for (const job of ['repo-quality:', 'ui-quality:', 'mobile-quality:', 'backend-quality:', 'quality:']) {
     assert.match(workflow, new RegExp(`^  ${job}`, 'm'));
   }
@@ -24,8 +79,38 @@ test('CI splits component checks and preserves Stack build caches', async () => 
   assert.match(workflow, /concurrency:[\s\S]*?cancel-in-progress: true/);
 });
 
+test('safe-install CI permits missing scripts without masking script failures', async () => {
+  const workflow = await source('.github/workflows/ci-safe-install.yml');
+  assert.match(workflow, /run: npm run -s --if-present build/);
+  assert.match(workflow, /run: npm run -s --if-present test/);
+  assert.doesNotMatch(workflow, /\|\||no (?:build|test) script; skipping/);
+});
+
+test('configured Datadog checks fail when tests or results are missing', async () => {
+  const workflow = await source('.github/workflows/datadog-synthetics.yml');
+  assert.match(workflow, /test_search_query: 'tag:e2e-tests'/);
+  assert.match(workflow, /datadog_site: datadoghq\.com/);
+  assert.match(workflow, /fail_on_critical_errors: true/);
+  assert.match(workflow, /fail_on_missing_tests: true/);
+  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.doesNotMatch(workflow, /runs-on: ubuntu-latest\n    env:/);
+  assert.match(workflow, /api_key: \$\{\{ secrets\.DD_API_KEY \}\}/);
+  assert.match(workflow, /app_key: \$\{\{ secrets\.DD_APP_KEY \}\}/);
+  assert.match(workflow, /steps\.datadog-config\.outputs\.configured == 'true'/);
+});
+
+test('migration CI runs the owning merch checkout expiry assertions without waiving failures', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const migrationJob = workflow.split('  migration-tests:')[1].split('\n  production-migrations:')[0];
+  assert.match(migrationJob, /run: \.\/scripts\/test-artist-merch-storefronts-migration\.sh/);
+  assert.doesNotMatch(migrationJob, /continue-on-error: true/);
+  const runner = await source('scripts/test-artist-merch-storefronts-migration.sh');
+  assert.match(runner, /apply_file "\$TDF_MERCH_DATABASE" "\$TDF_MERCH_ROOT\/tdf-hq\/test\/integration\/merch_checkout_expiry_assertions\.sql"/);
+});
+
 test('persona browser journeys are artifacted and gate aggregate quality', async () => {
   const workflow = await source('.github/workflows/ci.yml');
+  const playwrightConfig = await source('playwright.config.mjs');
   assert.match(workflow, /^  persona-web-e2e:/m);
   assert.match(workflow, /npx playwright install --with-deps chromium firefox webkit/);
   assert.match(workflow, /run: npm run test:e2e:web/);
@@ -33,6 +118,8 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.match(workflow, /retention-days: 14/);
   assert.match(workflow, /quality:[\s\S]*?needs:[\s\S]*?- persona-web-e2e/);
   assert.match(workflow, /PERSONA_WEB_E2E_RESULT: \$\{\{ needs\.persona-web-e2e\.result \}\}/);
+  assert.match(playwrightConfig, /npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui/);
+  assert.doesNotMatch(playwrightConfig, /npm run dev --workspace=tdf-hq-ui/);
 });
 
 test('backend quality compiles, tests and exports the binary in one Stack pass', async () => {
@@ -40,6 +127,27 @@ test('backend quality compiles, tests and exports the binary in one Stack pass',
   assert.match(script, /build_args=\(--no-terminal test tdf-hq\)/);
   assert.equal((script.match(/stack "\$\{build_args\[@\]\}"/g) ?? []).length, 1);
   assert.doesNotMatch(script, /stack --no-terminal test/);
+});
+
+test('backend quality requires the canonical payment PostgreSQL regressions', async () => {
+  const quality = await source('scripts/quality-backend.sh');
+  const runner = await source('scripts/test-payment-audit-runtime.sh');
+  assert.match(quality, /scripts\/test-payment-audit-runtime\.sh/);
+  assert.match(runner, /TDF_PAYMENT_AUDIT_DATABASE_URL=/);
+  assert.match(runner, /payment_audit_fixture\.sql/);
+  assert.match(runner, /--fail-on=empty/);
+  assert.match(runner, /test -x "\$test_binary"/);
+});
+
+test('backend quality requires real invitation and dependency PostgreSQL regressions', async () => {
+  const quality = await source('scripts/quality-backend.sh');
+  for (const runner of ['test-invitation-update-concurrency.sh', 'test-event-relations-runtime.sh']) {
+    assert.ok(quality.includes(`scripts/${runner}`));
+    const script = await source(`scripts/${runner}`);
+    assert.match(script, /--fail-on=empty/);
+    assert.match(script, /test -x "\$test_binary"/);
+    assert.doesNotMatch(script, /stack test/);
+  }
 });
 
 test('backend quality exercises public booking concurrency with its tested binary', async () => {
@@ -75,6 +183,21 @@ test('backend image packages the tested artifact instead of recompiling Haskell'
   assert.match(runtimeDockerfile, /ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(runtimeDockerfile, /postgresql-client/);
   assert.doesNotMatch(runtimeDockerfile, /stack (?:--[^\n]+ )?build/);
+});
+
+test('image workflow grants the reusable native artifact job its required read permissions', async () => {
+  const caller = await source('.github/workflows/build.yml');
+  const callee = await source('.github/workflows/ci.yml');
+  const callerJob = caller.match(/^  required-tests:\n([\s\S]*?)(?=^  \S)/m)?.[1];
+  const nativeJob = callee.match(/^  native-android-e2e:\n([\s\S]*?)(?=^  \S)/m)?.[1];
+  assert.ok(callerJob && nativeJob);
+  for (const permission of ['contents', 'actions']) {
+    const requiredRead = new RegExp(`^      ${permission}: read$`, 'm');
+    assert.match(nativeJob, requiredRead);
+    // GitHub validates called-job permissions even when that job is skipped.
+    assert.match(callerJob, requiredRead);
+  }
+  assert.doesNotMatch(callerJob, /: write\b|write-all/);
 });
 
 test('automatic migration integration matches the persisted production locale', async () => {
@@ -136,4 +259,125 @@ test('affected active workflow actions use Node 24 majors', async () => {
       `${action} must use its Node 24 major`,
     );
   }
+});
+
+test('native artifact admission rejects application drift while allowing only Maestro fixture changes', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const match = workflow.match(/python3 - <<'PYVERIFY'\n([\s\S]*?)\n          PYVERIFY/);
+  assert.ok(match, 'Native artifact admission must run before download');
+  const admission = match[1].split('\n').map(line => line.slice(10)).join('\n');
+  const harness = `
+import json, os, sys
+from unittest.mock import patch
+expected='a'*40
+run={'head_sha':'b'*40,'conclusion':sys.argv[3],'path':sys.argv[4]}
+changed=json.loads(sys.argv[2])
+def output(command, **kwargs):
+    return expected if 'rev-parse' in command else '\\n'.join(changed)
+os.environ['RUNNER_TEMP']='/synthetic'
+with patch('pathlib.Path.read_text',return_value=json.dumps(run)), patch('subprocess.check_output',side_effect=output), patch('subprocess.run'):
+    exec(compile(sys.argv[1], '<actual-workflow-admission>', 'exec'))
+`;
+  const invoke = (paths, conclusion = 'success', workflowPath = '.github/workflows/interaction-android.yml') => spawnSync('python3', ['-c', harness, admission, JSON.stringify(paths), conclusion, workflowPath], { encoding: 'utf8' });
+  assert.equal(invoke(['e2e/interactions/create.yaml']).status, 0);
+  for (const paths of [['src/features/interactions/DiscussionScreen.tsx'], ['android/app/build.gradle'], ['package-lock.json'], ['.github/workflows/interaction-android.yml'], ['scripts/android-release.py'], ['e2e/interactions/entry.js'], ['e2e/interactions/create.yaml', 'app.config.ts']]) {
+    assert.notEqual(invoke(paths).status, 0, `Must rebuild after ${paths.join(', ')}`);
+  }
+  assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'failure').status, 0);
+  assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'success', '.github/workflows/untrusted.yml').status, 0);
+});
+
+// The actual identity runner parses its contract, so backend CI needs the
+// declared root parser and supported Node runtime before invoking it.
+test('backend runtime checks install declared parser dependencies on Node 22', async () => {
+  const job = (await source('.github/workflows/ci.yml')).split('  backend-quality:')[1].split('\n  quality:')[0];
+  assert.match(job, /name: Setup backend verification Node[\s\S]*?node-version: 22/);
+  assert.match(job, /name: Install backend verification dependencies\n        run: npm ci --ignore-scripts/);
+  assert.ok(job.indexOf('Install backend verification dependencies') < job.indexOf('node scripts/__tests__/identity-http-runtime.mjs'));
+  assert.match(JSON.parse(await source('package.json')).devDependencies.yaml, /^\d+\.\d+\.\d+$/);
+});
+
+test('native PostgreSQL opt-in owns only successfully created loopback databases', () => {
+  const script = `
+    . "$1"
+    createdb() { echo "createdb $*"; return "$CREATE_RESULT"; }
+    psql() { echo "psql $*"; }
+    dropdb() { echo "dropdb $*"; }
+    docker() { echo unexpected-docker; exit 97; }
+    tdf_test_db_init tdf_owned_test
+    tdf_test_db_cleanup
+  `;
+  const invoke = (createResult, extra = {}) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
+    encoding: 'utf8', env: { PATH: process.env.PATH, TDF_TEST_NATIVE_POSTGRES: '1',
+      TDF_TEST_NATIVE_POSTGRES_USER: 'synthetic', CREATE_RESULT: createResult, ...extra },
+  });
+  const owned = invoke('0');
+  assert.equal(owned.status, 0, owned.stderr);
+  assert.match(owned.stdout, /createdb -h 127\.0\.0\.1 -p 5432 -U synthetic tdf_owned_test/);
+  assert.equal((owned.stdout.match(/dropdb/g) ?? []).length, 1);
+  assert.doesNotMatch(owned.stdout, /unexpected-docker/);
+  const existing = invoke('17');
+  assert.equal(existing.status, 17);
+  assert.doesNotMatch(existing.stdout, /dropdb|unexpected-docker/);
+  for (const extra of [{ PGHOSTADDR: '192.0.2.1' }, { PGSERVICE: 'remote' },
+    { TDF_TEST_NATIVE_POSTGRES_PORT: 'bad' }, { TDF_TEST_NATIVE_POSTGRES_USER: 'bad role' }]) {
+    const rejected = invoke('0', extra);
+    assert.notEqual(rejected.status, 0);
+    assert.doesNotMatch(rejected.stdout, /createdb|dropdb|unexpected-docker/);
+  }
+});
+
+test('every PR reaches specification admission, including previously omitted material roots', async () => {
+  const workflow = parseYaml(await source('.github/workflows/ci.yml'));
+  assert.ok(Object.hasOwn(workflow.on, 'pull_request'));
+  assert.deepEqual(workflow.on.pull_request ?? {}, {},
+    'Workflow-level filters can silently skip the specification admission gate');
+  for (const file of ['ops/new-check.sh', 'functions/new.ts', 'streaming/new.py',
+    'tidal-agent/new.ts', 'e2e/native/new.ts', 'test/contracts/new.json',
+    '.github/new.yml', 'formal/system/requirements.json', '.gitmodules']) {
+    assert.equal(classifyChangedFiles([file]).repo, true, file);
+  }
+});
+
+test('repository lane checks actual API availability policy without a backend build', async () => {
+  const quality = await source('scripts/quality-repo.sh');
+  assert.match(quality, /node "\$ROOT\/scripts\/check-api-availability\.mjs"/);
+});
+
+test('repository image conformance installs and probes FFmpeg before running actual codecs', async () => {
+  const job = parseYaml(await source('.github/workflows/ci.yml')).jobs['repo-quality'];
+  const setup = job.steps.findIndex(step => step.name === 'Install image conformance tools');
+  const checks = job.steps.findIndex(step => step.name === 'Run repository checks');
+  assert.ok(setup >= 0 && setup < checks);
+  assert.match(job.steps[setup].run, /apt-get install -y --no-install-recommends ffmpeg/);
+  assert.match(job.steps[setup].run, /ffmpeg -version/);
+  assert.match(job.steps[setup].run, /ffprobe -version/);
+  assert.doesNotMatch(job.steps[setup].run, /allow-unauthenticated|trusted=yes|\|\| true/);
+});
+
+test('pinned Mobile main and release validation and configured synthetics fail closed', async () => {
+  const validation = parseYaml(await source('tdf-mobile/.github/workflows/mobile-validate.yml'));
+  for (const event of ['push', 'pull_request']) {
+    assert.ok(validation.on[event].branches.includes('main'));
+    assert.ok(validation.on[event].branches.includes('release/**'));
+  }
+  const steps = validation.jobs.validate.steps;
+  for (const command of ['npm run release:check', 'npm test -- --watch=false', 'npm run doctor']) {
+    assert.ok(steps.some((step) => step.run === command && !step['continue-on-error']));
+  }
+  assert.ok(steps.some((step) => step.run?.includes('unittest discover')));
+  const workflow = parseYaml(await source('tdf-mobile/.github/workflows/datadog-synthetics.yml'));
+  for (const event of ['push', 'pull_request']) {
+    assert.ok(workflow.on[event].branches.includes('release/tdf-shipped-*'));
+  }
+  const job = workflow.jobs.synthetics;
+  assert.match(job.if, /head\.repo\.fork/);
+  const provider = job.steps.find((step) => step.uses?.startsWith('DataDog/'));
+  assert.equal(provider.with['fail-on-critical-errors'], true);
+  assert.equal(provider.with['fail-on-missing-tests'], true);
+  assert.equal(provider['continue-on-error'], undefined);
+  assert.equal(job['continue-on-error'], undefined);
+  assert.match(provider.if, /DD_API_KEY != ''/);
+  assert.match(provider.if, /DD_APP_KEY != ''/);
+  assert.ok(job.steps.some((step) => step.run?.includes('Skipping Datadog synthetics')));
 });

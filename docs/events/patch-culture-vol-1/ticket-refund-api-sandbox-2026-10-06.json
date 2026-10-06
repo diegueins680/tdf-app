@@ -1,0 +1,317 @@
+{
+  "checkedOn": "2026-10-06",
+  "environment": "PayPal official sandbox; native TDF API on isolated loopback PostgreSQL with production schema and additive refund migrations",
+  "nativeSourceCommit": "a058dc0bb80dd04e3341fdbcd0df066b6732701c",
+  "laterDisplayAndFinanceSourceCommit": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+  "productionWritten": false,
+  "liveChargingEnabled": false,
+  "evidence": {
+    "refund-api-partial-report.json": {
+      "sha256": "127a4d2a36be366b4c04660baff2245b8458df0513b3cbc996037ed6b69ae75b",
+      "result": {
+        "nativeSource": "a058dc0bb80dd04e3341fdbcd0df066b6732701c",
+        "quantity": 2,
+        "paidMinor": 4000,
+        "currency": "USD",
+        "taxMinor": 0,
+        "unauthenticatedRequest": 401,
+        "fractionalTicketRejected": 409,
+        "concurrentRequests": 8,
+        "uniqueRefundRequests": 1,
+        "heldTicketStates": [
+          "issued",
+          "refund_pending"
+        ],
+        "pendingTicketCheckIn": 409,
+        "selfApprovalRejected": 409,
+        "concurrentApprovalHttp": [
+          200,
+          200
+        ],
+        "refundStatus": "approved",
+        "refundAmountMinor": 2000,
+        "stripeFieldUnused": true,
+        "approvalReplay": 200,
+        "ticketStatesAfterRefund": [
+          "issued",
+          "refunded"
+        ],
+        "refundedTicketCheckIn": 409,
+        "remainingTicketConcurrentCheckIns": [
+          200,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409
+        ],
+        "usedTicketRefundRejected": 409
+      }
+    },
+    "refund-api-partial-ledger.json": {
+      "sha256": "b306c4591d181df1f92e38bd007a534d462765eb5f10983f8c0c9144cbf6067f",
+      "result": {
+        "checkoutStatus": "partially_refunded",
+        "capturedMinor": 4000,
+        "refundedMinor": 2000,
+        "refundStatus": "succeeded",
+        "creditNoteCount": 1,
+        "journalBalance": 0,
+        "allocationCount": 1,
+        "legacyOrderStatus": "paid",
+        "requestStatus": "approved"
+      }
+    },
+    "refund-api-qr-report.json": {
+      "sha256": "c62383ae80b2e9ccb2bd0b2a9af748ca98e91a9334d1e5ccdf8ef29ba5d70a74",
+      "result": {
+        "results": [
+          {
+            "index": 0,
+            "decoded": true,
+            "matchesIssuedCredential": true,
+            "width": 280,
+            "height": 280
+          },
+          {
+            "index": 1,
+            "decoded": true,
+            "matchesIssuedCredential": true,
+            "width": 280,
+            "height": 280
+          }
+        ]
+      }
+    },
+    "refund-api-provider-verification.json": {
+      "sha256": "54849f42f8fa5027a7d33f09897f815376cd7b6bb39d319625cbcfebb191a62f",
+      "result": {
+        "officialRefundGet": 200,
+        "refundStatus": "COMPLETED",
+        "amount": {
+          "currency_code": "USD",
+          "value": "20.00"
+        },
+        "canonicalCorrelationPresent": true,
+        "externalTestCleanupMinor": 2000,
+        "captureFullyRefunded": true
+      }
+    },
+    "refund-api-full-report.json": {
+      "sha256": "d292be62fdf60893ac3a5e644589f6942aba3457e0d7aa3b882b2fb82373d584",
+      "result": {
+        "nativeSource": "a058dc0bb80dd04e3341fdbcd0df066b6732701c",
+        "fullAmountMinor": 2000,
+        "currency": "USD",
+        "requestHttp": 200,
+        "approvalHttp": 200,
+        "approvalReplayHttp": 200,
+        "paymentStatus": "refunded",
+        "fulfillmentStatus": "issued",
+        "ticketStatus": "refunded",
+        "checkInAfterRefund": 409
+      }
+    },
+    "refund-api-full-ledger.json": {
+      "sha256": "f0874fb91fd7189063cfdb1a62f689f45f2952263117d9bf3c03dee48c34a6df",
+      "result": {
+        "refundStatus": "succeeded",
+        "capturedMinor": 2000,
+        "refundedMinor": 2000,
+        "requestStatus": "approved",
+        "checkoutStatus": "refunded",
+        "journalBalance": 0,
+        "allocationCount": 1,
+        "creditNoteCount": 1,
+        "legacyOrderStatus": "refunded"
+      }
+    },
+    "refund-api-full-provider-verification.json": {
+      "sha256": "b14bb32f8caa88fd0c56844864cdd09b3551cc5dd8ba604dd59957e6b2f48b8f",
+      "result": {
+        "officialRefundGet": 200,
+        "refundStatus": "COMPLETED",
+        "amount": {
+          "currency_code": "USD",
+          "value": "20.00"
+        },
+        "canonicalCorrelationPresent": true,
+        "captureFullyRefunded": true
+      }
+    },
+    "current-webhook-verification-report.json": {
+      "sha256": "663b76a2cb569d111d60b152530e6cff5f3f01018ee35fdd7e61f3eaa08d4c10",
+      "result": [
+        {
+          "eventType": "PAYMENT.CAPTURE.REFUNDED",
+          "signatureStatus": "SUCCESS",
+          "backendStatus": 200,
+          "duplicateDeliveryStatuses": [
+            200,
+            200
+          ]
+        },
+        {
+          "eventType": "PAYMENT.CAPTURE.COMPLETED",
+          "signatureStatus": "SUCCESS",
+          "backendStatus": 200,
+          "duplicateDeliveryStatuses": [
+            200,
+            200
+          ]
+        },
+        {
+          "eventType": "PAYMENT.CAPTURE.REFUNDED",
+          "signatureStatus": "SUCCESS",
+          "backendStatus": 200,
+          "duplicateDeliveryStatuses": [
+            200,
+            200
+          ]
+        },
+        {
+          "eventType": "PAYMENT.CAPTURE.COMPLETED",
+          "signatureStatus": "SUCCESS",
+          "backendStatus": 200,
+          "duplicateDeliveryStatuses": [
+            200,
+            200
+          ]
+        },
+        {
+          "eventType": "PAYMENT.CAPTURE.REFUNDED",
+          "signatureStatus": "SUCCESS",
+          "backendStatus": 200,
+          "duplicateDeliveryStatuses": [
+            200,
+            200
+          ]
+        }
+      ]
+    },
+    "refund-api-webhook-retired.json": {
+      "sha256": "868ab6dcbce47eb18dc76f8fa4a7fa83673f08cced12d819bc426c460fdafdd2",
+      "result": {
+        "httpStatus": 204,
+        "temporarySandboxWebhookRemoved": true
+      }
+    },
+    "refund-api-resource-cleanup.json": {
+      "sha256": "45744fc42d52ae48957ae09ef45ce62a2423cb3a7023596e639ba505e4bd20bd",
+      "result": {
+        "temporaryWebhookRemoved": true,
+        "stoppedOwnedGroups": [
+          "browser",
+          "tunnel",
+          "gateway",
+          "ui",
+          "smtp",
+          "api"
+        ],
+        "browserControllerConfirmedClosed": true
+      }
+    },
+    "refund-api-final-native-report.json": {
+      "sha256": "8ddc562fd4d49ea280ca17ad6c834e83dfce5f1ca954a0cc8461e255d4564063",
+      "result": {
+        "sourceCommit": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+        "nativeBuildTime": "2026-10-06T02:13:35Z",
+        "anonymousFinanceHttp": 401,
+        "organizerFinanceHttp": 200,
+        "grossMinor": 14000,
+        "refundedMinor": 8000,
+        "matchesCanonicalLedger": true,
+        "refundedOrderAndTicketPreserved": true,
+        "newProviderTransactions": 0,
+        "productionWritten": false
+      }
+    }
+  },
+  "purchase": {
+    "browserViewport": {
+      "width": 390,
+      "height": 844
+    },
+    "provider": "PayPal sandbox SDK popup",
+    "orders": 2,
+    "capturedMinor": [
+      4000,
+      2000
+    ],
+    "currency": "USD",
+    "taxMinor": 0,
+    "ticketsIssued": 3,
+    "confirmationEmailsAcceptedByIsolatedSmtp": 2,
+    "externalEmailDeliveryVerified": false
+  },
+  "qualification": {
+    "fullFreshDatabaseSuite": {
+      "sourceCommit": "a058dc0bb80dd04e3341fdbcd0df066b6732701c",
+      "examples": 382,
+      "failures": 0
+    },
+    "financeCorrectionFocusedDatabaseSuite": {
+      "sourceCommit": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+      "examples": 28,
+      "failures": 0
+    },
+    "ticketStatusParser": {
+      "sourceCommit": "39ae087f31abf0b4012f632233286b9f5943c26b",
+      "examples": 2,
+      "failures": 0
+    },
+    "organizerUi": {
+      "tests": 12,
+      "failures": 0,
+      "typescript": "pass",
+      "scopedEslint": "pass"
+    },
+    "migrationGuards": {
+      "database": "disposable_loopback_18952",
+      "usedRollbackGuards": 3,
+      "immutableRequestBindingVerified": true,
+      "repeatApplyPreservesHistory": true,
+      "counts": {
+        "requestBindings": 10,
+        "ticketAllocations": 20,
+        "providerQueryJobs": 41
+      }
+    },
+    "catalogAudit": {
+      "tests": 6,
+      "failures": 0,
+      "unreviewedOrStaleDecisions": 0,
+      "scope": "183-entry migration registry, allocation protocol, bounded test fixture and status presentation reviewed; prior decisions retained."
+    },
+    "repositoryQuality": "passed at 8cb4b6385 before final legacy SQLite fixture compatibility correction",
+    "legacyVisibilityCompatibility": {
+      "examples": 1,
+      "failures": 0,
+      "scope": "Existing hidden-event buyer refund, unrelated buyer denial and strict-admin rejection against SQLite legacy fixture; portable CAST preserves PostgreSQL UUID binding semantics."
+    },
+    "portableBindingPostgresRegression": {
+      "examples": 28,
+      "failures": 0,
+      "scope": "Final CAST binding syntax on real PostgreSQL; request, query, callback, refund, inventory and finance projection cases."
+    }
+  },
+  "limitations": [
+    "Official native purchase/refund/check-in qualification uses source a058dc0; later source8aa554 native build and read-only finance/refunded-order HTTP verification passed separately without new provider transactions.",
+    "First order: native partial refund USD20; remaining USD20 refunded directly through official provider for test cleanup after its retained ticket had checked in. That external cleanup is not claimed as a canonical allocated refund or inventory release.",
+    "Sandbox merchant/capability configuration does not establish live merchant readiness.",
+    "Local SMTP acceptance is not external email delivery.",
+    "No native Android/iOS refund journey or offline check-in qualification.",
+    "Protected branch integration, exact deployed artifact, production recovery gates and live event activation remain outstanding.",
+    "Final legacy-test compatibility changes CAST syntax and supplies empty lookup tables in SQLite; it is qualified separately from the native8aa HTTP receipt."
+  ],
+  "localLogSha256": {
+    "ticket-refund-request-final-full.log": "b1af3a2c05bc83a437a65740d33cd48ee5a8b063ea74d4384f6eda9079b322d3",
+    "ticket-refund-request-finance.log": "68b503f7c51dea1484f1665d7d4e50da2cc5d63b523a0533f9588338894a5d31",
+    "ticket-refund-status-normalization.log": "aac41d90f3ca071347e7e5955420ab42f4179c628b5ad1b1cc49fe9b086330a0",
+    "ticket-refund-request-ui-final.log": "f3780a2618a0138d65616a6d6ec8a54671ac47d2c8b29967a40b4a1658c901fb",
+    "ticket-refund-legacy-visibility.log": "45762ed02d8892eeb0c4f6115afbd017635dfea3b9c5288af01e2d1e9143cd0d",
+    "ticket-refund-final-postgres-cast.log": "cb5299e9271a7b34f7607580c0b39d953a14f2785df47238d503a45d1512e069"
+  }
+}

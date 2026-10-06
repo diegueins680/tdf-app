@@ -261,6 +261,8 @@ nonAdminUser =
         { auPartyId = toSqlKey 99
         , auRoles = [Customer]
         , auModules = modulesForRoles [Customer]
+        , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 materializationCandidate :: EventResearchCandidateDTO

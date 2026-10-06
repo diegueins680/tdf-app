@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
-import { getAnalyticsClient } from '../analytics/posthog';
-import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import { captureReconciledFirstValue } from '../analytics/onboardingCompletionAnalytics';
+import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
 
@@ -172,13 +172,21 @@ function readStoredSession(): { session: SessionUser | null; scope: SessionStora
     return { session: null, scope: 'local' };
   }
 
-  const fromSession = readStoredSessionFrom(window.sessionStorage);
+  const readAvailableStorage = (scope: 'sessionStorage' | 'localStorage') => {
+    try {
+      return readStoredSessionFrom(window[scope]);
+    } catch {
+      // Access to the storage object itself can throw in restricted contexts.
+      return null;
+    }
+  };
+  const fromSession = readAvailableStorage('sessionStorage');
   if (fromSession) {
     currentSession = fromSession;
     return { session: fromSession, scope: 'session' };
   }
 
-  const fromLocal = readStoredSessionFrom(window.localStorage);
+  const fromLocal = readAvailableStorage('localStorage');
   currentSession = fromLocal;
   return { session: fromLocal, scope: 'local' };
 }
@@ -220,6 +228,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const clearLocalSessionState = useCallback(() => {
     sessionVersionRef.current += 1;
+    advanceAuthSessionEpoch();
     setLoading(false);
     updateSessionState(null);
     transientApiToken = null;
@@ -249,6 +258,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         const snapshot = await loadSessionSnapshot();
         if (cancelled || versionAtStart !== sessionVersionRef.current) return;
 
+        advanceAuthSessionEpoch();
         if (!snapshot) {
           updateSessionState(null);
           return;
@@ -286,6 +296,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const login = useCallback((user: SessionUser, options?: LoginOptions) => {
     sessionVersionRef.current += 1;
+    advanceAuthSessionEpoch();
     setPersistScope(options?.remember === false ? 'session' : 'local');
     setLoading(false);
     updateSessionState(normalizeSessionUser(user));
@@ -301,6 +312,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const setApiToken = useCallback((token: string | null) => {
     sessionVersionRef.current += 1;
+    advanceAuthSessionEpoch();
     const normalized = normalizeApiToken(token);
 
     setSession((prev) => {
@@ -319,13 +331,20 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // Identify the user in analytics whenever the session changes. Reset on
   // logout so the next user does not inherit the previous distinct id.
   useEffect(() => {
-    const analytics = getAnalyticsClient();
-    if (!analytics.ready) return;
-    if (session?.partyId != null) {
-      analytics.identify(String(session.partyId));
-    } else {
-      analytics.reset();
-    }
+    const partyId = session?.partyId;
+    let cancelled = false;
+    void import('../analytics/posthog')
+      .then(({ getAnalyticsClient }) => {
+        if (cancelled) return;
+        const analytics = getAnalyticsClient();
+        if (!analytics.ready) return;
+        if (partyId != null) analytics.identify(String(partyId));
+        else analytics.reset();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
   useEffect(() => {
@@ -334,33 +353,36 @@ export function SessionProvider({ children }: SessionProviderProps) {
     const apiToken = session?.apiToken ?? undefined;
     const versionAtStart = sessionVersionRef.current;
     let cancelled = false;
+    let inFlight: Promise<void> | null = null;
+    const ownsSession = () => !cancelled
+      && versionAtStart === sessionVersionRef.current
+      && currentSession?.partyId === partyId;
 
-    void reconcileOnboardingProgress(apiToken)
-      .then(async (result) => {
-        if (
-          cancelled
-          || versionAtStart !== sessionVersionRef.current
-          || currentSession?.partyId !== partyId
-        ) return;
-        const { captureReconciledFirstValue } = await import('../analytics/onboardingProgress');
-        if (
-          cancelled
-          || versionAtStart !== sessionVersionRef.current
-          || currentSession?.partyId !== partyId
-        ) return;
-        captureReconciledFirstValue(getAnalyticsClient(), partyId, result);
-      })
-      .catch((error) => {
-        if (
-          cancelled
-          || versionAtStart !== sessionVersionRef.current
-          || currentSession?.partyId !== partyId
-        ) return;
-        logger.warn('Failed to reconcile onboarding progress', error);
-      });
+    const reconcile = (): Promise<void> => {
+      if (!ownsSession()) return Promise.resolve();
+      if (inFlight) return inFlight;
+      inFlight = reconcileOnboardingProgress(apiToken)
+        .then(async (result) => {
+          if (!ownsSession()) return;
+          const { getAnalyticsClient } = await import('../analytics/posthog');
+          if (!ownsSession()) return;
+          captureReconciledFirstValue(getAnalyticsClient(), partyId, result);
+        })
+        .catch((error) => {
+          if (!ownsSession()) return;
+          logger.warn('Failed to reconcile onboarding progress', error);
+        })
+        .finally(() => { inFlight = null; });
+      return inFlight;
+    };
+    const handleOnline = () => { void reconcile(); };
+
+    void reconcile();
+    window.addEventListener('online', handleOnline);
 
     return () => {
       cancelled = true;
+      window.removeEventListener('online', handleOnline);
     };
   }, [session?.apiToken, session?.partyId]);
 
@@ -392,5 +414,7 @@ export function getActiveSession(): SessionUser | null {
 }
 
 export function setTransientApiToken(token: string | null | undefined): void {
-  transientApiToken = normalizeApiToken(token);
+  const normalized = normalizeApiToken(token);
+  if (normalized !== transientApiToken) advanceAuthSessionEpoch();
+  transientApiToken = normalized;
 }

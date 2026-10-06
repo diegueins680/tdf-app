@@ -1,4 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
+import { useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
@@ -23,11 +25,10 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import LaunchIcon from '@mui/icons-material/Launch';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Fans } from '../api/fans';
 import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import type { ArtistReleaseDTO } from '../api/types';
-import { useSession } from '../session/SessionContext';
+import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
 import ArtistFansList from '../components/ArtistFansList';
@@ -36,10 +37,22 @@ import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
-import { parsePositiveSafeInt } from '../utils/ids';
+import { safeArtistId, buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
+export { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
+import { useTranslation } from 'react-i18next';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
+}
+
+interface FollowCommand {
+  artistId: number;
+  viewerId: number;
+  segment: string;
+  wasFollowing: boolean;
+  resume: boolean;
+  isCurrent: () => boolean;
+  ownsProfile: () => boolean;
 }
 
 type ArtistPublicPageDisplayContract = Readonly<{
@@ -51,26 +64,6 @@ type ArtistPublicPageDisplayContract = Readonly<{
 const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
   releaseDescriptionPreviewChars: 100 + 4 * 10,
 } as const satisfies ArtistPublicPageDisplayContract;
-
-export const isArtistFollowResume = (search: string, artistId: number | null): boolean => {
-  if (!artistId) return false;
-  const params = new URLSearchParams(search);
-  return params.get('resume') === 'follow'
-    && parsePositiveSafeInt(params.get('artistId')) === artistId;
-};
-
-export const buildArtistFollowAuthPath = (profileLink: string | null, artistId: number | null): string => {
-  if (!profileLink || !artistId) return '/login?signup=1&intent=follow_artists&redirect=%2Ffans';
-  const resumePath = `${profileLink}?${new URLSearchParams({
-    resume: 'follow',
-    artistId: String(artistId),
-  }).toString()}`;
-  return `/login?${new URLSearchParams({
-    signup: '1',
-    intent: 'follow_artists',
-    redirect: resumePath,
-  }).toString()}`;
-};
 
 const parseJsonObject = (raw?: string | null): Record<string, unknown> => {
   if (!raw) return {};
@@ -188,9 +181,15 @@ export default function ArtistPublicPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { session } = useSession();
+  const { session, loading: sessionLoading } = useSession();
   const viewerId = session?.partyId ?? null;
-  const hasToken = Boolean(session);
+  const hasToken = Boolean(session && safeArtistId(viewerId) && !sessionLoading);
+  const mountedRef = useRef(true);
+  const pendingRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const segment = (slugOrId ?? '').trim();
 
@@ -208,14 +207,20 @@ export default function ArtistPublicPage() {
     if (artist.apSlug) return `/a/${artist.apSlug}`;
     return `/a/${artist.apArtistId}`;
   }, [artistQuery.data]);
-  const resumeFollow = useMemo(
-    () => isArtistFollowResume(location.search, artistId),
-    [artistId, location.search],
-  );
-  const followAuthPath = useMemo(
-    () => buildArtistFollowAuthPath(profileLink, artistId),
-    [artistId, profileLink],
-  );
+  const viewRef = useRef({ session, artistId, pathname: location.pathname, key: location.key, generation: 0 });
+  const previousView = viewRef.current;
+  const generation = previousView.generation + Number(previousView.session !== session
+    || previousView.artistId !== artistId || previousView.pathname !== location.pathname);
+  // A -> B -> A must not revive a receipt from the first profile/session lifetime.
+  viewRef.current = { session, artistId, pathname: location.pathname, key: location.key, generation };
+  const resumeFollow = hasToken && isArtistFollowResume(location.search, artistId);
+  const clearResume = () => {
+    const params = new URLSearchParams(location.search);
+    params.delete('resume');
+    params.delete('artistId');
+    const search = params.toString();
+    void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
+  };
 
   const releasesQuery = useQuery({
     queryKey: ['public-artist-releases', artistId],
@@ -234,6 +239,7 @@ export default function ArtistPublicPage() {
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
     enabled: Boolean(viewerId && hasToken),
+    retry: false,
   });
 
   const isFollowing = useMemo(() => {
@@ -242,33 +248,60 @@ export default function ArtistPublicPage() {
   }, [artistId, followsQuery.data]);
 
   const followMutation = useMutation({
-    mutationFn: async () => {
-      if (!artistId) return;
-      if (isFollowing) {
-        await Fans.unfollow(artistId);
+    mutationFn: async (command: FollowCommand) => {
+      if (!command.isCurrent()) throw new Error('Follow context changed');
+      if (command.wasFollowing) {
+        await Fans.unfollow(command.artistId);
       } else {
-        await Fans.follow(artistId);
+        await Fans.follow(command.artistId);
       }
     },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
+    onSuccess: (_result, command) => {
+      // The server write committed even if this profile or navigation lifetime ended.
+      void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void qc.invalidateQueries({ queryKey: ['public-artist', segment] });
-      if (!isFollowing) {
-        void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      void qc.invalidateQueries({ queryKey: ['public-artist', command.segment] });
+      if (!command.isCurrent()) return;
+      if (!command.wasFollowing) {
+        void captureFirstValueOnce(getAnalyticsClient(), command.viewerId, 'artist_followed', undefined, command.ownsProfile)
+          .catch(() => undefined);
       }
-      if (resumeFollow && profileLink) navigate(profileLink, { replace: true });
+      if (command.resume && !command.wasFollowing) clearResume();
     },
+    onSettled: () => { pendingRef.current = false; },
   });
+
+  const toggleFollow = () => {
+    if (pendingRef.current || !hasToken || !session || getActiveSession() !== session
+      || !safeArtistId(artistId) || !safeArtistId(viewerId)
+      || !followsQuery.isSuccess || followsQuery.isFetching) return;
+    const pathname = location.pathname;
+    const key = location.key;
+    const ownsProfile = () => mountedRef.current && getActiveSession() === session
+      && viewRef.current.session === session && viewRef.current.artistId === artistId
+      && viewRef.current.pathname === pathname && viewRef.current.generation === generation;
+    pendingRef.current = true;
+    followMutation.mutate({
+      artistId, viewerId, segment, wasFollowing: isFollowing, resume: resumeFollow,
+      ownsProfile, isCurrent: () => ownsProfile() && viewRef.current.key === key,
+    });
+  };
+
+  useEffect(() => {
+    if (!resumeFollow || !isFollowing || !followsQuery.isSuccess || followsQuery.isFetching
+      || getActiveSession() !== session || pendingRef.current) return;
+    const params = new URLSearchParams(location.search);
+    params.delete('resume');
+    params.delete('artistId');
+    const search = params.toString();
+    void navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true });
+  }, [followsQuery.isFetching, followsQuery.isSuccess, isFollowing, location.hash, location.pathname, location.search, navigate, resumeFollow, session]);
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
   const canonicalReleases = canonicalReleasesQuery.data ?? [];
 
-  useEffect(() => {
-    if (!resumeFollow || !profileLink || followsQuery.isLoading || !isFollowing) return;
-    navigate(profileLink, { replace: true });
-  }, [followsQuery.isLoading, isFollowing, navigate, profileLink, resumeFollow]);
+  const releaseSelection = usePublicationSelection('release', releases.map((release) => release.arReleaseId), releasesQuery.isLoading);
 
   useMetaTags({
     title: artist?.apDisplayName ?? 'Artista',
@@ -414,7 +447,7 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={followAuthPath}
+                    to={buildArtistFollowAuthPath(profileLink, artistId)}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >
@@ -427,14 +460,14 @@ export default function ArtistPublicPage() {
                     tabIndex={0}
                     onClick={(event) => {
                       event.currentTarget.focus();
-                      followMutation.mutate();
+                      toggleFollow();
                     }}
                     startIcon={isFollowing ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                    disabled={followMutation.isPending}
-                    aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : `Seguir a ${artist.apDisplayName}`}
+                    disabled={followMutation.isPending || !followsQuery.isSuccess || followsQuery.isFetching}
+                    aria-label={isFollowing ? `Dejar de seguir a ${artist.apDisplayName}` : resumeFollow ? t('artistFollow.resumeAction') : `Seguir a ${artist.apDisplayName}`}
                     sx={{ textTransform: 'none' }}
                   >
-                    {isFollowing ? 'Siguiendo' : 'Seguir'}
+                    {isFollowing ? 'Siguiendo' : resumeFollow ? t('artistFollow.resumeAction') : 'Seguir'}
                   </Button>
                 )}
                 {isSelf && (
@@ -460,26 +493,19 @@ export default function ArtistPublicPage() {
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           <Stack spacing={2.5}>
             {resumeFollow && !isFollowing && (
-              <Alert
-                severity="info"
-                action={(
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={() => followMutation.mutate()}
-                    disabled={followMutation.isPending || followsQuery.isLoading}
-                  >
-                    {t('artistFollow.resumeAction')}
-                  </Button>
-                )}
-              >
-                {t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}
+              <Alert severity="info">{t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}</Alert>
+            )}
+            {hasToken && followsQuery.isError && (
+              <Alert severity="warning" action={(
+                <Button onClick={() => { void followsQuery.refetch(); }} color="inherit" size="small">
+                  {t('artistFollow.retry')}
+                </Button>
+              )}>
+                {t('artistFollow.stateError')}
               </Alert>
             )}
-            {resumeFollow && followMutation.isError && (
-              <Alert severity="error">
-                {t('artistFollow.resumeError', { artist: artist.apDisplayName })}
-              </Alert>
+            {followMutation.isError && followMutation.variables?.isCurrent() && (
+              <Alert severity="error">{t('artistFollow.resumeError', { artist: artist.apDisplayName })}</Alert>
             )}
             {canClaim && (
               <Alert
@@ -498,8 +524,6 @@ export default function ArtistPublicPage() {
                 Este perfil aún no está reclamado. Si eres el artista, crea tu cuenta y reclámalo.
               </Alert>
             )}
-
-            <ArtistMerchStores artistPartyId={artist.apArtistId} />
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -657,6 +681,7 @@ export default function ArtistPublicPage() {
                 )}
               </Stack>
 
+              {releaseSelection.notice}
               {(releasesQuery.isLoading || canonicalReleasesQuery.isLoading) && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
                   <CircularProgress size={18} aria-label="Cargando lanzamientos del artista" />
@@ -680,12 +705,13 @@ export default function ArtistPublicPage() {
                 <LazyPaginatedList
                   items={releases}
                   loading={releasesQuery.isFetching}
-                  pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+                  pagination={{ itemLabel: 'releases', initialRowsPerPage: 6, selectedIndex: releaseSelection.index, resetKey: releaseSelection.requested }}
                   renderItems={(visibleReleases) => (
                     <Grid container spacing={2} sx={{ mt: 0.5 }}>
                       {visibleReleases.map((release) => (
-                        <Grid key={release.arReleaseId} item xs={12} sm={6} md={4}>
+                        <Grid key={release.arReleaseId} item xs={12} sm={6} md={4} component={PublicationAnchor} selected={releaseSelection.requested === String(release.arReleaseId)}>
                           <ReleaseCard release={release} />
+                          <InteractionPanel kind="artist_release" entityKey={String(release.arReleaseId)} />
                         </Grid>
                       ))}
                     </Grid>

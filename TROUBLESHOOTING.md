@@ -295,20 +295,22 @@ ls -la
 1. **Initialize submodule**
    ```bash
    # From repository root
-   git submodule update --init --recursive
+   git submodule update --init --checkout --recursive
    cd tdf-mobile
    ls -la  # Should now show files
    ```
 
 2. **Update submodule to latest**
    ```bash
-   git submodule update --remote
+   git submodule update --checkout --remote
    ```
 
 3. **Clone with submodules**
    ```bash
    # For fresh clones
-   git clone --recursive <repository-url>
+   git clone <repository-url>
+   cd tdf-app
+   git submodule update --init --checkout --recursive
    ```
 
 ### Expo Won't Start

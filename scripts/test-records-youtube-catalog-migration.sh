@@ -6,38 +6,68 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 up_migration="$repo_root/tdf-hq/sql/2026-09-06_records_youtube_catalog.sql"
 down_migration="$repo_root/tdf-hq/sql/2026-09-06_records_youtube_catalog_rollback.sql"
 
+TDF_RECORDS_MODE=""
+TDF_RECORDS_TEMP_DIR=""
+TDF_RECORDS_PG_BIN="/usr/local/opt/postgresql@16/bin"
+TDF_RECORDS_PORT=$((55432 + ($$ % 1000)))
+
 cleanup() {
-  docker rm -f "$test_container" >/dev/null 2>&1 || true
+  if [ "$TDF_RECORDS_MODE" = "docker" ]; then
+    docker rm -f "$test_container" >/dev/null 2>&1 || true
+  elif [ "$TDF_RECORDS_MODE" = "local" ] && [ -n "$TDF_RECORDS_TEMP_DIR" ]; then
+    "$TDF_RECORDS_PG_BIN/pg_ctl" -D "$TDF_RECORDS_TEMP_DIR/data" -m immediate stop >/dev/null 2>&1 || true
+    # Retain the isolated database files for failure diagnosis.
+  fi
 }
 trap cleanup EXIT INT TERM
 
-docker run --rm -d \
-  --name "$test_container" \
-  -e POSTGRES_PASSWORD=records-youtube-catalog-test \
-  -e POSTGRES_DB=records_youtube_catalog_test \
-  postgres:16-alpine >/dev/null
-
-attempt=0
-until docker exec "$test_container" \
-  psql -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test -Atc 'SELECT 1' \
-  >/dev/null 2>&1; do
-  attempt=$((attempt + 1))
-  if [ "$attempt" -ge 30 ]; then
-    echo "Records YouTube catalog test database did not become queryable" >&2
+if [ -n "${TDF_RECORDS_TEST_DATABASE_URL:-}" ]; then
+  TDF_RECORDS_MODE="external"
+  records_existing_tables=$(psql "$TDF_RECORDS_TEST_DATABASE_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p')")
+  if [ "$records_existing_tables" != "0" ]; then
+    echo "Records tests require an empty isolated database" >&2
     exit 1
   fi
-  sleep 1
-done
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  TDF_RECORDS_MODE="docker"
+  docker run --rm -d \
+    --name "$test_container" \
+    -p 127.0.0.1::5432 \
+    -e POSTGRES_HOST_AUTH_METHOD=trust \
+    -e POSTGRES_DB=records_youtube_catalog_test \
+    postgres:16-alpine >/dev/null
+
+  attempt=0
+  until docker exec "$test_container" pg_isready -U postgres -d records_youtube_catalog_test >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 45 ]; then
+      echo "Records migration test database did not become ready" >&2
+      exit 1
+    fi
+    sleep 1
+  done
+elif [ -x "$TDF_RECORDS_PG_BIN/initdb" ] && [ -x "$TDF_RECORDS_PG_BIN/pg_ctl" ]; then
+  TDF_RECORDS_MODE="local"
+  TDF_RECORDS_TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/tdf-records-migration.XXXXXX")
+  LC_ALL=C "$TDF_RECORDS_PG_BIN/initdb" -D "$TDF_RECORDS_TEMP_DIR/data" --locale=C --encoding=UTF8 -A trust -U postgres >/dev/null
+  "$TDF_RECORDS_PG_BIN/pg_ctl" -D "$TDF_RECORDS_TEMP_DIR/data" -o "-h 127.0.0.1 -k $TDF_RECORDS_TEMP_DIR -p $TDF_RECORDS_PORT" -w start >/dev/null
+  "$TDF_RECORDS_PG_BIN/createdb" -h 127.0.0.1 -p "$TDF_RECORDS_PORT" -U postgres records_youtube_catalog_test
+else
+  echo "Docker daemon and PostgreSQL 16 binaries are both unavailable" >&2
+  exit 1
+fi
 
 psql_exec() {
-  docker exec -i "$test_container" \
-    psql -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test "$@"
+  if [ "$TDF_RECORDS_MODE" = "external" ]; then
+    psql "$TDF_RECORDS_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 "$@"
+  elif [ "$TDF_RECORDS_MODE" = "docker" ]; then
+    docker exec -i "$test_container" psql -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test "$@"
+  else
+    "$TDF_RECORDS_PG_BIN/psql" -h 127.0.0.1 -p "$TDF_RECORDS_PORT" -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test "$@"
+  fi
 }
-
 apply_file() {
-  docker exec -i "$test_container" \
-    psql -v ON_ERROR_STOP=1 -U postgres -d records_youtube_catalog_test \
-    < "$1" >/dev/null
+  psql_exec < "$1" >/dev/null
 }
 
 psql_exec >/dev/null <<'SQL'
@@ -333,4 +363,57 @@ apply_file "$up_migration"
 test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "34"
 test "$(psql_exec -Atc "SELECT count(DISTINCT membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "34"
 
-echo "Records YouTube catalog migration passed 27-video ingestion, exact ordering, evidence, replay, rollback, and reapply checks."
+# Provider removal repair is independently reversible and never changes identity.
+availability_up="$repo_root/tdf-hq/sql/2026-09-18_records_resource_availability.sql"
+availability_down="$repo_root/tdf-hq/sql/2026-09-18_records_resource_availability_rollback.sql"
+apply_file "$availability_up"
+test "$(psql_exec -Atc "SELECT count(*) FROM record_external_resource WHERE availability='unavailable' AND thumbnail_url IS NULL;")" = "2"
+test "$(psql_exec -Atc "SELECT count(*) FROM record_external_resource WHERE external_code='f2BabxM1Pjc' AND thumbnail_url='https://i.ytimg.com/vi/f2BabxM1Pjc/hqdefault.jpg' AND availability IS NULL;")" = "1"
+initial_status=$(psql_exec -Atc "SELECT md5(string_agg(row_to_json(r)::text,',' ORDER BY id)) FROM record_external_resource r;")
+apply_file "$availability_up"
+test "$initial_status" = "$(psql_exec -Atc "SELECT md5(string_agg(row_to_json(r)::text,',' ORDER BY id)) FROM record_external_resource r;")"
+apply_file "$availability_down"
+test "$(psql_exec -Atc "SELECT count(*) FROM record_external_resource WHERE external_code IN ('ooPsIHsikYU','Cb7VGZJ6apo') AND availability IS NULL AND thumbnail_url IS NOT NULL;")" = "2"
+apply_file "$availability_up"
+test "$(psql_exec -Atc "SELECT count(*) FROM record_external_resource WHERE availability='unavailable';")" = "2"
+psql_exec -c "UPDATE record_external_resource SET thumbnail_url='https://editor.example/approved.jpg',version=version+1 WHERE external_code='ooPsIHsikYU';" >/dev/null
+apply_file "$availability_down"
+test "$(psql_exec -Atc "SELECT thumbnail_url FROM record_external_resource WHERE external_code='ooPsIHsikYU';")" = "https://editor.example/approved.jpg"
+apply_file "$availability_up"
+test "$(psql_exec -Atc "SELECT thumbnail_url FROM record_external_resource WHERE external_code='ooPsIHsikYU';")" = "https://editor.example/approved.jpg"
+test "$(psql_exec -Atc "SELECT count(*) FROM catalog_backfill_run WHERE run_code='records-resource-availability-2026-09-18';")" = "1"
+echo "Records catalog and availability: ingestion, identities, replay, rollback, reapplication, editorial protection passed."
+
+apply_file "$repo_root/tdf-hq/test/sql/records_ingestion_runtime.sql"
+apply_file "$repo_root/tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql"
+apply_file "$repo_root/tdf-hq/test/sql/records_ingestion_invariants.sql"
+apply_file "$repo_root/tdf-hq/sql/2026-09-20_records_ingestion_runtime_rollback.sql"
+test "$(psql_exec -Atc "SELECT enabled FROM records_ingestion_control;")" = "f"
+test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE code='youtube-recording-testVIDEO01';")" = "1"
+apply_file "$repo_root/tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql"
+echo "Records runtime: approval, private content, identity, publication, replay, ownership, stale updates and retained rollback passed."
+
+# Competing entry points use the exact production advisory key. Hold the first
+# transaction open so the second cannot observe an uncommitted resource identity.
+psql_exec -c "UPDATE records_ingestion_control SET enabled=true; UPDATE social_sync_account SET records_ingestion=jsonb_set(records_ingestion,'{approvedAt}',to_jsonb(now()));" >/dev/null
+runtime_concurrent_sql="SELECT tdf_ingest_public_video(a.id,b.id,jsonb_build_object('id','testVIDEO02','channelId',a.external_user_id,'privacyStatus','public','uploadStatus','processed','eligible',true,'verifiedAt','2026-09-21T03:00:00Z','publishedAt','2026-09-20T00:00:00Z','title','Concurrent fixture','durationSeconds',120)) FROM social_sync_account a CROSS JOIN catalog_backfill_run b WHERE b.run_code='runtime-fixture'"
+psql_exec -c "BEGIN; SELECT pg_advisory_xact_lock(20260920,1); SELECT pg_sleep(2); $runtime_concurrent_sql; COMMIT;" >/dev/null &
+runtime_first_pid=$!
+psql_exec -c "$runtime_concurrent_sql;" >/dev/null &
+runtime_second_pid=$!
+wait "$runtime_first_pid"
+wait "$runtime_second_pid"
+test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE code='youtube-recording-testVIDEO02';")" = "1"
+test "$(psql_exec -Atc "SELECT count(*) FROM records_ingestion_change WHERE after_value->>'external_code'='testVIDEO02';")" = "1"
+echo "Records concurrent database entry points preserve one resource, recording and change."
+
+if [ -n "${TDF_RECORDS_RUNTIME_PROBE:-}" ]; then
+  if [ "$TDF_RECORDS_MODE" = "docker" ]; then
+    TDF_RECORDS_PORT=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' "$test_container")
+  fi
+  if [ "$TDF_RECORDS_MODE" != "external" ]; then
+    TDF_RECORDS_TEST_DATABASE_URL="host=127.0.0.1 port=$TDF_RECORDS_PORT user=postgres dbname=records_youtube_catalog_test"
+  fi
+  export TDF_RECORDS_TEST_DATABASE_URL
+  "$TDF_RECORDS_RUNTIME_PROBE"
+fi

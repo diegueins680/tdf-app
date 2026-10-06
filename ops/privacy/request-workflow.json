@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "requirement": "PRIV-DELETE-001",
+  "deadlineDays": 30,
+  "warningDays": 7,
+  "channels": [
+    "mobile",
+    "social_messages",
+    "account"
+  ],
+  "states": [
+    "received",
+    "awaiting_identity",
+    "verified",
+    "planned",
+    "executing",
+    "failed",
+    "effects_verified",
+    "closed",
+    "withdrawn"
+  ],
+  "transitions": {
+    "request_identity": {
+      "from": [
+        "received"
+      ],
+      "to": "awaiting_identity",
+      "evidence": "identity_request"
+    },
+    "verify_identity": {
+      "from": [
+        "received",
+        "awaiting_identity"
+      ],
+      "to": "verified",
+      "evidence": "identity_verification"
+    },
+    "plan": {
+      "from": [
+        "verified"
+      ],
+      "to": "planned",
+      "evidence": "scope_plan"
+    },
+    "start": {
+      "from": [
+        "planned",
+        "failed"
+      ],
+      "to": "executing",
+      "evidence": "execution_admission"
+    },
+    "fail": {
+      "from": [
+        "executing"
+      ],
+      "to": "failed",
+      "evidence": "execution_failure"
+    },
+    "verify_effects": {
+      "from": [
+        "executing"
+      ],
+      "to": "effects_verified",
+      "evidence": "effect_verification"
+    },
+    "close": {
+      "from": [
+        "effects_verified"
+      ],
+      "to": "closed",
+      "evidence": "delivered_completion_notice"
+    },
+    "withdraw": {
+      "from": [
+        "verified",
+        "planned"
+      ],
+      "to": "withdrawn",
+      "evidence": "verified_requester_withdrawal"
+    },
+    "replan": {
+      "from": [
+        "planned",
+        "failed"
+      ],
+      "to": "planned",
+      "evidence": "scope_plan"
+    },
+    "review_retention": {
+      "from": [
+        "closed"
+      ],
+      "to": "closed",
+      "evidence": "retention_review"
+    }
+  },
+  "surfaces": [
+    "identity_sessions",
+    "profiles_contacts",
+    "social_content",
+    "messages",
+    "events_bookings",
+    "commerce_financial_audit",
+    "courses",
+    "media_blobs",
+    "provider_copies",
+    "notifications_analytics_logs",
+    "imports_exports",
+    "backups"
+  ],
+  "dispositions": [
+    "erase",
+    "anonymize",
+    "retain",
+    "not_applicable"
+  ],
+  "retentionRule": "Retained data requires a scoped rationale and a review date, including backup expiry and restore suppression. A retained disposition is not a deletion claim."
+}

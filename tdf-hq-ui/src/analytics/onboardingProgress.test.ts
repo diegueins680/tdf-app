@@ -31,6 +31,21 @@ describe('captureFirstValueOnce', () => {
     window.localStorage.clear();
   });
 
+  it('does not dispatch or consume completion for a context that is no longer current', async () => {
+    const analytics = { capture: jest.fn() };
+    let current = false;
+    let resolveResult: ((value: OnboardingCompletionResultDTO) => void) | undefined;
+    const complete = jest.fn(() => new Promise<OnboardingCompletionResultDTO>((resolve) => { resolveResult = resolve; }));
+    await expect(captureFirstValueOnce(analytics, 42, 'artist_followed', complete, () => current)).resolves.toBe(false);
+    expect(complete).not.toHaveBeenCalled();
+    current = true;
+    const pending = captureFirstValueOnce(analytics, 42, 'artist_followed', complete, () => current);
+    current = false;
+    resolveResult?.(completionResult('artist_followed', true));
+    await expect(pending).resolves.toBe(false);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(analytics.capture).not.toHaveBeenCalled();
+  });
   it('emits first value and completion only after the server claims the first completion', async () => {
     const analytics = { capture: jest.fn() };
     const complete = jest.fn()
@@ -50,14 +65,14 @@ describe('captureFirstValueOnce', () => {
     const analytics = { capture: jest.fn() };
     const complete = jest.fn().mockRejectedValue(new Error('offline'));
 
-    await expect(captureFirstValueOnce(analytics, null, 'artist_followed', complete, () => true)).resolves.toBe(false);
+    await expect(captureFirstValueOnce(analytics, null, 'artist_followed', complete)).resolves.toBe(false);
     await expect(captureFirstValueOnce(analytics, 7, 'artist_followed', complete, () => true)).resolves.toBe(false);
     expect(complete).toHaveBeenCalledTimes(1);
     expect(analytics.capture).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(pendingKey(7))).toBe('artist_followed');
   });
 
-  it('replays a failed handshake and emits the canonical server-inferred value', async () => {
+  it('replays a failed handshake for the same Party and clears it after an authoritative response', async () => {
     const analytics = { capture: jest.fn() };
     const offlineComplete = jest.fn().mockRejectedValue(new Error('offline'));
 
@@ -69,7 +84,10 @@ describe('captureFirstValueOnce', () => {
       () => true,
     )).resolves.toBe(false);
 
-    const retryComplete = jest.fn().mockResolvedValue(completionResult('event_saved', true));
+    const retryComplete = jest.fn().mockResolvedValue({
+      progress: { eligible: false, firstValue: 'access_requested' },
+      newlyCompleted: true,
+    });
     await expect(retryPendingFirstValueCompletion(
       analytics,
       7,
@@ -79,16 +97,16 @@ describe('captureFirstValueOnce', () => {
 
     expect(retryComplete).toHaveBeenCalledWith('access_requested');
     expect(window.localStorage.getItem(pendingKey(7))).toBeNull();
-    expect(analytics.capture).toHaveBeenCalledWith('first_value_completed', expect.objectContaining({
-      platform: 'web',
-      value: 'event_saved',
-    }));
+    expect(analytics.capture).toHaveBeenCalledTimes(2);
   });
 
   it('clears an idempotent replay without duplicating completion analytics', async () => {
     const analytics = { capture: jest.fn() };
     window.localStorage.setItem(pendingKey(7), 'artist_followed');
-    const complete = jest.fn().mockResolvedValue(completionResult('artist_followed', false));
+    const complete = jest.fn().mockResolvedValue({
+      progress: { eligible: false, firstValue: 'artist_followed' },
+      newlyCompleted: false,
+    });
 
     await expect(retryPendingFirstValueCompletion(
       analytics,

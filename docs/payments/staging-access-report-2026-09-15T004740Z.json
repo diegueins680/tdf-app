@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-09-15T00:47:40.611Z",
+  "sourceCommit": null,
+  "scope": "read_only_staging_metadata",
+  "providerQualified": false,
+  "apps": [
+    {
+      "app": "tdf-hq-studio-audit-staging",
+      "status": {
+        "accessible": false,
+        "reason": "hosting_authentication_unavailable"
+      },
+      "config": {
+        "accessible": false,
+        "reason": "hosting_authentication_unavailable"
+      },
+      "secretPresence": {
+        "accessible": false,
+        "reason": "hosting_authentication_unavailable"
+      },
+      "health": {
+        "httpStatus": 200,
+        "statusOk": true,
+        "databaseOk": true
+      }
+    },
+    {
+      "app": "tdf-studio-audit-staging-web",
+      "status": {
+        "accessible": false,
+        "reason": "hosting_authentication_unavailable"
+      },
+      "config": {
+        "accessible": false,
+        "reason": "hosting_authentication_unavailable"
+      },
+      "secretPresence": {
+        "accessible": false,
+        "reason": "hosting_authentication_unavailable"
+      },
+      "health": {
+        "httpStatus": 200,
+        "statusOk": true,
+        "databaseOk": false
+      }
+    }
+  ],
+  "alternativeHosting": {
+    "configured": false,
+    "accessible": false
+  }
+}

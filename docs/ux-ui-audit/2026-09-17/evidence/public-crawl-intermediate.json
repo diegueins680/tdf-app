@@ -1,0 +1,1133 @@
+[
+  {
+    "route": "/",
+    "width": 320,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/instagram",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/ig",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/tdf",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/comercio",
+    "width": 320,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/commerce",
+    "width": 320,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribucion",
+    "width": 320,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribution",
+    "width": 320,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/sobre-tdf",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/inicio",
+    "width": 320,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/buscar",
+    "width": 320,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/fans",
+    "width": 320,
+    "finalPath": "/fans",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-1d5r04y > .MuiAlert-message.css-127h8j3"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/mi-artista",
+    "width": 320,
+    "finalPath": "/mi-artista",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-1d5r04y > .MuiAlert-message.css-127h8j3"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/artista/crear",
+    "width": 320,
+    "finalPath": "/artista/crear",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace",
+    "width": 320,
+    "finalPath": "/marketplace",
+    "title": "Marketplace · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/tiendas",
+    "width": 320,
+    "finalPath": "/tiendas",
+    "title": "Merch de artistas · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering",
+    "width": 320,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering/pago-datafast",
+    "width": 320,
+    "finalPath": "/mezcla-mastering/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/services/mixing-mastering",
+    "width": 320,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace/pago-datafast",
+    "width": 320,
+    "finalPath": "/marketplace/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/google-drive/callback",
+    "width": 320,
+    "finalPath": "/oauth/google-drive/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/instagram/callback",
+    "width": 320,
+    "finalPath": "/oauth/instagram/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-dic-2025",
+    "width": 320,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 378
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-abr-2026",
+    "width": 320,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 378
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/trials",
+    "width": 320,
+    "finalPath": "/trials",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/live-sessions/registro",
+    "width": 320,
+    "finalPath": "/live-sessions/registro",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 337
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/feedback",
+    "width": 320,
+    "finalPath": "/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/privacidad",
+    "width": 320,
+    "finalPath": "/privacidad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/apelaciones",
+    "width": 320,
+    "finalPath": "/apelaciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reputacion/como-se-calcula",
+    "width": 320,
+    "finalPath": "/reputacion/como-se-calcula",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/consentimiento",
+    "width": 320,
+    "finalPath": "/whatsapp/consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/ok",
+    "width": 320,
+    "finalPath": "/whatsapp/ok",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/records",
+    "width": 320,
+    "finalPath": "/records",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/donar",
+    "width": 320,
+    "finalPath": "/donar",
+    "title": "Donaciones · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar",
+    "width": 320,
+    "finalPath": "/reservar",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/dj-booth",
+    "width": 320,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar/dj-booth",
+    "width": 320,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/domo-del-pululahua",
+    "width": 320,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/venues/domo-del-pululahua",
+    "width": 320,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/login",
+    "width": 320,
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reset",
+    "width": 320,
+    "finalPath": "/reset",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/herramientas/creador-musical",
+    "width": 320,
+    "finalPath": "/herramientas/creador-musical",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 390
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "pre"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/",
+    "width": 1280,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/instagram",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/ig",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/tdf",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/comercio",
+    "width": 1280,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/commerce",
+    "width": 1280,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribucion",
+    "width": 1280,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribution",
+    "width": 1280,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/sobre-tdf",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/inicio",
+    "width": 1280,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/buscar",
+    "width": 1280,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/fans",
+    "width": 1280,
+    "finalPath": "/fans",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mi-artista",
+    "width": 1280,
+    "finalPath": "/mi-artista",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/artista/crear",
+    "width": 1280,
+    "finalPath": "/artista/crear",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace",
+    "width": 1280,
+    "finalPath": "/marketplace",
+    "title": "Marketplace · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/tiendas",
+    "width": 1280,
+    "finalPath": "/tiendas",
+    "title": "Merch de artistas · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering",
+    "width": 1280,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering/pago-datafast",
+    "width": 1280,
+    "finalPath": "/mezcla-mastering/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/services/mixing-mastering",
+    "width": 1280,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace/pago-datafast",
+    "width": 1280,
+    "finalPath": "/marketplace/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/google-drive/callback",
+    "width": 1280,
+    "finalPath": "/oauth/google-drive/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/instagram/callback",
+    "width": 1280,
+    "finalPath": "/oauth/instagram/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-dic-2025",
+    "width": 1280,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-abr-2026",
+    "width": 1280,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/trials",
+    "width": 1280,
+    "finalPath": "/trials",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/live-sessions/registro",
+    "width": 1280,
+    "finalPath": "/live-sessions/registro",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1281
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/feedback",
+    "width": 1280,
+    "finalPath": "/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/privacidad",
+    "width": 1280,
+    "finalPath": "/privacidad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/apelaciones",
+    "width": 1280,
+    "finalPath": "/apelaciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reputacion/como-se-calcula",
+    "width": 1280,
+    "finalPath": "/reputacion/como-se-calcula",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/consentimiento",
+    "width": 1280,
+    "finalPath": "/whatsapp/consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/ok",
+    "width": 1280,
+    "finalPath": "/whatsapp/ok",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/records",
+    "width": 1280,
+    "finalPath": "/records",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/donar",
+    "width": 1280,
+    "finalPath": "/donar",
+    "title": "Donaciones · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar",
+    "width": 1280,
+    "finalPath": "/reservar",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/dj-booth",
+    "width": 1280,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar/dj-booth",
+    "width": 1280,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/domo-del-pululahua",
+    "width": 1280,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/venues/domo-del-pululahua",
+    "width": 1280,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/login",
+    "width": 1280,
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reset",
+    "width": 1280,
+    "finalPath": "/reset",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/herramientas/creador-musical",
+    "width": 1280,
+    "finalPath": "/herramientas/creador-musical",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  }
+]

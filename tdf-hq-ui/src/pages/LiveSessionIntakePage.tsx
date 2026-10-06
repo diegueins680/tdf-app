@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Autocomplete,
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Grid,
   IconButton,
   Paper,
@@ -19,14 +23,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
-import type { PartyDTO, PartyUpdate } from '../api/types';
 import type { PartySelectorOption } from '../api/partySelector';
 import { PartySelector } from '../components/party-selector/PartySelector';
-import { Admin } from '../api/admin';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
+import { useSession } from '../session/SessionContext';
+import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 interface MusicianEntry {
@@ -83,10 +87,22 @@ const asNullableString = (value?: string | null): string | null => {
 
 export interface LiveSessionIntakeFormProps {
   variant?: 'internal' | 'public';
+  accessCode?: string;
+  draftOwner?: number;
+  canReuseContacts?: boolean;
 }
 
-export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntakeFormProps) {
+export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner, canReuseContacts = false }: LiveSessionIntakeFormProps) {
+  const [submissionKey, setSubmissionKey] = useState<string>(() => crypto.randomUUID());
   const qc = useQueryClient();
+  const authority = useRef({ accessCode, generation: 0 });
+  if (authority.current.accessCode !== accessCode) {
+    authority.current = { accessCode, generation: authority.current.generation + 1 };
+  }
+  const submissionGeneration = useRef(-1);
+  const submissionPending = useRef(false);
+  const [abandonOpen, setAbandonOpen] = useState(false);
+
   const { locale } = useLocalePreferences();
   const { data: musicCatalogs, isLoading: musicCatalogsLoading } = useQuery({
     queryKey: ['catalogs', 'live-session-intake', locale],
@@ -109,14 +125,15 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
   const [riderFile, setRiderFile] = useState<File | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const termsVersion = 'TDF Live Sessions v2';
-  const draftKey = 'live-session-draft';
+  const draftKey = draftOwner && draftOwner > 0 ? `live-session-draft:${variant}:${draftOwner}` : null;
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !draftKey) return;
     try {
       const raw = window.localStorage.getItem(draftKey);
       if (!raw) return;
       const parsed = JSON.parse(raw) as Partial<{
+        submissionKey: string;
         bandName: string;
         bandDescription: string;
         primaryGenreId: string;
@@ -127,6 +144,9 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         musicians: MusicianEntry[];
         setlist: SongEntry[];
       }>;
+      if (typeof parsed.submissionKey === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(parsed.submissionKey)) {
+        setSubmissionKey(parsed.submissionKey);
+      }
       setBandName(parsed.bandName ?? '');
       setBandDescription(parsed.bandDescription ?? '');
       setPrimaryGenreId(parsed.primaryGenreId ?? '');
@@ -146,11 +166,12 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
     } catch {
       // ignore bad drafts
     }
-  }, []);
+  }, [draftKey]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !draftKey) return;
     const payload = {
+      submissionKey,
       bandName,
       bandDescription,
       primaryGenreId,
@@ -167,6 +188,8 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
       // ignore storage errors
     }
   }, [
+    submissionKey,
+    draftKey,
     bandName,
     bandDescription,
     primaryGenreId,
@@ -191,31 +214,12 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
     [genreOptions, primaryGenreId],
   );
 
-  const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {
-    const instrumentName = instrumentOptions.find((item) => item.id === entry.instrumentId)?.name;
-    const created = await Parties.create({
-      cDisplayName: entry.name,
-      cIsOrg: false,
-      cInstagram: asNullableString(entry.instagram),
-    });
-    const updatePayload: PartyUpdate = {
-      uPrimaryEmail: asNullableString(entry.email),
-      uPrimaryPhone: asNullableString(entry.phone),
-      uNotes: instrumentName ? `Instrumento: ${instrumentName}` : undefined,
-      uInstagram: asNullableString(entry.instagram),
-    };
-    await Parties.update(created.partyId, updatePayload);
-    if (entry.email) {
-      await Admin.createUser({
-        partyId: created.partyId,
-        username: entry.email,
-      });
-    }
-    return created;
-  };
-
   const mutation = useMutation({
     mutationFn: async () => {
+      const generation = authority.current.generation;
+      submissionGeneration.current = generation;
+      setShowSuccessDialog(false);
+      if (variant === 'public' && !accessCode) throw new Error('Valida tu código antes de enviar.');
       if (!bandName.trim()) {
         throw new Error('Ingresa el nombre de la banda.');
       }
@@ -225,22 +229,13 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
       for (const entry of musicians) {
         if (!entry.name.trim() && !entry.partyId) continue;
 
-        let partyId = entry.partyId;
-
-        if (!partyId) {
-          const created = await createPartyAndUser(entry);
-          partyId = created.partyId;
-          await qc.invalidateQueries({ queryKey: ['parties'] });
-        } else if (entry.instagram.trim()) {
-          await Parties.update(partyId, {
-            uInstagram: asNullableString(entry.instagram),
-          });
-        }
+        const partyId = variant === 'internal' && canReuseContacts ? entry.partyId : undefined;
 
         const instagramNote = asNullableString(entry.instagram)
           ? `Instagram: ${entry.instagram.trim().startsWith('@') ? entry.instagram.trim() : `@${entry.instagram.trim()}`}`
           : null;
-        const mergedNotes = [asNullableString(entry.notes), instagramNote].filter(Boolean).join(' · ') || null;
+        const phoneNote = entry.phone.trim() ? `Teléfono: ${entry.phone.trim()}` : null;
+        const mergedNotes = [asNullableString(entry.notes), instagramNote, phoneNote].filter(Boolean).join(' · ') || null;
 
         ensuredMusicians.push({
           partyId,
@@ -248,7 +243,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
           email: asNullableString(entry.email),
           instrumentId: asNullableString(entry.instrumentId),
           notes: mergedNotes,
-          isExisting: Boolean(entry.partyId),
+          isExisting: Boolean(partyId),
         });
       }
 
@@ -276,13 +271,31 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
           })
           .filter((song) => song.title.length > 0),
         riderFile,
-      });
-      setAcceptedTerms(false);
+      }, variant === 'public' ? accessCode : undefined, submissionKey);
+      return generation;
     },
-    onSuccess: () => {
+    onSettled: () => { submissionPending.current = false; },
+    onSuccess: (generation) => {
+      if (generation !== authority.current.generation) return;
+      void qc.invalidateQueries({ queryKey: ['parties'] });
+      setSubmissionKey(crypto.randomUUID());
+      setAcceptedTerms(false);
       setShowSuccessDialog(true);
     },
   });
+
+  const abandonDraft = () => {
+    if (submissionPending.current || mutation.isPending) return;
+    if (draftKey) window.localStorage.removeItem(draftKey);
+    setSubmissionKey(crypto.randomUUID());
+    setBandName(''); setBandDescription(''); setPrimaryGenreId('');
+    setContactEmail(''); setContactPhone(''); setAvailableDates('');
+    setSessionDate(toLocalDateInputValue());
+    setMusicians([emptyMusician()]); setSetlist([emptySong()]);
+    setRiderFile(null); setAcceptedTerms(false); setShowSuccessDialog(false);
+    setAbandonOpen(false); mutation.reset();
+    window.history.back();
+  };
 
   const handleMusicianChange = (id: string, patch: Partial<MusicianEntry>) => {
     setMusicians((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
@@ -335,7 +348,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
 
   return (
     <Stack spacing={3}>
-      <EnrollmentSuccessDialog open={showSuccessDialog} onClose={() => setShowSuccessDialog(false)} />
+      <EnrollmentSuccessDialog open={showSuccessDialog && submissionGeneration.current === authority.current.generation} onClose={() => setShowSuccessDialog(false)} />
       <Box>
         <Typography variant="h4" fontWeight={700} gutterBottom>
           {variant === 'public' ? 'Aplicar a TDF Live Sessions' : 'Live Session — Datos de banda'}
@@ -345,14 +358,14 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Typography>
       </Box>
 
-      {mutation.isError && (
+      {mutation.isError && submissionGeneration.current === authority.current.generation && (
         <Alert severity="error">
           {mutation.error instanceof Error ? mutation.error.message : 'Ocurrió un error inesperado.'}
         </Alert>
       )}
 
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Typography variant="h6">Proyecto</Typography>
           <Grid container spacing={2}>
@@ -437,7 +450,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">Músicos</Typography>
@@ -469,7 +482,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
                 </Stack>
 
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
+                  {variant === 'internal' && canReuseContacts && <Grid item xs={12} md={6}>
                     <PartySelector
                       value={musician.partyId ? {
                         partyId: musician.partyId, partyType: 'person', displayName: musician.name || 'Contacto asignado',
@@ -479,7 +492,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
                       field={{ label: 'Seleccionar contacto existente', helperText: 'Busca por nombre o @username.' }}
                       search={{ context: 'live_session', kind: 'person', accountOnly: false }}
                     />
-                  </Grid>
+                  </Grid>}
                   <Grid item xs={12} md={6}>
                     <TextField
                       label="Nombre completo"
@@ -553,7 +566,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
                     </Grid>
                   ) : (
                     <Grid item xs={12}>
-                      <Chip label="Se creará usuario y contacto automáticamente" color="info" size="small" />
+                      <Chip label="Se creará un contacto para esta sesión" color="info" size="small" />
                     </Grid>
                   )}
                 </Grid>
@@ -563,7 +576,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">Setlist y canciones</Typography>
@@ -644,7 +657,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Typography variant="h6">Términos y logística</Typography>
           <Typography variant="body2" color="text.secondary">
@@ -677,7 +690,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={1.5}>
           <Typography variant="h6">Rider técnico</Typography>
           <Button
@@ -705,23 +718,41 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
         </Stack>
       </Paper>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <Button variant="outlined" onClick={() => window.history.back()}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
+        <Button variant="outlined" disabled={mutation.isPending} onClick={() => {
+          if (!submissionPending.current) setAbandonOpen(true);
+        }}>
           Cancelar
         </Button>
         <Button
           variant="contained"
           size="large"
-          onClick={() => mutation.mutate()}
+          onClick={() => {
+            if (submissionPending.current) return;
+            submissionPending.current = true;
+            mutation.mutate();
+          }}
           disabled={mutation.isPending || !acceptedTerms}
         >
           {mutation.isPending ? 'Guardando…' : 'Enviar Live Session'}
         </Button>
       </Stack>
+      <Dialog open={abandonOpen} onClose={() => { if (!submissionPending.current) setAbandonOpen(false); }}>
+        <DialogTitle>¿Descartar este borrador?</DialogTitle>
+        <DialogContent>
+          Se borrará el formulario local. Si ya intentaste enviarlo, una solicitud anterior podría haberse guardado:
+          comprueba su estado con TDF antes de iniciar otra. Esto no elimina solicitudes guardadas.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAbandonOpen(false)}>Seguir editando</Button>
+          <Button onClick={abandonDraft} disabled={mutation.isPending}>Descartar borrador</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }
 
 export default function LiveSessionIntakePage() {
-  return <LiveSessionIntakeForm variant="internal" />;
+  const { session } = useSession();
+  return <LiveSessionIntakeForm key={session?.partyId ?? 'anonymous'} variant="internal" draftOwner={session?.partyId} canReuseContacts={buildAccessibleModuleSet(session?.roles, session?.modules).has('crm')} />;
 }

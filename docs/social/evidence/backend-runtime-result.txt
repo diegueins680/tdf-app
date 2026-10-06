@@ -1,0 +1,13 @@
+Executed 2026-09-15, isolated worktree, Stack GHC 9.10.3 --fast test binary.
+Command (cwd tdf-hq):
+./.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test
+
+
+Finished in 20.6455 seconds
+2540 examples, 0 failures
+
+Raw stdout SHA256: b62633d4e7e7d26b806e275365412148c44fc8b74701bdb637b646318b744dc0
+Raw stdout retained locally at docs/social/evidence/backend-runtime-tests.txt.
+Stack command failed AFTER linking, during copy of the absent tdf-hq-exe.
+This is runtime test evidence, not a successful full application build.
+Reaction source SHA256: ff6010bf608f7dcc849b9557c6ca68455b7a7c28871d820999708216323613c8

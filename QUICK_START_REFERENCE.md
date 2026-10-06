@@ -8,6 +8,7 @@ Fast reference for common commands, workflows, and configurations.
 # Clone with submodules
 git clone --recursive https://github.com/diegueins680/tdf-app
 cd tdf-app
+git submodule update --init --checkout --recursive
 
 # Install JS deps (UI + mobile)
 npm install
@@ -79,7 +80,7 @@ npm run generate:api          # Regenerate API client
 cd tdf-mobile
 
 # Submodule
-git submodule update --init --recursive
+git submodule update --init --checkout --recursive
 
 # Development
 npm install                    # Install dependencies
@@ -282,10 +283,10 @@ curl -I -X OPTIONS http://localhost:8080/parties \
 
 ```bash
 # Initialize submodule
-git submodule update --init --recursive
+git submodule update --init --checkout --recursive
 
 # Update to latest
-git submodule update --remote
+git submodule update --checkout --remote
 ```
 
 ### Build Errors

@@ -1607,6 +1607,10 @@ RecordExternalResource sql=record_external_resource
     labelEn Text Maybe
     durationMs Int Maybe
     thumbnailUrl Text Maybe
+    availability Text Maybe
+    availabilityReason Text Maybe
+    verifiedAt UTCTime Maybe
+    providerMetadata AesonValue Maybe
     active Bool default=True
     createdAt UTCTime default=CURRENT_TIMESTAMP
     updatedAt UTCTime default=CURRENT_TIMESTAMP

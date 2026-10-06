@@ -1,0 +1,22 @@
+{
+  "source": "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+  "sha256": "f3b3183fc1a089b71c135b5fc6e7ca4ef370e6e42b376230815a82a9ae5b7b03",
+  "solver": "4.13.3",
+  "results": [
+    {
+      "function": "capture",
+      "safety": "unsat",
+      "admission_equivalence": "unsat",
+      "non_vacuity": "sat",
+      "legacy_counterexample": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]"
+    },
+    {
+      "function": "refund",
+      "safety": "unsat",
+      "admission_equivalence": "unsat",
+      "non_vacuity": "sat",
+      "legacy_counterexample": "[current = 1,\n limit = 9223372036854775807,\n amount = 9223372036854775807]"
+    }
+  ],
+  "boundary": "Two recognized Haskell arithmetic fragments, all signed Int64 inputs with nonnegative current and limit; trusted shallow translation; not SQL or whole-program refinement"
+}

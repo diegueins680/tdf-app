@@ -1,0 +1,24 @@
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+(node:60754) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/pages/PartyRelationshipMigration.test.ts
+  Party relationship picker migration
+    ✓ uses a remote account selector for event collaborators (20 ms)
+    ✓ loads full musician details only after a canonical selection (16 ms)
+    ✓ does not accept typed Party IDs for new chats or friendships (5 ms)
+    ✓ uses the booking display name instead of downloading the Party directory for orders (3 ms)
+    ✓ uses the dedicated teacher projection instead of filtering the Party directory (6 ms)
+    ✓ loads CRM notes only for visible label artists instead of downloading the Party directory (12 ms)
+    ✓ does not expose an assignee Party ID in the operations inbox (3 ms)
+    ✓ uses privacy-safe fallbacks when a related Party cannot be resolved (17 ms)
+    ✓ scopes logistics discovery to the event authorization boundary (2 ms)
+    ✓ keeps visible Party-number references on a closed administrative allowlist (97 ms)
+    ✓ requires every production selector instance to declare an authorization context (71 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       11 passed, 11 total
+Snapshots:   0 total
+Time:        6.087 s
+Ran all test suites within paths "src/pages/PartyRelationshipMigration.test.ts".

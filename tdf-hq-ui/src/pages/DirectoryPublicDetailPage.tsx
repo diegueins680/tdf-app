@@ -1,3 +1,4 @@
+import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
   Alert,
   Box,
@@ -23,7 +24,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
+import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { API_BASE_URL } from '../api/client';
@@ -38,6 +39,7 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
 import { canonicalEventUrl, safePublicImageUrl } from '../utils/eventSharing';
 import { useAnalytics } from '../analytics/useAnalytics';
+import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
 
 type DetailKind = Exclude<DirectoryEntityType, never>;
@@ -64,6 +66,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const location = useLocation();
   const { session } = useSession();
   const analytics = useAnalytics();
+  const trackFunnel = useTicketFunnel();
   const trackedEventView = useRef<string | null>(null);
   const identifier = params['slug'] ?? params['eventId'] ?? params['venueId'] ?? '';
   const detail = useQuery({
@@ -105,7 +108,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const reputation = record(value['reputation']);
   const reviewAverage = number(reputation?.['reviewAverage']);
   const reviewCount = number(reputation?.['reviewCount']) ?? 0;
-  const schemaType = kind === 'event' ? 'MusicEvent'
+  const schemaType = kind === 'event' ? 'Event'
     : kind === 'venue' ? 'MusicVenue'
       : kind === 'classified' && categoryCode === 'paid-work' ? 'JobPosting'
         : kind === 'classified' && ['offering-services', 'equipment-sale-rental', 'room-studio-available', 'classes'].includes(categoryCode ?? '') ? 'Offer'
@@ -126,6 +129,10 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       source,
     });
   }, [analytics, detail.isError, detail.isLoading, identifier, kind, location.search]);
+
+  useEffect(() => {
+    if (kind === 'event' && detail.data && !detail.isError) trackFunnel('event_view', { eventId: Number(identifier) });
+  }, [detail.data, detail.isError, identifier, kind, trackFunnel]);
 
   useMetaTags({
     title,
@@ -152,6 +159,13 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
 
   if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress aria-label="Cargando perfil del directorio" /></Stack>;
   if (detail.isError) return <Container maxWidth="md" sx={{ py: 8 }}><Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert></Container>;
+
+  // Moment media uses the existing authenticated event endpoint. Preserve old
+  // public discussion URLs while sending them through the normal login route.
+  const requestedMoment = new URLSearchParams(location.search).get('moment');
+  if (kind === 'event' && requestedMoment && /^[1-9][0-9]{0,17}$/.test(requestedMoment)) {
+    return <Navigate replace to={`/social/eventos/${encodeURIComponent(identifier)}?moment=${requestedMoment}`} />;
+  }
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
   const professions = rows(value['professions']);
@@ -274,23 +288,28 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                 </Stack>
               )}
 
+              {kind !== 'venue' && targetId && <InteractionPanel kind={kind === 'profile' ? 'directory_profile' : kind} entityKey={targetId} />}
               {kind === 'profile' && <ProfileReviews slug={identifier} profileId={targetId} authenticated={Boolean(session)} />}
 
               {shouldResumeContact ? (
                 <Alert severity="info">
                   <Stack spacing={1.5}>
                     <Box>
-                      <Typography variant="h5" fontWeight={800}>Continúa tu contacto con {title}</Typography>
+                      <Typography variant="h5" fontWeight={800}>
+                        {english ? `Continue your contact with ${title}` : `Continúa tu contacto con ${title}`}
+                      </Typography>
                       <Typography color="text.secondary" mt={0.5}>
-                        Revisa el perfil remitente y escribe tu mensaje antes de enviarlo. Nada se enviará automáticamente.
+                        {english
+                          ? 'Review the sender profile and write your message before sending it. Nothing will be sent automatically.'
+                          : 'Revisa el perfil remitente y escribe tu mensaje antes de enviarlo. Nada se enviará automáticamente.'}
                       </Typography>
                     </Box>
                     <Stack direction="row" gap={1} flexWrap="wrap">
                       <Button component={RouterLink} to={authenticatedAction} variant="contained">
-                        Revisar y escribir mensaje
+                        {english ? 'Review and write a message' : 'Revisar y escribir mensaje'}
                       </Button>
                       <Button component={RouterLink} to={location.pathname} variant="text">
-                        Ahora no
+                        {english ? 'Not now' : 'Ahora no'}
                       </Button>
                     </Stack>
                   </Stack>

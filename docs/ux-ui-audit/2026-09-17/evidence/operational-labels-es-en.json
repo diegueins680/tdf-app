@@ -1,0 +1,72 @@
+[
+  {
+    "lang": "es",
+    "route": "/bookings",
+    "regions": [],
+    "buttons": [
+      "Ant",
+      "Sig",
+      "Hoy",
+      "Mes",
+      "Semana",
+      "Día"
+    ]
+  },
+  {
+    "lang": "es",
+    "route": "/kanban",
+    "regions": [
+      "Tablero de proyectos",
+      "Etapa Inscrito",
+      "Etapa Agendado",
+      "Etapa Asistió",
+      "Etapa Reposición necesaria",
+      "Etapa Completado"
+    ],
+    "buttons": []
+  },
+  {
+    "lang": "es",
+    "route": "/configuracion/actividad",
+    "regions": [
+      "Resumen por usuario",
+      "Actividad reciente"
+    ],
+    "buttons": []
+  },
+  {
+    "lang": "en",
+    "route": "/bookings",
+    "regions": [],
+    "buttons": [
+      "prev",
+      "next",
+      "today",
+      "month",
+      "week",
+      "day"
+    ]
+  },
+  {
+    "lang": "en",
+    "route": "/kanban",
+    "regions": [
+      "Project board",
+      "Enrolled stage",
+      "Scheduled stage",
+      "Attended stage",
+      "Make-up needed stage",
+      "Completed stage"
+    ],
+    "buttons": []
+  },
+  {
+    "lang": "en",
+    "route": "/configuracion/actividad",
+    "regions": [
+      "Summary by user",
+      "Recent activity"
+    ],
+    "buttons": []
+  }
+]

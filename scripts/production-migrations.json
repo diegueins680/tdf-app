@@ -4,7 +4,7 @@
     {
       "id": "2026-07-12_ticketing_runtime_schema",
       "path": "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
-      "introducedBy": "4ec247f222ec6b6b6e91a7fb0829b1ebbd463d32"
+      "introducedBy": "4ed9a0826f9f1924422dabe45a6b569bbf02968d"
     },
     {
       "id": "2026-07-12_ticket_checkout_idempotency",
@@ -19,7 +19,7 @@
     {
       "id": "2026-07-15_social_sync_runtime_schema",
       "path": "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
-      "introducedBy": "f4805f72b4749029741373798da659566b5c4ea5"
+      "introducedBy": "22073e900aa0c8edadcc6f4682366ecf7f760363"
     },
     {
       "id": "2026-07-15_social_discovery_reviews",
@@ -29,7 +29,7 @@
     {
       "id": "2026-07-21_event_logistics",
       "path": "tdf-hq/sql/2026-07-21_event_logistics.sql",
-      "introducedBy": "5121f69a7d4535db89d2f6bba432061fc6063190"
+      "introducedBy": "8b4ba1edf9248ca70a895b8b6a12d9a47c741dbc"
     },
     {
       "id": "2026-07-29_campaign_automation",
@@ -39,7 +39,7 @@
     {
       "id": "2026-07-30_event_city_subscriptions",
       "path": "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
-      "introducedBy": "54009732c8ac9d2a4e7b6912b5ec1ed9dd5d945e"
+      "introducedBy": "a0e130a06e97497006e89a785e0c3da2c252df99"
     },
     {
       "id": "2026-08-02_ddex_catalog_core",
@@ -54,12 +54,12 @@
     {
       "id": "2026-08-05_platform_internationalization",
       "path": "tdf-hq/sql/2026-08-05_platform_internationalization.sql",
-      "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"
+      "introducedBy": "79d88cacc8baf2eb9bf670c87f15ceedd4342f5e"
     },
     {
       "id": "2026-08-05_artist_promotion_slots",
       "path": "tdf-hq/sql/2026-08-05_artist_promotion_slots.sql",
-      "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"
+      "introducedBy": "45bd44ec73787b71b491bcfb9a43c4cde1b62a59"
     },
     {
       "id": "2026-08-05_artist_enrichment",
@@ -69,12 +69,12 @@
     {
       "id": "2026-08-06_feature_access_requests",
       "path": "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
-      "introducedBy": "1e1387d564b2bd9b5b25a7e5f83d8d22ba35983c"
+      "introducedBy": "b3d952079b759886ff4454edf926d81aa3c1db0b"
     },
     {
       "id": "2026-08-06_feature_navigation_preferences",
       "path": "tdf-hq/sql/2026-08-06_feature_navigation_preferences.sql",
-      "introducedBy": "1e1387d564b2bd9b5b25a7e5f83d8d22ba35983c"
+      "introducedBy": "b3d952079b759886ff4454edf926d81aa3c1db0b"
     },
     {
       "id": "2026-08-09_admin_operations_control_center",
@@ -189,13 +189,17 @@
     {
       "id": "2026-08-13_unified_checkout_core",
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
-      "compatibleAppliedChecksums": ["88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"],
+      "compatibleAppliedChecksums": [
+        "88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"
+      ],
       "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
     },
     {
       "id": "2026-08-13_distribution_accounting_core",
       "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
-      "compatibleAppliedChecksums": ["4d7419295635c826506c1505d1771e2234216e7a8dcb116c35186bd8342f4e18"],
+      "compatibleAppliedChecksums": [
+        "4d7419295635c826506c1505d1771e2234216e7a8dcb116c35186bd8342f4e18"
+      ],
       "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
     },
     {
@@ -296,7 +300,9 @@
     {
       "id": "2026-08-18_music_directory_profile_images",
       "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
-      "compatibleAppliedChecksums": ["7a7c21f0e30e3233e91602a4dbb69cc51827bab7cb30f74a8224bf173e559807"],
+      "compatibleAppliedChecksums": [
+        "7a7c21f0e30e3233e91602a4dbb69cc51827bab7cb30f74a8224bf173e559807"
+      ],
       "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"
     },
     {
@@ -307,33 +313,35 @@
     {
       "id": "2026-08-20_verified_experience_reviews",
       "path": "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
-      "introducedBy": "dad0ca237b737bdeee5ec87970c2bbfe846e1450"
+      "introducedBy": "bf0c1b2abc0d5488efb9218639393c470f4563ec"
     },
     {
       "id": "2026-08-21_studio_internship_audit",
       "path": "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
-      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+      "introducedBy": "d68b794e531501589e18c24dbb60aa00ada0a0f7"
     },
     {
       "id": "2026-08-24_ticket_qr_constraint_compatibility",
       "path": "tdf-hq/sql/2026-08-24_ticket_qr_constraint_compatibility.sql",
-      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+      "introducedBy": "be0b3a36d9c659a3d343907036a92d0d5c947e96"
     },
     {
       "id": "2026-08-24_studio_audit_completion_exception",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql",
-      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+      "introducedBy": "e73f91871f81682ef96266a73ed9d4f2092c1ae1"
     },
     {
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
-      "compatibleAppliedChecksums": ["77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"],
-      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+      "compatibleAppliedChecksums": [
+        "77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"
+      ],
+      "introducedBy": "f0ea79a2304202c0bb8c55dcc4c91f5b57aeb4ab"
     },
     {
       "id": "2026-09-08_studio_audit_historical_failure_gate_repair",
       "path": "tdf-hq/sql/2026-09-08_studio_audit_historical_failure_gate_repair.sql",
-      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+      "introducedBy": "46f6ecdc78e49c6745fd2c9450c5763dc60d71dd"
     },
     {
       "id": "2026-08-25_commerce_trigger_row_binding_compatibility",
@@ -351,14 +359,9 @@
       "introducedBy": "a8fa00463d60dbd5df9d02565a9694aaaba4c14e"
     },
     {
-      "id": "2026-09-01_contextual_reputation",
-      "path": "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
-      "introducedBy": "c94a7899329e7c126afd11bccef10b3d9f45bb6c"
-    },
-    {
       "id": "2026-09-02_party_selector_search_indexes",
       "path": "tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql",
-      "introducedBy": "88d2d847211c410793712135b7376f3f1924d5dd"
+      "introducedBy": "442f758a6f901ea5151f13783ce21042302750a4"
     },
     {
       "id": "2026-09-01_contextual_reputation",
@@ -413,13 +416,15 @@
     {
       "id": "2026-09-08_notification_notif_type_not_null_repair",
       "path": "tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql",
-      "compatibleAppliedChecksums": ["7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"],
-      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
+      "compatibleAppliedChecksums": [
+        "7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"
+      ],
+      "introducedBy": "d5ecbf3f97f62940c7d66537e5b9a1141c45128c"
     },
     {
       "id": "2026-09-08_notification_notif_type_text_compatibility",
       "path": "tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql",
-      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
+      "introducedBy": "714060ffcc1db56448f6d3cb82e055e0085af4e7"
     },
     {
       "id": "2026-09-05_party_selector_username_diacritic_indexes",
@@ -454,7 +459,32 @@
     {
       "id": "2026-09-07_service_storefront_package_bounds_repair",
       "path": "tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql",
-      "introducedBy": "48992e37f83ac6c6f45d4f1a2a4888c6bf41bd2f"
+      "introducedBy": "e84cfa0e495034a0b321e3510cd84611609bcc76"
+    },
+    {
+      "id": "2026-09-07_catalog_slug_alias_integrity_revalidation",
+      "path": "tdf-hq/sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql",
+      "introducedBy": "349bd9ba4f8e63b43a4046538083ef9c6b8aec96"
+    },
+    {
+      "id": "2026-09-06_user_onboarding_progress",
+      "path": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
+      "introducedBy": "64702d26ac2129f96f40b921f943dea907828419"
+    },
+    {
+      "id": "2026-09-07_user_experiment_assignment",
+      "path": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
+      "introducedBy": "8c296087431a191234000311862a4287ef819bd7"
+    },
+    {
+      "id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
+      "path": "tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql",
+      "introducedBy": "dfea3d01484395c62b080a4adee270308d0ed912"
+    },
+    {
+      "id": "2026-09-07_artist_merch_storefronts",
+      "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+      "introducedBy": "5bca2c33df5cd9367adb91ec84ab2d6bc3772b8f"
     },
     {
       "id": "2026-09-08_event_rsvp_identity_privacy_feed",
@@ -485,6 +515,431 @@
       "id": "2026-09-10_party_selector_rate_limit_scopes",
       "path": "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes.sql",
       "introducedBy": "565ed7d0a1c5381719538c6e2bcae83ac30c3a92"
+    },
+    {
+      "id": "2026-09-09_public_booking_tentative_idempotency",
+      "path": "tdf-hq/sql/2026-09-09_public_booking_tentative_idempotency.sql",
+      "introducedBy": "2da5c939baca7cdeec8aba623a83e9b42440f2e3"
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+      "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
+      "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
+    },
+    {
+      "id": "2026-09-17_directory_event_privacy_composition",
+      "path": "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
+      "introducedBy": "9ddd014b9d6a897d15608d9d23f4445c4c7118eb"
+    },
+    {
+      "id": "2026-09-16_artist_self_service",
+      "path": "tdf-hq/sql/2026-09-16_artist_self_service.sql",
+      "introducedBy": "d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37"
+    },
+    {
+      "id": "2026-09-17_identity_reconciliation",
+      "path": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+      "introducedBy": "ab0a7cc211c0ad1be72fcc60ed3ad324d8227501"
+    },
+    {
+      "id": "2026-09-18_identity_review_dependencies",
+      "path": "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
+      "introducedBy": "d442013ce79b2afefdda6a203500cf2a58532ca7"
+    },
+    {
+      "id": "2026-09-18_notification_navigation",
+      "path": "tdf-hq/sql/2026-09-18_notification_navigation.sql",
+      "introducedBy": "3cf19c64bd60610059af6c26ec40104093be21c5"
+    },
+    {
+      "id": "2026-09-18_provider_subject_identity",
+      "path": "tdf-hq/sql/2026-09-18_provider_subject_identity.sql",
+      "introducedBy": "b0779951f9010263fcda9c9165d3ec14ba6f9e55"
+    },
+    {
+      "id": "2026-09-18_live_intake_idempotency",
+      "path": "tdf-hq/sql/2026-09-18_live_intake_idempotency.sql",
+      "introducedBy": "062143d3cb98befb6a52a987c7d42980f70313f3"
+    },
+    {
+      "id": "2026-09-18_calendar_runtime_schema",
+      "path": "tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql",
+      "introducedBy": "49ff02de5ade1b8923f099c22af0bbf57350a078"
+    },
+    {
+      "id": "2026-09-18_course_identity_requests",
+      "path": "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
+      "introducedBy": "9bc040b718db0a297c9766a6c4084e0803765599"
+    },
+    {
+      "id": "2026-09-18_trial_identity_requests",
+      "path": "tdf-hq/sql/2026-09-18_trial_identity_requests.sql",
+      "introducedBy": "8a83c8cfb84296b21ccd5c4fecbcc35f1ebd95e7"
+    },
+    {
+      "id": "2026-09-18_ads_identity_requests",
+      "path": "tdf-hq/sql/2026-09-18_ads_identity_requests.sql",
+      "introducedBy": "948036699799dae2cffd45bde073fb8b02cbbbca"
+    },
+    {
+      "id": "2026-09-18_records_resource_availability",
+      "path": "tdf-hq/sql/2026-09-18_records_resource_availability.sql",
+      "introducedBy": "bec94317473fa8f2016ba165b5813a391c81b9ac"
+    },
+    {
+      "id": "2026-09-20_records_ingestion_runtime",
+      "path": "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
+      "introducedBy": "633d3dc8f2451397c8bb51beee51700c172aad98"
+    },
+    {
+      "id": "2026-09-27_event_ingestion_boundaries",
+      "path": "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
+      "introducedBy": "441dfcc968559f829e84c89751f008657566138c"
+    },
+    {
+      "id": "2026-09-14_social_v2_foundation",
+      "path": "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
+      "introducedBy": "fa6b99e7a4e718f7e6db7226ed01301ff762e4f9"
+    },
+    {
+      "id": "2026-09-14_social_v2_read_models",
+      "path": "tdf-hq/sql/2026-09-14_social_v2_read_models.sql",
+      "introducedBy": "aa56289c3b01d0d74d45c5e590882eca98fd5b2c"
+    },
+    {
+      "id": "2026-09-15_social_v2_dm_write_boundary",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
+      "introducedBy": "efc827f7628afe084db173be627d0d7f71d0142a"
+    },
+    {
+      "id": "2026-09-15_social_v2_chat_api",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
+      "introducedBy": "02755bc410eecb5c3e03938121f1197102c709e1"
+    },
+    {
+      "id": "2026-09-15_social_v2_relationship_reads",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_relationship_reads.sql",
+      "introducedBy": "8b2d1557a5e72e0346af1fd43dc7cf36033da067"
+    },
+    {
+      "id": "2026-09-15_social_v2_profile_reads",
+      "path": "tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql",
+      "introducedBy": "7706258a9e8ecbe0b99b4fd23903df606848ad03"
+    },
+    {
+      "id": "2026-09-16_social_v2_legacy_writes",
+      "path": "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql",
+      "introducedBy": "7e601607f60b2987e502c4a14db821bbf37df296"
+    },
+    {
+      "id": "2026-09-16_social_v2_fan_effects",
+      "path": "tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql",
+      "introducedBy": "daf6c5a680b81928c2e2c66df98063328e6d5e9c"
+    },
+    {
+      "id": "2026-09-28_universal_interactions",
+      "path": "tdf-hq/sql/2026-09-28_universal_interactions.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_policy",
+      "path": "tdf-hq/sql/2026-09-28_interaction_policy.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_discussions",
+      "path": "tdf-hq/sql/2026-09-28_interaction_discussions.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_locks",
+      "path": "tdf-hq/sql/2026-09-28_interaction_locks.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_commands",
+      "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_blocks",
+      "path": "tdf-hq/sql/2026-09-28_interaction_blocks.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_summary",
+      "path": "tdf-hq/sql/2026-09-28_interaction_summary.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_notifications",
+      "path": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_navigation",
+      "path": "tdf-hq/sql/2026-09-28_interaction_navigation.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_read_optimization",
+      "path": "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_legacy",
+      "path": "tdf-hq/sql/2026-09-28_interaction_legacy.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_compatibility",
+      "path": "tdf-hq/sql/2026-09-28_interaction_compatibility.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_account_controls",
+      "path": "tdf-hq/sql/2026-09-28_interaction_account_controls.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-28_interaction_integrity",
+      "path": "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f"
+    },
+    {
+      "id": "2026-09-29_interaction_review_repairs",
+      "path": "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
+      "introducedBy": "5eb0ac922528c814951aafa9f9fc57a435d48b98"
+    },
+    {
+      "id": "2026-09-29_interaction_publication_authority",
+      "path": "tdf-hq/sql/2026-09-29_interaction_publication_authority.sql",
+      "introducedBy": "d6c52fad19c22062b6f85921ffc55335460c5724"
+    },
+    {
+      "id": "2026-09-29_interaction_reaction_withdrawal",
+      "path": "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
+      "introducedBy": "7d8de4c5d84aa8faf83b6558093bbb571dc0615d"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_block_boundary",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
+      "introducedBy": "e2dc17a5153d7f734f419d73c1d1575a696dfe30"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_access",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_access.sql",
+      "introducedBy": "3f6a1b7528ed4a6b4a68e36337dcc5f37d5d6a2d"
+    },
+    {
+      "id": "2026-09-29_interaction_legacy_reply_aliases",
+      "path": "tdf-hq/sql/2026-09-29_interaction_legacy_reply_aliases.sql",
+      "introducedBy": "e415244248058c13043bd1bbd3f40d12241e209f"
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_delivery",
+      "path": "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
+      "introducedBy": "96a2fc934a978dd10df235f9ac15567d4d4294c2"
+    },
+    {
+      "id": "2026-09-29_interaction_event_destinations",
+      "path": "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
+      "introducedBy": "1a884dff86b51ccb7905a58a280bd9fbe7fa8d75"
+    },
+    {
+      "id": "2026-09-29_interaction_mention_privacy",
+      "path": "tdf-hq/sql/2026-09-29_interaction_mention_privacy.sql",
+      "introducedBy": "6334d897c573ae7b2e03c917ad26177e1c0b1958"
+    },
+    {
+      "id": "2026-09-29_interaction_inactive_allowlists",
+      "path": "tdf-hq/sql/2026-09-29_interaction_inactive_allowlists.sql",
+      "introducedBy": "8e6a2a80bafd9949f7f9aada2ec73301e02b2184"
+    },
+    {
+      "id": "2026-09-29_interaction_legacy_moment_choices",
+      "path": "tdf-hq/sql/2026-09-29_interaction_legacy_moment_choices.sql",
+      "introducedBy": "7c2f5d3246e19c424200aba206cebe8d06942401"
+    },
+    {
+      "id": "2026-09-29_interaction_catalog_authority",
+      "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
+      "introducedBy": "70f9d3031f1c783070e087e295345f9f36c30720"
+    },
+    {
+      "id": "2026-09-29_interaction_report_reopen",
+      "path": "tdf-hq/sql/2026-09-29_interaction_report_reopen.sql",
+      "introducedBy": "712687c976075925d475e9c0ddbe6b06e6590bef"
+    },
+    {
+      "id": "2026-09-29_interaction_ownerless_policy",
+      "path": "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
+      "introducedBy": "3624766ea78cc6663be0a8be5d4c7a9a94d2961c"
+    },
+    {
+      "id": "2026-09-29_interaction_author_moderation_notices",
+      "path": "tdf-hq/sql/2026-09-29_interaction_author_moderation_notices.sql",
+      "introducedBy": "d1ecc182f8041e0f5341514fc2c67e2b27269b4a"
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_comments",
+      "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_comments.sql",
+      "introducedBy": "de95fbd6a631104880cc0fc88039a24932ecc84f"
+    },
+    {
+      "id": "2026-09-29_interaction_pause_boundary",
+      "path": "tdf-hq/sql/2026-09-29_interaction_pause_boundary.sql",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_reasons",
+      "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_reasons.sql",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a"
+    },
+    {
+      "id": "2026-09-30_interaction_report_content_version",
+      "path": "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
+      "introducedBy": "0b63d746a5b720e7cacffd41ed04ae849e4a3284"
+    },
+    {
+      "id": "2026-09-30_interaction_records_publication",
+      "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
+      "introducedBy": "9dd2cefc7af63096417b7e14a59a37e35022bd43"
+    },
+    {
+      "id": "2026-09-30_interaction_classified_expiry",
+      "path": "tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql",
+      "introducedBy": "5966161d8cf7c31a776ea5c2778068fbbd78b920"
+    },
+    {
+      "id": "2026-10-03_discovery_ownership_metadata_boundary",
+      "path": "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
+      "introducedBy": "6e7b87d8ad3a4c56b033484fe7174dceacec5961"
+    },
+    {
+      "id": "2026-09-11_payment_intent_runtime_sync",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1"
+    },
+    {
+      "id": "2026-09-11_manual_bank_provider_activation",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "introducedBy": "a177068959f31f269ad24efe454c2978798105ae"
+    },
+    {
+      "id": "2026-09-11_provider_capability_catalog",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139"
+    },
+    {
+      "id": "2026-09-13_provider_execution_runtime",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "introducedBy": "6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5"
+    },
+    {
+      "id": "2026-09-15_provider_query_recovery",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "introducedBy": "b9875ff176c35f446c64d53dccadfd15b839cda4"
+    },
+    {
+      "id": "2026-09-16_payment_intent_refund_sync",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "introducedBy": "f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b"
+    },
+    {
+      "id": "2026-10-05_ticket_admission_audit",
+      "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
+      "introducedBy": "468410cbe345069295ab52c42becc9f1d9aa9629"
+    },
+    {
+      "id": "2026-10-05_ticket_transfer_deadline",
+      "path": "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
+      "introducedBy": "28b254a65c5d2bab5c039f777ac9d4493c296b3b"
+    },
+    {
+      "id": "2026-10-05_ticket_order_quantity_limit",
+      "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
+      "introducedBy": "67616c06acf9fca8810d918904510574b7a44eb3"
+    },
+    {
+      "id": "2026-10-05_ticket_policy_lifecycle_history",
+      "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+      "introducedBy": "604c2366edfd2a86478e9d0177dcfeee2dd21678"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_delivery",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+      "introducedBy": "409293891a255bb722ee026f3c7ba80a8f835589"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_lease_index",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
+      "introducedBy": "73fae64015f3058d40f7c237010f7ea975290e7f"
+    },
+    {
+      "id": "2026-10-04_auth_recovery_expiry",
+      "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
+      "introducedBy": "57315f2d4b3aafac8ec7242c5913028f157dff8d"
+    },
+    {
+      "id": "2026-10-04_checkout_amount_correspondence",
+      "path": "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+      "introducedBy": "c57fdab05d59b30ce4505e022267b627c18663c6"
+    },
+    {
+      "id": "2026-10-04_merch_commission_exact",
+      "path": "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
+      "introducedBy": "f8494a20a11e5b9df7b0a948cddbdfeac4930519"
+    },
+    {
+      "id": "2026-10-05_booking_calendar_projection",
+      "path": "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+      "introducedBy": "04925a10d769499192b3a1bc289d11c39a91fc05"
+    },
+    {
+      "id": "2026-10-05_ddex_validation_legacy_nullability",
+      "path": "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+      "introducedBy": "58f095cf863fafed7dcb3232e2bb3f728ac6867b"
+    },
+    {
+      "id": "2026-10-05_operations_scoped_projection",
+      "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+      "introducedBy": "53e4011a7c86046abb96350681aa105ac565c6c1"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_lease_clock",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
+      "introducedBy": "7e1ea290626cce735b642f33b79bcedd631e0327"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_claim_clock",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql",
+      "introducedBy": "56b55a5703e943958d5d5f00f19bfb15afae80e1"
+    },
+    {
+      "id": "2026-10-05_ticket_inclusive_tax",
+      "path": "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
+      "introducedBy": "ba309ec13b2b9abb0bfb46fd17b2d0e66aa5e0fb"
+    },
+    {
+      "id": "2026-10-05_invoice_receipt_snapshot",
+      "path": "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+      "introducedBy": "be2d6b1fdff96a7a33e5967da56a1d51f39f15bf"
+    },
+    {
+      "id": "2026-10-06_ticket_refund_allocation",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
+      "introducedBy": "507cb9eb95b4b2efe1cae746e345621e5bc730ca"
+    },
+    {
+      "id": "2026-10-06_ticket_refund_request_binding",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
+      "introducedBy": "d0501293cbeef7118da86e5dcff8f5550ed49c28"
     }
   ]
 }

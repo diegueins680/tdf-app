@@ -1,26 +1,28 @@
 name: CI
 
 on:
+  # Every PR must reach source admission, including new runtime/ops roots and
+  # canonical specification-only edits. Component jobs are selected below.
   pull_request:
-    paths:
-      - 'tdf-hq/**'
-      - 'tdf-hq-ui/**'
-      - 'tdf-mobile'
-      - 'tdf-mobile/**'
-      - 'scripts/**'
-      - 'test/personas/**'
-      - 'test/internships/**'
-      - 'e2e/web/**'
-      - 'playwright.config.mjs'
-      - 'docs/persona-testing/**'
-      - 'docs/internships/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.npmrc'
-      - '.dockerignore'
-      - '.github/workflows/**'
-      - 'fly.toml'
   workflow_dispatch:
+    inputs:
+      inspect_payment_staging:
+        description: Read-only metadata and secret-name inspection of the two fixed staging apps.
+        required: false
+        default: false
+        type: boolean
+      force_backend:
+        description: Build the backend even when path classification would skip it.
+        type: boolean
+        default: false
+      publish_backend_artifact:
+        description: Retain the tested backend executable for one day.
+        type: boolean
+        default: false
+      native_android_run:
+        description: Successful TDF-mobile Android test-build run matching the checked-in mobile commit.
+        type: string
+        default: ''
   workflow_call:
     inputs:
       force_backend:
@@ -39,6 +41,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  payment-staging-inspection:
+    if: github.event_name == 'workflow_dispatch' && inputs.inspect_payment_staging == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Verify staging target and redaction guards
+        run: node --test scripts/__tests__/payment-staging-inspection.test.mjs
+      - name: Install official Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
+        with:
+          version: '0.4.103'
+      - name: Inspect only existing staging metadata
+        env:
+          FLY_STAGING_API_TOKEN: ${{ secrets.FLY_STAGING_API_TOKEN }}
+          FLY_STAGING_WEB_TOKEN: ${{ secrets.FLY_STAGING_WEB_TOKEN }}
+          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
+          NO_COLOR: '1'
+        run: node scripts/inspect-payment-staging.mjs
+      - name: Upload allowlisted staging access report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: payment-staging-access-${{ github.sha }}
+          path: artifacts/payment-staging/access-report.json
+          if-no-files-found: ignore
+          retention-days: 7
+
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -59,7 +96,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          FORCE_BACKEND: ${{ inputs.force_backend && 'true' || 'false' }}
+          FORCE_BACKEND: ${{ (inputs.force_backend || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')) && 'true' || 'false' }}
         run: |
           args=(--base "$BASE_SHA" --head "$HEAD_SHA" --github-output "$GITHUB_OUTPUT")
           if [ "$FORCE_BACKEND" = 'true' ]; then args+=(--force-backend); fi
@@ -72,6 +109,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -82,8 +126,43 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Install image conformance tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Install pinned recovery encryption tools
+        run: |
+          mkdir -m 700 "${RUNNER_TEMP}/tdf-recovery-private"
+          tdf_recovery_tools="${RUNNER_TEMP}/tdf-recovery-private/age"
+          python3 scripts/install-recovery-tools.py --destination "$tdf_recovery_tools"
+          printf 'TDF_RECOVERY_TOOLS=%s\n' "$tdf_recovery_tools" >> "$GITHUB_ENV"
+
       - name: Run repository checks
         run: npm run quality:repo
+
+      - name: Require canonical mappings for new implementation surfaces
+        env:
+          SPECIFICATION_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        run: |
+          if [ -z "$SPECIFICATION_BASE_SHA" ] || [ "$SPECIFICATION_BASE_SHA" = '0000000000000000000000000000000000000000' ]; then
+            SPECIFICATION_BASE_SHA="$(git merge-base origin/main HEAD)"
+          fi
+          python3 scripts/check-new-specification-surfaces.py --base "$SPECIFICATION_BASE_SHA"
+
+      - name: Verify private upload persistence across container replacement
+        timeout-minutes: 8
+        run: python3 scripts/test-persistent-uploads-container.py
+
+      - name: Verify synthetic cold PostgreSQL recovery and negative controls
+        timeout-minutes: 8
+        run: |
+          tdf_physical_image='pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21'
+          docker pull "$tdf_physical_image"
+          sudo install -d -m 700 /opt/tdf/backups
+          sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-physical-postgres-docker.py
 
   ui-quality:
     needs: changes
@@ -128,6 +207,12 @@ jobs:
       - name: Run isolated persona web journeys
         run: npm run test:e2e:web
 
+      - name: Verify default-off deletion rollout
+        env:
+          PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED: 'false'
+          PLAYWRIGHT_ARTIFACT_DIR: artifacts/persona-playwright/deletion-rollout-off
+        run: npx playwright test e2e/web/account-deletion-rollout.spec.mjs
+
       - name: Upload sanitized browser evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -145,6 +230,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        # Opt in to mobile; web hosts use .gitmodules' update=none default.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           submodules: recursive
 
@@ -159,6 +249,9 @@ jobs:
 
       - name: Install mobile dependencies
         run: npm --prefix tdf-mobile ci
+
+      - name: Verify shared notification destinations
+        run: node scripts/generate-notification-navigation.mjs --check
 
       - name: Run mobile checks
         run: npm run quality:mobile
@@ -182,6 +275,8 @@ jobs:
           --health-retries 12
     env:
       REQUIRE_STACK: '1'
+      TDF_TEST_POSTGRES_HOST: postgres
+      TDF_TEST_POSTGRES_PASSWORD: postgres
       STACK_ROOT: ${{ github.workspace }}/.stack-root
       BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
     steps:
@@ -191,13 +286,29 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates
+
+      - name: Trust the exact container checkout for evidence Git reads
+        # Container paths resolve to /__w while checkout may trust the host alias.
+        # Never disable the ownership check with a wildcard.
+        run: git config --global --add safe.directory "$(pwd -P)"
+
+      - name: Setup backend verification Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install backend verification dependencies
+        run: npm ci --ignore-scripts
 
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v6
         with:
           path: .stack-root
           key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Restore incremental backend objects
         uses: actions/cache@v6
@@ -210,6 +321,52 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify authenticated account deletion and auditable resolution
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_AUDIT_E2E_BACKEND_EXE: ${{ env.BACKEND_BINARY_OUT }}
+          TDF_AUDIT_E2E_DATABASE: tdf_account_deletion_test
+        run: |
+          export TDF_AUDIT_E2E_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          sh scripts/test-studio-internship-audit-api-e2e.sh
+
+      - name: Inspect the compiled Servant API against documented operations
+        run: |
+          mkdir -p tmp/specification
+          node scripts/inspect-compiled-api.mjs --binary "$BACKEND_BINARY_OUT" --output tmp/specification/compiled-api
+
+      - name: Verify booking object scope and concurrent resource calendar
+        env:
+          TDF_BOOKING_TEST_PG_HOST: postgres
+          TDF_BOOKING_TEST_PG_PORT: '5432'
+          TDF_BOOKING_TEST_PG_ROLE: postgres
+          TDF_BOOKING_TEST_PG_PASSWORD: postgres
+          TDF_BOOKING_TEST_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+          TDF_BOOKING_TEST_OUTPUT: tmp/specification/booking-conformance
+        run: python3 scripts/test-booking-conformance.py
+
+      - name: Verify artist self-service transactions and migration
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: ./scripts/test-artist-self-service.sh
+
+      - name: Verify social session revocation and model-derived HTTP fixtures
+        env:
+          PGPASSWORD: postgres
+          TDF_SOCIAL_HTTP_EMPTY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_social_session_test
+        run: |
+          createdb -h postgres -U postgres tdf_hq_social_session_test
+          bash scripts/social/test-http.sh
+      - name: Verify event operations HTTP runner safety guards
+        run: node --test scripts/__tests__/event-operations-http-runner.test.mjs
+
+      - name: Verify event operations authenticated HTTP boundary
+        run: sh scripts/test-event-operations-http-ci.sh
+
       - name: Verify authenticated artist merch HTTP runtime
         env:
           PGPASSWORD: postgres
@@ -218,11 +375,140 @@ jobs:
           createdb -h postgres -U postgres tdf_hq_merch_runtime_test
           ./scripts/test-artist-merch-runtime.sh
 
+      - name: Verify provider identity authentication and concurrent linking
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-provider-identity.sh
+
+      - name: Verify atomic Live Session identity intake
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-live-intake-identity.sh
+
+      - name: Verify source-scoped course contacts and registration retries
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-course-identity.sh
+
+      - name: Verify trial enquiries and actor-scoped student creation
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-trial-identity.sh
+
+      - name: Verify marketplace contact identity and evidence retries
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-marketplace-contact-identity.sh
+
+
+      - name: Verify reversible identity reconciliation
+        env:
+          PGPASSWORD: postgres
+          TDF_IDENTITY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_identity_reconciliation_test
+        run: |
+          createdb -h postgres -U postgres tdf_identity_reconciliation_test
+          bash scripts/test-identity-reconciliation.sh
+          node --test scripts/__tests__/identity-reconciliation.test.mjs
+
+      - name: Verify resumable video ingestion and migration invariants
+        env:
+          PGPASSWORD: postgres
+          TDF_RECORDS_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_records_runtime_test
+        run: |
+          createdb -h postgres -U postgres tdf_records_runtime_test
+          ./scripts/test-records-ingestion-runtime.sh
+
+      - name: Verify shared event pilot and publication boundaries
+        env:
+          PGPASSWORD: postgres
+          TDF_EVENT_BOUNDARY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_event_boundary_test
+        run: |
+          createdb -h postgres -U postgres tdf_event_boundary_test
+          ./scripts/test-event-ingestion-boundaries.sh
+
+      - name: Verify atomic ticket admission on PostgreSQL
+        env:
+          PGPASSWORD: postgres
+          TICKET_ADMISSION_TEST_DSN: postgresql://postgres:postgres@postgres:5432/tdf_ticket_admission_test
+        run: |
+          createdb -h postgres -U postgres tdf_ticket_admission_test
+          bash scripts/test-ticket-admission.sh
+          node --test scripts/__tests__/ticket-admission-model.test.mjs
+
+      - name: Verify durable ticket confirmations and concurrent workers
+        env:
+          PGPASSWORD: postgres
+          TICKET_CONFIRMATION_TEST_DSN: postgresql://postgres:postgres@postgres:5432/tdf_ticket_confirmation_worker_test
+        run: |
+          createdb -h postgres -U postgres tdf_ticket_confirmation_worker_test
+          bash scripts/test-ticket-confirmation.sh
+          python3 scripts/test-ticket-confirmation-smtp.py
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
+
+      - name: Verify canonical provider retry concurrency and compatibility
+        env:
+          PGPASSWORD: postgres
+          TDF_PROVIDER_RETRY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_provider_retry_test
+        run: |
+          createdb -h postgres -U postgres tdf_provider_retry_test
+          sh scripts/test-provider-retry-runtime.sh
+      - name: Verify contact HTTP concurrency, authorization, archival and rollback
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: |
+          bash scripts/test-auth-recovery-migration.sh
+          node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-credential-lifecycle.sh
+
+      - name: Verify checkout monetary snapshots and invalid-schema controls
+        env:
+          TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/checkout-amount-postgres.mjs
+
+      - name: Verify artist claim preparation concurrency and privacy
+        env:
+          TDF_CLAIM_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_CLAIM_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/test-artist-claim-target-http.sh
+
+      - name: Verify public catalog persistence contract and database round trips
+        env:
+          TDF_PUBLIC_CATALOG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_PUBLIC_CATALOG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/public-catalog-http-runtime.mjs
+      - name: Verify calendar runtime schema and admin HTTP contract
+        env:
+          TDF_CALENDAR_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_CALENDAR_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/calendar-http-runtime.mjs
+
+      - name: Verify navigation first-visit concurrency and account isolation
+        env:
+          TDF_NAVIGATION_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_NAVIGATION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/navigation-http-runtime.mjs
+
+      - name: Verify paused experiment authority and concurrent HTTP persistence
+        env:
+          TDF_EXPERIMENT_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_EXPERIMENT_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: node scripts/__tests__/experiment-http-runtime.mjs
 
       - name: Exercise public booking HTTP idempotency and resource conflicts
         env:
@@ -230,14 +516,153 @@ jobs:
           TDF_PUBLIC_BOOKING_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-public-booking-http-concurrency.sh
 
+      - name: Verify universal interactions through real HTTP sessions
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/interactions/test-http.sh
+
+      - name: Retain compiler-derived API discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compiled-api-${{ github.sha }}
+          path: tmp/specification/compiled-api/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Retain synthetic booking conformance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: booking-conformance-${{ github.sha }}
+          path: tmp/specification/booking-conformance
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload tested backend executable
-        if: inputs.publish_backend_artifact == true
+        if: inputs.publish_backend_artifact == true || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')
         uses: actions/upload-artifact@v7
         with:
           name: tdf-hq-binary-${{ github.sha }}
           path: tdf-hq/.release/tdf-hq-exe
           if-no-files-found: error
           retention-days: 1
+
+  native-android-e2e:
+    if: github.event_name == 'workflow_dispatch' && inputs.native_android_run != ''
+    needs: backend-quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@v7
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v8
+        with:
+          name: tdf-hq-binary-${{ github.sha }}
+          path: artifacts/interaction-backend
+      - name: Verify and download the matching native test artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MOBILE_RUN: ${{ inputs.native_android_run }}
+        run: |
+          [[ "$MOBILE_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/diegueins680/TDF-mobile/actions/runs/$MOBILE_RUN" > "$RUNNER_TEMP/mobile-run.json"
+          python3 - <<'PYVERIFY'
+          import json, os, pathlib, subprocess
+          run=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'mobile-run.json').read_text())
+          expected=subprocess.check_output(['git','-C','tdf-mobile','rev-parse','HEAD'],text=True).strip()
+          assert run['conclusion']=='success' and run['path']=='.github/workflows/interaction-android.yml'
+          source=run['head_sha']
+          assert len(source)==40 and all(c in '0123456789abcdef' for c in source)
+          if source != expected:
+              subprocess.run(['git','-C','tdf-mobile','fetch','--no-tags','--depth=1','origin',source],check=True)
+              changed=subprocess.check_output(['git','-C','tdf-mobile','diff','--name-only',source,expected],text=True).splitlines()
+              # Only Maestro YAML may differ. App, dependencies, native projects,
+              # release scripts and build workflows must remain byte-identical.
+              assert changed and all(p.startswith('e2e/interactions/') and p.endswith('.yaml') for p in changed), 'Native artifact application source differs'
+          print('Verified native application source; test fixtures may advance independently')
+          PYVERIFY
+          gh run download "$MOBILE_RUN" --repo diegueins680/TDF-mobile --pattern 'interaction-android-*' --dir artifacts/interaction-apk
+      - name: Install test runtime and verified Maestro CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client libpq5 libgmp10 libnuma1
+          chmod +x artifacts/interaction-backend/tdf-hq-exe
+          ldd artifacts/interaction-backend/tdf-hq-exe
+          curl --fail --location --silent --show-error https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.5.1/maestro.zip -o "$RUNNER_TEMP/maestro.zip"
+          printf '%s  %s\n' '2d924bfd37cccabca438a727213648cbfe4f8bb711559ec8e9d199dc09a5ce52' "$RUNNER_TEMP/maestro.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP/maestro-cli"
+          echo "$RUNNER_TEMP/maestro-cli/maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable hardware virtualization on the disposable runner
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run installed Android discussion journeys
+        uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_INTERACTION_SERVER_BIN: ${{ github.workspace }}/artifacts/interaction-backend/tdf-hq-exe
+          TDF_INTERACTION_SERVER_PORT: '18128'
+          TDF_INTERACTION_NATIVE_DEVICE: emulator-5554
+          TDF_INTERACTION_NATIVE_APP_ID: com.tdf.records
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          cores: 2
+          ram-size: 2048M
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install "$(find artifacts/interaction-apk -name '*.apk' -print -quit)"
+            adb reverse tcp:18128 tcp:18128
+            adb shell am start -W -n com.tdf.records/.MainActivity
+            bash scripts/interactions/test-http.sh || { adb logcat -b crash -d; find "$HOME/.maestro/tests" -name '*.png' -exec cp {} /tmp/ \;; exit 1; }
+      - name: Retain synthetic native screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: interaction-android-evidence-${{ github.sha }}
+          path: |
+            /tmp/tdf-interaction-native-*.png
+            /tmp/screenshot-*.png
+          if-no-files-found: ignore
+          retention-days: 7
 
   quality:
     if: always()
@@ -248,6 +673,7 @@ jobs:
       - persona-web-e2e
       - mobile-quality
       - backend-quality
+      - native-android-e2e
     runs-on: ubuntu-latest
     steps:
       - name: Require every selected quality job to pass
@@ -258,8 +684,9 @@ jobs:
           PERSONA_WEB_E2E_RESULT: ${{ needs.persona-web-e2e.result }}
           MOBILE_RESULT: ${{ needs.mobile-quality.result }}
           BACKEND_RESULT: ${{ needs.backend-quality.result }}
+          NATIVE_ANDROID_RESULT: ${{ needs.native-android-e2e.result }}
         run: |
-          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT"; do
+          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT" "$NATIVE_ANDROID_RESULT"; do
             case "$result" in
               success|skipped) ;;
               *) echo "Selected quality job did not pass: $result" >&2; exit 1 ;;
@@ -275,6 +702,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        # Opt in to mobile; web hosts use .gitmodules' update=none default.
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           submodules: recursive
 
@@ -294,7 +726,7 @@ jobs:
         run: npm run generate:api
 
       - name: Verify generated clients are committed
-        run: git diff --exit-code -- tdf-hq-ui/src/api/generated/types.ts tdf-mobile/src/api/generated/types.ts
+        run: node scripts/check-generated-api.mjs
 
   api-contracts:
     if: always()
@@ -334,6 +766,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -345,6 +779,14 @@ jobs:
 
       - name: Rehearse access-request notification compatibility migration
         run: npm run test:access-request-notification-migration
+
+      - name: Rehearse notification navigation and history-preserving rollback
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: sh scripts/test-notification-navigation-migration.sh
 
       - name: Rehearse Party selector rate-limit scope migration
         run: npm run test:party-selector-rate-limit-migration
@@ -361,11 +803,17 @@ jobs:
       - name: Rehearse provider event operations migration
         run: ./scripts/test-provider-event-operations-migration.sh
 
+      - name: Rehearse provider execution and reconciliation migration
+        run: ./scripts/test-provider-execution-runtime-migration.sh
+
       - name: Rehearse contextual reputation staging worker migration
         run: ./scripts/test-contextual-reputation-worker-migration.sh
 
       - name: Rehearse merch reputation migration with synthetic evidence
         run: ./scripts/test-merch-reputation-migration.sh
+
+      - name: Rehearse merch checkout expiry and storefront migration
+        run: ./scripts/test-artist-merch-storefronts-migration.sh
 
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
@@ -384,6 +832,13 @@ jobs:
 
       - name: Rehearse verified experience review migration
         run: sh ./scripts/test-verified-experience-reviews-migration.sh
+
+      - name: Verify public ticket checkout policy limits and rollback
+        env:
+          TDF_TICKET_PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_public_ticket_checkout_test
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_public_ticket_checkout_test'
+          npm run test:public-ticket-checkout-migration
 
       - name: Create production baseline fixture
         run: |

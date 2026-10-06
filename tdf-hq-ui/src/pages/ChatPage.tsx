@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -78,23 +79,25 @@ const parsePositiveInt = (raw: string | null | undefined): number | null => {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
-const loadSelectedThreadId = (): number | null => {
+const selectedThreadKey = (partyId: number | null) => `${SELECTED_THREAD_STORAGE_KEY}:party:${partyId ?? 0}`;
+
+const loadSelectedThreadId = (partyId: number | null): number | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return parsePositiveInt(window.localStorage.getItem(SELECTED_THREAD_STORAGE_KEY));
+    return parsePositiveInt(window.localStorage.getItem(selectedThreadKey(partyId)));
   } catch {
     return null;
   }
 };
 
-const storeSelectedThreadId = (threadId: number | null) => {
+const storeSelectedThreadId = (threadId: number | null, partyId: number | null) => {
   if (typeof window === 'undefined') return;
   try {
     if (!threadId) {
-      window.localStorage.removeItem(SELECTED_THREAD_STORAGE_KEY);
+      window.localStorage.removeItem(selectedThreadKey(partyId));
       return;
     }
-    window.localStorage.setItem(SELECTED_THREAD_STORAGE_KEY, String(threadId));
+    window.localStorage.setItem(selectedThreadKey(partyId), String(threadId));
   } catch {
     // ignore storage issues
   }
@@ -180,12 +183,18 @@ function MessageBubble({ message, myPartyId }: MessageBubbleProps) {
 }
 
 export default function ChatPage() {
+  const { session } = useSession();
+  return <ChatWorkspace key={session?.partyId ?? 'signed-out'} />;
+}
+
+function ChatWorkspace() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { session } = useSession();
   const location = useLocation();
   const navigate = useNavigate();
   const myPartyId = session?.partyId ?? null;
-  const [selectedThreadId, setSelectedThreadId] = useState(() => loadSelectedThreadId());
+  const [selectedThreadId, setSelectedThreadId] = useState(() => loadSelectedThreadId(myPartyId));
   const [draftByThread, setDraftByThread] = useState({} as DraftByThread);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatInput, setNewChatInput] = useState('');
@@ -197,7 +206,7 @@ export default function ChatPage() {
   const requestParamConsumed = useRef(false);
   const [readVersion, setReadVersion] = useState(0);
 
-  useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1)), []);
+  useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
 
   const healthQuery = useQuery({
     queryKey: ['health'],
@@ -207,31 +216,31 @@ export default function ChatPage() {
   });
 
   const friendsQuery = useQuery({
-    queryKey: ['social-friends'],
+    queryKey: ['social-friends', myPartyId],
     queryFn: SocialAPI.listFriends,
     enabled: Boolean(session?.partyId),
     staleTime: 15_000,
   });
 
   const friendProfilesQuery = useQuery({
-    queryKey: ['social-friend-profiles', friendsQuery.data?.map((row) => row.pfFollowingId).sort((a, b) => a - b).join(',')],
+    queryKey: ['social-friend-profiles', myPartyId, friendsQuery.data?.map((row) => row.pfFollowingId).sort((a, b) => a - b).join(',')],
     queryFn: () => SocialAPI.listProfiles((friendsQuery.data ?? []).map((row) => row.pfFollowingId)),
     enabled: Boolean(friendsQuery.data?.length),
     staleTime: 5 * 60_000,
   });
 
   const threadsQuery = useQuery({
-    queryKey: ['chat-threads'],
+    queryKey: ['chat-threads', myPartyId],
     queryFn: ChatAPI.listThreads,
+    enabled: Boolean(myPartyId),
     refetchInterval: 10_000,
   });
 
-  const threads = useMemo(() => threadsQuery.data ?? [], [threadsQuery.data]);
+  const threads = useMemo(() => threadsQuery.isError ? [] : threadsQuery.data ?? [], [threadsQuery.data, threadsQuery.isError]);
   const readMap = useMemo(() => {
     void readVersion;
-    return loadChatReadMap();
-  }, [readVersion]);
-  const unreadCount = useMemo(() => countUnreadThreads(threads, readMap), [readMap, threads]);
+    return loadChatReadMap(myPartyId ?? 0);
+  }, [myPartyId, readVersion]);
 
   const friendOptions: FriendOption[] = useMemo(() => {
     const profilesById = new Map((friendProfilesQuery.data ?? []).map((profile) => [profile.sppPartyId, profile]));
@@ -257,24 +266,39 @@ export default function ChatPage() {
     return threads.find((t) => t.ctThreadId === selectedThreadId) ?? null;
   }, [selectedThreadId, threads]);
 
-  const activeProfileQuery = useQuery({
-    queryKey: ['social-profile', selectedThread?.ctOtherPartyId],
-    queryFn: () => SocialAPI.getProfile(selectedThread!.ctOtherPartyId),
-    enabled: selectedThread !== null,
-    staleTime: 5 * 60_000,
-  });
-
   const messagesQuery = useQuery({
-    queryKey: ['chat-messages', selectedThreadId],
+    queryKey: ['chat-messages', myPartyId, selectedThreadId],
     queryFn: () => ChatAPI.listMessages(selectedThreadId!, { limit: 80 }),
-    enabled: Boolean(selectedThreadId),
+    enabled: selectedThread !== null && Boolean(myPartyId),
     refetchInterval: 3_000,
   });
 
+  const activeProfileQuery = useQuery({
+    queryKey: ['social-profile', myPartyId, selectedThread?.ctOtherPartyId],
+    queryFn: () => SocialAPI.getProfile(selectedThread!.ctOtherPartyId),
+    enabled: selectedThread !== null && !messagesQuery.isError,
+    staleTime: 5 * 60_000,
+  });
+
+  // A denied/error message refetch also withdraws its cached sidebar preview and
+  // the shared navigation badge. The next thread poll can recover transient errors.
+  useEffect(() => {
+    if (!messagesQuery.isError || !selectedThreadId) return;
+    qc.setQueryData<ChatThreadDTO[]>(['chat-threads', myPartyId], (cached) =>
+      cached?.filter((thread) => thread.ctThreadId !== selectedThreadId));
+  }, [messagesQuery.isError, myPartyId, qc, selectedThreadId]);
+
   const messages: ChatMessageDTO[] = useMemo(
-    () => messagesQuery.data ?? [],
-    [messagesQuery.data],
+    () => messagesQuery.isError || !selectedThread ? [] : messagesQuery.data ?? [],
+    [messagesQuery.data, messagesQuery.isError, selectedThread],
   );
+
+  const visibleThreads = useMemo(
+    () => messagesQuery.isError ? threads.filter((thread) => thread.ctThreadId !== selectedThreadId) : threads,
+    [messagesQuery.isError, selectedThreadId, threads],
+  );
+  const unreadCount = useMemo(() => countUnreadThreads(visibleThreads, readMap), [readMap, visibleThreads]);
+  const conversationAllowed = selectedThread !== null && !messagesQuery.isError && !threadsQuery.isError;
 
   useEffect(() => {
     if (!selectedThreadId) return;
@@ -282,16 +306,16 @@ export default function ChatPage() {
   }, [messages.length, selectedThreadId]);
 
   useEffect(() => {
-    storeSelectedThreadId(selectedThreadId);
-  }, [selectedThreadId]);
+    storeSelectedThreadId(selectedThreadId, myPartyId);
+  }, [myPartyId, selectedThreadId]);
 
   useEffect(() => {
     if (!selectedThreadId) return;
-    if (!messagesQuery.data) return;
+    if (!messagesQuery.data || messagesQuery.isError || !selectedThread) return;
     const lastMessageAt = messages[messages.length - 1]?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
     if (!lastMessageAt) return;
-    markThreadSeen(selectedThreadId, lastMessageAt);
-  }, [messages, messagesQuery.data, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
+    markThreadSeen(selectedThreadId, lastMessageAt, myPartyId ?? 0);
+  }, [myPartyId, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
 
   const createThreadMutation = useMutation({
     mutationFn: (otherPartyId: number) => ChatAPI.getOrCreateDmThread(otherPartyId),
@@ -302,7 +326,7 @@ export default function ChatPage() {
       setNewChatError(null);
       setBannerError(null);
       setSelectedThreadId(thread.ctThreadId);
-      await qc.invalidateQueries({ queryKey: ['chat-threads'] });
+      await qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
     },
     onError: (err) => setNewChatError(err.message),
   });
@@ -326,16 +350,15 @@ export default function ChatPage() {
   }, [createThreadMutation, location.search, navigate]);
 
   const sendMutation = useMutation({
-    mutationFn: (body: string) => ChatAPI.sendMessage(selectedThreadId!, body),
-    onSuccess: async () => {
+    mutationFn: ({ threadId, body }: { threadId: number; body: string }) => ChatAPI.sendMessage(threadId, body),
+    onSuccess: async (_message, variables) => {
       setDraftByThread((prev) => {
-        if (!selectedThreadId) return prev;
-        return { ...prev, [String(selectedThreadId)]: '' };
+        return { ...prev, [String(variables.threadId)]: '' };
       });
       setSendError(null);
       setBannerError(null);
-      await qc.invalidateQueries({ queryKey: ['chat-messages', selectedThreadId] });
-      await qc.invalidateQueries({ queryKey: ['chat-threads'] });
+      await qc.invalidateQueries({ queryKey: ['chat-messages', myPartyId, variables.threadId] });
+      await qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
     },
     onError: (err) => setSendError(err.message),
   });
@@ -370,7 +393,7 @@ export default function ChatPage() {
   };
 
   const handleSend = () => {
-    if (!selectedThreadId) {
+    if (!selectedThreadId || !conversationAllowed) {
       setSendError('Selecciona una conversación.');
       return;
     }
@@ -380,7 +403,7 @@ export default function ChatPage() {
       return;
     }
     if (sendMutation.isPending) return;
-    sendMutation.mutate(body);
+    sendMutation.mutate({ threadId: selectedThreadId, body });
   };
 
   const threadsLoading = threadsQuery.isLoading;
@@ -427,7 +450,7 @@ export default function ChatPage() {
             tabIndex={0}
             onClick={(event) => {
               event.currentTarget.focus();
-              void qc.invalidateQueries({ queryKey: ['chat-threads'] });
+              void qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
             }}
           >
             Refrescar
@@ -477,7 +500,7 @@ export default function ChatPage() {
             <Divider />
             {threadsLoading ? (
               <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-                <CircularProgress size={24} />
+                <CircularProgress size={24} aria-label={t('auditAccessibility.loadingConversations')} />
               </Box>
             ) : threadsError ? (
               <Box sx={{ p: 2 }}>
@@ -490,7 +513,7 @@ export default function ChatPage() {
                       tabIndex={0}
                       onClick={(event) => {
                         event.currentTarget.focus();
-                        void qc.invalidateQueries({ queryKey: ['chat-threads'] });
+                        void qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
                       }}
                     >
                       Reintentar
@@ -510,7 +533,7 @@ export default function ChatPage() {
               </Box>
             ) : (
               <LazyPaginatedList
-                items={threads}
+                items={visibleThreads}
                 loading={threadsQuery.isFetching}
                 pagination={{ itemLabel: 'conversaciones', initialRowsPerPage: 10 }}
                 renderItems={(visibleThreads) => (
@@ -540,7 +563,7 @@ export default function ChatPage() {
         <Card sx={{ flex: 1, minWidth: 0 }}>
           <CardContent sx={{ display: 'flex', flexDirection: 'column', height: { xs: 'auto', md: 600 } }}>
             <Box sx={{ mb: 1 }}>
-              {selectedThread ? (() => {
+              {selectedThread && conversationAllowed ? (() => {
                 const threadDisplayName = selectedThread.ctOtherDisplayName.trim();
                 const displayName = threadDisplayName === '' ? 'Perfil no disponible' : threadDisplayName;
                 const profile = activeProfileQuery.data;
@@ -582,7 +605,7 @@ export default function ChatPage() {
               })() : (
                 <Typography fontWeight={800} noWrap>Selecciona una conversación</Typography>
               )}
-              {selectedThread && (
+              {selectedThread && conversationAllowed && (
                 <Typography variant="caption" color="text.secondary">
                   Conversación activa
                 </Typography>
@@ -593,7 +616,7 @@ export default function ChatPage() {
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 1, minHeight: 240 }}>
               {messagesLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress size={24} />
+                  <CircularProgress size={24} aria-label={t('auditAccessibility.loadingMessages')} />
                 </Box>
               ) : messagesError ? (
                 <Alert
@@ -645,7 +668,7 @@ export default function ChatPage() {
                 aria-label={composerAriaLabel}
                 placeholder={selectedThreadId ? 'Escribe un mensaje…' : 'Selecciona una conversación…'}
                 value={draft}
-                disabled={!selectedThreadId || sendMutation.isPending}
+                disabled={!conversationAllowed || sendMutation.isPending}
                 inputProps={{ 'aria-label': composerAriaLabel }}
                 onChange={(e) => updateDraft(e.target.value)}
                 onKeyDown={(e) => {
@@ -663,7 +686,7 @@ export default function ChatPage() {
                   event.currentTarget.focus();
                   handleSend();
                 }}
-                disabled={!selectedThreadId || sendMutation.isPending || !draft.trim()}
+                disabled={!conversationAllowed || sendMutation.isPending || !draft.trim()}
               >
                 <SendIcon />
               </IconButton>

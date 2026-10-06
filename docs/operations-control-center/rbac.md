@@ -22,3 +22,10 @@ Field policy:
 - Cross-tenant cache keys include operation, scope, filters, and actor authorization context; this release does not introduce shared server caches.
 
 Consequential actions require explicit UI confirmation. Refund, reversal/void, financial chargeback resolution, paid/near-term cancellation, credit/debit note, issued-document change, privacy erasure, permanent deletion, and configured threshold actions require a separate requester and approver. PostgreSQL and the API both prevent self-approval.
+
+The reconciled executable policy and mutation limits live in
+[the canonical Operations projection contract](../../formal/system/operations-projection-boundary.md).
+Read grants compose by union; ReadOnly cannot enlarge another role's write scope.
+Undeclared producer-role domain grants default to deny instead of inheriting a
+reception list fallback. Organization-shared saved layouts are preferences and
+never source-data permissions.

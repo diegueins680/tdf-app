@@ -1,0 +1,608 @@
+[
+  {
+    "role": "webmaster",
+    "route": "/configuracion",
+    "width": 320,
+    "finalPath": "/configuracion/cms",
+    "title": "Configuración / CMS · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "controls": [
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Buscar sección⌘K",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Crear",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "0",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "A",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Reintentar",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(109, 40, 217)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      }
+    ],
+    "helpers": [
+      {
+        "text": "Selecciona una definición editorial persistida.",
+        "color": "rgba(0, 0, 0, 0.38)",
+        "classes": "MuiFormHelperText-root Mui-disabled MuiFormHelperText-sizeMedium MuiFormHelperText-contained css-1uevzkx"
+      },
+      {
+        "text": "Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.",
+        "color": "rgb(89, 89, 99)",
+        "classes": "MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled css-1uevzkx"
+      }
+    ],
+    "selectedTabs": 0,
+    "headings": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#\\:r14\\:-helper-text"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #9e9e9e, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "webmaster",
+    "route": "/configuracion/cms",
+    "width": 320,
+    "finalPath": "/configuracion/cms",
+    "title": "Configuración / CMS · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "controls": [
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Buscar sección⌘K",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Crear",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "0",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "A",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Reintentar",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(109, 40, 217)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      }
+    ],
+    "helpers": [
+      {
+        "text": "Selecciona una definición editorial persistida.",
+        "color": "rgba(0, 0, 0, 0.38)",
+        "classes": "MuiFormHelperText-root Mui-disabled MuiFormHelperText-sizeMedium MuiFormHelperText-contained css-1uevzkx"
+      },
+      {
+        "text": "Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.",
+        "color": "rgb(89, 89, 99)",
+        "classes": "MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled css-1uevzkx"
+      }
+    ],
+    "selectedTabs": 0,
+    "headings": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#\\:r14\\:-helper-text"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #9e9e9e, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "webmaster",
+    "route": "/configuracion",
+    "width": 1280,
+    "finalPath": "/configuracion/cms",
+    "title": "Configuración / CMS · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "controls": [
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": -1,
+        "color": "rgb(0, 0, 0)",
+        "background": "rgba(0, 0, 0, 0.45)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Buscar sección⌘K",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Crear",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "0",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "A",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Reintentar",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(109, 40, 217)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      }
+    ],
+    "helpers": [
+      {
+        "text": "Selecciona una definición editorial persistida.",
+        "color": "rgba(0, 0, 0, 0.38)",
+        "classes": "MuiFormHelperText-root Mui-disabled MuiFormHelperText-sizeMedium MuiFormHelperText-contained css-1uevzkx"
+      },
+      {
+        "text": "Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.",
+        "color": "rgb(89, 89, 99)",
+        "classes": "MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled css-1uevzkx"
+      }
+    ],
+    "selectedTabs": 0,
+    "headings": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#\\:r25\\:-helper-text"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #9e9e9e, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "webmaster",
+    "route": "/configuracion/cms",
+    "width": 1280,
+    "finalPath": "/configuracion/cms",
+    "title": "Configuración / CMS · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "controls": [
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": -1,
+        "color": "rgb(0, 0, 0)",
+        "background": "rgba(0, 0, 0, 0.45)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Buscar sección⌘K",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(89, 89, 99)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Crear",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "0",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "A",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(17, 17, 19)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "Reintentar",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgb(109, 40, 217)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": true,
+        "tabIndex": -1,
+        "color": "rgba(0, 0, 0, 0.26)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      {
+        "text": "",
+        "disabled": false,
+        "tabIndex": 0,
+        "color": "rgba(0, 0, 0, 0.54)",
+        "background": "rgba(0, 0, 0, 0)"
+      }
+    ],
+    "helpers": [
+      {
+        "text": "Selecciona una definición editorial persistida.",
+        "color": "rgba(0, 0, 0, 0.38)",
+        "classes": "MuiFormHelperText-root Mui-disabled MuiFormHelperText-sizeMedium MuiFormHelperText-contained css-1uevzkx"
+      },
+      {
+        "text": "Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.",
+        "color": "rgb(89, 89, 99)",
+        "classes": "MuiFormHelperText-root MuiFormHelperText-sizeMedium MuiFormHelperText-contained MuiFormHelperText-filled css-1uevzkx"
+      }
+    ],
+    "selectedTabs": 0,
+    "headings": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "#\\:r1p\\:-helper-text"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #9e9e9e, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  }
+]

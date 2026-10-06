@@ -13,6 +13,7 @@ run_npm() {
 }
 
 echo "▶ Linting, type-checking, testing and building tdf-hq-ui"
+node --test "$ROOT/scripts/__tests__/ui-validation-bundle.test.mjs"
 run_npm run lint --workspace=tdf-hq-ui --prefix "$ROOT"
 run_npm run typecheck --workspace=tdf-hq-ui --prefix "$ROOT"
 run_npm run test --workspace=tdf-hq-ui --prefix "$ROOT"

@@ -8,9 +8,35 @@ Comprehensive business management system for TDF Records, featuring CRM, schedul
 
 This is a monorepo containing three main applications:
 
+Production web is served at `https://www.tdfrecords.net`; the canonical backend
+is `https://api.tdfrecords.net` on Hetzner. Follow
+[the current operations runbook](ops/hetzner/README.md) and its
+[validation record](ops/hetzner/validation-2026-09-28.md), including outstanding
+interactive authentication/upload gates. Retained Fly/Trader resources are not
+authority to deploy TDF back to the retired API or restore a stale database.
+
+Authoritative contracts and boundaries:
+
+- `tdf-hq/docs/openapi/api.yaml` generates the web and pinned mobile clients;
+  handlers and authorization tests establish implemented behavior.
+- `scripts/production-migrations.json` orders reviewed SQL and introduction
+  commits; the production migration ledger records applied checksums. Broad
+  Persistent startup migration remains disabled.
+- The feature registry and runtime gates determine availability; merging code
+  does not authorize enabling experimental adapters or payment providers.
+- `FORMAL_VERIFICATION.md` and `formal/system/README.md` index domain
+  specifications, mappings, bounded checks and outstanding obligations.
+- `specs.yaml` preserves the original CRM web v1 requirements, including its
+  web-only/offline-false scope and historical role list. It is not a current
+  whole-product deployment, native-platform or authorization inventory.
+- The `tdf-mobile` gitlink selects the compatible native source. Mobile
+  `eas.json` and native release checks define release hosts/platform builds;
+  a source pin or merge is not evidence of store delivery.
+
+
 ### Backend - `tdf-hq/`
 **Tech Stack:** Haskell + Servant + PostgreSQL + Persistent  
-**Purpose:** REST API server with JWT authentication, OpenAPI specs, and PDF generation
+**Purpose:** REST API server with server-validated sessions, an OpenAPI contract, and PDF generation
 
 - CRM & party management with role-based access control
 - Resource scheduling (studios, rehearsal rooms, classrooms)
@@ -43,17 +69,18 @@ This is a monorepo containing three main applications:
 - Student lesson scheduling
 - Package balance tracking
 - Calendar integration
-- **Offline support**: Schedule viewing, package balances, and booking mutations work offline with automatic sync
+- **Connectivity:** API mutations require a connection. Cached catalog/onboarding data and explicit error recovery do not establish a durable offline booking queue or automatic mutation replay.
 
-**Note:** This is a Git submodule. Run `git submodule update --init --recursive` after cloning.
+**Note:** This is a Git submodule. Run `git submodule update --init --checkout --recursive` after cloning.
 
 [→ Mobile Documentation](MOBILE_APP.md)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Backend:** Stack (Haskell), PostgreSQL 16
-- **Frontend/Mobile:** Node.js 20.19.4+ (LTS), npm 10+
+- **Backend:** Stack with `tdf-hq/stack.yaml` (GHC 9.10.3); production PostgreSQL 17 with the extensions specified in `ops/hetzner/README.md`
+- **Root/frontend:** Node.js 22+ (`package.json`; CI uses Node 22), npm 10+
+- **Mobile:** use the pinned submodule’s `.nvmrc` and lockfile. Its standalone CI currently selects Node 20.19.4; root CI also verifies the coupled client on Node 22. Do not infer the Mobile pin’s toolchain from the root package.
 - **Optional:** Docker + Docker Compose
 
 ### Development Setup
@@ -130,9 +157,9 @@ make logs    # View logs
 
 ## 📦 Submodules & Backups
 
-- `tdf-mobile/` is tracked as a Git submodule (Expo app). After cloning, run `git submodule update --init --recursive` (or clone with `--recursive`) so `tdf-mobile` pulls the correct commit.
+- `tdf-mobile/` is tracked as a Git submodule (Expo app). After cloning, run `git submodule update --init --checkout --recursive` so `tdf-mobile` pulls the correct commit.
 - Local UI snapshots live under `tdf-hq-ui.backup.*` and are ignored by Git. They are useful for experimentation but should never be committed or referenced by CI.
-- Any time the root repo is moved to a new machine or CI provider, repeat the submodule init step; otherwise builds that traverse the tree (Cloudflare/Vercel) will fail looking for `tdf-mobile`.
+- Mobile checkout is opt-in (`update = none` in `.gitmodules`). Web deployments (Cloudflare/Vercel) need only `tdf-hq-ui` and skip the mobile repository. Mobile development requires repository access and the explicit `--checkout` command above; `git clone --recursive` alone leaves mobile unpopulated.
 
 ## 📋 Project Structure
 
@@ -266,10 +293,12 @@ cd tdf-hq && stack build --copy-bins
 
 | Target | Root Directory | Install Command | Build Command | Output | Notes |
 | --- | --- | --- | --- | --- | --- |
-| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://<your-backend-domain>`, `VITE_TZ=America/Guayaquil`. Never place bearer credentials in `VITE_*` variables. |
+| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=22`, `VITE_API_BASE=https://<your-backend-domain>`, `VITE_TZ=America/Guayaquil`. Never place bearer credentials in `VITE_*` variables. |
 | **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
 
 > Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with your API domain so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
+
+Cloudflare submodule authentication failures occur before the build command runs. The committed `.gitmodules` setting skips mobile during default recursive checkout. Deploy a commit containing this setting; retrying an older commit will still use its old configuration. GitHub Actions jobs that require mobile explicitly override this default. See [Git submodule update configuration](https://git-scm.com/docs/gitmodules).
 
 ## 🔐 Environment Variables
 

@@ -1,9 +1,18 @@
 # TDF Service Storefront - Deployment Checklist
 
+> Current hosting (2026-09-28): the live API is `https://api.tdfrecords.net`.
+> Use [the current guarded deployment/recovery procedure](ops/hetzner/README.md)
+> for runtime secrets, releases, backups and logs. Former Fly deployment steps
+> below are historical and must not be executed against the retired app/database.
+> Preserve existing provider webhook IDs/signing secrets when changing callback
+> URLs; inspect existing endpoints before creating a replacement. Existing
+> provider/environment restrictions and payment-validation gates still apply.
+
+
 ## Pre-Deployment
 
 ### Database
-- [ ] Run migration: `tdf-hq/sql/2026-08-04_service_storefront.sql`
+- [ ] Verify the storefront schema and all registered successors against the production migration manifest; do not apply the historical bootstrap SQL directly
 - [ ] Apply the registered checkout migrations through `scripts/render-production-migration-batch.mjs`; do not apply an ad hoc subset
 - [ ] Verify tables created: `service_storefront_package`, `service_storefront_order`, `service_storefront_order_status_change`, `service_storefront_revision`
 - [ ] Verify seed data: 9 packages (3 Mixing, 3 Mastering, 3 Bundle)
@@ -59,25 +68,34 @@
 ## Deployment Steps
 
 ### 1. Database Migration
-```bash
-cd tdf-hq
-psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f sql/2026-08-04_service_storefront.sql
-```
+
+Use the reviewed manifest and checksum-pinned batch through the canonical
+[Hetzner release/recovery procedure](ops/hetzner/README.md). Reconcile the actual
+ledger, validate the exact candidate and preserve qualified backups before
+applying any pending migration. An incomplete release executor or recovery
+qualification blocks production execution; this checklist supplies no ad hoc SQL
+or alternate deployment lane.
 
 ### 2. Backend Deployment
-```bash
-cd tdf-hq
-stack build --copy-bins
-flyctl deploy --app tdf-hq
-```
+
+Stage the reviewed provider credentials and existing webhook ID in the protected
+canonical Hetzner environment through that same procedure. Preserve unrelated
+configuration and the provider environment; inspect the existing PayPal endpoint
+before changing its callback URL and preserve its identity and signing-validation
+configuration. Do not create duplicates or rotate credentials merely for a host
+correction. Keep unqualified payment/refund switches disabled.
+
+Deploy only the verified immutable candidate through the canonical release lane,
+then verify the API identity, database readiness and applicable authenticated
+flows. Do not deploy, restart or install secrets on the retired Fly app/database.
+Setting environment values alone is not payment or webhook acceptance evidence.
 
 ### 3. Frontend Deployment
-```bash
-cd tdf-hq-ui
-npm run build
-wrangler pages deploy dist --project-name=tdf-app
-# Or push to git for auto-deployment via Cloudflare
-```
+
+Use the reviewed main-branch Cloudflare deployment and verify its immutable
+identity against `https://www.tdfrecords.net`. A preview build is not production
+verification. Local builds use the root `npm run build:ui` command and Node22;
+frontend configuration must contain no privileged provider or backend secrets.
 
 ### 4. Smoke Tests
 ```bash
@@ -88,11 +106,11 @@ curl https://api.tdfrecords.net/health
 curl https://api.tdfrecords.net/services/storefront
 
 # Check frontend
-curl -I https://tdf-app.pages.dev/mezcla-mastering
+curl -I https://www.tdfrecords.net/mezcla-mastering
 ```
 
 ### 5. Manual Testing
-1. Open https://tdf-app.pages.dev/mezcla-mastering
+1. Open https://www.tdfrecords.net/mezcla-mastering
 2. Verify page loads correctly
 3. Test package selection
 4. Test order form validation
@@ -134,33 +152,20 @@ curl -I https://tdf-app.pages.dev/mezcla-mastering
 
 ## Rollback Procedure
 
-### If Critical Issues Found
-
-1. **Disable feature immediately:**
-   - Remove route from `publicRoutes.tsx`
-   - Redeploy frontend
-
-2. **If payment issues:**
-   - Disable payment endpoints
-   - Manually process pending orders
-
-3. **If database issues:**
-   - Tables are additive (no destructive changes)
-   - Can keep tables, just disable API endpoints
-
-4. **Full rollback:**
-   ```bash
-   # Revert frontend
-   git revert <commit-hash>
-   git push
-   
-   # Backend: tables remain, just don't use them
-   # No database rollback needed
-   ```
+Follow the canonical recovery procedure using the inspected deployment identity,
+qualified database/assets/private-upload backups and a schema-compatible recovery
+image. Preserve financial records, idempotency keys, orders and provider event
+history. Do not assume an additive migration makes an older binary compatible,
+replay a charge, manually settle orders, or discard tables as a rollback shortcut.
+Feature containment and any required provider action remain separately reviewed.
 
 ---
 
-## Known Limitations (Phase 1)
+## Historical Phase 1 backlog (not current implementation status)
+
+The following records the initial roadmap, not a live feature inventory. Current
+contracts, feature gates, implemented handlers and release evidence determine
+availability; do not infer missing or enabled functionality from this list.
 
 1. **Backend handlers not yet implemented** - Frontend page works but API calls will fail until handlers are added
 2. **File upload not implemented** - Customers cannot upload tracks yet (manual process)
@@ -168,7 +173,7 @@ curl -I https://tdf-app.pages.dev/mezcla-mastering
 4. **Admin order management not implemented** - Orders visible in DB but no admin UI
 5. **Revision workflow not implemented** - Revision requests handled manually
 
-### Recommended Phase 2 (Week 2-3)
+### Historical Phase 2 proposal
 - Implement backend server handlers
 - Add file upload (Google Drive integration)
 - Add email notifications (SendGrid/SES)
@@ -196,7 +201,6 @@ curl -I https://tdf-app.pages.dev/mezcla-mastering
 
 - **Datafast Support:** support@datafast.com.ec
 - **PayPal Support:** support@paypal.com
-- **Fly.io Support:** support@fly.io
 - **Cloudflare Support:** support@cloudflare.com
 
 ---

@@ -47,12 +47,14 @@ data PublicEventTicketPolicyDTO = PublicEventTicketPolicyDTO
   , currency          :: Text
   , buyerFeeBps       :: Int
   , organizerFeeBps   :: Int
+  , taxIncluded       :: Bool
   , taxBps            :: Int
   , holdMinutes       :: Int
   , termsVersion      :: Text
   , termsSummary      :: Text
   , refundPolicy      :: Text
   , transferAllowed   :: Bool
+  , maxTicketsPerOrder :: Int
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketPolicyDTO
@@ -103,6 +105,7 @@ data PublicEventTicketQuoteDTO = PublicEventTicketQuoteDTO
   , netFaceValueMinor      :: Int64
   , buyerPlatformFeeMinor  :: Int64
   , organizerPlatformFeeMinor :: Int64
+  , taxIncluded            :: Bool
   , taxMinor               :: Int64
   , checkoutTotalMinor     :: Int64
   , organizerPayableMinor  :: Int64

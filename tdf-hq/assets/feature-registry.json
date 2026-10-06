@@ -39,6 +39,170 @@
   },
   "features": [
     {
+      "id": "public.mobile",
+      "parentId": null,
+      "webRoute": "/app",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": {
+        "es": "TDF Mobile / Programa de testers",
+        "en": "TDF Mobile / Tester program"
+      },
+      "synonyms": {
+        "es": [
+          "aplicación móvil",
+          "beta",
+          "descargar",
+          "testers"
+        ],
+        "en": [
+          "mobile app",
+          "beta",
+          "download",
+          "testers"
+        ]
+      },
+      "keywords": [
+        "android",
+        "ios",
+        "testflight",
+        "feedback"
+      ],
+      "description": {
+        "es": "Acceso verificado a TDF Mobile y participación voluntaria en el programa de pruebas.",
+        "en": "Verified TDF Mobile access and voluntary participation in the tester program."
+      },
+      "navigationGroup": "people",
+      "icon": "home",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/app",
+        "documentedException": null
+      },
+      "accessRequestEligible": false,
+      "aliases": []
+    },
+    {
+      "id": "account.deletion",
+      "parentId": null,
+      "webRoute": "/cuenta/eliminar",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": {
+        "es": "Eliminar mi cuenta",
+        "en": "Delete my account"
+      },
+      "synonyms": {
+        "es": [
+          "eliminación de cuenta",
+          "borrar mis datos"
+        ],
+        "en": [
+          "account deletion",
+          "delete my data"
+        ]
+      },
+      "keywords": [
+        "account",
+        "privacy",
+        "deletion"
+      ],
+      "description": {
+        "es": "Solicitar la eliminación completa de la cuenta con confirmación de identidad y seguimiento del equipo.",
+        "en": "Request full account deletion with identity confirmation and team follow-up."
+      },
+      "navigationGroup": "help",
+      "icon": "privacy-tip",
+      "breadcrumb": [],
+      "requiredAuth": "authenticated",
+      "permissions": {
+        "discover": {},
+        "view": {},
+        "submit": {
+          "recordScope": "own"
+        }
+      },
+      "recordScope": "own",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/cuenta/eliminar",
+        "documentedException": "Dedicated authenticated web initiation; no separate native erasure implementation."
+      },
+      "accessRequestEligible": false,
+      "apiScopes": [
+        {
+          "pathPrefix": "/feedback/account-deletion",
+          "methods": {
+            "POST": "submit"
+          }
+        }
+      ]
+    },
+    {
+      "id": "community.discussion",
+      "parentId": null,
+      "webRoute": "/conversacion/:destinationKind/:destinationId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Conversación",
+        "en": "Discussion"
+      },
+      "synonyms": {
+        "es": [
+          "comentarios",
+          "respuestas"
+        ],
+        "en": [
+          "comments",
+          "replies"
+        ]
+      },
+      "keywords": [
+        "discussion",
+        "comments",
+        "reactions"
+      ],
+      "description": {
+        "es": "Reacciones y conversaciones sujetas a los permisos de la publicación.",
+        "en": "Reactions and discussions governed by publication permissions."
+      },
+      "navigationGroup": "people",
+      "icon": "chat",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "record",
+      "searchable": false,
+      "mobilePresentation": {
+        "kind": "native-contextual",
+        "destination": "/conversacion/[destinationKind]/[destinationId]",
+        "documentedException": null
+      },
+      "accessRequestEligible": false,
+      "apiScopes": [
+        {
+          "pathPrefix": "/interactions",
+          "methods": {
+            "GET": "view",
+            "POST": "view",
+            "PUT": "view"
+          }
+        }
+      ]
+    },
+    {
       "id": "public.platform",
       "parentId": null,
       "webRoute": "/tdf",
@@ -365,11 +529,11 @@
       "navigationGroup": "people",
       "icon": "person-add",
       "breadcrumb": ["community"],
-      "requiredAuth": "optional",
-      "permissions": { "discover": {}, "view": {}, "create": { "rolesAny": ["Admin", "Artist", "Artista"] } },
+      "requiredAuth": "authenticated",
+      "permissions": { "discover": {}, "view": {}, "create": {} },
       "routeAction": "create",
       "mobilePresentation": { "kind": "native", "destination": "/createArtistProfile", "documentedException": null },
-      "accessRequestEligible": true
+      "accessRequestEligible": false
     },
     {
       "id": "marketplace",
@@ -1985,6 +2149,85 @@
       "apiScopes": [{ "pathPrefix": "/ads", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }, { "pathPrefix": "/admin/communications", "methods": { "GET": "view", "POST": "publish", "PATCH": "edit" } }]
     },
     {
+      "id": "admin.video-sources",
+      "parentId": null,
+      "webRoute": "/configuracion/fuentes-videos",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": {
+        "es": "Fuentes de videos",
+        "en": "Video sources"
+      },
+      "synonyms": {
+        "es": [
+          "ingesta YouTube"
+        ],
+        "en": [
+          "YouTube ingestion"
+        ]
+      },
+      "keywords": [
+        "video",
+        "youtube",
+        "ingestion"
+      ],
+      "navigationGroup": "admin",
+      "icon": "source",
+      "breadcrumb": [],
+      "requiredRoles": [
+        "Admin"
+      ],
+      "requiredModules": [
+        "Admin"
+      ],
+      "permissions": {
+        "discover": {
+          "rolesAny": [
+            "Admin"
+          ],
+          "modulesAll": [
+            "Admin"
+          ],
+          "strictAdmin": true
+        },
+        "view": {
+          "rolesAny": [
+            "Admin"
+          ],
+          "modulesAll": [
+            "Admin"
+          ],
+          "strictAdmin": true
+        },
+        "administer": {
+          "rolesAny": [
+            "Admin"
+          ],
+          "modulesAll": [
+            "Admin"
+          ],
+          "strictAdmin": true
+        }
+      },
+      "globalMenu": true,
+      "accessRequestEligible": false,
+      "mobilePresentation": {
+        "kind": "security-concealed",
+        "destination": null,
+        "documentedException": "Provider administration is web only."
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/admin/records-ingestion",
+          "methods": {
+            "GET": "view",
+            "POST": "administer",
+            "PUT": "administer"
+          }
+        }
+      ]
+    },
+    {
       "id": "admin.event-sources",
       "parentId": "social.discovery",
       "webRoute": "/configuracion/fuentes-eventos",
@@ -2780,6 +3023,28 @@
       "interfaceExpected": false
     },
     {
+      "id": "technical.provider-payment-return",
+      "parentId": "public.commerce",
+      "webRoute": "/pagos/retorno",
+      "routeType": "technical",
+      "classification": "technical-route",
+      "label": { "es": "Retorno de proveedor de pago", "en": "Payment provider return" },
+      "synonyms": { "es": [], "en": [] },
+      "keywords": ["payment", "provider", "return"],
+      "navigationGroup": null,
+      "icon": "technical",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": { "kind": "technical", "destination": null, "documentedException": "Provider redirects resume the originating checkout in the web application." },
+      "accessRequestEligible": false,
+      "technical": true,
+      "searchable": false,
+      "safeLockedDisclosure": false
+    },
+    {
       "id": "technical.service-payment-return",
       "parentId": "service.mixing-mastering",
       "webRoute": "/mezcla-mastering/pago-datafast",
@@ -3163,6 +3428,79 @@
       "searchable": false,
       "safeLockedDisclosure": false,
       "apiScopes": [{ "pathPrefix": "/stubs", "methods": { "GET": "view" } }]
+    },
+    {
+      "id": "notifications.detail",
+      "parentId": null,
+      "webRoute": "/notificaciones/:notificationId",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "Notificación",
+        "en": "Notification"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": [
+        "notification"
+      ],
+      "navigationGroup": "help",
+      "icon": "lock",
+      "breadcrumb": [],
+      "permissions": {
+        "view": {}
+      },
+      "globalMenu": false,
+      "accessRequestEligible": false,
+      "mobilePresentation": {
+        "kind": "native-contextual",
+        "destination": "/notifications",
+        "documentedException": null
+      },
+      "apiScopes": [
+        {
+          "pathPrefix": "/fans/me/notifications",
+          "methods": {
+            "GET": "view"
+          }
+        }
+      ],
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none"
+    },
+    {
+      "id": "music.public.catalog",
+      "parentId": null,
+      "webRoute": "/musica",
+      "aliases": ["/musica/:slug"],
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Música", "en": "Music" },
+      "synonyms": { "es": ["catálogo", "lanzamientos"], "en": ["catalog", "releases"] },
+      "keywords": ["music", "release", "catalog"],
+      "navigationGroup": "people",
+      "icon": "album",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "The native app exposes releases through artist profiles." },
+      "accessRequestEligible": false
+    },
+    {
+      "id": "music.library",
+      "parentId": null,
+      "webRoute": "/musica/biblioteca",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Biblioteca musical", "en": "Music library" },
+      "synonyms": { "es": ["favoritos", "playlists", "historial"], "en": ["favorites", "playlists", "history"] },
+      "keywords": ["music", "library", "playlist"],
+      "navigationGroup": "people",
+      "icon": "album",
+      "breadcrumb": [],
+      "accessRequestEligible": false
     }
   ]
 }

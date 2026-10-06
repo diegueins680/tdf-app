@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { useMemo, useState } from 'react';
 import type { DirectorySearchItem } from '../../api/directory';
@@ -5,6 +6,7 @@ import type { DirectorySearchItem } from '../../api/directory';
 const DEFAULT_CENTER = { latitude: -0.180653, longitude: -78.467834 };
 
 export default function OpenStreetMapResults({ items }: { items: DirectorySearchItem[] }) {
+  const { t } = useTranslation();
   const mappable = useMemo(
     () => items.filter((item) => Number.isFinite(item.location.latitude) && Number.isFinite(item.location.longitude)),
     [items],
@@ -22,20 +24,20 @@ export default function OpenStreetMapResults({ items }: { items: DirectorySearch
   const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${marker}`;
 
   return (
-    <Stack spacing={2} aria-label="Resultados en mapa">
+    <Stack spacing={2} aria-label={t('directorySearch.mapResults')}>
       <Alert severity="info">
-        El mapa usa ubicaciones aproximadas autorizadas. TDF no muestra direcciones residenciales ni coordenadas privadas.
+        {t('directorySearch.mapPrivacy')}
       </Alert>
       <Box
         component="iframe"
-        title="Mapa OpenStreetMap de resultados"
+        title={t('directorySearch.mapTitle')}
         src={mapUrl}
         loading="lazy"
         referrerPolicy="no-referrer"
         sx={{ width: '100%', minHeight: { xs: 360, md: 520 }, border: 0, borderRadius: 3 }}
       />
       {mappable.length > 0 ? (
-        <Stack direction="row" gap={1} flexWrap="wrap" aria-label="Marcadores del mapa">
+        <Stack direction="row" gap={1} flexWrap="wrap" aria-label={t('directorySearch.mapMarkers')}>
           {mappable.map((item) => (
             <Chip
               key={`${item.type}:${item.id}`}
@@ -47,7 +49,7 @@ export default function OpenStreetMapResults({ items }: { items: DirectorySearch
           ))}
         </Stack>
       ) : (
-        <Typography color="text.secondary">Estos resultados no tienen una ubicación pública aproximada.</Typography>
+        <Typography color="text.secondary">{t('directorySearch.mapEmpty')}</Typography>
       )}
       <Button
         component="a"
@@ -56,7 +58,7 @@ export default function OpenStreetMapResults({ items }: { items: DirectorySearch
         rel="noreferrer"
         sx={{ alignSelf: 'flex-start' }}
       >
-        Abrir en OpenStreetMap
+        {t('directorySearch.openMap')}
       </Button>
     </Stack>
   );

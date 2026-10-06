@@ -19,6 +19,12 @@ module TDF.Auth
   , moduleFromRegistryCode
   , modulesForRoles
   , loadAuthedUser
+  , lockCredentialForSession
+  , revokeInteractiveSessions
+  , isAuthenticatableApiTokenLabel
+  , withCurrentAuthSession
+  , withCurrentModuleAccess
+  , withCurrentAuthorization
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
@@ -29,8 +35,10 @@ module TDF.Auth
   ) where
 
 import           Control.Applicative        ((<|>))
-import           Control.Monad              (forM, guard)
+import           Control.Monad              (forM, guard, void)
 import           Control.Monad.IO.Class     (liftIO)
+import           Crypto.Hash               (Digest, SHA256, hash)
+import           Data.ByteArray            (constEq)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
@@ -49,11 +57,13 @@ import           Database.Persist
   , SelectOpt(LimitTo)
   , get
   , getBy
+  , getEntity
   , selectList
   , toPersistValue
   , (==.)
   )
-import           Database.Persist.Sql       (Single (..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
+import           Database.Persist.Sql       (Single (..), SqlPersistT, fromSqlKey, rawSql, rawExecute, runSqlPool)
+import           Database.Persist.SqlBackend (getRDBMS)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
@@ -109,7 +119,78 @@ data AuthedUser = AuthedUser
   { auPartyId :: PartyId
   , auRoles   :: [RoleEnum]
   , auModules :: Set ModuleAccess
+  -- Internal reference only; never the bearer secret. Synthetic/system actors have none.
+  , auApiTokenId :: Maybe ApiTokenId
+  , auSessionWitness :: Maybe AuthSessionWitness
   } deriving (Show, Eq)
+
+-- Request-local proof of the canonical token row read during authentication.
+-- The constructor is private; credentials/fingerprints must never be logged or serialized.
+data AuthSessionWitness = AuthSessionWitness ApiTokenId PartyId (Digest SHA256)
+  deriving (Eq)
+
+instance Show AuthSessionWitness where
+  show _ = "<authenticated-session>"
+
+-- PostgreSQL-only transaction guard. FOR SHARE conflicts with token UPDATE/DELETE,
+-- including non-key changes to active/purpose. Keep this lock through the event action.
+-- Lock by identity first, then validate the returned current row after any lock wait.
+withCurrentAuthSession :: AuthedUser -> SqlPersistT IO a -> SqlPersistT IO (Maybe a)
+withCurrentAuthSession user action = case auSessionWitness user of
+  Nothing -> pure Nothing
+  Just (AuthSessionWitness tokenId capturedParty fingerprint)
+    | auPartyId user /= capturedParty -> pure Nothing
+    | otherwise -> do
+        rows <- rawSql "SELECT ?? FROM api_token WHERE id=? FOR SHARE" [toPersistValue tokenId]
+        case rows of
+          [Entity _ tok]
+            | apiTokenActive tok
+            , apiTokenPartyId tok == capturedParty
+            , isAuthenticatableApiTokenLabel (apiTokenLabel tok)
+            , (hash (TE.encodeUtf8 (apiTokenToken tok)) :: Digest SHA256)
+                `constEq` fingerprint -> Just <$> action
+          _ -> pure Nothing
+
+-- Hold the actual session, role assignments and module permission chain through
+-- the caller's transaction. A later inserted assignment cannot broaden this
+-- admission: the permission query is restricted to the locked assignment IDs.
+withCurrentModuleAccess
+  :: ModuleAccess -> AuthedUser -> SqlPersistT IO a
+  -> SqlPersistT IO (Either ServerError a)
+withCurrentModuleAccess required = withCurrentAuthorization (validateModuleAccess required)
+
+-- Evaluate the caller's complete predicate on current locked roles/modules, not
+-- on request-captured grants. Locks remain held through all transactional effects.
+withCurrentAuthorization
+  :: (AuthedUser -> Either ServerError ()) -> AuthedUser -> SqlPersistT IO a
+  -> SqlPersistT IO (Either ServerError a)
+withCurrentAuthorization validate original action = do
+  admitted <- withCurrentAuthSession original $ do
+    assigned <- rawSql
+      "SELECT assignment.id::text,role.code,role.active FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id WHERE assignment.party_id=? AND assignment.active ORDER BY assignment.id,role.id FOR SHARE OF assignment,role"
+      [toPersistValue (auPartyId original)]
+      :: SqlPersistT IO [(Single Text, Single Text, Single Bool)]
+    let roles = traverse (\(_, Single code, Single active) ->
+          if active then roleFromRegistryCode code else Nothing) assigned
+        assignmentIds = [toPersistValue key | (Single key, _, _) <- assigned]
+    case roles of
+      Nothing -> pure (Left err401)
+      Just [] -> pure (Left err403)
+      Just currentRoles -> do
+        moduleRows <- rawSql
+          ("SELECT m.code FROM party_security_role psr JOIN security_role r ON r.id=psr.role_id JOIN role_permission rp ON rp.role_id=r.id JOIN security_permission p ON p.id=rp.permission_id JOIN security_action a ON a.id=p.action_id JOIN security_module m ON m.id=p.module_id WHERE psr.id IN ("
+           <> T.intercalate "," (map (const "?::uuid") assignmentIds)
+           <> ") AND psr.active AND r.active AND rp.active AND p.active AND a.active AND m.active AND p.resource_scope='module' AND a.code='access' ORDER BY psr.id,r.id,rp.id,p.id,a.id,m.id FOR SHARE OF psr,r,rp,p,a,m")
+          assignmentIds :: SqlPersistT IO [Single Text]
+        case traverse (\(Single code) -> moduleFromRegistryCode code) moduleRows of
+          Nothing -> pure (Left err401)
+          Just modules -> case validate original
+            { auRoles = Set.toAscList (Set.fromList currentRoles)
+            , auModules = Set.fromList modules
+            } of
+              Left rejected -> pure (Left rejected)
+              Right () -> Right <$> action
+  pure $ maybe (Left err401) id admitted
 
 -- | Create the Servant auth context using the database environment.
 authContext :: Env -> Context '[AuthHandler Request AuthedUser]
@@ -182,12 +263,49 @@ authWithToken env req = do
     throw401 :: Text -> Handler a
     throw401 msg = throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
+-- Lifecycle lock order: provider subject (if any), Party, credential, tokens.
+-- NO KEY UPDATE stays compatible with Event operations' Party KEY SHARE locks.
+-- Re-read the credential after waiting; identity relocation invalidates discovery.
+lockCredentialForSession :: UserCredentialId -> SqlPersistT IO (Maybe (Entity UserCredential))
+lockCredentialForSession credentialId = do
+  discovered <- get credentialId
+  case discovered of
+    Nothing -> pure Nothing
+    Just credential -> do
+      backend <- getRDBMS
+      case backend of
+        "postgresql" -> void (rawSql
+          "SELECT id FROM party WHERE id=? FOR NO KEY UPDATE"
+          [toPersistValue (userCredentialPartyId credential)] :: SqlPersistT IO [Single PartyId])
+        -- SQLite's unit-test adapter reserves the database writer without changing
+        -- rows or firing row triggers. It is not PostgreSQL concurrency evidence.
+        "sqlite" -> rawExecute "UPDATE user_credential SET active=active WHERE 1=0" []
+        _ -> liftIO (fail "Unsupported credential lifecycle database")
+      locked <- if backend == "postgresql"
+        then do
+          rows <- rawSql "SELECT ?? FROM user_credential WHERE id=? FOR UPDATE"
+            [toPersistValue credentialId]
+          pure $ case rows of [row] -> Just row; _ -> Nothing
+        else getEntity credentialId
+      pure $ do
+        row@(Entity _ current) <- locked
+        guard (userCredentialPartyId current == userCredentialPartyId credential)
+        pure row
+
+-- ApiToken has no credential FK: revoke existing interactive sessions for this
+-- Party, while preserving independently managed service/custom-label tokens.
+-- Caller holds the Party lifecycle lock through mutation and replacement issuance.
+revokeInteractiveSessions :: PartyId -> SqlPersistT IO ()
+revokeInteractiveSessions partyKey = rawExecute
+  "UPDATE api_token SET active=false WHERE party_id=? AND active=true AND (lower(trim(label)) LIKE 'password-login:%' OR lower(trim(label)) LIKE 'google-login:%' OR lower(trim(label)) LIKE 'password-reset:%')"
+  [toPersistValue partyKey]
+
 loadAuthedUser :: Text -> SqlPersistT IO (Maybe AuthedUser)
 loadAuthedUser token = do
   mToken <- getBy (UniqueApiToken token)
   case mToken of
     Nothing -> pure Nothing
-    Just (Entity _ tok)
+    Just (Entity tokenId tok)
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
@@ -201,6 +319,9 @@ loadAuthedUser token = do
               { auPartyId = apiTokenPartyId tok
               , auRoles = roleList
               , auModules = modules
+              , auApiTokenId = Just tokenId
+              , auSessionWitness = Just (AuthSessionWitness tokenId (apiTokenPartyId tok)
+                  (hash (TE.encodeUtf8 (apiTokenToken tok))))
               }
 
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool

@@ -41,11 +41,16 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.EventTickets as TicketDomain
-import           TDF.DB (Env(..), sharedTlsManager)
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
+import           TDF.DB (Env(..))
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
+import qualified TDF.Ticketing.Inventory as Inventory
+import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
 
 type AppM = ReaderT Env Handler
@@ -56,12 +61,14 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpCurrency        :: Text
   , atpBuyerFeeBps     :: Int
   , atpOrganizerFeeBps :: Int
+  , atpTaxIncluded     :: Bool
   , atpTaxBps          :: Int
   , atpHoldMinutes     :: Int
   , atpTermsVersion    :: Text
   , atpTermsSummary    :: Text
   , atpRefundPolicy    :: Text
   , atpTransferAllowed :: Bool
+  , atpMaxTicketsPerOrder :: Int
   } deriving (Eq, Show)
 
 data TicketRuntimeView = TicketRuntimeView
@@ -81,6 +88,7 @@ data TicketRuntimeView = TicketRuntimeView
   , trvNetMinor           :: Int64
   , trvBuyerFeeMinor      :: Int64
   , trvOrganizerFeeMinor  :: Int64
+  , trvTaxIncluded        :: Bool
   , trvTaxMinor           :: Int64
   , trvCheckoutTotalMinor :: Int64
   , trvOrganizerPayable   :: Int64
@@ -196,7 +204,7 @@ loadApprovedTicketPolicy now eventKey = do
   rows <- (rawSql
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
-    \ terms_summary, refund_policy, transfer_allowed\
+    \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order, tax_included\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -206,13 +214,13 @@ loadApprovedTicketPolicy now eventKey = do
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int, Single Int
        , Single Int, Single Int, Single Text, Single Text, Single Text
-       , Single Bool
+       , Single Bool, Single Int, Single Bool
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
      , Single atpBuyerFeeBps, Single atpOrganizerFeeBps, Single atpTaxBps
      , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
-     , Single atpRefundPolicy, Single atpTransferAllowed
+     , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder, Single atpTaxIncluded
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -277,12 +285,14 @@ getPublicEventTicketStorefront rawEventId = do
           , Routes.currency = atpCurrency
           , Routes.buyerFeeBps = atpBuyerFeeBps
           , Routes.organizerFeeBps = atpOrganizerFeeBps
+          , Routes.taxIncluded = atpTaxIncluded
           , Routes.taxBps = atpTaxBps
           , Routes.holdMinutes = atpHoldMinutes
           , Routes.termsVersion = atpTermsVersion
           , Routes.termsSummary = atpTermsSummary
           , Routes.refundPolicy = atpRefundPolicy
           , Routes.transferAllowed = atpTransferAllowed
+          , Routes.maxTicketsPerOrder = atpMaxTicketsPerOrder
           }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
@@ -398,6 +408,9 @@ createPublicEventTicketCheckout rawEventId mIdempotency
   policy <- runDB (loadApprovedTicketPolicy now eventKey)
     >>= maybe (throwError (conflict
       "This event has no approved active ticket price and fee policy")) pure
+  when (requestedQuantity < 1 || requestedQuantity > atpMaxTicketsPerOrder policy) $
+    throwError (badRequest ("Ticket quantity must be between 1 and "
+      <> T.pack (show (atpMaxTicketsPerOrder policy)) <> " for this event"))
   unless (T.toUpper (SM.eventTicketTierCurrency tier) == atpCurrency policy) $
     throwError (conflict "Ticket tier currency does not match the approved event policy")
   checkoutEnvironment <- loadCheckoutEnvironment
@@ -417,7 +430,8 @@ createPublicEventTicketCheckout rawEventId mIdempotency
       throwError (badRequest "Fixed promotion currency does not match the approved event policy")
   let discountMinor = maybe 0 vpDiscountMinor validPromo
   price <- either (throwError . badRequest) pure $
-    TicketDomain.calculateTicketPrice
+    TicketDomain.calculateTicketPriceWithTaxMode
+      (atpTaxIncluded policy)
       (fromIntegral (SM.eventTicketTierPriceCents tier))
       requestedQuantity
       discountMinor
@@ -584,37 +598,14 @@ createTicketCheckoutTransaction
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
           , SocialEvents.isTicketTierSaleOpen now lockedTier ->
-              reserveAndCreate lockedTier transactionPromo
+              reserveAndCreate transactionPromo
         (_, _, Left promoError) -> pure (Left promoError)
         _ -> pure (Left (conflict "Ticket tier is no longer available"))
-    reserveAndCreate lockedTier transactionPromo = do
-      eventCapacityRows <- (rawSql
-        "SELECT event.capacity, COALESCE(sum(tier.quantity_sold), 0)::bigint\
-        \ FROM social_event event\
-        \ LEFT JOIN event_ticket_tier tier ON tier.event_id = event.id\
-        \ WHERE event.id = ? GROUP BY event.capacity"
-        [toPersistValue eventKey]
-        :: SqlPersistT IO [(Single (Maybe Int), Single Int64)])
-      let capacityAvailable = case eventCapacityRows of
-            [(Single Nothing, _)] -> True
-            [(Single (Just capacity), Single sold)] ->
-              sold + fromIntegral quantityInt <= fromIntegral capacity
-            _ -> False
-      if not capacityAvailable
-        then pure (Left (conflict "Event capacity is exhausted"))
-        else do
-          reserved <- updateWhereCount
-            [ SM.EventTicketTierId ==. tierKey
-            , SM.EventTicketTierIsActive ==. True
-            , SM.EventTicketTierQuantitySold
-                <=. SM.eventTicketTierQuantityTotal lockedTier - quantityInt
-            ]
-            [ SM.EventTicketTierQuantitySold +=. quantityInt
-            , SM.EventTicketTierUpdatedAt =. now
-            ]
-          if reserved == 0
-            then pure (Left (conflict "Ticket tier inventory is exhausted"))
-            else claimPromoAndCreate transactionPromo
+    reserveAndCreate transactionPromo = do
+      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt now
+      if not reserved
+        then pure (Left (conflict "Event or ticket tier inventory is exhausted"))
+        else claimPromoAndCreate transactionPromo
     claimPromoAndCreate transactionPromo = case transactionPromo of
       Nothing -> createOrder Nothing
       Just (ValidPromo (Entity promoKey promo) _) -> do
@@ -678,6 +669,7 @@ createTicketCheckoutTransaction
             , "discount_minor" .= TicketDomain.tpbDiscountMinor price
             , "buyer_fee_minor" .= TicketDomain.tpbBuyerFeeMinor price
             , "organizer_fee_minor" .= TicketDomain.tpbOrganizerFeeMinor price
+            , "tax_included" .= atpTaxIncluded policy
             , "tax_minor" .= TicketDomain.tpbTaxMinor price
             , "checkout_total_minor" .= TicketDomain.tpbCheckoutTotalMinor price
             , "organizer_payable_minor" .= TicketDomain.tpbOrganizerPayableMinor price
@@ -710,9 +702,9 @@ createTicketCheckoutTransaction
         \ discount_minor, net_face_value_minor, buyer_fee_bps, buyer_fee_minor,\
         \ organizer_fee_bps, organizer_fee_minor, tax_bps, tax_minor,\
         \ checkout_total_minor, organizer_payable_minor, platform_fee_minor,\
-        \ promo_code_id, terms_version, terms_accepted_at, hold_expires_at\
+        \ promo_code_id, terms_version, terms_accepted_at, hold_expires_at, tax_included\
         \) VALUES (?, ?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,\
-        \ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        \ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         [ toPersistValue orderKey, toPersistValue eventKey, toPersistValue tierKey
         , PersistText (Checkout.checkoutReferenceId checkout), PersistText (atpId policy)
         , PersistText (atpVersion policy), PersistText lookupHash
@@ -731,7 +723,7 @@ createTicketCheckoutTransaction
         , PersistInt64 (TicketDomain.tpbOrganizerPayableMinor price)
         , PersistInt64 (TicketDomain.tpbPlatformFeeMinor price)
         , maybe PersistNull toPersistValue promoKey, PersistText (atpTermsVersion policy)
-        , PersistUTCTime now, PersistUTCTime holdExpiresAt
+        , PersistUTCTime now, PersistUTCTime holdExpiresAt, PersistBool (atpTaxIncluded policy)
         ]
       rawExecute
         "INSERT INTO event_ticket_fulfillment_event(\
@@ -752,7 +744,7 @@ loadTicketRuntimeView orderKey = do
     \ runtime.unit_price_minor, runtime.gross_face_value_minor,\
     \ runtime.discount_minor, runtime.net_face_value_minor, runtime.buyer_fee_minor,\
     \ runtime.organizer_fee_minor, runtime.tax_minor, runtime.checkout_total_minor,\
-    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version\
+    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version, runtime.tax_included\
     \ FROM event_ticket_checkout_runtime runtime\
     \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
     \ WHERE runtime.order_id = ? AND checkout.domain_type = 'event_ticket_order'\
@@ -764,7 +756,7 @@ loadTicketRuntimeView orderKey = do
       [( Single Int64, Single Int64, Single Text, Single Text, Single Text
        , Single UTCTime, Single (Maybe UTCTime), Single Text, Single Text, Single Int, Single Int64
        , Single Int64, Single Int64, Single Int64, Single Int64, Single Int64
-       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text
+       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text, Single Bool
        )])
   pure $ case rows of
     [( Single trvOrderId, Single trvEventId, Single trvCheckoutId
@@ -774,7 +766,7 @@ loadTicketRuntimeView orderKey = do
      , Single trvDiscountMinor, Single trvNetMinor, Single trvBuyerFeeMinor
      , Single trvOrganizerFeeMinor, Single trvTaxMinor
      , Single trvCheckoutTotalMinor, Single trvOrganizerPayable
-     , Single trvPlatformFeeMinor, Single trvTermsVersion
+     , Single trvPlatformFeeMinor, Single trvTermsVersion, Single trvTaxIncluded
      )] -> Just TicketRuntimeView{..}
     _ -> Nothing
 
@@ -789,7 +781,7 @@ loadTicketCheckoutDTO orderKey lookupToken = do
   ticketEntities <- if isJust (trvIssuedAt runtime)
     then runDB $ selectList [SM.EventTicketOrderRefId ==. orderKey] [Asc SM.EventTicketId]
     else pure []
-  let publicTickets = map toPublicTicket ticketEntities
+  let publicTickets = map toPublicTicket (filter (Transfer.retainedByBuyer . entityVal) ticketEntities)
   pure Routes.PublicEventTicketCheckoutResponse
     { Routes.orderId = trvOrderId runtime
     , Routes.eventId = trvEventId runtime
@@ -808,6 +800,7 @@ loadTicketCheckoutDTO orderKey lookupToken = do
         , Routes.netFaceValueMinor = trvNetMinor runtime
         , Routes.buyerPlatformFeeMinor = trvBuyerFeeMinor runtime
         , Routes.organizerPlatformFeeMinor = trvOrganizerFeeMinor runtime
+        , Routes.taxIncluded = trvTaxIncluded runtime
         , Routes.taxMinor = trvTaxMinor runtime
         , Routes.checkoutTotalMinor = trvCheckoutTotalMinor runtime
         , Routes.organizerPayableMinor = trvOrganizerPayable runtime
@@ -839,22 +832,14 @@ loadPublicTicketPaymentMethods runtime = do
         Right environment -> do
           domainEnabled <- runDB $
             Checkout.domainEnabledForEnvironment environment "event_tickets"
-          if not domainEnabled then pure [] else do
-            datafastEnabled <- ((\datafast -> do
-                if ServiceStorefront.sdfEnvironment datafast /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderDatafast)
-              =<< ServiceStorefront.loadServiceDatafastEnv)
-              `catchError` const (pure False)
-            paypalEnabled <- ((\(_, _, _, configuredEnvironment, _) -> do
-                if configuredEnvironment /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderPayPal)
-              =<< ServiceStorefront.loadPaypalEnvForService)
-              `catchError` const (pure False)
-            pure $ ["datafast" | datafastEnabled] <> ["paypal" | paypalEnabled]
+          if not domainEnabled
+            then pure []
+            else PaymentAvailability.availableImplementedPaymentMethods
+              environment
+              PaymentAvailability.FlowEventTicket
+              (trvCheckoutTotalMinor runtime)
+              (trvCurrency runtime)
+              False
 
 requireLookupToken :: SM.EventTicketOrderId -> Maybe Text -> AppM ()
 requireLookupToken orderKey mLookupToken = do
@@ -1019,7 +1004,7 @@ beginTicketPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginTicketPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = tpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = tpcEnvironment context
@@ -1259,6 +1244,7 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
           , Checkout.vpProviderResource = checkoutId
           , Checkout.vpProviderResourcePath = Just resourcePath
           , Checkout.vpOrderReference = ticketReference context
+          , Checkout.vpProviderReference = ticketReference context
           , Checkout.vpAmountMinor = tpcAmountMinor context
           , Checkout.vpCurrency = tpcCurrency context
           , Checkout.vpEvidence = "server_to_server"
@@ -1297,7 +1283,7 @@ createPublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl (ticketReference context)
+      sharedProviderManager clientId clientSecret baseUrl (ticketReference context)
       (fromIntegral (tpcAmountMinor context)) (tpcCurrency context)
       (tpcBuyerName context) (tpcBuyerEmail context)
       `catchError` failTicketPaymentAttempt context attempt
@@ -1348,7 +1334,7 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
       attempt <- beginTicketPaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
         `catchError` failTicketPaymentAttempt context attempt
           Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
@@ -1395,6 +1381,7 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = ticketReference context
+            , Checkout.vpProviderReference = ticketReference context
             , Checkout.vpAmountMinor = tpcAmountMinor context
             , Checkout.vpCurrency = tpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -1420,9 +1407,8 @@ finalizeVerifiedTicketOrder :: TicketPaymentContext -> AppM ()
 finalizeVerifiedTicketOrder context = do
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  (order, ticketCodes, newlyIssued) <- liftIO $
+  _ <- liftIO $
     runSqlPool
       (SocialEvents.finalizePaidTicketOrder now (tpcOrderKey context))
       envPool
-  when newlyIssued $
-    SocialEvents.sendTicketConfirmationForOrder order ticketCodes
+  pure ()

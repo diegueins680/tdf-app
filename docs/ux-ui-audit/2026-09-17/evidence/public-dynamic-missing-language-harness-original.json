@@ -1,0 +1,1386 @@
+{
+  "status": "superseded language claims",
+  "reason": "Harness seeded obsolete tdf-locale key. Requested en was not asserted and cannot establish English coverage. Original es observations retained; en rerun with tdf-hq-ui/locale and html lang assertion.",
+  "results": [
+    {
+      "route": "/directorio/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/directorio/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/clasificados/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/clasificados/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/entradas",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/entradas",
+      "title": "Entradas para eventos · TDF Records · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/orden/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/orden/900000009",
+      "title": "Entradas para eventos · TDF Records · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/venues/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans/clubs/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/fans/clubs/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/artista/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/a/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/a/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/tiendas/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/tiendas/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/productos/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/productos/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource",
+      "title": "Tienda de artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "title": "Producto del artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/carrito",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/carrito",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/orden/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/orden/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/marketplace/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource/orden/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inscripcion/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inventario/scan/ux-audit-missing-resource",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/inventario/scan/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservas/orden/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/reservas/orden/900000009",
+      "title": "Estado de reserva · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua/cotizaciones/900000009",
+      "width": 320,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/domo-del-pululahua/cotizaciones/900000009",
+      "title": "Cotización Domo · TDF Records · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/directorio/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/directorio/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/clasificados/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/clasificados/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/entradas",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/entradas",
+      "title": "Entradas para eventos · TDF Records · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/orden/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/orden/900000009",
+      "title": "Entradas para eventos · TDF Records · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/venues/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans/clubs/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/fans/clubs/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/artista/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/a/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/a/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/tiendas/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/tiendas/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/productos/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/productos/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource",
+      "title": "Tienda de artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "title": "Producto del artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/carrito",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/carrito",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/orden/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/orden/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/marketplace/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource/orden/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inscripcion/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inventario/scan/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/inventario/scan/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservas/orden/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/reservas/orden/900000009",
+      "title": "Estado de reserva · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua/cotizaciones/900000009",
+      "width": 1280,
+      "language": "es",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/domo-del-pululahua/cotizaciones/900000009",
+      "title": "Cotización Domo · TDF Records · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/directorio/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/directorio/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/clasificados/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/clasificados/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/entradas",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/entradas",
+      "title": "Event tickets · TDF Records · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/orden/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/orden/900000009",
+      "title": "Event tickets · TDF Records · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/venues/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans/clubs/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/fans/clubs/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/artista/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/a/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/a/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/tiendas/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/tiendas/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/productos/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/productos/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource",
+      "title": "Tienda de artista · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "title": "Artist product · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/carrito",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/carrito",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/orden/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/orden/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/marketplace/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource/orden/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inscripcion/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inventario/scan/ux-audit-missing-resource",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/inventario/scan/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservas/orden/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/reservas/orden/900000009",
+      "title": "Estado de reserva · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua/cotizaciones/900000009",
+      "width": 320,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/domo-del-pululahua/cotizaciones/900000009",
+      "title": "Domo quote · TDF Records · TDF Records",
+      "geometry": {
+        "width": 320,
+        "scroll": 320
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/directorio/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/directorio/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/clasificados/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/clasificados/ux-audit-missing-resource",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/entradas",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/entradas",
+      "title": "Event tickets · TDF Records · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/eventos/900000009/orden/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/eventos/900000009/orden/900000009",
+      "title": "Event tickets · TDF Records · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/venues/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/venues/900000009",
+      "title": "Directorio musical · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/fans/clubs/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/fans/clubs/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/artista/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/artista/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/a/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/a/900000009",
+      "title": "Artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/tiendas/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/tiendas/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/merch/productos/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/merch/productos/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource",
+      "title": "Tienda de artista · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/producto/ux-audit-missing-resource",
+      "title": "Artist product · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/ux-audit-missing-resource/carrito",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/ux-audit-missing-resource/carrito",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/tienda/orden/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/tienda/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/marketplace/orden/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/marketplace/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/mezcla-mastering/pedido/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource/orden/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource/orden/900000009",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/curso/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inscripcion/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/curso/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/inventario/scan/ux-audit-missing-resource",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/inventario/scan/ux-audit-missing-resource",
+      "title": "TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/reservas/orden/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/reservas/orden/900000009",
+      "title": "Estado de reserva · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    },
+    {
+      "route": "/domo-del-pululahua/cotizaciones/900000009",
+      "width": 1280,
+      "language": "en",
+      "scenario": "absent-resource/anonymous",
+      "finalPath": "/domo-del-pululahua/cotizaciones/900000009",
+      "title": "Domo quote · TDF Records · TDF Records",
+      "geometry": {
+        "width": 1280,
+        "scroll": 1280
+      },
+      "errors": [],
+      "failures": [],
+      "violations": []
+    }
+  ]
+}

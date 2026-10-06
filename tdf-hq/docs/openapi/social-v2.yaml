@@ -1,0 +1,408 @@
+openapi: 3.0.0
+info:
+  title: TDF Social V2 inactive pilot
+  version: 0.1.0
+paths:
+  /social/v2/me:
+    get:
+      tags:
+      - Social V2 (inactive)
+      operationId: getSocialV2Me
+      summary: getSocialV2Me
+      description: Experimental account-only API. Process and database gates default
+        off. Not qualified for production cutover.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Current authorized state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialV2Me'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision, request identity, or transition conflict; refresh
+            current state
+        '429':
+          description: Mutation rate limit
+  /social/v2/relationships/{partyId}:
+    get:
+      tags:
+      - Social V2 (inactive)
+      operationId: getSocialV2Relationship
+      summary: getSocialV2Relationship
+      description: Experimental account-only API. Process and database gates default
+        off. Not qualified for production cutover.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Current authorized state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialV2State'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision, request identity, or transition conflict; refresh
+            current state
+        '429':
+          description: Mutation rate limit
+      parameters: &id001
+      - in: path
+        name: partyId
+        required: true
+        schema: &id003
+          type: integer
+          format: int64
+          minimum: 1
+    post:
+      tags:
+      - Social V2 (inactive)
+      operationId: mutateSocialV2Relationship
+      summary: mutateSocialV2Relationship
+      description: Experimental account-only API. Process and database gates default
+        off. Not qualified for production cutover.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Current authorized state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialV2State'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision, request identity, or transition conflict; refresh
+            current state
+        '429':
+          description: Mutation rate limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialV2Command'
+      parameters: *id001
+  /social/v2/preferences:
+    put:
+      tags:
+      - Social V2 (inactive)
+      operationId: updateSocialV2Preferences
+      summary: updateSocialV2Preferences
+      description: Experimental account-only API. Process and database gates default
+        off. Not qualified for production cutover.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Current authorized state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialV2Preferences'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision, request identity, or transition conflict; refresh
+            current state
+        '429':
+          description: Mutation rate limit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialV2PreferenceUpdate'
+  /social/v2/following:
+    get:
+      tags:
+      - Social V2 (inactive)
+      operationId: getSocialV2Following
+      summary: getSocialV2Following
+      description: Experimental account-only API. Process and database gates default
+        off. Not qualified for production cutover.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Current authorized state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialV2Feed'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision, request identity, or transition conflict; refresh
+            current state
+        '429':
+          description: Mutation rate limit
+      parameters:
+      - &id002
+        in: query
+        name: limit
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      - in: query
+        name: cursor
+        schema:
+          type: string
+          pattern: ^[1-9][0-9]*$
+  /social/v2/discover:
+    get:
+      tags:
+      - Social V2 (inactive)
+      operationId: getSocialV2Discover
+      summary: getSocialV2Discover
+      description: Experimental account-only API. Process and database gates default
+        off. Not qualified for production cutover.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Current authorized state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialV2Discover'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '404':
+          description: Disabled or unavailable
+        '409':
+          description: Revision, request identity, or transition conflict; refresh
+            current state
+        '429':
+          description: Mutation rate limit
+      parameters:
+      - *id002
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    SocialV2State:
+      type: object
+      additionalProperties: false
+      required:
+      - partyId
+      - revision
+      - following
+      - requested
+      - incoming
+      - connected
+      - blocked
+      - muted
+      - dismissed
+      properties:
+        partyId: *id003
+        revision: &id005
+          type: integer
+          format: int64
+          minimum: 0
+        following: &id004
+          type: boolean
+        requested: *id004
+        incoming: *id004
+        connected: *id004
+        blocked: *id004
+        muted: *id004
+        dismissed: *id004
+    SocialV2Preferences:
+      type: object
+      additionalProperties: false
+      required:
+      - discoverable
+      - personalized
+      - revision
+      properties:
+        discoverable: *id004
+        personalized: *id004
+        revision: *id005
+    SocialV2Me:
+      type: object
+      additionalProperties: false
+      required:
+      - discoverable
+      - personalized
+      - revision
+      - relationships
+      properties:
+        discoverable: *id004
+        personalized: *id004
+        revision: *id005
+        relationships:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - partyId
+            - revision
+            - following
+            - requested
+            - incoming
+            - connected
+            - blocked
+            - muted
+            - dismissed
+            - displayName
+            properties:
+              partyId: *id003
+              revision: *id005
+              following: *id004
+              requested: *id004
+              incoming: *id004
+              connected: *id004
+              blocked: *id004
+              muted: *id004
+              dismissed: *id004
+              displayName:
+                type: string
+    SocialV2Command:
+      type: object
+      additionalProperties: false
+      required:
+      - operation
+      - expectedRevision
+      - requestKey
+      properties:
+        operation:
+          type: string
+          enum:
+          - request
+          - accept
+          - disconnect
+          - follow
+          - unfollow
+          - block
+          - unblock
+          - mute
+          - unmute
+          - dismiss
+          - undismiss
+        expectedRevision: *id005
+        requestKey:
+          type: string
+          minLength: 1
+          maxLength: 80
+    SocialV2PreferenceUpdate:
+      type: object
+      additionalProperties: false
+      required:
+      - discoverable
+      - personalized
+      - expectedRevision
+      properties:
+        discoverable: *id004
+        personalized: *id004
+        expectedRevision: *id005
+    SocialV2Feed:
+      type: object
+      additionalProperties: false
+      required:
+      - nextCursor
+      - items
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - postId
+            - position
+            - publishedAt
+            - createdAt
+            - title
+            - content
+            - authorId
+            - authorName
+            - artistId
+            properties:
+              postId: *id003
+              position:
+                type: string
+                pattern: ^[1-9][0-9]*$
+              publishedAt:
+                type: string
+                format: date-time
+              createdAt:
+                type: string
+                format: date-time
+              title:
+                type: string
+                nullable: true
+              content:
+                type: string
+              authorId: *id003
+              authorName:
+                type: string
+              artistId: *id003
+    SocialV2Discover:
+      type: object
+      additionalProperties: false
+      required:
+      - personalized
+      - items
+      properties:
+        personalized: *id004
+        items:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - partyId
+            - displayName
+            - reason
+            - relationship
+            properties:
+              partyId: *id003
+              displayName:
+                type: string
+              reason:
+                type: string
+                enum:
+                - shared_interests
+                - public_profile
+              relationship:
+                $ref: '#/components/schemas/SocialV2State'

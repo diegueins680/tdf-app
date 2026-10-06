@@ -10,22 +10,6 @@ money:
     - no browser request can transition a payment to paid or captured
 
 state_machines:
-  checkout:
-    initial: draft
-    transitions:
-      draft: [validated, cancelled]
-      validated: [holding, awaiting_payment, cancelled, expired]
-      holding: [awaiting_payment, cancelled, expired]
-      awaiting_payment: [processing, cancelled, expired, failed]
-      processing: [paid, failed, cancelled]
-      paid: [partially_refunded, refunded, disputed, chargeback]
-      partially_refunded: [partially_refunded, refunded, disputed, chargeback]
-      disputed: [paid, chargeback]
-      failed: []
-      cancelled: []
-      expired: []
-      refunded: []
-      chargeback: []
   marketplace_sale_fulfillment:
     initial: on_hold
     method_specific_transitions:
@@ -302,3 +286,26 @@ rights_and_distribution:
     - sent requires transport evidence; acknowledged requires recipient evidence; live requires store or partner evidence
     - mocked or sandbox responses cannot transition production deliveries
     - usage corrections append lineage and never overwrite financial history
+
+# Historical material is excluded from active state-machine discovery.
+# This table is not the runtime checkout contract; see AUTHORITY-021.
+historical_state_machines:
+  checkout_2026_08_13:
+    status: deprecated_incomplete_reference
+    superseded_by: formal/system/payment-retry.md
+    runtime_correspondence: false
+    initial: draft
+    transitions:
+      draft: [validated, cancelled]
+      validated: [holding, awaiting_payment, cancelled, expired]
+      holding: [awaiting_payment, cancelled, expired]
+      awaiting_payment: [processing, cancelled, expired, failed]
+      processing: [paid, failed, cancelled]
+      paid: [partially_refunded, refunded, disputed, chargeback]
+      partially_refunded: [partially_refunded, refunded, disputed, chargeback]
+      disputed: [paid, chargeback]
+      failed: []
+      cancelled: []
+      expired: []
+      refunded: []
+      chargeback: []

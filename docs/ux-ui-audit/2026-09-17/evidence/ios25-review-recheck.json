@@ -1,0 +1,144 @@
+{
+  "statusObservations": [
+    {
+      "observedAt": "2026-09-18T18:52:02.935Z",
+      "status": 200,
+      "kind": "storeVersions",
+      "data": [
+        {
+          "id": "df5500ae-e7a2-4b3c-8de9-e06869733bde",
+          "versionString": "1.0.1",
+          "appStoreState": "WAITING_FOR_REVIEW",
+          "appVersionState": "WAITING_FOR_REVIEW",
+          "releaseType": "MANUAL"
+        }
+      ]
+    },
+    {
+      "observedAt": "2026-09-18T18:52:03.491Z",
+      "status": 200,
+      "kind": "build25",
+      "data": [
+        {
+          "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+          "version": "25",
+          "uploadedDate": "2026-09-18T11:09:34-07:00",
+          "processingState": "VALID"
+        }
+      ],
+      "beta": [
+        {
+          "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+        }
+      ]
+    }
+  ],
+  "reviewObservations": [
+    {
+      "observedAt": "2026-09-18T18:53:30.572Z",
+      "path": "/v1/apps/6779786470/reviewSubmissions?include=items",
+      "status": 200,
+      "data": [
+        {
+          "type": "reviewSubmissions",
+          "id": "c59f5706-f10e-4caf-ad00-3fff47911f3b",
+          "attributes": {
+            "platform": "IOS",
+            "submittedDate": "2026-09-18T18:16:23.722Z",
+            "state": "WAITING_FOR_REVIEW"
+          },
+          "relationships": {
+            "items": {
+              "meta": {
+                "paging": {
+                  "total": 1,
+                  "limit": 10
+                }
+              },
+              "data": [
+                {
+                  "type": "reviewSubmissionItems",
+                  "id": "YzU5ZjU3MDYtZjEwZS00Y2FmLWFkMDAtM2ZmZjQ3OTExZjNifDZ8ODg2OTAzNDkx"
+                }
+              ],
+              "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/c59f5706-f10e-4caf-ad00-3fff47911f3b/relationships/items",
+                "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/c59f5706-f10e-4caf-ad00-3fff47911f3b/items"
+              }
+            }
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/c59f5706-f10e-4caf-ad00-3fff47911f3b"
+          }
+        },
+        {
+          "type": "reviewSubmissions",
+          "id": "b6b56572-fa3c-4d59-96bb-152aa781db01",
+          "attributes": {
+            "platform": "IOS",
+            "submittedDate": "2026-09-18T04:48:43.779Z",
+            "state": "COMPLETE"
+          },
+          "relationships": {
+            "items": {
+              "meta": {
+                "paging": {
+                  "total": 1,
+                  "limit": 10
+                }
+              },
+              "data": [
+                {
+                  "type": "reviewSubmissionItems",
+                  "id": "YjZiNTY1NzItZmEzYy00ZDU5LTk2YmItMTUyYWE3ODFkYjAxfDZ8ODg2OTAzNDkx"
+                }
+              ],
+              "links": {
+                "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/b6b56572-fa3c-4d59-96bb-152aa781db01/relationships/items",
+                "related": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/b6b56572-fa3c-4d59-96bb-152aa781db01/items"
+              }
+            }
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissions/b6b56572-fa3c-4d59-96bb-152aa781db01"
+          }
+        }
+      ],
+      "included": [
+        {
+          "type": "reviewSubmissionItems",
+          "id": "YzU5ZjU3MDYtZjEwZS00Y2FmLWFkMDAtM2ZmZjQ3OTExZjNifDZ8ODg2OTAzNDkx",
+          "attributes": {
+            "state": "READY_FOR_REVIEW"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/YzU5ZjU3MDYtZjEwZS00Y2FmLWFkMDAtM2ZmZjQ3OTExZjNifDZ8ODg2OTAzNDkx"
+          }
+        },
+        {
+          "type": "reviewSubmissionItems",
+          "id": "YjZiNTY1NzItZmEzYy00ZDU5LTk2YmItMTUyYWE3ODFkYjAxfDZ8ODg2OTAzNDkx",
+          "attributes": {
+            "state": "REMOVED"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems/YjZiNTY1NzItZmEzYy00ZDU5LTk2YmItMTUyYWE3ODFkYjAxfDZ8ODg2OTAzNDkx"
+          }
+        }
+      ]
+    },
+    {
+      "observedAt": "2026-09-18T18:53:30.856Z",
+      "path": "/v1/appStoreVersions/df5500ae-e7a2-4b3c-8de9-e06869733bde/relationships/build",
+      "status": 200,
+      "data": {
+        "type": "builds",
+        "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997"
+      }
+    }
+  ],
+  "deviceBlocker": "User explicitly has no physical iPhone available. Keep MANUAL; simulator and Android evidence cannot replace required Google OAuth physical iPhone acceptance."
+}

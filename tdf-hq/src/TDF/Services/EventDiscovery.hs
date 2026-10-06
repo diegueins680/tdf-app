@@ -8,6 +8,10 @@ module TDF.Services.EventDiscovery
   , DiscoverySyncStats(..)
   , EventDiscoveryCity(..)
   , EventDiscoveryRunHandle
+  , eventDiscoveryDailySlot
+  , eventDiscoveryFullReconciliation
+  , ticketmasterNextPage
+  , buenPlanNextPage
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , fetchBuenPlanEvents
@@ -16,8 +20,10 @@ module TDF.Services.EventDiscovery
   , fetchTicketmasterEventsForCity
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
+  , completeEventDiscoverySourceRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
+  , loadEcuadorDiscoveryCities
   , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
@@ -26,19 +32,23 @@ module TDF.Services.EventDiscovery
   , reconcileProviderEvents
   , discoveredEventFitsPilotLimit
   , countImportedDiscoveryEvents
+  , countEventPilotIdentitiesDb
   , isDiscoveredEventKnown
+  , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
+  , preserveEventOwnership
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Exception (try)
-import Control.Monad (filterM, forM, forM_, unless)
+import Control.Monad (filterM, forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
   ( FromJSON(..)
   , Value(..)
+  , ToJSON(toJSON)
   , decodeStrict'
   , encode
   , eitherDecode
@@ -49,7 +59,9 @@ import Data.Aeson
   , (.!=)
   , (.=)
   )
+import Data.Int (Int64)
 import Data.Aeson.Types (parseMaybe)
+import Data.Aeson.Key (Key)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -67,13 +79,14 @@ import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (UTCTime, addUTCTime, diffUTCTime, utctDay)
+import Data.Time (UTCTime(..), DayOfWeek(Sunday), addDays, addUTCTime, dayOfWeek, diffUTCTime, secondsToDiffTime, utctDay)
 import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
   , PersistValue
+  , Update
   , SelectOpt(Asc)
   , deleteWhere
   , get
@@ -151,7 +164,7 @@ data DiscoveredEvent = DiscoveredEvent
   , discoveredEventTitle :: Text
   , discoveredEventDescription :: Maybe Text
   , discoveredEventStart :: UTCTime
-  , discoveredEventEnd :: UTCTime
+  , discoveredEventEnd :: Maybe UTCTime
   , discoveredEventVenue :: DiscoveredVenue
   , discoveredEventArtists :: [DiscoveredArtist]
   , discoveredEventPriceCents :: Maybe Int
@@ -249,22 +262,59 @@ finishEventDiscoveryRun ::
   Int ->
   DiscoverySyncStats ->
   IO ()
-finishEventDiscoveryRun pool (EventDiscoveryRunHandle runKey) now citiesCount stats =
-  runSqlPool
-    ( update
-        runKey
-        [ Social.ExternalEventDiscoveryRunStatus =. "completed"
-        , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
-        , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
-        , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
-        , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
-        , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
-        , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
-        , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
-        , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+finishEventDiscoveryRun pool handle now citiesCount stats =
+  runSqlPool (finishEventDiscoveryRunDb handle now citiesCount stats) pool
+
+finishEventDiscoveryRunDb ::
+  EventDiscoveryRunHandle -> UTCTime -> Int -> DiscoverySyncStats -> SqlPersistT IO ()
+finishEventDiscoveryRunDb (EventDiscoveryRunHandle runKey) now citiesCount stats =
+  update runKey
+    [ Social.ExternalEventDiscoveryRunStatus =. "completed"
+    , Social.ExternalEventDiscoveryRunCitiesCount =. citiesCount
+    , Social.ExternalEventDiscoveryRunEventsSeen =. discoveryEventsSeen stats
+    , Social.ExternalEventDiscoveryRunEventsCreated =. discoveryEventsCreated stats
+    , Social.ExternalEventDiscoveryRunEventsUpdated =. discoveryEventsUpdated stats
+    , Social.ExternalEventDiscoveryRunVenuesCreated =. discoveryVenuesCreated stats
+    , Social.ExternalEventDiscoveryRunArtistsCreated =. discoveryArtistsCreated stats
+    , Social.ExternalEventDiscoveryRunErrorMessage =. Nothing
+    , Social.ExternalEventDiscoveryRunFinishedAt =. Just now
+    ]
+
+-- | Fetches happen outside the transaction. Completion rechecks source authority
+-- under its row lock before any absence reconciliation, including empty feeds.
+-- Disablement either wins first (no completion writes) or follows this commit.
+completeEventDiscoverySourceRun ::
+  ConnectionPool -> Social.EventDiscoverySourceId -> EventDiscoveryRunHandle ->
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> DiscoverySyncStats -> IO ()
+completeEventDiscoverySourceRun pool sourceKey handle now provider cities seen stats =
+  runSqlPool complete pool
+  where
+    complete = do
+      backend <- T.toCaseFold <$> getRDBMS
+      sources <- if "postgres" `T.isInfixOf` backend
+        then rawSql "SELECT ?? FROM event_discovery_source WHERE id=? FOR UPDATE"
+          [toPersistValue sourceKey]
+        else maybe [] (pure . Entity sourceKey) <$> get sourceKey
+      case sources of
+        [Entity _ source]
+          | Social.eventDiscoverySourceEnabled source
+            && Social.eventDiscoverySourceSourceKey source == provider -> pure ()
+        _ -> liftIO (fail "Event source disabled or unavailable before completion")
+      -- Reference status updates acquire the pilot lock in their trigger.
+      -- Match imports' source -> pilot -> event order before reconciliation.
+      when ("postgres" `T.isInfixOf` backend) $ do
+        controls <- rawSql
+          "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+          [] :: SqlPersistT IO [Single Bool]
+        unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+      _ <- reconcileProviderEventsDb now provider cities seen
+      finishEventDiscoveryRunDb handle now (length cities) stats
+      update sourceKey
+        [ Social.EventDiscoverySourceConsecutiveFailures =. 0
+        , Social.EventDiscoverySourceLastSuccessAt =. Just now
+        , Social.EventDiscoverySourceLastError =. Nothing
+        , Social.EventDiscoverySourceUpdatedAt =. now
         ]
-    )
-    pool
 
 failEventDiscoveryRun ::
   ConnectionPool ->
@@ -602,7 +652,7 @@ fetchBuenPlanEvents cfg cities now
         (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
         now
     fetchPage pageNumber collected
-      | pageNumber > 10 = pure (Right collected)
+      | pageNumber > 10 = pure (Left "Buen Plan pagination budget exhausted; inventory incomplete")
       | otherwise = do
           requestResult <-
             try (parseRequest (buildBuenPlanRequestUrl pageNumber)) ::
@@ -642,9 +692,10 @@ fetchBuenPlanEvents cfg cities now
                                   Left err -> pure (Left err)
                                   Right (pageCount, normalized) -> do
                                     let nextCollected = collected ++ normalized
-                                    if pageNumber >= pageCount
-                                      then pure (Right nextCollected)
-                                      else fetchPage (pageNumber + 1) nextCollected
+                                    case buenPlanNextPage pageNumber pageCount of
+                                      Left err -> pure (Left err)
+                                      Right Nothing -> pure (Right nextCollected)
+                                      Right (Just nextPage) -> fetchPage nextPage nextCollected
 
     buildBuenPlanRequestUrl pageNumber =
       T.unpack
@@ -699,7 +750,7 @@ normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = 
       , discoveredEventTitle = title
       , discoveredEventDescription = description
       , discoveredEventStart = buenPlanEventStart
-      , discoveredEventEnd = addUTCTime (3 * 60 * 60) buenPlanEventStart
+      , discoveredEventEnd = Nothing
       , discoveredEventVenue =
           DiscoveredVenue
             { discoveredVenueExternalId = venueExternalId
@@ -999,8 +1050,8 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
   venueName <- cleanSingleLine 300 structuredEventVenue
   let endTime =
         case structuredEventEnd of
-          Just candidate | candidate > structuredEventStart -> candidate
-          _ -> addUTCTime (3 * 60 * 60) structuredEventStart
+          Just candidate | candidate > structuredEventStart -> Just candidate
+          _ -> Nothing
       lookaheadEnd =
         addUTCTime
           (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
@@ -1072,13 +1123,13 @@ normalizeStructuredArtist sourceKey rawName = do
 normalizeStructuredStatus ::
   UTCTime ->
   UTCTime ->
-  UTCTime ->
+  Maybe UTCTime ->
   Maybe Text ->
   Text
 normalizeStructuredStatus now startsAt endsAt rawStatus
-  | endsAt < now = "completed"
-  | startsAt <= now && endsAt >= now = "live"
   | normalized `elem` ["cancelled", "canceled"] = "cancelled"
+  | maybe False (< now) endsAt = "completed"
+  | startsAt <= now && maybe False (>= now) endsAt = "live"
   | normalized `elem` ["on_sale", "onsale", "confirmed"] = "on_sale"
   | otherwise = "announced"
   where
@@ -1185,6 +1236,15 @@ loadActiveUserCities :: ConnectionPool -> IO [Text]
 loadActiveUserCities pool =
   map eventDiscoveryCityName <$> loadSubscribedDiscoveryCities pool
 
+-- Discovery scope is independent of personal follow preferences. Reuse the
+-- canonical city registry, including places attached to approved venue feeds.
+loadEcuadorDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
+loadEcuadorDiscoveryCities pool = do
+  rows <- runSqlPool (rawSql
+    "SELECT name,country_code,time_zone FROM event_city WHERE country_code='EC' ORDER BY CASE WHEN normalized_name='quito' THEN 0 ELSE 1 END,normalized_name"
+    [] :: SqlPersistT IO [(Single Text,Single Text,Single (Maybe Text))]) pool
+  pure [EventDiscoveryCity name country zone | (Single name,Single country,Single zone) <- rows]
+
 loadSubscribedDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
 loadSubscribedDiscoveryCities pool = do
   rows <-
@@ -1259,6 +1319,36 @@ fetchTicketmasterEvents cfg apiKey city now =
     city
     now
 
+-- | The latest due slot, including one bounded catch-up after downtime.
+-- America/Guayaquil is UTC-05:00; this never uses the host's local timezone.
+eventDiscoveryDailySlot :: Int -> UTCTime -> UTCTime
+eventDiscoveryDailySlot localHour now =
+  let utcHour = (max 0 (min 23 localHour) + 5) `mod` 24
+      today = UTCTime (utctDay now) (secondsToDiffTime (fromIntegral utcHour * 3600))
+   in if today <= now then today else today { utctDay = addDays (-1) (utctDay today) }
+
+eventDiscoveryFullReconciliation :: UTCTime -> Bool
+eventDiscoveryFullReconciliation slot =
+  dayOfWeek (utctDay (addUTCTime (-5 * 3600) slot)) == Sunday
+
+-- | A budget stop is not a complete upstream inventory. Never reconcile
+-- omissions using the prefix returned before a pagination limit or outage.
+ticketmasterNextPage :: Int -> Int -> Int -> Either Text (Maybe Int)
+ticketmasterNextPage = providerNextPage "Ticketmaster"
+
+-- Buen Plan uses one-based pages. Exhausting its request budget while another
+-- page exists is an incomplete inventory, never a successful empty/missing set.
+buenPlanNextPage :: Int -> Int -> Either Text (Maybe Int)
+buenPlanNextPage currentPage totalPages =
+  fmap (fmap (+ 1)) (providerNextPage "Buen Plan" 10 (currentPage - 1) totalPages)
+
+providerNextPage :: Text -> Int -> Int -> Int -> Either Text (Maybe Int)
+providerNextPage provider pageBudget currentPage totalPages
+  | pageBudget < 1 || currentPage < 0 || totalPages < 0 = Left ("Invalid " <> provider <> " pagination metadata")
+  | currentPage + 1 >= totalPages = Right Nothing
+  | currentPage + 1 >= pageBudget = Left (provider <> " pagination budget exhausted; inventory incomplete")
+  | otherwise = Right (Just (currentPage + 1))
+
 fetchTicketmasterEventsForCity ::
   AppConfig ->
   Text ->
@@ -1301,7 +1391,8 @@ fetchTicketmasterEventsWithCountry cfg countryCode apiKey city now =
   where
     endTime = addUTCTime (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400)) now
     fetchPage pageNumber collected
-      | pageNumber >= eventDiscoveryMaxPagesPerCity cfg = pure (Right collected)
+      | pageNumber >= eventDiscoveryMaxPagesPerCity cfg =
+          pure (Left "Ticketmaster pagination budget exhausted; inventory incomplete")
       | otherwise = do
           let url =
                 buildTicketmasterRequestUrl
@@ -1344,9 +1435,10 @@ fetchTicketmasterEventsWithCountry cfg countryCode apiKey city now =
                               if ticketmasterResponseRawEventCount decoded > 0 && null decodedEvents
                                 then pure (Left "Ticketmaster returned no usable event records")
                                 else
-                                  if pageNumber + 1 >= totalPages
-                                    then pure (Right nextCollected)
-                                    else fetchPage (pageNumber + 1) nextCollected
+                                  case ticketmasterNextPage (eventDiscoveryMaxPagesPerCity cfg) pageNumber totalPages of
+                                    Left err -> pure (Left err)
+                                    Right Nothing -> pure (Right nextCollected)
+                                    Right (Just nextPage) -> fetchPage nextPage nextCollected
 
 requestTicketmasterPage ::
   Request ->
@@ -1390,8 +1482,8 @@ normalizeTicketmasterEvent configuredDefault requestedCity now TicketmasterEvent
         endText <- ticketmasterEndDateTime endData
         iso8601ParseM (T.unpack endText)
       end = case parsedEnd of
-        Just candidate | candidate > start -> candidate
-        _ -> addUTCTime (3 * 60 * 60) start
+        Just candidate | candidate > start -> Just candidate
+        _ -> Nothing
       classifications = ticketmasterEventClassifications
       segmentName = firstClassificationName ticketmasterSegment classifications
       genreNames = classificationGenreNames classifications
@@ -1525,13 +1617,13 @@ normalizeEventType title segment
 normalizeEventStatus ::
   UTCTime ->
   UTCTime ->
-  UTCTime ->
+  Maybe UTCTime ->
   Maybe Text ->
   Bool ->
   Text
 normalizeEventStatus now startsAt endsAt sourceStatus saleOpen
   | normalizedSource `elem` ["cancelled", "canceled"] = "cancelled"
-  | now >= startsAt && now <= endsAt = "live"
+  | now >= startsAt && maybe False (>= now) endsAt = "live"
   | saleOpen = "on_sale"
   | otherwise = "announced"
   where
@@ -1635,6 +1727,17 @@ joinDescription parts =
     [] -> Nothing
     values -> Just (T.intercalate "\n\n" values)
 
+-- Approval cannot make an incomplete provider record publishable. Missing
+-- confirmed end remains valid; venue, sale reference and lineup are required.
+discoveredEventPublicationReady :: DiscoveredEvent -> Bool
+discoveredEventPublicationReady DiscoveredEvent{..} =
+  not (T.null (T.strip discoveredEventTitle))
+    && not (T.null (T.strip (discoveredVenueName discoveredEventVenue)))
+    && not ("Ubicación publicada en Buen Plan" `T.isPrefixOf` discoveredVenueName discoveredEventVenue)
+    && not (null discoveredEventArtists)
+    && maybe False ("https://" `T.isPrefixOf`) discoveredEventTicketUrl
+    && discoveredVenueCountryCode discoveredEventVenue == Just "EC"
+
 syncDiscoveredEvent :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO DiscoverySyncStats
 syncDiscoveredEvent pool now event =
   runSqlPool (syncDiscoveredEventDb True now event) pool
@@ -1680,7 +1783,25 @@ discoveredEventFitsPilotLimit pool pilotLimit event =
           mergeCandidate <- findCanonicalEventCandidate event
           case mergeCandidate of
             Just _ -> pure True
-            Nothing -> (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+            Nothing -> do
+              backend <- T.toCaseFold <$> getRDBMS
+              if "postgres" `T.isInfixOf` backend then do
+                approved <- rawSql
+                  "SELECT approved FROM event_research_pilot_control WHERE control_key='default'"
+                  [] :: SqlPersistT IO [Single Bool]
+                if approved == [Single True] then pure True else do
+                  total <- countEventPilotIdentitiesDb
+                  pure (total < min 20 (max 0 pilotLimit))
+              else (< max 0 pilotLimit) <$> countImportedDiscoveryEventsDb
+
+-- | The status endpoint and PostgreSQL writer preflight share the same canonical
+-- identities as the database capacity guard, including linked research/imports.
+countEventPilotIdentitiesDb :: SqlPersistT IO Int
+countEventPilotIdentitiesDb = do
+  rows <- rawSql "SELECT count(*) FROM tdf_event_pilot_keys()" []
+  case rows of
+    [Single total] -> pure total
+    _ -> liftIO (fail "Event pilot capacity could not be read")
 
 countImportedDiscoveryEventsDb :: SqlPersistT IO Int
 countImportedDiscoveryEventsDb = do
@@ -1762,13 +1883,7 @@ reconcileImportedEvents pool now activeCities =
         resolveAllowedImportedUpdateStateId
           (Social.socialEventWorkflowStateId eventRow)
           desiredWorkflowStateId
-      update
-        eventKey
-        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
-        , Social.SocialEventMetadata =.
-            updateImportedEventMetadata isPublic (Social.socialEventMetadata eventRow)
-        , Social.SocialEventUpdatedAt =. now
-        ]
+      update eventKey (reconciledEventUpdates now workflowStateId isPublic Nothing eventRow)
 
 -- | Mark provider records that disappeared from a successful full run. A
 -- record remains usable for one missed run to absorb transient upstream
@@ -1781,7 +1896,11 @@ reconcileProviderEvents ::
   [Text] ->
   IO Int
 reconcileProviderEvents pool now provider targetCities seenExternalIds =
-  runSqlPool reconcile pool
+  runSqlPool (reconcileProviderEventsDb now provider targetCities seenExternalIds) pool
+
+reconcileProviderEventsDb ::
+  UTCTime -> Text -> [EventDiscoveryCity] -> [Text] -> SqlPersistT IO Int
+reconcileProviderEventsDb now provider targetCities seenExternalIds = reconcile
   where
     seen =
       Map.fromList
@@ -1855,36 +1974,39 @@ reconcileProviderEvents pool now provider targetCities seenExternalIds =
         )
         targetCities
 
-updateImportedEventMetadata :: Bool -> Maybe Text -> Maybe Text
-updateImportedEventMetadata isPublic rawMetadata =
-  updateImportedEventMetadataWithTicket isPublic Nothing rawMetadata
-
 updateImportedEventMetadataWithTicket ::
   Bool ->
   Maybe Text ->
   Maybe Text ->
   Maybe Text
 updateImportedEventMetadataWithTicket isPublic replacementTicketUrl rawMetadata =
-  Just . TE.decodeUtf8 . BL.toStrict . encode $
-    Object
-      ( AesonKeyMap.insert "ticketUrl" ticketUrlValue
-          . AesonKeyMap.insert "isPublic" (Bool isPublic)
-          . AesonKeyMap.delete "eventStatus"
-          $ originalObject
-      )
+  Just . encodeMetadata $ AesonKeyMap.insert "_discoveryOwned" (Object nextOwned) effective
   where
-    originalObject =
-      case rawMetadata >>= decodeStrict' . TE.encodeUtf8 of
-        Just (Object value) -> value
-        _ -> AesonKeyMap.empty
-    ticketUrlValue =
-      if isPublic
-        then
-          maybe
-            (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" originalObject))
-            String
-            replacementTicketUrl
-        else Null
+    original = AesonKeyMap.delete "eventStatus" (metadataObject rawMetadata)
+    previous = case AesonKeyMap.lookup "_discoveryOwned" original of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    stillOwned key = AesonKeyMap.member key previous
+      && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key original
+    incoming = AesonKeyMap.fromList
+      [ ("isPublic", Bool isPublic)
+      , ("ticketUrl", if isPublic then maybe
+          (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" original)) String replacementTicketUrl
+          else Null)
+      ]
+    apply acc key
+      | stillOwned key = maybe acc (\v -> AesonKeyMap.insert key v acc)
+          (AesonKeyMap.lookup key incoming)
+      | otherwise = acc
+    merged = foldl apply original ["isPublic", "ticketUrl"]
+    -- Source disappearance/expiry can hide any imported event, but can never
+    -- publish an editorially hidden or legacy event by claiming ownership.
+    effective = if isPublic then merged else AesonKeyMap.insert "isPublic" (Bool False) merged
+    nextOwned = foldl advance previous ["isPublic", "ticketUrl"]
+    advance acc key
+      | stillOwned key = maybe acc (\v -> AesonKeyMap.insert key v acc)
+          (AesonKeyMap.lookup key effective)
+      | otherwise = AesonKeyMap.delete key acc
 
 refreshCanonicalVisibility ::
   UTCTime ->
@@ -1936,16 +2058,34 @@ refreshCanonicalVisibility now eventKey = do
         resolveAllowedImportedUpdateStateId
           (Social.socialEventWorkflowStateId eventRow)
           desiredWorkflowStateId
-      update
-        eventKey
-        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
-        , Social.SocialEventMetadata =.
-            updateImportedEventMetadataWithTicket
-              isPublic
-              ticketUrl
-              (Social.socialEventMetadata eventRow)
-        , Social.SocialEventUpdatedAt =. now
-        ]
+      update eventKey (reconciledEventUpdates now workflowStateId isPublic ticketUrl eventRow)
+
+-- Reconciliation shares the import ownership boundary; it must not silently
+-- reclaim a workflow field changed by an editor or an unproven legacy writer.
+reconciledEventUpdates :: UTCTime -> UUID -> Bool -> Maybe Text
+  -> Social.SocialEvent -> [Update Social.SocialEvent]
+reconciledEventUpdates now desiredState isPublic ticketUrl current =
+  [ Social.SocialEventWorkflowStateId =. nextState
+  , Social.SocialEventMetadata =. Just (encodeMetadata finalMetadata)
+  , Social.SocialEventUpdatedAt =. now
+  ]
+  where
+    original = metadataObject (Social.socialEventMetadata current)
+    previous = case AesonKeyMap.lookup "_discoveryOwned" original of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    ownsState = AesonKeyMap.lookup "workflowStateId" previous
+      == Just (toJSON (Social.socialEventWorkflowStateId current))
+    nextState = if ownsState then Just desiredState else Social.socialEventWorkflowStateId current
+    updatedMetadata = metadataObject (updateImportedEventMetadataWithTicket
+      isPublic ticketUrl (Social.socialEventMetadata current))
+    updatedOwned = case AesonKeyMap.lookup "_discoveryOwned" updatedMetadata of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    nextOwned = if ownsState
+      then AesonKeyMap.insert "workflowStateId" (toJSON nextState) updatedOwned
+      else AesonKeyMap.delete "workflowStateId" updatedOwned
+    finalMetadata = AesonKeyMap.insert "_discoveryOwned" (Object nextOwned) updatedMetadata
 
 sourceRefIsActive :: Social.ExternalEventRef -> Bool
 sourceRefIsActive ref =
@@ -2002,7 +2142,25 @@ resolveAllowedImportedUpdateStateId currentStateId desiredStateId =
       pure (if allowed then desiredStateId else currentState)
 
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
-syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
+syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do
+  -- Every automated entry point locks its enabled source and the existing
+  -- pilot before event/entity locks. Database triggers enforce the shared cap in the same transaction.
+  backend <- T.toCaseFold <$> getRDBMS
+  autoPublish <- if "postgres" `T.isInfixOf` backend then do
+    sources <- rawSql
+      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json') FOR SHARE"
+      [toPersistValue discoveredEventProvider] :: SqlPersistT IO [Single Int64]
+    unless (length sources == 1) (liftIO (fail "Event source disabled or unavailable"))
+    controls <- rawSql
+      "SELECT approved FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE"
+      [] :: SqlPersistT IO [Single Bool]
+    unless (length controls == 1) (liftIO (fail "Event pilot control unavailable"))
+    authority <- rawSql
+      "SELECT true FROM event_discovery_publication_approval approval JOIN event_discovery_source source ON source.id=approval.source_id WHERE source.source_key=? AND source.enabled AND approval.revoked_at IS NULL AND approval.approved_at<=? LIMIT 1"
+      [toPersistValue discoveredEventProvider,toPersistValue now] :: SqlPersistT IO [Single Bool]
+    pure (requestedPublication && controls == [Single True] && authority == [Single True]
+      && discoveredEventPublicationReady event)
+    else pure requestedPublication -- SQLite unit fixtures; deployed storage is PostgreSQL.
   initialExistingRef <-
     getBy
       (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
@@ -2013,6 +2171,8 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
         _ <- lockDiscoveredSocialEvent (Social.externalEventRefEventId ref)
         fmap (Entity refKey) <$> get refKey
   case existingRef of
+    Just (Entity _ ref) | now < Social.externalEventRefLastSeenAt ref ->
+      pure emptyDiscoverySyncStats { discoveryEventsSeen=1 }
     Just (Entity refKey ref)
       | Social.externalEventRefIsSuppressed ref -> do
           update
@@ -2170,20 +2330,9 @@ syncUnsuppressedDiscoveredEventDb
               resolveAllowedImportedUpdateStateId
                 (existingEvent >>= Social.socialEventWorkflowStateId)
                 desiredWorkflowStateId
-            update
-              existingEventKey
-              [ Social.SocialEventTitle =. discoveredEventTitle
-              , Social.SocialEventDescription =. discoveredEventDescription
-              , Social.SocialEventVenueId =. Just venueKey
-              , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
-              , Social.SocialEventStartTime =. discoveredEventStart
-              , Social.SocialEventEndTime =. Just discoveredEventEnd
-              , Social.SocialEventPriceCents =. discoveredEventPriceCents
-              , Social.SocialEventEventTypeId =. Just eventTypeUuid
-              , Social.SocialEventWorkflowStateId =. Just workflowStateId
-              , Social.SocialEventMetadata =. metadata
-              , Social.SocialEventUpdatedAt =. now
-              ]
+            forM_ existingEvent $ \current ->
+              update existingEventKey (ownedEventUpdates current now DiscoveredEvent{..}
+                venueKey eventTypeUuid workflowStateId metadata)
           else pure ()
         update
           refKey
@@ -2213,20 +2362,9 @@ syncUnsuppressedDiscoveredEventDb
                     resolveAllowedImportedUpdateStateId
                       (candidateEvent >>= Social.socialEventWorkflowStateId)
                       desiredWorkflowStateId
-                  update
-                    candidateKey
-                    [ Social.SocialEventTitle =. discoveredEventTitle
-                    , Social.SocialEventDescription =. discoveredEventDescription
-                    , Social.SocialEventVenueId =. Just venueKey
-                    , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
-                    , Social.SocialEventStartTime =. discoveredEventStart
-                    , Social.SocialEventEndTime =. Just discoveredEventEnd
-                    , Social.SocialEventPriceCents =. discoveredEventPriceCents
-                    , Social.SocialEventEventTypeId =. Just eventTypeUuid
-                    , Social.SocialEventWorkflowStateId =. Just workflowStateId
-                    , Social.SocialEventMetadata =. metadata
-                    , Social.SocialEventUpdatedAt =. now
-                    ]
+                  forM_ candidateEvent $ \current ->
+                    update candidateKey (ownedEventUpdates current now DiscoveredEvent{..}
+                      venueKey eventTypeUuid workflowStateId metadata)
                 else pure ()
               pure (candidateKey, False)
             Nothing -> do
@@ -2241,11 +2379,12 @@ syncUnsuppressedDiscoveredEventDb
                     , Social.socialEventEventTypeId = Just eventTypeUuid
                     , Social.socialEventWorkflowStateId = Just desiredWorkflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
-                    , Social.socialEventEndTime = Just discoveredEventEnd
+                    , Social.socialEventEndTime = discoveredEventEnd
                     , Social.socialEventPriceCents = discoveredEventPriceCents
                     , Social.socialEventCurrencyId = Nothing
                     , Social.socialEventCapacity = Nothing
-                    , Social.socialEventMetadata = metadata
+                    , Social.socialEventMetadata = initialOwnedEventMetadata DiscoveredEvent{..}
+                        venueKey eventTypeUuid desiredWorkflowStateId metadata
                     , Social.socialEventCreatedAt = now
                     , Social.socialEventUpdatedAt = now
                     }
@@ -2279,6 +2418,101 @@ syncUnsuppressedDiscoveredEventDb
       , discoveryVenuesCreated = if venueCreated then 1 else 0
       , discoveryArtistsCreated = artistsCreated
       }
+
+-- Compare each canonical field with the last value actually supplied by ingestion.
+-- A differing field belongs to the editor. Keep unrelated metadata, and retain the
+-- newest source evidence even when its canonical field is protected. Legacy rows
+-- without ownership evidence are conservative: their canonical fields are not adopted.
+ownedEventUpdates :: Social.SocialEvent -> UTCTime -> DiscoveredEvent -> Social.VenueId
+  -> UUID -> UUID -> Maybe Text -> [Update Social.SocialEvent]
+ownedEventUpdates current now event@DiscoveredEvent{..} venueKey typeId stateId metadata =
+  [ Social.SocialEventTitle =. keep "title" (Social.socialEventTitle current) discoveredEventTitle
+  , Social.SocialEventDescription =. keep "description" (Social.socialEventDescription current) discoveredEventDescription
+  , Social.SocialEventVenueId =. keep "venueId" (Social.socialEventVenueId current) (Just venueKey)
+  , Social.SocialEventTimezone =. keep "timezone" (Social.socialEventTimezone current) (importedEventTimeZone discoveredEventVenue)
+  , Social.SocialEventStartTime =. keep "startTime" (Social.socialEventStartTime current) discoveredEventStart
+  , Social.SocialEventEndTime =. keep "endTime" (Social.socialEventEndTime current) discoveredEventEnd
+  , Social.SocialEventPriceCents =. keep "priceCents" (Social.socialEventPriceCents current) discoveredEventPriceCents
+  , Social.SocialEventEventTypeId =. keep "eventTypeId" (Social.socialEventEventTypeId current) (Just typeId)
+  , Social.SocialEventWorkflowStateId =. keep "workflowStateId" (Social.socialEventWorkflowStateId current) (Just stateId)
+  , Social.SocialEventMetadata =. Just (encodeMetadata mergedMetadata)
+  , Social.SocialEventUpdatedAt =. now
+  ]
+  where
+    oldMetadata = metadataObject (Social.socialEventMetadata current)
+    previous = case AesonKeyMap.lookup "_discoveryOwned" oldMetadata of
+      Just (Object snapshot) -> snapshot
+      _ -> AesonKeyMap.empty
+    next = ownedEventSnapshot event venueKey typeId stateId metadata
+    -- Only previously owned keys remain owned; a missing legacy snapshot is not
+    -- permission to claim values that may have been written by an administrator.
+    nextOwned = AesonKeyMap.filterWithKey
+      (\key _ -> AesonKeyMap.member key previous
+        && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key actualSnapshot) next
+    actualSnapshot = currentEventSnapshot current
+    keep :: ToJSON a => Key -> a -> a -> a
+    keep key actual incoming =
+      if AesonKeyMap.lookup key previous == Just (toJSON actual) then incoming else actual
+    mergeMetadata acc key =
+      let actual = AesonKeyMap.lookup key oldMetadata
+       in if actual == AesonKeyMap.lookup key previous && AesonKeyMap.member key previous
+          then maybe acc (\value -> AesonKeyMap.insert key value acc) (AesonKeyMap.lookup key next)
+          else acc
+    mergedMetadata = AesonKeyMap.insert "_discoveryOwned" (Object nextOwned)
+      (foldl mergeMetadata oldMetadata ["ticketUrl", "imageUrl", "currency", "isPublic"])
+
+initialOwnedEventMetadata :: DiscoveredEvent -> Social.VenueId -> UUID -> UUID -> Maybe Text -> Maybe Text
+initialOwnedEventMetadata event venueKey typeId stateId metadata = Just . encodeMetadata $
+  AesonKeyMap.insert "_discoveryOwned" (Object (ownedEventSnapshot event venueKey typeId stateId metadata))
+    (metadataObject metadata)
+
+ownedEventSnapshot :: DiscoveredEvent -> Social.VenueId -> UUID -> UUID -> Maybe Text -> AesonKeyMap.KeyMap Value
+ownedEventSnapshot DiscoveredEvent{..} venueKey typeId stateId metadata = AesonKeyMap.fromList
+  [ ("title", toJSON discoveredEventTitle)
+  , ("description", toJSON discoveredEventDescription)
+  , ("venueId", toJSON (Just venueKey))
+  , ("timezone", toJSON (importedEventTimeZone discoveredEventVenue))
+  , ("startTime", toJSON discoveredEventStart)
+  , ("endTime", toJSON discoveredEventEnd)
+  , ("priceCents", toJSON discoveredEventPriceCents)
+  , ("eventTypeId", toJSON (Just typeId))
+  , ("workflowStateId", toJSON (Just stateId))
+  ] <> metadataObject metadata
+
+-- Stored ingestion evidence is internal. An editorial writer carries it forward
+-- only for fields whose canonical values it did not change, under the event lock.
+preserveEventOwnership :: Social.SocialEvent -> Social.SocialEvent -> Maybe Text
+preserveEventOwnership current proposed =
+  case AesonKeyMap.lookup "_discoveryOwned" (metadataObject (Social.socialEventMetadata current)) of
+    Just (Object previous) -> Just . encodeMetadata $
+      AesonKeyMap.insert "_discoveryOwned" (Object remaining)
+        (metadataObject (Social.socialEventMetadata proposed))
+      where
+        remaining = AesonKeyMap.filterWithKey
+          (\key _ -> AesonKeyMap.lookup key (currentEventSnapshot current)
+            == AesonKeyMap.lookup key (currentEventSnapshot proposed)) previous
+    _ -> Social.socialEventMetadata proposed
+
+currentEventSnapshot :: Social.SocialEvent -> AesonKeyMap.KeyMap Value
+currentEventSnapshot current = AesonKeyMap.fromList
+  [ ("title", toJSON (Social.socialEventTitle current))
+  , ("description", toJSON (Social.socialEventDescription current))
+  , ("venueId", toJSON (Social.socialEventVenueId current))
+  , ("timezone", toJSON (Social.socialEventTimezone current))
+  , ("startTime", toJSON (Social.socialEventStartTime current))
+  , ("endTime", toJSON (Social.socialEventEndTime current))
+  , ("priceCents", toJSON (Social.socialEventPriceCents current))
+  , ("eventTypeId", toJSON (Social.socialEventEventTypeId current))
+  , ("workflowStateId", toJSON (Social.socialEventWorkflowStateId current))
+  ] <> metadataObject (Social.socialEventMetadata current)
+
+metadataObject :: Maybe Text -> AesonKeyMap.KeyMap Value
+metadataObject value = case value >>= decodeStrict' . TE.encodeUtf8 of
+  Just (Object fields) -> fields
+  _ -> AesonKeyMap.empty
+
+encodeMetadata :: AesonKeyMap.KeyMap Value -> Text
+encodeMetadata = TE.decodeUtf8 . BL.toStrict . encode . Object
 
 eventHasSuppressedReference ::
   Social.SocialEventId ->

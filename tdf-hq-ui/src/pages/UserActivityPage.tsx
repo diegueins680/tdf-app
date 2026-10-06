@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -94,6 +95,7 @@ const summarizeActivityByActor = (items: readonly UserActivity[]): ActorActivity
 };
 
 export default function UserActivityPage() {
+  const { t } = useTranslation();
   const [limit, setLimit] = useState(200);
 
   const activityQuery = useQuery<UserActivity[]>({
@@ -169,7 +171,7 @@ export default function UserActivityPage() {
 
       {(activityQuery.isLoading || hasActivity) && (
         <Paper>
-          <TableContainer>
+          <TableContainer tabIndex={0} role="region" aria-label={t('auditAccessibility.activitySummary')}>
             <Table size="small" aria-label="Resumen de actividad por usuario">
               <TableHead>
                 <TableRow>
@@ -183,7 +185,7 @@ export default function UserActivityPage() {
                 {activityQuery.isLoading && (
                   <TableRow>
                     <TableCell colSpan={4} align="center">
-                      <CircularProgress size={24} />
+                      <CircularProgress size={24} aria-label={t('auditAccessibility.loadingActivitySummary')} />
                     </TableCell>
                   </TableRow>
                 )}
@@ -229,7 +231,7 @@ export default function UserActivityPage() {
             items={activities}
             pagination={{ itemLabel: 'acciones', initialRowsPerPage: 25, resetKey: limit }}
             renderItems={(visibleActivities) => (
-              <TableContainer>
+              <TableContainer tabIndex={0} role="region" aria-label={t('auditAccessibility.recentActivity')}>
                 <Table size="small" aria-label="Actividad reciente">
                   <TableHead>
                     <TableRow>
@@ -244,7 +246,7 @@ export default function UserActivityPage() {
                     {activityQuery.isLoading && (
                       <TableRow>
                         <TableCell colSpan={5} align="center">
-                          <CircularProgress size={24} />
+                          <CircularProgress size={24} aria-label={t('auditAccessibility.loadingRecentActivity')} />
                         </TableCell>
                       </TableRow>
                     )}

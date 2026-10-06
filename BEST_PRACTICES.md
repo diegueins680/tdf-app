@@ -24,7 +24,7 @@ This repo now ships with codified guardrails for both the TypeScript frontends a
 
 ## Submodules, Assets, and Backups
 
-- **Submodule init** – `tdf-mobile/` is a Git submodule. Run `git submodule update --init --recursive` after cloning or pulling commits that touch the mobile app. Pushes from CI/Cloudflare will fail if the submodule isn’t initialized.
+- **Submodule init** – `tdf-mobile/` is a Git submodule. Run `git submodule update --init --checkout --recursive` after cloning or pulling commits that touch the mobile app. Mobile development and checks require this explicit checkout; web deployments omit the mobile repository.
 - **UI backups** – Any `tdf-hq-ui.backup.*` directories are developer snapshots and intentionally ignored by `.gitignore`. Never reference them from production builds.
 - **Brand assets** – The React shell uses the `BrandLogo` component with SVG glyphs (`src/assets/tdf-*.svg`). When updating the wordmark, swap the SVGs rather than re-introducing inline text so dark/light themes stay legible.
 

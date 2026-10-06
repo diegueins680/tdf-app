@@ -495,6 +495,7 @@ describe('API query/id validation', () => {
         fullName: 'Ana Perez',
         email: 'ana@example.com',
       } as never,
+      'course-slug-validation-request',
     );
     expect(postMock).toHaveBeenCalledWith(
       '/public/courses/cohort%2F2026/registrations',
@@ -502,6 +503,7 @@ describe('API query/id validation', () => {
         fullName: 'Ana Perez',
         email: 'ana@example.com',
       },
+      { headers: { 'Idempotency-Key': 'course-slug-validation-request' } },
     );
 
     expect(() => Courses.getMetadata('   ')).toThrow('slug no puede estar vacío.');

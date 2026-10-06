@@ -1,0 +1,26 @@
+{
+  "at": "2026-09-18T08:44:39.303Z",
+  "source": "3c72536ac83cff16481a0dd633748393eee996a8",
+  "backend": "38256cf721d92380c8cfc0b6d19e10bd8703c233",
+  "isolated": true,
+  "/social-events/artists/1/followers": {
+    "status": 200,
+    "rowCount": 1,
+    "ownsPersistedFollow": true
+  },
+  "/fans/me/follows": {
+    "status": 200,
+    "rowCount": 0,
+    "ownsPersistedFollow": false
+  },
+  "/session/onboarding": {
+    "status": 200,
+    "completedAt": null,
+    "eligible": true
+  },
+  "completion": {
+    "status": 200,
+    "body": "{\"newlyCompleted\":false,\"progress\":{\"completedAt\":null,\"eligible\":true,\"firstValue\":null,\"firstValueCompletedAt\":null,\"onboardingIntent\":\"follow_artists\",\"signupCompletedAt\":\"2026-09-18T07:59:45.761465Z\",\"updatedAt\":\"2026-09-18T07:59:45.761465Z\"}}"
+  },
+  "ownershipCheck": "Actual followerPartyId matches isolated account B; the initial diagnostic used the obsolete afFollowerPartyId alias and was corrected after inspecting the wire DTO."
+}

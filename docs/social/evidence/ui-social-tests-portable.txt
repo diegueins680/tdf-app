@@ -1,0 +1,14 @@
+(node:33877) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+PASS tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx (12.719 s)
+PASS tdf-hq-ui/src/api/socialV2.test.ts
+PASS tdf-hq-ui/src/api/social.test.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       15 passed, 15 total
+Snapshots:   0 total
+Time:        16.835 s, estimated 32 s
+Ran all test suites matching tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx|tdf-hq-ui/src/api/socialV2.test.ts|tdf-hq-ui/src/api/social.test.ts.

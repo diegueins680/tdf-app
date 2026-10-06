@@ -1,0 +1,56 @@
+{
+  "scope": "Intermediate exact-revision evidence; not final-candidate conformance or deployment approval.",
+  "consolidatedMain": "259148d2af3b511dd7d011534e024014c90dfb15",
+  "shippedMobile": "147ec8bc4ad4150eaab1ad410aa1803822075697",
+  "compatibleMobile": "58abc5a543ed89b692e3e7bd569bf6db766dd0ac",
+  "hosted": {
+    "run": 37276228191,
+    "url": "https://github.com/diegueins680/tdf-app/actions/runs/37276228191",
+    "result": "success",
+    "head": "eadbcb451af07d9ab237a72663f82530eeb824e1",
+    "testedMerge": "3340954541cd98ab0419f8376ac68c54b299a581",
+    "testedParents": [
+      "259148d2af3b511dd7d011534e024014c90dfb15",
+      "eadbcb451af07d9ab237a72663f82530eeb824e1"
+    ],
+    "testedTreeAndHeadTree": "a59c069d7e7afb5388c355c7f0bc86e467edda9e",
+    "bookingChecks": 164,
+    "backendScope": "Full hosted backend build/tests and selected PostgreSQL/HTTP/concurrency gates; later route/worker/collector/policy changes are excluded."
+  },
+  "repositoryGate": {
+    "revision": "1e1ba292fef25cbb2b4fc64d339579292b7eb1a5",
+    "command": "bash scripts/quality-repo.sh",
+    "exitCode": 0,
+    "logSha256": "5a7f67076bdbfb005ed8c89840c95724c9118c3e0c083bc324a9b6bc7d26c0e4",
+    "limitation": "Subsequent review found policy-only admission gap, corrected in8b27add85. Earlier green gate does not establish policy admission."
+  },
+  "reviews": [
+    {
+      "revision": "83cbe2fd412781b2b21061117a32aac42171cb4a",
+      "reviewer": "independent conformance_review agent",
+      "result": "No findings in scoped route/worker/admission source review."
+    },
+    {
+      "revision": "be4a6e8b3403901b0115362829ff86c4b53b787b",
+      "reviewer": "independent conformance_review agent",
+      "result": "No findings;11Python and11Node tests independently passed."
+    },
+    {
+      "revision": "1e1ba292fef25cbb2b4fc64d339579292b7eb1a5",
+      "reviewer": "independent conformance_review agent",
+      "result": "P2 actual availability policy could bypass backend selection; missing/duplicate IDs accepted by Python."
+    },
+    {
+      "revision": "8b27add85bb92e43170a1593b85ed86d1a7a37a9",
+      "reviewer": "independent conformance_review agent",
+      "result": "P2 fixed;10Node9Python2CIwiring tests passed. Actual gate correctly rejects stale compiled snapshot; no new findings."
+    }
+  ],
+  "outstanding": [
+    "Historical at8b27add85, resolved by8faf7975b: rebuilt5d9a917ed executable emitted843 routes/zero competing and passed206 synthetic runtime checks; see formal/system/compiled-api-boundary.md.",
+    "Full final-candidate quality, review and normal protected merge.",
+    "Canonical guarded Hetzner release executor and eligible production verification.",
+    "Broad semantic gaps remain:49 explicit obligations,430 discovered candidates,1976 unmapped material surfaces; no whole-system conformance claim."
+  ],
+  "productionChanged": false
+}

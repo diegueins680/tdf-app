@@ -119,6 +119,9 @@ data PaymentEvent
   | PaymentChargebackObserved
   deriving (Eq, Show)
 
+-- Reference helper only: production checkout mutations use CheckoutStore and
+-- PaymentRuntimeStore. This table is not runtime refinement evidence.
+-- See formal/system/payment-retry.md and AUTHORITY-021.
 transitionCheckout :: CheckoutState -> CheckoutEvent -> Either Text CheckoutState
 transitionCheckout current event = case (current, event) of
   (CheckoutDraft, CheckoutValidationPassed) -> Right CheckoutValidated
@@ -222,7 +225,8 @@ authorize lifecycle amount
 capture :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
 capture lifecycle amount
   | amount <= 0 = Left "Capture amount must be positive"
-  | newCaptured > maximumCapture = Left "Capture exceeds the authorized payment balance"
+  -- Check the remaining balance before adding bounded Int64 amounts.
+  | amount > maximumCapture - paymentCapturedMinor lifecycle = Left "Capture exceeds the authorized payment balance"
   | otherwise = Right lifecycle
       { paymentState = if newCaptured == paymentAmountMinor lifecycle
           then PaymentCaptured
@@ -256,7 +260,7 @@ voidAuthorization lifecycle amount
 refund :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
 refund lifecycle amount
   | amount <= 0 = Left "Refund amount must be positive"
-  | newRefunded > paymentCapturedMinor lifecycle = Left "Refund exceeds the captured balance"
+  | amount > paymentCapturedMinor lifecycle - paymentRefundedMinor lifecycle = Left "Refund exceeds the captured balance"
   | otherwise = Right lifecycle
       { paymentState = if newRefunded == paymentCapturedMinor lifecycle
           then PaymentRefunded
@@ -312,5 +316,5 @@ eventName event = case event of
 ledgerBalances :: [(Text, Int64)] -> Bool
 ledgerBalances entries = not (null entries) && all (== 0) (Map.elems balances)
   where
-    balances :: Map Text Int64
-    balances = Map.fromListWith (+) [(T.toUpper (T.strip currency), amount) | (currency, amount) <- entries]
+    balances :: Map Text Integer
+    balances = Map.fromListWith (+) [(T.toUpper (T.strip currency), toInteger amount) | (currency, amount) <- entries]

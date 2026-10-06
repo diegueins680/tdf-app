@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Box, LinearProgress, Stack, TablePagination, Typography, type SxProps, type Theme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import '../i18n/index';
@@ -26,6 +26,7 @@ interface LazyPaginatedListProps<T> {
     rowsPerPageOptions?: readonly number[];
     labelRowsPerPage?: string;
     resetKey?: unknown;
+    selectedIndex?: number;
     sx?: SxProps<Theme>;
   };
 }
@@ -43,10 +44,12 @@ export default function LazyPaginatedList<T>({
   const initialRowsPerPage = paginationConfig?.initialRowsPerPage;
   const rowsPerPageOptions = paginationConfig?.rowsPerPageOptions ?? DEFAULT_ROWS_PER_PAGE_OPTIONS;
   const resetKey = paginationConfig?.resetKey;
+  const selectedIndex = paginationConfig?.selectedIndex;
   const normalizedOptions = useMemo(() => normalizeRowsPerPageOptions(rowsPerPageOptions), [rowsPerPageOptions]);
   const initialPageSize = initialRowsPerPage && normalizedOptions.includes(initialRowsPerPage)
     ? initialRowsPerPage
     : (normalizedOptions[0] ?? DEFAULT_ROWS_PER_PAGE_OPTIONS[0]);
+  const appliedSelection = useRef<{ index: number; pageSize: number; resetKey: unknown } | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(initialPageSize);
   const deferredItems = useDeferredValue(items);
@@ -60,6 +63,9 @@ export default function LazyPaginatedList<T>({
   }, [initialPageSize, normalizedOptions]);
 
   useEffect(() => {
+    // A reset invalidates the remembered application as well as the page. React
+    // may replay setup; the following selection effect must restore its target.
+    appliedSelection.current = null;
     setPage(0);
   }, [resetKey, rowsPerPage]);
 
@@ -68,6 +74,17 @@ export default function LazyPaginatedList<T>({
       setPage(maxPage);
     }
   }, [maxPage, page]);
+
+  useEffect(() => {
+    if (selectedIndex !== undefined && Number.isSafeInteger(selectedIndex) && selectedIndex >= 0 && selectedIndex < totalItems) {
+      const applied = appliedSelection.current;
+      // Reposition when a refresh moves the linked item; otherwise retain user pagination.
+      if (applied?.index === selectedIndex
+        && applied.pageSize === rowsPerPage && Object.is(applied.resetKey, resetKey)) return;
+      appliedSelection.current = { index: selectedIndex, pageSize: rowsPerPage, resetKey };
+      setPage(Math.floor(selectedIndex / rowsPerPage));
+    } else if (selectedIndex === undefined || selectedIndex < 0) appliedSelection.current = null;
+  }, [selectedIndex, rowsPerPage, totalItems, resetKey]);
 
   const startIndex = page * rowsPerPage;
   const visibleItems = useMemo(

@@ -226,7 +226,7 @@ export default function DavidCelayaReportPage() {
           title="Bloques registrados"
           subtitle="Los tiempos visibles en las capturas se usaron para abrir y cerrar cada bloque de trabajo."
         >
-          <TableContainer>
+          <TableContainer tabIndex={0} role="region" aria-label="Reporte de pagos">
             <Table sx={tableSx}>
               <TableHead>
                 <TableRow>

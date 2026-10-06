@@ -8,6 +8,7 @@
 
 ## Build, Run, and Dev
 - Toolchain: **stack only** — `stack.yaml` uses `lts-24.42` (GHC 9.10.3). Do **not** use `cabal` or the system GHC; it is a different toolchain the project does not use, its `dist-newstyle/` artifacts are ignored, and a green `cabal` build does not imply a green project build.
+- Package/dependency/module authority: `tdf-hq.cabal`, consumed by Stack and Docker. The obsolete ignored `package.yaml` was removed; do not regenerate the Cabal manifest from historical Hpack metadata.
 - Env: `set -a; source config/default.env; set +a`.
 - Build: `stack setup` then `stack build`.
 - Run: `stack run` (or `bash scripts/dev_run.sh`).
@@ -22,10 +23,10 @@
 - Pattern for new endpoints: update `TDF.API` type, implement handlers in `TDF.Server`, DTOs in `TDF.DTO`, DB logic in `TDF.DB`/`TDF.Models`.
 
 ## Testing Guidelines
-- No test suite yet. If adding tests:
-  - Create `test/` and use Hspec; name files `*.Spec.hs`.
-  - Add a `test-suite` to `tdf-hq.cabal`; run with `stack test`.
-  - Prefer unit tests for handlers and DB queries; use factories/fixtures over ad‑hoc data.
+- The existing `test/` Hspec/QuickCheck suite runs with `stack test`. PostgreSQL, HTTP and concurrency runners under root `scripts/` cover additional boundaries; see `.github/workflows/ci.yml` for the complete backend lane.
+- Local invitation/event-relation runners can use an existing loopback PostgreSQL server with `TDF_TEST_NATIVE_POSTGRES=1` (optional `TDF_TEST_NATIVE_POSTGRES_USER` / `TDF_TEST_NATIVE_POSTGRES_PORT`). They create and remove only their own new `_test` databases; pre-existing names fail closed. Default local behavior still uses Docker, and CI uses its isolated service. Never inherit libpq routing overrides.
+- Prefer observable handler/database tests with isolated fixtures. Follow `FORMAL_VERIFICATION.md` for critical invariants and negative controls.
+- Pending external-runner cases in Hspec are not a PostgreSQL test pass.
 
 ## Commit & Pull Requests
 - Commits: short, imperative subjects (e.g., "Enable CORS"). Optional prefixes like `feat:`, `fix:`, `chore:` are welcome.
@@ -34,18 +35,26 @@
 
 ## Security & Configuration
 - Do not commit secrets; use env vars (`config/default.env` as a template).
-- CORS is permissive for dev; restrict `corsOrigins` in `app/Main.hs` for production.
+- Production CORS is fail-closed in `src/TDF/Cors.hs`; set an explicit origin allowlist and keep `ALLOW_ALL_ORIGINS=false`. See `formal/system/cors-boundary.md` at repository root.
 - Seeding endpoint is for development only; remove/guard before release.
 
 ## Submodules & Backups
-- `tdf-mobile/` is a Git submodule. When cloning or pulling, run `git submodule update --init --recursive` so the Expo app is available locally and for CI. Deployments that inspect the tree (Cloudflare Pages, Vercel) will fail if the submodule isn’t initialized.
+- `tdf-mobile/` is a Git submodule. When cloning or pulling, run `git submodule update --init --checkout --recursive` so the Expo app is available locally and for CI. Mobile CI uses an explicit checkout; web deployments on Cloudflare Pages and Vercel omit the mobile repository.
 - UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
 
 ## Deployment Runbooks
-- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, and `VITE_TZ=America/Guayaquil`. Never place bearer credentials in `VITE_*` variables because they are public bundle configuration.
-- **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
-- **Koyeb (API)** – configure all `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`). Without the CORS envs Cloudflare/Vercel frontends cannot talk to the API.
-- Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.
+- Follow `../ops/hetzner/README.md` and its validation record for the current
+  production API at `https://api.tdfrecords.net`. Preserve the production database,
+  backups, reviewed migration manifest and compatible recovery image.
+- Cloudflare Pages builds from the repository root with Node 22 and
+  `npm run build:ui`, output `tdf-hq-ui/dist`. Both `VITE_API_BASE` and
+  `PUBLIC_API_BASE` must use the canonical API host; never put bearer credentials
+  in public `VITE_*` configuration.
+- The retained Fly runner and Koyeb references are historical/legacy scope, not
+  the current production deployment procedure. Do not modify shared Trader resources.
+- Inspect current rollout prerequisites and feature flags before deploying; a
+  successful build does not establish production authentication or upload behavior.
+- The authoritative system index and verification boundaries are in `../formal/system/README.md`.
 
 ## Branding
 - The React shell renders SVG logos through `BrandLogo`. Swap SVG assets (`tdf-hq-ui/src/assets/tdf-*.svg`) rather than hardcoding text to maintain contrast in both themes.

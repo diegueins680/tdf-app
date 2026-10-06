@@ -1,0 +1,606 @@
+{
+  "observedAt": "2026-09-18T18:54:49.657219+00:00",
+  "scope": "Status-only reconciliation; previous fields are historical, not current pending work. No product change or new acceptance is inferred.",
+  "changes": [
+    {
+      "id": "UX-260917-004",
+      "fields": {
+        "verificationMethod": {
+          "previous": "Old pin 326/327 with timeout; current main 456/456 plus typecheck; remaining checks recorded separately.",
+          "current": "Current published mobile pin qualified with release:check, regenerated API parity, 510 mobile tests, signed-artifact checks and bounded runtime evidence; historical baseline and failures retained in Git history and evidence/status-reconciliation.json."
+        },
+        "releaseStatus": {
+          "previous": "Current mobile corrections not publicly distributed. Android15 source90ca EAS96622c14 and isolatedQA46b1 in progress. Old4602 used preview/production API and is disqualified for isolated QA; wrong-profile download removed with receipt. iOS23 GitHub first attempt failed1/507 tests from production env leaking into Jest;106 isolates test env. Apple1.0.1 release MANUAL and WAITING_FOR_REVIEW verified15:51. Physical iPhone OAuth pending.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        },
+        "verificationStatus": {
+          "previous": "Historical onboarding recovery is incorporated. Current main430 pins7b7ecaf; tab fix667 must be integrated without losing required Google provider contract. Parent435 reconciliation and cold-start release blocker UX035 remain pending.",
+          "current": "Historical recovery, Google provider contract, native cold-start repair and enlarged-tab fixes are contained in2a0e5a99535d9ef199a3e3464a660192f882f72b. Root454 b22 CI completed:2193 web tests,510 mobile tests,persona browser gate,contracts,catalog and primary Cloudflare pass. Regeneration against newly merged root7635a5f leaves mobile generated types unchanged and identical to web; release:check passes. Correct isolated Android QA46b1 passed login/follow/cold return, with installed064b recheck at18:32; iOS simulator text/cold-link evidence remains separately bounded. Exact signed iOS25/Android17 source SHAs and equivalent runtime at the pin are in evidence/mobile-artifact-pin-equivalence.json. New parent head requires its own review/gates; physical iPhone Google and full native acceptance remain incomplete."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-005",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Mobile#89 mergedd22b49e; iOS simulator policy-return/input verified on74d784c; production store release pending.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-006",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final runtime/release pending. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained. Directory:26 focused tests and10 ES/EN production-bundle journeys in3engines/5profiles pass; public identities and query retained.",
+          "current": "Previous UI/policy coverage plus review regressions: regional fr/de/pt authentication fallback links to English legal originals; recovery locale query, email subject/body/CTA and lang link; 8 backend examples/100 QuickCheck, 12 locale/policy component tests. Mobile77 suites/461 tests; source1ec9160 merged via PR94. Final release status is recorded separately. New review: transport/status errors now carry stable codes and UI translates network/timeout/401/startup for password,Google and signup flows.27 focused tests and25 production-bundle ES/EN failure cases across5 profiles/3 engines pass; input/destination preserved. Unknown actionable provider errors retained. Directory:26 focused tests and10 ES/EN production-bundle journeys in3engines/5profiles pass; public identities and query retained."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-008",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Mobile#89 mergedd22b49e; release:check with Expo generated route types passed; store release pending.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-009",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-010",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment. Historical a81 public smoke verified English login/signup/legal/recovery with storage allowed/denied and token removal; no signup, email or reset mutation."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-011",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-012",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-013",
+      "fields": {
+        "verificationStatus": {
+          "previous": "13 activation tests, TypeScript, full UI lint and23 CI contracts pass. Full pinned TLC/Alloy runner passes; ArtistActivation15 states with safety/liveness and named negative control. Exact new head CI/review pending.",
+          "current": "13 activation tests, TypeScript, full UI lint and23 CI contracts pass. Full pinned TLC/Alloy runner passes; ArtistActivation15 states with safety/liveness and named negative control. Exact-head approval and applicable CI completed before #406 merged; see mergeStatus."
+        }
+      }
+    },
+    {
+      "id": "MOB-AUTH-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+          "current": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases."
+        },
+        "mergeStatus": {
+          "previous": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+          "current": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge."
+        },
+        "releaseStatus": {
+          "previous": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "MOB-COM-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+          "current": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases."
+        },
+        "mergeStatus": {
+          "previous": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+          "current": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge."
+        },
+        "releaseStatus": {
+          "previous": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "ACT-01",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "STATE-01",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "MOB-ROUTE-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+          "current": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases."
+        },
+        "mergeStatus": {
+          "previous": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+          "current": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge."
+        },
+        "releaseStatus": {
+          "previous": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "MOB-LINK-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending.",
+          "current": "2026-09-18:4 focused native Jest suites/60 tests pass: AuthProvider,TicketCheckout,DeepLinks,onboardingIntent. Simulator19 arrival/capture succeeds; complete device auth/checkout/cross-account runtime pending. Later physical Samsung isolated QA verifies password login, persisted follow and session after reopening (evidence/android-physical-46b1.json and android-reconnect-verification.json). These checks do not close the distinct checkout, protected post-login destination, cross-account and physical iPhone Google cases."
+        },
+        "mergeStatus": {
+          "previous": "MobilePR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root gitlink1ec9160 in#422 pending merge.",
+          "current": "Mobile PR94 merged f2b4823d5c79a5d8c04b6ff4e3f42f5f2588fde9; root422 merged f19bb8855e8a9bc5b73ee4c3199c631540eb0df9. Contained through mobile2a0e5a9 and parent449/e1; parent454 qualifies the current published pin, pending review/merge."
+        },
+        "releaseStatus": {
+          "previous": "iOS19 AppReview WAITING_FOR_REVIEW, external TestFlight WAITING_FOR_BETA_REVIEW; Android10 Alpha submitted/in review. Public availability not evidenced.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "API-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Current schema inspected and clients byte-compared at efa2555; hosted API contract checks passed on38256/8c2e5. Current root merge/backend rollout pending.",
+          "current": "Current schema inspected and clients byte-compared at efa2555; hosted API contract checks passed on38256/8c2e5. Root422 merged and the contract is included in deployed e1; current generated web/mobile clients remain byte-identical after regeneration from main7635a5f."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "EXP-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-main integration checks pending.",
+          "current": "Pre-integration: Stack9.10.3 --fast build;2578Hspec examples0fail1PG-onlypending; actual isolated HTTP/PostgreSQL paused/no-write,16concurrent assignments/exposures, account isolation, completion/expiry lock contention and revocation pass. Full pinned TLC/Alloy runner and3experiment negative controls pass.43native conformance tests pass after two initial5-second timeouts under host contention; no test timeout/assertion weakened. Post-integration approval and applicable hosted gates completed before431 merged; production remains intentionally paused as specified in releaseStatus."
+        }
+      }
+    },
+    {
+      "id": "I18N-01",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 and web f19 deployed; public web now a81 including f19. Exact live journey acceptance being verified; no assertion of store publication. Production public a81 smoke: English login/signup/legal links/recovery, storage allowed+denied, token removed,0pageerrors. No signup submitted, email sent or password reset mutation.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment. Historical a81 public smoke verified English login/signup/legal/recovery with storage allowed/denied and token removal; no signup, email or reset mutation."
+        }
+      }
+    },
+    {
+      "id": "A11Y-01",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Actual isolated API/browser after label correction:320/1280 zero axe WCAG2.2-tagged violations; row/column IDs on visible combobox and notes. Complete5-tab cross-engine/keyboard/focus regression pending final shared-header change. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow.",
+          "current": "Actual isolated API/browser after label correction:320/1280 zero axe WCAG2.2-tagged violations; row/column IDs on visible combobox and notes. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-015",
+      "fields": {
+        "implementationStatus": {
+          "previous": "Local changes; next exact-head review and hosted gates pending",
+          "current": "Implemented and merged; exact source and approval/gate evidence recorded in mergeStatus."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-016",
+      "fields": {
+        "implementationStatus": {
+          "previous": "Local changes; next exact-head review and hosted gates pending",
+          "current": "Implemented and merged; exact source and approval/gate evidence recorded in mergeStatus."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-017",
+      "fields": {
+        "implementationStatus": {
+          "previous": "Local changes; next exact-head review and hosted gates pending",
+          "current": "Implemented and merged; exact source and approval/gate evidence recorded in mergeStatus."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-018",
+      "fields": {
+        "implementationStatus": {
+          "previous": "local scoped repair",
+          "current": "Implemented; source, merge and release evidence recorded separately."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-019",
+      "fields": {
+        "implementationStatus": {
+          "previous": "local scoped repair",
+          "current": "Implemented; source, merge and release evidence recorded separately."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-020",
+      "fields": {
+        "implementationStatus": {
+          "previous": "local scoped repair",
+          "current": "Implemented; source, merge and release evidence recorded separately."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-021",
+      "fields": {
+        "implementationStatus": {
+          "previous": "local repair",
+          "current": "Implemented; source, merge and release evidence recorded separately."
+        },
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-022",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-023",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Focused slow-response verification pending. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; final expanded checks pending. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes. Follow-up18 delayed-read cases (3pages×ES/EN×3engines) on real production bundle pass; each asserts actual document language and distinct translated accessible names. TypeScript/build/lint pass;365762gzipbytes/5preloads withinbudget. Earlier local harness used an obsolete locale key, so its requested-English rows were Spanish and discarded; corrected harness explicitly asserts actual language. No screen-reader/manual announcement certification.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. Student198 arrivals found one loading-state aria-progressbar-name in /mis-clasificados; four directory loading labels repaired. Sixth review thread found duplicate activity loading names; both now translated distinctly. Four delayed-response ES/EN browser checks pass for both activity loading names and directory profile loader. Eight-case delayed ES/EN checks passed for first5 additional loaders. Subsequent Reports/Chat initial arrival and12-case delayed runtime confirmed missing names; the final expanded result follows. Final14 slow-response ES/EN cases pass: real isolated API/session, locale override; synthetic read-only thread for message loading. All8 additional loaders have distinct translated accessible names; zero aria-progressbar-name violations. Final build365423gzip/5preloads passes. Follow-up18 delayed-read cases (3pages×ES/EN×3engines) on real production bundle pass; each asserts actual document language and distinct translated accessible names. TypeScript/build/lint pass;365762gzipbytes/5preloads withinbudget. Earlier local harness used an obsolete locale key, so its requested-English rows were Spanish and discarded; corrected harness explicitly asserts actual language. No screen-reader/manual announcement certification."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-024",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-025",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-026",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof. Integrated17unit cases include account change;10browsercases5profiles/3engines prove unavailable retry/cancel and0intent creation. Model bounds unchanged; generation maps session/event/tier/close changes. Review regression fails before fix;19 component/logic tests pass afterward; TypeScript/build364991gzip bytes/5preloads and affected lint pass. CheckoutCancellation separately models fixed-context cancellation,5distinct states; unsafe guard negative control produces NoAbandonedReservation counterexample;10 current browser cases pass in5profiles/3engines. Full pinned TLC1.7.2/Alloy6.2.0 runner passes, including all four checkout negative controls. 21component/logic tests pass including delayed payment success delivered once and provider rejection recovery. Payment-aware TLC8distinct states and both cancellation negative controls pass; full runner completing. TypeScript/build364988gzip/5preloads pass.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged.; reviewed bundle28 focused arrivals has zero axe/pageerror/overflow; isolated Google Calendar config/events500 retained as environment limitation. Manager/Engineer/Artist/Accounting198 arrivals each clear. Not all action/state/native coverage. 16 component/logic tests pass; TLC CheckoutReadiness221distinct states, safety/conditional liveness plus3negative controls pass. No real charges or settlement proof. Integrated17unit cases include account change;10browsercases5profiles/3engines prove unavailable retry/cancel and0intent creation. Model bounds unchanged; generation maps session/event/tier/close changes. Review regression fails before fix;19 component/logic tests pass afterward; TypeScript/build364991gzip bytes/5preloads and affected lint pass. CheckoutCancellation separately models fixed-context cancellation,5distinct states; unsafe guard negative control produces NoAbandonedReservation counterexample;10 current browser cases pass in5profiles/3engines. Full pinned TLC1.7.2/Alloy6.2.0 runner passes, including all four checkout negative controls. 21component/logic tests pass including delayed payment success delivered once and provider rejection recovery. Payment-aware TLC8distinct states and both cancellation negative controls pass; full runner passed before the approved429 merge. TypeScript/build364988gzip/5preloads pass."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-027",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-028",
+      "fields": {
+        "verificationStatus": {
+          "previous": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; CI pending.",
+          "current": "198 admin +198 customer route/width cases; final28 focused cases clear all observed axe violations. Customer all198 have no axe violations. Admin final three transient/breadcrumb cases addressed and rechecked.15 existing component tests; build364500 gzip bytes/5preloads within410KiB. Integrated d4f720e51 bundle lint/build and28 targeted actual-backend browser cases pass; applicable hosted gates completed before429 merged."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-029",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Backend f19 guarded release complete04:38:48Z; web f19 Cloudflare succeeded, then public assets advanced to main a81 including f19. Native source1ec: iOS19 AppReview/TestFlight external waiting; Android10 Alpha submitted/in review. Per-journey production acceptance distinct from revision containment.",
+          "current": "The #422 implementation was deployed in guarded f19 and is contained in verified release e1 (evidence/release-e1-verification.json); current public API ab9/healthy observed 18:53 UTC after the separate mail release (evidence/current-api-mail-release.json). Native current artifacts/review state are recorded in UX-260917-004. Per-journey production acceptance remains distinct from source containment."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-032",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Durable5profile/3engine5tab regression running. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run pending.",
+          "current": "Actual compiled final bundle320/1280: status and notes centers hit the focused controls, not header; zero axe WCAG-tagged violations. Build/typecheck365423gzip/5preloads and affected lint pass. Final durable10 cases passed in5profiles/3engines, each checking5campaign tabs, keyboard focus/menu/Escape, row/column names, axe and reflow. New local production build365428gzip/5preloads,10cases in5profiles/3engines and affected lint PASS; corrected Linux hosted run passed before the approved433 merge."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-033",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-035",
+      "fields": {
+        "releaseStatus": {
+          "previous": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-037",
+      "fields": {
+        "verificationStatus": {
+          "previous": "502 tests/84 suites plus full release check and hosted validate/Datadog pass on d70d945fc; actual A-B-A and immediate client-token revocation regressions, canonical namespace integration and bounded models documented in native-artist-follow.md. Final Android isolated QA build1c92c4c3 FINISHED, APK/manifest/hash verified; physical execution pending disconnected device. Earlier source runtime evidence retained separately. Final507tests/85suites PASS. Actuald70canonicalfollow completes D viaisolatedPG; a785 coldreturn and persistedfollow PASS. NativeLanding042 also fixed; older1c92Androidartifact doesnotqualifynewsource. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact.",
+          "current": "502 tests/84 suites plus full release check and hosted validate/Datadog pass on d70d945fc; actual A-B-A and immediate client-token revocation regressions, canonical namespace integration and bounded models documented in native-artist-follow.md. Final Android isolated QA build1c92c4c3 FINISHED, APK/manifest/hash verified; physical execution of that historical artifact was not qualified; later qualified artifacts and actual device results follow. Earlier source runtime evidence retained separately. Final507tests/85suites PASS. Actuald70canonicalfollow completes D viaisolatedPG; a785 coldreturn and persistedfollow PASS. NativeLanding042 also fixed; older1c92Androidartifact doesnotqualifynewsource. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact."
+        },
+        "releaseStatus": {
+          "previous": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-039",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.\nRelated increment evidence: Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Full stack tests running; production-after pending. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Actual concurrent HTTP/PostgreSQL negative10001≠2001, corrected response2001 with terms and next-request exclusion PASS. Query counts remain5/28. Both11-state positive catalog models and11-state unsafe control pass in the full pinned suite. Final Stack build PASS; new hosted gates pending.",
+          "current": "Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Full2587backend examples:0failures/3existing pending; npm verify:formal passes its scoped gates.\nRelated increment evidence: Stack build passed. ActualPG corrected5marketplace/28Records executions versus baseline259/60 on80generated listings (64published). All value/detail/publication assertions pass; fixtures cleaned. Initial cleanup/history FK and worker observer contamination fixed; failed attempts not counted. Actual concurrent HTTP/PostgreSQL negative10001≠2001, corrected response2001 with terms and next-request exclusion PASS. Query counts remain5/28. Both11-state positive catalog models and11-state unsafe control pass in the full pinned suite. Final Stack build PASS; applicable hosted gates passed before449 integrated443."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-040",
+      "fields": {
+        "verificationStatus": {
+          "previous": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Hosted gates and production pending.",
+          "current": "Migration/restart idempotence and HTTP assertions PASS;58release tests PASS;6browser cases Admin/ReadOnly×320/768/1280 PASS. Browser setup initially lacked allowed loopback origin; configured isolated proxy/server before qualified execution. Applicable hosted gates passed before449 merged; production calendar tables and110-entry ledger were verified during guarded e1 (evidence/release-e1-verification.json)."
+        }
+      }
+    },
+    {
+      "id": "UX-260917-042",
+      "fields": {
+        "verificationStatus": {
+          "previous": "All stated local/hosted mobile gates and full pinned TLC/Alloy PASS. Actual simulator afterfix sees connected profile and persisted follow on two cold launches. Not a new cloud/signed artifact; physical Android/iOS and stores remain pending. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact.",
+          "current": "All stated local/hosted mobile gates and full pinned TLC/Alloy PASS. Actual simulator afterfix sees connected profile and persisted follow on two cold launches. That simulator observation alone did not qualify a signed build or physical device; later device and store evidence are recorded separately. Correct full isolated Android QA46b1/6f8 on physicalSamsung passed login/canonicalfollow/coldreturn; authoritative API session/follows/onboarding200, count1, personalapp unchanged. See evidence/android-physical-46b1.json. This does not qualify production Google OAuth. Reconnected Samsung18:32UTC recheck passes persisted follow/cold-session return and1x/2x complete tab geometry on verified installed QA prototype064b; originalfont1.0 restored and personalapp unchanged. evidence/android-reconnect-verification.json. This is not installation of the Play17 artifact."
+        },
+        "releaseStatus": {
+          "previous": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json.",
+          "current": "Android17/c2a4cb GitHub35376997735 passed510tests and signed artifact verification; independent JAR/certificate/manifest/production config/SHA checks passed. Uploaded/validated/committed Alpha18:18UTC; actual Play Console in review18:20, previous15 available to selected testers. iOS25/9f GitHub35376470123 passed, independent signature/config checks and Apple validation/upload passed; VALID/internal IN_BETA_TESTING. App Review now uses25 in submissionc59f5706-f10e-4caf-ad00-3fff47911f3b WAITING_FOR_REVIEW/MANUAL18:16UTC. Physical iPhone Google OAuth and public store rollout remain pending. See evidence/ios-github25-artifact.json, android-github17-artifact.json and android17-review-state.json. User confirmed no physical iPhone is available; Google OAuth device acceptance remains blocked, with manual publication retained."
+        }
+      }
+    }
+  ],
+  "predecessorMergeEvidence": {
+    "data": {
+      "repository": {
+        "p406": {
+          "number": 406,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T01:34:52Z",
+          "mergeCommit": {
+            "oid": "db69e0534e87ffcb9b3ccf3a856a7fc85e839f16"
+          }
+        },
+        "p422": {
+          "number": 422,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T04:16:07Z",
+          "mergeCommit": {
+            "oid": "f19bb8855e8a9bc5b73ee4c3199c631540eb0df9"
+          }
+        },
+        "p425": {
+          "number": 425,
+          "state": "MERGED",
+          "mergedAt": "2026-09-17T23:31:29Z",
+          "mergeCommit": {
+            "oid": "437fdddea907ba7a20b8626242bf2aed108d6789"
+          }
+        },
+        "p429": {
+          "number": 429,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T06:03:28Z",
+          "mergeCommit": {
+            "oid": "c00578da58d3a2a4541fceb08a6d1c463318d8a1"
+          }
+        },
+        "p431": {
+          "number": 431,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T06:40:19Z",
+          "mergeCommit": {
+            "oid": "2f01b20b0c2a2e2088570c3dc5deba6197266452"
+          }
+        },
+        "p433": {
+          "number": 433,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T07:20:14Z",
+          "mergeCommit": {
+            "oid": "6d49c0f055b24743a13991a5fbb94e3774c07c9a"
+          }
+        },
+        "p435": {
+          "number": 435,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p438": {
+          "number": 438,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T08:54:35Z",
+          "mergeCommit": {
+            "oid": "499e8be7b8edaccbbd46a4d763e4c3b6326b4d92"
+          }
+        },
+        "p440": {
+          "number": 440,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T09:19:55Z",
+          "mergeCommit": {
+            "oid": "5d49f61fa68000abb188bf6d9bb19a3bce035aec"
+          }
+        },
+        "p442": {
+          "number": 442,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p443": {
+          "number": 443,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p444": {
+          "number": 444,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p445": {
+          "number": 445,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p446": {
+          "number": 446,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p447": {
+          "number": 447,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p448": {
+          "number": 448,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:11Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p449": {
+          "number": 449,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T15:42:09Z",
+          "mergeCommit": {
+            "oid": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+          }
+        },
+        "p450": {
+          "number": 450,
+          "state": "MERGED",
+          "mergedAt": "2026-09-18T17:04:56Z",
+          "mergeCommit": {
+            "oid": "3f0a56c0ded55fa9525dc80c895505ffcb069449"
+          }
+        }
+      }
+    }
+  },
+  "currentContractEvidence": "current-contract-parity.json"
+}

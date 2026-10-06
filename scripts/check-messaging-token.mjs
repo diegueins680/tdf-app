@@ -4,6 +4,7 @@
  *
  * Checks if Instagram/Facebook messaging tokens are valid and not expiring soon.
  * Exchanges short-lived tokens for long-lived (60-day) tokens when needed.
+ * Pass --check for read-only validation; no arguments retain automatic maintenance.
  *
  * Environment variables:
  *   FACEBOOK_APP_ID       - Meta App ID
@@ -13,7 +14,8 @@
  *   FLY_APP_NAME          - Fly.io app name (default: tdf-hq)
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
+import { pathToFileURL } from 'url';
 
 const APP_ID = process.env.FACEBOOK_APP_ID || process.env.META_APP_ID;
 const APP_SECRET = process.env.FACEBOOK_APP_SECRET || process.env.META_APP_SECRET;
@@ -31,13 +33,17 @@ function error(...args) {
   console.error(`[${new Date().toISOString()}] ERROR:`, ...args);
 }
 
-async function graph(path, token) {
+async function graph(path, token, fetchImpl = globalThis.fetch) {
   const url = `${GRAPH_BASE}${path}&access_token=${encodeURIComponent(token)}`;
-  const res = await fetch(url);
+  const res = await fetchImpl(url);
   return res.json();
 }
 
-async function checkToken(token, name) {
+export async function checkToken(token, name, {
+  appId = APP_ID,
+  appSecret = APP_SECRET,
+  fetchImpl = globalThis.fetch,
+} = {}) {
   log(`\n=== Checking ${name} ===`);
 
   if (!token) {
@@ -45,13 +51,17 @@ async function checkToken(token, name) {
     return { ok: false, error: 'missing' };
   }
 
-  if (!APP_ID || !APP_SECRET) {
+  if (!appId || !appSecret) {
     error('FACEBOOK_APP_ID and FACEBOOK_APP_SECRET are required');
     return { ok: false, error: 'missing_credentials' };
   }
 
   try {
-    const debug = await graph(`/debug_token?input_token=${encodeURIComponent(token)}`, `${APP_ID}|${APP_SECRET}`);
+    const debug = await graph(
+      `/debug_token?input_token=${encodeURIComponent(token)}`,
+      `${appId}|${appSecret}`,
+      fetchImpl
+    );
 
     if (debug.error) {
       error(`Token check failed: ${debug.error.message}`);
@@ -63,6 +73,11 @@ async function checkToken(token, name) {
     log(`Type: ${info.type}`);
     log(`Profile: ${info.profile_id || 'N/A'}`);
     log(`Scopes: ${(info.scopes || []).join(', ')}`);
+
+    if (info.is_valid !== true) {
+      error('Token is invalid');
+      return { ok: false, error: 'invalid' };
+    }
 
     if (info.expires_at) {
       const expiresAt = new Date(info.expires_at * 1000);
@@ -159,8 +174,18 @@ async function refreshTokenFlow(currentToken) {
 
     // Step 4: Update Fly secrets
     log('\n=== Updating Fly.io Secrets ===');
-    const cmd = `flyctl secrets set INSTAGRAM_MESSAGING_TOKEN="${pageToken}" FACEBOOK_MESSAGING_TOKEN="${pageToken}" --app ${FLY_APP}`;
-    execSync(cmd, { stdio: 'inherit' });
+    execFileSync(
+      'flyctl',
+      [
+        'secrets',
+        'set',
+        `INSTAGRAM_MESSAGING_TOKEN=${pageToken}`,
+        `FACEBOOK_MESSAGING_TOKEN=${pageToken}`,
+        '--app',
+        FLY_APP,
+      ],
+      { stdio: 'inherit' }
+    );
 
     log('✅ Secrets updated successfully');
     return pageToken;
@@ -170,44 +195,76 @@ async function refreshTokenFlow(currentToken) {
   }
 }
 
-async function main() {
+// Reject unsupported CLI input before either validation or credential mutation.
+export function parseReadOnly(args) {
+  if (args.length === 0) return false;
+  if (args.length === 1 && args[0] === '--check') return true;
+  throw new Error('Usage: check-messaging-token.mjs [--check]');
+}
+
+/**
+ * Return a process exit code. Read-only execution may inspect token health but
+ * must never call refresh; default execution retains refresh-when-needed.
+ * check/refresh dependencies make that side-effect boundary directly testable.
+ */
+export async function runMessagingTokenMaintenance({
+  readOnly = false,
+  instagramToken = IG_TOKEN,
+  facebookToken = FB_TOKEN,
+  check = checkToken,
+  refresh = refreshTokenFlow,
+} = {}) {
   console.log('=== Messaging Token Health Check ===\n');
 
   // Check both tokens (they're usually the same)
-  const igCheck = await checkToken(IG_TOKEN, 'Instagram Messaging Token');
-  const fbCheck = await checkToken(FB_TOKEN, 'Facebook Messaging Token');
+  const igCheck = await check(instagramToken, 'Instagram Messaging Token');
+  const fbCheck = await check(facebookToken, 'Facebook Messaging Token');
 
   const needsRefresh = !igCheck.ok || igCheck.expiringSoon || !fbCheck.ok || fbCheck.expiringSoon;
 
   if (needsRefresh) {
+    // Fail before reaching any token exchange, Page-token lookup, or Fly update.
+    // An expiring token is not a successful read-only maintenance check.
+    if (readOnly) {
+      error('Read-only check failed: token maintenance is required; no credentials were changed.');
+      return 1;
+    }
     log('\n⚠️ Token needs refresh');
 
-    if (!IG_TOKEN) {
+    if (!instagramToken) {
       error('No token to refresh. Set INSTAGRAM_MESSAGING_TOKEN first.');
-      process.exit(1);
+      return 1;
     }
 
     try {
-      const newToken = await refreshTokenFlow(IG_TOKEN);
+      const newToken = await refresh(instagramToken);
       log('\n✅ Refresh complete!');
-      log(`New token prefix: ${newToken.substring(0, 10)}...`);
 
       // Final verification
-      const finalCheck = await checkToken(newToken, 'Refreshed Token');
+      const finalCheck = await check(newToken, 'Refreshed Token');
       if (!finalCheck.ok) {
         error('Final verification failed');
-        process.exit(1);
+        return 1;
       }
     } catch (err) {
       error(`Refresh failed: ${err.message}`);
-      process.exit(1);
+      return 1;
     }
   } else {
     log('\n✅ All tokens are healthy. No action needed.');
   }
+  return 0;
 }
 
-main().catch(err => {
-  error(err.message);
-  process.exit(1);
-});
+export async function runMessagingTokenCli(args, options = {}) {
+  return runMessagingTokenMaintenance({ ...options, readOnly: parseReadOnly(args) });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runMessagingTokenCli(process.argv.slice(2)).then(code => {
+    process.exitCode = code;
+  }).catch(err => {
+    error(err.message);
+    process.exitCode = 1;
+  });
+}

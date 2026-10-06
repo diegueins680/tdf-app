@@ -14,6 +14,7 @@ import Database.Persist (Entity (..), Key)
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
+import Test.QuickCheck (Positive (..), property)
 
 import TDF.Auth
   ( AuthedUser (..)
@@ -28,6 +29,7 @@ import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
   , GoogleProfile (..)
+  , recoveryWindowValid
   , normalizeAuthEmailAddress
   , parsePasswordChangeAuthToken
   , selectUniqueGoogleLoginCredential
@@ -38,9 +40,10 @@ import TDF.ServerAuth
   , validateGoogleIdTokenInput
   , validateLoginRequest
   , validateGoogleIdTokenInfo
+  , validateGoogleTokenExpiry
   , validatePasswordChangeUsernameInput
   , validatePasswordResetToken
-  , validateSignupArtistClaimEmail
+  , validateOptionalSignupClaimArtistId
   , validateSignupDisplayName
   , validateSignupFanArtistIds
   , validateSignupGoogleIdToken
@@ -54,6 +57,7 @@ import TDF.ServerAuth
 
 spec :: Spec
 spec = do
+  recoveryWindowSpec
   authEmailSpec
   moduleAccessSpec
   loginRequestSpec
@@ -68,7 +72,7 @@ spec = do
   googleAccountCreationTermsSpec
   signupPhoneSpec
   signupFanArtistIdsSpec
-  signupArtistClaimEmailSpec
+  signupArtistClaimAuthoritySpec
   artistInvitationSpec
   onboardingProgressSpec
   passwordResetTokenSpec
@@ -122,6 +126,8 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
           { auPartyId = toSqlKey 1
           , auRoles = roles
           , auModules = modulesForRoles roles
+          , auApiTokenId = Nothing
+          , auSessionWitness = Nothing
           }
       assertRejected expectedMessage result =
         case result of
@@ -420,9 +426,11 @@ signupTermsAcceptanceSpec = describe "validateSignupTermsAcceptance" $ do
 googleAccountCreationTermsSpec :: Spec
 googleAccountCreationTermsSpec = describe "validateGoogleAccountCreationTerms" $ do
   it "allows provisioning only when the Google request carries accepted versioned terms" $ do
-    validateGoogleAccountCreationTerms (Just "tdf-account-terms-v1") `shouldBe` Right ()
-    validateGoogleAccountCreationTerms (Just "unknown-terms-v9") `shouldSatisfy` isLeft
-    validateGoogleAccountCreationTerms Nothing `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just True) (Just "tdf-account-terms-v1") `shouldBe` Right ()
+    validateGoogleAccountCreationTerms (Just True) (Just "unknown-terms-v9") `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just True) Nothing `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms Nothing (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
+    validateGoogleAccountCreationTerms (Just False) (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
 
 signupPhoneSpec :: Spec
 signupPhoneSpec = describe "validateOptionalSignupPhone" $ do
@@ -481,20 +489,19 @@ signupFanArtistIdsSpec = describe "validateSignupFanArtistIds" $
         expectationFailure
           ("Expected oversized fanArtistIds to be rejected, got " <> show value)
 
-signupArtistClaimEmailSpec :: Spec
-signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
-  it "allows unclaimed artist profiles with no stored email or the same normalized email" $ do
-    validateSignupArtistClaimEmail "ada@example.com" Nothing `shouldBe` Right ()
-    validateSignupArtistClaimEmail " ada@example.com " (Just "ADA@Example.com")
-      `shouldBe` Right ()
-    validateSignupArtistClaimEmail "ada@example.com" (Just "   ")
-      `shouldBe` Right ()
-
-  it "rejects mismatched or malformed stored emails before binding a signup to an artist profile" $ do
-    validateSignupArtistClaimEmail "ada@example.com" (Just "other@example.com")
-      `shouldBe` Left "Artist profile email does not match signup email"
-    validateSignupArtistClaimEmail "ada@example.com" (Just "not-an-email")
-      `shouldBe` Left "Artist profile email does not match signup email"
+signupArtistClaimAuthoritySpec :: Spec
+signupArtistClaimAuthoritySpec = describe "password signup artist authority" $ do
+  it "permits independent account creation without an artist claim" $
+    validateOptionalSignupClaimArtistId Nothing `shouldBe` Right Nothing
+  it "rejects every positive caller-selected identity across the Int64 domain" $
+    property $ \(Positive artistId) ->
+      case validateOptionalSignupClaimArtistId (Just (artistId :: Int64)) of
+        Left err -> errHTTPCode err == 403
+        Right _ -> False
+  it "retains malformed identifier validation" $
+    mapM_ (\artistId -> case validateOptionalSignupClaimArtistId (Just artistId) of
+      Left err -> errHTTPCode err `shouldBe` 400
+      Right _ -> expectationFailure "Invalid artist identity accepted") [0, -1]
 
 artistInvitationSpec :: Spec
 artistInvitationSpec = describe "validateArtistInvitation" $ do
@@ -637,7 +644,7 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
         canonicalJson emailVerified =
           "{\"aud\":\"client-id\",\"email\":\"ada@example.com\","
             <> "\"sub\":\"google-sub-1\",\"iss\":\"https://accounts.google.com\","
-            <> "\"email_verified\":" <> emailVerified <> "}"
+            <> "\"exp\":\"4102444800\",\"email_verified\":" <> emailVerified <> "}"
         assertRejected raw expectedMessage =
           case decodeTokenInfo raw of
             Left err ->
@@ -665,10 +672,18 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
       (canonicalJson "\"yes\"")
       "email_verified must be a boolean"
 
+  it "rejects expired provider tokens including the exact expiration boundary" $ do
+    let epoch = UTCTime (fromGregorian 1970 1 1) 0
+    validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 99 } `shouldSatisfy` isLeft
+    validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 100 } `shouldSatisfy` isLeft
+    validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 101 } `shouldBe` Right ()
+
   it "normalizes Google emails only after rejecting invalid token email shapes" $ do
     case validateGoogleIdTokenInfo (Just "client-id") googleTokenInfo of
       Right profile -> do
         gpEmail profile `shouldBe` "ada@example.com"
+        gpSubject profile `shouldBe` "google-sub-1"
+        gpIssuer profile `shouldBe` "https://accounts.google.com"
         gpName profile `shouldBe` Just "Ada Lovelace"
       Left err ->
         expectationFailure ("Expected valid Google token info, got " <> T.unpack err)
@@ -793,6 +808,7 @@ googleTokenInfo =
     , gitName = Just " Ada Lovelace "
     , gitPicture = Nothing
     , gitSub = "google-sub-1"
+    , gitExp = 4102444800
     , gitIss = Just "https://accounts.google.com"
     }
 
@@ -810,3 +826,21 @@ selectedGoogleCredentialKey
   -> Either T.Text (Maybe (Key UserCredential))
 selectedGoogleCredentialKey =
   fmap (fmap credentialEntityKey) . selectUniqueGoogleLoginCredential
+
+recoveryWindowSpec :: Spec
+recoveryWindowSpec = describe "ID-SESSION-003 recovery expiry" $ do
+  it "accepts issuance and rejects equality at expiry" $ do
+    recoveryWindowValid 1000 1900 1000 `shouldBe` True
+    recoveryWindowValid 1000 1900 1899 `shouldBe` True
+    recoveryWindowValid 1000 1900 1900 `shouldBe` False
+    recoveryWindowValid 1000 1900 999 `shouldBe` False
+  it "accepts every second inside a translated window, never its deadline" $
+    property $ \(Positive epochSeed) ->
+      let issued = fromInteger ((epochSeed :: Integer) `mod` (toInteger (maxBound :: Int64) - 901))
+          expires = issued + 900
+      in all (recoveryWindowValid issued expires) [issued .. expires - 1]
+          && not (recoveryWindowValid issued expires expires)
+  it "does not accept malformed or overflow-shaped windows" $ do
+    recoveryWindowValid (-1) 899 1 `shouldBe` False
+    recoveryWindowValid 0 901 1 `shouldBe` False
+    recoveryWindowValid (maxBound - 899) minBound maxBound `shouldBe` False

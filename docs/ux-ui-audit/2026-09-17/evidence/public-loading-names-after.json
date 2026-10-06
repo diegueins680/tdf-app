@@ -1,0 +1,254 @@
+[
+  {
+    "engine": "chromium",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/tdf",
+    "blocked": [
+      "/fans/artists",
+      "/records/feed"
+    ],
+    "names": [
+      "Cargando artistas destacados"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/marketplace",
+    "blocked": [
+      "/marketplace"
+    ],
+    "names": [
+      "Cargando productos del marketplace"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/records",
+    "blocked": [
+      "/records/feed"
+    ],
+    "names": [
+      "Cargando grabaciones publicadas",
+      "Cargando lanzamientos publicados",
+      "Cargando sesiones publicadas"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/tdf",
+    "blocked": [
+      "/fans/artists",
+      "/records/feed"
+    ],
+    "names": [
+      "Loading featured artists"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/marketplace",
+    "blocked": [
+      "/marketplace"
+    ],
+    "names": [
+      "Loading marketplace products"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "chromium",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/records",
+    "blocked": [
+      "/records/feed"
+    ],
+    "names": [
+      "Loading published recordings",
+      "Loading published releases",
+      "Loading published sessions"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/tdf",
+    "blocked": [
+      "/fans/artists",
+      "/records/feed"
+    ],
+    "names": [
+      "Cargando artistas destacados"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/marketplace",
+    "blocked": [
+      "/marketplace"
+    ],
+    "names": [
+      "Cargando productos del marketplace"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/records",
+    "blocked": [
+      "/records/feed"
+    ],
+    "names": [
+      "Cargando grabaciones publicadas",
+      "Cargando lanzamientos publicados",
+      "Cargando sesiones publicadas"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/tdf",
+    "blocked": [
+      "/fans/artists",
+      "/records/feed"
+    ],
+    "names": [
+      "Loading featured artists"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/marketplace",
+    "blocked": [
+      "/marketplace"
+    ],
+    "names": [
+      "Loading marketplace products"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "firefox",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/records",
+    "blocked": [
+      "/records/feed"
+    ],
+    "names": [
+      "Loading published recordings",
+      "Loading published releases",
+      "Loading published sessions"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/tdf",
+    "blocked": [
+      "/fans/artists",
+      "/records/feed"
+    ],
+    "names": [
+      "Cargando artistas destacados"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/marketplace",
+    "blocked": [
+      "/marketplace"
+    ],
+    "names": [
+      "Cargando productos del marketplace"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "language": "es",
+    "observedLanguage": "es",
+    "path": "/records",
+    "blocked": [
+      "/records/feed"
+    ],
+    "names": [
+      "Cargando grabaciones publicadas",
+      "Cargando lanzamientos publicados",
+      "Cargando sesiones publicadas"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/tdf",
+    "blocked": [
+      "/fans/artists",
+      "/records/feed"
+    ],
+    "names": [
+      "Loading featured artists"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/marketplace",
+    "blocked": [
+      "/marketplace"
+    ],
+    "names": [
+      "Loading marketplace products"
+    ],
+    "violations": []
+  },
+  {
+    "engine": "webkit",
+    "language": "en",
+    "observedLanguage": "en",
+    "path": "/records",
+    "blocked": [
+      "/records/feed"
+    ],
+    "names": [
+      "Loading published recordings",
+      "Loading published releases",
+      "Loading published sessions"
+    ],
+    "violations": []
+  }
+]

@@ -275,6 +275,9 @@ export function validateFlyConfig(toml) {
   const reputationAggregationMode = String(
     env.get('REPUTATION_AGGREGATION_MODE') ?? '',
   ).trim().toLowerCase();
+  const singleFeatureOnboardingExperiment = String(
+    env.get('SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const eventDiscoveryAutoPublish = String(
     env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
@@ -341,6 +344,9 @@ export function validateFlyConfig(toml) {
   }
   if (reputationAggregationMode !== 'simulation') {
     throw new Error('fly.toml must set REPUTATION_AGGREGATION_MODE="simulation".');
+  }
+  if (singleFeatureOnboardingExperiment !== 'false') {
+    throw new Error('fly.toml must stage SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED="false" until explicit activation approval.');
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
@@ -540,7 +546,7 @@ BEGIN
   IF to_regclass('public.notification') IS NULL OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'notification'
-  ) <> 9 OR to_regclass('public.idx_notification_recipient') IS NULL THEN
+  ) NOT IN (9,10) OR to_regclass('public.idx_notification_recipient') IS NULL THEN
     RAISE EXCEPTION 'The repaired notification schema is missing or incomplete';
   END IF;
   IF EXISTS (
@@ -692,8 +698,125 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF to_regclass('public.receipt_number_counter') IS NULL THEN
+    RAISE EXCEPTION 'Receipt number allocation counter is missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('receipt', 'unique_receipt_invoice', 'UNIQUE (invoice_id)'),
+      ('invoice', 'invoice_receipt_snapshot_identity', 'UNIQUE (id, currency, subtotal_cents, tax_cents, total_cents)'),
+      ('receipt', 'receipt_invoice_snapshot', 'FOREIGN KEY (invoice_id, currency, subtotal_cents, tax_cents, total_cents) REFERENCES invoice(id, currency, subtotal_cents, tax_cents, total_cents) ON UPDATE RESTRICT ON DELETE RESTRICT')
+    ) expected(relation_name, constraint_name, definition)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_constraint c
+      WHERE c.conrelid=to_regclass('public.' || expected.relation_name)
+        AND c.conname=expected.constraint_name AND c.convalidated
+        AND NOT c.condeferrable AND pg_get_constraintdef(c.oid)=expected.definition
+    )
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.receipt'::regclass
+      AND conname='receipt_nonnegative_snapshot' AND contype='c' AND convalidated
+      AND pg_get_expr(conbin,conrelid) IN (
+        '((currency ~ ''^[A-Z]{3}$''::text) AND (subtotal_cents >= 0) AND (tax_cents >= 0) AND ((total_cents)::numeric = ((subtotal_cents)::numeric + (tax_cents)::numeric)))',
+        '(((currency)::text ~ ''^[A-Z]{3}$''::text) AND (subtotal_cents >= 0) AND (tax_cents >= 0) AND ((total_cents)::numeric = ((subtotal_cents)::numeric + (tax_cents)::numeric)))'
+      )
+  ) THEN
+    RAISE EXCEPTION 'Invoice receipt snapshot authority is missing or changed';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+    ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+      WHERE t.tgrelid=to_regclass('public.' || expected.table_name)
+        AND t.tgname=expected.trigger_name AND p.proname=expected.function_name
+        AND p.pronamespace='public'::regnamespace
+        AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+        AND t.tgtype=expected.trigger_type
+        AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+        AND t.tgdeferrable=expected.deferred AND t.tginitdeferred=expected.deferred
+    )
+  ) THEN
+    RAISE EXCEPTION 'Checkout monetary correspondence triggers are missing or disabled';
+  END IF;
+  IF to_regclass('public.commerce_checkout_amount_boundary') IS NULL THEN
+    RAISE EXCEPTION 'Checkout monetary migration snapshot fence is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.commerce_checkout_amount_boundary WHERE singleton) THEN
+    RAISE EXCEPTION 'Checkout monetary migration snapshot fence is empty';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid=to_regclass('public.merch_order')
+      AND conname='merch_order_commission_exact' AND contype='c' AND convalidated
+      AND pg_get_expr(conbin,conrelid)=
+        '((tdf_commission_minor)::numeric = div((((product_subtotal_minor)::numeric - (discount_minor)::numeric) * (tdf_commission_bps)::numeric), (10000)::numeric))'
+  ) THEN
+    RAISE EXCEPTION 'Exact merchandise commission constraint is missing or changed';
+  END IF;
+  IF to_regclass('public.google_calendar_config') IS NULL
+     OR to_regclass('public.google_calendar_event') IS NULL THEN
+    RAISE EXCEPTION 'Calendar runtime relations are missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('google_calendar_config', 'id', 'bigint', 'NO'),
+      ('google_calendar_config', 'owner_id', 'bigint', 'YES'),
+      ('google_calendar_config', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_config', 'access_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'refresh_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_type', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_expires_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'sync_cursor', 'character varying', 'YES'),
+      ('google_calendar_config', 'synced_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_config', 'updated_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'id', 'bigint', 'NO'),
+      ('google_calendar_event', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'google_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'status', 'character varying', 'NO'),
+      ('google_calendar_event', 'summary', 'character varying', 'YES'),
+      ('google_calendar_event', 'description', 'character varying', 'YES'),
+      ('google_calendar_event', 'location', 'character varying', 'YES'),
+      ('google_calendar_event', 'start_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'end_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'updated_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'html_link', 'character varying', 'YES'),
+      ('google_calendar_event', 'attendees', 'character varying', 'YES'),
+      ('google_calendar_event', 'raw_payload', 'character varying', 'YES'),
+      ('google_calendar_event', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'updated_local', 'timestamp with time zone', 'NO')
+    ) expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns actual
+      ON actual.table_schema='public' AND actual.table_name=expected.table_name
+      AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+      OR actual.is_nullable<>expected.is_nullable
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid='public.google_calendar_config'::regclass
+      AND tgname='identity_archive_reference_guard' AND NOT tgisinternal
+      AND tgfoid='identity_reject_archived_reference()'::regprocedure AND tgenabled='O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_event'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id, google_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='f' AND confrelid='public.party'::regclass AND convalidated
+      AND conkey=ARRAY[(SELECT attnum FROM pg_attribute
+        WHERE attrelid='public.google_calendar_config'::regclass AND attname='owner_id')]
+  ) THEN
+    RAISE EXCEPTION 'Calendar runtime columns or archived-owner guard are incompatible';
+  END IF;
   IF to_regclass('public.notification') IS NULL THEN
     RAISE EXCEPTION 'The notification relation is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notification' AND column_name='target_key' AND data_type='text' AND is_nullable='YES') OR to_regclass('public.notification_navigation_backfill') IS NULL OR to_regclass('public.notification_navigation_constraint_history') IS NULL THEN
+    RAISE EXCEPTION 'Notification destination identity or reversible history journal is missing';
   END IF;
   -- A named allowlist must include the access-request events. The pre-ledger
   -- notification baseline had no allowlist at all, which is also valid: it
@@ -859,6 +982,17 @@ BEGIN
      OR pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
        NOT ILIKE '%suppressed%' THEN
     RAISE EXCEPTION 'directory_public_event does not enforce imported-event tombstones';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%directory_social_event_metadata_is_public%' THEN
+    RAISE EXCEPTION 'directory_public_event does not enforce event metadata privacy';
+  END IF;
+  IF directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{}}') IS DISTINCT FROM TRUE
+     OR directory_social_event_metadata_is_public('{"isPublic":false,"_discoveryOwned":{}}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":null}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"unexpected":1}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"_discoveryOwned":{}}') IS DISTINCT FROM FALSE THEN
+    RAISE EXCEPTION 'Directory metadata ownership/privacy boundary is missing or invalid';
   END IF;
   IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
        NOT ILIKE '%directory_public_event%'
@@ -1348,6 +1482,34 @@ BEGIN
     RAISE EXCEPTION 'unique_external_event_discovery_slot is missing or invalid';
   END IF;
 
+  IF to_regclass('public.records_ingestion_control') IS NULL
+    OR to_regclass('public.records_ingestion_quota') IS NULL
+    OR to_regclass('public.records_ingestion_change') IS NULL
+    OR to_regclass('public.records_ingestion_admin_audit') IS NULL
+    OR to_regprocedure('public.tdf_ingest_public_video(bigint,uuid,jsonb)') IS NULL
+    OR to_regprocedure('public.tdf_mark_video_unavailable(bigint,uuid,text,text,timestamptz)') IS NULL
+    OR to_regprocedure('public.tdf_expire_records_provider_data()') IS NULL THEN
+    RAISE EXCEPTION 'Records ingestion runtime schema is incomplete';
+  END IF;
+  IF (SELECT count(*) FROM records_ingestion_control WHERE singleton) <> 1
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='social_sync_account'::regclass
+      AND tgname='records_source_configuration_lock' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='provider_metadata' AND data_type='jsonb')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='source_account_id' AND data_type='bigint') THEN
+    RAISE EXCEPTION 'Records ingestion controls, metadata or source locking are incomplete';
+  END IF;
+
+  IF to_regclass('public.event_discovery_publication_approval') IS NULL
+    OR to_regprocedure('public.tdf_event_pilot_keys(bigint,bigint)') IS NULL
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='external_event_ref'::regclass
+      AND tgname='event_discovery_pilot_limit_trigger' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='event_discovery_source'::regclass
+      AND tgname='event_source_publication_scope' AND tgenabled='O') THEN
+    RAISE EXCEPTION 'Shared event pilot or publication authority is incomplete';
+  END IF;
+
   FOREACH social_table IN ARRAY ARRAY[
     'social_sync_account',
     'social_sync_post',
@@ -1362,7 +1524,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 12 OR (
+  ) <> 13 OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1379,6 +1541,7 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('social_sync_account', 'records_ingestion', 'jsonb', 'YES'),
         ('social_sync_account', 'party_id', 'bigint', 'YES'),
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),
@@ -1614,6 +1777,12 @@ BEGIN
     END IF;
   END LOOP;
 
+  IF (SELECT count(*) FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='ddex_validation_issue'
+        AND column_name IN ('severity','layer') AND is_nullable='YES') <> 2 THEN
+    RAISE EXCEPTION 'Canonical DDEX issue writes require nullable retained legacy severity and layer';
+  END IF;
+
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'ddex_document'
@@ -1656,6 +1825,7 @@ BEGIN
     'commerce_payment_attempt',
     'commerce_provider_binding',
     'commerce_provider_event_inbox',
+    'commerce_provider_operation',
     'commerce_refund',
     'commerce_refund_allocation',
     'commerce_refund_reason_code',
@@ -1982,6 +2152,7 @@ BEGIN
       ('service_booking_checkout_runtime', 'trg_service_booking_validate_runtime'),
       ('service_booking_checkout_runtime', 'trg_service_booking_validate_transition'),
       ('service_booking_checkout_runtime', 'trg_service_booking_record_transition'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_sync_domain_booking_status'),
       ('booking_resource', 'trg_service_booking_allocate_resource'),
       ('booking', 'trg_service_booking_sync_legacy_allocation'),
       ('commerce_checkout_session', 'trg_service_booking_require_verified_payment'),
@@ -1994,6 +2165,37 @@ BEGIN
     WHERE actual.oid IS NULL
   ) THEN
     RAISE EXCEPTION 'Service booking invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.booking'::regclass
+      AND t.tgname = 'trg_service_booking_sync_legacy_allocation' AND t.tgenabled = 'O'
+      AND t.tgfoid = to_regprocedure('public.service_booking_sync_legacy_booking_allocation()')
+      AND t.tgtype = 17 AND t.tgqual IS NULL AND NOT t.tgisinternal
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND ARRAY['starts_at','ends_at','status','service_offering_id']::text[] <@ ARRAY(
+        SELECT a.attname::text FROM pg_attribute a
+        WHERE a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr))
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc WHERE oid = to_regprocedure('public.service_booking_sync_legacy_booking_allocation()')
+      AND strpos(prosrc, 'booking_checkout_snapshot_correspondence') > 0
+      AND strpos(prosrc, 'booking_checkout_lifecycle_correspondence') > 0
+      AND strpos(prosrc, 'starts_at = EXCLUDED.starts_at') > 0
+      AND strpos(prosrc, 'ends_at = EXCLUDED.ends_at') > 0
+      AND strpos(prosrc, 'allocation_status = EXCLUDED.allocation_status') > 0
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.service_booking_checkout_runtime'::regclass
+      AND t.tgname = 'trg_service_booking_sync_domain_booking_status' AND t.tgenabled = 'O'
+      AND t.tgfoid = to_regprocedure('public.service_booking_sync_domain_booking_status()')
+      AND t.tgtype = 17 AND t.tgqual IS NULL AND NOT t.tgisinternal
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND ARRAY['fulfillment_status']::text[] <@ ARRAY(
+        SELECT a.attname::text FROM pg_attribute a
+        WHERE a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr))
+  ) OR to_regprocedure('public.service_booking_projected_booking_status(text)') IS NULL THEN
+    RAISE EXCEPTION 'Booking calendar update and checkout correspondence contract is missing';
   END IF;
 
   IF NOT EXISTS (
@@ -2124,8 +2326,27 @@ BEGIN
         ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_event_inbox', 'evidence_type', 'text', 'NO'),
         ('commerce_provider_event_inbox', 'processing_started_at', 'timestamp with time zone', 'YES'),
         ('commerce_provider_event_inbox', 'last_attempt_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_operation', 'id', 'uuid', 'NO'),
+        ('commerce_provider_operation', 'payment_attempt_id', 'uuid', 'NO'),
+        ('commerce_provider_operation', 'provider', 'text', 'NO'),
+        ('commerce_provider_operation', 'environment', 'text', 'NO'),
+        ('commerce_provider_operation', 'merchant_account_ref', 'text', 'NO'),
+        ('commerce_provider_operation', 'provider_reference', 'text', 'NO'),
+        ('commerce_provider_operation', 'operation', 'text', 'NO'),
+        ('commerce_provider_operation', 'idempotency_key', 'text', 'NO'),
+        ('commerce_provider_operation', 'request_sha256', 'text', 'NO'),
+        ('commerce_provider_operation', 'status', 'text', 'NO'),
+        ('commerce_provider_operation', 'outcome_certainty', 'text', 'NO'),
+        ('commerce_provider_operation', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_operation', 'redirect_url_ciphertext', 'bytea', 'YES'),
+        ('commerce_provider_operation', 'last_error_code', 'text', 'YES'),
+        ('commerce_provider_operation', 'started_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_operation', 'completed_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_operation', 'created_at', 'timestamp with time zone', 'NO'),
+        ('commerce_provider_operation', 'updated_at', 'timestamp with time zone', 'NO'),
         ('commerce_refund', 'provider', 'text', 'YES'),
         ('commerce_refund', 'environment', 'text', 'YES'),
         ('commerce_refund', 'merchant_account_ref', 'text', 'YES'),
@@ -2158,6 +2379,8 @@ BEGIN
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
+        ('commerce_provider_operation', 'commerce_provider_operation_payment_attempt_id_fkey', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
+        ('commerce_provider_operation', 'fk_commerce_provider_operation_account', 'f', 'FOREIGN KEY (provider, environment) REFERENCES commerce_provider_account(provider, environment) ON DELETE RESTRICT'),
         ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''placetopay''::text, ''payphone''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
         ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
         ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
@@ -2173,15 +2396,39 @@ BEGIN
     RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.commerce_provider_event_inbox'::regclass
+      AND conname = 'ck_commerce_provider_event_evidence'
+      AND contype = 'c' AND convalidated
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid = to_regprocedure('public.commerce_protect_provider_event()')
+      AND strpos(pg_get_functiondef(oid), 'evidence_type') > 0
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid = to_regprocedure('public.commerce_guard_provider_operation_immutable()')
+      AND strpos(pg_get_functiondef(oid), 'provider_resource_id') > 0
+  ) THEN
+    RAISE EXCEPTION 'Provider execution evidence guards are missing or invalid';
+  END IF;
+
   IF to_regclass('public.idx_commerce_payment_attempt_intent') IS NULL
      OR to_regclass('public.idx_commerce_provider_event_work') IS NULL
      OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_untrusted_work') IS NULL
+     OR to_regclass('public.idx_commerce_provider_operation_reconciliation') IS NULL
+     OR to_regclass('public.uq_commerce_provider_operation_create') IS NULL
      OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
      OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN
     RAISE EXCEPTION 'Provider event/refund runtime indexes are incomplete';
   END IF;
 
   IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_provider_operation'::regclass
+      AND tgname = 'trg_commerce_provider_operation_immutable' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
     SELECT 1 FROM pg_trigger
     WHERE tgrelid = 'public.commerce_refund'::regclass
       AND tgname = 'trg_commerce_validate_refund_write' AND tgenabled = 'O'
@@ -2194,7 +2441,7 @@ BEGIN
     WHERE tgrelid = 'public.commerce_receipt'::regclass
       AND tgname = 'trg_commerce_validate_credit_note' AND tgenabled = 'O'
   ) THEN
-    RAISE EXCEPTION 'Provider refund invariant triggers are missing or disabled';
+    RAISE EXCEPTION 'Provider execution/refund invariant triggers are missing or disabled';
   END IF;
 
   IF EXISTS (
@@ -2203,13 +2450,18 @@ BEGIN
       ('checkout.paypal.webhooks'),
       ('checkout.paypal.refunds'),
       ('checkout.datafast.webhooks'),
-      ('checkout.datafast.refunds')
+      ('checkout.datafast.refunds'),
+      ('checkout.placetopay.webhooks'),
+      ('checkout.payphone.notifications')
     ) AS expected(flag_key)
     LEFT JOIN revenue_feature_flag AS flag
       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
-    WHERE flag.flag_key IS NULL OR flag.enabled
+    -- PayPal webhook intake is an approved production capability. Restarts
+    -- must preserve its configured state; refunds and Datafast stay staged.
+    WHERE flag.flag_key IS NULL
+       OR (flag.enabled AND expected.flag_key <> 'checkout.paypal.webhooks')
   ) THEN
-    RAISE EXCEPTION 'Production provider event/refund capability gates must exist disabled';
+    RAISE EXCEPTION 'Production provider capability gates must exist; refunds and Datafast must remain disabled';
   END IF;
 
   IF EXISTS (
@@ -2242,6 +2494,36 @@ BEGIN
   ) <> 8 THEN
     RAISE EXCEPTION 'Account-bound onboarding progress constraints are incomplete';
   END IF;
+
+  IF to_regclass('public.user_experiment_assignment') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_experiment_assignment'
+  ) <> 8 OR to_regclass('public.user_experiment_assignment_pending_exposure_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_experiment_assignment'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 7 THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment constraints are incomplete';
+  END IF;
+  IF to_regclass('public.interaction_runtime') IS NULL
+     OR to_regclass('public.interaction_report_comment_open') IS NULL
+     OR to_regprocedure('interaction_command(bigint,uuid,uuid,jsonb)') IS NULL
+     OR to_regprocedure('interaction_dispatch_events(integer)') IS NULL
+     OR to_regprocedure('interaction_report_reasons(bigint,uuid)') IS NULL
+     OR EXISTS(SELECT 1 FROM interaction_entity_kind WHERE code='artist_update' AND enabled)
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_event' AND column_name='mention_party_ids'
+       AND udt_name='_int8' AND is_nullable='NO')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_notification' AND column_name='last_event_id'
+       AND data_type='bigint' AND is_nullable='NO') THEN
+    RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
 END
 $verify$;`;
 }
@@ -2254,12 +2536,17 @@ export function buildMachineDeployArgs({
   excludeMachine,
   contextualReputationEnabled = false,
   publicReputationProjectionEnabled = false,
+  eventDiscoveryEnabled = false,
+  eventDiscoveryAutoPublish = false,
 }) {
   if (typeof contextualReputationEnabled !== 'boolean') {
     throw new Error('contextualReputationEnabled must be a boolean.');
   }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
+  }
+  if (typeof eventDiscoveryEnabled !== 'boolean' || typeof eventDiscoveryAutoPublish !== 'boolean') {
+    throw new Error('Event discovery gates must be booleans.');
   }
   const args = [
     'flyctl', 'deploy', '.',
@@ -2275,8 +2562,9 @@ export function buildMachineDeployArgs({
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
-    '--env', 'EVENT_DISCOVERY_ENABLED=false',
-    '--env', 'EVENT_DISCOVERY_AUTO_PUBLISH=false',
+    '--env', `EVENT_DISCOVERY_ENABLED=${eventDiscoveryEnabled}`,
+    '--env', `EVENT_DISCOVERY_AUTO_PUBLISH=${eventDiscoveryAutoPublish}`,
+    '--env', 'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',
@@ -2294,6 +2582,8 @@ export function buildReleaseSteps(options = {}) {
   const sha = normalizeFullSha(options.sha);
   const contextualReputationEnabled = false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
+  const eventDiscoveryEnabled = options.eventDiscoveryEnabled ?? false;
+  const eventDiscoveryAutoPublish = options.eventDiscoveryAutoPublish ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
   const selectedCanary = options.canaryMachineId ?? options.canaryMachine;
@@ -2344,6 +2634,8 @@ export function buildReleaseSteps(options = {}) {
       sha: previousSha,
       contextualReputationEnabled: previousContextualReputationEnabled,
       publicReputationProjectionEnabled,
+      eventDiscoveryEnabled,
+      eventDiscoveryAutoPublish,
       onlyMachine: canary,
     }),
   };
@@ -2353,7 +2645,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2366,7 +2658,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,

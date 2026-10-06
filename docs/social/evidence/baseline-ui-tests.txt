@@ -1,0 +1,24 @@
+
+> tdf-app@0.2.0 test:ui
+> npm run test --workspace=tdf-hq-ui --runTestsByPath src/api/social.test.ts src/api/socialInbox.test.ts src/pages/SocialInboxPage.test.tsx
+
+npm warn "src/api/social.test.ts" is being parsed as a normal command line argument.
+npm warn Unknown cli config "--runTestsByPath". This will stop working in the next major version of npm.
+
+> tdf-hq-ui@0.1.0 test
+> NODE_OPTIONS=--experimental-vm-modules jest --runInBand src/api/social.test.ts src/api/socialInbox.test.ts src/pages/SocialInboxPage.test.tsx
+
+(node:46223) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[TESTOMATIO] Testomatio Reporter v2.12.0
+[TESTOMATIO] Pipes: No pipes enabled
+[TESTOMATIO] If you want to use Testomatio reporter, pass your token as TESTOMATIO env variable
+PASS src/pages/SocialInboxPage.test.tsx (16.57 s)
+PASS src/api/socialInbox.test.ts
+PASS src/api/social.test.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       44 passed, 44 total
+Snapshots:   0 total
+Time:        23.213 s
+Ran all test suites matching src/api/social.test.ts|src/api/socialInbox.test.ts|src/pages/SocialInboxPage.test.tsx.

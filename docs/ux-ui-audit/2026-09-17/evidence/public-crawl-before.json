@@ -1,0 +1,2277 @@
+[
+  {
+    "route": "/",
+    "width": 320,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/instagram",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/ig",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/tdf",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/comercio",
+    "width": 320,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiChip-colorWarning > .MuiChip-label.MuiChip-labelSmall.css-4y436t"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.11 (foreground color: #ffffff, background color: #ed6c02, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/commerce",
+    "width": 320,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiChip-colorWarning > .MuiChip-label.MuiChip-labelSmall.css-4y436t"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.11 (foreground color: #ffffff, background color: #ed6c02, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/distribucion",
+    "width": 320,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribution",
+    "width": 320,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/sobre-tdf",
+    "width": 320,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/inicio",
+    "width": 320,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/buscar",
+    "width": 320,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/fans",
+    "width": 320,
+    "finalPath": "/fans",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiTypography-inherit"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.65:1 with the surrounding text. (Minimum contrast is 3:1, link text: #6d28d9, surrounding text: #111113)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-1jwtjok > .MuiPaper-elevation0.MuiAlert-root.MuiAlert-colorInfo > .MuiAlert-message.css-127h8j3"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/mi-artista",
+    "width": 320,
+    "finalPath": "/mi-artista",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiTypography-inherit"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.65:1 with the surrounding text. (Minimum contrast is 3:1, link text: #6d28d9, surrounding text: #111113)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-1jwtjok > .MuiPaper-elevation0.MuiAlert-root.MuiAlert-colorInfo > .MuiAlert-message.css-127h8j3"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/artista/crear",
+    "width": 320,
+    "finalPath": "/artista/crear",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace",
+    "width": 320,
+    "finalPath": "/marketplace",
+    "title": "Marketplace · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/tiendas",
+    "width": 320,
+    "finalPath": "/tiendas",
+    "title": "Merch de artistas · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering",
+    "width": 320,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-input-field-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiSelect-select"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/mezcla-mastering/pago-datafast",
+    "width": 320,
+    "finalPath": "/mezcla-mastering/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/services/mixing-mastering",
+    "width": 320,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-input-field-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiSelect-select"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/marketplace/pago-datafast",
+    "width": 320,
+    "finalPath": "/marketplace/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiButton-outlinedInfo"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #0277bd, background color: #f8f7f5, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/oauth/google-drive/callback",
+    "width": 320,
+    "finalPath": "/oauth/google-drive/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/instagram/callback",
+    "width": 320,
+    "finalPath": "/oauth/instagram/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-dic-2025",
+    "width": 320,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 378
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiButton-outlinedInfo"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.32 (foreground color: #0277bd, background color: #e5f6fd, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiAlert-message"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/curso/produccion-musical-abr-2026",
+    "width": 320,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 378
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiButton-outlinedInfo"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.32 (foreground color: #0277bd, background color: #e5f6fd, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      },
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiAlert-message"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/trials",
+    "width": 320,
+    "finalPath": "/trials",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/live-sessions/registro",
+    "width": 320,
+    "finalPath": "/live-sessions/registro",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 345
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(2) > .css-1ov46kg.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r29\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2a\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2d\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2e\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2f\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2g\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2h\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(3) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(3) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .css-1s6kwmb.MuiButton-outlinedSizeMedium.MuiButton-outlinedPrimary"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #4b377f, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(3) > .css-1ov46kg.MuiStack-root > .css-1ov46kg.MuiStack-root > .MuiPaper-outlined.css-1eb31q2.MuiPaper-root > .css-mbvifz.MuiStack-root > .MuiTypography-subtitle1.css-1av9wws"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2j\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2j\\:-helper-text"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2n\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2o\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2p\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2q\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2r\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2u\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiChip-colorInfo > .MuiChip-label.MuiChip-labelSmall.css-4y436t"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #7e828d, background color: #265376, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .css-1s6kwmb.MuiButton-outlinedSizeMedium.MuiButton-outlinedPrimary"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #4b377f, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-megz7u.MuiTypography-body2"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-1ov46kg.MuiStack-root > .MuiPaper-outlined.css-1eb31q2.MuiPaper-root > .css-mbvifz.MuiStack-root > .MuiTypography-subtitle1.css-1av9wws"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r30\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r31\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r32\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r33\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(5) > .css-1ov46kg.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(5) > .css-1ov46kg.MuiStack-root > .css-megz7u.MuiTypography-body2:nth-child(2)"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-megz7u.MuiTypography-body2:nth-child(3)"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-wp741z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-pb4y8c.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-x1f7zk"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #4b377f, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/feedback",
+    "width": 320,
+    "finalPath": "/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/privacidad",
+    "width": 320,
+    "finalPath": "/privacidad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/apelaciones",
+    "width": 320,
+    "finalPath": "/apelaciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reputacion/como-se-calcula",
+    "width": 320,
+    "finalPath": "/reputacion/como-se-calcula",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/consentimiento",
+    "width": 320,
+    "finalPath": "/whatsapp/consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/ok",
+    "width": 320,
+    "finalPath": "/whatsapp/ok",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/records",
+    "width": 320,
+    "finalPath": "/records",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "link-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-1w44ib4"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-ta5tcq"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1ld4tyl"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-15gct6v"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-3mbzst"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1csc8pb"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-gt3kgw"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1enpnvz"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-hdq10t"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1le0nhr"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/donar",
+    "width": 320,
+    "finalPath": "/donar",
+    "title": "Donaciones · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar",
+    "width": 320,
+    "finalPath": "/reservar",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "label",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".PrivateSwitchBase-input"
+            ],
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/dj-booth",
+    "width": 320,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "label",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".PrivateSwitchBase-input"
+            ],
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/reservar/dj-booth",
+    "width": 320,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "label",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".PrivateSwitchBase-input"
+            ],
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/domo-del-pululahua",
+    "width": 320,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/venues/domo-del-pululahua",
+    "width": 320,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/login",
+    "width": 320,
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reset",
+    "width": 320,
+    "finalPath": "/reset",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 320
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/herramientas/creador-musical",
+    "width": 320,
+    "finalPath": "/herramientas/creador-musical",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 320,
+      "scroll": 390
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "scrollable-region-focusable",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              "pre"
+            ],
+            "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/",
+    "width": 1280,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/instagram",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/ig",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/tdf",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/comercio",
+    "width": 1280,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiChip-colorWarning > .MuiChip-label.MuiChip-labelSmall.css-4y436t"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.11 (foreground color: #ffffff, background color: #ed6c02, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/commerce",
+    "width": 1280,
+    "finalPath": "/comercio",
+    "title": "Servicios TDF · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiChip-colorWarning > .MuiChip-label.MuiChip-labelSmall.css-4y436t"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.11 (foreground color: #ffffff, background color: #ed6c02, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/distribucion",
+    "width": 1280,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/distribution",
+    "width": 1280,
+    "finalPath": "/distribucion",
+    "title": "Distribución musical · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/sobre-tdf",
+    "width": 1280,
+    "finalPath": "/tdf",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(1) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiGrid-grid-md-6.css-iol86l.MuiGrid-item:nth-child(2) > .css-1o92w9h.MuiPaper-root.MuiPaper-outlined > .MuiCardContent-root.css-15q2cw4 > .css-1ov46kg.MuiStack-root > .css-152pvdc.MuiButton-outlinedSizeMedium.MuiButton-outlined"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.75 (foreground color: #6d28d9, background color: #090c12, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-109j2mh"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #6d28d9, background color: #07090f, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-2hdo1z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #6d28d9, background color: #0c1018, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/inicio",
+    "width": 1280,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/buscar",
+    "width": 1280,
+    "finalPath": "/buscar",
+    "title": "Directorio y clasificados musicales · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/fans",
+    "width": 1280,
+    "finalPath": "/fans",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiTypography-inherit"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.65:1 with the surrounding text. (Minimum contrast is 3:1, link text: #6d28d9, surrounding text: #111113)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/mi-artista",
+    "width": 1280,
+    "finalPath": "/mi-artista",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "link-in-text-block",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiTypography-inherit"
+            ],
+            "summary": "Fix any of the following:\n  The link has insufficient color contrast of 2.65:1 with the surrounding text. (Minimum contrast is 3:1, link text: #6d28d9, surrounding text: #111113)\n  The link has no styling (such as underline) to distinguish it from the surrounding text"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/artista/crear",
+    "width": 1280,
+    "finalPath": "/artista/crear",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/marketplace",
+    "width": 1280,
+    "finalPath": "/marketplace",
+    "title": "Marketplace · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/tiendas",
+    "width": 1280,
+    "finalPath": "/tiendas",
+    "title": "Merch de artistas · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/mezcla-mastering",
+    "width": 1280,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-input-field-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiSelect-select"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/mezcla-mastering/pago-datafast",
+    "width": 1280,
+    "finalPath": "/mezcla-mastering/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/services/mixing-mastering",
+    "width": 1280,
+    "finalPath": "/mezcla-mastering",
+    "title": "Mezcla y Masterización · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "aria-input-field-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiSelect-select"
+            ],
+            "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/marketplace/pago-datafast",
+    "width": 1280,
+    "finalPath": "/marketplace/pago-datafast",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiButton-outlinedInfo"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.48 (foreground color: #0277bd, background color: #f8f7f5, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/oauth/google-drive/callback",
+    "width": 1280,
+    "finalPath": "/oauth/google-drive/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/oauth/instagram/callback",
+    "width": 1280,
+    "finalPath": "/oauth/instagram/callback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/curso/produccion-musical-dic-2025",
+    "width": 1280,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiButton-outlinedInfo"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.32 (foreground color: #0277bd, background color: #e5f6fd, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/curso/produccion-musical-abr-2026",
+    "width": 1280,
+    "finalPath": "/curso/produccion-musical-jun-2026",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiButton-outlinedInfo"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.32 (foreground color: #0277bd, background color: #e5f6fd, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/trials",
+    "width": 1280,
+    "finalPath": "/trials",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/live-sessions/registro",
+    "width": 1280,
+    "finalPath": "/live-sessions/registro",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1281
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(2) > .css-1ov46kg.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r29\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2a\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2d\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2e\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2f\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2g\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2h\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(3) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(3) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .css-1s6kwmb.MuiButton-outlinedSizeMedium.MuiButton-outlinedPrimary"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #4b377f, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(3) > .css-1ov46kg.MuiStack-root > .css-1ov46kg.MuiStack-root > .MuiPaper-outlined.css-1eb31q2.MuiPaper-root > .css-mbvifz.MuiStack-root > .MuiTypography-subtitle1.css-1av9wws"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2j\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2j\\:-helper-text"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2n\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2o\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2p\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2q\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2r\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r2u\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiChip-colorInfo > .MuiChip-label.MuiChip-labelSmall.css-4y436t"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #7e828d, background color: #265376, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-95g4uk.MuiStack-root > .css-1s6kwmb.MuiButton-outlinedSizeMedium.MuiButton-outlinedPrimary"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #4b377f, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-megz7u.MuiTypography-body2"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(4) > .css-1ov46kg.MuiStack-root > .css-1ov46kg.MuiStack-root > .MuiPaper-outlined.css-1eb31q2.MuiPaper-root > .css-mbvifz.MuiStack-root > .MuiTypography-subtitle1.css-1av9wws"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r30\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r31\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r32\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              "#\\:r33\\:-label"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(5) > .css-1ov46kg.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".MuiPaper-elevation1.css-jfjg2a.MuiPaper-elevation:nth-child(5) > .css-1ov46kg.MuiStack-root > .css-megz7u.MuiTypography-body2:nth-child(2)"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-megz7u.MuiTypography-body2:nth-child(3)"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-uw4qzu"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-wp741z"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.36 (foreground color: #444856, background color: #7e828d, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-pb4y8c.MuiStack-root > .MuiTypography-h6.css-okqixw"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.47 (foreground color: #2b2f3a, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          },
+          {
+            "target": [
+              ".css-x1f7zk"
+            ],
+            "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.53 (foreground color: #4b377f, background color: #7e828d, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/feedback",
+    "width": 1280,
+    "finalPath": "/feedback",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/privacidad",
+    "width": 1280,
+    "finalPath": "/privacidad",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/apelaciones",
+    "width": 1280,
+    "finalPath": "/apelaciones",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reputacion/como-se-calcula",
+    "width": 1280,
+    "finalPath": "/reputacion/como-se-calcula",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/consentimiento",
+    "width": 1280,
+    "finalPath": "/whatsapp/consentimiento",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/whatsapp/ok",
+    "width": 1280,
+    "finalPath": "/whatsapp/ok",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/records",
+    "width": 1280,
+    "finalPath": "/records",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "link-name",
+        "impact": "serious",
+        "nodes": [
+          {
+            "target": [
+              ".css-1w44ib4"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-ta5tcq"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1ld4tyl"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-15gct6v"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-3mbzst"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1csc8pb"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-gt3kgw"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1enpnvz"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-hdq10t"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          },
+          {
+            "target": [
+              ".css-1le0nhr"
+            ],
+            "summary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element does not have text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/donar",
+    "width": 1280,
+    "finalPath": "/donar",
+    "title": "Donaciones · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reservar",
+    "width": 1280,
+    "finalPath": "/reservar",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "label",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".PrivateSwitchBase-input"
+            ],
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/dj-booth",
+    "width": 1280,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "label",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".PrivateSwitchBase-input"
+            ],
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/reservar/dj-booth",
+    "width": 1280,
+    "finalPath": "/dj-booth",
+    "title": "Reservar · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": [
+      {
+        "id": "label",
+        "impact": "critical",
+        "nodes": [
+          {
+            "target": [
+              ".PrivateSwitchBase-input"
+            ],
+            "summary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "route": "/domo-del-pululahua",
+    "width": 1280,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/venues/domo-del-pululahua",
+    "width": 1280,
+    "finalPath": "/domo-del-pululahua",
+    "title": "Domo del Pululahua · TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/login",
+    "width": 1280,
+    "finalPath": "/login",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/reset",
+    "width": 1280,
+    "finalPath": "/reset",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  },
+  {
+    "route": "/herramientas/creador-musical",
+    "width": 1280,
+    "finalPath": "/herramientas/creador-musical",
+    "title": "TDF Records",
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280
+    },
+    "errors": [],
+    "failures": [],
+    "violations": []
+  }
+]

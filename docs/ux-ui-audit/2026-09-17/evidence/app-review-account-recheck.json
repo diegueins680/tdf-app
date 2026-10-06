@@ -1,0 +1,1 @@
+{"observedAt":"2026-09-18T18:01:43.246Z","source":"existing App Store Connect App Review account; no account created or secrets emitted","loginStatus":200,"checks":[{"path":"/session","status":200},{"path":"/session/onboarding","status":200}]}

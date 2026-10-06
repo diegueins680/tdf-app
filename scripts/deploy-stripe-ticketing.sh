@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deprecated compatibility helper. Production releases must use the guarded
-# release lane in scripts/production-release.mjs via the npm commands below.
+# Hetzner procedure in ops/hetzner/README.md; preparation does not deploy.
 
 set -euo pipefail
 
@@ -24,15 +24,13 @@ case "$environment" in
     cat >&2 <<'EOF'
 [refused] scripts/deploy-stripe-ticketing.sh no longer performs remote releases.
 
-Use the guarded backend release lane from the repository root with a full SHA:
+Prepare the release/recovery bundle from the repository root with full SHAs:
 
-  npm run release:backend:plan -- --sha <full-sha>
-  npm run release:backend:preflight -- --sha <full-sha>
-  npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+  npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
 
-The release lane keeps application-startup migrations and event discovery off,
-applies required schema changes once, verifies health/version, and rolls out the
-pinned backend image.
+This command only prepares artifacts; it does not deploy. Follow
+ops/hetzner/README.md for reviewed migrations, backups, rollout and recovery.
+Keep application-startup migrations and experimental event discovery disabled.
 EOF
     exit 1
     ;;

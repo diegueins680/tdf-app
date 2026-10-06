@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger';
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
-import { isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
+import { getAuthSessionEpoch, isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
 import { resolveApiBase } from '../config/apiBase';
 
 const API_BASE = resolveApiBase();
@@ -121,6 +121,7 @@ export const HTTP_STATUS_REQUEST_TIMEOUT = 408 satisfies ApiError['status'];
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const endApiRequest = beginApiRequest();
+  const requestEpoch = getAuthSessionEpoch();
 
   try {
     const authHeader = buildAuthorizationHeader();
@@ -171,7 +172,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       const statusLabel = statusText !== '' ? statusText : `HTTP ${res.status}`;
       const details = trimmed !== '' ? trimmed : statusLabel;
       if ((res.status === 401 || res.status === 403) && isSessionAuthFailureMessage(details)) {
-        notifyAuthSessionExpired();
+        notifyAuthSessionExpired(requestEpoch);
       }
       throw new ApiError(details, res.status);
     }

@@ -24,12 +24,8 @@ describe('signup payload builder', () => {
     expect(payload.fanArtistIds).toBeUndefined();
   });
 
-  it('keeps claimable artist ids only when valid', () => {
-    const claimed = buildSignupPayload(baseForm, [], 42);
-    expect(claimed.claimArtistId).toBe(42);
-
-    const ignored = buildSignupPayload(baseForm, [], 0);
-    expect(ignored.claimArtistId).toBeUndefined();
+  it('creates an independent account without an ownership claim', () => {
+    expect(buildSignupPayload(baseForm, [])).not.toHaveProperty('claimArtistId');
   });
 
   it('normalizes fan artist ids to unique positive safe integers', () => {
@@ -37,16 +33,7 @@ describe('signup payload builder', () => {
     expect(payload.fanArtistIds).toEqual([7, 11]);
   });
 
-  it('keeps claim artist id only when it is a positive safe integer', () => {
-    const accepted = buildSignupPayload(baseForm, [], 42);
-    expect(accepted.claimArtistId).toBe(42);
 
-    const rejectedFraction = buildSignupPayload(baseForm, [], 42.5);
-    expect(rejectedFraction.claimArtistId).toBeUndefined();
-
-    const rejectedUnsafe = buildSignupPayload(baseForm, [], Number.MAX_SAFE_INTEGER + 1);
-    expect(rejectedUnsafe.claimArtistId).toBeUndefined();
-  });
 });
 
 describe('deriveEffectiveRoles', () => {

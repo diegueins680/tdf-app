@@ -12,6 +12,9 @@ executable tdf-hq-exe
   hs-source-dirs:   app, src
   other-modules:
     TDF.App.Boot
+    TDF.App.StartupResponse
+    TDF.App.FailureBoundary
+    TDF.App.Readiness
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
@@ -25,9 +28,26 @@ executable tdf-hq-exe
     TDF.API.Feedback
     TDF.API.Payments
     TDF.API.PaymentCapabilities
+    TDF.API.ProviderExecution
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Proposals
+    TDF.Interactions.API
+    TDF.Interactions.Server
+    TDF.Interactions.Legacy
+    TDF.Interactions.Notifications
+    TDF.Social.API
+    TDF.Social.Server
+    TDF.API.Chat
+    TDF.API.SocialProfiles
+    TDF.Social.Profiles
+    TDF.API.SocialRelationships
+    TDF.Social.FanEffects
+    TDF.API.FanFollowing
+    TDF.Social.RelationshipWrites
+    TDF.Social.RelationshipReads
+    TDF.Social.Chat
+    TDF.Social.Session
     TDF.API.Calendar
     TDF.API.Marketplace
     TDF.API.Merch
@@ -59,10 +79,16 @@ executable tdf-hq-exe
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
+    TDF.Ticketing.Admission
+    TDF.Ticketing.Refund
+    TDF.Ticketing.Confirmation
+    TDF.Ticketing.Inventory
+    TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
@@ -70,14 +96,20 @@ executable tdf-hq-exe
     TDF.Commerce.MerchReservationWorker
     TDF.Commerce.ServiceBookings
     TDF.Commerce.PaymentIntentStore
+    TDF.Commerce.PaymentRuntimeStore
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderExecutionStore
+    TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
+    TDF.Commerce.ProviderAdapter.PayPalRefund
+    TDF.Commerce.RefundReconciliation
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -93,7 +125,9 @@ executable tdf-hq-exe
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
     TDF.Email
+    TDF.Email.Headers
     TDF.Handlers.InputList
+    TDF.Invoice.Receipt
     TDF.Invoice.SRI
     TDF.Internationalization
     TDF.LogBuffer
@@ -117,6 +151,10 @@ executable tdf-hq-exe
     TDF.Leads.Model
     TDF.Email.Service
     TDF.FeatureRegistry
+    TDF.EventOperations.API
+    TDF.EventOperations.DatabaseBoundary
+    TDF.EventOperations.Server
+    TDF.EventOperations.Types
     TDF.Operations.API
     TDF.Operations.Model
     TDF.Operations.Server
@@ -127,6 +165,10 @@ executable tdf-hq-exe
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.YouTube
+    TDF.Services.RecordsIngestion
+    TDF.Server.RecordsIngestion
+    TDF.API.RecordsIngestion
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
     TDF.Services.Stripe
@@ -139,6 +181,8 @@ executable tdf-hq-exe
     TDF.Server
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
+    TDF.Server.PaymentAvailability
+    TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -160,6 +204,8 @@ executable tdf-hq-exe
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
+    TDF.Server.ProviderTransport
+    TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
@@ -243,6 +289,7 @@ executable tdf-hq-exe
     , directory
     , transformers
     , mtl
+    , network
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -287,6 +334,22 @@ test-suite tdf-hq-test
   hs-source-dirs:    test, src
   main-is:           Spec.hs
   other-modules:
+    TDF.LiveIntakeIdentitySpec
+    TDF.ProviderIdentitySpec
+    TDF.CredentialLifecycleSpec
+    TDF.DriveReplaySpec
+    TDF.CourseIdentitySpec
+    TDF.TrialIdentitySpec
+    TDF.MarketplaceIdentitySpec
+    TDF.Commerce.WorkerLoggingSpec
+    TDF.Commerce.CheckoutMoneySpec
+    TDF.Commerce.PaymentArithmeticSpec
+    TDF.EmailHeadersSpec
+    TDF.CorsSpec
+    TDF.Invoice.ReceiptSpec
+    TDF.FailureBoundarySpec
+    TDF.ReadinessSpec
+    TDF.TicketConfirmationSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
@@ -296,11 +359,15 @@ test-suite tdf-hq-test
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
     TDF.App.Boot
+    TDF.App.StartupResponse
+    TDF.App.FailureBoundary
+    TDF.App.Readiness
     TDF.API.Bands
     TDF.API.Facebook
     TDF.API.Future
     TDF.API.Payments
     TDF.API.PaymentCapabilities
+    TDF.API.ProviderExecution
     TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Instagram
@@ -309,6 +376,22 @@ test-suite tdf-hq-test
     TDF.API.InternAudit
     TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
+    TDF.Interactions.API
+    TDF.Interactions.Server
+    TDF.Interactions.Legacy
+    TDF.Interactions.Notifications
+    TDF.Social.API
+    TDF.Social.Server
+    TDF.API.Chat
+    TDF.API.SocialProfiles
+    TDF.Social.Profiles
+    TDF.API.SocialRelationships
+    TDF.Social.FanEffects
+    TDF.API.FanFollowing
+    TDF.Social.RelationshipWrites
+    TDF.Social.RelationshipReads
+    TDF.Social.Chat
+    TDF.Social.Session
     TDF.API.Calendar
     TDF.API.CommerceOperations
     TDF.API.Label
@@ -339,10 +422,16 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
+    TDF.Ticketing.Admission
+    TDF.Ticketing.Refund
+    TDF.Ticketing.Confirmation
+    TDF.Ticketing.Inventory
+    TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
@@ -350,14 +439,20 @@ test-suite tdf-hq-test
     TDF.Commerce.MerchReservationWorker
     TDF.Commerce.ServiceBookings
     TDF.Commerce.PaymentIntentStore
+    TDF.Commerce.PaymentRuntimeStore
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderExecutionStore
+    TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
+    TDF.Commerce.ProviderAdapter.PayPalRefund
+    TDF.Commerce.RefundReconciliation
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -377,8 +472,10 @@ test-suite tdf-hq-test
     TDF.DDEX.Security
     TDF.DDEX.Storage
     TDF.Email
+    TDF.Email.Headers
     TDF.Email.Service
     TDF.Handlers.InputList
+    TDF.Invoice.Receipt
     TDF.Invoice.SRI
     TDF.Internationalization
     TDF.Leads.Model
@@ -402,6 +499,12 @@ test-suite tdf-hq-test
     TDF.Server.MusicReleaseUpload
     TDF.MusicRelease.DomainSpec
     TDF.Models.SocialEventsModels
+    TDF.EventOperations.API
+    TDF.EventOperations.DatabaseBoundary
+    TDF.EventOperations.DatabaseBoundarySpec
+    TDF.EventOperations.Server
+    TDF.EventOperations.Types
+    TDF.EventOperations.TypesSpec
     TDF.CMS.Models
       TDF.Catalog.Models
       TDF.Catalog.CountryReferenceSeed
@@ -416,6 +519,7 @@ test-suite tdf-hq-test
     TDF.Directory.PolicySpec
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
+    TDF.Profiles.ArtistActivationSpec
     TDF.RagStore
     TDF.Reputation
     TDF.Reputation.Worker
@@ -428,6 +532,8 @@ test-suite tdf-hq-test
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
+    TDF.Server.PaymentAvailability
+    TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -436,7 +542,13 @@ test-suite tdf-hq-test
     TDF.Server.MerchReputation
     TDF.Server.Merch
     TDF.Server.MerchRuntimeSpec
+    TDF.Commerce.ProviderRetrySpec
+    TDF.Commerce.RefundSafetySpec
+    TDF.Commerce.RefundRecoverySpec
+    TDF.Server.PaymentAuditSpec
     TDF.Server.ServiceStorefront
+    TDF.Server.ProviderTransport
+    TDF.Server.TicketRefunds
     TDF.ServerAuth
     TDF.ServerAuthSpec
     TDF.ServerAdmin
@@ -458,16 +570,24 @@ test-suite tdf-hq-test
     TDF.ServerFanClub
     TDF.ServerFanClubSpec
     TDF.ServerSpec
+    TDF.StartupResponseSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
+    TDF.Server.EventRelationsSpec
     TDF.Social.FollowSpec
     TDF.Services
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.YouTube
+    TDF.Services.RecordsIngestion
+    TDF.Server.RecordsIngestion
+    TDF.API.RecordsIngestion
     TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
+    TDF.Services.YouTubeSpec
+    TDF.Services.RecordsIngestionSpec
     TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe
@@ -504,9 +624,10 @@ test-suite tdf-hq-test
     TDF.WhatsApp.HistorySpec
     TDF.WhatsApp.Service
     TDF.WhatsApp.Transport
-  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
+  ghc-options:       -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N2
   default-language:  Haskell2010
   build-depends:
+    async,
       base                 >=4.14 && <5
     , aeson                >=2.0
     , bytestring
@@ -534,6 +655,7 @@ test-suite tdf-hq-test
     , wai-cors
     , http2                >=5.0 && <5.4
     , postgresql-simple
+    , postgresql-libpq
     , random
     , http-client
     , http-client-tls
@@ -542,6 +664,7 @@ test-suite tdf-hq-test
     , directory
     , transformers
     , mtl
+    , network
     , mime-mail
     , tagged
     , unordered-containers

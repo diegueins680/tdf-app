@@ -1,0 +1,187 @@
+{
+  "observedAt": "2026-10-05",
+  "baselineRoot": "ee745ca41f249952c1ddb3eabdcb11ec736883cc",
+  "baselineMobile": "705fd75d3c87a31e8086fd6743398b01057676da",
+  "limitation": "Counts include dependency propagation; reports remain nonzero. Patched worktree lock hashes identify exact candidate inputs. Not runtime exploitability counts.",
+  "reports": [
+    {
+      "scope": "root",
+      "command": "npm audit --json --ignore-scripts",
+      "exitCode": 1,
+      "lockSha256": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
+      "rawReportSha256": "0a1f298110a59d214ebbc3339d864758ab7b3e63e9acae0923af1c5ee083a661",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 10,
+        "high": 33,
+        "critical": 0,
+        "total": 43
+      },
+      "directAdvisories": [
+        {
+          "package": "braces",
+          "severity": "high",
+          "nodes": [
+            "node_modules/braces"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+              "range": "<=3.0.3",
+              "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns"
+            }
+          ]
+        },
+        {
+          "package": "ip",
+          "severity": "high",
+          "nodes": [
+            "node_modules/ip"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-2p57-rm9w-gvfp",
+              "range": "<=2.0.1",
+              "title": "ip SSRF improper categorization in isPublic"
+            }
+          ]
+        },
+        {
+          "package": "stream-json",
+          "severity": "moderate",
+          "nodes": [
+            "node_modules/stream-json"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-528h-pc64-c93x",
+              "range": "<=3.4.0",
+              "title": "stream-json: pick/ignore/filter/replace filters are O(depth\u00b2) on nested input \u2014 small crafted JSON blocks the event loop for seconds\u2192minutes (DoS)"
+            }
+          ]
+        },
+        {
+          "package": "uuid",
+          "severity": "moderate",
+          "nodes": [
+            "node_modules/uuid"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+              "range": "<11.1.1",
+              "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scope": "mobile",
+      "command": "npm audit --json --ignore-scripts",
+      "exitCode": 1,
+      "lockSha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
+      "rawReportSha256": "867b60a152648d4ebbe8e3e1af348464045d498322d9892704e285fd74838fee",
+      "counts": {
+        "info": 0,
+        "low": 0,
+        "moderate": 17,
+        "high": 60,
+        "critical": 0,
+        "total": 77
+      },
+      "directAdvisories": [
+        {
+          "package": "braces",
+          "severity": "high",
+          "nodes": [
+            "node_modules/braces"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+              "range": "<=3.0.3",
+              "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns"
+            }
+          ]
+        },
+        {
+          "package": "decode-uri-component",
+          "severity": "moderate",
+          "nodes": [
+            "node_modules/decode-uri-component"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-vcc3-ghjq-m6fr",
+              "range": "<=0.4.2",
+              "title": "decode-uri-component: Denial of service via exponential decoding of malformed percent-encoded input"
+            }
+          ]
+        },
+        {
+          "package": "image-size",
+          "severity": "high",
+          "nodes": [
+            "node_modules/image-size"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
+              "range": ">=1.2.0 <=2.0.2",
+              "title": "image-size: JXL and HEIF parsers allow denial of service through infinite loops"
+            },
+            {
+              "url": "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+              "range": ">=0.6.3 <=2.0.2",
+              "title": "image-size: ICNS parser allows denial of service through an infinite loop"
+            }
+          ]
+        },
+        {
+          "package": "node-forge",
+          "severity": "high",
+          "nodes": [
+            "node_modules/node-forge"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv",
+              "range": "<=1.4.0",
+              "title": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements"
+            }
+          ]
+        },
+        {
+          "package": "stream-json",
+          "severity": "moderate",
+          "nodes": [
+            "node_modules/stream-json"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-528h-pc64-c93x",
+              "range": "<=3.4.0",
+              "title": "stream-json: pick/ignore/filter/replace filters are O(depth\u00b2) on nested input \u2014 small crafted JSON blocks the event loop for seconds\u2192minutes (DoS)"
+            }
+          ]
+        },
+        {
+          "package": "uuid",
+          "severity": "moderate",
+          "nodes": [
+            "node_modules/uuid"
+          ],
+          "advisories": [
+            {
+              "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+              "range": "<11.1.1",
+              "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

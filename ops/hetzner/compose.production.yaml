@@ -1,0 +1,134 @@
+# Production requires the final fenced-source restore and reviewed cutover.
+name: tdf-production
+services:
+  db:
+    image: ${POSTGRES_IMAGE:?Set the verified PG17 image digest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tdf_hq
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets: [postgres_password]
+    command: [postgres, -c, shared_buffers=128MB, -c, max_connections=60, -c, work_mem=4MB]
+    shm_size: 160mb
+    mem_limit: 896m
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d tdf_hq']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  canary:
+    profiles: [canary]
+    image: ${TDF_IMAGE:?Set the reviewed TDF image digest}
+    restart: 'no'
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: ./api.canary.env
+    environment:
+      APP_PORT: '8080'
+      APP_ENV: production
+      RUN_MIGRATIONS: 'false'
+      AUTO_APPLY_PRODUCTION_MIGRATIONS: 'false'
+      RESET_DB: 'false'
+      SEED_DB: 'false'
+      EVENT_DISCOVERY_ENABLED: 'false'
+      EVENT_DISCOVERY_AUTO_PUBLISH: 'false'
+      EVENT_LOGISTICS_RECHECK_ENABLED: 'false'
+      ARTIST_ENRICHMENT_ENABLED: 'false'
+      REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
+      ALLOW_ALL_ORIGINS: 'false'
+      ALLOWED_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
+      HQ_ASSETS_BASE_URL: https://api.tdfrecords.net/assets/serve
+      RADIO_PUBLIC_BASE: https://api.tdfrecords.net/live
+      HQ_ASSETS_DIR: /data/assets
+      TZ: America/Guayaquil
+    mem_limit: 384m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./assets:/data/assets
+      - type: bind
+        source: ./uploads
+        target: /app/uploads
+        bind:
+          create_host_path: false
+    networks: [database]
+    # Probe from the host using the container's internal address over SSH.
+    # Keep absent: published ports, external networks, production credentials.
+  api:
+    profiles: [serve]
+    image: ${TDF_IMAGE:?Set the verified TDF image digest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: ./api.env
+        format: raw
+    environment:
+      APP_PORT: '8080'
+      APP_ENV: production
+      PORT: '8080'
+      ALLOW_ALL_ORIGINS: 'false'
+      CORS_DISABLE_DEFAULTS: 'true'
+      ALLOWED_ORIGINS: https://www.tdfrecords.net,https://tdfrecords.net
+      RUN_MIGRATIONS: 'false'
+      AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true'
+      RESET_DB: 'false'
+      SEED_DB: 'false'
+      EVENT_DISCOVERY_ENABLED: 'false'
+      EVENT_DISCOVERY_AUTO_PUBLISH: 'false'
+      REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'
+      HQ_ASSETS_BASE_URL: https://api.tdfrecords.net/assets/serve
+      RADIO_PUBLIC_BASE: https://api.tdfrecords.net/live
+      HQ_ASSETS_DIR: /data/assets
+      TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT: /data/assets/.internal-feedback
+      TZ: America/Guayaquil
+    mem_limit: 512m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./assets:/data/assets
+      - type: bind
+        source: ./uploads
+        target: /app/uploads
+        bind:
+          create_host_path: false
+    networks: [database, outbound]
+  edge:
+    profiles: [serve]
+    image: ${CADDY_IMAGE:?Set the verified Caddy image digest}
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    mem_limit: 128m
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [outbound]
+secrets:
+  postgres_password:
+    file: ./postgres_password
+volumes:
+  postgres_data:
+    external: true
+    name: tdf_production_postgres_data
+  # Reuse the validated certificate storage when switching the edge.
+  caddy_data:
+    external: true
+    name: tdf-restore_caddy_data
+  caddy_config:
+    external: true
+    name: tdf-restore_caddy_config
+networks:
+  database:
+    internal: true
+  outbound:

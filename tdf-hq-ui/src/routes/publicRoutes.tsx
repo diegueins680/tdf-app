@@ -4,6 +4,8 @@ import { Navigate, Route, useLocation } from 'react-router-dom';
 import PublicBranding from '../components/PublicBranding';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
+const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
+const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
@@ -43,8 +45,10 @@ const PublicBookingPage = lazy(() => import('../pages/PublicBookingPage'));
 const PublicBookingOrderTrackingPage = lazy(() => import('../pages/PublicBookingOrderTrackingPage'));
 const PublicReputationRightsPage = lazy(() => import('../pages/PublicReputationRightsPage'));
 const PublicEventTicketsPage = lazy(() => import('../pages/PublicEventTicketsPage'));
+const ProviderPaymentReturnPage = lazy(() => import('../pages/ProviderPaymentReturnPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
+const InteractionPage = lazy(() => import('../pages/InteractionPage'));
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
@@ -79,7 +83,9 @@ export function renderPublicRoutes() {
       <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/pagos/retorno" element={<PublicBranding><ProviderPaymentReturnPage /></PublicBranding>} />
       <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
+      <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
@@ -109,6 +115,8 @@ export function renderPublicRoutes() {
       <Route path="/inscripcion/:slug" element={<PublicBranding><InscripcionPage /></PublicBranding>} />
       <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
       <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />
+      <Route path="/app" element={<PublicBranding><MobileAppPage /></PublicBranding>} />
+      <Route path="/cuenta/eliminar" element={<PublicBranding><AccountDeletionPage /></PublicBranding>} />
       <Route path="/feedback" element={<PublicBranding><FeedbackPage /></PublicBranding>} />
       <Route path="/privacidad" element={<PublicBranding><PublicReputationRightsPage /></PublicBranding>} />
       <Route path="/apelaciones" element={<PublicBranding><PublicReputationRightsPage view="appeal" /></PublicBranding>} />

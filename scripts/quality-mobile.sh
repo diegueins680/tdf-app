@@ -13,12 +13,13 @@ run_npm() {
 }
 
 if node "$ROOT/scripts/mobile-workspace-ready.mjs" --quiet; then
+  node "$ROOT/scripts/check-dependency-security.mjs" --mobile
   echo "▶ Linting, type-checking and testing tdf-mobile"
   run_npm --prefix "$ROOT/tdf-mobile" run lint
   run_npm --prefix "$ROOT/tdf-mobile" run typecheck
   run_npm --prefix "$ROOT/tdf-mobile" run test
 elif [ "${REQUIRE_MOBILE_WORKSPACE:-0}" = "1" ]; then
-  echo "✖ Missing or incomplete tdf-mobile install. Run: git submodule update --init --recursive && (cd tdf-mobile && npm install)" >&2
+  echo "✖ Missing or incomplete tdf-mobile install. Run: git submodule update --init --checkout --recursive && (cd tdf-mobile && npm install)" >&2
   exit 1
 else
   echo "▶ Skipping mobile checks: workspace missing or install incomplete"

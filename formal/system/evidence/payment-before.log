@@ -1,0 +1,6 @@
+/private/tmp/tdf-formal-system-20260918/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /private/tmp/tdf-formal-system-20260918/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+Right (PaymentLifecycle {paymentState = PaymentPartiallyCaptured, paymentAmountMinor = 9223372036854775807, paymentAuthorizedMinor = 9223372036854775807, paymentCapturedMinor = -9223372036854775808, paymentRefundedMinor = 0})
+Right (PaymentLifecycle {paymentState = PaymentPartiallyRefunded, paymentAmountMinor = 9223372036854775807, paymentAuthorizedMinor = 9223372036854775807, paymentCapturedMinor = 9223372036854775807, paymentRefundedMinor = -9223372036854775808})
+True

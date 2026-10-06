@@ -29,6 +29,7 @@ export interface AdsInquiryOut {
 }
 
 export const Ads = {
-  submit: (payload: AdsInquiryPayload) => post<AdsInquiryOut>('/ads/inquiry', payload),
+  submit: (payload: AdsInquiryPayload, requestKey: string) =>
+    post<AdsInquiryOut>('/ads/inquiry', payload, { headers: { 'Idempotency-Key': requestKey } }),
   list: () => get<AdsInquiryDTO[]>('/ads/inquiries'),
 };

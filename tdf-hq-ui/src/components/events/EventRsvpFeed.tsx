@@ -25,9 +25,6 @@ export default function EventRsvpFeed({ partyId, directorySlug, isSelf, locale }
       : SocialEventsAPI.listRsvpFeed(String(partyId), pageParam, 20),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.feedNextCursor ?? undefined,
-    // Missing or non-public directory profiles deliberately return 404. Retrying
-    // cannot make that activity visible, but transient failures remain retryable.
-    retry: (failureCount, error) => !(error instanceof ApiError && error.status === 404) && failureCount < 3,
     enabled: Boolean(directorySlug ?? partyId),
   });
   const remove = useMutation({

@@ -36,6 +36,30 @@ if [ "${precheck_only}" = "true" ] && [ "${auto_apply}" != "true" ]; then
   exit 64
 fi
 
+# Match Config.isProductionRuntime: any recognized production alias wins.
+production_runtime=false
+for runtime_value in "${APP_ENV:-}" "${ENVIRONMENT:-}" "${NODE_ENV:-}" "${RUNTIME_ENV:-}"; do
+  # Read the whole value, not individual lines. Include Unicode whitespace
+  # accepted by Haskell Text.strip even under a byte-oriented awk locale.
+  normalized_runtime=$(printf '%s' "$runtime_value" | awk '
+    { value = value (NR == 1 ? "" : "\n") $0 }
+    END {
+      whitespace = "[[:space:]]| | | | | | | | | | | | | | | | | |　"
+      sub("^(" whitespace ")+", "", value)
+      sub("(" whitespace ")+$", "", value)
+      print tolower(value)
+    }')
+  case "$normalized_runtime" in prod|production|live) production_runtime=true ;; esac
+done
+if [ "$production_runtime" = "true" ] && [ "${precheck_only}" != "true" ]; then
+  entrypoint_directory="$(CDPATH= cd "$(dirname "$0")" && pwd -P)"
+  . "$entrypoint_directory/persistent-uploads.sh"
+  if ! require_private_upload_mount /proc/self/mountinfo /app/uploads; then
+    echo "Production requires a writable persistent mount at /app/uploads before accepting attachments" >&2
+    exit 78
+  fi
+fi
+
 packaged_assets="${TDF_PACKAGED_ASSETS_DIR:-/app/assets}"
 served_assets="${HQ_ASSETS_DIR:-}"
 

@@ -1,0 +1,1 @@
+{"observedAt":"2026-09-18T12:44:08.781Z","status":200,"builds":[{"id":"5ebb79bf-8bf0-4802-9dff-42239c97afbb","version":"21","processingState":"VALID","uploadedDate":"2026-09-18T00:35:41-07:00"}],"beta":[{"id":"5ebb79bf-8bf0-4802-9dff-42239c97afbb","autoNotifyEnabled":true,"internalBuildState":"IN_BETA_TESTING","externalBuildState":"READY_FOR_BETA_SUBMISSION"}]}

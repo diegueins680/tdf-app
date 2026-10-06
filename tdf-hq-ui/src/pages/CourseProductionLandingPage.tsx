@@ -37,6 +37,7 @@ import type { CourseCheckoutResponse, CourseMetadata, CourseRegistrationRequest 
 import { Courses } from '../api/courses';
 import type { DatafastCheckoutDTO } from '../api/types';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
@@ -214,6 +215,7 @@ export default function CourseProductionLandingPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [checkout, setCheckout] = useState<CourseCheckoutResponse | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -224,7 +226,7 @@ export default function CourseProductionLandingPage() {
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
   const paypalButtonRef = useRef<HTMLDivElement | null>(null);
   const paypalClientId = import.meta.env?.VITE_PAYPAL_CLIENT_ID?.trim() ?? '';
-  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const checkoutIdempotency = useRef<string | null>(null);
   const productionSlugs = useMemo(() => {
     const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
@@ -303,13 +305,11 @@ export default function CourseProductionLandingPage() {
 
   const registrationMutation = useMutation({
     mutationFn: (payload: CourseRegistrationRequest) => {
-      const fingerprint = JSON.stringify({ selectedSlug, payload });
-      if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
-        checkoutIdempotency.current = { fingerprint, key: createCourseIdempotencyKey() };
-      }
-      return Courses.register(selectedSlug, payload, checkoutIdempotency.current.key);
+      checkoutIdempotency.current ??= createCourseIdempotencyKey();
+      return Courses.register(selectedSlug, payload, checkoutIdempotency.current);
     },
     onSuccess: (response) => {
+      checkoutIdempotency.current = null;
       setCheckout(response);
       const token = response.lookupToken?.trim();
       if (token) saveCourseLookupToken(selectedSlug, response.registrationId, token);
@@ -621,10 +621,23 @@ export default function CourseProductionLandingPage() {
                 <CourseCheckoutCard
                   checkout={checkout}
                   paymentBusy={paymentBusy}
+                  hostedPaymentLocked={hostedPaymentLocked}
+                  hostedPaymentDisabled={datafastDialogOpen || paypalDialogOpen}
                   paymentError={paymentError}
+                  checkoutLookupToken={checkoutLookupToken}
+                  initialBuyerPhone={phone}
                   paypalAvailable={Boolean(paypalClientId && paypalReady)}
                   onDatafast={() => void handleDatafastPayment()}
                   onPaypal={() => void handlePaypalPayment()}
+                  onHostedSafetyLockChange={setHostedPaymentLocked}
+                  onHostedPaymentConfirmed={async () => {
+                    if (!checkoutLookupToken) return;
+                    setCheckout(await Courses.getCheckout(
+                      checkout.courseSlug,
+                      checkout.registrationId,
+                      checkoutLookupToken,
+                    ));
+                  }}
                 />
               )}
               <InstructorCard meta={meta} />
@@ -693,17 +706,29 @@ export default function CourseProductionLandingPage() {
 function CourseCheckoutCard({
   checkout,
   paymentBusy,
+  hostedPaymentLocked,
+  hostedPaymentDisabled,
   paymentError,
+  checkoutLookupToken,
+  initialBuyerPhone,
   paypalAvailable,
   onDatafast,
   onPaypal,
+  onHostedSafetyLockChange,
+  onHostedPaymentConfirmed,
 }: {
   checkout: CourseCheckoutResponse;
   paymentBusy: boolean;
+  hostedPaymentLocked: boolean;
+  hostedPaymentDisabled: boolean;
   paymentError: string | null;
+  checkoutLookupToken: string | null;
+  initialBuyerPhone?: string | null;
   paypalAvailable: boolean;
   onDatafast: () => void;
   onPaypal: () => void;
+  onHostedSafetyLockChange: (locked: boolean) => void;
+  onHostedPaymentConfirmed: () => void | Promise<void>;
 }) {
   const paid = checkout.paymentStatus === 'paid';
   const held = checkout.fulfillmentStatus === 'seat_held';
@@ -771,20 +796,34 @@ function CourseCheckoutCard({
               No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.
             </Alert>
           )}
-          {checkout.checkoutAvailable && !paid && (
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              {checkout.paymentMethods.includes('datafast') && (
-                <Button variant="contained" disabled={paymentBusy} onClick={onDatafast}>
-                  Pagar con Datafast
-                </Button>
-              )}
-              {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
-                <Button variant="outlined" disabled={paymentBusy} onClick={onPaypal}>
-                  Pagar con PayPal
-                </Button>
-              )}
-            </Stack>
-          )}
+          <Stack spacing={1.5}>
+            {checkout.checkoutAvailable && !paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                {checkout.paymentMethods.includes('datafast') && (
+                  <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
+                    Pagar con Datafast
+                  </Button>
+                )}
+                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
+                  <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
+                    Pagar con PayPal
+                  </Button>
+                )}
+            </Stack>}
+            {checkout.checkoutId && checkoutLookupToken && (
+                <HostedProviderCheckout
+                  checkout={{
+                    checkoutId: checkout.checkoutId,
+                    lookupToken: checkoutLookupToken,
+                    returnPath: `/curso/${encodeURIComponent(checkout.courseSlug)}/orden/${checkout.registrationId}`,
+                  }}
+                  offeredMethods={checkout.checkoutAvailable && !paid ? checkout.paymentMethods : []}
+                  disabled={!checkout.checkoutAvailable || paid || paymentBusy || hostedPaymentDisabled}
+                  initialBuyerPhone={initialBuyerPhone}
+                  onSafetyLockChange={onHostedSafetyLockChange}
+                  onPaymentConfirmed={onHostedPaymentConfirmed}
+                />
+            )}
+          </Stack>
           <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.62)' }}>
             Orden de curso #{checkout.registrationId}. Pago y cumplimiento académico son estados separados.
           </Typography>
@@ -1010,9 +1049,9 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
               {sessions.map((session) => (
                 <Stack
                   key={`${session.date}-${session.label}`}
-                  direction="row"
+                  direction={{ xs: 'column', sm: 'row' }}
                   spacing={1}
-                  alignItems="center"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
                   sx={{ bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2, px: 1.5, py: 1 }}
                 >
                   <Chip
@@ -1132,6 +1171,11 @@ function FormCard({
           {seatsText && (
             <Alert
               severity={isFull ? 'warning' : 'info'}
+              sx={{
+                flexWrap: 'wrap',
+                '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
+                '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
+              }}
               action={
                 <Button
                   size="small"

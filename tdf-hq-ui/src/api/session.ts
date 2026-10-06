@@ -50,11 +50,12 @@ export async function logoutSessionRequest(): Promise<void> {
 
 export async function completeOnboardingProgress(
   firstValue?: OnboardingFirstValue,
+  apiToken?: string,
 ): Promise<OnboardingCompletionResultDTO> {
   const response = await fetch(sessionUrl('/session/onboarding/complete'), {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}) },
     body: JSON.stringify(firstValue ? { firstValue } : {}),
   });
 
@@ -81,9 +82,10 @@ export async function reconcileOnboardingProgress(
   return response.json() as Promise<OnboardingCompletionResultDTO>;
 }
 
-export async function loadOnboardingProgress(): Promise<OnboardingProgressDTO> {
+export async function loadOnboardingProgress(apiToken?: string): Promise<OnboardingProgressDTO> {
   const response = await fetch(sessionUrl('/session/onboarding'), {
     credentials: 'include',
+    ...(apiToken ? { headers: { Authorization: `Bearer ${apiToken}` } } : {}),
   });
 
   if (!response.ok) {

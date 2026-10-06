@@ -173,8 +173,8 @@ export const Trials = {
     const qs = subjectId == null ? '' : `?subjectId=${requirePositiveInteger(subjectId, 'subjectId')}`;
     return get<TrialSlot[]>(`${base}/trial-slots${qs}`);
   },
-  createRequest: (payload: TrialRequestPayload) =>
-    post<TrialRequestResponse>(`${base}/trial-requests`, payload),
+  createRequest: (payload: TrialRequestPayload, idempotencyKey: string) =>
+    post<TrialRequestResponse>(`${base}/trial-requests`, payload, { headers: { 'Idempotency-Key': idempotencyKey } }),
   listTeachers: () => get<TeacherDTO[]>(`${base}/teachers`),
   listTeacherClasses: (teacherId: number, params?: { subjectId?: number; from?: string; to?: string }) => {
     const normalizedTeacherId = requirePositiveInteger(teacherId, 'teacherId');
@@ -211,7 +211,8 @@ export const Trials = {
   attendClassSession: (classId: number, payload: ClassSessionAttend) =>
     post<ClassSessionOut>(`${base}/class-sessions/${requirePositiveInteger(classId, 'classId')}/attend`, payload),
   listStudents: () => get<StudentDTO[]>(`${base}/students`),
-  createStudent: (payload: StudentCreate) => post<StudentDTO>(`${base}/students`, payload),
+  createStudent: (payload: StudentCreate, idempotencyKey: string) =>
+    post<StudentDTO>(`${base}/students`, payload, { headers: { 'Idempotency-Key': idempotencyKey } }),
   updateStudent: (studentId: number, payload: StudentUpdate) =>
     patch<StudentDTO>(`${base}/students/${requirePositiveInteger(studentId, 'studentId')}`, payload),
   listTeacherStudents: (teacherId: number) =>

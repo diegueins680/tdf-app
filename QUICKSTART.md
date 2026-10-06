@@ -14,12 +14,13 @@ Spin up the backend API + web UI for local development.
 ```bash
 git clone --recursive <repository-url>
 cd tdf-app
+git submodule update --init --checkout --recursive
 ```
 
 If you already cloned without submodules:
 
 ```bash
-git submodule update --init --recursive
+git submodule update --init --checkout --recursive
 ```
 
 ## 2) Install JS dependencies (UI + mobile)

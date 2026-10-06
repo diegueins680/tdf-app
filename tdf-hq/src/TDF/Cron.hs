@@ -13,11 +13,13 @@ module TDF.Cron
   , selectInstagramSyncAccessToken
   ) where
 
+import Web.PathPieces (toPathPiece)
 import           Control.Concurrent      (forkIO, threadDelay)
 import           Control.Exception
   ( SomeAsyncException
   , SomeException
   , displayException
+  , bracket
   , finally
   , fromException
   , throwIO
@@ -89,15 +91,17 @@ import           TDF.Services.EventDiscovery
   , DiscoveredEvent(..)
   , DiscoveredVenue(..)
   , EventDiscoveryCity(..)
+  , eventDiscoveryDailySlot
+  , eventDiscoveryFullReconciliation
   , beginEventDiscoveryRun
   , discoveredEventFitsPilotLimit
   , failEventDiscoveryRun
   , fetchBuenPlanEvents
   , fetchStructuredFeedEvents
   , fetchTicketmasterEventsForCity
-  , finishEventDiscoveryRun
+  , completeEventDiscoverySourceRun
+  , loadEcuadorDiscoveryCities
   , loadSubscribedDiscoveryCities
-  , reconcileProviderEvents
   , reconcileImportedEvents
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
@@ -123,6 +127,7 @@ import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
 import           TDF.Config
   ( AppConfig
+  , eventDiscoveryHourLocal
   , eventDiscoveryEnabled
   , eventDiscoveryAutoPublish
   , eventDiscoveryPilotLimit
@@ -295,7 +300,7 @@ runArtistEnrichmentWithLeaderLock Env{envPool, envConfig} =
 
 -- | Import external events for cities with active subscriptions. Every API
 -- replica starts the loop, while a PostgreSQL advisory lock and per-source
--- slot ledger ensure that only one replica performs each six-hour run.
+-- slot ledger ensure that only one replica performs each daily run.
 startEventDiscoveryJob :: Env -> IO ()
 startEventDiscoveryJob env@Env{envConfig}
   | not (eventDiscoveryEnabled envConfig) =
@@ -304,10 +309,11 @@ startEventDiscoveryJob env@Env{envConfig}
       void (forkIO (eventDiscoveryLoop env))
       LogBuf.addLog
         LogBuf.LogInfo
-        "[Cron][EventDiscovery] Scheduled every six hours at UTC slot boundaries."
+        ("[Cron][EventDiscovery] Scheduled daily at " <> T.pack (show (eventDiscoveryHourLocal envConfig))
+          <> ":00 America/Guayaquil (UTC-05:00); Sunday full reconciliation.")
 
 eventDiscoveryLoop :: Env -> IO ()
-eventDiscoveryLoop env = do
+eventDiscoveryLoop env@Env{envConfig} = do
   threadDelay (30 * 1000000)
   forever $ do
     runResult <- tryNonAsync (runEventDiscoveryWithLeaderLock env)
@@ -320,22 +326,10 @@ eventDiscoveryLoop env = do
         LogBuf.addLog LogBuf.LogError message
       Right () -> pure ()
     now <- getCurrentTime
-    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoverySlot now))
+    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoveryDailySlot (eventDiscoveryHourLocal envConfig) now))
 
 discoverySlotSeconds :: NominalDiffTime
-discoverySlotSeconds = 6 * 60 * 60
-
-eventDiscoverySlot :: UTCTime -> UTCTime
-eventDiscoverySlot now =
-  UTCTime
-    (utctDay now)
-    ( secondsToDiffTime
-        ( (floor (toRational (utctDayTime now)) `div` slotSeconds)
-            * slotSeconds
-        )
-    )
-  where
-    slotSeconds = 6 * 60 * 60
+discoverySlotSeconds = 24 * 60 * 60
 
 runEventDiscoveryWithLeaderLock :: Env -> IO ()
 runEventDiscoveryWithLeaderLock env@Env{envPool} = do
@@ -497,7 +491,7 @@ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey ac
       body = Social.eventLogisticsActivityTitle activity <> ": " <> verdict <> ", estimado " <> estimateLabel <> ", holgura " <> T.pack (show (ceiling (fromIntegral bufferSeconds / (60 :: Double)) :: Int)) <> " min."
       emailSvc = EmailSvc.mkEmailService envConfig
       targetId = fromIntegral (fromSqlKey (Social.eventLogisticsActivityEventId activity))
-      logisticsUrl = fmap (\base -> T.dropWhileEnd (== '/') base <> "/social/eventos/" <> T.pack (show (fromSqlKey (Social.eventLogisticsActivityEventId activity))) <> "/logistica") (EmailSvc.esAppBase emailSvc)
+      logisticsUrl = fmap (\base -> T.dropWhileEnd (== '/') base <> "/social/eventos/" <> T.pack (show (fromSqlKey (Social.eventLogisticsActivityEventId activity))) <> "/logistica?activity=" <> toPathPiece activityKey) (EmailSvc.esAppBase emailSvc)
   for_ recipientKeys $ \partyKey -> do
     inAppClaim <- runSqlPool (insertUnique Social.EventLogisticsAlertDelivery
       { Social.eventLogisticsAlertDeliveryActivityId = activityKey
@@ -514,6 +508,7 @@ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey ac
       , notificationBody = body
       , notificationTargetType = Just "event_logistics"
       , notificationTargetId = Just targetId
+      , notificationTargetKey = Just (toPathPiece activityKey)
       , notificationIsRead = False
       , notificationCreatedAt = now
       }) envPool
@@ -539,30 +534,24 @@ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey ac
 
 withEventDiscoveryLeaderLock :: ConnectionPool -> IO a -> IO (Maybe a)
 withEventDiscoveryLeaderLock pool action =
-  withResource pool $ \backend -> do
-    acquiredRows <-
-      runSqlConn
-        (rawSql "SELECT pg_try_advisory_lock(8401320250712)" [] :: SqlPersistT IO [Single Bool])
-        backend
-    case acquiredRows of
-      [Single True] ->
-        Just
-          <$> ( action
-                  `finally` void
-                    ( runSqlConn
-                        (rawSql "SELECT pg_advisory_unlock(8401320250712)" [] :: SqlPersistT IO [Single Bool])
-                        backend
-                    )
-              )
-      _ -> pure Nothing
+  withResource pool $ \backend -> bracket
+    (runSqlConn (rawSql "SELECT pg_try_advisory_lock(8401320250712)" [] :: SqlPersistT IO [Single Bool]) backend)
+    (\locked -> when (locked == [Single True]) $ void $
+      runSqlConn (rawSql "SELECT pg_advisory_unlock(8401320250712)" [] :: SqlPersistT IO [Single Bool]) backend)
+    (\locked -> if locked == [Single True] then Just <$> action else pure Nothing)
 
 runEventDiscoveryOnce :: Env -> IO ()
 runEventDiscoveryOnce Env{..} = do
   now <- getCurrentTime
   ensureDefaultEventDiscoverySources now
-  let slot = eventDiscoverySlot now
-  allCities <- loadSubscribedDiscoveryCities envPool
-  let cities = selectEventDiscoveryCities slot allCities
+  let slot = eventDiscoveryDailySlot (eventDiscoveryHourLocal envConfig) now
+  LogBuf.addLog LogBuf.LogInfo
+    ("[Cron][EventDiscovery] " <> (if eventDiscoveryFullReconciliation slot then "Sunday full" else "Daily")
+      <> " source refresh for " <> T.pack (show slot))
+  ecuadorCities <- loadEcuadorDiscoveryCities envPool
+  followedCities <- loadSubscribedDiscoveryCities envPool
+  let allCities = nub (ecuadorCities ++ followedCities)
+      cities = selectEventDiscoveryCities slot allCities
   lifecycleChanges <- reconcileImportedEvents envPool now allCities
   when (lifecycleChanges > 0) $
     LogBuf.addLog
@@ -582,7 +571,7 @@ runEventDiscoveryOnce Env{..} = do
     then
       LogBuf.addLog
         LogBuf.LogInfo
-        "[Cron][EventDiscovery] No active city subscriptions; nothing to import."
+        "[Cron][EventDiscovery] Ecuador city registry is empty; coverage is unavailable."
     else forM_ sources $ \sourceEntity@(Entity _ source) ->
       if sourceCircuitOpen now source
         then
@@ -608,7 +597,15 @@ runEventDiscoveryOnce Env{..} = do
             LogBuf.LogInfo
             ("[Cron][EventDiscovery][" <> provider <> "] Slot already claimed; skipping.")
         Just handle -> do
-          outcome <- tryNonAsync (fetchAndSyncSource now cities source)
+          outcome <- tryNonAsync $ do
+            fetched <- fetchAndSyncSource now cities source
+            case fetched of
+              Left errText -> pure (Left errText)
+              Right (processedCities, events, totals) -> do
+                completedAt <- getCurrentTime
+                completeEventDiscoverySourceRun envPool sourceKey handle completedAt
+                  provider processedCities (map discoveredEventExternalId events) totals
+                pure (Right totals)
           finishedAt <- getCurrentTime
           case outcome of
             Left err -> do
@@ -624,16 +621,7 @@ runEventDiscoveryOnce Env{..} = do
               LogBuf.addLog
                 LogBuf.LogError
                 ("[Cron][EventDiscovery][" <> provider <> "] " <> errText)
-            Right (Right (processedCities, events, totals)) -> do
-              _ <-
-                reconcileProviderEvents
-                  envPool
-                  finishedAt
-                  provider
-                  processedCities
-                  (map discoveredEventExternalId events)
-              finishEventDiscoveryRun envPool handle finishedAt (length processedCities) totals
-              markSourceSuccess sourceKey finishedAt
+            Right (Right totals) -> do
               LogBuf.addLog
                 LogBuf.LogInfo
                 ( "[Cron][EventDiscovery]["
@@ -696,7 +684,7 @@ runEventDiscoveryOnce Env{..} = do
               ([], [], [])
               requestedCities
           pure $
-            if null processedCities && not (null errors)
+            if not (null errors)
               then Left (T.intercalate "; " (take 3 (reverse errors)))
               else Right (reverse processedCities, events)
 
@@ -739,14 +727,8 @@ runEventDiscoveryOnce Env{..} = do
 
     syncOne now totals event = do
       let autoPublish = eventDiscoveryAutoPublish envConfig
-      withinPilotLimit <-
-        if autoPublish
-          then pure True
-          else
-            discoveredEventFitsPilotLimit
-              envPool
-              (eventDiscoveryPilotLimit envConfig)
-              event
+      withinPilotLimit <- discoveredEventFitsPilotLimit
+        envPool (eventDiscoveryPilotLimit envConfig) event
       if not withinPilotLimit
         then do
           LogBuf.addLog
@@ -773,7 +755,9 @@ runEventDiscoveryOnce Env{..} = do
                     <> ": "
                     <> T.pack (displayException err)
                 )
-              pure totals
+              -- Reconciling a partially persisted response could hide events
+              -- and falsely mark success, so fail the entire source run.
+              throwIO err
             Right stats -> pure (addDiscoveryStats totals stats)
 
     markSourceFailure sourceKey finishedAt errText =
@@ -782,18 +766,6 @@ runEventDiscoveryOnce Env{..} = do
             sourceKey
             [ Social.EventDiscoverySourceConsecutiveFailures +=. 1
             , Social.EventDiscoverySourceLastError =. Just (T.take 2000 errText)
-            , Social.EventDiscoverySourceUpdatedAt =. finishedAt
-            ]
-        )
-        envPool
-
-    markSourceSuccess sourceKey finishedAt =
-      runSqlPool
-        ( update
-            sourceKey
-            [ Social.EventDiscoverySourceConsecutiveFailures =. 0
-            , Social.EventDiscoverySourceLastSuccessAt =. Just finishedAt
-            , Social.EventDiscoverySourceLastError =. Nothing
             , Social.EventDiscoverySourceUpdatedAt =. finishedAt
             ]
         )
@@ -836,15 +808,14 @@ maxEventDiscoveryCitiesPerRun = 500
 
 selectEventDiscoveryCities :: UTCTime -> [a] -> [a]
 selectEventDiscoveryCities _ [] = []
+selectEventDiscoveryCities _ cities | length cities <= maxEventDiscoveryCitiesPerRun = cities
 selectEventDiscoveryCities slot cities =
   take maxEventDiscoveryCitiesPerRun rotated
   where
     cityCount = length cities
-    slotOfDay =
-      floor (toRational (utctDayTime slot)) `div` (6 * 60 * 60)
     offset =
       fromIntegral
-        ( ((toModifiedJulianDay (utctDay slot) * 4 + slotOfDay)
+        ( ((toModifiedJulianDay (utctDay slot))
               * fromIntegral maxEventDiscoveryCitiesPerRun)
             `mod` fromIntegral cityCount
         )

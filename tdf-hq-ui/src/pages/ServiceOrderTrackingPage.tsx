@@ -1,8 +1,11 @@
-import { useMemo } from 'react';
+import { readOptionalBrowserStorage } from '../utils/optionalBrowserStorage';
+import { useMemo, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ServiceStorefront } from '../api/serviceStorefront';
+import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const readFragmentToken = (): string => {
@@ -34,7 +37,7 @@ export default function ServiceOrderTrackingPage() {
   const lookupToken = useMemo(() => {
     const fragmentToken = readFragmentToken();
     if (fragmentToken) return fragmentToken;
-    return typeof window === 'undefined' ? '' : sessionStorage.getItem(`tdf-service-order:${orderNumber}`)?.trim() ?? '';
+    return typeof window === 'undefined' ? '' : readOptionalBrowserStorage('session', `tdf-service-order:${orderNumber}`)?.trim() ?? '';
   }, [orderNumber]);
 
   const orderQuery = useQuery({
@@ -43,6 +46,27 @@ export default function ServiceOrderTrackingPage() {
     enabled: Boolean(orderNumber && lookupToken),
     retry: false,
   });
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const paymentMethodsQuery = useQuery({
+    queryKey: [
+      'service-storefront-order-payment-methods',
+      orderQuery.data?.ssoCurrency,
+      orderQuery.data?.ssoPriceUsdCents,
+    ],
+    queryFn: () => loadAvailableCheckoutMethods({
+      currency: orderQuery.data!.ssoCurrency,
+      amountMinor: orderQuery.data!.ssoPriceUsdCents,
+      productFlow: 'professional_service',
+    }),
+    enabled: orderQuery.data?.ssoStatus === 'awaiting_payment',
+    retry: false,
+  });
+  const hostedPaymentMethods = useMemo(() => [
+    ...(paymentMethodsQuery.data?.placeToPayCard ? ['placetopay_card'] : []),
+    ...(paymentMethodsQuery.data?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
+    ...(paymentMethodsQuery.data?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(paymentMethodsQuery.data?.payPhoneWallet ? ['payphone_wallet'] : []),
+  ], [paymentMethodsQuery.data]);
 
   if (!lookupToken) {
     return (
@@ -92,6 +116,22 @@ export default function ServiceOrderTrackingPage() {
               <Typography variant="caption" color="text.secondary">
                 Pago y entrega del servicio son estados independientes. Un pago confirmado no significa que los archivos hayan sido recibidos o entregados.
               </Typography>
+              {order.ssoCheckoutId && (
+                <HostedProviderCheckout
+                  checkout={{
+                    checkoutId: order.ssoCheckoutId,
+                    lookupToken,
+                    returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
+                  }}
+                  offeredMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
+                  disabled={order.ssoStatus !== 'awaiting_payment' || paymentMethodsQuery.isLoading}
+                  initialBuyerPhone={order.ssoBuyerPhone}
+                  onSafetyLockChange={setHostedPaymentLocked}
+                  onPaymentConfirmed={async () => {
+                    await orderQuery.refetch();
+                  }}
+                />
+              )}
             </Stack>
           </CardContent>
         </Card>
@@ -100,7 +140,7 @@ export default function ServiceOrderTrackingPage() {
           targetId={order.ssoPackageId}
           title={`Reseñas de ${order.ssoServiceKind} ${order.ssoTier}`}
         />
-        <Button component={RouterLink} to="/mezcla-mastering" variant="outlined">Volver a servicios</Button>
+        <Button component={RouterLink} to="/mezcla-mastering" variant="outlined" disabled={hostedPaymentLocked}>Volver a servicios</Button>
       </Stack>
     </Box>
   );

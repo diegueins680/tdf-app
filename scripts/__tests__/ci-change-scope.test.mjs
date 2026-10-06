@@ -24,6 +24,22 @@ test('ordinary backend changes avoid UI, mobile, contracts and migrations', () =
   });
 });
 
+for (const source of [
+  'tdf-hq-ui/src/components/notificationTarget.ts',
+  'scripts/generate-notification-navigation.mjs',
+]) {
+  test(`notification navigation drift is checked when only ${source} changes`, () => {
+    assert.deepEqual(classifyChangedFiles([source]), {
+      repo: true,
+      ui: source.startsWith('tdf-hq-ui/'),
+      mobile: true,
+      backend: false,
+      contracts: false,
+      migrations: false,
+    });
+  });
+}
+
 test('public booking HTTP concurrency harness selects backend validation', () => {
   assert.deepEqual(classifyChangedFiles(['scripts/test-public-booking-http-concurrency.sh']), {
     repo: true,
@@ -46,6 +62,28 @@ test('OpenAPI changes validate both generated clients', () => {
   });
 });
 
+test('Mobile pins and contract definition changes select generated API validation', () => {
+  for (const file of ['tdf-mobile', 'tdf-hq/src/TDF/API.hs',
+    'tdf-hq/src/TDF/API/Social.hs', 'tdf-hq/src/TDF/DTO.hs',
+    'tdf-hq/src/TDF/DTO/Social.hs', 'tdf-hq/docs/openapi/social-v2.yaml',
+    'scripts/check-generated-api.mjs', 'scripts/__tests__/generated-api-conformance.test.mjs']) {
+    assert.equal(classifyChangedFiles([file]).contracts, true, file);
+  }
+});
+
+test('every event operations HTTP runner selects backend validation', () => {
+  for (const file of [
+    'scripts/test-event-operations-http.sh',
+    'scripts/test-event-operations-http-ci.sh',
+    'scripts/run-event-operations-http-harness.sh',
+    'scripts/__tests__/event-operations-http-runner.test.mjs',
+  ]) {
+    assert.deepEqual(classifyChangedFiles([file]), {
+      repo: true, backend: true, ui: false, mobile: false, contracts: false, migrations: false,
+    });
+  }
+});
+
 test('schema model changes run backend and migration checks', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/src/TDF/ModelsExtra.hs']), {
     repo: true,
@@ -55,6 +93,15 @@ test('schema model changes run backend and migration checks', () => {
     contracts: false,
     migrations: true,
   });
+});
+
+test('merch checkout expiry runner and SQL assertions select migration validation', () => {
+  for (const file of [
+    'scripts/test-artist-merch-storefronts-migration.sh',
+    'tdf-hq/test/integration/merch_checkout_expiry_assertions.sql',
+  ]) {
+    assert.equal(classifyChangedFiles([file]).migrations, true, file);
+  }
 });
 
 test('production migration runner changes run backend and migration checks', () => {

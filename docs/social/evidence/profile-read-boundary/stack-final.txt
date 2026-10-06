@@ -1,0 +1,13 @@
+EXCERPT of /private/tmp/social-profile-stack-final.txt
+Command: (cd tdf-hq && stack test --fast); observed wrapper exit 0.
+Original full-log SHA-256: 5240ade5feea9aeb3846f9495468ed2f44e6556830b5f88759989506101b167d
+Only compilation/result summary lines retained here; full original remains at the path above.
+
+[137 of 210] Compiling TDF.Social.Profiles [Source file changed]
+[211 of 211] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test [Objects changed]
+[135 of 191] Compiling TDF.Social.Profiles [Source file changed]
+[192 of 192] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-exe/tdf-hq-exe [Objects changed]
+Finished in 8.5119 seconds
+2542 examples, 0 failures
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).

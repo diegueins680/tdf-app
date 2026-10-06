@@ -11,8 +11,18 @@
 
 module TDF.Server where
 
+import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.Social.FanEffects as FanEffects
+import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.RelationshipWrites as SocialWrites
+import qualified TDF.Social.Profiles as SocialProfiles
+import TDF.Social.Server (socialV2Server)
+import qualified TDF.Interactions.Legacy as InteractionLegacy
+import qualified TDF.Interactions.Server as InteractionsServer
+import qualified TDF.Interactions.Notifications as InteractionNotifications
 import           Control.Applicative ((<|>))
 import           Control.Exception (Exception, SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
+import qualified Control.Exception.Safe as Safe
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
@@ -44,7 +54,7 @@ import           Data.Char
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
@@ -54,7 +64,6 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS8
-import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
@@ -101,6 +110,8 @@ import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
+import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -126,7 +137,9 @@ import           TDF.Config ( AppConfig(..)
 import           TDF.DB
 import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
+import qualified TDF.EventOperations.Server as EventOperationsServer
 import qualified TDF.Invoice.SRI as Sri
+import           TDF.Invoice.Receipt (validateReceiptSnapshot)
 import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
@@ -153,6 +166,8 @@ import           TDF.Auth
   , moduleName
   , modulesForRoles
   , validateModuleAccess
+  , withCurrentAuthSession
+  , withCurrentModuleAccess
   )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
@@ -184,7 +199,10 @@ import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.Money as CommerceMoney
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Server.DomoQuoteCheckout as DomoQuoteCheckoutServer
@@ -209,6 +227,7 @@ import qualified TDF.Trials.Server as TrialsServer
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
 import           TDF.Version      (VersionInfo(..), getVersionInfo)
+import           TDF.App.Readiness (databaseReady)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
 import qualified TDF.Email.Service as EmailSvc
@@ -220,6 +239,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , loadOrCreateArtistProfileDTO
                                      , searchArtistProfilesDTO
                                      , resolvePublishedGenreSelections
+                                     , activateOwnArtistProfile
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -742,15 +762,16 @@ server env =
   :<|> inventoryPublicServer
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
+  :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
   :<|> PaymentCapabilitiesServer.paymentCapabilitiesServer
   :<|> MusicReleaseServer.musicReleasePublicServer
+  :<|> ProviderExecutionServer.providerExecutionServer
   :<|> protectedServer
   :<|> marketplacePublicServer
-  :<|> radioPresencePublicServer
   :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
   :<|> serviceStorefrontPublicServer
@@ -1666,23 +1687,6 @@ coursesAdminServer user =
       requireCourseAdmin
       deleteCourseRegistrationFollowUp user slug regId followUpId
 
-radioPresencePublicServer :: Int64 -> AppM (Maybe RadioPresenceDTO)
-radioPresencePublicServer partyId = do
-  when (partyId <= 0) $ throwBadRequest "Invalid party id"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    mRow <- selectFirst [PartyRadioPresencePartyId ==. toSqlKey partyId] []
-    pure (fmap presenceToDTO mRow)
-  where
-    presenceToDTO (Entity _ PartyRadioPresence{..}) =
-      RadioPresenceDTO
-        { rpPartyId     = fromIntegral (fromSqlKey partyRadioPresencePartyId)
-        , rpStreamUrl   = partyRadioPresenceStreamUrl
-        , rpStationName = partyRadioPresenceStationName
-        , rpStationId   = partyRadioPresenceStationId
-        , rpUpdatedAt   = partyRadioPresenceUpdatedAt
-        }
-
 listEngineersPublic :: AppM [PublicEngineerDTO]
 listEngineersPublic = do
   Env pool _ <- ask
@@ -1760,7 +1764,8 @@ whatsappWebhookServer =
                   , ME.CourseRegistrationCreatedAt >=. oneHourAgo
                   ]
               when (recentCount < 3) $ do
-                _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
+                _ <- createCourseRegistrationInScope "whatsapp-course" (productionCourseSlug envConfig)
+                  (Just ("whatsapp-message-" <> T.pack (show (fromSqlKey (entityKey incomingEntity))))) CourseRegistrationRequest
                   { fullName = Nothing
                   , email = Nothing
                   , phoneE164 = Just phone
@@ -3044,7 +3049,7 @@ fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
-  :<|> (notifList user :<|> notifCount user :<|> notifMarkRead user :<|> notifMarkAllRead user)
+  :<|> (notifList user :<|> notifCount user :<|> notifGet user :<|> notifMarkRead user :<|> notifMarkAllRead user)
   :<|> CatalogServer.createSelfFanRoleRequest user
   :<|> discoveryFeed user
   :<|> fanClubSecureListMyClubs user
@@ -3052,7 +3057,8 @@ fanSecureServer user =
 
 artistSecureServer :: AuthedUser -> ServerT ArtistSecureAPI AppM
 artistSecureServer user =
-       ( artistGetOwnProfile user
+       artistActivateOwnProfile user
+  :<|> ( artistGetOwnProfile user
     :<|> artistUpdateOwnProfile user
     :<|> artistUpdateOwnProfile user
        )
@@ -3060,18 +3066,19 @@ artistSecureServer user =
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
 socialServer user =
-       socialListFollowers user
-  :<|> socialListFollowing user
+       SocialReads.relationshipList user "followers" (socialListFollowers user)
+  :<|> SocialReads.relationshipList user "following" (socialListFollowing user)
   :<|> vcardExchange user
-  :<|> socialListFriends user
+  :<|> SocialReads.relationshipList user "friends" (socialListFriends user)
   :<|> socialAddFriend user
   :<|> socialRemoveFriend user
-  :<|> socialListProfiles user
-  :<|> socialGetProfile user
-  :<|> socialListSuggestedFriends user
+  :<|> SocialProfiles.profileList user (socialListProfiles user)
+  :<|> SocialProfiles.profileGet user (socialGetProfile user)
+  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
+  :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
-chatServer user =
+chatServer user = SocialChat.chatPolicyServer user $
        chatListThreads user
   :<|> chatGetOrCreateDM user
   :<|> chatListMessages user
@@ -3121,12 +3128,13 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
-      (try (uploadToDrive manager accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
+      (try (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
-    Left err ->
-      throwError err502
+    Left err -> case fromException err of
+      Just replayError -> throwError (replayError :: ServerError)
+      Nothing -> throwError err502
         { errBody = BL8.pack (formatDriveUploadException (T.pack (displayException err))) }
   where
     resolveDriveAccessToken :: Manager -> Maybe Text -> AppM Text
@@ -3806,9 +3814,11 @@ protectedServer user =
   :<|> DirectoryServer.directoryProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
+  :<|> EventOperationsServer.eventOperationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user
   :<|> MusicReleaseServer.musicReleaseProtectedServer user
+  :<|> InteractionsServer.interactionsServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =
@@ -3873,28 +3883,24 @@ navigationPreferencesServer user =
       now <- liftIO getCurrentTime
       let featureIdValue = registryFeatureId feature
           unique = ME.UniqueFeatureNavigationPreference (auPartyId user) featureIdValue
-      entity <- runDB $ do
-        existing <- getBy unique
-        case existing of
-          Nothing -> do
-            preferenceId <- insert ME.FeatureNavigationPreference
-              { ME.featureNavigationPreferencePartyId = auPartyId user
-              , ME.featureNavigationPreferenceFeatureId = featureIdValue
-              , ME.featureNavigationPreferenceFavorite = False
-              , ME.featureNavigationPreferencePinned = False
-              , ME.featureNavigationPreferencePinOrder = Nothing
-              , ME.featureNavigationPreferenceLastVisitedAt = Just now
-              , ME.featureNavigationPreferenceUseCount = 1
-              , ME.featureNavigationPreferenceUpdatedAt = now
-              }
-            getJustEntity preferenceId
-          Just (Entity preferenceId _) -> do
-            update preferenceId
-              [ ME.FeatureNavigationPreferenceLastVisitedAt =. Just now
-              , ME.FeatureNavigationPreferenceUseCount +=. 1
-              , ME.FeatureNavigationPreferenceUpdatedAt =. now
-              ]
-            getJustEntity preferenceId
+      -- A first visit may arrive concurrently from multiple tabs or devices.
+      -- The unique-key upsert creates once and increments under the DB row lock;
+      -- visit tracking never overwrites the account's favorites or pin settings.
+      entity <- runDB $ upsertBy unique
+        ME.FeatureNavigationPreference
+          { ME.featureNavigationPreferencePartyId = auPartyId user
+          , ME.featureNavigationPreferenceFeatureId = featureIdValue
+          , ME.featureNavigationPreferenceFavorite = False
+          , ME.featureNavigationPreferencePinned = False
+          , ME.featureNavigationPreferencePinOrder = Nothing
+          , ME.featureNavigationPreferenceLastVisitedAt = Just now
+          , ME.featureNavigationPreferenceUseCount = 1
+          , ME.featureNavigationPreferenceUpdatedAt = now
+          }
+        [ ME.FeatureNavigationPreferenceLastVisitedAt =. Just now
+        , ME.FeatureNavigationPreferenceUseCount +=. 1
+        , ME.FeatureNavigationPreferenceUpdatedAt =. now
+        ]
       pure (navigationPreferenceToDTO entity)
 
     visiblePreference modules entity@(Entity _ preferenceValue) = do
@@ -3925,6 +3931,7 @@ accessRequestsServer user =
        listMine
   :<|> createRequest
   :<|> listReviewQueue
+  :<|> getRequest
   :<|> decideRequest
   :<|> cancelRequest
   where
@@ -3936,7 +3943,66 @@ accessRequestsServer user =
         [Desc ME.FeatureAccessRequestRequestedAt]
       mapM loadFeatureAccessRequestDTO rows
 
-    createRequest (FeatureAccessRequestCreate requestedFeatureId requestedAction requestedJustification) = do
+    createRequest (FeatureAccessRequestCreate requestedFeatureId requestedAction requestedJustification)
+      | T.toLower (T.strip requestedFeatureId) == "artist.onboarding"
+      , T.toLower (T.strip requestedAction) == "create" = createArtistAccess
+      | otherwise = createReviewedRequest requestedFeatureId requestedAction requestedJustification
+
+    createArtistAccess = do
+      Env pool _ <- ask
+      now <- liftIO getCurrentTime
+      result <- liftIO $ flip runSqlPool pool $ do
+        activated <- activateOwnArtistProfile (auPartyId user) now
+        case activated of
+          Left message -> pure (Left message)
+          Right _ -> do
+            existing <- selectFirst
+              [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+              , ME.FeatureAccessRequestAction ==. "create"
+              , ME.FeatureAccessRequestStatus <-. ["pending", "approved"]
+              ] [Desc ME.FeatureAccessRequestRequestedAt]
+            let note = Just "Perfil de artista activado automáticamente por su titular, sin aprobación manual."
+            row <- case existing of
+              Just (Entity key request) | ME.featureAccessRequestStatus request == "approved" ->
+                pure (Entity key request)
+              _ -> do
+                (key, previous) <- case existing of
+                  Just (Entity key request) -> pure (key, Just (ME.featureAccessRequestStatus request))
+                  Nothing -> do
+                    key <- insert ME.FeatureAccessRequest
+                      { ME.featureAccessRequestRequesterPartyId = auPartyId user
+                      , ME.featureAccessRequestFeatureId = "artist.onboarding"
+                      , ME.featureAccessRequestAction = "create"
+                      , ME.featureAccessRequestRoleContext = encodeAccessContext (map roleToText (auRoles user))
+                      , ME.featureAccessRequestModuleContext = encodeAccessContext (map moduleName (Set.toList (auModules user)))
+                      , ME.featureAccessRequestJustification = Nothing
+                      , ME.featureAccessRequestStatus = "approved"
+                      , ME.featureAccessRequestReviewerGroup = "system-policy"
+                      , ME.featureAccessRequestReviewerPartyId = Nothing
+                      , ME.featureAccessRequestReviewerNotes = note
+                      , ME.featureAccessRequestRequestedAt = now
+                      , ME.featureAccessRequestUpdatedAt = now
+                      , ME.featureAccessRequestDecidedAt = Just now
+                      , ME.featureAccessRequestCancelledAt = Nothing
+                      , ME.featureAccessRequestExpiresAt = Nothing
+                      }
+                    pure (key, Nothing)
+                update key
+                  [ ME.FeatureAccessRequestStatus =. "approved"
+                  , ME.FeatureAccessRequestReviewerPartyId =. Nothing
+                  , ME.FeatureAccessRequestReviewerNotes =. note
+                  , ME.FeatureAccessRequestUpdatedAt =. now
+                  , ME.FeatureAccessRequestDecidedAt =. Just now
+                  , ME.FeatureAccessRequestExpiresAt =. Nothing
+                  ]
+                insert_ (featureAccessRequestHistoryRecord key (Just (auPartyId user)) "automatically_approved" previous "approved" note now)
+                writeFeatureAccessRequestAudit (Just (auPartyId user)) key "access_request_automatically_approved" "artist.onboarding" "create" "approved" now
+                getJustEntity key
+            pure (Right row)
+      either (\message -> throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) loadFeatureAccessRequestDTO result
+
+    createReviewedRequest requestedFeatureId requestedAction requestedJustification = do
       feature <- maybe
         (throwError err400 { errBody = "Unknown or unavailable feature" })
         pure
@@ -3989,6 +4055,7 @@ accessRequestsServer user =
             , notificationBody = "Tu solicitud fue enviada al grupo revisor correspondiente."
             , notificationTargetType = Just "feature_access_request"
             , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
+            , notificationTargetKey = Nothing
             , notificationIsRead = False
             , notificationCreatedAt = now
             }
@@ -4014,6 +4081,20 @@ accessRequestsServer user =
         [Asc ME.FeatureAccessRequestRequestedAt]
       let visibleRows = filter (reviewerCanSeeRequest user . entityVal) rows
       mapM loadFeatureAccessRequestDTO visibleRows
+
+    getRequest requestIdValue = do
+      when (requestIdValue <= 0) $ throwError err404
+      requestEntity <- runDB (getEntity (toSqlKey requestIdValue)) >>= maybe (throwError err404) pure
+      let requestValue = entityVal requestEntity
+          owner = ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user
+          reviewer = not owner && isFeatureAccessReviewer user && reviewerCanSeeRequest user requestValue
+      unless (owner || reviewer) $ throwError err404
+      now <- liftIO getCurrentTime
+      let effective = if ME.featureAccessRequestStatus requestValue == "pending"
+                         && maybe False (<= now) (ME.featureAccessRequestExpiresAt requestValue)
+            then requestValue { ME.featureAccessRequestStatus = "expired" } else requestValue
+      dto <- loadFeatureAccessRequestDTO (Entity (entityKey requestEntity) effective)
+      pure $ object ["request" .= dto, "canReview" .= reviewer, "canCancel" .= owner]
 
     decideRequest requestIdValue (FeatureAccessRequestDecision requestedDecision requestedNotes) = do
       unless (isFeatureAccessReviewer user) $
@@ -4100,6 +4181,7 @@ accessRequestsServer user =
                   <> "para más información."
           , notificationTargetType = Just "feature_access_request"
           , notificationTargetId = Just (fromIntegral requestIdValue)
+          , notificationTargetKey = Nothing
           , notificationIsRead = False
           , notificationCreatedAt = now
           }
@@ -4331,7 +4413,7 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
     rolesResult <- loadCanonicalPartyRoles reviewerPartyId
     roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
-    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
+    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles) Nothing Nothing
     when (registryReviewerCanDecide reviewer feature actionName) $
       insert_ Notification
         { notificationRecipientPartyId = reviewerPartyId
@@ -4341,6 +4423,7 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
             <> " solicitó acceso. La solicitud está disponible para revisión."
         , notificationTargetType = Just "feature_access_request"
         , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
+        , notificationTargetKey = Nothing
         , notificationIsRead = False
         , notificationCreatedAt = now
         }
@@ -5876,51 +5959,22 @@ ensurePartyForCourseRegistrationDb
   -> SqlPersistT IO (Either ServerError PartyId)
 ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
   let display = fromMaybe "Alumno / cliente" (cleanOptional mName <|> mEmail <|> mPhone)
-  mExistingResult <- case mEmail of
-    Just addr -> selectUniquePartyByPrimaryEmail addr
-    Nothing -> case mPhone of
-      Just phone -> selectUniquePartyByPrimaryPhone phone
-      Nothing -> pure (Right Nothing)
-  case mExistingResult of
-    Left err -> pure (Left err)
-    Right mExisting -> fmap Right $ do
-      pid <- case mExisting of
-        Just (Entity partyId party) -> do
-          let updates = catMaybes
-                [ if isJust (partyPrimaryEmail party) || isNothing mEmail
-                    then Nothing
-                    else Just (PartyPrimaryEmail =. mEmail)
-                , if isJust (partyPrimaryPhone party) || isNothing mPhone
-                    then Nothing
-                    else Just (PartyPrimaryPhone =. mPhone)
-                , if isJust (partyWhatsapp party) || isNothing mPhone
-                    then Nothing
-                    else Just (PartyWhatsapp =. mPhone)
-                , if T.null (M.partyDisplayName party)
-                    then Just (PartyDisplayName =. display)
-                    else Nothing
-                ]
-          unless (null updates) $
-            update partyId updates
-          pure partyId
-        Nothing -> insert Party
-          { partyLegalName = Nothing
-          , partyDisplayName = display
-          , partyIsOrg = False
-          , partyTaxId = Nothing
-          , partyPrimaryEmail = mEmail
-          , partyPrimaryPhone = mPhone
-          , partyWhatsapp = mPhone
-          , partyInstagram = Nothing
-          , partyEmergencyContact = Nothing
-          , partyNotes = Nothing
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
-      ensureCourseRegistrationPartyRoles pid now
-      pure pid
+  Right <$> insert Party
+    { partyLegalName = Nothing
+    , partyDisplayName = display
+    , partyIsOrg = False
+    , partyTaxId = Nothing
+    , partyPrimaryEmail = mEmail
+    , partyPrimaryPhone = mPhone
+    , partyWhatsapp = mPhone
+    , partyInstagram = Nothing
+    , partyEmergencyContact = Nothing
+    , partyNotes = Just "Unverified course contact; supplied details do not establish account identity."
+    , partyStripeCustomerId = Nothing
+    , partyCountryCode = Nothing
+    , partyCountryId = Nothing
+    , partyCreatedAt = now
+    }
 
 ensureCourseRegistrationParty
   :: Maybe Text
@@ -5928,43 +5982,31 @@ ensureCourseRegistrationParty
   -> Maybe Text
   -> UTCTime
   -> AppM (Maybe PartyId, Maybe (Text, Text))
-ensureCourseRegistrationParty mName mEmail mPhone now =
-  case mEmail of
-    Just emailAddr -> do
-      (partyId, mNewUser) <- ensurePartyWithAccount mName emailAddr mPhone
-      runDB $ ensureCourseRegistrationPartyRoles partyId now
-      pure (Just partyId, mNewUser)
-    Nothing -> case mPhone of
-      Nothing -> pure (Nothing, Nothing)
-      Just _ -> do
-        partyResult <- runDB $ ensurePartyForCourseRegistrationDb mName Nothing mPhone now
-        partyId <- either throwError pure partyResult
-        pure (Just partyId, Nothing)
+ensureCourseRegistrationParty mName mEmail mPhone now = do
+  result <- runDB $ ensurePartyForCourseRegistrationDb mName mEmail mPhone now
+  partyId <- either throwError pure result
+  pure (Just partyId, Nothing)
 
 ensureCourseRegistrationPartyLink
   :: Entity ME.CourseRegistration
   -> AppM (Entity ME.CourseRegistration)
-ensureCourseRegistrationPartyLink ent@(Entity regId reg) =
+ensureCourseRegistrationPartyLink (Entity regId _) = runDB $ do
+  -- Re-read under a row lock so concurrent administrative reads cannot create
+  -- competing contacts for the same source registration.
+  _ <- rawSql "SELECT id FROM course_registration WHERE id=? FOR UPDATE"
+    [toPersistValue regId] :: SqlPersistT IO [Single Int64]
+  reg <- getJust regId
   case ME.courseRegistrationPartyId reg of
-    Just _ -> pure ent
+    Just _ -> pure (Entity regId reg)
     Nothing -> do
       now <- liftIO getCurrentTime
-      (mPartyId, _) <- ensureCourseRegistrationParty
+      result <- ensurePartyForCourseRegistrationDb
         (ME.courseRegistrationFullName reg)
         (ME.courseRegistrationEmail reg)
-        (ME.courseRegistrationPhoneE164 reg)
-        now
-      case mPartyId of
-        Nothing -> pure ent
-        Just partyId -> do
-          runDB $ update regId
-            [ ME.CourseRegistrationPartyId =. Just partyId
-            , ME.CourseRegistrationUpdatedAt =. now
-            ]
-          pure (Entity regId reg
-            { ME.courseRegistrationPartyId = Just partyId
-            , ME.courseRegistrationUpdatedAt = now
-            })
+        (ME.courseRegistrationPhoneE164 reg) now
+      partyId <- either (liftIO . throwIO) pure result
+      update regId [ME.CourseRegistrationPartyId =. Just partyId, ME.CourseRegistrationUpdatedAt =. now]
+      pure (Entity regId reg { ME.courseRegistrationPartyId = Just partyId, ME.courseRegistrationUpdatedAt = now })
 
 parseOptionalUtcText :: Text -> Maybe Text -> AppM (Maybe UTCTime)
 parseOptionalUtcText fieldName mValue =
@@ -6610,8 +6652,8 @@ recordCourseEmailEvent rawSlug mRegistrationId rawRecipientEmail mRecipientName 
       , ME.courseEmailEventCreatedAt = now
       }
 
-courseEmailSentWithinLast24Hours :: Text -> AppM Bool
-courseEmailSentWithinLast24Hours rawRecipientEmail = do
+courseEmailSentWithinLast24Hours :: ME.CourseRegistrationId -> Text -> AppM Bool
+courseEmailSentWithinLast24Hours registrationKey rawRecipientEmail = do
   let recipientEmail = T.toLower (T.strip rawRecipientEmail)
   if T.null recipientEmail
     then pure False
@@ -6620,14 +6662,23 @@ courseEmailSentWithinLast24Hours rawRecipientEmail = do
       let cutoff = addUTCTime (negate 86400) now
       mRecent <- runDB $ selectFirst
         [ ME.CourseEmailEventRecipientEmail ==. recipientEmail
+        , ME.CourseEmailEventRegistrationId ==. Just registrationKey
+        , ME.CourseEmailEventEventType ==. "registration_confirmation"
         , ME.CourseEmailEventStatus ==. "sent"
         , ME.CourseEmailEventCreatedAt >=. cutoff
         ]
         [Desc ME.CourseEmailEventCreatedAt]
       pure (isJust mRecent)
 
-createOrUpdateRegistration :: Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
-createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
+createOrUpdateRegistration :: Text -> Maybe Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
+createOrUpdateRegistration = createCourseRegistrationInScope "public-course"
+
+createCourseRegistrationInScope :: Text -> Text -> Maybe Text -> CourseRegistrationRequest -> AppM CourseRegistrationResponse
+createCourseRegistrationInScope namespace rawSlug mRequestKey payload@CourseRegistrationRequest{..} = do
+  requestKey <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    ServiceStorefront.validateIdempotencyKey mRequestKey
+  unless (T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) requestKey) $
+    throwBadRequest "Course Idempotency-Key must contain only ASCII letters, digits, hyphens or underscores"
   metaRaw <- loadCourseMetadata rawSlug
   let Courses.CourseMetadata{ Courses.slug = metaSlug
                             , Courses.sessions = metaSessions
@@ -6650,67 +6701,62 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
     throwBadRequest "email requerido"
-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
-  existing <- either throwError pure existingResult
-  either throwError pure $
-    validateCourseRegistrationSeatAvailability
-      metaRemaining
-      (ME.courseRegistrationStatus . entityVal <$> existing)
-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now
-  case existing of
-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.
-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do
-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId
-      runDB $ update regId
-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)
-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)
-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)
-        , ME.CourseRegistrationPartyId =. resolvedPartyId
-        , ME.CourseRegistrationSource =. sourceClean
-        , ME.CourseRegistrationStatus =. pendingStatus
-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)
-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)
-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)
-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)
-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)
-        , ME.CourseRegistrationUpdatedAt =. now
-        ]
-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
-    _ -> do
-      regId <- runDB $ insert ME.CourseRegistration
-        { ME.courseRegistrationCourseSlug = slugVal
-        , ME.courseRegistrationPartyId = mPartyId
-        , ME.courseRegistrationFullName = nameClean
-        , ME.courseRegistrationEmail = normalizedEmail
-        , ME.courseRegistrationPhoneE164 = phoneClean
-        , ME.courseRegistrationSource = sourceClean
-        , ME.courseRegistrationStatus = pendingStatus
-        , ME.courseRegistrationAdminNotes = Nothing
-        , ME.courseRegistrationHowHeard = howHeardClean
-        , ME.courseRegistrationUtmSource = utmSourceVal
-        , ME.courseRegistrationUtmMedium = utmMediumVal
-        , ME.courseRegistrationUtmCampaign = utmCampaignVal
-        , ME.courseRegistrationUtmContent = utmContentVal
-        , ME.courseRegistrationStripePaymentIntentId = Nothing
-        , ME.courseRegistrationStripeSubscriptionId = Nothing
-        , ME.courseRegistrationSubscriptionStatus = Nothing
-        , ME.courseRegistrationCreatedAt = now
-        , ME.courseRegistrationUpdatedAt = now
-        }
-      void $ runDB $ insertCourseRegistrationFollowUp
-        regId
-        mPartyId
-        Nothing
-        "registration"
-        (Just "Inscripción recibida")
-        ("Nueva inscripción capturada desde " <> sourceClean <> ".")
-        Nothing
-        Nothing
-        Nothing
-        now
-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser
-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }
+  let requestScope = namespace <> ":" <> slugVal
+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))
+  (regId, savedStatus, created) <- runDB $ do
+    _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+      [PersistText (requestScope <> ":" <> requestKey)] :: SqlPersistT IO [Single Int64]
+    previous <- rawSql "SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?"
+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]
+    case previous of
+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)
+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = "This registration changed after an earlier send. Review the saved registration before starting another submission." }
+      [] -> do
+          when (namespace == "public-course") $ do
+            existingCheckout <- rawSql "SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?"
+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]
+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = "A checkout already exists for this request. Retry to load its saved result." }
+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing
+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now
+          partyId <- either (liftIO . throwIO) pure partyResult
+          let mPartyId = Just partyId
+          regId <- insert ME.CourseRegistration
+            { ME.courseRegistrationCourseSlug = slugVal
+            , ME.courseRegistrationPartyId = mPartyId
+            , ME.courseRegistrationFullName = nameClean
+            , ME.courseRegistrationEmail = normalizedEmail
+            , ME.courseRegistrationPhoneE164 = phoneClean
+            , ME.courseRegistrationSource = sourceClean
+            , ME.courseRegistrationStatus = pendingStatus
+            , ME.courseRegistrationAdminNotes = Nothing
+            , ME.courseRegistrationHowHeard = howHeardClean
+            , ME.courseRegistrationUtmSource = utmSourceVal
+            , ME.courseRegistrationUtmMedium = utmMediumVal
+            , ME.courseRegistrationUtmCampaign = utmCampaignVal
+            , ME.courseRegistrationUtmContent = utmContentVal
+            , ME.courseRegistrationStripePaymentIntentId = Nothing
+            , ME.courseRegistrationStripeSubscriptionId = Nothing
+            , ME.courseRegistrationSubscriptionStatus = Nothing
+            , ME.courseRegistrationCreatedAt = now
+            , ME.courseRegistrationUpdatedAt = now
+            }
+          void $ insertCourseRegistrationFollowUp
+            regId
+            mPartyId
+            Nothing
+            "registration"
+            (Just "Inscripción recibida")
+            ("Nueva inscripción capturada desde " <> sourceClean <> ".")
+            Nothing
+            Nothing
+            Nothing
+            now
+          rawExecute "INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)"
+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]
+          pure (regId, pendingStatus, True)
+      _ -> liftIO $ throwIO err500 { errBody = "Could not resolve registration request" }
+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing
+  pure CourseRegistrationResponse { id = fromSqlKey regId, status = savedStatus }
   where
     sendConfirmation courseSlug regKey courseTitle landing metaSessions nameClean mEmail mNewUser =
       case mEmail of
@@ -6738,10 +6784,10 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
                 "skipped"
                 (Just msg)
             Just _ -> do
-              alreadySent <- courseEmailSentWithinLast24Hours emailAddr
+              alreadySent <- courseEmailSentWithinLast24Hours regKey emailAddr
               if alreadySent
                 then do
-                  let msg = "[CourseRegistration] Skipped registration confirmation to " <> emailAddr <> ": daily email cap reached (max 1 every 24h)."
+                  let msg = "[CourseRegistration] Skipped registration confirmation to " <> emailAddr <> ": this registration already received a confirmation within 24h."
                   liftIO $ LogBuf.addLog LogBuf.LogWarning msg
                   recordCourseEmailEvent
                     courseSlug
@@ -6783,10 +6829,10 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
               -- This is evaluated after registration_confirmation, so a just-sent
               -- confirmation will block welcome in the same request.
               for_ mNewUser $ \(username, tempPassword) -> do
-                welcomeAlreadySent <- courseEmailSentWithinLast24Hours emailAddr
+                welcomeAlreadySent <- courseEmailSentWithinLast24Hours regKey emailAddr
                 if welcomeAlreadySent
                   then do
-                    let msg = "[CourseRegistration] Skipped welcome email to " <> emailAddr <> ": daily email cap reached (max 1 every 24h)."
+                    let msg = "[CourseRegistration] Skipped welcome email to " <> emailAddr <> ": this registration already received a confirmation within 24h."
                     liftIO $ LogBuf.addLog LogBuf.LogWarning msg
                     recordCourseEmailEvent
                       courseSlug
@@ -7828,76 +7874,6 @@ validateCourseRegistrationUtm (Just UTMTags{..}) = do
   contentVal <- validateOptionalCourseRegistrationTextField "utm.content" 256 content
   pure (sourceVal, mediumVal, campaignVal, contentVal)
 
--- Ensure a Party/UserCredential exists for a registration email. Returns (username, tempPassword) only when a new
--- credential was created.
-ensureUserAccount :: Maybe Text -> Text -> AppM (Maybe (Text, Text))
-ensureUserAccount mName emailAddr = snd <$> ensurePartyWithAccount mName emailAddr Nothing
-
-ensurePartyWithAccount :: Maybe Text -> Text -> Maybe Text -> AppM (Key Party, Maybe (Text, Text))
-ensurePartyWithAccount mName emailAddr mPhone = do
-  now <- liftIO getCurrentTime
-  let display = case fmap T.strip mName of
-        Just nameTxt | not (T.null nameTxt) -> nameTxt
-        _                                   -> emailAddr
-      phoneClean = mPhone >>= normalizePhone
-  partyResult <- runDB $ do
-    mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
-    case mPartyOrErr of
-      Left serverErr -> pure (Left serverErr)
-      Right mParty -> fmap Right $ case mParty of
-        Just (Entity pid party) -> do
-          let updates = catMaybes
-                [ if not (T.null (M.partyDisplayName party)) || T.null display
-                    then Nothing
-                    else Just (PartyDisplayName =. display)
-                , case phoneClean of
-                    Just phone | isNothing (partyPrimaryPhone party) -> Just (PartyPrimaryPhone =. Just phone)
-                    _ -> Nothing
-                ]
-          unless (null updates) (update pid updates)
-          pure pid
-        Nothing -> insert Party
-          { partyLegalName = Nothing
-          , partyDisplayName = display
-          , partyIsOrg = False
-          , partyTaxId = Nothing
-          , partyPrimaryEmail = Just emailAddr
-          , partyPrimaryPhone = phoneClean
-          , partyWhatsapp = Nothing
-          , partyInstagram = Nothing
-          , partyEmergencyContact = Nothing
-          , partyNotes = Nothing
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
-  partyId <- either throwError pure partyResult
-  mCred <- runDB $ selectFirst [UserCredentialPartyId ==. partyId] []
-  newCred <- case mCred of
-    Just _ -> pure Nothing
-    Nothing -> do
-      username <- runDB (generateUniqueUsername (deriveBaseUsername mName emailAddr) partyId)
-      tempPassword <- liftIO Email.generateTempPassword
-      hashed <- liftIO (hashPasswordText tempPassword)
-      _ <- runDB $ insert UserCredential
-        { userCredentialPartyId = partyId
-        , userCredentialUsername = username
-        , userCredentialPasswordHash = hashed
-        , userCredentialActive = True
-        }
-      runDB $
-        requireAutomaticSecurityPolicyDb
-          "account.generated.customer"
-          partyId
-          False
-          Nothing
-          "generated-account"
-          ("generated-account:" <> T.pack (show (fromSqlKey partyId)))
-          now
-      pure (Just (username, tempPassword))
-  pure (partyId, newCred)
-
 -- Guest commerce creates only the customer Party. Account creation remains an
 -- explicit post-purchase choice; creating a credential without delivering its
 -- random password would leave the customer with an inaccessible account.
@@ -7918,23 +7894,7 @@ ensurePartyRecordDb now mName emailAddr mPhone = do
         Just nameTxt | not (T.null nameTxt) -> nameTxt
         _                                   -> emailAddr
       phoneClean = mPhone >>= normalizePhone
-  mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
-  case mPartyOrErr of
-    Left serverErr -> pure (Left serverErr)
-    Right mParty -> fmap Right $ case mParty of
-      Just (Entity pid party) -> do
-        let updates = catMaybes
-              [ if not (T.null (M.partyDisplayName party)) || T.null display
-                  then Nothing
-                  else Just (PartyDisplayName =. display)
-              , case phoneClean of
-                  Just phone | isNothing (partyPrimaryPhone party) ->
-                    Just (PartyPrimaryPhone =. Just phone)
-                  _ -> Nothing
-              ]
-        unless (null updates) (update pid updates)
-        pure pid
-      Nothing -> insert Party
+  Right <$> insert Party
         { partyLegalName = Nothing
         , partyDisplayName = display
         , partyIsOrg = False
@@ -7944,7 +7904,7 @@ ensurePartyRecordDb now mName emailAddr mPhone = do
         , partyWhatsapp = Nothing
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
-        , partyNotes = Nothing
+        , partyNotes = Just "Unverified guest booking contact; supplied contact details do not establish account identity."
         , partyStripeCustomerId = Nothing
         , partyCountryCode = Nothing
         , partyCountryId = Nothing
@@ -8083,8 +8043,16 @@ duplicateCourseRegistrationMessage contactLabel statuses
       "Multiple course registrations match this " <> contactLabel
 
 -- Health
-health :: AppM TDF.API.HealthStatus
-health = pure (HealthStatus "ok" "ok")
+health :: AppM (Headers '[Header "Cache-Control" Text] TDF.API.HealthStatus)
+health = do
+  pool <- asks envPool
+  ready <- liftIO (databaseReady pool)
+  if ready
+    then pure (addHeader "no-store" (HealthStatus "ok" "ok"))
+    else throwError err503
+      { errBody = encode (HealthStatus "degraded" "unavailable")
+      , errHeaders = [("Content-Type", "application/json"), ("Cache-Control", "no-store"), ("Retry-After", "5")]
+      }
 
 
 
@@ -8172,103 +8140,10 @@ fanListFollows user = do
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
-fanFollowArtist user artistId = do
-  requireFanAccess user
-  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
-  let artistKey = toSqlKey artistId :: PartyId
-      fanKey    = auPartyId user
-  when (artistKey == fanKey) $
-    throwBadRequest "No puedes seguirte a ti mismo"
-  targetKey <- runDB (resolveFanFollowArtistTarget artistId) >>= either throwError pure
-  Env pool _ <- ask
-  mDto <- liftIO $ flip runSqlPool pool $ do
-    now <- liftIO getCurrentTime
-    insertedFollow <- insertUnique FanFollow
-      { fanFollowFanPartyId    = fanKey
-      , fanFollowArtistPartyId = targetKey
-      , fanFollowCreatedAt     = now
-      }
-    when (isJust insertedFollow) $ do
-      recordEngagementEvent
-        (Just fanKey)
-        (Just targetKey)
-        "artist"
-        (Just (fromIntegral (fromSqlKey targetKey)))
-        "follow"
-        Nothing
-        now
-      createArtistFollowerNotification fanKey targetKey now
-    -- Auto-follow club members
-    mClub <- getBy (UniqueFanClubArtist targetKey)
-    case mClub of
-      Nothing -> pure ()
-      Just (Entity cid _) -> do
-        -- Get existing member profiles (excluding self)
-        existingProfiles <- selectList
-          [ M.FanClubMemberProfileClubId ==. cid
-          , M.FanClubMemberProfilePartyId !=. fanKey
-          ] []
-        let existingMemberIds = map (fanClubMemberProfilePartyId . entityVal) existingProfiles
-        -- Create member profile for new fan if not exists
-        mExistingProfile <- getBy (UniqueFanClubMemberProfile fanKey cid)
-        case mExistingProfile of
-          Just _ -> pure ()
-          Nothing -> do
-            mFanProfile <- getBy (UniqueFanProfile fanKey)
-            let avatarUrl = case mFanProfile of
-                  Just (Entity _ fp) -> fanProfileAvatarUrl fp
-                  Nothing -> Nothing
-            insert_ FanClubMemberProfile
-              { fanClubMemberProfilePartyId = fanKey
-              , fanClubMemberProfileClubId = cid
-              , fanClubMemberProfileHandle = Nothing
-              , fanClubMemberProfileBio = Nothing
-              , fanClubMemberProfileAvatarUrl = avatarUrl
-              , fanClubMemberProfileJoinedAt = now
-              }
-        -- Auto-follow: new fan follows existing members
-        forM_ existingMemberIds $ \memberId ->
-          void $ insertUnique PartyFollow
-            { partyFollowFollowerPartyId = fanKey
-            , partyFollowFollowingPartyId = memberId
-            , partyFollowViaNfc = False
-            , partyFollowCreatedAt = now
-            }
-        -- Auto-follow: existing members follow new fan
-        forM_ existingMemberIds $ \memberId ->
-          void $ insertUnique PartyFollow
-            { partyFollowFollowerPartyId = memberId
-            , partyFollowFollowingPartyId = fanKey
-            , partyFollowViaNfc = False
-            , partyFollowCreatedAt = now
-            }
-    loadFanFollowDTO fanKey targetKey
-  maybe (throwError err404) pure mDto
+fanFollowArtist = FanEffects.followArtist
 
 fanUnfollowArtist :: AuthedUser -> Int64 -> AppM NoContent
-fanUnfollowArtist user artistId = do
-  requireFanAccess user
-  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
-  let artistKey = toSqlKey artistId :: PartyId
-  when (artistKey == auPartyId user) $
-    throwBadRequest "No puedes dejar de seguirte a ti mismo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    existingFollow <- getBy (UniqueFanFollow (auPartyId user) artistKey)
-    case existingFollow of
-      Nothing -> pure ()
-      Just _ -> do
-        now <- liftIO getCurrentTime
-        deleteBy (UniqueFanFollow (auPartyId user) artistKey)
-        recordEngagementEvent
-          (Just (auPartyId user))
-          (Just artistKey)
-          "artist"
-          (Just (fromIntegral (fromSqlKey artistKey)))
-          "unfollow"
-          Nothing
-          now
-  pure NoContent
+fanUnfollowArtist = FanEffects.unfollowArtist
 
 recordEngagementEvent
   :: Maybe PartyId
@@ -8288,21 +8163,6 @@ recordEngagementEvent actorPartyId targetArtistId entityType entityId eventType 
     , engagementEventEventType = eventType
     , engagementEventMetadata = metadata
     , engagementEventCreatedAt = createdAt
-    }
-
-createArtistFollowerNotification :: PartyId -> PartyId -> UTCTime -> SqlPersistT IO ()
-createArtistFollowerNotification fanKey artistKey now = do
-  mFan <- get fanKey
-  let fanName = maybe "Un fan" M.partyDisplayName mFan
-  insert_ Notification
-    { notificationRecipientPartyId = artistKey
-    , notificationNotifType = "artist_liked"
-    , notificationTitle = "Nuevo fan"
-    , notificationBody = fanName <> " empezó a seguir tu perfil."
-    , notificationTargetType = Just "artist"
-    , notificationTargetId = Just (fromIntegral (fromSqlKey artistKey))
-    , notificationIsRead = False
-    , notificationCreatedAt = now
     }
 
 resolveFanFollowArtistTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
@@ -8567,78 +8427,13 @@ socialListSuggestedFriends user = do
           ]
 
 socialAddFriend :: AuthedUser -> Int64 -> AppM [PartyFollowDTO]
-socialAddFriend user targetId = do
-  let followerKey = auPartyId user
-  targetKey <- runDB (resolveSocialTargetPartyId targetId) >>= either throwError pure
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes agregarte como amigo"
-  now <- liftIO getCurrentTime
-  runDB $ do
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = followerKey
-      , partyFollowFollowingPartyId = targetKey
-      , partyFollowViaNfc           = False
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. False ]
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = targetKey
-      , partyFollowFollowingPartyId = followerKey
-      , partyFollowViaNfc           = False
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. False ]
-    rows <- selectList
-      [ PartyFollowFollowerPartyId ==. followerKey
-      , PartyFollowFollowingPartyId ==. targetKey
-      ] []
-    partyFollowEntitiesToDTO rows
+socialAddFriend = SocialWrites.addFriend
 
 socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
-socialRemoveFriend user targetId = do
-  when (targetId <= 0) $ throwBadRequest "Invalid party id"
-  let followerKey = auPartyId user
-      targetKey   = toSqlKey targetId :: PartyId
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes eliminarte como amigo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    deleteBy (UniquePartyFollow followerKey targetKey)
-    deleteBy (UniquePartyFollow targetKey followerKey)
-  pure NoContent
+socialRemoveFriend = SocialWrites.removeFriend
 
 vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
-vcardExchange user VCardExchangeRequest{..} = do
-  let followerKey = auPartyId user
-  targetKey <- runDB (resolveSocialTargetPartyId vcerPartyId) >>= either throwError pure
-  when (followerKey == targetKey) $
-    throwBadRequest "No puedes compartir tu vCard contigo mismo"
-  now <- liftIO getCurrentTime
-  runDB $ do
-    -- Create mutual follows; mark as NFC-sourced.
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = followerKey
-      , partyFollowFollowingPartyId = targetKey
-      , partyFollowViaNfc           = True
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. True ]
-    _ <- upsert PartyFollow
-      { partyFollowFollowerPartyId  = targetKey
-      , partyFollowFollowingPartyId = followerKey
-      , partyFollowViaNfc           = True
-      , partyFollowCreatedAt        = now
-      }
-      [ PartyFollowViaNfc =. True ]
-    rowsAB <- selectList
-      [ PartyFollowFollowerPartyId ==. followerKey
-      , PartyFollowFollowingPartyId ==. targetKey
-      ] [Desc PartyFollowCreatedAt]
-    rowsBA <- selectList
-      [ PartyFollowFollowerPartyId ==. targetKey
-      , PartyFollowFollowingPartyId ==. followerKey
-      ] [Desc PartyFollowCreatedAt]
-    partyFollowEntitiesToDTO (rowsAB ++ rowsBA)
+vcardExchange = SocialWrites.exchangeVCard
 
 resolveSocialTargetPartyId :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
 resolveSocialTargetPartyId rawPartyId =
@@ -8665,15 +8460,7 @@ maxSocialProfilePartyIds :: Int
 maxSocialProfilePartyIds = 100
 
 validateSocialProfilePartyIds :: [Int64] -> Either ServerError [Int64]
-validateSocialProfilePartyIds rawPartyIds
-  | any (<= 0) rawPartyIds =
-      Left err400 { errBody = "partyId query must contain only positive integers" }
-  | length rawPartyIds > maxSocialProfilePartyIds =
-      Left err400 { errBody = "partyId query supports at most 100 ids" }
-  | length rawPartyIds /= length (nub rawPartyIds) =
-      Left err400 { errBody = "partyId query must not contain duplicate ids" }
-  | otherwise =
-      Right rawPartyIds
+validateSocialProfilePartyIds = SocialProfiles.validateProfileIds
 
 socialGetProfile :: AuthedUser -> Int64 -> AppM SocialPartyProfileDTO
 socialGetProfile _ partyId = do
@@ -8683,11 +8470,7 @@ socialGetProfile _ partyId = do
   maybe (throwError err404) pure mProfile
 
 requireFanAccess :: AuthedUser -> AppM ()
-requireFanAccess user@AuthedUser{..} = do
-  unless (Fan `elem` auRoles || Customer `elem` auRoles) $
-    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Fan access required") }
-  unless (hasCoherentAuthScope user) $
-    throwError err403 { errBody = "Fan access requires coherent role grants" }
+requireFanAccess = FanEffects.requireFanAccess
 
 requireArtistAccess :: AuthedUser -> AppM ()
 requireArtistAccess user@AuthedUser{..} = do
@@ -8695,6 +8478,15 @@ requireArtistAccess user@AuthedUser{..} = do
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist access required") }
   unless (hasCoherentAuthScope user) $
     throwError err403 { errBody = "Artist access requires coherent role grants" }
+
+artistActivateOwnProfile :: AuthedUser -> AppM ArtistProfileDTO
+artistActivateOwnProfile user = do
+  unless (hasCoherentAuthScope user) $
+    throwError err403 { errBody = "Artist activation requires a coherent account" }
+  Env pool _ <- ask
+  now <- liftIO getCurrentTime
+  result <- liftIO $ flip runSqlPool pool $ activateOwnArtistProfile (auPartyId user) now
+  either (\message -> throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure result
 
 artistGetOwnProfile :: AuthedUser -> AppM ArtistProfileDTO
 artistGetOwnProfile user = do
@@ -8744,27 +8536,35 @@ artistUpdateOwnPhoto user ArtistProfilePhotoUpdate{..} = do
 
 notifList :: AuthedUser -> Maybe Bool -> AppM [NotificationDTO]
 notifList user mUnreadOnly = do
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    let filters = [NotificationRecipientPartyId ==. auPartyId user]
-                  ++ [NotificationIsRead ==. False | mUnreadOnly == Just True]
-    notifs <- selectList filters [Desc NotificationCreatedAt, LimitTo 50]
-    pure $ map (\(Entity nid n) -> NotificationDTO
+  result <- runDB $ InteractionNotifications.notificationRows user (mUnreadOnly == Just True) Nothing
+  rows <- either throwError pure result
+  pure (map notificationToDTO rows)
+
+notifGet :: AuthedUser -> Int64 -> AppM NotificationDTO
+notifGet user ident = do
+  result <- runDB $ InteractionNotifications.notificationRows user False (Just ident)
+  rows <- either throwError pure result
+  case rows of
+    [entity] -> pure (notificationToDTO entity)
+    _ -> throwError err404
+
+notificationToDTO :: Entity Notification -> NotificationDTO
+notificationToDTO (Entity nid n) = NotificationDTO
       { nId = fromSqlKey nid
       , nType = notificationNotifType n
       , nTitle = notificationTitle n
       , nBody = notificationBody n
       , nTargetType = notificationTargetType n
       , nTargetId = fmap fromIntegral (notificationTargetId n)
+      , nTargetKey = notificationTargetKey n
       , nIsRead = notificationIsRead n
       , nCreatedAt = notificationCreatedAt n
-      }) notifs
+      }
 
 notifCount :: AuthedUser -> AppM NotificationCountDTO
 notifCount user = do
-  Env pool _ <- ask
-  cnt <- liftIO $ flip runSqlPool pool $
-    count [NotificationRecipientPartyId ==. auPartyId user, NotificationIsRead ==. False]
+  result <- runDB $ InteractionNotifications.notificationUnreadCount user
+  cnt <- either throwError pure result
   pure NotificationCountDTO { ncUnread = cnt }
 
 notifMarkRead :: AuthedUser -> Int64 -> AppM NoContent
@@ -8803,7 +8603,8 @@ discoveryFeed user mLimit = do
       case boostedContentTargetType bc of
         "post" -> do
           let postKey = toSqlKey (fromIntegral (boostedContentTargetId bc)) :: FanClubPostId
-          mPost <- get postKey
+          readable <- InteractionLegacy.visible (auPartyId user) "club_post" (T.pack (show (fromSqlKey postKey)))
+          mPost <- if readable then get postKey else pure Nothing
           case mPost of
             Nothing -> pure Nothing
             Just p -> do
@@ -9177,7 +8978,19 @@ searchParties
   -> Maybe Int64
   -> Maybe Int
   -> AppM PartySelectorPageDTO
-searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit = do
+searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit
+  | (T.toLower . T.strip <$> rawContext) == Just "interaction_mention" = do
+      queryText <- either throwError pure (validatePartySelectorQuery rawQuery)
+      limit <- either throwError pure (validatePartySelectorLimit rawLimit)
+      scope <- maybe (throwError err400 {errBody="scopeId is required"}) pure rawScopeId
+      DirectoryServer.consumeRate user "party_selector:interaction_mention" 300
+      InteractionsServer.searchMentions user scope queryText rawCursor (Just limit)
+  | otherwise = searchPartiesStandard user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit
+
+searchPartiesStandard
+  :: AuthedUser -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Bool -> [Int64] -> Maybe Int64 -> Maybe Int
+  -> AppM PartySelectorPageDTO
+searchPartiesStandard user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit = do
   query <- either throwError pure (validatePartySelectorQuery rawQuery)
   context <- either throwError pure (validatePartySelectorContext rawContext)
   for_ (partySelectorContextModule context) (requireModule user)
@@ -9210,9 +9023,9 @@ searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded r
       normalizedUsername = partySelectorNormalizedUsernameSql
       nameSql
         | publicDiscovery =
-            "SELECT ?? FROM party WHERE " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+            "SELECT ?? FROM party WHERE NOT EXISTS (SELECT 1 FROM identity_party_archive a WHERE a.party_id=party.id) AND " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
         | otherwise =
-            "SELECT ?? FROM party WHERE (" <> normalizedDisplayName <> " LIKE ? OR " <> normalizedLegalName <> " LIKE ?) ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 WHEN " <> normalizedLegalName <> " = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
+            "SELECT ?? FROM party WHERE NOT EXISTS (SELECT 1 FROM identity_party_archive a WHERE a.party_id=party.id) AND (" <> normalizedDisplayName <> " LIKE ? OR " <> normalizedLegalName <> " LIKE ?) ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 WHEN " <> normalizedLegalName <> " = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
       usernameSql =
         "SELECT ?? FROM user_credential WHERE id > 0 AND " <> normalizedUsername <> " LIKE ? AND active = TRUE ORDER BY CASE WHEN " <> normalizedUsername <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
   (parties, credentials, fanProfiles, engineerPartyIds) <- liftIO $ flip runSqlPool pool $ do
@@ -9487,38 +9300,46 @@ listParties user mLimit mOffset = do
   Env pool _ <- ask
   (limit, offset) <- either throwError pure (validatePartyListPagination mLimit mOffset)
   (entities, accountIds) <- liftIO $ flip runSqlPool pool $ do
-    parts <- selectList [] [Asc PartyId, LimitTo limit, OffsetBy offset]
+    parts <- rawSql "SELECT ?? FROM party WHERE NOT EXISTS (SELECT 1 FROM identity_party_archive a WHERE a.party_id=party.id) ORDER BY id LIMIT ? OFFSET ?" [toPersistValue limit, toPersistValue offset]
     let partyIds = map entityKey parts
     creds <- selectList [UserCredentialPartyId <-. partyIds] []
     let accountSet = Set.fromList (map (userCredentialPartyId . entityVal) creds)
     pure (parts, accountSet)
   pure (map (\ent -> toPartyDTO (Set.member (entityKey ent) accountIds) ent) entities)
 
-createParty :: AuthedUser -> PartyCreate -> AppM PartyDTO
-createParty user req = do
+createParty :: AuthedUser -> Maybe Text -> PartyCreate -> AppM PartyDTO
+createParty user requestKey req = do
   requireModule user ModuleCRM
+  when (isNothing requestKey) $
+    throwError err400 { errBody = "Update the app or refresh the contact form before creating a contact so retries can be saved safely." }
+  for_ requestKey $ \key ->
+    unless (T.length key >= 16 && T.length key <= 128 && T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) key) $
+      throwError err400 { errBody = "Idempotency-Key must contain 16-128 ASCII letters, digits, hyphens or underscores" }
   displayNameVal <- either throwError pure (validatePartyDisplayName (cDisplayName req))
   primaryEmailVal <- either throwError pure (validatePartyPrimaryEmail (cPrimaryEmail req))
   Env pool _ <- ask
-  now <- liftIO getCurrentTime
-  let p = Party
-          { partyLegalName = cLegalName req
-          , partyDisplayName = displayNameVal
-          , partyIsOrg = cIsOrg req
-          , partyTaxId = cTaxId req
-          , partyPrimaryEmail = primaryEmailVal
-          , partyPrimaryPhone = cPrimaryPhone req
-          , partyWhatsapp = cWhatsapp req
-          , partyInstagram = cInstagram req
-          , partyEmergencyContact = cEmergencyContact req
-          , partyNotes = cNotes req
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
-  pid <- liftIO $ flip runSqlPool pool $ insert p
-  pure $ toPartyDTO False (Entity pid p)
+  result <- liftIO $ try $ flip runSqlPool pool $ case requestKey of
+    Nothing -> pure Nothing
+    Just key -> do
+      let body = object
+            [ "display_name" .= displayNameVal, "legal_name" .= cLegalName req
+            , "is_org" .= cIsOrg req, "tax_id" .= cTaxId req
+            , "primary_email" .= primaryEmailVal, "primary_phone" .= cPrimaryPhone req
+            , "whatsapp" .= cWhatsapp req, "instagram" .= cInstagram req
+            , "emergency_contact" .= cEmergencyContact req, "notes" .= cNotes req
+            ]
+      ids <- rawSql "SELECT identity_create_contact(?, ?, ?::jsonb)"
+        [toPersistValue (auPartyId user), PersistText key, PersistText (TE.decodeUtf8 (BL.toStrict (encode body)))]
+      case ids of
+        [Single pid] -> getEntity (toSqlKey pid :: PartyId)
+        _ -> pure Nothing
+  case result of
+    Left sqlError
+      | sqlState sqlError `elem` ["22023", "55000"] ->
+          throwError err409 { errBody = "This contact request has changed or was archived. Review the contact before retrying." }
+      | otherwise -> throwError err500 { errBody = "Contact creation failed" }
+    Right Nothing -> throwError err500 { errBody = "Contact creation failed" }
+    Right (Just ent) -> getParty user (fromSqlKey (entityKey ent))
 
 getParty :: AuthedUser -> Int64 -> AppM PartyDTO
 getParty user pidI = do
@@ -9526,7 +9347,11 @@ getParty user pidI = do
   pidValid <- either throwError pure (validatePositiveIdField "partyId" pidI)
   Env pool _ <- ask
   let pid = toSqlKey pidValid :: Key Party
-  mp <- liftIO $ flip runSqlPool pool $ getEntity pid
+  mp <- liftIO $ flip runSqlPool pool $ do
+    mappings <- rawSql "SELECT canonical_party_id FROM identity_party_archive WHERE party_id=?" [toPersistValue pid]
+    case mappings of
+      [Single canonicalId] -> getEntity (toSqlKey canonicalId)
+      _ -> getEntity pid
   case mp of
     Nothing -> throwError err404
     Just ent -> do
@@ -9543,7 +9368,7 @@ updateParty user pidI req = do
   primaryEmailUpdate <- either throwError pure (validatePartyPrimaryEmailUpdate (uPrimaryEmail req))
   Env pool _ <- ask
   let pid = toSqlKey pidValid :: Key Party
-  liftIO $ flip runSqlPool pool $ do
+  result <- liftIO $ try $ flip runSqlPool pool $ do
     mp <- get pid
     case mp of
       Nothing -> pure ()
@@ -9561,7 +9386,12 @@ updateParty user pidI req = do
               , partyNotes            = maybe (partyNotes p) Just       (uNotes req)
               }
         replace pid p'
-  getParty user pidValid
+  case result of
+    Left sqlError
+      | sqlState sqlError == "55000" ->
+          throwError err409 { errBody = "This contact was archived. Open its current record before editing." }
+      | otherwise -> throwError err500 { errBody = "Contact update failed" }
+    Right () -> getParty user pidValid
 
 validatePartyDisplayName :: Text -> Either ServerError Text
 validatePartyDisplayName rawDisplayName =
@@ -9603,8 +9433,8 @@ partyRelated user pidI = do
   now <- liftIO getCurrentTime
 
   (asCustomer, asEngineer) <- runDB $ do
-    customerRows <- selectList [BookingPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
-    engineerRows <- selectList [BookingEngineerPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
+    customerRows <- selectList (bookingScopeFilters user ++ [BookingPartyId ==. Just partyKey]) [Desc BookingStartsAt, LimitTo 50]
+    engineerRows <- selectList (bookingScopeFilters user ++ [BookingEngineerPartyId ==. Just partyKey]) [Desc BookingStartsAt, LimitTo 50]
     pure (customerRows, engineerRows)
 
   (studentSessions, teacherSessions, subjectMap, partyNameMap, bookingMap) <- runDB $ do
@@ -9629,7 +9459,7 @@ partyRelated user pidI = do
 
     bookings <- if null bookingIds
       then pure []
-      else selectList [BookingId <-. bookingIds] []
+      else selectList (bookingScopeFilters user ++ [BookingId <-. bookingIds]) []
     let bookingsById = Map.fromList [ (entityKey e, entityVal e) | e <- bookings ]
 
     pure (studentRows, teacherRows, subjectsById, partyNamesById, bookingsById)
@@ -9678,7 +9508,7 @@ partyRelated user pidI = do
           , prcStartAt        = Trials.classSessionStartAt cs
           , prcEndAt          = Trials.classSessionEndAt cs
           , prcStatus         = classStatusLabel (Trials.classSessionAttended cs) (Trials.classSessionStartAt cs) mBooking
-          , prcBookingId      = fromSqlKey <$> Trials.classSessionBookingId cs
+          , prcBookingId      = if isJust mBooking then fromSqlKey <$> Trials.classSessionBookingId cs else Nothing
           }
 
       toRelatedTrack (Entity key t) =
@@ -9850,112 +9680,10 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
     pure (toServiceAdSlotDTO slot)
 
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
-createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
-  titleVal <- either throwError pure (validateServiceMarketplaceBookingTitle smbTitle)
-  paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
-  notesVal <- either throwError pure (validateServiceMarketplaceBookingNotes smbNotes)
-  (adId, slotId) <- either throwError pure (validateServiceMarketplaceBookingRefs smbAdId smbSlotId)
-  pool <- asks envPool
-  now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ do
-    adEnt@(Entity adKey _) <- resolveServiceAdEntity adId
-    slotEnt@(Entity slotKey _) <- resolveServiceAdSlotEntity slotId
-    let ad = entityVal adEnt
-        slot = entityVal slotEnt
-        providerId = serviceAdProviderPartyId ad
-    when (not (serviceAdActive ad)) $ liftIO $ throwIO err409 { errBody = "Service ad is inactive" }
-    case validateServiceMarketplaceBookingSlot adKey slot of
-      Left serverErr -> liftIO $ throwIO serverErr
-      Right () -> pure ()
-    when (providerId == auPartyId user) $ liftIO $ throwIO err400 { errBody = "Cannot book your own service ad" }
-    let orderTitle = fromMaybe (serviceAdHeadline ad) titleVal
-    catalogId <- maybe (liftIO $ throwIO err409 { errBody = "Service ad is missing catalogId" }) pure (serviceAdServiceCatalogId ad)
-    catalog <- get catalogId
-    catalogKind <- case validateServiceMarketplaceCatalog catalog of
-      Left serverErr -> liftIO $ throwIO serverErr
-      Right kind -> pure kind
-    offeringEntity <- do
-      mapped <- getBy (Catalog.UniqueServiceOfferingLegacyId (Just (fromSqlKey catalogId)))
-      maybe
-        (liftIO $ throwIO err409 { errBody = "Service ad catalog has no canonical service offering mapping" })
-        pure
-        mapped
-    offeringUuid <-
-      maybe
-        (liftIO $ throwIO err500 { errBody = "Canonical service offering key is not a UUID" })
-        pure
-        (serviceOfferingUUIDFromKey (entityKey offeringEntity))
-    _ <- loadSelectableServiceOffering now offeringUuid
-    serviceOrderId <- insert ServiceOrder
-      { serviceOrderCustomerId = auPartyId user
-      , serviceOrderArtistId = Just providerId
-      , serviceOrderCatalogId = catalogId
-      , serviceOrderServiceOfferingId = Just offeringUuid
-      , serviceOrderServiceKind = catalogKind
-      , serviceOrderTitle = Just orderTitle
-      , serviceOrderDescription = notesVal
-      , serviceOrderStatus = "escrow_held"
-      , serviceOrderPriceQuotedCents = Just (serviceAdFeeCents ad)
-      , serviceOrderQuoteSentAt = Just now
-      , serviceOrderScheduledStart = Just (serviceAdSlotStartsAt slot)
-      , serviceOrderScheduledEnd = Just (serviceAdSlotEndsAt slot)
-      , serviceOrderCreatedAt = now
-      }
-    bookingId <- insert Booking
-      { bookingTitle = orderTitle
-      , bookingServiceOrderId = Just serviceOrderId
-      , bookingPartyId = Just (auPartyId user)
-      , bookingServiceType = Nothing
-      , bookingServiceOfferingId = Just offeringUuid
-      , bookingBookingTypeId = Nothing
-      , bookingWorkflowStateId = Nothing
-      , bookingEngineerPartyId = Just providerId
-      , bookingEngineerName = Nothing
-      , bookingStartsAt = serviceAdSlotStartsAt slot
-      , bookingEndsAt = serviceAdSlotEndsAt slot
-      , bookingStatus = Confirmed
-      , bookingCreatedBy = Just (auPartyId user)
-      , bookingNotes = notesVal
-      , bookingCreatedAt = now
-      }
-    update slotKey [ServiceAdSlotStatus =. "booked"]
-    paymentId <- insert Payment
-      { paymentInvoiceId = Nothing
-      , paymentOrderId = Just serviceOrderId
-      , paymentPartyId = auPartyId user
-      , paymentMethod = paymentMethodVal
-      , paymentAmountCents = serviceAdFeeCents ad
-      , paymentCurrency = serviceAdCurrency ad
-      , paymentReceivedAt = now
-      , paymentReference = Nothing
-      , paymentConcept = Just "escrow_hold"
-      , paymentPeriod = Nothing
-      , paymentAttachment = Nothing
-      , paymentCreatedBy = Just (auPartyId user)
-      , paymentCreatedAt = Just now
-      }
-    escrowId <- insert ServiceEscrow
-      { serviceEscrowBookingId = bookingId
-      , serviceEscrowServiceOrderId = serviceOrderId
-      , serviceEscrowAdId = adKey
-      , serviceEscrowPatronPartyId = auPartyId user
-      , serviceEscrowProviderPartyId = providerId
-      , serviceEscrowAmountCents = serviceAdFeeCents ad
-      , serviceEscrowCurrency = serviceAdCurrency ad
-      , serviceEscrowStatus = "held"
-      , serviceEscrowHeldPaymentId = Just paymentId
-      , serviceEscrowReleasedPaymentId = Nothing
-      , serviceEscrowHeldAt = now
-      , serviceEscrowReleasedAt = Nothing
-      }
-    pure $ Api.ServiceMarketplaceBookingDTO
-      { Api.smbBookingId = fromSqlKey bookingId
-      , Api.smbServiceOrderId = fromSqlKey serviceOrderId
-      , Api.smbEscrowId = fromSqlKey escrowId
-      , Api.smbEscrowStatus = "held"
-      , Api.smbEscrowAmountCents = serviceAdFeeCents ad
-      , Api.smbEscrowCurrency = serviceAdCurrency ad
-      }
+-- SYS-ESCROW-001: nominal Payment rows are not evidence of held funds.
+-- Keep the route fail-closed until a separately approved verified escrow flow exists.
+createServiceMarketplaceBooking _ _ =
+  throwError err503 { errBody = "Service marketplace booking is unavailable until verified escrow is supported" }
 
 completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 completeServiceMarketplaceBooking user rawBookingId = do
@@ -9991,48 +9719,9 @@ validateServiceMarketplaceCompletion bookingStatusVal escrow
       Left err409 { errBody = "Booking must be confirmed or in progress before marketplace completion" }
 
 releaseServiceMarketplaceEscrow :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
-releaseServiceMarketplaceEscrow user rawBookingId = do
-  pool <- asks envPool
-  now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ do
-    booking@(Entity bookingKey _) <- resolveServiceMarketplaceBookingEntity rawBookingId
-    -- Lock the escrow row to prevent concurrent double-release
-    _ <- rawSql
-      "SELECT id FROM service_escrow WHERE booking_id = ? FOR UPDATE"
-      [toPersistValue bookingKey] ::
-      SqlPersistT IO [Single (Key ServiceEscrow)]
-    escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
-    Entity escrowKey escrow <-
-      either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
-    let canRelease = serviceEscrowPatronPartyId escrow == auPartyId user || hasRole Admin user
-    when (not canRelease) $ liftIO $ throwIO err403
-    when (bookingStatus (entityVal booking) /= Completed) $
-      liftIO $ throwIO err409 { errBody = "Escrow can only be released after booking completion" }
-    when (not (escrowTransitionAllowed (serviceEscrowStatus escrow) "released")) $
-      liftIO $ throwIO err409 { errBody = "Escrow state transition not allowed" }
-    releasePaymentId <- insert Payment
-      { paymentInvoiceId = Nothing
-      , paymentOrderId = Just (serviceEscrowServiceOrderId escrow)
-      , paymentPartyId = serviceEscrowProviderPartyId escrow
-      , paymentMethod = BankTransferM
-      , paymentAmountCents = serviceEscrowAmountCents escrow
-      , paymentCurrency = serviceEscrowCurrency escrow
-      , paymentReceivedAt = now
-      , paymentReference = Nothing
-      , paymentConcept = Just "escrow_release"
-      , paymentPeriod = Nothing
-      , paymentAttachment = Nothing
-      , paymentCreatedBy = Just (auPartyId user)
-      , paymentCreatedAt = Just now
-      }
-    update escrowKey
-      [ ServiceEscrowStatus =. "released"
-      , ServiceEscrowReleasedPaymentId =. Just releasePaymentId
-      , ServiceEscrowReleasedAt =. Just now
-      ]
-    update (serviceEscrowServiceOrderId escrow) [ServiceOrderStatus =. "paid_out"]
-    refreshed <- getJustEntity escrowKey
-    pure (mkEscrowBookingDTO refreshed)
+-- SYS-ESCROW-002: completion or a nominal hold cannot authorize a payout.
+releaseServiceMarketplaceEscrow _ _ =
+  throwError err503 { errBody = "Service marketplace escrow release is unavailable until verified escrow is supported" }
 
 escrowTransitionAllowed :: Text -> Text -> Bool
 escrowTransitionAllowed "held" "released" = True
@@ -10393,6 +10082,7 @@ reviewServiceBookingManualPayment user rawBookingId request = do
                         , Checkout.vpProviderResource = evidenceId
                         , Checkout.vpProviderResourcePath = Nothing
                         , Checkout.vpOrderReference = toPathPiece bookingKey
+                        , Checkout.vpProviderReference = toPathPiece bookingKey
                         , Checkout.vpAmountMinor = sbpcDepositMinor context
                         , Checkout.vpCurrency = sbpcCurrency context
                         , Checkout.vpEvidence = "staff_verified_manual"
@@ -10434,6 +10124,40 @@ insertServiceBookingManualReviewAudit context provider reviewerId attemptId evid
     , PersistText evidenceId
     ]
 
+-- Scheduling module admission is not object authority. Product decision2026-10-05:
+-- only these four roles may inspect/operate the complete studio calendar.
+hasStudioBookingAccess :: AuthedUser -> Bool
+hasStudioBookingAccess user = any (`elem` auRoles user) [Admin, Manager, StudioManager, Reception]
+
+canAccessBooking :: AuthedUser -> Booking -> Bool
+canAccessBooking user booking = hasStudioBookingAccess user
+  || bookingPartyId booking == Just (auPartyId user)
+  || bookingEngineerPartyId booking == Just (auPartyId user)
+
+bookingScopeFilters :: AuthedUser -> [Filter Booking]
+bookingScopeFilters user
+  | hasStudioBookingAccess user = []
+  | otherwise = [BookingPartyId ==. Just (auPartyId user)]
+      ||. [BookingEngineerPartyId ==. Just (auPartyId user)]
+
+-- Keep current-session validation and every mutation in the same transaction.
+-- Constraint/retry failures are conflicts; raw SQL diagnostics stay private.
+runBookingTransaction :: AuthedUser -> SqlPersistT IO (Either ServerError a) -> AppM a
+runBookingTransaction user action = do
+  Env pool _ <- ask
+  outcome <- liftIO $ try $ flip runSqlPool pool $ do
+    checked <- withCurrentAuthSession user action
+    let result = fromMaybe (Left err401) checked
+    case result of
+      Left _ -> transactionUndo >> pure result
+      Right _ -> pure result
+  case outcome of
+    Left sqlError
+      | sqlState sqlError `elem` ["23P01", "23514", "40001", "40P01"] ->
+          throwError err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+      | otherwise -> liftIO (throwIO (sqlError :: SqlError))
+    Right result -> either throwError pure result
+
 listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
 listBookings user mBookingId mPartyId mEngineerPartyId = do
   requireModule user ModuleScheduling
@@ -10449,24 +10173,25 @@ listBookings user mBookingId mPartyId mEngineerPartyId = do
           mBooking <- getEntity bookingKey
           case mBooking of
             Nothing -> pure []
-            Just ent -> buildBookingDTOs [ent]
+            Just ent | canAccessBooking user (entityVal ent) -> buildBookingDTOs [ent]
+                     | otherwise -> pure []
         _ -> do
           let loadByParty pid = do
                 let pidKey = toSqlKey pid :: Key Party
-                selectList [BookingPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+                selectList (bookingScopeFilters user ++ [BookingPartyId ==. Just pidKey]) [Desc BookingStartsAt, LimitTo 500]
               loadByEngineer pid = do
                 let pidKey = toSqlKey pid :: Key Party
-                selectList [BookingEngineerPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+                selectList (bookingScopeFilters user ++ [BookingEngineerPartyId ==. Just pidKey]) [Desc BookingStartsAt, LimitTo 500]
           case (partyIdFilter, engineerPartyIdFilter) of
             (Nothing, Nothing) -> do
-              bookings <- selectList [] [Desc BookingId]
+              bookings <- selectList (bookingScopeFilters user) [Desc BookingId]
               buildBookingDTOs bookings
             _ -> do
               byParty <- maybe (pure []) loadByParty partyIdFilter
               byEngineer <- maybe (pure []) loadByEngineer engineerPartyIdFilter
               let merged = dedupeByKey (byParty ++ byEngineer)
               buildBookingDTOs merged
-    if isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
+    if not (hasStudioBookingAccess user) || isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
       then pure dbBookings
       else do
         courseSessions <- flip runSqlPool pool courseCalendarBookings
@@ -10825,6 +10550,8 @@ loadPublicBookingCheckoutDTO bookingKey lookupToken = do
         sbrvPaymentStatus
         sbrvHoldExpiresAt
         (Api.pbmpStatus <$> manualPayment)
+        sbrvDepositMinor
+        sbrvCurrency
       pure Api.PublicBookingCheckoutDTO
         { Api.pbcBooking = dto
         , Api.pbcCheckoutId = sbrvCheckoutId
@@ -10853,8 +10580,10 @@ loadPublicBookingPaymentMethods
   -> Text
   -> UTCTime
   -> Maybe Text
+  -> Int64
+  -> Text
   -> AppM [Text]
-loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus = do
+loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus amountMinor currency = do
   now <- liftIO getCurrentTime
   if paymentStatus `notElem` ["awaiting_payment", "failed"]
       || holdExpiresAt <= now
@@ -10870,27 +10599,12 @@ loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatu
             Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
           if not domainEnabled
             then pure []
-            else do
-              datafastEnabled <- ((\datafast -> do
-                  if ServiceStorefront.sdfEnvironment datafast /= checkoutEnvironment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      checkoutEnvironment Checkout.ProviderDatafast)
-                =<< ServiceStorefront.loadServiceDatafastEnv)
-                `catchError` const (pure False)
-              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
-                  if paypalEnvironment /= checkoutEnvironment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      checkoutEnvironment Checkout.ProviderPayPal)
-                =<< ServiceStorefront.loadPaypalEnvForService)
-                `catchError` const (pure False)
-              bankTransferEnabled <- runDB $ Checkout.providerEnabledForEnvironment
-                checkoutEnvironment Checkout.ProviderBankTransfer
-              pure $
-                ["datafast" | datafastEnabled]
-                  <> ["paypal" | paypalEnabled]
-                  <> ["bank_transfer" | bankTransferEnabled]
+            else PaymentAvailability.availableImplementedPaymentMethods
+              checkoutEnvironment
+              PaymentAvailability.FlowBooking
+              amountMinor
+              currency
+              True
 
 serviceBookingLookupNotFound :: ServerError
 serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }
@@ -11107,7 +10821,7 @@ beginServiceBookingPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginServiceBookingPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = sbpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = sbpcEnvironment context
@@ -11367,6 +11081,7 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
             , Checkout.vpProviderResource = checkoutId
             , Checkout.vpProviderResourcePath = Just resourcePath
             , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpProviderReference = toPathPiece (sbpcBookingKey context)
             , Checkout.vpAmountMinor = sbpcDepositMinor context
             , Checkout.vpCurrency = sbpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -11407,7 +11122,7 @@ createPublicBookingPaypalOrder rawBookingId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl
+      sharedProviderManager clientId clientSecret baseUrl
       (toPathPiece (sbpcBookingKey context))
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
@@ -11455,7 +11170,7 @@ capturePublicBookingPaypalOrder
       attempt <- beginServiceBookingPaymentAttempt
         context Checkout.ProviderPayPal Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedPaypalOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedPaypalOrderId
         `catchError` failServiceBookingPaymentAttempt
           context attempt Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
@@ -11508,6 +11223,7 @@ capturePublicBookingPaypalOrder
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedPaypalOrderId <> "/capture")
             , Checkout.vpOrderReference = toPathPiece (sbpcBookingKey context)
+            , Checkout.vpProviderReference = toPathPiece (sbpcBookingKey context)
             , Checkout.vpAmountMinor = sbpcDepositMinor context
             , Checkout.vpCurrency = sbpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -11716,7 +11432,6 @@ createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
       | otherwise -> throwError err409
           { errBody = "Idempotency key was already used for a different booking checkout" }
     Nothing -> do
-      partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
       resourceKeys <- runDB $
         resolveResourcesForBooking (Just offering) requestedResourceIds startsAtClean endsAtClean
       let lookupHash = marketplaceSha256Text lookupToken
@@ -11724,7 +11439,7 @@ createPublicBookingCheckout mIdempotency Api.PublicBookingCheckoutReq{..} = do
           resolvedEngineerName = resolveBookingEngineerName engineerNameClean mEngineerParty
       creation <- createServiceBookingCheckoutTransaction
         checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
-        fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+        fullNameClean emailClean notesClean phoneClean mEngineerParty resolvedEngineerName
         offering policy price startsAtClean endsAtClean resourceKeys
       case creation of
         Left serverErr -> throwError serverErr
@@ -11754,7 +11469,7 @@ createServiceBookingCheckoutTransaction
   -> Text
   -> Text
   -> Maybe Text
-  -> Key Party
+  -> Maybe Text
   -> Maybe (Entity Party)
   -> Maybe Text
   -> Entity Catalog.ServiceOffering
@@ -11766,7 +11481,7 @@ createServiceBookingCheckoutTransaction
   -> AppM (Either ServerError (Key Booking))
 createServiceBookingCheckoutTransaction
     checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
-    fullNameClean emailClean notesClean partyId mEngineerParty resolvedEngineerName
+    fullNameClean emailClean notesClean phoneClean mEngineerParty resolvedEngineerName
     (Entity offeringKey offering) policy price startsAtClean endsAtClean resourceKeys = do
   Env{ envPool } <- ask
   result <- liftIO $
@@ -11814,6 +11529,10 @@ createServiceBookingCheckoutTransaction
           { errBody = "Approved booking service references a missing service-order catalog" }) pure mCatalog
       let totalMinorInt = fromIntegral (ServiceBookings.bpbTotalMinor price)
           serviceLabel = Catalog.serviceOfferingNameEs offering
+      -- The request lock and existing-order check precede contact creation.
+      -- Email is contact data, never proof of access to an existing account.
+      partyResult <- ensurePartyRecordDb now (Just fullNameClean) emailClean phoneClean
+      partyId <- either (liftIO . throwIO) pure partyResult
       serviceOrderKey <- insert ServiceOrder
         { serviceOrderCustomerId = partyId
         , serviceOrderArtistId = entityKey <$> mEngineerParty
@@ -12086,7 +11805,6 @@ createPublicTentativeBookingTransaction
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do
   requireModule user ModuleScheduling
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
 
   titleClean <- either throwError pure (validateRequiredBookingTitle (cbTitle req))
@@ -12101,11 +11819,13 @@ createBooking user req = do
   partyIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "partyId" (cbPartyId req)
-  mParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "partyId" partyIdClean))
+  unless (hasStudioBookingAccess user || maybe True (== fromSqlKey (auPartyId user)) partyIdClean) $
+    throwError err403 { errBody = "Booking creation requires the customer owner or studio staff" }
+  let effectivePartyId = if hasStudioBookingAccess user then partyIdClean else Just (fromSqlKey (auPartyId user))
+  mParty <- runDB (resolveOptionalBookingPartyReference "partyId" effectivePartyId)
       >>= either throwError pure
   mEngineerParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingEngineerReference engineerIdClean))
+    runDB (resolveOptionalBookingEngineerReference engineerIdClean)
       >>= either throwError pure
   let engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = entityKey <$> mParty
@@ -12133,12 +11853,12 @@ createBooking user req = do
         , bookingStartsAt       = cbStartsAt req
         , bookingEndsAt         = cbEndsAt req
         , bookingStatus         = status'
-        , bookingCreatedBy      = Nothing
+        , bookingCreatedBy      = Just (auPartyId user)
         , bookingNotes          = notesClean
         , bookingCreatedAt      = now
         }
 
-  dtoResult <- liftIO $ flip runSqlPool pool $ do
+  dto <- runBookingTransaction user $ do
     bookingId <- insert bookingRecord
     let uniqueResources = nub resourceKeys
     forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
@@ -12150,7 +11870,6 @@ createBooking user req = do
     created <- getJustEntity bookingId
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
-  dto <- either throwError pure dtoResult
   notifyEngineerIfNeeded dto
   pure dto
 
@@ -12159,7 +11878,6 @@ updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   bookingIdValid <- either throwError pure (validatePositiveIdField "bookingId" bookingIdI)
   either throwError pure (validateUpdateBookingRequestHasChanges req)
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
@@ -12169,10 +11887,15 @@ updateBooking user bookingIdI req = do
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
   let bookingId = toSqlKey bookingIdValid :: Key Booking
-  result <- liftIO $ flip runSqlPool pool $ do
+  runBookingTransaction user $ do
+    -- Serialize read/replace so concurrent edits cannot overwrite unrelated fields
+    -- from an older record. The database projection enforces resource exclusion.
+    _ <- (rawSql "SELECT id FROM booking WHERE id = ? FOR UPDATE"
+      [toPersistValue bookingId] :: SqlPersistT IO [Single Int64])
     mBooking <- getEntity bookingId
     case mBooking of
       Nothing -> pure (Left err404)
+      Just (Entity _ current) | not (canAccessBooking user current) -> pure (Left err404)
       Just (Entity _ current) -> do
         existingServiceOffering <-
           case bookingServiceOfferingId current >>= serviceOfferingKeyFromUUID of
@@ -12227,7 +11950,6 @@ updateBooking user bookingIdI req = do
                         replace bookingId updated
                         dtos <- buildBookingDTOs [Entity bookingId updated]
                         pure (maybe (Left err500) Right (listToMaybe dtos))
-  either throwError pure result
 
 resolveOptionalBookingPartyReference
   :: Text
@@ -12473,29 +12195,10 @@ validateChatMessageListLookup
   -> Maybe Int64
   -> Maybe Int64
   -> Either ServerError (Int64, Maybe Int64, Maybe Int64)
-validateChatMessageListLookup threadId mBeforeId mAfterId = do
-  threadIdValid <- validatePositiveIdField "threadId" threadId
-  beforeIdValid <- validateOptionalPositiveIdField "beforeId" mBeforeId
-  afterIdValid <- validateOptionalPositiveIdField "afterId" mAfterId
-  when (isJust beforeIdValid && isJust afterIdValid) $
-    Left err400 { errBody = "Use either beforeId or afterId" }
-  pure (threadIdValid, beforeIdValid, afterIdValid)
+validateChatMessageListLookup = SocialChat.validateLookup
 
 validateChatSendMessageBody :: Text -> Either ServerError Text
-validateChatSendMessageBody rawBody
-  | T.null body =
-      Left err400 { errBody = "Mensaje vacío" }
-  | T.length body > 5000 =
-      Left err400 { errBody = "Mensaje demasiado largo (max 5000 caracteres)" }
-  | T.any isUnsupportedChatMessageChar body =
-      Left err400 { errBody = "message must not contain control or formatting characters" }
-  | otherwise =
-      Right body
-  where
-    body = T.strip rawBody
-    isUnsupportedChatMessageChar ch =
-      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
-        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+validateChatSendMessageBody = SocialChat.validateBody
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
@@ -13587,18 +13290,19 @@ unavailableDefaultResourcesError serviceLabel names =
     }
 
 isResourceAvailableDB :: Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO Bool
+isResourceAvailableDB _ start end | start >= end = pure False
 isResourceAvailableDB resourceKey start end = do
-  bookingResources <- selectList [BookingResourceResourceId ==. resourceKey] []
-  let bookingIds = map (bookingResourceBookingId . entityVal) bookingResources
-  if null bookingIds
-    then pure True
-    else do
-      bookings <- selectList [BookingId <-. bookingIds] []
-      let activeBookings = filter (\(Entity _ b) -> bookingStatus b `notElem` [Cancelled, NoShow]) bookings
-      pure $ all (noOverlap . entityVal) activeBookings
-  where
-    noOverlap booking =
-      bookingEndsAt booking <= start || bookingStartsAt booking >= end
+  -- The exclusion-backed allocation is the authority, including paid runtime
+  -- holds and released/completed history. Booking status alone is insufficient.
+  rows <- (rawSql
+    "SELECT EXISTS (SELECT 1 FROM service_booking_resource_allocation\
+    \ WHERE resource_id = ? AND allocation_status IN ('holding','reserved')\
+    \ AND starts_at < ? AND ends_at > ?)"
+    [toPersistValue resourceKey, PersistUTCTime end, PersistUTCTime start]
+    :: SqlPersistT IO [Single Bool])
+  pure $ case rows of
+    [Single occupied] -> not occupied
+    _ -> False
 
 -- Packages
 packageServer :: AuthedUser -> ServerT PackageAPI AppM
@@ -13820,7 +13524,7 @@ createInvoice user CreateInvoiceReq{..} = do
     validatePreparedCents
       "Invoice total"
       (sum (map (toInteger . plTotal) preparedLines))
-  Env pool cfg <- ask
+  Env _ cfg <- ask
   currency <-
     maybe
       (either throwError pure (validateCurrencyCode (Just (defaultCurrency cfg))))
@@ -13828,13 +13532,10 @@ createInvoice user CreateInvoiceReq{..} = do
       explicitCurrency
   unless (currency `elem` supportedCurrencies cfg) $
     throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
-  customerKey <- do
-    resolved <- liftIO $ flip runSqlPool pool $ resolveInvoiceCustomerId ciCustomerId
-    either throwError pure resolved
   now <- liftIO getCurrentTime
   let day      = utctDay now
       notes    = normalizeOptionalText ciNotes
-      invoiceRecord = Invoice
+      invoiceRecord customerKey = Invoice
         { invoiceCustomerId    = customerKey
         , invoiceIssueDate     = day
         , invoiceDueDate       = day
@@ -13848,9 +13549,11 @@ createInvoice user CreateInvoiceReq{..} = do
         , invoiceNotes         = notes
         , invoiceCreatedAt     = now
         }
-  (invoiceEnt, lineEntities, maybeReceiptKey) <- liftIO $ flip runSqlPool pool $ do
-    iid <- insert invoiceRecord
-    let invEntity = Entity iid invoiceRecord
+  (invoiceEnt, lineEntities, maybeReceiptKey) <- runInvoiceTransaction user $ do
+    customerKey <- resolveInvoiceCustomerId ciCustomerId >>= either rejectInvoiceTransaction pure
+    let record = invoiceRecord customerKey
+    iid <- insert record
+    let invEntity = Entity iid record
     invoiceLines <- forM preparedLines $ \pl -> do
       let line = invoiceLineFromPrepared iid pl
       lid <- insert line
@@ -13895,34 +13598,60 @@ createReceipt user CreateReceiptReq{..} = do
   currencyOverride <- either throwError pure (validateReceiptCurrency crCurrency)
   buyerNameOverride <- either throwError pure (validateReceiptBuyerName crBuyerName)
   buyerEmailOverride <- either throwError pure (validateReceiptBuyerEmail crBuyerEmail)
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
   let iid = toSqlKey invoiceIdValid :: Key Invoice
-  result <- liftIO $ flip runSqlPool pool $ do
-    mInvoice <- getEntity iid
-    case mInvoice of
-      Nothing      -> pure (Left "invoice-not-found")
-      Just invEnt -> do
-        existing <- selectFirst [ReceiptInvoiceId ==. iid] []
-        case existing of
-          Just receiptEnt -> do
-            receiptLines <- selectList [ReceiptLineReceiptId ==. entityKey receiptEnt] [Asc ReceiptLineId]
-            pure (Right (receiptToDTO receiptEnt receiptLines))
-          Nothing -> do
-            invoiceLines <- selectList [InvoiceLineInvoiceId ==. iid] [Asc InvoiceLineId]
-            if null invoiceLines
-              then pure (Left "invoice-empty")
-              else do
-                (receiptEnt, receiptLines) <-
-                  issueReceipt now buyerNameOverride buyerEmailOverride
-                               (normalizeOptionalText crNotes) currencyOverride
-                               invEnt invoiceLines
-                pure (Right (receiptToDTO receiptEnt receiptLines))
+      notesOverride = normalizeOptionalText crNotes
+  runInvoiceTransaction user $ do
+    -- This row is the idempotency domain. Same-invoice replays serialize here;
+    -- different invoices share only the short annual number allocation lock.
+    invoices <- rawSql "SELECT ?? FROM invoice WHERE id=? FOR UPDATE" [toPersistValue iid]
+    invEnt <- case invoices of
+      [entity] -> pure entity
+      _ -> rejectInvoiceTransaction err404 { errBody = "Invoice not found" }
+    let inv = entityVal invEnt
+    when (maybe False (/= invoiceCurrency inv) currencyOverride) $
+      rejectInvoiceTransaction err422 { errBody = "Receipt currency must match invoice currency" }
+    existing <- getBy (UniqueReceiptInvoice iid)
+    case existing of
+      Just receiptEnt@(Entity rid rec) -> do
+        unless (maybe True (== M.receiptBuyerName rec) buyerNameOverride
+             && maybe True (\value -> Just value == M.receiptBuyerEmail rec) buyerEmailOverride
+             && maybe True (\value -> Just value == M.receiptNotes rec) notesOverride) $
+          rejectInvoiceTransaction err409 { errBody = "Receipt replay parameters differ from issued evidence" }
+        receiptLines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+        pure (receiptToDTO receiptEnt receiptLines)
+      Nothing -> do
+        invoiceLines <- rawSql
+          "SELECT ?? FROM invoice_line WHERE invoice_id=? ORDER BY id FOR SHARE"
+          [toPersistValue iid]
+        (receiptEnt, receiptLines) <- issueReceipt now buyerNameOverride buyerEmailOverride
+          notesOverride currencyOverride invEnt invoiceLines
+        pure (receiptToDTO receiptEnt receiptLines)
+
+-- Throw inside runSqlPool so every rejected write rolls back before conversion
+-- to an HTTP error. Unexpected and asynchronous failures retain their semantics.
+newtype InvoiceTransactionRejected = InvoiceTransactionRejected ServerError deriving Show
+instance Exception InvoiceTransactionRejected
+
+rejectInvoiceTransaction :: ServerError -> SqlPersistT IO a
+rejectInvoiceTransaction = liftIO . throwIO . InvoiceTransactionRejected
+
+runInvoiceTransaction :: AuthedUser -> SqlPersistT IO a -> AppM a
+runInvoiceTransaction user action = do
+  Env pool _ <- ask
+  result <- liftIO $ Safe.tryAny $ flip runSqlPool pool $ do
+    admitted <- withCurrentModuleAccess ModuleInvoicing user action
+    either rejectInvoiceTransaction pure admitted
   case result of
-    Left "invoice-not-found" -> throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 "Invoice not found") }
-    Left "invoice-empty"     -> throwBadRequest "Invoice has no line items to receipt"
-    Left otherMsg             -> throwBadRequest otherMsg
-    Right dto                 -> pure dto
+    Right value -> pure value
+    Left failure -> case fromException failure of
+      Just (InvoiceTransactionRejected rejected) -> throwError rejected
+      Nothing -> case fromException failure of
+        Just sqlError
+          | sqlState sqlError `elem` ["23505", "23503", "23514", "22003", "40001", "40P01"] ->
+              throwError err409 { errBody = "Invoice receipt conflicts with stored evidence; reload before retrying" }
+          | otherwise -> liftIO (throwIO (sqlError :: SqlError))
+        Nothing -> liftIO (throwIO failure)
 
 getReceipt :: AuthedUser -> Int64 -> AppM ReceiptDTO
 getReceipt user ridParam = do
@@ -14257,18 +13986,17 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
       defaultEmail = party >>= partyPrimaryEmail
       buyerName    = fromMaybe defaultName mBuyerName
       buyerEmail   = mBuyerEmail <|> defaultEmail
-      currency     = maybe (invoiceCurrency inv) (normalizeCurrency . Just) mCurrency
+      currency     = invoiceCurrency inv
       notes        = mNotes <|> invoiceNotes inv
-      calcTotals (Entity _ line) =
-        let lineSubtotal = invoiceLineQuantity line * invoiceLineUnitCents line
-            lineTotal    = invoiceLineTotalCents line
-        in (lineSubtotal, lineTotal - lineSubtotal, lineTotal)
-      subtotals = [ s | ent <- lineEntities, let (s, _, _) = calcTotals ent ]
-      taxPieces = [ t | ent <- lineEntities, let (_, t, _) = calcTotals ent ]
-      totals    = [ tot | ent <- lineEntities, let (_, _, tot) = calcTotals ent ]
-      subtotal  = sum subtotals
-      taxTotal  = sum taxPieces
-      total     = sum totals
+  when (maybe False (/= currency) mCurrency) $
+    rejectInvoiceTransaction err422 { errBody = "Receipt currency must match invoice currency" }
+  (subtotal, taxTotal, total) <- either
+    (\message -> rejectInvoiceTransaction err422 { errBody = BL.fromStrict (TE.encodeUtf8 message) })
+    pure $ validateReceiptSnapshot
+      (invoiceSubtotalCents inv, invoiceTaxCents inv, invoiceTotalCents inv)
+      [ (invoiceLineQuantity line, invoiceLineUnitCents line,
+         invoiceLineTaxBps line, invoiceLineTotalCents line)
+      | Entity _ line <- lineEntities ]
   number <- generateReceiptNumber (utctDay now)
   let receiptRecord = Receipt
         { receiptInvoiceId    = iid
@@ -14286,7 +14014,7 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
         , receiptCreatedAt    = now
         }
   rid <- insert receiptRecord
-  receiptLines <- forM lineEntities $ \(Entity _ line) -> do
+  forM_ lineEntities $ \(Entity _ line) -> do
     let lineRecord = ReceiptLine
           { receiptLineReceiptId = rid
           , receiptLineDescription = invoiceLineDescription line
@@ -14295,18 +14023,22 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
           , receiptLineTaxBps      = Just (invoiceLineTaxBps line)
           , receiptLineTotalCents  = invoiceLineTotalCents line
           }
-    rlId <- insert lineRecord
-    pure (Entity rlId lineRecord)
-  pure (Entity rid receiptRecord, receiptLines)
+    insert_ lineRecord
+  -- PostgreSQL normalizes timestamps to its storage precision. Return the
+  -- persisted representation on first issuance as well as every replay.
+  persistedReceipt <- getJust rid
+  persistedLines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+  pure (Entity rid persistedReceipt, persistedLines)
 
 generateReceiptNumber :: Day -> SqlPersistT IO Text
 generateReceiptNumber day = do
   let (year, _, _) = toGregorian day
-      start = fromGregorian year 1 1
-      next  = fromGregorian (year + 1) 1 1
-  countForYear <- count [ReceiptIssueDate >=. start, ReceiptIssueDate <. next]
-  let sequenceNumber = countForYear + 1
-  pure (T.pack (printf "R-%04d-%04d" year sequenceNumber))
+  allocated <- rawSql
+    "INSERT INTO receipt_number_counter(receipt_year,last_number) VALUES (?,1) ON CONFLICT (receipt_year) DO UPDATE SET last_number=receipt_number_counter.last_number+1 RETURNING last_number"
+    [PersistInt64 (fromInteger year)] :: SqlPersistT IO [Single Int64]
+  case allocated of
+    [Single sequenceNumber] -> pure (T.pack (printf "R-%04d-%04d" year sequenceNumber))
+    _ -> rejectInvoiceTransaction err409 { errBody = "Receipt number allocation failed" }
 
 throwBadRequest :: Text -> AppM a
 throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
@@ -14390,32 +14122,65 @@ validateAdsInquiry AdsInquiry{..} = do
     , aiChannel = channelClean
     }
 
-adsInquiryPublic :: AdsInquiry -> AppM AdsInquiryOut
-adsInquiryPublic rawInquiry = do
+adsInquiryPublic :: Maybe Text -> AdsInquiry -> AppM AdsInquiryOut
+adsInquiryPublic maybeKey rawInquiry = do
   inquiry <- either throwError pure (validateAdsInquiry rawInquiry)
+  requestKey <- either throwError pure (validateAdsInquiryRequestKey maybeKey)
   env <- ask
   now <- liftIO getCurrentTime
-  partyId <- runDB (ensurePartyForInquiry inquiry now) >>= either throwError pure
-  (mSubjectKey, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
-  inquiryId <- runDB $ do
-    rid <- insert (Trials.LeadInterest
-      { Trials.leadInterestPartyId   = partyId
-      , Trials.leadInterestInterestType = "ad_inquiry"
-      , Trials.leadInterestSubjectId = mSubjectKey
-      , Trials.leadInterestDetails   = fmap T.strip (aiMessage inquiry)
-      , Trials.leadInterestSource    = T.toLower (fromMaybe "ads" (aiChannel inquiry))
-      , Trials.leadInterestDriveLink = Nothing
-      , Trials.leadInterestStatus    = "Open"
-      , Trials.leadInterestCreatedAt = now
-      })
-    pure rid
-  channels <- liftIO $ sendAutoReplies (envPool env) partyId (envConfig env) inquiry courseLabel
-  pure AdsInquiryOut
-    { aioOk = True
-    , aioInquiryId = entityKeyInt inquiryId
-    , aioPartyId = entityKeyInt partyId
-    , aioRepliedVia = channels
-    }
+  (fresh, response) <- runDB (createAdsInquiryDb requestKey inquiry now) >>= either throwError pure
+  if not fresh then pure response else do
+    -- The committed receipt reserves notification dispatch exactly once. A
+    -- crash or ambiguous external response is reviewed; retries never resend.
+    (_, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
+    attempted <- liftIO $ (try (sendAutoReplies (envPool env) (toSqlKey (fromIntegral (aioPartyId response))) (envConfig env) inquiry courseLabel) :: IO (Either SomeException [Text]))
+    case attempted of
+      Left _ -> do
+        runDB $ rawExecute "UPDATE identity_ads_request SET notification_state='review' WHERE request_key=?" [PersistText requestKey]
+        pure response
+      Right channels -> do
+        let completed = response { aioRepliedVia = channels }
+        runDB $ rawExecute "UPDATE identity_ads_request SET notification_state=?, response_payload=?::jsonb WHERE request_key=?"
+          [PersistText (if null channels then "review" else "completed"), PersistText (TE.decodeUtf8 (BL.toStrict (encode completed))), PersistText requestKey]
+        pure completed
+
+validateAdsInquiryRequestKey :: Maybe Text -> Either ServerError Text
+validateAdsInquiryRequestKey (Just key)
+  | T.length key >= 16 && T.length key <= 128
+  , T.all (\ch -> ch <= '\x7f' && (isAlphaNum ch || ch == '-' || ch == '_')) key = Right key
+validateAdsInquiryRequestKey _ = Left err400 { errBody = "Refresh the form before submitting: a valid Idempotency-Key is required." }
+
+createAdsInquiryDb :: Text -> AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError (Bool, AdsInquiryOut))
+createAdsInquiryDb requestKey inquiry now = do
+  let payload = TE.decodeUtf8 (BL.toStrict (encode inquiry))
+  _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended('public-ads:' || ?, 0))" [PersistText requestKey] :: SqlPersistT IO [Single Int64])
+  saved <- (rawSql "SELECT request_payload=?::jsonb, response_payload::text FROM identity_ads_request WHERE request_key=?" [PersistText payload,PersistText requestKey] :: SqlPersistT IO [(Single Bool, Single Text)])
+  case saved of
+    [(Single True, Single response)] -> pure $ case eitherDecodeStrict' (TE.encodeUtf8 response) of
+      Left _ -> Left err500 { errBody = "Saved inquiry requires review" }
+      Right accepted -> Right (False, accepted)
+    [_] -> pure $ Left err409 { errBody = "This inquiry was already saved with different details." }
+    [] -> do
+      partyResult <- ensurePartyForInquiry inquiry now
+      case partyResult of
+        Left err -> pure (Left err)
+        Right partyId -> do
+          (subjectKey, _) <- resolveSubject (aiCourse inquiry)
+          inquiryId <- insert (Trials.LeadInterest
+            { Trials.leadInterestPartyId = partyId
+            , Trials.leadInterestInterestType = "ad_inquiry"
+            , Trials.leadInterestSubjectId = subjectKey
+            , Trials.leadInterestDetails = fmap T.strip (aiMessage inquiry)
+            , Trials.leadInterestSource = T.toLower (fromMaybe "ads" (aiChannel inquiry))
+            , Trials.leadInterestDriveLink = Nothing
+            , Trials.leadInterestStatus = "Open"
+            , Trials.leadInterestCreatedAt = now
+            })
+          let response = AdsInquiryOut True (entityKeyInt inquiryId) (entityKeyInt partyId) []
+          rawExecute "INSERT INTO identity_ads_request(request_key,party_id,lead_interest_id,request_payload,response_payload,notification_state) VALUES (?,?,?,?::jsonb,?::jsonb,'dispatching')"
+            [PersistText requestKey,toPersistValue partyId,toPersistValue inquiryId,PersistText payload,PersistText (TE.decodeUtf8 (BL.toStrict (encode response)))]
+          pure $ Right (True,response)
+    _ -> pure $ Left err500 { errBody = "Inquiry identity requires review" }
 
 validateAdsAssistRequest
   :: AdsAssistRequest
@@ -15446,7 +15211,7 @@ maxChatKitExpiryAnchorChars = 64
 
 isChatKitExpiryAnchorChar :: Char -> Bool
 isChatKitExpiryAnchorChar ch =
-  isAscii ch && (isAlphaNum ch || ch `elem` ("_-" :: String))
+  ch <= '\x7f' && (isAlphaNum ch || ch `elem` ("_-" :: String))
 
 rejectNullChatKitExpiryField :: Text -> Object -> Parser ()
 rejectNullChatKitExpiryField fieldName expiresAfter =
@@ -15707,68 +15472,22 @@ extractOutputFragments value =
   in directText <> partText
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError PartyId)
-ensurePartyForInquiry AdsInquiry{..} now = do
-  let emailClean = T.strip <$> aiEmail
-      phoneClean = aiPhone >>= normalizePhone
-      display = fromMaybe "Contacto Ads" (T.strip <$> aiName)
-  existingResult <- case emailClean of
-    Just e  -> selectUniquePartyByPrimaryEmail e
-    Nothing -> case phoneClean of
-      Just p  -> selectUniquePartyByPrimaryPhone p
-      Nothing -> pure (Right Nothing)
-  case existingResult of
-    Left err -> pure (Left err)
-    Right mExisting ->
-      Right <$> upsertInquiryParty emailClean phoneClean display mExisting
-  where
-    upsertInquiryParty emailClean phoneClean display (Just (Entity pid party)) = do
-      let updates = catMaybes
-            [ if isJust (M.partyPrimaryEmail party) || isNothing emailClean
-                then Nothing
-                else Just (M.PartyPrimaryEmail =. emailClean)
-            , if isJust (M.partyPrimaryPhone party) || isNothing phoneClean
-                then Nothing
-                else Just (M.PartyPrimaryPhone =. phoneClean)
-            , if isJust (M.partyWhatsapp party) || isNothing phoneClean
-                then Nothing
-                else Just (M.PartyWhatsapp =. phoneClean)
-            , if T.null (M.partyDisplayName party) && not (T.null display)
-                then Just (M.PartyDisplayName =. display)
-                else Nothing
-            ]
-      unless (null updates) $
-        update pid updates
-      ensureStudentRole pid
-      pure pid
-    upsertInquiryParty emailClean phoneClean display Nothing = do
-      pid <- insert M.Party
-        { M.partyLegalName        = Nothing
-        , M.partyDisplayName      = display
-        , M.partyIsOrg            = False
-        , M.partyTaxId            = Nothing
-        , M.partyPrimaryEmail     = emailClean
-        , M.partyPrimaryPhone     = phoneClean
-        , M.partyWhatsapp         = phoneClean
-        , M.partyInstagram        = Nothing
-        , M.partyEmergencyContact = Nothing
-        , M.partyNotes            = Nothing
-        , M.partyStripeCustomerId = Nothing
-        , M.partyCountryCode       = Nothing
-        , M.partyCountryId         = Nothing
-        , M.partyCreatedAt        = now
-        }
-      ensureStudentRole pid
-      pure pid
-
-    ensureStudentRole pid =
-      requireAutomaticSecurityPolicyDb
-        "trial.inquiry.student"
-        pid
-        False
-        Nothing
-        "trial-inquiry"
-        ("trial-inquiry:" <> T.pack (show (fromSqlKey pid)))
-        now
+ensurePartyForInquiry AdsInquiry{..} now = fmap Right $ insert M.Party
+  { M.partyLegalName = Nothing
+  , M.partyDisplayName = fromMaybe "Contacto Ads" (T.strip <$> aiName)
+  , M.partyIsOrg = False
+  , M.partyTaxId = Nothing
+  , M.partyPrimaryEmail = T.strip <$> aiEmail
+  , M.partyPrimaryPhone = aiPhone >>= normalizePhone
+  , M.partyWhatsapp = Nothing
+  , M.partyInstagram = Nothing
+  , M.partyEmergencyContact = Nothing
+  , M.partyNotes = Nothing
+  , M.partyStripeCustomerId = Nothing
+  , M.partyCountryCode = Nothing
+  , M.partyCountryId = Nothing
+  , M.partyCreatedAt = now
+  }
 
 resolveSubject :: Maybe Text -> SqlPersistT IO (Maybe (Key Trials.Subject), Maybe Text)
 resolveSubject mCourse =
@@ -16003,14 +15722,23 @@ listMarketplace = do
           selectList
             [ME.MarketplaceListingActive ==. True]
             [Asc ME.MarketplaceListingTitle]
-        forM listings $ \(Entity lid listing) -> do
-          mAsset <- get (ME.marketplaceListingAssetId listing)
-          pure (lid, listing, mAsset)
-  rows <- liftIO $ flip runSqlPool envPool loadListings
+        if null listings
+          then pure ([], Map.empty)
+          else do
+            assets <- getMany (map (ME.marketplaceListingAssetId . entityVal) listings)
+            rentalTerms <- loadPublicMarketplaceRentalTerms (map entityKey listings)
+            pure
+              ( [ (lid, listing, Map.lookup (ME.marketplaceListingAssetId listing) assets)
+                | Entity lid listing <- listings
+                ]
+              , rentalTerms
+              )
+      renderListings (rows, rentalTerms) =
+        fmap catMaybes $ forM rows $ \row@(lid, _, _) ->
+          toMarketplaceDTOWithTerms assetsBase (Map.lookup (toPathPiece lid) rentalTerms) row
+  loaded@(rows, _) <- liftIO $ flip runSqlPool envPool loadListings
   if not (null rows)
-    then do
-      dtos <- forM rows (toMarketplaceDTO assetsBase)
-      pure (catMaybes dtos)
+    then renderListings loaded
     else if seedDatabase envConfig
     then do
       -- Auto-publish demo inventory so the public marketplace is never empty.
@@ -16018,8 +15746,7 @@ listMarketplace = do
         seedInventoryAssets
         seedMarketplaceListings
       seeded <- liftIO $ flip runSqlPool envPool loadListings
-      dtos <- forM seeded (toMarketplaceDTO assetsBase)
-      pure (catMaybes dtos)
+      renderListings seeded
     else
       pure []
 
@@ -16136,10 +15863,21 @@ toMarketplaceDTO
   -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
   -> AppM (Maybe MarketplaceItemDTO)
 toMarketplaceDTO _ (_, _, Nothing) = pure Nothing
-toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
-  mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
+toMarketplaceDTO assetsBase row@(lid, _, _) = do
   Env{ envPool } <- ask
   mRentalTerms <- liftIO $ flip runSqlPool envPool $ loadActiveMarketplaceRentalTerms lid
+  toMarketplaceDTOWithTerms assetsBase mRentalTerms row
+
+-- The public collection loads these inputs in bulk; item/checkout callers retain
+-- the same authoritative per-listing terms query and DTO construction.
+toMarketplaceDTOWithTerms
+  :: Text
+  -> Maybe MarketplaceRentalTerms
+  -> (Key ME.MarketplaceListing, ME.MarketplaceListing, Maybe ME.Asset)
+  -> AppM (Maybe MarketplaceItemDTO)
+toMarketplaceDTOWithTerms _ _ (_, _, Nothing) = pure Nothing
+toMarketplaceDTOWithTerms assetsBase mRentalTerms (lid, listing, Just asset) = do
+  mPhoto <- liftIO $ resolveMarketplacePhotoUrl assetsBase (ME.assetPhotoUrl asset)
   let listedPrice = maybe
         (ME.marketplaceListingPriceUsdCents listing)
         mrtDailyRateCents
@@ -16192,6 +15930,42 @@ data MarketplaceRentalTerms = MarketplaceRentalTerms
   , mrtTermsVersion :: Text
   , mrtTermsSummary :: Text
   } deriving (Eq, Show)
+
+-- Bind the already selected listing IDs. Re-reading listing.active under READ
+-- COMMITTED could remove approved terms after concurrent fulfillment deactivates
+-- an asset, causing a selected rental to fall back to its base price.
+loadPublicMarketplaceRentalTerms :: [Key ME.MarketplaceListing] -> SqlPersistT IO (Map.Map Text MarketplaceRentalTerms)
+loadPublicMarketplaceRentalTerms [] = pure Map.empty
+loadPublicMarketplaceRentalTerms listingIds = do
+  let placeholders = T.intercalate "," (replicate (length listingIds) "?::uuid")
+  rows <- (rawSql
+    ("SELECT CAST(t.listing_id AS TEXT), t.daily_rate_usd_cents, t.weekly_rate_usd_cents, t.security_deposit_usd_cents," <>
+     " t.late_fee_usd_cents, t.min_days, t.max_days, t.cancellation_window_hours, t.timezone, t.terms_version, t.terms_summary" <>
+     " FROM marketplace_rental_listing_terms t" <>
+     " WHERE t.listing_id IN (" <> placeholders <> ") AND t.active AND t.approved_at IS NOT NULL")
+    (map (PersistText . toPathPiece) listingIds)
+    :: SqlPersistT IO
+      [( Single Text, Single Int64, Single (Maybe Int64), Single Int64, Single Int64
+       , Single Int, Single Int, Single Int, Single Text, Single Text, Single Text
+       )])
+  pure $ Map.fromList
+    [ (listingId, MarketplaceRentalTerms
+        { mrtDailyRateCents = fromIntegral dailyRate
+        , mrtWeeklyRateCents = fromIntegral <$> weeklyRate
+        , mrtSecurityDepositCents = fromIntegral securityDeposit
+        , mrtLateFeeCents = fromIntegral lateFee
+        , mrtMinDays = minDays
+        , mrtMaxDays = maxDays
+        , mrtCancellationWindowHours = cancellationWindowHours
+        , mrtTimezone = timezone
+        , mrtTermsVersion = termsVersion
+        , mrtTermsSummary = termsSummary
+        })
+    | ( Single listingId, Single dailyRate, Single weeklyRate, Single securityDeposit, Single lateFee
+      , Single minDays, Single maxDays, Single cancellationWindowHours, Single timezone, Single termsVersion
+      , Single termsSummary
+      ) <- rows
+    ]
 
 loadActiveMarketplaceRentalTerms
   :: Key ME.MarketplaceListing
@@ -16253,14 +16027,14 @@ createCart = do
   Env{..} <- ask
   cartId <- liftIO $ flip runSqlPool envPool $ insert $ ME.MarketplaceCart now now
   cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartId
-  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace cart" cartDto)
+  either throwError pure (cartDto >>= requireLoadedMarketplaceWriteResult "Marketplace cart")
 
 getCart :: Text -> AppM MarketplaceCartDTO
 getCart rawId = do
   cartKey <- parseCartId rawId
   Env{..} <- ask
   mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartKey
-  maybe (throwError marketplaceCartNotFound) pure mCart
+  either throwError (maybe (throwError marketplaceCartNotFound) pure) mCart
 
 upsertCartItem :: Text -> MarketplaceCartItemUpdate -> AppM MarketplaceCartDTO
 upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
@@ -16358,8 +16132,10 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
                         [PersistText (toPathPiece itemId)]
                       _ -> pure ()
                     update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-                    maybe (Left marketplaceCartNotFound) Right
-                      <$> loadCartDTO (defaultCurrency envConfig) cartKey
+                    loaded <- loadCartDTO (defaultCurrency envConfig) cartKey
+                    case loaded >>= maybe (Left marketplaceCartNotFound) Right of
+                      Left serverErr -> transactionUndo >> pure (Left serverErr)
+                      Right dto -> pure (Right dto)
   either throwError pure result
 
 validateMarketplaceCartSelection
@@ -16429,41 +16205,10 @@ data MarketplaceSaleCheckoutContext = MarketplaceSaleCheckoutContext
 
 checkoutCart :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId mIdempotency payload = do
-  context <- prepareMarketplaceSaleCheckout "bank_transfer" rawId mIdempotency payload
-  now <- liftIO getCurrentTime
-  Env{ envPool } <- ask
-  providerEnabled <- liftIO $ flip runSqlPool envPool $
-    Checkout.providerEnabledForEnvironment
-      (msccEnvironment context) Checkout.ProviderBankTransfer
-  unless providerEnabled $
-    throwError err503
-      { errBody = "Bank transfer checkout is disabled in this environment" }
-  attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
-        { Checkout.pacCheckout = msccCheckout context
-        , Checkout.pacProvider = Checkout.ProviderBankTransfer
-        , Checkout.pacEnvironment = msccEnvironment context
-        , Checkout.pacOperation = Checkout.OperationManualVerify
-        , Checkout.pacAmountMinor = fromIntegral (msccTotalCents context)
-        , Checkout.pacCurrency = msccCurrency context
-        , Checkout.pacMerchantRef = "tdf-marketplace-manual"
-        , Checkout.pacIdempotencyKey = msccIdempotencyKey context
-        , Checkout.pacCreatedAt = now
-        , Checkout.pacCorrelationId = "marketplace-manual:" <> toPathPiece (msccOrderKey context)
-        }
-  attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
-  liftIO $ flip runSqlPool envPool $ do
-    Checkout.recordManualPaymentSelection
-      (msccCheckout context)
-      attempt
-      Checkout.ProviderBankTransfer
-      ("marketplace-manual:" <> toPathPiece (msccOrderKey context))
-      now
-    update (msccOrderKey context)
-      [ ME.MarketplaceOrderStatus =. "awaiting_manual_confirmation"
-      , ME.MarketplaceOrderPaymentProvider =. Just "bank_transfer"
-      , ME.MarketplaceOrderUpdatedAt =. now
-      ]
+  -- Contact coordination creates an unpaid request, not a bank-transfer
+  -- payment selection. It must remain available without online/custody capability
+  -- approval and must not create a payment intent, attempt, evidence or receipt.
+  context <- prepareMarketplaceSaleCheckout "contact" rawId mIdempotency payload
   orderDto <- loadMarketplaceOrderWithLookup context
   when (msccCreated context) $ sendMarketplaceOrderCreatedEmail orderDto
   pure orderDto
@@ -16576,7 +16321,7 @@ ensureMarketplacePaymentRailAvailable rawProvider context = do
   let provider = T.toLower (T.strip rawProvider)
       checkoutId = Checkout.checkoutReferenceId (msccCheckout context)
   conflicts <- runDB $ case provider of
-    "bank_transfer" -> rawSql
+    candidate | candidate `elem` ["bank_transfer", "contact"] -> rawSql
       "SELECT 1::bigint FROM commerce_payment_attempt\
       \ WHERE checkout_id = ?::uuid\
       \ AND provider IN ('datafast','paypal','stripe')\
@@ -16587,8 +16332,8 @@ ensureMarketplacePaymentRailAvailable rawProvider context = do
     _ -> pure []
   unless (null (conflicts :: [Single Int64])) $
     throwError err409
-      { errBody = if provider == "bank_transfer"
-          then "An online payment is awaiting customer action or processing; verify it before selecting bank transfer"
+      { errBody = if provider `elem` ["bank_transfer", "contact"]
+          then "An online payment is awaiting customer action or processing; verify it before requesting manual coordination"
           else "Manual payment evidence is under review; resolve it before starting an online payment"
       }
   where
@@ -17326,7 +17071,7 @@ createDatafastCheckout rawId mIdempotency payload = do
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
       , Checkout.pacProvider = Checkout.ProviderDatafast
       , Checkout.pacEnvironment = msccEnvironment context
@@ -17463,7 +17208,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
           { errBody = "DATAFAST_ENV does not match the stored checkout environment"
           }
       attemptResult <- liftIO $ flip runSqlPool envPool $
-        Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
           { Checkout.pacCheckout = checkout
           , Checkout.pacProvider = Checkout.ProviderDatafast
           , Checkout.pacEnvironment = checkoutEnvironment
@@ -17489,6 +17234,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
               , Checkout.vpProviderResource = fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order)
               , Checkout.vpProviderResourcePath = Just resourcePathTxt
               , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpProviderReference = toPathPiece orderKey
               , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
               , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
               , Checkout.vpEvidence = "server_to_server"
@@ -17550,7 +17296,7 @@ createPaypalOrder rawId mIdempotency payload = do
   unless providerEnabled $
     throwError err503 { errBody = "PayPal checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
       , Checkout.pacProvider = Checkout.ProviderPayPal
       , Checkout.pacEnvironment = msccEnvironment context
@@ -17568,7 +17314,7 @@ createPaypalOrder rawId mIdempotency payload = do
   (ppOrderId, approvalUrl) <- case ME.marketplaceOrderPaypalOrderId order of
     Just storedOrderId -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager cid sec baseUrl
+      sharedProviderManager cid sec baseUrl
       (toPathPiece (msccOrderKey context))
       (msccTotalCents context)
       (msccCurrency context)
@@ -17665,7 +17411,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
       { errBody = "PAYPAL_ENV does not match the stored checkout environment"
       }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = checkout
       , Checkout.pacProvider = Checkout.ProviderPayPal
       , Checkout.pacEnvironment = paypalEnvironment
@@ -17679,7 +17425,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
       }
   attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
   outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-    sharedTlsManager cid sec baseUrl paypalOrderId
+    sharedProviderManager cid sec baseUrl paypalOrderId
     `catchError` \serverErr -> do
       liftIO $ flip runSqlPool envPool $
         Checkout.recordPaymentFailure checkout attempt Checkout.ProviderPayPal
@@ -17743,6 +17489,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
               , Checkout.vpProviderResourcePath = Just
                   ("/v2/checkout/orders/" <> paypalOrderId <> "/capture")
               , Checkout.vpOrderReference = toPathPiece orderKey
+              , Checkout.vpProviderReference = toPathPiece orderKey
               , Checkout.vpAmountMinor = fromIntegral (ME.marketplaceOrderTotalUsdCents order)
               , Checkout.vpCurrency = ME.marketplaceOrderCurrency order
               , Checkout.vpEvidence = "server_to_server"
@@ -17805,7 +17552,7 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   Env{ envPool } <- ask
   (cid, sec, baseUrl, _, merchantRef) <- ServiceStorefront.loadPaypalEnvForService
   outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-    sharedTlsManager cid sec baseUrl paypalOrderId
+    sharedProviderManager cid sec baseUrl paypalOrderId
   now <- liftIO getCurrentTime
   let status = ServiceStorefront.spcoStatus outcome
       nextStatus
@@ -17837,7 +17584,7 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   dfEnv <- loadDatafastEnv
-  manager <- pure sharedTlsManager
+  let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
       currencyTxt = T.toUpper (T.strip currency)
@@ -17857,7 +17604,7 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
       allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
       body = RequestBodyBS (renderSimpleQuery False allParams)
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
-  req0 <- liftIO $ parseRequest (baseUrlClean ++ "/v1/checkouts")
+  req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
   let req = req0
         { method = "POST"
         , requestBody = body
@@ -17866,40 +17613,30 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
             , ("Content-Type", "application/x-www-form-urlencoded")
             ]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "Datafast checkout request failed." }
-  case eitherDecode (responseBody resp) of
-    Left _ -> throwError err502 { errBody = "No pudimos interpretar la respuesta de Datafast." }
-    Right dfResp -> do
-      code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfcResult dfResp)))
-      unless (isDfCheckoutSuccess code) $
-        throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
-      checkoutId <- either throwError pure (validateDatafastCheckoutId (dfcId dfResp))
-      let widgetUrl =
-            baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
-      pure (checkoutId, widgetUrl)
+  dfResp <- ServiceStorefront.providerResponse manager Checkout.ProviderDatafast req
+  code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfcResult dfResp)))
+  unless (isDfCheckoutSuccess code) $
+    throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
+  checkoutId <- either throwError pure (validateDatafastCheckoutId (dfcId dfResp))
+  let widgetUrl =
+        baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
+  pure (checkoutId, widgetUrl)
 
 datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
 datafastPaymentStatus dfEnv resourcePathTxt = do
   resourcePath <- either throwError pure (validateDatafastResourcePath (Just resourcePathTxt))
-  manager <- pure sharedTlsManager
+  let manager = sharedProviderManager
   let rp = T.unpack resourcePath
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
       basePath = baseUrlClean ++ rp
       sep = if '?' `elem` basePath then "&" else "?"
       fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (dfEntityId dfEnv)
-  req0 <- liftIO $ parseRequest fullUrl
+  req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast fullUrl
   let req = req0
         { method = "GET"
         , requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 (dfBearerToken dfEnv))]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "Datafast status request failed." }
-  case eitherDecode (responseBody resp) of
-    Left _ -> throwError err502 { errBody = "No pudimos leer el estado del pago de Datafast." }
-    Right statusResp -> pure statusResp
+  ServiceStorefront.providerResponse manager Checkout.ProviderDatafast req
 
 validateDatafastResourcePath :: Maybe Text -> Either ServerError Text
 validateDatafastResourcePath Nothing =
@@ -18365,98 +18102,110 @@ submitMarketplaceManualEvidence
   context <- requireMarketplacePaymentContext rawOrderId mLookupToken
   customerReference <- either throwError pure $
     validatePublicBookingManualReference mmesCustomerReference
-  customerParty <- ensurePartyRecord
-    (Just (mpcxBuyerName context)) (mpcxBuyerEmail context) (mpcxBuyerPhone context)
-  let customerId = fromSqlKey customerParty
-      checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
-  outcome <- runDB $ do
-    rows <- (rawSql
-      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
-      \ evidence.submitted_by, attempt.id::text, checkout.status,\
-      \ checkout.customer_party_id\
-      \ FROM commerce_manual_payment_evidence evidence\
-      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
-      \ JOIN commerce_checkout_session checkout ON checkout.id = evidence.checkout_id\
-      \ JOIN marketplace_order_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
-      \ WHERE runtime.order_id = ?::uuid\
-      \ AND checkout.id = ?::uuid\
-      \ AND checkout.domain_order_id = runtime.order_id::text\
-      \ AND checkout.total_minor = ? AND checkout.currency = ?\
-      \ AND attempt.checkout_id = checkout.id\
-      \ AND attempt.provider = 'bank_transfer'\
-      \ AND attempt.operation = 'manual_verify'\
-      \ AND attempt.environment = checkout.environment\
-      \ AND attempt.amount_minor = checkout.total_minor\
-      \ AND attempt.currency = checkout.currency\
-      \ FOR UPDATE OF evidence, attempt, checkout"
-      [ PersistText (toPathPiece (mpcxOrderKey context))
-      , PersistText checkoutId
-      , PersistInt64 (mpcxTotalMinor context)
-      , PersistText (mpcxCurrency context)
-      ] :: SqlPersistT IO
-        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
-         , Single Text, Single Text, Single (Maybe Int64)
-         )])
-    case rows of
-      [( Single evidenceId, Single status, Single existingReference
-       , Single existingSubmitter, Single attemptId, Single checkoutStatus
-       , Single existingCustomer
-       )]
-        | maybe False (/= customerId) existingCustomer ->
-            pure (Left "Marketplace customer identity does not match the checkout")
-        | checkoutStatus == "paid" && status /= "approved" ->
-            pure (Left "This checkout is already paid by another payment attempt")
-        | status `elem` ["submitted", "under_review"]
-            && existingReference == Just customerReference
-            && existingSubmitter == Just customerId -> pure (Right ())
-        | status == "approved" -> pure (Right ())
-        | status `elem` ["submitted", "under_review"] ->
-            pure (Left "Different manual evidence is already under review")
-        | status `elem` ["awaiting_evidence", "rejected"] -> do
-            now <- liftIO getCurrentTime
-            rawExecute
-              "UPDATE commerce_checkout_session SET customer_party_id = COALESCE(customer_party_id, ?)\
-              \ WHERE id = ?::uuid"
-              [PersistInt64 customerId, PersistText checkoutId]
-            when (status == "rejected") $
-              Checkout.recordManualPaymentSelection
-                (mpcxCheckout context)
-                (Checkout.PaymentAttemptReference attemptId)
-                Checkout.ProviderBankTransfer
-                (marketplacePaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
-                now
-            rawExecute
-              "UPDATE commerce_manual_payment_evidence\
-              \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
-              \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
-              \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
-              \ WHERE id = ?::uuid"
-              [ PersistText customerReference
-              , PersistInt64 (mpcxTotalMinor context)
-              , PersistText (mpcxCurrency context)
-              , PersistUTCTime now
-              , PersistInt64 customerId
-              , PersistText evidenceId
-              ]
-            rawExecute
-              "INSERT INTO commerce_checkout_audit_event(\
-              \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
-              \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
-              \ jsonb_build_object('attempt_id', ?))"
-              [ PersistText checkoutId
-              , PersistText (T.pack (show customerId))
-              , PersistText (marketplacePaymentCorrelationId
-                  context Checkout.ProviderBankTransfer "manual-evidence")
-              , PersistText attemptId
-              ]
-            pure (Right ())
-        | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
-      [] -> pure (Left "Select bank transfer before submitting evidence")
-      _ -> pure (Left "Marketplace manual payment evidence is ambiguous")
+  outcome <- runDB $ submitMarketplaceManualEvidenceDb context customerReference
   either (throwError . marketplaceCheckoutConflict) pure outcome
   runDB (loadOrderDTO (mpcxOrderKey context))
     >>= either throwError pure
       . requireLoadedMarketplacePublicOrderResponse "Marketplace order"
+
+-- Called only after the order lookup-token access check. The transaction owns
+-- every contact, checkout, evidence, and audit mutation for this submission.
+submitMarketplaceManualEvidenceDb
+  :: MarketplacePaymentContext -> Text -> SqlPersistT IO (Either Text ())
+submitMarketplaceManualEvidenceDb context customerReference = do
+  let checkoutId = Checkout.checkoutReferenceId (mpcxCheckout context)
+  rows <- (rawSql
+    "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+    \ evidence.submitted_by, attempt.id::text, checkout.status,\
+    \ checkout.customer_party_id\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ JOIN commerce_checkout_session checkout ON checkout.id = evidence.checkout_id\
+    \ JOIN marketplace_order_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
+    \ WHERE runtime.order_id = ?::uuid\
+    \ AND checkout.id = ?::uuid\
+    \ AND checkout.domain_order_id = runtime.order_id::text\
+    \ AND checkout.total_minor = ? AND checkout.currency = ?\
+    \ AND attempt.checkout_id = checkout.id\
+    \ AND attempt.provider = 'bank_transfer'\
+    \ AND attempt.operation = 'manual_verify'\
+    \ AND attempt.environment = checkout.environment\
+    \ AND attempt.amount_minor = checkout.total_minor\
+    \ AND attempt.currency = checkout.currency\
+    \ FOR UPDATE OF evidence, attempt, checkout"
+    [ PersistText (toPathPiece (mpcxOrderKey context))
+    , PersistText checkoutId
+    , PersistInt64 (mpcxTotalMinor context)
+    , PersistText (mpcxCurrency context)
+    ] :: SqlPersistT IO
+      [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+       , Single Text, Single Text, Single (Maybe Int64)
+       )])
+  case rows of
+    [( Single evidenceId, Single status, Single existingReference
+     , Single existingSubmitter, Single attemptId, Single checkoutStatus
+     , Single existingCustomer
+     )]
+      | Just customer <- existingCustomer, Just submitter <- existingSubmitter, customer /= submitter ->
+          pure (Left "Marketplace evidence and checkout identities require review")
+      | checkoutStatus == "paid" && status /= "approved" ->
+          pure (Left "This checkout is already paid by another payment attempt")
+      | status `elem` ["submitted", "under_review"]
+          && existingReference == Just customerReference
+          && isJust existingCustomer && existingSubmitter == existingCustomer -> pure (Right ())
+      | status == "approved" -> pure (Right ())
+      | status `elem` ["submitted", "under_review"] ->
+          pure (Left "Different manual evidence is already under review")
+      | status `elem` ["awaiting_evidence", "rejected"] -> do
+          now <- liftIO getCurrentTime
+          -- The locked checkout/evidence is the trusted operation identity.
+          -- Create a new unverified contact only for its first submission, in
+          -- this same transaction. Shared email never adopts another account.
+          customerId <- case existingCustomer <|> existingSubmitter of
+            Just existingId -> pure existingId
+            Nothing -> do
+              result <- ensurePartyRecordDb now
+                (Just (mpcxBuyerName context)) (mpcxBuyerEmail context) (mpcxBuyerPhone context)
+              fromSqlKey <$> either (liftIO . throwIO) pure result
+          rawExecute
+            "UPDATE commerce_checkout_session SET customer_party_id = COALESCE(customer_party_id, ?)\
+            \ WHERE id = ?::uuid"
+            [PersistInt64 customerId, PersistText checkoutId]
+          when (status == "rejected") $
+            Checkout.recordManualPaymentSelection
+              (mpcxCheckout context)
+              (Checkout.PaymentAttemptReference attemptId)
+              Checkout.ProviderBankTransfer
+              (marketplacePaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
+              now
+          rawExecute
+            "UPDATE commerce_manual_payment_evidence\
+            \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+            \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+            \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+            \ WHERE id = ?::uuid"
+            [ PersistText customerReference
+            , PersistInt64 (mpcxTotalMinor context)
+            , PersistText (mpcxCurrency context)
+            , PersistUTCTime now
+            , PersistInt64 customerId
+            , PersistText evidenceId
+            ]
+          rawExecute
+            "INSERT INTO commerce_checkout_audit_event(\
+            \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+            \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+            \ jsonb_build_object('attempt_id', ?))"
+            [ PersistText checkoutId
+            , PersistText (T.pack (show customerId))
+            , PersistText (marketplacePaymentCorrelationId
+                context Checkout.ProviderBankTransfer "manual-evidence")
+            , PersistText attemptId
+            ]
+          pure (Right ())
+      | otherwise -> pure (Left "Manual evidence cannot be submitted in its current state")
+    [] -> pure (Left "Select bank transfer before submitting evidence")
+    _ -> pure (Left "Marketplace manual payment evidence is ambiguous")
 
 validateMarketplaceManualReview
   :: MarketplaceManualPaymentReview
@@ -18656,6 +18405,7 @@ reviewMarketplaceManualPayment user rawOrderId request = do
                         , Checkout.vpProviderResource = evidenceId
                         , Checkout.vpProviderResourcePath = Nothing
                         , Checkout.vpOrderReference = toPathPiece orderKey
+                        , Checkout.vpProviderReference = toPathPiece orderKey
                         , Checkout.vpAmountMinor = mpcxTotalMinor context
                         , Checkout.vpCurrency = mpcxCurrency context
                         , Checkout.vpEvidence = "staff_verified_manual"
@@ -19644,19 +19394,22 @@ data MarketplaceCartTotalsState a
   | MarketplaceCartEmpty
   | MarketplaceCartInvalidQuantity Int
   | MarketplaceCartInvalidRental Text
+  | MarketplaceCartInvalidAmount Text
   | MarketplaceCartInvalidCurrency Text
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
 
-loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
+loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Either ServerError (Maybe MarketplaceCartDTO))
 loadCartDTO configuredDefault cartId = do
   mCart <- get cartId
   case mCart of
-    Nothing -> pure Nothing
+    Nothing -> pure (Right Nothing)
     Just _ -> do
       items <- loadCartLines cartId
-      pure (Just (cartToDTO configuredDefault cartId items))
+      pure $ case cartToDTO configuredDefault cartId items of
+        Left message -> Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+        Right dto -> Right (Just dto)
 
 data MarketplaceCartLine = MarketplaceCartLine
   { mclCartItem :: Entity ME.MarketplaceCartItem
@@ -19693,14 +19446,14 @@ loadCartTotals cartId = do
             Nothing | pricingError : _ <- pricingErrors ->
               pure (MarketplaceCartInvalidRental pricingError)
             Nothing -> do
-              let totalCents =
-                    sum (map mclSubtotalCents items)
-                  rawCurrencies =
+              let rawCurrencies =
                     map (ME.marketplaceListingCurrency . entityVal . mclListing) items
-              case resolveMarketplaceCartCurrency rawCurrencies of
-                Left invalidCurrencyState -> pure invalidCurrencyState
-                Right currency ->
-                  pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+              case CommerceMoney.checkedCartTotal (map mclSubtotalCents items) of
+                Left message -> pure (MarketplaceCartInvalidAmount message)
+                Right totalCents -> case resolveMarketplaceCartCurrency rawCurrencies of
+                  Left invalidCurrencyState -> pure invalidCurrencyState
+                  Right currency ->
+                    pure (MarketplaceCartTotalsReady (items, totalCents, currency))
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
@@ -19709,6 +19462,8 @@ requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
   Left (marketplaceCartInvalidQuantityError rawQuantity)
+requireMarketplaceCartTotals (MarketplaceCartInvalidAmount message) =
+  Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidRental message) =
   Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidCurrency _) =
@@ -19818,7 +19573,10 @@ loadCartLines cartId = do
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
-    let qty = ME.marketplaceCartItemQuantity ci
+    let checkedSubtotal = CommerceMoney.checkedCartSubtotal
+          (ME.marketplaceCartItemQuantity ci) (ME.marketplaceListingPriceUsdCents (entityVal listing))
+        subtotal = either (const 0) (\amount -> amount) checkedSubtotal
+        qty = ME.marketplaceCartItemQuantity ci
         purpose = T.toLower (T.strip (ME.marketplaceListingPurpose (entityVal listing)))
         saleLine = MarketplaceCartLine
           { mclCartItem = ent
@@ -19827,12 +19585,14 @@ loadCartLines cartId = do
           , mclQuantity = qty
           , mclPurpose = purpose
           , mclUnitPriceCents = ME.marketplaceListingPriceUsdCents (entityVal listing)
-          , mclSubtotalCents = ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
+          , mclSubtotalCents = subtotal
           , mclRentalStartDate = Nothing
           , mclRentalEndDate = Nothing
           , mclRentalBreakdown = Nothing
           , mclRentalTerms = Nothing
-          , mclPricingError = if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
+          , mclPricingError = case checkedSubtotal of
+              Left message -> Just message
+              Right _ -> if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
           }
     if purpose /= "rent"
       then pure saleLine
@@ -19886,11 +19646,14 @@ cartToDTO
   :: Text
   -> Key ME.MarketplaceCart
   -> [MarketplaceCartLine]
-  -> MarketplaceCartDTO
-cartToDTO configuredDefault cartId items =
+  -> Either Text MarketplaceCartDTO
+cartToDTO configuredDefault cartId items = do
+  -- A failed line calculation uses a placeholder only inside the loader; never
+  -- expose it as a successful zero-price cart or use it for payment admission.
+  mapM_ (\line -> CommerceMoney.checkedCartSubtotal (mclQuantity line) (mclUnitPriceCents line)) items
+  subtotal <- CommerceMoney.checkedCartTotal (map mclSubtotalCents items)
   let currency = maybe configuredDefault
         (ME.marketplaceListingCurrency . entityVal . mclListing) (listToMaybe items)
-      subtotal = sum (map mclSubtotalCents items)
       itemDtos = flip map items $ \line ->
         let listingEnt = mclListing line
             assetEnt = mclAsset line
@@ -19923,7 +19686,7 @@ cartToDTO configuredDefault cartId items =
                 (\breakdown -> formatUsd (MarketplaceRentals.rpbSecurityDepositMinor breakdown) currency)
                   <$> mBreakdown
             }
-  in MarketplaceCartDTO
+  pure MarketplaceCartDTO
       { mcCartId          = toPathPiece cartId
       , mcItems           = itemDtos
       , mcCurrency        = currency
@@ -20460,27 +20223,6 @@ resolvePaypalBaseUrl mEnv =
     sandboxBase = "https://api-m.sandbox.paypal.com"
     liveBase = "https://api-m.paypal.com"
 
-paypalAccessToken :: Manager -> Text -> Text -> String -> AppM Text
-paypalAccessToken manager cid sec baseUrl = do
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
-  let authVal = BS8.pack "Basic " <> B64.encode (BS8.pack (T.unpack cid <> ":" <> T.unpack sec))
-      req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS (BL8.pack "grant_type=client_credentials")
-        , requestHeaders =
-            [ ("Content-Type", "application/x-www-form-urlencoded")
-            , ("Authorization", authVal)
-            ]
-        }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal token request failed." }
-  token <- case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
-    Right tok -> pure tok
-  either throwError pure $
-    validatePayPalTokenResponse token
-
 validatePayPalTokenResponse :: PayPalToken -> Either ServerError Text
 validatePayPalTokenResponse PayPalToken{..} = do
   accessToken <- validatePayPalAccessTokenField payPalAccessToken
@@ -20518,58 +20260,6 @@ validatePayPalTokenTypeField mRawTokenType =
       Left err502
         { errBody = "PayPal token response token_type must be Bearer"
         }
-
-createPaypalOrderRemote
-  :: Manager
-  -> Text
-  -> Text
-  -> String
-  -> Int
-  -> Text
-  -> Text
-  -> Text
-  -> AppM (Text, Maybe Text)
-createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
-  token <- paypalAccessToken manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
-  let amountStr = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
-      body = object
-        [ "intent" .= ("CAPTURE" :: Text)
-        , "purchase_units" .=
-            [ object
-                [ "amount" .= object ["currency_code" .= T.toUpper currency, "value" .= amountStr]
-                ]
-            ]
-        , "payer" .= object
-            [ "name" .= object ["given_name" .= buyerName]
-            , "email_address" .= buyerEmail
-            ]
-        , "application_context" .= object ["shipping_preference" .= ("NO_SHIPPING" :: Text)]
-        ]
-      req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS (encode body)
-        , requestHeaders =
-            [ ("Content-Type", "application/json")
-            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            ]
-        }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal create order falló." }
-  resObj <- case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear respuesta PayPal: " <> err) }
-    Right val -> pure (val :: PayPalCreateResponse)
-  approval <-
-    either throwError pure $
-      resolvePayPalApprovalUrlForBase baseUrl (pcrLinks resObj)
-  ppOrderId <-
-    either throwError pure $
-      validatePayPalCreateOrderIdField (pcrId resObj)
-  matchedApproval <-
-    either throwError pure $
-      validatePayPalApprovalUrlOrderToken ppOrderId approval
-  pure (ppOrderId, Just matchedApproval)
 
 resolvePayPalApprovalUrl :: [PayPalLink] -> Either ServerError Text
 resolvePayPalApprovalUrl links =
@@ -20706,39 +20396,6 @@ collectPayPalApprovalUrlToken (rawParam:remaining) tokens seenUserAction =
           collectPayPalApprovalUrlToken remaining tokens True
     _ ->
       Nothing
-
-capturePaypalOrderRemote
-  :: Manager
-  -> Text
-  -> Text
-  -> String
-  -> Text
-  -> AppM PayPalCaptureOutcome
-capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
-  token <- paypalAccessToken manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId ++ "/capture")
-  let req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS "{}"
-        , requestHeaders =
-            [ ("Content-Type", "application/json")
-            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            ]
-        }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal capture falló." }
-  parsed <- case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
-    Right val -> pure val
-  statusTxt <-
-    either throwError pure (extractPayPalCaptureStatus parsed)
-  payerEmail <-
-    either throwError pure (extractPayPalPayerEmail parsed)
-  pure PayPalCaptureOutcome
-    { pcoStatus = statusTxt
-    , pcoPayerEmail = payerEmail
-    }
 
 extractPayPalCaptureStatus :: Value -> Either ServerError Text
 extractPayPalCaptureStatus (Object o) =
@@ -21350,13 +21007,14 @@ data DriveApiResp = DriveApiResp
   , darWebViewLink    :: Maybe Text
   , darWebContentLink :: Maybe Text
   , darResourceKey    :: Maybe Text
+  , darRequestFingerprint :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON DriveApiResp where
   parseJSON = withObject "DriveApiResp" $ \o -> do
     rejectUnexpectedDriveResponseKeys
       "Drive upload response"
-      ["id", "webViewLink", "webContentLink", "resourceKey"]
+      ["id", "webViewLink", "webContentLink", "resourceKey", "appProperties"]
       o
     darId <- (o .: "id") >>= parseDriveApiFileId
     darWebViewLink <-
@@ -21375,6 +21033,10 @@ instance FromJSON DriveApiResp where
           "must be a Google Drive download https link for the uploaded file"
     darResourceKey <-
       (o .:? "resourceKey") >>= traverse (parseDriveApiResourceKey "resourceKey")
+    properties <- o .:? "appProperties"
+    darRequestFingerprint <- case properties of
+      Nothing -> pure Nothing
+      Just value -> withObject "Drive appProperties" (.:? "tdfRequestFingerprint") value
     validateDriveResponseResourceKeyConsistency
       darWebViewLink
       darWebContentLink
@@ -21480,8 +21142,18 @@ rejectUnexpectedDriveResponseKeys responseLabel allowedKeys o =
   where
     allowedKeySet = Set.fromList (map AKey.fromText allowedKeys)
 
+-- Actor and exact request binding; a caller key is not ownership evidence.
+-- Provider lookup/create is not atomic, so this is not an exactly-once guarantee.
+driveUploadFingerprint :: PartyId -> Text -> Text -> Maybe Text -> BL.ByteString -> Text
+driveUploadFingerprint actor name mime folder bytes =
+  digest $ BL.toStrict $ encode
+    ((1 :: Int), fromSqlKey actor, name, mime, folder, digest (BL.toStrict bytes))
+  where
+    digest value = T.pack (show (hash value :: Digest SHA256))
+
 uploadToDrive
   :: Manager
+  -> PartyId         -- ^ Current authenticated principal, never caller-supplied ownership
   -> Text            -- ^ Google access token (user or service)
   -> FileData Tmp    -- ^ Uploaded file from client
   -> Text            -- ^ Normalized file MIME type
@@ -21489,19 +21161,21 @@ uploadToDrive
   -> Maybe Text      -- ^ Optional folder id
   -> Maybe Text      -- ^ Optional deterministic idempotency key
   -> IO DriveUploadDTO
-uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
+uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
+  fileBytes <- BL.readFile (fdPayload file)
   uuid <- nextRandom
   let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
       dashBoundary = "--" <> boundary
       fileName = fromMaybe (fdFileName file) mName
       mimeTypeBS = TE.encodeUtf8 mimeTypeTxt
+      fingerprint = driveUploadFingerprint actor fileName mimeTypeTxt mFolder fileBytes
       meta = object $
         [ "name" .= fileName
         , "mimeType" .= mimeTypeTxt
         ] <> maybe [] (\f -> ["parents" .= [f]]) mFolder
-          <> maybe [] (\key -> ["appProperties" .= object ["tdfIdempotencyKey" .= key]]) mIdempotencyKey
+          <> maybe [] (\key -> ["appProperties" .= object
+              ["tdfIdempotencyKey" .= key, "tdfRequestFingerprint" .= fingerprint]]) mIdempotencyKey
 
-  fileBytes <- BL.readFile (fdPayload file)
   let metaPart = BL.intercalate "\r\n"
         [ BL.fromStrict (TE.encodeUtf8 dashBoundary)
         , "Content-Type: application/json; charset=UTF-8"
@@ -21533,7 +21207,10 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey
     Nothing -> pure Nothing
     Just key -> findDriveUploadByIdempotencyKey manager accessToken key mFolder
   driveResp <- case existing of
-    Just found -> pure found
+    Just found -> do
+      unless (darRequestFingerprint found == Just fingerprint) $
+        throwIO err409 { errBody = "Drive idempotency key is bound to a different or legacy unverified request" }
+      pure found
     Nothing -> do
       resp <- httpLbs req manager
       let uploadStatus = statusCode (responseStatus resp)
@@ -21601,7 +21278,7 @@ findDriveUploadByIdempotencyKey manager accessToken key mFolder = do
       scopedQuery = maybe baseQuery (\folder -> baseQuery <> " and '" <> folder <> "' in parents") mFolder
       query = renderQuery True
         [ ("q", Just (TE.encodeUtf8 scopedQuery))
-        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey)")
+        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey,appProperties)")
         , ("pageSize", Just "2")
         ]
   req0 <- parseRequest ("https://www.googleapis.com/drive/v3/files" <> BS8.unpack query)

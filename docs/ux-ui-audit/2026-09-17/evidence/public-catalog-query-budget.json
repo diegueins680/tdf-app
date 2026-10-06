@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-09-18T10:23:52.598190+00:00",
+  "environment": "real isolated PostgreSQL17 localhost; actual compiled Haskell HTTP server",
+  "generatedFixtures": 80,
+  "generatedPublished": 64,
+  "totalPublished": 64,
+  "before": {
+    "marketplaceExecutions": 259,
+    "recordsExecutions": 60,
+    "queryBudgetResult": "FAIL as intended"
+  },
+  "after": {
+    "marketplaceExecutions": 5,
+    "recordsExecutions": 28,
+    "queryBudgetResult": "PASS",
+    "marketplaceElapsedMs": 23,
+    "contracts": "prices, approved terms, list/detail equality, publication filter, wire arrays passed"
+  },
+  "observer": "PostgreSQL SimpleQuery/Execute messages in transactions containing catalog reads, including BEGIN/COMMIT; independent background-worker transactions excluded; no SQL/credentials retained",
+  "limits": "Local latency is not production or field performance. All80synthetic fixtures cleaned after each final run;64published. No payment, user data or production write."
+}

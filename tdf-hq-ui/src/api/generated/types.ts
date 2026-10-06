@@ -4,87 +4,119 @@
  */
 
 export interface paths {
-    "/music/playback-events": {
+    "/invoices": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["listInvoices"];
         put?: never;
-        /**
-         * Record anonymous playback telemetry
-         * @description Requires anonymousId. Session identity is bound on first insert; exact retries are deduplicated. Client identity is not proof of a real listener. Only published and territorially available recordings are accepted.
-         */
-        post: operations["recordAnonymousMusicPlayback"];
+        /** @description Create a draft invoice. When ciGenerateReceipt is true, invoice, lines, receipt and number allocation commit atomically. Session and canonical invoicing grants are revalidated and locked through the transaction. This endpoint has no external idempotency key: retrying invoice creation can create a second invoice. */
+        post: operations["createInvoice"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/music/me/playback-events": {
+    "/invoices/{invoiceId}": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                invoiceId: number;
+            };
             cookie?: never;
         };
-        get?: never;
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["getInvoiceById"];
         put?: never;
-        /**
-         * Record playback and update the current user's history atomically
-         * @description Identity comes exclusively from authentication. Use a new session after login, logout or account change. Late events do not rewind the latest history position. Replays must preserve the original payload.
-         */
-        post: operations["recordAuthenticatedMusicPlayback"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/music/releases/{releaseId}/versions/{versionId}/validate": {
+    "/receipts": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["listReceipts"];
         put?: never;
-        /**
-         * Validate release metadata, rights, resources and availability
-         * @description Read-only validation requiring release.edit. Includes resource graph errors with version-local field paths; does not repair approved content.
-         */
-        post: operations["validateMusicReleaseVersion"];
+        /** @description One immutable receipt per invoice. Lock and revalidate the current session, canonical invoicing grants and invoice through commit. Currency must equal invoice currency (422 otherwise). Exact checked minor-unit totals must agree with invoice lines and header. A replay returns the existing snapshot; omitted or null overrides preserve it, and different explicit buyer name, email or nonblank notes return 409. Blank notes normalize to omission. Annual numbers are unique; gaps are permitted. This is a receipt record, not payment capture or SRI authorization. */
+        post: operations["createReceipt"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/music/releases/{releaseId}/versions/{versionId}/transition": {
+    "/receipts/{receiptId}": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                receiptId: number;
+            };
             cookie?: never;
         };
-        get?: never;
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["getReceipt"];
         put?: never;
-        /**
-         * Request an editorial state transition
-         * @description Submission requires release.submit; review, approval and scheduling require strict TDF administration. Validation is repeated under the version lock before review/approval/scheduling. Invalid content returns 422 without consuming the idempotency key. Publication is scheduler-only.
-         */
-        post: operations["transitionMusicReleaseVersion"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/music/releases/{releaseId}/versions/{versionId}/corrections": {
+    "/operations/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible scoped work */
+        get: operations["operationsWorkItems"];
+        put?: never;
+        /**
+         * Create a bound manual work item
+         * @description correlationKey is an organization-scoped idempotency key bound to current actor, resolved branch and semantic payload. The returned projection uses a server-generated manual UUID key. Exact authorized replay returns the current item without new effects; changed binding or unbound legacy keys reject. Metadata must be empty. Unassigned specialists cannot create work they may not operate. Receipt, targeted projection, audit and response decoding commit together.
+         */
+        post: operations["operationsManualWorkItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one visible work item with history */
+        get: operations["operationsWorkItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/notes": {
         parameters: {
             query?: never;
             header?: never;
@@ -94,10 +126,876 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create an auditable correction of an immutable release version
-         * @description Requires verified artist ownership or release.edit permission and the authoring feature flag. Allocation is serialized per release. Repeating a key for the same source returns its correction; reusing that key for another source returns 409. Resources remain private and reference immutable bytes. Publication terms must be accepted again.
+         * Append an authorized note atomically
+         * @description Current session, roles, assignment and active scope are locked through commit, including mentioned memberships. This is an append command without a replay receipt; an ambiguous response requires reconciliation before retry.
          */
-        post: operations["createMusicReleaseCorrection"];
+        post: operations["operationsWorkItemNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/integration-failures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List manager-visible failures in the selected branch
+         * @description Selects the earliest active scoped membership, as other default-scoped Operations reads. Other branches and unscoped failures are excluded.
+         */
+        get: operations["operationsIntegrationFailures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/integration-failures/{failureId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request one retry of an eligible integration failure
+         * @description Current manager grant and active scoped membership are locked. Only retryable open or dead_letter failures enter retrying; resolved or already retrying rows reject409. State and audit commit once. This records retry admission, not provider delivery.
+         */
+        post: operations["operationsReplayFailure"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read visible scoped stream records */
+        get: operations["operationsStreamEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/saved-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List own and explicitly shared organization views */
+        get: operations["operationsSavedViews"];
+        put?: never;
+        /**
+         * Save an owned organization view
+         * @description Owner and name identify the replaceable layout. Shared layouts are organization-visible. Stored filters and columns are presentation preferences and never expand source authorization. Each accepted replacement has an audit; no requestId replay deduplication is promised.
+         */
+        post: operations["operationsSaveView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register an encrypted owned push subscription */
+        post: operations["operationsPushSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read metrics over visible operational work
+         * @description Uses the same role, assignment, organization and branch filter as the item list. Integration-failure counts are manager-only and branch-scoped. Amounts are dashboard projections, not reconciled accounting evidence.
+         */
+        get: operations["operationsMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item seen command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemSeen"];
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item transition command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemTransition"];
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item assignment command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemAssignment"];
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/priority": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item priority command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemPriority"];
+        trace?: never;
+    };
+    "/operations/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay a bound approval request
+         * @description Requires Admin, Manager or Accounting in an enabled organization and active branch. Organization-scoped idempotency keys bind the requester, resolved scope and semantic payload. Exact authorized replay returns the retained request without new audit. This endpoint does not execute the source action.
+         */
+        post: operations["operationsCreateApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/approvals/{approvalId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Commit a pending unexpired approval decision
+         * @description Requires a different current Admin, Manager or Accounting actor in the same active organization/branch. The pending decision and audit commit together. Expiry is evaluated after lock waits. A terminal replay returns 409; decisions cannot reopen. Approval does not execute a payment or deletion.
+         */
+        patch: operations["operationsDecideApproval"];
+        trace?: never;
+    };
+    "/drive/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a file through the authorized Google Drive adapter
+         * @description Requires a coherent authenticated operations or persisted artist role admitted by validateDriveAccess. Uses the supplied Google OAuth access token, or configured service credentials and default folder. Files must be nonempty and at most 50 MiB. An optional idempotency key is bound to the authenticated Party, effective filename, MIME, destination folder and exact bytes. A conflicting or legacy unbound entry returns 409 before upload or permission changes. Identical replay reuses the file and retries best-effort public-reader permission. A null duPublicUrl does not attest public access. Provider lookup/create is not atomic; concurrent creation and ambiguous provider outcomes do not have an exactly-once guarantee.
+         */
+        post: operations["uploadDriveFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active trial subjects
+         * @description Public active subjects only. The historical includeInactive query never selected the protected handler and grants no access to inactive subjects.
+         */
+        get: operations["listPublicTrialSubjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/subjects/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List subjects for authorized school operations
+         * @description Requires current bearer authentication, Scheduling access, and Teacher, Admin, Manager, Studio Manager or Reception role. Uses a distinct path so the public list cannot shadow this handler.
+         */
+        get: operations["listManagedTrialSubjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/payment-capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List payment routes actually available for a transaction
+         * @description Returns only routes with verified environment, merchant, credential, contract, method and completion gates. An empty route list is authoritative. No secrets or merchant configuration are returned. Fallback requires authoritative confirmation that no charge was or will be created; ambiguous outcomes remain held for reconciliation.
+         */
+        get: operations["listPaymentCapabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listInteractionReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/blocked-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listInteractionBlockedAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/targets/{kind}/{entityKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/targets/{kind}/{entityKey}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionComments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/targets/{kind}/{entityKey}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionComment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/targets/{kind}/{entityKey}/reactors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionReactors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/resolve/{destinationKind}/{destinationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["resolveInteractionDestination"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/interactions/targets/{kind}/{entityKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicInteractionSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/interactions/targets/{kind}/{entityKey}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicInteractionComments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/interactions/targets/{kind}/{entityKey}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicInteractionComment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/interactions/targets/{kind}/{entityKey}/reactors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicInteractionReactors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/interactions/resolve/{destinationKind}/{destinationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["resolvePublicInteractionDestination"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/targets/{targetId}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["executeInteractionCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/blocks/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionBlock"];
+        put: operations["setInteractionBlock"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionPreferences"];
+        put: operations["setInteractionPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interactions/moderation/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInteractionModeration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Creates an unverified enquiry contact. A request key identifies one submission; email never establishes account ownership. Unsupported credential fields are rejected. */
+        post: operations["createTrialSignupEnquiry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/trial-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Creates an enquiry and unverified contact atomically, without login credentials or access grants. Identical retries return the saved request even if availability changes. */
+        post: operations["createPublicTrialRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Requires school authorization. Creates a new student contact and applies the existing student policy. Retries are scoped to the authenticated actor; shared email cannot adopt another person. */
+        post: operations["createSchoolStudent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Me
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/relationships/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Relationship
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Relationship"];
+        put?: never;
+        /**
+         * mutateSocialV2Relationship
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        post: operations["mutateSocialV2Relationship"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * updateSocialV2Preferences
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        put: operations["updateSocialV2Preferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/following": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Following
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Following"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/v2/discover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getSocialV2Discover
+         * @description Experimental account-only API. Process and database gates default off. Not qualified for production cutover.
+         */
+        get: operations["getSocialV2Discover"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete an opted-in preparation task with current RACI and completed dependencies
+         * @description Only draft/planning events and planned/confirmed tasks with both policy guards. Requires current owner or scoped task.manage authority; exact historical replay requires current read authority. Revalidates the bound session and SQL receipt inside the transaction before commit. Result aggregateRevision is exactly the original expectedRevision plus one, also on replay. No actor, time, hash or override can be supplied. No approver/evidence, live-event or notification flow is implied. No automatic rebase or retry with a new key after network ambiguity. Requires separately reviewed SQL/feature activation; disabled by default.
+         */
+        post: operations["completeEventOperationTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/raci/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read current scoped RACI editing options without granting authority
+         * @description Current task readers may read the context. Only current managers receive options, and only during supported lifecycle states with current required accountability. Uses the same session/auth/task revision fences and one post-wait clock/snapshot. Returns minimal Party IDs, not contacts or names. Each keyset page is independently authorized; pages are not a consistent roster snapshot. All options are advisory; the command still revalidates authority, source, recipient and expected revision.
+         */
+        get: operations["getEventRaciEditorContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign one current unbounded RACI assignment atomically
+         * @description Planning-stage command on the canonical task. Requires current owner or applicable task.manage authority; read-only current access permits exact historical replay only. Revalidates the bound authenticated session and validates the SQL receipt before commit. Preserves the revoked assignment, immutable audit and task-scoped idempotency receipt. Result aggregateRevision equals expectedRevision plus two, including on exact replay. No recipient consent, availability, booking or notification is implied. Requires separately reviewed SQL/feature activation. Never automatically rebase or retry with a new key after an ambiguous network failure. No actor/time/hash may be supplied.
+         */
+        post: operations["reassignEventOperationTaskRaci"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}/revisioned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the canonical task with its coherent aggregate storage revision
+         * @description Opt-in envelope; the existing task representation is unchanged. Requires the same current authenticated session and exact task.read/task.manage scope as the task route. Metadata is share-locked through the canonical projection and authorization is checked after waiting. The decimal-string revision is not an authorization or readiness certificate; RACI time windows can expire without a storage write. Query parameters cannot select an actor.
+         */
+        get: operations["getEventOperationTaskWithRevision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/tasks/{activityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the currently authorized task state and RACI projection
+         * @description Uses canonical logistics activity IDs. Requires current ownership or task.read/task.manage scoped to this event or exact task; event.read, finance, coproduction and assignment alone do not grant access. Session validity is rechecked in the same database transaction. The response excludes notes, titles, dates, contacts, dependencies, documents and history. Activity and policy versions are not an aggregate ETag or offline write token. Numeric identifiers and versions are restricted to exact JavaScript-safe integers. Query parameters cannot select the acting party or authorization time.
+         */
+        get: operations["getEventOperationTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the authorized canonical lifecycle projection for an event
+         * @description Returns only capabilities currently held by the authenticated party and transitions whose policy, authority, and implementation-effect gate all permit execution. A disabled feature, an unknown event, and an event the caller cannot read all produce 404 so object identifiers do not disclose event existence.
+         */
+        get: operations["getEventOperationSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-operations/events/{eventId}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply an idempotent, version-guarded canonical lifecycle transition
+         * @description Uses optimistic concurrency and database row locking; it never silently applies last-write-wins. Reusing a command UUID with the same canonical request returns the stored result, while reuse with different content is rejected. Only early planning and independent-approval transitions are implementation-enabled in this phase. Publishing and every transition with ticket, booking, contract, notification, or financial effects remain closed until those effects are transactional or outboxed and verified. Current read authority is required before any receipt or conflict is disclosed. Absent and unreadable events return the identical 404 not_found error, including retries and changed-content keys. A readable event can still return 403 when the caller lacks transition authority.
+         */
+        post: operations["applyEventOperationTransition"];
         delete?: never;
         options?: never;
         head?: never;
@@ -159,6 +1057,58 @@ export interface paths {
         put?: never;
         /** Create a social event using a canonical event type identifier */
         post: operations["createSocialEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List legacy metadata visible to the broadcaster or artist followers; streaming URLs and keys are null. */
+        get: operations["listEventLiveBroadcasts"];
+        put?: never;
+        /** @description Native creation is unavailable503 after event, lineup, follower and caller-identity checks. No broadcast is persisted. */
+        post: operations["createEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Broadcaster or follower updates the legacy viewer count and heartbeat. This is not evidence of provider connection; streaming URLs and keys are null. */
+        post: operations["heartbeatEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Only the broadcaster may end the legacy session. Streaming URLs and keys are null; this does not revoke remote provider credentials. */
+        post: operations["endEventLiveBroadcast"];
         delete?: never;
         options?: never;
         head?: never;
@@ -430,11 +1380,88 @@ export interface paths {
         };
         /**
          * Health Check
-         * @description Checks the health of the API server and its database connection.
+         * @description Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
          */
         get: operations["getHealth"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request an account recovery email */
+        post: operations["requestPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Consume an unexpired single-use recovery challenge
+         * @description Requires credential-bound metadata and a current database time within the 15-minute challenge lifetime, checked after lock waits. Legacy metadata-free challenges require a fresh request. Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
+         */
+        post: operations["confirmPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change a password using the current password
+         * @description Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+         */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change a password using the current password
+         * @description Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+         */
+        post: operations["changePasswordV1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -495,6 +1522,26 @@ export interface paths {
          * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
          */
         post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an account
+         * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
+         */
+        post: operations["signupV1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -656,20 +1703,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/session/artist-invitation": {
+    "/session/experiments/{experimentId}/assignment": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
+            cookie?: never;
+        };
+        /**
+         * Read the current account experiment assignment
+         * @description Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
+         */
+        get: operations["getExperimentAssignment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/experiments/{experimentId}/exposure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
             cookie?: never;
         };
         get?: never;
         put?: never;
         /**
-         * Redeem a recognized artist invitation
-         * @description Idempotently activates only the non-administrative Artist role through a persisted automatic security policy. The invitation must be an explicitly allowlisted campaign value; ordinary artist onboarding continues through reviewed access requests.
+         * Record the current account experiment exposure
+         * @description Uses authenticated Party authority and persisted signup/completion eligibility. Disabled by default; paused responses do not assign or record exposure. No roles or permissions are granted. Assignment is versioned and exposure is idempotent.
          */
-        post: operations["redeemArtistInvitation"];
+        post: operations["recordExperimentExposure"];
         delete?: never;
         options?: never;
         head?: never;
@@ -867,6 +1938,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/hooks/whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify WhatsApp webhook
+         * @description Echoes the hub.challenge parameter when the verify token matches.
+         */
+        get: operations["verifyWhatsAppWebhookLegacy"];
+        put?: never;
+        /**
+         * Receive WhatsApp webhook
+         * @description Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+         */
+        post: operations["handleWhatsAppWebhookLegacy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/instagram/reply": {
         parameters: {
             query?: never;
@@ -927,6 +2022,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instagram/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Instagram webhook
+         * @description Echoes hub.challenge when verify token matches.
+         */
+        get: operations["verifyInstagramWebhook"];
+        put?: never;
+        /**
+         * Receive Instagram webhook
+         * @description Consumes Meta Instagram webhook payloads for Messenger inbox ingestion.
+         */
+        post: operations["handleInstagramWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/facebook/webhook": {
         parameters: {
             query?: never;
@@ -977,7 +2096,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                    "X-Hub-Signature-256": string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -988,7 +2110,28 @@ export interface paths {
             };
             responses: {
                 /** @description Processed */
-                204: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid JSON or webhook envelope. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid signature with a configured app secret. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1393,6 +2536,26 @@ export interface paths {
         get: operations["listFanArtists"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/me/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate my artist profile immediately
+         * @description Creates the authenticated account's artist profile and grants only the Artist role through an audited automatic policy in one transaction. No manual approval or invitation is required. Repeated calls preserve existing profile content and create no duplicate grant. Revoked roles and inactive accounts cannot be reactivated this way. No target party or role is accepted.
+         */
+        post: operations["activateMyArtistProfile"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2595,7 +3758,7 @@ export interface paths {
         head?: never;
         /**
          * Update user account
-         * @description Update username, active flag, roles, or force a password reset for a specific user.
+         * @description Strict administrator updates one credential's username, active flag or password. Disable, username change or password replacement atomically revokes the Party's existing password, Google and recovery tokens; custom service tokens remain separately managed. Another active credential may authenticate anew.
          */
         patch: operations["adminUpdateUser"];
         trace?: never;
@@ -2737,7 +3900,7 @@ export interface paths {
         };
         /**
          * Search active radio streams
-         * @description Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+         * @description Returns active streams excluding quarantined UUID-path URLs that can contain historical native publishing keys. Country and genre filtering use immutable UUIDs of active persisted references.
          */
         get: operations["searchRadioStreams"];
         put?: never;
@@ -2835,8 +3998,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create a radio transmission
-         * @description Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+         * Native radio broadcasting unavailable
+         * @description Returns 503 after normal authentication and request decoding. No stream is persisted. Endpoint configuration cannot override this safety boundary; a verified provider must separate listener identity from publish authority.
          */
         post: operations["createRadioTransmission"];
         delete?: never;
@@ -2852,7 +4015,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get current user's radio presence */
+        /**
+         * Get current user's radio presence
+         * @description Quarantined UUID-path presence is returned as null.
+         */
         get: operations["getRadioPresence"];
         put?: never;
         /** Set current user's radio presence */
@@ -2871,7 +4037,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a party's radio presence */
+        /**
+         * Get a party's radio presence
+         * @description Quarantined UUID-path presence is returned as null.
+         */
         get: operations["getPartyRadioPresence"];
         put?: never;
         post?: never;
@@ -2892,7 +4061,7 @@ export interface paths {
         put?: never;
         /**
          * Submit a Live Session intake
-         * @description Creates a Live Session intake using canonical persisted genre and instrument UUIDs. Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre, instrument, role, label, code, and slug fields are rejected.
+         * @description Atomically creates an intake and its contacts, using canonical persisted genre and instrument UUIDs. Email never selects an existing person. Explicit contact IDs require existing access. Intake does not create login credentials or grant roles. Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre, instrument, role, label, code, and slug fields are rejected.
          */
         post: operations["createLiveSessionIntake"];
         delete?: never;
@@ -2915,6 +4084,26 @@ export interface paths {
          * @description Creates feedback using canonical persisted category and severity UUIDs. Legacy category, severity, copied label, code, and slug fields are rejected. Authentication is optional.
          */
         post: operations["submitFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/account-deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate manual account deletion with authenticated acceptance
+         * @description Requires a live authenticated session belonging to accountId. Rejects expired, anonymous or mismatched sessions before insertion or notification. Returns the authoritative owner and request ID; does not erase the account. Requires the non-simple X-Requested-With header and validates any Origin against configured TDF origins, independently of permissive CORS settings.
+         */
+        post: operations["requestAccountDeletion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2984,6 +4173,26 @@ export interface paths {
         get: operations["listLegacyFeedbackForAdmin"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/account-deletion/{feedbackId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record manual deletion fulfilment with an authenticated administrator audit
+         * @description Records completion or rejection once; does not erase account data. Concurrent repeated resolution returns 409.
+         */
+        post: operations["resolveAccountDeletion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4366,6 +5575,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/services/storefront/refunds/{refundId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Read local held-refund status and query readiness
+         * @description Strict Admin only. Does not contact the provider. Supports known PayPal refund IDs for the mixing/mastering storefront only. Missing configuration or qualification never enables the action.
+         */
+        get: operations["adminGetServiceRefundRecovery"];
+        put?: never;
+        /**
+         * Query a held refund without issuing another refund
+         * @description Requires the exact environment flag, process switch, qualified merchant account, and verified capabilities. Uses only GET for the known refund resource (OAuth token acquisition is separate). Validates original capture, refund ID, amount and currency. Exact completion may atomically update local financial records. All other outcomes remain held. Concurrent operators share a query quota. A timeout or HTTP error is never proof of no refund. Do not retry by submitting a new refund.
+         */
+        post: operations["adminReconcileServiceRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/services/storefront/orders/{orderId}/reconcile": {
         parameters: {
             query?: never;
@@ -4380,6 +5615,170 @@ export interface paths {
         put?: never;
         /** Compare an order binding with the provider without changing payment state */
         post: operations["adminReconcileServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/checkouts/{checkoutId}/payment-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or recover a hosted provider payment session
+         * @description New provider contacts require an exact enabled provider/method/capability combination and a payable, unexpired checkout. An exact request replay with the original lookup token and idempotency key recovers a previously contacted operation even after checkout expiry or payment, account suspension, or provider credential unavailability. Recovery validates immutable request fields and still requires the operation encryption key. A merely prepared operation remains subject to all new-contact gates. An ambiguous outcome stays locked for reconciliation and cannot be retried through another provider.
+         */
+        post: operations["createProviderPaymentSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        /** Read a durable hosted payment-session state */
+        get: operations["getProviderPaymentSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/provider-notifications/placetopay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a signed PlaceToPay session notification
+         * @description Verifies the embedded SHA-256 signature, persists the exact encrypted body, and queues an authenticated session query. The notification alone never marks an order paid.
+         */
+        post: operations["receivePlaceToPayNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commerce/provider-notifications/payphone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive an unsigned PayPhone external notification
+         * @description Persists the exact body as an untrusted query trigger. Payment and fulfillment advance only after the authenticated PayPhone status API matches transaction ID, client reference, amount, and USD currency.
+         */
+        post: operations["receivePayPhoneNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/NotificacionPago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a PayPhone external notification on its required method name
+         * @description Compatibility alias required by PayPhone's notification contract. It uses the same untrusted-callback persistence and authenticated-query reconciliation as the canonical endpoint.
+         */
+        post: operations["receivePayPhoneNotificationCompatibility"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/reconciliation-exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect redacted individual payment reconciliation exceptions
+         * @description Additive read-only contract (2026-09-15). Requires strict Admin access. Defaults to sandbox and echoes the applied filters. Amounts are exact decimal strings of signed 64-bit minor units, never floating-point JSON numbers. Exception labels, including resolved or ignored, do not authorize payment, refund, payout, hold release or fulfillment. No provider contact, free-text notes, merchant aliases or external references are returned. Internal links are present only for a uniquely matched stored binding; an absent link is not proof that no payment occurred. Missing schema is explicit, and reads have a three-second per-statement database timeout. Live offset pages may shift and are not an immutable accounting export.
+         */
+        get: operations["adminListCommerceReconciliationExceptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-queries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect redacted provider status-query recovery jobs
+         * @description Additive read-only contract (2026-09-15). Requires strict Admin access. Defaults to sandbox and returns only one environment. This does not claim jobs, reserve query budgets, contact providers or authorize payment retries. Completed jobs are not proof of paid orders. A disabled database flag is reported explicitly; an enabled flag is not evidence of a running worker, qualified account or valid credentials. Missing recovery schema is reported as cpqsSchemaReady=false, never as a verified empty queue. Reads have a three-second per-statement database timeout. Offset pagination is a live operational view, not an immutable export; refresh after concurrent changes.
+         */
+        get: operations["adminListCommerceProviderQueries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the redacted canonical payment operations overview
+         * @description Strict-admin view of provider activation gates and aggregate financial states. Merchant account references, credentials, secrets, and raw provider payloads are never returned.
+         */
+        get: operations["adminGetCommercePaymentOverview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4419,9 +5818,55 @@ export interface paths {
         put?: never;
         /**
          * Requeue one dead-letter provider event with immutable operator evidence
-         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original encrypted payload; untrusted callbacks still require an authenticated provider query.
          */
         post: operations["adminReplayCommerceProviderEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List bookings within the caller's object scope
+         * @description Scheduling access is required. Admin, Manager, StudioManager and Reception can view the studio calendar; other actors see only bookings where their party is the customer or assigned engineer. Query filters never widen this scope. A foreign or missing bookingId returns an empty list. Only the studio-wide unfiltered calendar includes synthetic course sessions.
+         */
+        get: operations["listBookings"];
+        put?: never;
+        /**
+         * Create an authenticated studio booking
+         * @description Scheduling access is required. Studio-wide roles may choose a customer; other actors may create only for themselves, with an omitted/null partyId resolving to their authenticated party. Resource conflicts roll back the transaction. This compatibility operation does not establish payment.
+         */
+        post: operations["createBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update an owned, assigned or staff-accessible booking
+         * @description Scheduling access and persisted object scope are checked before mutation; a requested engineer assignment cannot grant access. Updates serialize on the booking row and project interval/status changes atomically into the exclusion-backed calendar. Checkout-bound intervals/offering and lifecycle cannot diverge from their authoritative runtime. Omitted/null fields retain existing values; a blank notes string clears notes. At least one field must be non-null. Resources and customer ownership cannot be reassigned here.
+         */
+        put: operations["updateBooking"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5067,6 +6512,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/directory/artist-claim-targets/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Prepare a core artist for a reviewed management claim
+         * @description Authenticated, idempotent preparation. Reuses an existing canonical directory target or creates a private draft under a per-artist lock. Returns only an opaque target ID and the core artist public name. Does not publish, grant permissions, or transfer identity. Archived, suspended and blocked targets are denied.
+         */
+        put: operations["prepareArtistManagementClaim"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/claims": {
         parameters: {
             query?: never;
@@ -5144,6 +6609,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. */
         patch: operations["decideDirectoryClaim"];
         trace?: never;
     };
@@ -5633,6 +7099,94 @@ export interface paths {
          * @description Browser approval is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, quote, checkout, environment, and provider binding before recording the deposit and reserving the date.
          */
         post: operations["capturePublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List up to 50 recent notifications owned by the current account */
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/notifications/{notificationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one recipient-owned notification without marking it as read */
+        get: operations["getNotification"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark only an activated recipient-owned notification as read */
+        post: operations["markNotificationRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/{requestId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the specific request in its current lifecycle state
+         * @description Visible only to its requester or a currently authorized reviewer. Navigation does not approve, reject, cancel or provision access.
+         */
+        get: operations["getFeatureAccessRequest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/notification-context/{kind}/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a specific notification target with current resource authorization */
+        get: operations["getDirectoryNotificationContext"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6852,54 +8406,921 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/records-ingestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read approved video sources, health, checkpoints, and recent runs */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Strict-administrator ingestion overview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Strict administrator required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/records-ingestion/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Verify and approve a YouTube channel, or disable an existing source */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        channelId: string;
+                        enabled: boolean;
+                        /** Format: uuid */
+                        collectionId: string;
+                        approvalReference?: string | null;
+                        partyId?: number | null;
+                        artistProfileId?: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Audited source configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Invalid source configuration */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict administrator required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider verification failed */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Provider credential unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/records-ingestion/control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change the ingestion emergency stop and interval */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        running: boolean;
+                        intervalSeconds: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Audited control state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Strict administrator required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/records-ingestion/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run or resume bounded ingestion using a stable execution key */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        sourceAccountId: number;
+                        executionKey: string;
+                        reconciliation: boolean;
+                        dryRun: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Durable run identity and explicit completed, partial, failed, busy, disabled or rate-limited status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+                /** @description Strict administrator required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/playback-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record anonymous playback telemetry
+         * @description Requires anonymousId. Session identity is bound on first insert; exact retries are deduplicated. Client identity is not proof of a real listener. Only published and territorially available recordings are accepted.
+         */
+        post: operations["recordAnonymousMusicPlayback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/me/playback-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record playback and update the current user's history atomically
+         * @description Identity comes exclusively from authentication. Use a new session after login, logout or account change. Late events do not rewind the latest history position. Replays must preserve the original payload.
+         */
+        post: operations["recordAuthenticatedMusicPlayback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate release metadata, rights, resources and availability
+         * @description Read-only validation requiring release.edit. Includes resource graph errors with version-local field paths; does not repair approved content.
+         */
+        post: operations["validateMusicReleaseVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request an editorial state transition
+         * @description Submission requires release.submit; review, approval and scheduling require strict TDF administration. Validation is repeated under the version lock before review/approval/scheduling. Invalid content returns 422 without consuming the idempotency key. Publication is scheduler-only.
+         */
+        post: operations["transitionMusicReleaseVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an auditable correction of an immutable release version
+         * @description Requires verified artist ownership or release.edit permission and the authoring feature flag. Allocation is serialized per release. Repeating a key for the same source returns its correction; reusing that key for another source returns 409. Resources remain private and reference immutable bytes. Publication terms must be accepted again.
+         */
+        post: operations["createMusicReleaseCorrection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/artist-invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redeem a recognized artist invitation
+         * @description Idempotently activates only the non-administrative Artist role through a persisted automatic security policy. The invitation must be an explicitly allowlisted campaign value; ordinary artist onboarding continues through reviewed access requests.
+         */
+        post: operations["redeemArtistInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        MusicPlaybackConflict: {
-            /** @enum {string} */
-            code: "playback_identity_conflict";
-            message: string;
+        InvoiceLineDTO: {
+            /** Format: int64 */
+            lineId: number;
+            description: string;
+            /** Format: int64 */
+            quantity: number;
+            /** Format: int64 */
+            unitCents: number;
+            /** Format: int64 */
+            taxBps: number;
+            /** Format: int64 */
+            totalCents: number;
+            /** Format: int64 */
+            serviceOrderId: number | null;
+            /** Format: int64 */
+            packagePurchaseId: number | null;
         };
-        MusicPlaybackEventInput: {
-            /** Format: uuid */
-            eventId: string;
-            /** Format: uuid */
-            sessionId: string;
-            sequenceNumber: number;
-            anonymousId?: string | null;
-            /** Format: uuid */
-            releaseVersionId: string;
-            /** Format: uuid */
-            recordingId: string;
-            /** @enum {string} */
-            eventType: "play_start" | "progress" | "pause" | "seek" | "complete" | "skip" | "error" | "buffering" | "quality_selected";
+        InvoiceDTO: {
             /** Format: int64 */
-            positionMs: number;
+            invId: number;
+            number: string | null;
+            statusI: string;
             /** Format: int64 */
-            listenedDeltaMs: number;
-            quality?: string | null;
-            /** @description Not trusted for access or stored territory; the server uses the configured edge. */
-            territoryCode?: string | null;
+            subtotalC: number;
+            /** Format: int64 */
+            taxC: number;
+            /** Format: int64 */
+            totalC: number;
+            currency: string;
+            /** Format: int64 */
+            customerId: number | null;
+            sriDocumentId: string | null;
+            notes: string | null;
+            /** Format: int64 */
+            receiptId: number | null;
+            lineItems: components["schemas"]["InvoiceLineDTO"][];
+        };
+        CreateInvoiceLineReq: {
+            cilDescription: string;
+            cilQuantity: number;
+            cilUnitCents: number;
+            cilTaxBps?: number | null;
+            /** Format: int64 */
+            cilServiceOrderId?: number | null;
+            /** Format: int64 */
+            cilPackagePurchaseId?: number | null;
+        };
+        CreateInvoiceReq: {
+            /** Format: int64 */
+            ciCustomerId: number;
+            ciCurrency?: string | null;
+            ciNumber?: string | null;
+            ciNotes?: string | null;
+            ciGenerateReceipt?: boolean | null;
+            ciLineItems: components["schemas"]["CreateInvoiceLineReq"][];
+        };
+        ReceiptLineDTO: {
+            /** Format: int64 */
+            receiptLineId: number;
+            rlDescription: string;
+            /** Format: int64 */
+            rlQuantity: number;
+            /** Format: int64 */
+            rlUnitCents: number;
+            /** Format: int64 */
+            rlTaxBps: number | null;
+            /** Format: int64 */
+            rlTotalCents: number;
+        };
+        ReceiptDTO: {
+            /** Format: int64 */
+            receiptId: number;
+            receiptNumber: string;
             /** Format: date-time */
-            occurredAt: string;
-            /** @description JSON metadata limited to 16 KiB when encoded. */
-            metadata: unknown;
+            issuedAt: string;
+            /** Format: date */
+            issueDate: string;
+            buyerName: string;
+            buyerEmail: string | null;
+            currency: string;
+            /** Format: int64 */
+            subtotalCents: number;
+            /** Format: int64 */
+            taxCents: number;
+            /** Format: int64 */
+            totalCents: number;
+            notes: string | null;
+            /** Format: int64 */
+            invoiceId: number;
+            lineItems: components["schemas"]["ReceiptLineDTO"][];
         };
-        MusicValidationIssue: {
-            fieldPath: string;
+        CreateReceiptReq: {
+            /** Format: int64 */
+            crInvoiceId: number;
+            crBuyerName?: string | null;
+            crBuyerEmail?: string | null;
+            crNotes?: string | null;
+            crCurrency?: string | null;
+        };
+        EventLiveBroadcastDTO: {
+            elbId: string | null;
+            elbEventId: string | null;
+            elbArtistId: string;
+            elbArtistName: string;
+            elbBroadcasterName: string;
+            elbBroadcasterPartyId: string | null;
+            elbTitle: string;
+            elbDescription: string | null;
+            elbStatus: string;
+            /** @description Always null while native streaming is unavailable */
+            elbPlaybackUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbIngestUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbWhipUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbStreamKey: string | null;
+            elbViewerCount: number;
+            /** Format: date-time */
+            elbStartedAt: string | null;
+            /** Format: date-time */
+            elbEndedAt: string | null;
+            /** Format: date-time */
+            elbLastHeartbeatAt: string | null;
+        };
+        EventLiveBroadcastCreateDTO: {
+            elbCreateArtistId: string;
+            elbCreateArtistName?: string;
+            elbCreateBroadcasterName?: string;
+            elbCreateBroadcasterPartyId?: string;
+            elbCreateTitle?: string;
+            elbCreateDescription?: string;
+            elbCreateQuality?: string;
+        };
+        EventLiveBroadcastHeartbeatDTO: {
+            /** @description Clamped to -1000 through 1000 by the legacy handler */
+            elbhViewerDelta?: number;
+        };
+        EventLiveBroadcastEndDTO: {
+            elbEndBroadcasterPartyId?: string;
+        };
+        TrialSubject: {
+            /** Format: int64 */
+            subjectId: number;
+            name: string;
+            active: boolean;
+            roomIds: string[];
+        };
+        /** @enum {string} */
+        PaymentCapabilityName: "one_time" | "recurring" | "tokenization" | "three_ds" | "installments" | "authorize" | "capture" | "void" | "full_refund" | "partial_refund" | "disputes" | "chargebacks" | "payment_link" | "signed_webhook" | "server_verification" | "connected_accounts" | "split_settlement" | "seller_payouts";
+        PaymentRoute: {
+            /** @enum {string} */
+            provider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            capabilities: components["schemas"]["PaymentCapabilityName"][];
+            priority: number;
+        };
+        PaymentCapabilityResponse: {
+            /** @enum {string} */
+            environment: "sandbox" | "production";
+            buyerCountry: string;
+            currency: string;
+            /** Format: int64 */
+            amountMinor: number;
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            /** @enum {string} */
+            productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+            routes: components["schemas"]["PaymentRoute"][];
+            fallbackPolicy: string;
+        };
+        /** @enum {string} */
+        InteractionKind: "club_post" | "club_memory" | "event" | "event_moment" | "recording" | "recording_session" | "record_release" | "artist_release" | "classified" | "directory_profile" | "artist_update";
+        InteractionMention: {
+            partyId: number;
+            start: number;
+            end: number;
+        };
+        InteractionAuthor: {
+            id: number;
+            displayName: string;
+            avatarUrl: string | null;
+        };
+        InteractionComment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            targetId: string;
+            /** Format: uuid */
+            parentId: string | null;
+            /** Format: uuid */
+            rootId: string;
+            depth: number;
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            editedAt: string | null;
+            /** @enum {string} */
+            state: "visible" | "deleted" | "hidden" | "removed" | "unavailable";
+            body: string;
+            author: components["schemas"]["InteractionAuthor"] | null;
+            canEdit: boolean | null;
+            canDelete: boolean | null;
+            mentions: components["schemas"]["InteractionMention"][];
+            replyCount?: number;
+            moderationBody?: string;
+            openReports?: number;
+            /** @description Latest 20 open report reasons, visible only to authorized moderators; reporter identities are omitted. */
+            reportReasons?: string[];
+            legacyPresentation?: {
+                title?: string | null;
+                mediaUrls?: string[];
+            } | null;
+        };
+        InteractionReaction: {
+            /** Format: uuid */
+            id: string;
             code: string;
-            message: string;
+            emoji: string;
+            label: string;
+            count: number;
+            selectable: boolean;
         };
-        MusicCorrectionFailure: {
-            message: string;
-            errors: {
-                /** @enum {string} */
-                code: "correction_resource_graph_invalid" | "correction_recording_reference_invalid" | "correction_source_unavailable" | "correction_retry_required";
-                /** @enum {string} */
-                fieldPath: "assets" | "assets.recordingId" | "sourceVersionId";
-                message: string;
+        InteractionContext: {
+            kind: components["schemas"]["InteractionKind"];
+            key: string;
+            ownerId: number | null;
+            title: string;
+            route: string;
+            public: boolean;
+            canManage: boolean;
+            reactable: boolean;
+            commentable: boolean;
+            shareable: boolean;
+        };
+        InteractionSummary: components["schemas"]["InteractionContext"] & {
+            /** Format: uuid */
+            id: string;
+            version: number;
+            /** @enum {string} */
+            commentPolicy: "everyone" | "followers" | "mentioned" | "off";
+            canReact: boolean;
+            canComment: boolean;
+            canModerate: boolean;
+            commentCount: number;
+            rootCount: number;
+            reactions: components["schemas"]["InteractionReaction"][];
+            /** Format: uuid */
+            myReactionTypeId: string | null;
+            /** @enum {string} */
+            subscription: "all" | "participating" | "muted";
+            /** @enum {string} */
+            defaultSort: "newest" | "oldest" | "relevant";
+            mentionedPeople?: components["schemas"]["InteractionAuthor"][];
+        };
+        InteractionPage: {
+            items: components["schemas"]["InteractionComment"][];
+            /** Format: uuid */
+            nextCursor: string | null;
+            /** @enum {string} */
+            sort?: "newest" | "oldest";
+        };
+        InteractionCommentContext: {
+            target: components["schemas"]["InteractionContext"];
+            root: components["schemas"]["InteractionComment"];
+            comment: components["schemas"]["InteractionComment"];
+            parent: components["schemas"]["InteractionComment"] | null;
+            surrounding: components["schemas"]["InteractionComment"][];
+        };
+        InteractionDestination: components["schemas"]["InteractionContext"] & {
+            /** Format: uuid */
+            targetId: string;
+            /** Format: uuid */
+            commentId: string | null;
+            context: components["schemas"]["InteractionCommentContext"] | null;
+        };
+        InteractionReactors: {
+            items: {
+                author: components["schemas"]["InteractionAuthor"];
+                /** Format: uuid */
+                reactionTypeId: string;
             }[];
+            nextCursor: number | null;
+        };
+        InteractionBlockedAccounts: {
+            items: (components["schemas"]["InteractionBlock"] & {
+                displayName: string;
+            })[];
+            nextCursor: number | null;
+        };
+        InteractionBlock: {
+            partyId: number;
+            blocked: boolean;
+            version: number;
+            replay?: boolean;
+        };
+        InteractionBlockRequest: {
+            /** Format: uuid */
+            blockRequestKey: string;
+            blocked: boolean;
+            expectedVersion: number;
+        };
+        InteractionPreferences: {
+            reactions: boolean;
+            comments: boolean;
+            replies: boolean;
+            mentions: boolean;
+        };
+        InteractionCommand: {
+            /** @enum {string} */
+            operation: "reaction.set";
+            /** Format: uuid */
+            reactionTypeId: string | null;
+        } | {
+            /** @enum {string} */
+            operation: "comment.create";
+            body: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            mentions?: components["schemas"]["InteractionMention"][];
+        } | {
+            /** @enum {string} */
+            operation: "comment.edit";
+            /** Format: uuid */
+            commentId: string;
+            body: string;
+            mentions: components["schemas"]["InteractionMention"][];
+            expectedVersion: number;
+        } | {
+            /** @enum {string} */
+            operation: "comment.delete";
+            /** Format: uuid */
+            commentId: string;
+            expectedVersion: number;
+        } | {
+            /** @enum {string} */
+            operation: "comment.hide";
+            /** Format: uuid */
+            commentId: string;
+            expectedVersion: number;
+            reason: string;
+        } | {
+            /** @enum {string} */
+            operation: "comment.remove";
+            /** Format: uuid */
+            commentId: string;
+            expectedVersion: number;
+            reason: string;
+        } | {
+            /** @enum {string} */
+            operation: "comment.restore";
+            /** Format: uuid */
+            commentId: string;
+            expectedVersion: number;
+            reason: string;
+        } | {
+            /** @enum {string} */
+            operation: "comment.report";
+            /** Format: uuid */
+            commentId: string;
+            reason: string;
+        } | {
+            /** @enum {string} */
+            operation: "subscription.set";
+            /** @enum {string} */
+            mode: "all" | "participating" | "muted";
+        } | {
+            /** @enum {string} */
+            operation: "settings.update";
+            /** @enum {string} */
+            commentPolicy: "everyone" | "followers" | "mentioned" | "off";
+            expectedVersion: number;
+            mentionedPartyIds: number[];
+        } | {
+            /** @enum {string} */
+            operation: "comment.report.resolve";
+            /** Format: uuid */
+            commentId: string;
+            expectedVersion: number;
+            reason: string;
+            /** @enum {string} */
+            decision: "reviewed" | "dismissed";
+        };
+        InteractionCommandRequest: {
+            /** Format: uuid */
+            requestKey: string;
+            command: components["schemas"]["InteractionCommand"];
+        };
+        InteractionCommandResult: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            reactionTypeId?: string | null;
+            version?: number;
+            replay?: boolean;
+            reported?: boolean;
+            mode?: string;
+            commentPolicy?: string;
+        };
+        Notification: {
+            /** Format: int64 */
+            nId: number;
+            nType: string;
+            nTitle: string;
+            nBody: string;
+            nTargetType?: string | null;
+            /** Format: int64 */
+            nTargetId?: number | null;
+            /** @description Stable UUID of the target or logistics activity; never a URL */
+            nTargetKey?: string | null;
+            nIsRead: boolean;
+            /** Format: date-time */
+            nCreatedAt: string;
+        };
+        /** @enum {string} */
+        EventTaskStatus: "planned" | "confirmed" | "in_progress" | "completed" | "cancelled";
+        EventRaciAssignment: {
+            /** Format: int64 */
+            partyId: number;
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+        };
+        EventTaskPolicy: {
+            requiresAccountability: boolean;
+            dependenciesGateCompletion: boolean;
+            /** Format: int64 */
+            version: number;
+        };
+        /** @description Canonical ASCII decimal string in 1..9223372036854775807 (signed BIGINT maximum). Runtime decoders enforce the exact upper bound in addition to the pattern. Never convert to a JavaScript number. Not an authorization or readiness certificate. */
+        EventTaskAggregateRevision: string;
+        EventTaskCompletionCommand: {
+            expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @description Nonblank; preserved without normalization. */
+            reason: string;
+            /** @description Nonblank; bound to the idempotent request. */
+            correlationId: string;
+        };
+        EventTaskCompletionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            status: "completed";
+            /** Format: int32 */
+            activityVersion: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            replayed: boolean;
+        };
+        EventRaciEditorContext: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @description Current scoped permission; never a command authorization token. */
+            canManage: boolean;
+            /** @description Current lifecycle/accountability gates; not event readiness or consent. */
+            operationReady: boolean;
+            /** @description Current unbounded source pairs; empty unless operationReady. */
+            replaceableAssignments: components["schemas"]["EventRaciAssignment"][];
+            /** @description Ascending current readers strictly after cursor; empty unless operationReady. */
+            eligiblePartyIds: number[];
+            /**
+             * Format: int64
+             * @description Omitted on final page; otherwise last of exactly 100 returned eligible IDs.
+             */
+            nextAfterPartyId?: number;
+        };
+        EventRaciReassignmentCommand: {
+            expectedRevision: components["schemas"]["EventTaskAggregateRevision"];
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+            /** Format: int64 */
+            fromPartyId: number;
+            /**
+             * Format: int64
+             * @description Must differ from fromPartyId and currently be eligible to read the exact task.
+             */
+            toPartyId: number;
+            /** @description Nonblank; preserved without normalization. */
+            reason: string;
+            /** @description Nonblank; bound to the idempotent request. */
+            correlationId: string;
+        };
+        EventRaciReassignmentOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            role: "responsible" | "accountable" | "consulted" | "informed";
+            /** Format: int64 */
+            fromPartyId: number;
+            /** Format: int64 */
+            toPartyId: number;
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+            replayed: boolean;
+        };
+        EventOperationTaskWithRevision: {
+            task: components["schemas"]["EventOperationTask"];
+            aggregateRevision: components["schemas"]["EventTaskAggregateRevision"];
+        };
+        EventOperationTask: {
+            /** Format: int64 */
+            eventId: number;
+            /** Format: int64 */
+            activityId: number;
+            status: components["schemas"]["EventTaskStatus"];
+            /**
+             * Format: int64
+             * @description Activity version only, not an aggregate task/RACI concurrency token.
+             */
+            version: number;
+            policy?: components["schemas"]["EventTaskPolicy"];
+            /** @description Current non-revoked assignments at one server-selected authorization instant. */
+            raci: components["schemas"]["EventRaciAssignment"][];
+            /** @description True exactly when an existing policy requires accountability and the current RACI lacks exactly one Accountable or any Responsible. False with no policy does not certify readiness, membership validity or satisfied dependencies. */
+            accountabilityNeedsAttention: boolean;
+        };
+        /** @enum {string} */
+        EventLifecycleState: "draft" | "planning" | "pending_approval" | "approved" | "published" | "staffing" | "ready" | "in_progress" | "completed" | "settlement_pending" | "settled" | "archived" | "reprogrammed" | "cancelled";
+        EventOperationSnapshot: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** @description Existing social-event state retained as migration evidence. */
+            legacyStateCode?: string;
+            capabilities: string[];
+            availableTransitions: components["schemas"]["EventLifecycleState"][];
+        };
+        EventTransitionCommand: {
+            /** Format: int64 */
+            expectedVersion: number;
+            targetState: components["schemas"]["EventLifecycleState"];
+            /** @description Omit when unnecessary; explicit null is rejected. */
+            reason?: string;
+            correlationId: string;
+        };
+        EventTransitionOutcome: {
+            /** Format: int64 */
+            eventId: number;
+            canonicalState: components["schemas"]["EventLifecycleState"];
+            /** Format: int64 */
+            version: number;
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            authorityCode: "owner" | "event_approver" | "finance_approver" | "records_manager";
+            replayed: boolean;
+        };
+        EventOperationError: {
+            /** @enum {string} */
+            code: "feature_disabled" | "not_found" | "forbidden" | "invalid_request" | "reason_required" | "idempotency_conflict" | "version_conflict" | "transition_invalid" | "transition_effects_not_ready" | "operation_not_ready" | "assignment_not_replaceable" | "assignee_unavailable" | "assignment_conflict" | "accountability_not_ready" | "dependencies_not_ready" | "separation_of_duties" | "event_operations_unavailable" | "invalid_database_response";
         };
         MerchReputationSummary: {
             /** @enum {string} */
@@ -7882,7 +10303,7 @@ export interface components {
             termsAcceptedAt?: string | null;
             /** Format: date-time */
             depositPaidAt?: string | null;
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
         };
         PublicDomoPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -7908,8 +10329,12 @@ export interface components {
             currency: string;
             buyerFeeBps: number;
             organizerFeeBps: number;
+            /** @description Whether the advertised face value and buyer fee include tax. Omitted by older additive-tax APIs. */
+            taxIncluded?: boolean;
             taxBps: number;
             holdMinutes: number;
+            /** @description Approved per-order limit. Older API versions omit this field and enforce the legacy limit of 100. This is not a cumulative per-buyer quota. */
+            maxTicketsPerOrder?: number;
             termsVersion: string;
             termsSummary: string;
             refundPolicy: string;
@@ -7960,6 +10385,8 @@ export interface components {
             buyerPlatformFeeMinor: number;
             /** Format: int64 */
             organizerPlatformFeeMinor: number;
+            /** @description Immutable purchased tax mode. If true taxMinor is included in checkoutTotalMinor rather than added to face value and buyer fee. */
+            taxIncluded?: boolean;
             /** Format: int64 */
             taxMinor: number;
             /** Format: int64 */
@@ -7992,7 +10419,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
         };
@@ -8028,6 +10455,63 @@ export interface components {
             customerName?: string | null;
             partyDisplayName?: string | null;
             resources: components["schemas"]["BookingResource"][];
+            courseSlug?: string | null;
+            /** Format: double */
+            coursePrice?: number | null;
+            courseCurrency?: string | null;
+            courseCapacity?: number | null;
+            courseRemaining?: number | null;
+            courseLocation?: string | null;
+        };
+        BookingCreate: {
+            cbTitle: string;
+            /** Format: date-time */
+            cbStartsAt: string;
+            /** Format: date-time */
+            cbEndsAt: string;
+            /** @description One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted */
+            cbStatus: string;
+            cbNotes?: string | null;
+            /** Format: int64 */
+            cbPartyId?: number | null;
+            /** Format: int64 */
+            cbEngineerPartyId?: number | null;
+            cbEngineerName?: string | null;
+            /** Format: uuid */
+            cbServiceOfferingId: string;
+            cbResourceIds?: string[] | null;
+        };
+        /** @description At least one supported field must be non-null; null alone is not an update. */
+        BookingUpdate: {
+            ubTitle?: string | null;
+            /** Format: date-time */
+            ubStartsAt?: string | null;
+            /** Format: date-time */
+            ubEndsAt?: string | null;
+            /** @description One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted */
+            ubStatus?: string | null;
+            ubNotes?: string | null;
+            /** Format: int64 */
+            ubEngineerPartyId?: number | null;
+            ubEngineerName?: string | null;
+            /** Format: uuid */
+            ubServiceOfferingId?: string | null;
+        } | {
+            ubTitle: string;
+        } | {
+            ubStartsAt: string;
+        } | {
+            ubEndsAt: string;
+        } | {
+            ubStatus: string;
+        } | {
+            ubNotes: string;
+        } | {
+            ubEngineerPartyId: number;
+        } | {
+            ubEngineerName: string;
+        } | {
+            ubServiceOfferingId: string;
         };
         PublicBookingCreate: {
             pbFullName: string;
@@ -8107,7 +10591,7 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
             manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
         };
         PublicBookingManualPaymentCreate: {
@@ -8596,6 +11080,11 @@ export interface components {
             ssoCurrency: string;
             ssoStatus: string;
             ssoPaymentProvider: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical checkout identifier used by the provider-neutral payment session API.
+             */
+            ssoCheckoutId: string | null;
             ssoLookupToken: string | null;
             /** Format: date-time */
             ssoPaidAt: string | null;
@@ -8669,6 +11158,24 @@ export interface components {
             /** Format: date-time */
             ssrfCompletedAt: string | null;
         };
+        ServiceStorefrontRefundRecovery: {
+            /** Format: uuid */
+            ssrrRefundId: string;
+            /** @enum {string} */
+            ssrrEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            ssrrStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            /** @description Positive exact Int64 minor units; never parse through floating point */
+            ssrrAmountMinor: string;
+            /** @enum {string} */
+            ssrrCurrency: "USD";
+            /** @description Query readiness */
+            ssrrCanQuery: boolean;
+            /** @enum {string} */
+            ssrrOutcome: "not_queried" | "held" | "completed" | "already_completed";
+            /** Format: date-time */
+            ssrrCheckedAt: string | null;
+        };
         ServiceStorefrontReconciliation: {
             /** Format: uuid */
             ssrecOrderId: string;
@@ -8681,15 +11188,281 @@ export interface components {
             /** Format: date-time */
             ssrecCheckedAt: string;
         };
+        CommerceProviderCapability: {
+            cpcPaymentMethod: string;
+            cpcCapability: string;
+            /** @enum {string} */
+            cpcVerificationStatus: "documented" | "contract_required" | "sandbox_verified" | "production_verified" | "disabled";
+            /** Format: date-time */
+            cpcVerifiedAt: string | null;
+        };
+        CommerceProviderAccount: {
+            /** @enum {string} */
+            cpaProvider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            cpaEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cpaStatus: "disabled" | "testing" | "ready" | "suspended" | "blocked";
+            /** @enum {string} */
+            cpaContractStatus: "unverified" | "pending" | "approved" | "blocked";
+            /** @enum {string} */
+            cpaCredentialStatus: "absent" | "configured" | "validated" | "invalid";
+            cpaSettlementCurrency: string;
+            cpaEnabled: boolean;
+            cpaFeatureEnabled: boolean;
+            /** Format: date-time */
+            cpaVerifiedAt: string | null;
+            cpaDisabledReason: string | null;
+            cpaCapabilities: components["schemas"]["CommerceProviderCapability"][];
+        };
+        CommercePaymentIntentSummary: {
+            /** @enum {string} */
+            cpiEnvironment: "sandbox" | "production";
+            cpiStatus: string;
+            cpiCurrency: string;
+            /** Format: int64 */
+            cpiCount: number;
+            /** Format: int64 */
+            cpiAmountMinor: number;
+            /** Format: int64 */
+            cpiAuthorizedMinor: number;
+            /** Format: int64 */
+            cpiCapturedMinor: number;
+            /** Format: int64 */
+            cpiRefundedMinor: number;
+        };
+        CommerceAmountComponentSummary: {
+            /** @enum {string} */
+            cacEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cacComponentType: "subtotal" | "discount" | "tax" | "customer_fee" | "provider_fee" | "platform_commission" | "seller_payable" | "withholding" | "refund" | "chargeback" | "fx_adjustment";
+            /** @enum {string} */
+            cacSource: "quote" | "provider_estimate" | "provider_actual" | "tax_document" | "manual_adjustment";
+            cacCurrency: string;
+            /** Format: int64 */
+            cacCount: number;
+            /** Format: int64 */
+            cacAmountMinor: number;
+        };
+        CommerceCommissionSummary: {
+            ccmProvider: string;
+            /** @enum {string} */
+            ccmEnvironment: "sandbox" | "production";
+            ccmCurrency: string;
+            /** Format: int64 */
+            ccmCount: number;
+            /** Format: int64 */
+            ccmBasisAmountMinor: number;
+            /** Format: int64 */
+            ccmCommissionMinor: number;
+            /** Format: int64 */
+            ccmProviderFeeMinor: number;
+            /** Format: int64 */
+            ccmTaxMinor: number;
+            /** Format: int64 */
+            ccmSellerNetMinor: number;
+        };
+        CommerceRefundSummary: {
+            crfProvider: string;
+            /** @enum {string} */
+            crfEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            crfStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            crfCurrency: string;
+            /** Format: int64 */
+            crfCount: number;
+            /** Format: int64 */
+            crfAmountMinor: number;
+        };
+        CommerceDisputeSummary: {
+            cdsProvider: string;
+            /** @enum {string} */
+            cdsEnvironment: "sandbox" | "production";
+            /** @enum {string} */
+            cdsKind: "inquiry" | "dispute" | "chargeback";
+            cdsStatus: string;
+            cdsCurrency: string;
+            /** Format: int64 */
+            cdsCount: number;
+            /** Format: int64 */
+            cdsAmountMinor: number;
+        };
+        CommerceReconciliationSummary: {
+            crsProvider: string;
+            crsEnvironment: string;
+            /** @enum {string} */
+            crsStatus: "open" | "assigned" | "resolved" | "ignored";
+            crsCurrency: string | null;
+            /** Format: int64 */
+            crsCount: number;
+            /** Format: int64 */
+            crsExpectedMinor: number;
+            /** Format: int64 */
+            crsActualMinor: number;
+        };
+        CommerceSettlementSummary: {
+            cssProvider: string;
+            cssEnvironment: string;
+            cssStatus: string;
+            cssCurrency: string;
+            /** Format: int64 */
+            cssCount: number;
+            /** Format: int64 */
+            cssGrossMinor: number;
+            /** Format: int64 */
+            cssFeeMinor: number;
+            /** Format: int64 */
+            cssWithholdingMinor: number;
+            /** Format: int64 */
+            cssRefundMinor: number;
+            /** Format: int64 */
+            cssChargebackMinor: number;
+            /** Format: int64 */
+            cssNetMinor: number;
+        };
+        CommerceSellerBalanceSummary: {
+            csbProvider: string;
+            csbEnvironment: string;
+            /** @enum {string} */
+            csbAvailability: "available" | "pending";
+            csbCurrency: string;
+            /** Format: int64 */
+            csbEntryCount: number;
+            /** Format: int64 */
+            csbNetAmountMinor: number;
+        };
+        CommercePayoutSummary: {
+            cpsProvider: string;
+            cpsEnvironment: string;
+            cpsStatus: string;
+            cpsCurrency: string;
+            /** Format: int64 */
+            cpsCount: number;
+            /** Format: int64 */
+            cpsAmountMinor: number;
+        };
+        CommercePaymentOverview: {
+            /** Format: date-time */
+            cpoGeneratedAt: string;
+            cpoProviderAccounts: components["schemas"]["CommerceProviderAccount"][];
+            cpoPaymentIntents: components["schemas"]["CommercePaymentIntentSummary"][];
+            cpoAmountComponents: components["schemas"]["CommerceAmountComponentSummary"][];
+            cpoCommissions: components["schemas"]["CommerceCommissionSummary"][];
+            cpoRefunds: components["schemas"]["CommerceRefundSummary"][];
+            cpoDisputes: components["schemas"]["CommerceDisputeSummary"][];
+            cpoReconciliationExceptions: components["schemas"]["CommerceReconciliationSummary"][];
+            cpoSettlements: components["schemas"]["CommerceSettlementSummary"][];
+            cpoSellerBalances: components["schemas"]["CommerceSellerBalanceSummary"][];
+            cpoPayouts: components["schemas"]["CommercePayoutSummary"][];
+        };
+        CommerceReconciliationEntry: {
+            /** Format: uuid */
+            creId: string;
+            /**
+             * @description A recognized stored provider, not current merchant eligibility or availability
+             * @enum {string}
+             */
+            creProvider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer" | "stripe" | "unrecognized";
+            /** @enum {string} */
+            creStatus: "open" | "assigned" | "resolved" | "ignored" | "unrecognized";
+            /**
+             * @description Fixed safe classification, not raw stored exception text
+             * @enum {string}
+             */
+            creReason: "closed_checkout_approval" | "scheduled_query_review" | "binding_mismatch" | "unknown_provider_state" | "unrecognized";
+            /** Format: uuid */
+            creCheckoutId: string | null;
+            /** Format: uuid */
+            crePaymentAttemptId: string | null;
+            /** @description Exact signed 64-bit integer minor units; null means unknown, not zero */
+            creExpectedMinor: string | null;
+            /** @description Exact observed signed 64-bit minor units; not a booked capture or settlement */
+            creActualMinor: string | null;
+            creCurrency: string | null;
+            /** Format: date-time */
+            creDetectedAt: string;
+            /** Format: date-time */
+            creResolvedAt: string | null;
+        };
+        CommerceReconciliationReport: {
+            /** Format: date-time */
+            crrGeneratedAt: string;
+            /** @enum {string} */
+            crrEnvironment: "sandbox" | "production";
+            /** @enum {string|null} */
+            crrStatus: "open" | "assigned" | "resolved" | "ignored" | null;
+            /** Format: uuid */
+            crrCheckoutId: string | null;
+            crrSchemaReady: boolean;
+            crrEntries: components["schemas"]["CommerceReconciliationEntry"][];
+            crrLimit: number;
+            crrOffset: number;
+            crrHasMore: boolean;
+        };
+        CommerceProviderQuery: {
+            /** Format: uuid */
+            cpqOperationId: string;
+            /** Format: uuid */
+            cpqCheckoutId: string;
+            /** Format: uuid */
+            cpqPaymentAttemptId: string;
+            cpqProvider: string;
+            /** @enum {string} */
+            cpqStatus: "pending" | "processing" | "retry" | "completed" | "dead_letter";
+            cpqAttemptCount: number;
+            /** @description Original operation state; not a job state */
+            cpqOperationStatus: string;
+            /** @enum {string} */
+            cpqOutcomeCertainty: "not_sent" | "confirmed_no_charge" | "ambiguous" | "succeeded";
+            /** Format: date-time */
+            cpqCreatedAt: string;
+            /** Format: date-time */
+            cpqLastAttemptAt: string | null;
+            /** Format: date-time */
+            cpqNextAttemptAt: string;
+            /** Format: date-time */
+            cpqLeaseExpiresAt: string | null;
+            /** Format: date-time */
+            cpqCompletedAt: string | null;
+            /**
+             * @description Known server-authored diagnostic only; all other stored text becomes unrecognized
+             * @enum {string|null}
+             */
+            cpqLastOutcome: "retry_exhausted" | "process_switch_disabled" | "binding_changed" | "query_unavailable" | "query_unsupported" | "query_binding_mismatch" | "query_application_rejected" | "query_applied" | "provider_nonterminal" | "provider_requires_review" | "configuration_revoked" | "operation_already_terminal" | "immutable_binding_unavailable" | "unrecognized" | null;
+        };
+        CommerceProviderQueryBudget: {
+            cpqbProvider: string;
+            /**
+             * Format: date-time
+             * @description Earliest shared query slot
+             */
+            cpqbNextQueryAt: string;
+        };
+        CommerceProviderQueries: {
+            /** Format: date-time */
+            cpqsGeneratedAt: string;
+            /** @enum {string} */
+            cpqsEnvironment: "sandbox" | "production";
+            cpqsSchemaReady: boolean;
+            /** @description Database flag only; never worker liveness or complete activation authority */
+            cpqsRecoveryFlagEnabled: boolean;
+            cpqsJobs: components["schemas"]["CommerceProviderQuery"][];
+            cpqsBudgets: components["schemas"]["CommerceProviderQueryBudget"][];
+            cpqsLimit: number;
+            cpqsOffset: number;
+            cpqsHasMore: boolean;
+        };
         CommerceProviderEvent: {
             /** Format: uuid */
             cpeId: string;
             /** @enum {string} */
-            cpeProvider: "paypal" | "datafast" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
+            cpeProvider: "paypal" | "datafast" | "placetopay" | "payphone" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
             /** @enum {string} */
             cpeEnvironment: "sandbox" | "production";
             cpeProviderEventId: string;
             cpeEventType: string;
+            /** @enum {string} */
+            cpeEvidenceType: "signature_verified" | "untrusted_callback";
             cpeProviderResourceId: string | null;
             /** @enum {string} */
             cpeStatus: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
@@ -8716,6 +11489,40 @@ export interface components {
         };
         CommerceProviderEventReplayCreate: {
             cperReason: string;
+        };
+        PaymentSessionCreate: {
+            /** @enum {string} */
+            provider: "placetopay" | "payphone";
+            /** @enum {string} */
+            paymentMethod: "card" | "bank_redirect" | "deuna_qr" | "payphone_wallet";
+            buyerPhone?: string;
+            buyerCountryCode?: string;
+        };
+        PaymentSession: {
+            /** Format: uuid */
+            checkoutId: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            operationId: string;
+            /** @enum {string} */
+            provider: "placetopay" | "payphone";
+            /** @enum {string} */
+            state: "prepared" | "in_flight" | "requires_customer_action" | "processing" | "succeeded" | "confirmed_no_charge" | "ambiguous" | "failed";
+            externalId: string | null;
+            /**
+             * Format: uri
+             * @description Hosted provider URL; treat as a bearer capability and do not log it.
+             */
+            redirectUrl: string | null;
+            /** @enum {string} */
+            outcomeCertainty: "not_contacted" | "rejected_before_creation" | "confirmed_no_charge" | "ambiguous" | "succeeded";
+            /** @description True only when the provider is known not to have created a charge. */
+            canRetryOrFallback: boolean;
+        };
+        PayPhoneNotificationAck: {
+            Response: boolean;
+            ErrorCode: string;
         };
         DatafastCheckout: {
             dcOrderId: string;
@@ -8952,6 +11759,13 @@ export interface components {
             /** Format: int64 */
             resolutionPlanId: number;
             resolutionConflicts: components["schemas"]["DdexConflictResolution"][];
+        };
+        DdexPreview: {
+            previewMessageId: string;
+            previewSender: string;
+            previewReleaseCount: number;
+            previewResourceCount: number;
+            previewWarnings: string[];
         };
         DdexDownloadResponse: {
             downloadFileName: string;
@@ -9419,9 +12233,11 @@ export interface components {
              * @description Service status.
              * @enum {string}
              */
-            status?: "ok" | "degraded";
-            /** @description Application version. */
-            version?: string;
+            status: "ok" | "degraded" | "starting";
+            /** @enum {string} */
+            db: "ok" | "unavailable" | "starting";
+            /** @description Optional fixed startup explanation. Database errors never include exception details. */
+            message?: string;
         };
         LoginRequest: {
             /**
@@ -9435,6 +12251,10 @@ export interface components {
         GoogleLoginRequest: {
             /** @description Google ID token returned by Google Identity Services */
             idToken: string;
+            /** @description Must be explicitly true, with current terms acceptance, to create a new account for an unbound Google subject. Omission never creates an account. */
+            createNewAccount?: boolean;
+            /** @description Explicitly connect the verified Google identity using the existing TDF account credentials. No account or permission is merged. */
+            linkAccount?: components["schemas"]["LoginRequest"];
             /** @description Optional consent to receive TDF product and marketing updates when creating an account. */
             marketingOptIn?: boolean;
             /** @description Account terms acceptance when Google is used from signup. */
@@ -9473,10 +12293,25 @@ export interface components {
             fanArtistIds?: number[];
             /**
              * Format: int64
-             * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+             * @deprecated
+             * @description Unsupported legacy ownership claim. A supplied positive identifier is rejected with 403 before database effects. Create an independent account, then use the authenticated reviewed directory-claim workflow.
              */
             claimArtistId?: number;
             onboardingIntent?: components["schemas"]["OnboardingIntent"];
+        };
+        PasswordResetConfirmRequest: {
+            /** Format: uuid */
+            token: string;
+            /** Format: password */
+            newPassword: string;
+        };
+        ChangePasswordRequest: {
+            /** @description Optional when an active bearer token supplies the identifier */
+            username?: string;
+            /** Format: password */
+            currentPassword: string;
+            /** Format: password */
+            newPassword: string;
         };
         LoginResponse: {
             /** @description Bearer token for authenticated requests when a client is not using cookies. */
@@ -9529,12 +12364,23 @@ export interface components {
             /** @description True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence. */
             newlyCompleted: boolean;
         };
-        ArtistInvitationRedeemRequest: {
-            /**
-             * @description Explicit allowlisted campaign invitation. It is accepted only by the authenticated redemption endpoint and grants no administrative role.
-             * @enum {string}
-             */
-            artistInvitation: "tu_escena_conectada_piloto";
+        ExperimentAssignment: {
+            experimentId: string;
+            experimentVersion: number;
+            experimentEnabled: boolean;
+            experimentEligible: boolean;
+            variant: string;
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            eligibleUntil: string | null;
+            /** Format: date-time */
+            exposedAt: string | null;
+            newlyAssigned: boolean;
+        };
+        ExperimentExposureResult: {
+            assignment: components["schemas"]["ExperimentAssignment"];
+            newlyExposed: boolean;
         };
         SessionResponse: {
             username: string;
@@ -10067,6 +12913,19 @@ export interface components {
             durationMs?: number;
             /** Format: uri */
             thumbnailUrl?: string;
+            /**
+             * @description Absent when provider availability has not been verified.
+             * @enum {string}
+             */
+            availability?: "available" | "unavailable";
+            /** @description Verified provider reason, independent of image loading failures. */
+            availabilityReason?: string;
+            /** Format: date-time */
+            verifiedAt?: string;
+            /** @description Verified public provider metadata, including publication time, thumbnails, and embedding status. */
+            providerMetadata?: {
+                [key: string]: unknown;
+            };
             relationKind: string;
             primary: boolean;
             sortOrder: number;
@@ -10466,10 +13325,10 @@ export interface components {
             uacActive?: boolean | null;
         };
         UpdateUserAccountRequest: {
-            uauUsername?: string | null;
+            uauUsername?: string;
             /** Format: password */
-            uauPassword?: string | null;
-            uauActive?: boolean | null;
+            uauPassword?: string;
+            uauActive?: boolean;
         };
         ArtistProfile: {
             /** Format: int64 */
@@ -10985,7 +13844,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string | null;
             quote: components["schemas"]["CourseCheckoutQuote"] | null;
-            paymentMethods: ("datafast" | "paypal")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
             checkoutAvailable: boolean;
         };
         CoursePaypalCaptureRequest: {
@@ -11231,7 +14090,17 @@ export interface components {
             ifrRetests: components["schemas"]["InternalFeedbackRetest"][];
             ifrPotentialDuplicates: components["schemas"]["InternalFeedbackSummary"][];
         };
+        AccountDeletionAction: {
+            /** @enum {string} */
+            adaOutcome: "completed" | "rejected";
+            adaNote: string;
+            /** Format: int64 */
+            adaActor: number | null;
+            /** Format: date-time */
+            adaCreatedAt: string;
+        };
         LegacyFeedback: {
+            lfdDeletionHistory?: components["schemas"]["AccountDeletionAction"][];
             /** Format: uuid */
             lfdId: string;
             lfdTitle: string;
@@ -11458,6 +14327,11 @@ export interface components {
             ifsCreatedAt: string;
             /** Format: date-time */
             ifsUpdatedAt: string;
+        };
+        AccountDeletionReceipt: {
+            adrRequestId: string;
+            /** Format: int64 */
+            adrCreatedBy: number;
         };
         FeedbackMultipart: {
             title: string;
@@ -11932,9 +14806,7 @@ export interface components {
             /** Format: int64 */
             amountMinor?: number | null;
             currency?: string | null;
-            metadata: {
-                [key: string]: unknown;
-            };
+            metadata: Record<string, never>;
             requestId: string;
             sourceClient: string;
         };
@@ -12095,6 +14967,140 @@ export interface components {
             active: boolean;
             /** Format: date-time */
             updatedAt: string;
+        };
+        MusicPlaybackConflict: {
+            /** @enum {string} */
+            code: "playback_identity_conflict";
+            message: string;
+        };
+        MusicPlaybackEventInput: {
+            /** Format: uuid */
+            eventId: string;
+            /** Format: uuid */
+            sessionId: string;
+            sequenceNumber: number;
+            anonymousId?: string | null;
+            /** Format: uuid */
+            releaseVersionId: string;
+            /** Format: uuid */
+            recordingId: string;
+            /** @enum {string} */
+            eventType: "play_start" | "progress" | "pause" | "seek" | "complete" | "skip" | "error" | "buffering" | "quality_selected";
+            /** Format: int64 */
+            positionMs: number;
+            /** Format: int64 */
+            listenedDeltaMs: number;
+            quality?: string | null;
+            /** @description Not trusted for access or stored territory; the server uses the configured edge. */
+            territoryCode?: string | null;
+            /** Format: date-time */
+            occurredAt: string;
+            /** @description JSON metadata limited to 16 KiB when encoded. */
+            metadata: unknown;
+        };
+        MusicValidationIssue: {
+            fieldPath: string;
+            code: string;
+            message: string;
+        };
+        MusicCorrectionFailure: {
+            message: string;
+            errors: {
+                /** @enum {string} */
+                code: "correction_resource_graph_invalid" | "correction_recording_reference_invalid" | "correction_source_unavailable" | "correction_retry_required";
+                /** @enum {string} */
+                fieldPath: "assets" | "assets.recordingId" | "sourceVersionId";
+                message: string;
+            }[];
+        };
+        ArtistInvitationRedeemRequest: {
+            /**
+             * @description Explicit allowlisted campaign invitation. It is accepted only by the authenticated redemption endpoint and grants no administrative role.
+             * @enum {string}
+             */
+            artistInvitation: "tu_escena_conectada_piloto";
+        };
+        SocialV2Me: {
+            discoverable: boolean;
+            personalized: boolean;
+            /** Format: int64 */
+            revision: number;
+            relationships: {
+                /** Format: int64 */
+                partyId: number;
+                /** Format: int64 */
+                revision: number;
+                following: boolean;
+                requested: boolean;
+                incoming: boolean;
+                connected: boolean;
+                blocked: boolean;
+                muted: boolean;
+                dismissed: boolean;
+                displayName: string;
+            }[];
+        };
+        SocialV2State: {
+            /** Format: int64 */
+            partyId: number;
+            /** Format: int64 */
+            revision: number;
+            following: boolean;
+            requested: boolean;
+            incoming: boolean;
+            connected: boolean;
+            blocked: boolean;
+            muted: boolean;
+            dismissed: boolean;
+        };
+        SocialV2Command: {
+            /** @enum {string} */
+            operation: "request" | "accept" | "disconnect" | "follow" | "unfollow" | "block" | "unblock" | "mute" | "unmute" | "dismiss" | "undismiss";
+            /** Format: int64 */
+            expectedRevision: number;
+            requestKey: string;
+        };
+        SocialV2PreferenceUpdate: {
+            discoverable: boolean;
+            personalized: boolean;
+            /** Format: int64 */
+            expectedRevision: number;
+        };
+        SocialV2Preferences: {
+            discoverable: boolean;
+            personalized: boolean;
+            /** Format: int64 */
+            revision: number;
+        };
+        SocialV2Feed: {
+            nextCursor: string | null;
+            items: {
+                /** Format: int64 */
+                postId: number;
+                position: string;
+                /** Format: date-time */
+                publishedAt: string;
+                /** Format: date-time */
+                createdAt: string;
+                title: string | null;
+                content: string;
+                /** Format: int64 */
+                authorId: number;
+                authorName: string;
+                /** Format: int64 */
+                artistId: number;
+            }[];
+        };
+        SocialV2Discover: {
+            personalized: boolean;
+            items: {
+                /** Format: int64 */
+                partyId: number;
+                displayName: string;
+                /** @enum {string} */
+                reason: "shared_interests" | "public_profile";
+                relationship: components["schemas"]["SocialV2State"];
+            }[];
         };
         /** @enum {string} */
         DirectoryEntityType: "profile" | "classified" | "event" | "venue";
@@ -12986,171 +15992,1177 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    recordAnonymousMusicPlayback: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Trusted only when the origin is restricted to the configured edge. */
-                "CF-IPCountry"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MusicPlaybackEventInput"] & {
-                    anonymousId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Inserted or identical replay; no response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid telemetry or missing anonymous identifier */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Recording unavailable */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Session owner, sequence or event payload conflicts; no event or history is written */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MusicPlaybackConflict"];
-                };
-            };
-            /** @description Music playback telemetry disabled */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    recordAuthenticatedMusicPlayback: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Trusted only when the origin is restricted to the configured edge. */
-                "CF-IPCountry"?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MusicPlaybackEventInput"];
-            };
-        };
-        responses: {
-            /** @description Inserted or identical replay; no response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid telemetry */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Recording unavailable */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Session owner, sequence or event payload conflicts; no event or history is written */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MusicPlaybackConflict"];
-                };
-            };
-            /** @description Music playback telemetry disabled */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    validateMusicReleaseVersion: {
+    listInvoices: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                releaseId: string;
-                versionId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Current validation result */
+            /** @description Authoritative result */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        valid: boolean;
-                        errors: components["schemas"]["MusicValidationIssue"][];
-                    };
+                    "application/json": components["schemas"]["InvoiceDTO"][];
                 };
             };
-            /** @description Authentication required */
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Verified artist ownership or team permission required */
+            /** @description Invoicing module denied */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Release version not found */
+            /** @description Referenced object not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Authoring disabled */
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInvoiceReq"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInvoiceById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoiceId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listReceipts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDTO"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReceiptReq"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receiptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItems: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                q?: string;
+                seen?: boolean;
+                entityType?: string;
+                status?: string;
+                priority?: string;
+                slaState?: string;
+                assigneePartyId?: number;
+                customerPartyId?: number;
+                service?: string;
+                from?: string;
+                to?: string;
+                minAmountMinor?: number;
+                maxAmountMinor?: number;
+                paymentState?: string;
+                organizationId?: string;
+                branchId?: string;
+                sourceChannel?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItemPage"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsManualWorkItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsManualWorkItemCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItemDetail"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsNoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsNote"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsIntegrationFailures: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                status?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsIntegrationFailure"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsReplayFailure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                failureId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsReplayCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsIntegrationFailure"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsStreamEvents: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                afterId?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsStreamBatch"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsSavedViews: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsSavedView"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsSaveView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsSavedViewCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsSavedView"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsPushSubscriptionCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsPushSubscription"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Push encryption is not configured; no subscription committed */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -13159,90 +17171,2044 @@ export interface operations {
             };
         };
     };
-    transitionMusicReleaseVersion: {
+    operationsMetrics: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                branchId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped metrics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsMetrics"];
+                };
+            };
+            /** @description Malformed scope selector */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemSeen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsVersionedCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemTransition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsTransitionCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsAssignmentCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemPriority: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsPriorityCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsCreateApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsApprovalCreate"];
+            };
+        };
+        responses: {
+            /** @description New or identically replayed approval */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsApproval"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Linked item outside visible scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key bound to another request or transaction conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported action */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsDecideApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsApprovalDecision"];
+            };
+        };
+        responses: {
+            /** @description Committed approval decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsApproval"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid decision or blank reason */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadDriveFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Goog-Access-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    folderId?: string;
+                    name?: string;
+                    accessToken?: string;
+                    idempotencyKey?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Provider file reference; sharing is separately indicated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        duFileId: string;
+                        duWebViewLink: string | null;
+                        duWebContentLink: string | null;
+                        duPublicUrl: string | null;
+                    };
+                };
+            };
+            /** @description Invalid multipart input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated actor lacks Drive access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry key conflicts with the actor or request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider request or response failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider credentials are not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicTrialSubjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active subject catalog */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialSubject"][];
+                };
+            };
+        };
+    };
+    listManagedTrialSubjects: {
+        parameters: {
+            query?: {
+                includeInactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active subjects, or all subjects when includeInactive is true */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialSubject"][];
+                };
+            };
+            /** @description Invalid includeInactive query */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or inactive bearer session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor lacks school access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPaymentCapabilities: {
+        parameters: {
+            query: {
+                buyerCountry: string;
+                /** @description Currency is normalized to uppercase; only USD can yield available routes. */
+                currency: string;
+                amountMinor: number;
+                paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+                productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+                requires?: components["schemas"]["PaymentCapabilityName"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ordered transaction-specific routes; empty when no route is fully available. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentCapabilityResponse"];
+                };
+            };
+            /** @description Missing or invalid query parameter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment configuration is invalid. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInteractionReports: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionPage"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInteractionBlockedAccounts: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionBlockedAccounts"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionSummary"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionComments: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                root?: string;
+                sort?: "relevant" | "newest" | "oldest";
+            };
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionPage"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionCommentContext"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionReactors: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionReactors"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolveInteractionDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                destinationKind: "target" | "comment";
+                destinationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionDestination"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicInteractionSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionSummary"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicInteractionComments: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                root?: string;
+                sort?: "relevant" | "newest" | "oldest";
+            };
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionPage"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicInteractionComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionCommentContext"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicInteractionReactors: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                kind: components["schemas"]["InteractionKind"];
+                entityKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionReactors"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolvePublicInteractionDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                destinationKind: "target" | "comment";
+                destinationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionDestination"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    executeInteractionCommand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                targetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionCommandRequest"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionCommandResult"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionBlock"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setInteractionBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionBlockRequest"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionBlock"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionPreferences"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setInteractionPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionPreferences"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionPreferences"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInteractionModeration: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                targetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state; Cache-Control no-store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionPage"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision or request key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry using the same request key */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createTrialSignupEnquiry: {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": string;
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
-            path: {
-                releaseId: string;
-                versionId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
                 "application/json": {
-                    targetState: string;
-                    reason?: string | null;
-                    /** Format: date-time */
-                    releaseAtUtc?: string | null;
-                    releaseTimezone?: string | null;
-                    /** Format: date-time */
-                    embargoUntilUtc?: string | null;
-                    /** Format: date-time */
-                    takedownAtUtc?: string | null;
-                    takedownTimezone?: string | null;
-                    snapshot?: unknown;
-                    snapshotSha256?: string | null;
+                    firstName: string;
+                    lastName: string;
+                    email: string;
+                    phone?: string;
+                    marketingOptIn: boolean;
                 };
             };
         };
         responses: {
-            /** @description Resulting version or idempotent prior result */
+            /** @description Accepted enquiry or identical retry. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        [key: string]: unknown;
+                        ok: boolean;
                     };
                 };
             };
-            /** @description Invalid request or supplied snapshot hash */
+            /** @description Invalid input or missing retry key. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Editorial role or team permission required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Release version not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation errors; no state change, approval snapshot or transition audit committed */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                        errors: components["schemas"]["MusicValidationIssue"][];
-                    };
-                };
-            };
-            /** @description Authoring disabled */
-            503: {
+            /** @description The accepted request has different details. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13250,37 +19216,153 @@ export interface operations {
             };
         };
     };
-    createMusicReleaseCorrection: {
+    createPublicTrialRequest: {
         parameters: {
             query?: never;
             header: {
-                "Idempotency-Key": string;
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
-            path: {
-                releaseId: string;
-                versionId: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    subjectId: number;
+                    preferred: {
+                        /** Format: date-time */
+                        startAt: string;
+                        /** Format: date-time */
+                        endAt: string;
+                    }[];
+                    fullName?: string;
+                    email: string;
+                    phone?: string;
+                    notes?: string;
+                };
+            };
+        };
         responses: {
-            /** @description Correction version graph, or the current graph of its existing idempotent correction */
+            /** @description Accepted request or identical retry. */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** Format: uuid */
-                        id: string;
-                        versionNumber: number;
-                        state: string;
-                    } & {
-                        [key: string]: unknown;
+                        requestId: number;
+                        status: string;
                     };
                 };
             };
-            /** @description Missing or invalid idempotency key */
+            /** @description Invalid input or missing retry key. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The accepted request has different details. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No suitable teacher availability. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createSchoolStudent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    fullName: string;
+                    email: string;
+                    phone?: string;
+                    notes?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Accepted student or identical retry. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        studentId: number;
+                        displayName: string;
+                        email: string | null;
+                        phone: string | null;
+                    };
+                };
+            };
+            /** @description Invalid input or missing retry key. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description School access required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The accepted request has different details. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Me"];
+                };
+            };
+            /** @description Invalid input */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -13294,45 +19376,757 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Verified artist ownership or team permission required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Release or version not found */
+            /** @description Disabled or unavailable */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Ineligible source, source/key mismatch, or retryable transaction conflict; no new correction committed */
+            /** @description Revision, request identity, or transition conflict; refresh current state */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "text/plain": string;
-                    "application/json": components["schemas"]["MusicCorrectionFailure"];
-                };
+                content?: never;
             };
-            /** @description Source resource graph has invalid parent or recording references; transaction rolled back */
-            422: {
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Relationship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MusicCorrectionFailure"];
+                    "application/json": components["schemas"]["SocialV2State"];
                 };
             };
-            /** @description Music release authoring is disabled */
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mutateSocialV2Relationship: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialV2Command"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2State"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSocialV2Preferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialV2PreferenceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Preferences"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Following: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Feed"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSocialV2Discover: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authorized state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialV2Discover"];
+                };
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled or unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Revision, request identity, or transition conflict; refresh current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    completeEventOperationTask: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTaskCompletionCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed or exactly replayed original completion receipt */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTaskCompletionOutcome"];
+                };
+            };
+            /** @description Invalid capture, UUID, strict fields or constraints */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current reader lacks task mutation authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version/key conflict, unsupported task/event/policy, current RACI or prerequisites not ready */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence, commit or receipt-validation failure; no success implied */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getEventRaciEditorContext: {
+        parameters: {
+            query?: {
+                afterPartyId?: number;
+            };
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized context; no identity/contact discovery or write authority implied */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRaciEditorContext"];
+                };
+            };
+            /** @description Invalid or unsafe target/cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Disabled feature or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence or strict projection validation failure */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reassignEventOperationTaskRaci: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventRaciReassignmentCommand"];
+            };
+        };
+        responses: {
+            /** @description Committed or exactly replayed original outcome */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRaciReassignmentOutcome"];
+                };
+            };
+            /** @description Invalid capture, UUID, strict command fields or constraints */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current reader lacks task mutation authority */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled or opaque absent/foreign/unreadable task */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version/key conflict, unsupported lifecycle, timed source or ineligible/duplicate recipient */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sanitized persistence or receipt-validation failure; no success implied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventOperationTaskWithRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized task and matching storage revision; not a readiness certificate */
+            200: {
+                headers: {
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationTaskWithRevision"];
+                };
+            };
+            /** @description Invalid or unsafe integer path capture */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or no-longer-current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Persistence or strict envelope validation failed; no raw diagnostic is returned */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    getEventOperationTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+                activityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized minimal task projection; not a readiness certificate */
+            200: {
+                headers: {
+                    /** @description Do not persist this authorization-sensitive response in HTTP caches. */
+                    "Cache-Control"?: "private, no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationTask"];
+                };
+            };
+            /** @description Invalid or unsafe integer path capture */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled; otherwise absent, foreign-event and unreadable tasks share not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Persistence or strict projection validation failed; no raw diagnostic is returned */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    getEventOperationSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized event lifecycle projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationSnapshot"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled, event absent, or event not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+        };
+    };
+    applyEventOperationTransition: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID identifying this exact event transition command. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventTransitionCommand"];
+            };
+        };
+        responses: {
+            /** @description Accepted transition or exact replay of its stored result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventTransitionOutcome"];
+                };
+            };
+            /** @description Invalid command or a required rollback reason is absent */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is readable but current transition authority is insufficient, or an authorized historical rejection is replayed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Feature disabled, event absent, or event not visible; absent and unreadable targets share the not_found envelope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Version or command-key conflict, invalid lifecycle edge, missing implementation effects, or separation-of-duties violation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
+            };
+            /** @description Event operations persistence is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOperationError"];
+                };
             };
         };
     };
@@ -13446,6 +20240,218 @@ export interface operations {
             };
             /** @description Event type is unknown, inactive, ineffective, deprecated, or unpublished */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventLiveBroadcasts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastCreateDTO"];
+            };
+        };
+        responses: {
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Native broadcasting unavailable pending verified publisher authorization */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    heartbeatEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                broadcastId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastHeartbeatDTO"];
+            };
+        };
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    endEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                broadcastId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastEndDTO"];
+            };
+        };
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14127,14 +21133,224 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful response */
+            /** @description Database round trip succeeded. */
             200: {
                 headers: {
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
                 };
+            };
+            /** @description Initializing, unavailable database, or expired readiness deadline. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    "Retry-After"?: "5";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    requestPasswordReset: {
+        parameters: {
+            query?: {
+                /** @description Requested recovery language. Spanish locales use Spanish; other supplied locales use English fallback. Omitted values retain legacy Spanish email behavior. */
+                locale?: string;
+                /** @description Optional local destination, revalidated against the recovered account's permissions. Invalid destinations are ignored. */
+                redirect?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Request processed without revealing whether the account exists or email delivery succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request email. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPasswordReset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid payload or invalid, expired, revoked, consumed or unbound challenge */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer token used to resolve the username when omitted from the body; current password proof is still required. */
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid request fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current credentials or identifier session are invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePasswordV1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer token used to resolve the username when omitted from the body; current password proof is still required. */
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid request fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current credentials or identifier session are invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -14227,6 +21443,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
+            };
+            /** @description Invalid signup fields or missing terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public signup cannot claim an existing artist identity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Email already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    signupV1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description Account created */
+            200: {
+                headers: {
+                    /** @description Session cookie for browser-based clients. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid signup fields or missing terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public signup cannot claim an existing artist identity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Email already registered */
             409: {
@@ -14508,34 +21785,25 @@ export interface operations {
             };
         };
     };
-    redeemArtistInvitation: {
+    getExperimentAssignment: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ArtistInvitationRedeemRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Refreshed authenticated session with the Artist role */
+            /** @description Current experiment state, including a paused control response when disabled */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["ExperimentAssignment"];
                 };
-            };
-            /** @description Invitation campaign is not recognized */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Authentication required */
             401: {
@@ -14544,8 +21812,44 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Persisted automatic assignment policy is unavailable or inconsistent */
-            503: {
+            /** @description Unsupported experiment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordExperimentExposure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: "single-feature-onboarding-v1";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current experiment state, including a paused control response when disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentExposureResult"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported experiment */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14900,7 +22204,10 @@ export interface operations {
     handleWhatsAppWebhook: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -14911,7 +22218,105 @@ export interface operations {
         };
         responses: {
             /** @description Processed */
-            204: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyWhatsAppWebhookLegacy: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge echoed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleWhatsAppWebhookLegacy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppWebhook"];
+            };
+        };
+        responses: {
+            /** @description Processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14998,6 +22403,83 @@ export interface operations {
                 content: {
                     "application/json": Record<string, never>;
                 };
+            };
+        };
+    };
+    verifyInstagramWebhook: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verification challenge */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleInstagramWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -15652,6 +23134,40 @@ export interface operations {
             };
         };
     };
+    activateMyArtistProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artist profile ready to edit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Account or automatic artist policy does not allow activation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     searchPublicArtists: {
         parameters: {
             query?: {
@@ -15845,7 +23361,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Follow removed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -16047,7 +23563,10 @@ export interface operations {
     createParty: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable request key scoped to the authenticated actor. Reuse on retries with the same body; a changed body returns 409. Contact attributes never establish identity. */
+                "Idempotency-Key": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -16135,7 +23654,7 @@ export interface operations {
             query: {
                 q: string;
                 /** @description Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor. */
-                context?: "crm_assignment" | "booking" | "booking_engineer" | "billing_contact" | "artist_link" | "campaign_enrollment" | "event_invitation" | "social_connection" | "operations" | "internal_feedback" | "live_session" | "event_logistics";
+                context?: "crm_assignment" | "booking" | "booking_engineer" | "billing_contact" | "artist_link" | "campaign_enrollment" | "event_invitation" | "social_connection" | "interaction_mention" | "operations" | "internal_feedback" | "live_session" | "event_logistics";
                 /** @description Required domain scope for contexts that authorize against a concrete resource. For event_logistics this is the event ID. */
                 scopeId?: string;
                 kind?: "any" | "person" | "organization";
@@ -16493,7 +24012,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Draft archived without hard deletion. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -17443,7 +24962,7 @@ export interface operations {
         };
         responses: {
             /** @description Ordering updated. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18286,6 +25805,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UUID-path URL quarantined pending legacy broadcast reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     importRadioStreams: {
@@ -18394,17 +25920,29 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Transmission endpoints */
-            200: {
+            /** @description Invalid request representation */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["RadioTransmissionInfo"];
-                };
+                content?: never;
             };
-            /** @description Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
-            400: {
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Radio access denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Native broadcasting unavailable pending verified publisher authorization */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18461,6 +25999,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UUID-path URL quarantined pending legacy broadcast reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     clearRadioPresence: {
@@ -18473,7 +26018,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Presence cleared */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18513,7 +26058,10 @@ export interface operations {
     createLiveSessionIntake: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable identity for one submission, scoped to the authenticated actor. Reuse unchanged requests after failures; changed accepted requests return 409. */
+                "Idempotency-Key": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -18524,7 +26072,7 @@ export interface operations {
         };
         responses: {
             /** @description Intake created */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18544,7 +26092,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description A supplied musician identity is ambiguous */
+            /** @description The actor cannot select a supplied contact */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The accepted submission changed or an archived contact requires review */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -18567,7 +26122,7 @@ export interface operations {
         };
         responses: {
             /** @description Feedback accepted */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18575,6 +26130,55 @@ export interface operations {
             };
             /** @description Invalid multipart data, catalog reference, consent, or attachment */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    requestAccountDeletion: {
+        parameters: {
+            query: {
+                accountId: number;
+            };
+            header: {
+                "X-Requested-With": "TDF-Account-Deletion";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["FeedbackMultipart"];
+            };
+        };
+        responses: {
+            /** @description Authenticated request accepted for manual fulfilment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionReceipt"];
+                };
+            };
+            /** @description Invalid request, catalog reference, marker or attachment */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated account mismatch or invalid request origin proof */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18700,7 +26304,11 @@ export interface operations {
     };
     listLegacyFeedbackForAdmin: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filter privacy requests before pagination; returns up to 20 records including normalized ones. */
+                accountDeletionOnly?: boolean;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18718,6 +26326,71 @@ export interface operations {
             };
             /** @description Administrator access required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolveAccountDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    adrOutcome: "completed" | "rejected";
+                    adrNote: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Audit recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionAction"];
+                };
+            };
+            /** @description Invalid outcome or missing note or unidentified completion */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Administrator required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deletion request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request already resolved */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19427,6 +27100,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Private document stored or retrieved by content hash */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDocument"];
+                };
+            };
             /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
@@ -19434,8 +27116,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Storage integration is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19483,6 +27165,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Private XML encoded in a JSON download envelope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDownloadResponse"];
+                };
+            };
             /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
@@ -19490,8 +27181,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Private file storage integration is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19510,6 +27201,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Completed structural validation run; official XSD and recipient-profile validation have not run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexValidationRun"];
+                };
+            };
             /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
@@ -19524,8 +27224,15 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Governed validation execution is not implemented */
-            501: {
+            /** @description Current document lifecycle or source binding changed; rejected validation makes no changes */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19580,6 +27287,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description ERN 4.3.2 preview only; no import or delivery */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexPreview"];
+                };
+            };
             /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
@@ -19587,8 +27303,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Typed import preview generation is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19621,8 +27337,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Typed import planning is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19659,8 +27375,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Conflict resolution is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19686,8 +27402,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Import commit execution is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19729,8 +27445,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Export rendering and private storage are not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19756,8 +27472,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Export rendering and private storage are not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19975,6 +27691,13 @@ export interface operations {
             };
             /** @description Cart not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored cart quantity or price is invalid */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -21816,6 +29539,152 @@ export interface operations {
             };
         };
     };
+    adminGetServiceRefundRecovery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Local refund evidence and exact-environment readiness */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
+                };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Known refund or original capture binding unavailable; manual review required */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Readiness could not be verified */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReconcileServiceRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Completed, already completed by a concurrent observation, or still held */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefundRecovery"];
+                };
+            };
+            /** @description Invalid refund UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Shared provider query limit reached */
+            429: {
+                headers: {
+                    /** @description Seconds before another query may be attempted */
+                    "Retry-After"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence could not be verified; funds remain reserved */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reconciliation unavailable or authority changed; no financial completion applied */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     adminReconcileServiceStorefrontOrder: {
         parameters: {
             query?: never;
@@ -21860,6 +29729,379 @@ export interface operations {
             };
             /** @description Provider status could not be read */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createProviderPaymentSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                checkoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentSessionCreate"];
+            };
+        };
+        responses: {
+            /** @description Durable provider operation; may require customer action or reconciliation */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Invalid provider */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout or lookup token is invalid, or no contacted replay exists and checkout cannot accept payment. This is not no-charge evidence for an earlier transmitted request. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency conflict or another active canonical payment intent exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider/configuration is unavailable or an ambiguous result requires reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getProviderPaymentSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lookup-token-scoped state without provider payloads or credentials */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Session absent or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Encrypted operation storage is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePlaceToPayNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Verified notification durably accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid notification body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Signature verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePayPhoneNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Notification durably accepted in PayPhone's required acknowledgment format */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPhoneNotificationAck"];
+                };
+            };
+            /** @description Invalid notification or mismatched store identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different immutable evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receivePayPhoneNotificationCompatibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Notification durably accepted in PayPhone's required acknowledgment format */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPhoneNotificationAck"];
+                };
+            };
+            /** @description Invalid notification or mismatched store identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different immutable evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider account */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceReconciliationExceptions: {
+        parameters: {
+            query?: {
+                environment?: "sandbox" | "production";
+                status?: "open" | "assigned" | "resolved" | "ignored";
+                /** @description Exact internal checkout reference; optional, never a customer token */
+                checkoutId?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted review records, including explicit schema readiness and applied filters */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceReconciliationReport"];
+                };
+            };
+            /** @description Invalid filter or pagination */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report temporarily unavailable; no database diagnostics exposed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceProviderQueries: {
+        parameters: {
+            query?: {
+                environment?: "sandbox" | "production";
+                status?: "pending" | "processing" | "retry" | "completed" | "dead_letter";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted operational snapshot, with explicit schema availability */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderQueries"];
+                };
+            };
+            /** @description Invalid filter or pagination */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Report temporarily unavailable; no database diagnostics exposed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminGetCommercePaymentOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted provider readiness and canonical financial aggregates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommercePaymentOverview"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -21952,6 +30194,178 @@ export interface operations {
             };
             /** @description Event is not currently dead-lettered */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listBookings: {
+        parameters: {
+            query?: {
+                bookingId?: number;
+                partyId?: number;
+                engineerPartyId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped bookings; party and engineer filters combine by union within object scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"][];
+                };
+            };
+            /** @description Invalid positive identifier filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingCreate"];
+            };
+        };
+        responses: {
+            /** @description Persisted booking */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Invalid or unknown input field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling access or customer scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource conflict or stale concurrent operation; no mutation committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced party */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Authoritatively accepted booking */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking absent or outside the caller's object scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Calendar */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced party or offering */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23277,6 +31691,46 @@ export interface operations {
             };
         };
     };
+    prepareArtistManagementClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persisted claim target; no management access granted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist unavailable for claims */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     createDirectoryClaim: {
         parameters: {
             query?: never;
@@ -23382,8 +31836,43 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Reviewed claim; only approval can create a manager grant */
+            /** @description Reviewed claim; only a new approval transition creates a manager grant */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing Admin role or module or attempted self-review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Claim not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current claim state forbids this transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; decision and grant rolled back */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24503,6 +32992,177 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: {
+                unreadOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recipient-owned notification history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notificationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notification with stable target identity when retained */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Notification unavailable to this account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    markNotificationRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notificationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read state persisted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current details and actor-specific capabilities; actions still reauthorize on the server */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        request: components["schemas"]["FeatureAccessRequest"];
+                        canReview: boolean;
+                        canCancel: boolean;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request unavailable to this account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDirectoryNotificationContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "application" | "invitation" | "review" | "alert";
+                targetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped application, invitation, review or currently public saved-search result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource unavailable to this account */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -25892,7 +34552,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Favorite stored */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -25912,7 +34572,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Favorite removed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -26987,6 +35647,401 @@ export interface operations {
                 content?: never;
             };
             /** @description Durable private evidence storage is not configured in production */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordAnonymousMusicPlayback: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Trusted only when the origin is restricted to the configured edge. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusicPlaybackEventInput"] & {
+                    anonymousId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Inserted or identical replay; no response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid telemetry or missing anonymous identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Recording unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session owner, sequence or event payload conflicts; no event or history is written */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicPlaybackConflict"];
+                };
+            };
+            /** @description Music playback telemetry disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordAuthenticatedMusicPlayback: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Trusted only when the origin is restricted to the configured edge. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusicPlaybackEventInput"];
+            };
+        };
+        responses: {
+            /** @description Inserted or identical replay; no response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid telemetry */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Recording unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session owner, sequence or event payload conflicts; no event or history is written */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicPlaybackConflict"];
+                };
+            };
+            /** @description Music playback telemetry disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    validateMusicReleaseVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current validation result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        valid: boolean;
+                        errors: components["schemas"]["MusicValidationIssue"][];
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoring disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionMusicReleaseVersion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    targetState: string;
+                    reason?: string | null;
+                    /** Format: date-time */
+                    releaseAtUtc?: string | null;
+                    releaseTimezone?: string | null;
+                    /** Format: date-time */
+                    embargoUntilUtc?: string | null;
+                    /** Format: date-time */
+                    takedownAtUtc?: string | null;
+                    takedownTimezone?: string | null;
+                    snapshot?: unknown;
+                    snapshotSha256?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Resulting version or idempotent prior result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Invalid request or supplied snapshot hash */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Editorial role or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation errors; no state change, approval snapshot or transition audit committed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                        errors: components["schemas"]["MusicValidationIssue"][];
+                    };
+                };
+            };
+            /** @description Authoring disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMusicReleaseCorrection: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Correction version graph, or the current graph of its existing idempotent correction */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        versionNumber: number;
+                        state: string;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Missing or invalid idempotency key */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release or version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ineligible source, source/key mismatch, or retryable transaction conflict; no new correction committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                    "application/json": components["schemas"]["MusicCorrectionFailure"];
+                };
+            };
+            /** @description Source resource graph has invalid parent or recording references; transaction rolled back */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicCorrectionFailure"];
+                };
+            };
+            /** @description Music release authoring is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    redeemArtistInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistInvitationRedeemRequest"];
+            };
+        };
+        responses: {
+            /** @description Refreshed authenticated session with the Artist role */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            /** @description Invitation campaign is not recognized */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Persisted automatic assignment policy is unavailable or inconsistent */
             503: {
                 headers: {
                     [name: string]: unknown;

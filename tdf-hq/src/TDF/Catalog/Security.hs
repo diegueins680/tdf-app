@@ -90,6 +90,7 @@ expectedSecurityRoleAssignmentPolicyBindings :: Set (Text, Text, Text, Bool)
 expectedSecurityRoleAssignmentPolicyBindings = Set.fromList
   [ ("account.signup.customer", "account-signup", "customer", False)
   , ("account.google.customer", "google-account-create", "customer", True)
+  , ("artist.self-service.artist", "artist-self-service-activated", "artist", False)
   , ("artist.verified-claim.artist", "verified-artist-claim", "artist", True)
   , ("artist.invitation.artist", "artist-invitation-redeemed", "artist", False)
   , ("account.generated.customer", "generated-account-create", "customer", False)

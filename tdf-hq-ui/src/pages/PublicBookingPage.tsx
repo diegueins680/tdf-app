@@ -60,6 +60,7 @@ import { useSession } from '../session/SessionContext';
 import { resolveRuntimeCurrency } from '../utils/formatters';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 
 interface FormState {
   fullName: string;
@@ -411,6 +412,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const [checkoutSuccess, setCheckoutSuccess] = useState<PublicBookingCheckoutDTO | null>(null);
   const [authoritativeQuote, setAuthoritativeQuote] = useState<PublicBookingQuoteDTO | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -1511,33 +1513,56 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               No hay un rail en línea habilitado para esta orden. El horario sigue solamente en retención temporal.
                             </Alert>
                           )}
-                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                            {paymentMethods.includes('datafast') && (
-                              <Button
-                                variant="contained"
-                                disabled={paymentBusy}
-                                onClick={() => void handleDatafastDeposit()}
-                              >
-                                Pagar con tarjeta · Datafast
-                              </Button>
-                            )}
-                            {paymentMethods.includes('paypal') && paypalClientId && (
-                              <Button
-                                variant="outlined"
-                                disabled={paymentBusy}
-                                onClick={() => void handlePaypalDeposit()}
-                              >
-                                Pagar con PayPal
-                              </Button>
-                            )}
-                            {paymentMethods.includes('bank_transfer') && (
-                              <Button
-                                variant="outlined"
-                                disabled={paymentBusy}
-                                onClick={() => void handleManualDeposit()}
-                              >
-                                Registrar transferencia
-                              </Button>
+                          <Stack spacing={1.5}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              {paymentMethods.includes('datafast') && (
+                                <Button
+                                  variant="contained"
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handleDatafastDeposit()}
+                                >
+                                  Pagar con tarjeta · Datafast
+                                </Button>
+                              )}
+                              {paymentMethods.includes('paypal') && paypalClientId && (
+                                <Button
+                                  variant="outlined"
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handlePaypalDeposit()}
+                                >
+                                  Pagar con PayPal
+                                </Button>
+                              )}
+                              {paymentMethods.includes('bank_transfer') && (
+                                <Button
+                                  variant="outlined"
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handleManualDeposit()}
+                                >
+                                  Registrar transferencia
+                                </Button>
+                              )}
+                            </Stack>
+                            {checkoutLookupToken && (
+                              <HostedProviderCheckout
+                                checkout={{
+                                  checkoutId: checkoutSuccess.checkoutId,
+                                  lookupToken: checkoutLookupToken,
+                                  returnPath: `/reservas/orden/${checkoutSuccess.booking.bookingId}`,
+                                }}
+                                offeredMethods={paymentMethods}
+                                disabled={paymentBusy || datafastDialogOpen || paypalDialogOpen || manualDialogOpen}
+                                initialBuyerPhone={form.phone}
+                                onSafetyLockChange={setHostedPaymentLocked}
+                                onPaymentConfirmed={async () => {
+                                  const updated = await Bookings.getPublicCheckout(
+                                    checkoutSuccess.booking.bookingId,
+                                    checkoutLookupToken,
+                                  );
+                                  setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+                                  setSuccess(updated.booking);
+                                }}
+                              />
                             )}
                           </Stack>
                         </Stack>
@@ -1914,6 +1939,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                           <Grid item xs={12}>
                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                               <Checkbox
+                                inputProps={{ 'aria-label': 'Recordar mis datos mientras esta pestaña siga abierta' }}
                                 checked={rememberProfile}
                                 onChange={(e) => setRememberProfile(e.target.checked)}
                                 size="small"
@@ -2167,6 +2193,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               <Stack spacing={1}>
                                 <Stack direction="row" spacing={1} alignItems="center">
                                   <Checkbox
+                                    inputProps={{ 'aria-label': 'Asignar ingeniero después' }}
                                     checked={assignEngineerLater}
                                     onChange={(e) => {
                                       const checked = e.target.checked;

@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
+import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -168,15 +169,15 @@ export default function TrialLessonsPage() {
 
   const [subjectFilter, setSubjectFilter] = useState<number | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    return parseFilterId(window.localStorage.getItem('trial.filter.subject'));
+    return parseFilterId(readOptionalBrowserStorage('local', 'trial.filter.subject'));
   });
   const [teacherFilter, setTeacherFilter] = useState<number | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    return parseFilterId(window.localStorage.getItem('trial.filter.teacher'));
+    return parseFilterId(readOptionalBrowserStorage('local', 'trial.filter.teacher'));
   });
   const [statusFilter, setStatusFilter] = useState<StatusKey | 'all'>(() => {
     if (typeof window === 'undefined') return 'all';
-    const raw = window.localStorage.getItem('trial.filter.status');
+    const raw = readOptionalBrowserStorage('local', 'trial.filter.status');
     return parseStatusFilter(raw);
   });
   const [fromInput, setFromInput] = useState(() => {
@@ -187,7 +188,7 @@ export default function TrialLessonsPage() {
       start.setHours(0, 0, 0, 0);
       return toLocalInput(start.toISOString());
     }
-    return window.localStorage.getItem('trial.filter.from') ?? (() => {
+    return readOptionalBrowserStorage('local', 'trial.filter.from') ?? (() => {
       const now = new Date();
       const start = new Date(now);
       start.setDate(now.getDate() - 7);
@@ -202,7 +203,7 @@ export default function TrialLessonsPage() {
       end.setHours(23, 59, 0, 0);
       return toLocalInput(end.toISOString());
     }
-    return window.localStorage.getItem('trial.filter.to') ?? (() => {
+    return readOptionalBrowserStorage('local', 'trial.filter.to') ?? (() => {
       const end = new Date();
       end.setDate(end.getDate() + 30);
       end.setHours(23, 59, 0, 0);
@@ -264,11 +265,11 @@ export default function TrialLessonsPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('trial.filter.subject', subjectFilter === 'all' ? '' : String(subjectFilter));
-    window.localStorage.setItem('trial.filter.teacher', teacherFilter === 'all' ? '' : String(teacherFilter));
-    window.localStorage.setItem('trial.filter.status', statusFilter === 'all' ? '' : statusFilter);
-    window.localStorage.setItem('trial.filter.from', fromInput);
-    window.localStorage.setItem('trial.filter.to', toInput);
+    writeOptionalBrowserPreference('trial.filter.subject', subjectFilter === 'all' ? '' : String(subjectFilter));
+    writeOptionalBrowserPreference('trial.filter.teacher', teacherFilter === 'all' ? '' : String(teacherFilter));
+    writeOptionalBrowserPreference('trial.filter.status', statusFilter === 'all' ? '' : statusFilter);
+    writeOptionalBrowserPreference('trial.filter.from', fromInput);
+    writeOptionalBrowserPreference('trial.filter.to', toInput);
   }, [fromInput, statusFilter, subjectFilter, teacherFilter, toInput]);
   const [formError, setFormError] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
@@ -363,9 +364,17 @@ export default function TrialLessonsPage() {
     phone: '',
     notes: '',
   });
+  const identityRequestKey = useRef<string | null>(null);
+  const identityRequestPending = useRef(false);
   const studentMutation = useMutation({
-    mutationFn: Trials.createStudent,
+    mutationFn: (payload: Parameters<typeof Trials.createStudent>[0]) => {
+      identityRequestPending.current = true;
+      identityRequestKey.current ??= crypto.randomUUID();
+      return Trials.createStudent(payload, identityRequestKey.current);
+    },
+    onSettled: () => { identityRequestPending.current = false; },
     onSuccess: () => {
+      identityRequestKey.current = null;
       void qc.invalidateQueries({ queryKey: ['trial-students'] });
     },
   });
@@ -374,7 +383,13 @@ export default function TrialLessonsPage() {
     setStudentForm({ fullName: '', email: '', phone: '', notes: '' });
     setStudentDialogOpen(true);
   };
-  const closeStudentDialog = () => setStudentDialogOpen(false);
+  const closeStudentDialog = () => {
+    if (identityRequestPending.current || studentMutation.isPending) return;
+    if (identityRequestKey.current && !window.confirm('Una solicitud anterior podría haberse guardado. Comprueba su estado antes de crear otra. ¿Descartar este formulario e iniciar otra solicitud?')) return;
+    identityRequestKey.current = null;
+    studentMutation.reset();
+    setStudentDialogOpen(false);
+  };
 
   const handleDateChange = (value: string, minutesFallback: number) => {
     const iso = value ? toIsoOrNull(value) : null;
@@ -1047,19 +1062,25 @@ export default function TrialLessonsPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeStudentDialog}>Cancelar</Button>
+          <Button onClick={closeStudentDialog} disabled={studentMutation.isPending}>Cancelar</Button>
           <Button
             variant="contained"
             onClick={() => {
               void (async () => {
+                if (identityRequestPending.current) return;
+                identityRequestPending.current = true;
                 const payload = {
                   fullName: studentForm.fullName.trim(),
                   email: studentForm.email.trim(),
                   phone: studentForm.phone.trim() || undefined,
                   notes: studentForm.notes.trim() || undefined,
                 };
-                await studentMutation.mutateAsync(payload);
-                closeStudentDialog();
+                try {
+                  await studentMutation.mutateAsync(payload);
+                  setStudentDialogOpen(false);
+                } catch {
+                  // Keep the form and request key; React Query displays the error.
+                }
               })();
             }}
             disabled={studentMutation.isPending}

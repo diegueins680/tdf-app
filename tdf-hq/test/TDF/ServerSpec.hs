@@ -12,6 +12,11 @@ import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Int (Int64)
+import Data.Pool (destroyAllResources)
+import qualified Network.HTTP.Client as NotificationHTTP
+import Network.HTTP.Types.Status (statusCode)
+import Network.Wai.Handler.Warp (testWithApplication)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -19,7 +24,10 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey, toPersistValue, (==.))
+import Database.Persist
+    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getJust, insert, insert_, insertKey
+    , selectList, toPersistValue, update, (=.), (==.)
+    )
 import Database.Persist.Sql
     ( SqlPersistT
     , fromSqlKey
@@ -31,6 +39,7 @@ import Database.Persist.Sql
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
     ( AdsInquiry (..)
+    , ServiceMarketplaceBookingReq (..)
     , CreateBookingReq (..)
     , CmsContentDTO (..)
     , PublicBookingReq (..)
@@ -89,7 +98,7 @@ import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
-import TDF.DTO.SocialEventsDTO (ArtistDTO (..))
+import TDF.DTO.SocialEventsDTO (ArtistDTO (..), EventMomentReactionDTO (..))
 import TDF.Handlers.InputList
     ( AssetField (..)
     , renderInputListLatex
@@ -130,6 +139,7 @@ import TDF.DTO
     , CreateInvoiceLineReq (..)
     )
 import qualified TDF.DTO as DTO
+import qualified TDF.Server as NotificationServer
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
@@ -505,7 +515,7 @@ import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
     , validateFanClubPostPathId
     )
-import TDF.Server.SocialEventsHandlers (toggleMomentReactionDb, validateEventArtistIds)
+import TDF.Server.SocialEventsHandlers (redactMomentReactionIdentity, toggleMomentReactionDb, validateEventArtistIds)
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -525,6 +535,8 @@ mkUser roles =
         { auPartyId = toSqlKey 1
         , auRoles = roles
         , auModules = modulesForRoles roles
+        , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 futureAdminUser :: AuthedUser
@@ -726,6 +738,99 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "live database readiness" $ do
+        it "returns503 rather than success when the handler cannot acquire its database" $ do
+            let env = Env (error "PRIVATE_DATABASE_CONNECTION_DETAILS") (marketplaceTestConfig False)
+            testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                request <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> "/health")
+                response <- NotificationHTTP.httpLbs request manager
+                statusCode (NotificationHTTP.responseStatus response) `shouldBe` 503
+                lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
+                (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
+                    `shouldBe` Right (object ["status" .= ("degraded" :: Text), "db" .= ("unavailable" :: Text)])
+        it "performs a real database round trip before returning200" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                let env = Env pool (marketplaceTestConfig False)
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    request <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> "/health")
+                    response <- NotificationHTTP.httpLbs request manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 200
+                    lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
+                    (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
+                        `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
+    describe "notification navigation reads" $ do
+        it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
+            withNotificationFixture $ \env _ _ requestId notificationId ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    let fetch path authenticated = do
+                            base <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+                            NotificationHTTP.httpLbs (base { NotificationHTTP.requestHeaders =
+                                [("Authorization","Bearer google-token") | authenticated] }) manager
+                    notification <- fetch ("/fans/me/notifications/" <> show notificationId) True
+                    statusCode (NotificationHTTP.responseStatus notification) `shouldBe` 200
+                    BL8.unpack (NotificationHTTP.responseBody notification) `shouldContain` "party_profile"
+                    request <- fetch ("/access-requests/" <> show requestId) True
+                    statusCode (NotificationHTTP.responseStatus request) `shouldBe` 200
+                    BL8.unpack (NotificationHTTP.responseBody request) `shouldContain` "approved"
+                    anonymous <- fetch ("/access-requests/" <> show requestId) False
+                    statusCode (NotificationHTTP.responseStatus anonymous) `shouldBe` 401
+                    runSqlPool (rawExecute "UPDATE api_token SET active=0 WHERE token='google-token'" []) (envPool env)
+                    expired <- fetch ("/access-requests/" <> show requestId) True
+                    statusCode (NotificationHTTP.responseStatus expired) `shouldBe` 401
+        it "returns follower identity and recipient-scoped history without marking it read" $
+            withNotificationFixture $ \env owner outsider requestId notificationId -> do
+                let run action = runHandler (runReaderT action env)
+                result <- run (NotificationServer.notifGet owner notificationId)
+                case result of
+                    Right dto -> do
+                        DTO.nTargetId dto `shouldBe` Just (fromSqlKey (auPartyId outsider))
+                        DTO.nTargetType dto `shouldBe` Just "party_profile"
+                        DTO.nIsRead dto `shouldBe` False
+                    Left err -> expectationFailure (show err)
+                denied <- run (NotificationServer.notifGet outsider notificationId)
+                either (\err -> errHTTPCode err `shouldBe` 404) (const (expectationFailure "other recipient read notification")) denied
+                _ <- run (NotificationServer.notifMarkRead outsider notificationId)
+                unread <- run (NotificationServer.notifCount owner)
+                fmap DTO.ncUnread unread `shouldBe` Right 1
+                _ <- run (NotificationServer.notifMarkRead owner notificationId)
+                readCount <- run (NotificationServer.notifCount owner)
+                fmap DTO.ncUnread readCount `shouldBe` Right 0
+                requestId `shouldSatisfy` (>0)
+        it "shows current handled request status, rechecks reviewer scope, and performs no decision" $
+            withNotificationFixture $ \env owner outsider requestId _ -> do
+                let run action = runHandler (runReaderT action env)
+                    detail user = let _ :<|> _ :<|> _ :<|> handler :<|> _ :<|> _ = NotificationServer.accessRequestsServer user in handler
+                own <- run (detail owner requestId)
+                case own of
+                    Right value -> do
+                        BL8.unpack (A.encode value) `shouldContain` "approved"
+                        BL8.unpack (A.encode value) `shouldContain` "canReview\":false"
+                    Left err -> expectationFailure (show err)
+                denied <- run (detail outsider requestId)
+                either (\err -> errHTTPCode err `shouldBe` 404) (const (expectationFailure "unauthorized request read")) denied
+                missing <- run (detail owner (requestId+1000))
+                either (\err -> errHTTPCode err `shouldBe` 404) (const (expectationFailure "missing request disclosed")) missing
+                reviewed <- run (detail (outsider { auRoles=[Admin], auModules=modulesForRoles [Admin] }) requestId)
+                case reviewed of
+                    Right value -> BL8.unpack (A.encode value) `shouldContain` "canReview\":true"
+                    Left err -> expectationFailure (show err)
+                stored <- runSqlPool (get (toSqlKey requestId :: ME.FeatureAccessRequestId)) (envPool env)
+                fmap ME.featureAccessRequestStatus stored `shouldBe` Just "approved"
+                historyCount <- runSqlPool (count [ME.FeatureAccessRequestHistoryRequestId ==. toSqlKey requestId]) (envPool env)
+                historyCount `shouldBe` 0
+                runSqlPool (update (toSqlKey requestId :: ME.FeatureAccessRequestId)
+                    [ME.FeatureAccessRequestStatus =. "pending", ME.FeatureAccessRequestExpiresAt =. Just (UTCTime (fromGregorian 2020 1 1) 0)]) (envPool env)
+                expired <- run (detail owner requestId)
+                case expired of
+                    Right value -> BL8.unpack (A.encode value) `shouldContain` "expired"
+                    Left err -> expectationFailure (show err)
+                unchanged <- runSqlPool (get (toSqlKey requestId :: ME.FeatureAccessRequestId)) (envPool env)
+                fmap ME.featureAccessRequestStatus unchanged `shouldBe` Just "pending"
+                afterRead <- runSqlPool (count [ME.FeatureAccessRequestHistoryRequestId ==. toSqlKey requestId]) (envPool env)
+                afterRead `shouldBe` 0
     describe "Academy enrollment request contract" $ do
         it "normalizes allowed academy roles before persistence" $ do
             Academy.validateAcademyRole " Artist " `shouldBe` Right "artist"
@@ -921,6 +1026,7 @@ spec = describe "TDF.Server helpers" $ do
                             runReaderT
                                 ( createParty
                                     (mkUser [Admin])
+                                    (Just "invalid-display-name-fixture")
                                     ( DTO.PartyCreate
                                         Nothing
                                         rawDisplayName
@@ -2319,6 +2425,31 @@ spec = describe "TDF.Server helpers" $ do
                                 "Expected malformed artist auth scope to be rejected"
             assertRejected duplicatedArtist
             assertRejected invalidPartyArtist
+
+    describe "disabled legacy service marketplace financial writes" $ do
+        -- Extract the actual Servant route handlers, not a parallel policy helper.
+        -- A bottom Env fails if either path attempts to read configuration or a pool.
+        forM_ [[], [Customer], [Artist], [Admin], [Admin, Customer, Artist]] $ \roles -> do
+            let user = mkUser roles
+                _ :<|> _ :<|> _ :<|> _ :<|> book :<|> _ :<|> release =
+                    NotificationServer.serviceMarketplaceServer user
+                assertUnavailable action expectedBody = do
+                    result <- runHandler $ runReaderT action
+                        (error "Disabled financial writes must not access Env or persistence")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            errBody serverErr `shouldBe` expectedBody
+                        Right _ -> expectationFailure "Disabled financial write unexpectedly succeeded"
+            it ("rejects booking without database access for " <> show roles) $
+                forM_ [minBound, -1, 0, 1, maxBound] $ \identifier ->
+                    assertUnavailable
+                        (book (ServiceMarketplaceBookingReq identifier identifier Nothing Nothing (Just "cash")))
+                        "Service marketplace booking is unavailable until verified escrow is supported"
+            it ("rejects release and retries without database access for " <> show roles) $
+                forM_ [minBound, -1, 0, 1, maxBound, 1] $ \identifier ->
+                    assertUnavailable (release identifier)
+                        "Service marketplace escrow release is unavailable until verified escrow is supported"
 
     describe "validateServiceMarketplaceBookingRefs" $ do
         it "accepts positive ad and slot identifiers before marketplace booking lookups" $
@@ -4430,7 +4561,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected duplicate party email match to fail, got: " <> show value)
 
     describe "ensurePartyForInquiry" $
-        it "rejects duplicate contact fallbacks instead of arbitrary ad inquiry parties" $ do
+        it "creates independent unverified inquiry contacts when details are shared" $ do
             (duplicateEmailResult, duplicatePhoneResult, phoneSelectorResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let mkParty displayName emailAddr phoneNumber =
@@ -4489,12 +4620,12 @@ spec = describe "TDF.Server helpers" $ do
                                     <> contactLabel
                                     <> " match to fail"
                                 )
-            assertConflict "email" duplicateEmailResult
-            assertConflict "phone" duplicatePhoneResult
+            either (const False) (const True) duplicateEmailResult `shouldBe` True
+            either (const False) (const True) duplicatePhoneResult `shouldBe` True
             assertConflict "phone" phoneSelectorResult
 
     describe "ensurePartyForCourseRegistrationDb" $
-        it "rejects duplicate phone fallbacks instead of linking a course registration arbitrarily" $ do
+        it "keeps course contacts separate even when their phone matches existing people" $ do
             (singleId, singleResult, duplicateResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let mkParty displayName phoneNumber =
@@ -4532,22 +4663,15 @@ spec = describe "TDF.Server helpers" $ do
                 pure (expectedId, resolvedSingle, resolvedDuplicate)
 
             case singleResult of
-                Right partyId -> partyId `shouldBe` singleId
+                Right partyId -> partyId `shouldNotBe` singleId
                 Left serverErr ->
                     expectationFailure
                         ( "Expected single course registration party match, got: "
                             <> show serverErr
                         )
             case duplicateResult of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 409
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Multiple parties match this phone"
-                Right partyId ->
-                    expectationFailure
-                        ( "Expected duplicate course registration party match to fail, got: "
-                            <> show partyId
-                        )
+                Right partyId -> partyId `shouldNotBe` singleId
+                Left serverErr -> expectationFailure ("Shared contact details must remain valid: " <> show serverErr)
 
     describe "courseRegistrationFollowUpCounts" $
         it "counts non-intake follow-up rows for the admin list summary" $ do
@@ -4932,7 +5056,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -4971,7 +5095,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5043,7 +5167,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSessionAction action =
                             liftIO $ runHandler $ runReaderT action env
                     current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
@@ -5163,7 +5287,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeWith tokenValue request =
                             liftIO $ runHandler $ runReaderT
                                 (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
@@ -5261,7 +5385,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _redeemArtistInvitation = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         reconcileWith mToken =
                             liftIO $ runHandler $ runReaderT
                                 (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
@@ -5395,7 +5519,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeAccessRequest =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5507,7 +5631,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeEventSave =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5621,7 +5745,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeMomentReaction =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5686,6 +5810,57 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected repeated moment-reaction completion to remain idempotent, got: " <> show serverErr)
 
+        it "redacts other parties' moment-reaction identities without changing reaction counts" $ do
+            now <- getCurrentTime
+            let reaction = EventMomentReactionDTO
+                    { emrReactionTypeId = "50800000-0000-4000-8000-000000000001"
+                    , emrReactionCode = "heart"
+                    , emrReactionNameEs = "Corazon"
+                    , emrReactionNameEn = "Heart"
+                    , emrReactionEmoji = "heart"
+                    , emrPartyId = Just "42"
+                    , emrCreatedAt = Just now
+                    }
+                own = redactMomentReactionIdentity "42" reaction
+                other = redactMomentReactionIdentity "43" reaction
+            (emrPartyId own, emrCreatedAt own) `shouldBe` (Just "42", Just now)
+            (emrPartyId other, emrCreatedAt other) `shouldBe` (Nothing, Nothing)
+            emrReactionTypeId other `shouldBe` emrReactionTypeId reaction
+            length (map (redactMomentReactionIdentity "43") [reaction]) `shouldBe` 1
+
+        it "repairs legacy reaction evidence once without changing the original action time" $ do
+            now <- getCurrentTime
+            let originalTime = addUTCTime (-3600) now
+            (reactionTimes, evidenceTimes) <- runNoLoggingT $ do
+                pool <- createSqlitePool ":memory:" 1
+                liftIO $ runSqlPool initializeAuthSchema pool
+                (_otherPartyId, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                let momentKey = toSqlKey 42 :: Social.EventMomentId
+                    reactionType = fixtureUuidKey "50800000-0000-4000-8000-000000000001"
+                    actorPartyText = T.pack (show (fromSqlKey partyId))
+                liftIO $ flip runSqlPool pool $ do
+                    rawExecute "INSERT INTO event_moment(id) VALUES (42)" []
+                    insert_ Social.EventMomentReaction
+                        { Social.eventMomentReactionMomentId = momentKey
+                        , Social.eventMomentReactionReactionTypeId = Just reactionType
+                        , Social.eventMomentReactionReaction = Nothing
+                        , Social.eventMomentReactionReactorPartyId = actorPartyText
+                        , Social.eventMomentReactionCreatedAt = originalTime
+                        }
+                liftIO $ flip runSqlPool pool $ do
+                    _ <- toggleMomentReactionDb partyId actorPartyText momentKey reactionType (Just True) now
+                    _ <- toggleMomentReactionDb partyId actorPartyText momentKey reactionType (Just True) (addUTCTime 60 now)
+                    reactions <- selectList [Social.EventMomentReactionMomentId ==. momentKey] []
+                    evidence <- selectList
+                        [ M.EngagementEventActorPartyId ==. Just partyId
+                        , M.EngagementEventEntityType ==. "event_moment"
+                        , M.EngagementEventEventType ==. "reaction_added"
+                        ] []
+                    pure (map (Social.eventMomentReactionCreatedAt . entityVal) reactions,
+                          map (M.engagementEventCreatedAt . entityVal) evidence)
+            reactionTimes `shouldBe` [originalTime]
+            evidenceTimes `shouldBe` [originalTime]
+
         it "records moment-reaction additions atomically and retains evidence after removal" $ do
             states <-
                 runNoLoggingT $ do
@@ -5739,6 +5914,107 @@ spec = describe "TDF.Server helpers" $ do
                 , (False, 0, 1)
                 , (True, 1, 2)
                 ]
+        it "keeps experiment-assignment and exposure Party-bound, versioned, atomic, and paused by default" $ do
+            (pausedResult, firstAssignmentResult, repeatedAssignmentResult, firstExposureResult, repeatedExposureResult, controlAssignmentResult, controlExposureResult, expiredResult) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (controlPartyId, treatmentPartyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    expiredPartyId <- liftIO $ flip runSqlPool pool $ do
+                        partyIdValue <- insert
+                            M.Party
+                                { M.partyLegalName = Nothing
+                                , M.partyDisplayName = "Expired Experiment User"
+                                , M.partyIsOrg = False
+                                , M.partyTaxId = Nothing
+                                , M.partyPrimaryEmail = Just "expired-experiment@example.com"
+                                , M.partyPrimaryPhone = Nothing
+                                , M.partyWhatsapp = Nothing
+                                , M.partyInstagram = Nothing
+                                , M.partyEmergencyContact = Nothing
+                                , M.partyNotes = Nothing
+                                , M.partyStripeCustomerId = Nothing
+                                , M.partyCountryCode = Nothing
+                                , M.partyCountryId = Nothing
+                                , M.partyCreatedAt = now
+                                }
+                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True)
+                        pure partyIdValue
+                    let signupAt = addUTCTime (-3600) now
+                        insertProgress partyIdValue signupAtValue =
+                            liftIO $ flip runSqlPool pool $ insert_
+                                M.UserOnboardingProgress
+                                    { M.userOnboardingProgressPartyId = partyIdValue
+                                    , M.userOnboardingProgressSignupCompletedAt = Just signupAtValue
+                                    , M.userOnboardingProgressIntent = Just "events"
+                                    , M.userOnboardingProgressCompletedAt = Nothing
+                                    , M.userOnboardingProgressFirstValue = Nothing
+                                    , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                                    , M.userOnboardingProgressUpdatedAt = signupAtValue
+                                    }
+                        pausedEnv = Env pool (marketplaceTestConfig False)
+                        enabledEnv = Env pool ((marketplaceTestConfig False) {singleFeatureOnboardingExperimentEnabled = True})
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> _completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> getExperiment :<|> recordExposure = sessionServer
+                        runExperiment env tokenValue action =
+                            liftIO $ runHandler $ runReaderT
+                                (action (Just ("Bearer " <> tokenValue)) Nothing "single-feature-onboarding-v1")
+                                env
+                    insertProgress controlPartyId signupAt
+                    insertProgress treatmentPartyId signupAt
+                    insertProgress expiredPartyId (addUTCTime (-(25 * 60 * 60)) now)
+                    paused <- runExperiment pausedEnv "google-token" getExperiment
+                    firstAssignment <- runExperiment enabledEnv "google-token" getExperiment
+                    repeatedAssignment <- runExperiment enabledEnv "google-token" getExperiment
+                    firstExposure <- runExperiment enabledEnv "google-token" recordExposure
+                    repeatedExposure <- runExperiment enabledEnv "google-token" recordExposure
+                    controlAssignment <- runExperiment enabledEnv "ambiguous-token" getExperiment
+                    controlExposure <- runExperiment enabledEnv "ambiguous-token" recordExposure
+                    expired <- runExperiment enabledEnv "expired-experiment-token" getExperiment
+                    pure (paused, firstAssignment, repeatedAssignment, firstExposure, repeatedExposure, controlAssignment, controlExposure, expired)
+
+            case pausedResult of
+                Right assignmentValue -> do
+                    DTO.experimentEnabled assignmentValue `shouldBe` False
+                    DTO.experimentEligible assignmentValue `shouldBe` False
+                    DTO.variant assignmentValue `shouldBe` "control"
+                    DTO.assignedAt assignmentValue `shouldBe` Nothing
+                Left serverErr -> expectationFailure ("Expected paused assignment response, got: " <> show serverErr)
+            case (firstAssignmentResult, repeatedAssignmentResult) of
+                (Right firstAssignment, Right repeatedAssignment) -> do
+                    DTO.experimentEnabled firstAssignment `shouldBe` True
+                    DTO.experimentEligible firstAssignment `shouldBe` True
+                    DTO.experimentVersion firstAssignment `shouldBe` 1
+                    DTO.variant firstAssignment `shouldBe` "treatment_singlefeature"
+                    DTO.newlyAssigned firstAssignment `shouldBe` True
+                    DTO.newlyAssigned repeatedAssignment `shouldBe` False
+                    DTO.variant repeatedAssignment `shouldBe` DTO.variant firstAssignment
+                    DTO.assignedAt repeatedAssignment `shouldBe` DTO.assignedAt firstAssignment
+                    DTO.eligibleUntil repeatedAssignment `shouldBe` DTO.eligibleUntil firstAssignment
+                results -> expectationFailure ("Expected stable experiment assignments, got: " <> show results)
+            case (firstExposureResult, repeatedExposureResult) of
+                (Right firstExposure, Right repeatedExposure) -> do
+                    DTO.newlyExposed firstExposure `shouldBe` True
+                    DTO.exposedAt (DTO.assignment firstExposure) `shouldSatisfy` (/= Nothing)
+                    DTO.newlyExposed repeatedExposure `shouldBe` False
+                    DTO.exposedAt (DTO.assignment repeatedExposure)
+                        `shouldBe` DTO.exposedAt (DTO.assignment firstExposure)
+                results -> expectationFailure ("Expected idempotent experiment exposure, got: " <> show results)
+            case (controlAssignmentResult, controlExposureResult) of
+                (Right controlAssignment, Right controlExposure) -> do
+                    DTO.variant controlAssignment `shouldBe` "control"
+                    DTO.newlyAssigned controlAssignment `shouldBe` True
+                    DTO.newlyExposed controlExposure `shouldBe` True
+                    DTO.variant (DTO.assignment controlExposure) `shouldBe` "control"
+                results -> expectationFailure ("Expected an eligible control assignment and exposure, got: " <> show results)
+            case expiredResult of
+                Right assignmentValue -> do
+                    DTO.experimentEnabled assignmentValue `shouldBe` True
+                    DTO.experimentEligible assignmentValue `shouldBe` False
+                    DTO.assignedAt assignmentValue `shouldBe` Nothing
+                    DTO.newlyAssigned assignmentValue `shouldBe` False
+                Left serverErr -> expectationFailure ("Expected expired cohort to fail closed, got: " <> show serverErr)
 
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
@@ -5849,10 +6125,12 @@ spec = describe "TDF.Server helpers" $ do
                     usernameValue `shouldBe` "ada@example.com"
                     passwordValue `shouldBe` "supersecret"
 
+            decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\",\"linkAccount\":null}" `shouldSatisfy` isLeft
+            decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\",\"createNewAccount\":null}" `shouldSatisfy` isLeft
             case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
-                Right (DTO.GoogleLoginRequest idTokenValue _ _ _ _) ->
+                Right (DTO.GoogleLoginRequest idTokenValue _ _ _ _ _ _) ->
                     idTokenValue `shouldBe` "google-id-token"
 
             case decodeChangePasswordRequest
@@ -8560,9 +8838,11 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
 
     describe "validateOptionalSignupClaimArtistId" $ do
-        it "preserves omission and accepts positive artist ids for explicit profile claims" $ do
+        it "preserves independent signup but forbids anonymous artist adoption" $ do
             validateOptionalSignupClaimArtistId Nothing `shouldBe` Right Nothing
-            validateOptionalSignupClaimArtistId (Just 42) `shouldBe` Right (Just 42)
+            case validateOptionalSignupClaimArtistId (Just 42) of
+                Left serverErr -> errHTTPCode serverErr `shouldBe` 403
+                Right _ -> expectationFailure "Anonymous signup must not adopt an artist"
 
         it "rejects zero or negative artist ids instead of silently dropping the requested claim" $ do
             let assertInvalid result = case result of
@@ -8909,6 +9189,9 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                rawExecute
+                    "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
+                    [toPersistValue tokenId, toPersistValue credId]
                 result <- runPasswordResetConfirm "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
@@ -8956,6 +9239,9 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                rawExecute
+                    "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
+                    [toPersistValue tokenId, toPersistValue credId]
                 result <- runPasswordResetConfirm "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
@@ -11883,8 +12169,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
 
     describe "ensurePartyRecord" $
-        it "keeps guest-commerce identity Party-only and reuses the same contact" $ do
-            (firstResult, secondResult, credentialCount, partyCount) <-
+        it "keeps separate unverified guest operations distinct despite a shared email" $ do
+            (firstResult, secondResult, credentialCount, partyCount, originalPhone) <-
                 runNoLoggingT $ do
                     pool <- createSqlitePool ":memory:" 1
                     liftIO $ runSqlPool initializeAuthSchema pool
@@ -11900,25 +12186,28 @@ spec = describe "TDF.Server helpers" $ do
                                         (ensurePartyRecord displayName "guest-booking@example.com" phoneNumber)
                                         env
                     first <- ensureGuestParty (Just "Guest Booking") Nothing
-                    second <- ensureGuestParty (Just "Updated Guest") (Just "+593991234567")
                     let firstPartyId = case first of
                             Left serverErr -> error ("Guest Party creation failed: " <> show serverErr)
                             Right partyId -> partyId
+                    liftIO $ runSqlPool (insert_ (UserCredential firstPartyId "established-guest" "unchanged-test-hash" True)) pool
+                    second <- ensureGuestParty (Just "Updated Guest") (Just "+593991234567")
+                    preserved <- liftIO $ runSqlPool (getJust firstPartyId) pool
                     counts <- liftIO $ flip runSqlPool pool $
                         (,)
                             <$> count [M.UserCredentialPartyId ==. firstPartyId]
                             <*> count [M.PartyPrimaryEmail ==. Just "guest-booking@example.com"]
-                    pure (first, second, fst counts, snd counts)
+                    pure (first, second, fst counts, snd counts, M.partyPrimaryPhone preserved)
 
             case (firstResult, secondResult) of
                 (Right firstPartyId, Right secondPartyId) ->
-                    secondPartyId `shouldBe` firstPartyId
+                    secondPartyId `shouldNotBe` firstPartyId
                 (Left serverErr, _) ->
                     expectationFailure ("Expected first guest Party creation to succeed, got: " <> show serverErr)
                 (_, Left serverErr) ->
                     expectationFailure ("Expected repeated guest Party lookup to succeed, got: " <> show serverErr)
-            credentialCount `shouldBe` 0
-            partyCount `shouldBe` 1
+            credentialCount `shouldBe` 1
+            originalPhone `shouldBe` Nothing
+            partyCount `shouldBe` 2
 
     describe "validatePublicBookingNotes" $ do
         it "trims optional public-booking notes and keeps multiline intent" $ do
@@ -12047,6 +12336,38 @@ spec = describe "TDF.Server helpers" $ do
 
                     resolved `shouldBe` [liveRoomId]
 
+        it "uses authoritative allocation status and half-open time boundaries" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = addUTCTime 3600 startsAt
+                cases =
+                    [ ("holding", startsAt, endsAt, True)
+                    , ("reserved", startsAt, endsAt, True)
+                    , ("holding", addUTCTime (-3600) startsAt, startsAt, False)
+                    , ("reserved", endsAt, addUTCTime 3600 endsAt, False)
+                    , ("holding", addUTCTime (-1) startsAt, addUTCTime 1 startsAt, True)
+                    , ("reserved", addUTCTime (-1) endsAt, addUTCTime 1 endsAt, True)
+                    , ("released", startsAt, endsAt, False)
+                    , ("completed", startsAt, endsAt, False)
+                    , ("cancelled", startsAt, endsAt, False)
+                    ]
+            forM_ cases $ \(allocationStatus, allocatedStart, allocatedEnd, conflict) -> do
+                result <- try $ runResourceSqlite $ do
+                    roomId <- insertBookingResourceFixture "Control Room" "room-control"
+                    -- No legacy Booking row: a paid runtime hold alone must block.
+                    rawExecute
+                        "INSERT INTO service_booking_resource_allocation (resource_id, allocation_status, starts_at, ends_at) VALUES (?, ?, ?, ?)"
+                        [toPersistValue roomId, PersistText allocationStatus,
+                         PersistUTCTime allocatedStart, PersistUTCTime allocatedEnd]
+                    resolved <- resolveResourcesForBooking Nothing ["room-control"] startsAt endsAt
+                    pure (roomId, resolved)
+                case result of
+                    Left serverErr -> do
+                        conflict `shouldBe` True
+                        errHTTPCode serverErr `shouldBe` 409
+                    Right (roomId, resolved) -> do
+                        conflict `shouldBe` False
+                        resolved `shouldBe` [roomId]
+
         it "rejects unknown explicit room ids instead of silently falling back to default room selection" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
@@ -12073,28 +12394,8 @@ spec = describe "TDF.Server helpers" $ do
             result <- try $
                 runResourceSqlite $ do
                     controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
-                    bookingId <- insert Booking
-                        { bookingTitle = "Existing booking"
-                        , bookingServiceOrderId = Nothing
-                        , bookingPartyId = Nothing
-                        , bookingServiceType = Just "mixing"
-                        , bookingEngineerPartyId = Nothing
-                        , bookingEngineerName = Nothing
-                        , bookingStartsAt = startsAt
-                        , bookingEndsAt = endsAt
-                        , bookingStatus = Confirmed
-                        , bookingCreatedBy = Nothing
-                        , bookingNotes = Nothing
-                        , bookingServiceOfferingId = Nothing
-                        , bookingBookingTypeId = Nothing
-                        , bookingWorkflowStateId = Nothing
-                        , bookingCreatedAt = startsAt
-                        }
-                    _ <- insert BookingResource
-                        { bookingResourceBookingId = bookingId
-                        , bookingResourceResourceId = controlRoomId
-                        , bookingResourceRole = "primary"
-                        }
+                    insertBookingResourceHoldFixture
+                        "Existing booking" controlRoomId startsAt endsAt
                     resolveResourcesForBooking
                         Nothing
                         ["room-control"]
@@ -15353,6 +15654,7 @@ marketplaceTestConfig seedFlag =
         , stripeWebhookSecret = Nothing
         , contextualReputationEnabled = False
         , publicReputationProjectionEnabled = False
+        , singleFeatureOnboardingExperimentEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False
         , eventDiscoveryPilotLimit = 20
@@ -15582,6 +15884,21 @@ initializeAuthSchema = do
         []
 
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_experiment_assignment\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"experiment_id\" VARCHAR NOT NULL,\
+        \\"experiment_version\" INTEGER NOT NULL,\
+        \\"variant\" VARCHAR NOT NULL,\
+        \\"assigned_at\" TIMESTAMP NOT NULL,\
+        \\"eligible_until\" TIMESTAMP NOT NULL,\
+        \\"exposed_at\" TIMESTAMP NULL,\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\"),\
+        \UNIQUE(\"party_id\", \"experiment_id\", \"experiment_version\")\
+        \)"
+        []
+
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"fan_follow\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"fan_party_id\" INTEGER NOT NULL,\
@@ -15768,6 +16085,9 @@ initializeAuthSchema = do
         \)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS auth_recovery_challenge (api_token_id INTEGER PRIMARY KEY REFERENCES api_token(id),credential_id INTEGER NOT NULL REFERENCES user_credential(id),issued_at_epoch INTEGER NOT NULL,expires_at_epoch INTEGER NOT NULL,CHECK(expires_at_epoch-issued_at_epoch=900))"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"course_registration\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"course_slug\" VARCHAR NOT NULL,\
@@ -15919,6 +16239,11 @@ initializeChatSchema = do
 initializeResourceSchema :: SqlPersistT IO ()
 initializeResourceSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
+    -- Resolver unit fixture only: PostgreSQL migration/trigger/concurrency
+    -- correspondence is exercised by test-booking-conformance.py.
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS service_booking_resource_allocation (resource_id INTEGER NOT NULL, allocation_status VARCHAR NOT NULL, starts_at TIMESTAMP NOT NULL, ends_at TIMESTAMP NOT NULL)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"room\" (\
         \\"id\" VARCHAR PRIMARY KEY,\
@@ -16103,6 +16428,9 @@ insertBookingResourceHoldFixture bookingTitleVal resourceId startsAt endsAt = do
         , bookingResourceResourceId = resourceId
         , bookingResourceRole = "primary"
         }
+    rawExecute
+        "INSERT INTO service_booking_resource_allocation (resource_id, allocation_status, starts_at, ends_at) VALUES (?, 'reserved', ?, ?)"
+        [toPersistValue resourceId, PersistUTCTime startsAt, PersistUTCTime endsAt]
     pure ()
 
 fixtureInstagramMessage
@@ -16232,3 +16560,18 @@ initializePackageSchema = do
         \\"active\" BOOLEAN NOT NULL\
         \)"
         []
+
+withNotificationFixture :: (Env -> AuthedUser -> AuthedUser -> Int64 -> Int64 -> IO a) -> IO a
+withNotificationFixture action = runNoLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeAuthSchema pool
+    (otherId, ownerId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+    now <- liftIO getCurrentTime
+    (requestId, notificationId) <- liftIO $ flip runSqlPool pool $ do
+        rawExecute "CREATE TABLE notification(id INTEGER PRIMARY KEY,recipient_party_id INTEGER,notif_type TEXT,title TEXT,body TEXT,target_type TEXT,target_id INTEGER,target_key TEXT,is_read BOOLEAN,created_at TIMESTAMP)" []
+        rawExecute "CREATE TABLE feature_access_request_history(id INTEGER PRIMARY KEY,request_id INTEGER,actor_party_id INTEGER,transition TEXT,from_status TEXT,to_status TEXT,note TEXT,created_at TIMESTAMP)" []
+        request <- insert (ME.FeatureAccessRequest ownerId "label.ddex.inbox" "view" "[]" "[]" (Just "specific request") "approved" "label-reviewers" Nothing (Just "already handled") now now (Just now) Nothing Nothing)
+        notification <- insert (M.Notification ownerId "artist_liked" "Nuevo fan" "Display text must not determine identity" (Just "party_profile") (Just (fromIntegral (fromSqlKey otherId))) Nothing False now)
+        pure (fromSqlKey request,fromSqlKey notification)
+    liftIO $ action (Env pool (marketplaceTestConfig False))
+        ((mkUser [Customer]) {auPartyId=ownerId}) ((mkUser [Customer]) {auPartyId=otherId}) requestId notificationId

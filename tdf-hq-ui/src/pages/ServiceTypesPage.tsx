@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -145,6 +146,7 @@ const revisionStateColor = (state: string): 'default' | 'info' | 'success' | 'er
 };
 
 export default function ServiceTypesPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<OfferingForm>(emptyForm);
@@ -314,11 +316,11 @@ export default function ServiceTypesPage() {
   );
 
   return (
-    <Box sx={{ color: '#e2e8f0' }}>
+    <Box sx={{ color: 'text.primary' }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5} mb={2}>
         <Stack spacing={0.75}>
           <Typography variant="h5" fontWeight={800}>Catálogo de servicios</Typography>
-          <Typography variant="body2" color="rgba(226,232,240,0.75)">
+          <Typography variant="body2" color="text.secondary">
             Ofertas canónicas y borradores versionados. Publicar exige revisión; la agenda sólo escribe IDs aprobados.
           </Typography>
         </Stack>
@@ -334,7 +336,7 @@ export default function ServiceTypesPage() {
       <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', mb: 2 }}>
         <CardContent>
           {servicesQuery.isLoading ? (
-            <Stack direction="row" spacing={1} alignItems="center"><CircularProgress size={18} /><Typography variant="body2">Cargando servicios…</Typography></Stack>
+            <Stack direction="row" spacing={1} alignItems="center"><CircularProgress size={18} aria-label={t('auditAccessibility.loadingServices')} /><Typography variant="body2">Cargando servicios…</Typography></Stack>
           ) : services.length === 0 ? (
             <Alert severity="info">No hay ofertas de servicio publicadas.</Alert>
           ) : (
@@ -370,7 +372,7 @@ export default function ServiceTypesPage() {
       <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <CardContent>
           <Typography variant="h6" mb={1}>Revisiones recientes</Typography>
-          {revisionsQuery.isLoading ? <CircularProgress size={18} /> : (revisionsQuery.data?.length ?? 0) === 0 ? (
+          {revisionsQuery.isLoading ? <CircularProgress size={18} aria-label={t('auditAccessibility.loadingServiceRevisions')} /> : (revisionsQuery.data?.length ?? 0) === 0 ? (
             <Typography variant="body2" color="text.secondary">No hay borradores ni revisiones recientes.</Typography>
           ) : (
             <Table size="small" aria-label="Revisiones de servicios">

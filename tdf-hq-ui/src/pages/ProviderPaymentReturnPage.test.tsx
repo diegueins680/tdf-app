@@ -1,0 +1,150 @@
+/** @jest-environment jsdom */
+import { jest } from '@jest/globals';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+
+import {
+  loadOrCreatePaymentIdempotencyKey,
+  loadProviderPaymentResume,
+  paymentIdempotencyStorageKey,
+  saveProviderPaymentResume,
+} from '../utils/providerPaymentResume';
+
+const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const attemptId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const getMock = jest.fn();
+
+jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
+  getProviderPaymentSession: getMock,
+  safePlaceToPayRedirect: () => null,
+}));
+
+jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
+  useLocalePreferences: () => ({ locale: 'es-EC' }),
+}));
+
+const { default: ProviderPaymentReturnPage } = await import('./ProviderPaymentReturnPage');
+
+const resume = () => saveProviderPaymentResume({
+  version: 1,
+  checkoutId,
+  attemptId,
+  provider: 'placetopay',
+  paymentMethod: 'card',
+  lookupToken: 'secure-checkout-lookup-token',
+  returnPath: '/orden',
+  createdAt: Date.now(),
+});
+
+const session = (state: string, canRetryOrFallback: boolean) => ({
+  checkoutId,
+  attemptId,
+  operationId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  provider: 'placetopay',
+  state,
+  externalId: 'request-7',
+  redirectUrl: null,
+  outcomeCertainty: canRetryOrFallback ? 'confirmed_no_charge' : 'ambiguous',
+  canRetryOrFallback,
+});
+
+const renderPage = (entry = '/pagos/retorno') => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[entry]}>
+        <Routes>
+          <Route path="/pagos/retorno" element={<ProviderPaymentReturnPage />} />
+          <Route path="/orden" element={<div>Orden</div>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+};
+
+describe('ProviderPaymentReturnPage', () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    getMock.mockReset();
+    resume();
+  });
+
+  it('uses the server-bound checkout selector even after another checkout starts', async () => {
+    saveProviderPaymentResume({ version: 1,
+      checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', attemptId,
+      provider: 'placetopay', paymentMethod: 'card', lookupToken: 'other-private-lookup',
+      returnPath: '/other-order', createdAt: Date.now() });
+    getMock.mockResolvedValue(session('succeeded', false));
+    renderPage(`/pagos/retorno?tdf_checkout=${checkoutId}`);
+    await screen.findByText(/servidor verificó el pago/);
+    expect(getMock).toHaveBeenCalledWith(checkoutId, attemptId, 'secure-checkout-lookup-token');
+    expect(screen.getByRole('link', { name: 'Volver a la orden' }).getAttribute('href')).toBe('/orden');
+  });
+
+  it.each(['', '?tdf_checkout=', '?tdf_checkout=unknown'])('never guesses a checkout for an ambiguous or invalid return %s', (query) => {
+    saveProviderPaymentResume({ version: 1,
+      checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', attemptId,
+      provider: 'placetopay', paymentMethod: 'card', lookupToken: 'other-private-lookup',
+      returnPath: '/other-order', createdAt: Date.now() });
+    renderPage(`/pagos/retorno${query}`);
+    expect(screen.getByText(/no tiene la capacidad privada/)).toBeTruthy();
+    expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it('retains the private recovery lock when the result is ambiguous', async () => {
+    getMock.mockResolvedValue(session('ambiguous', false));
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('link', { name: 'Volver a la orden' }));
+
+    expect(await screen.findByText('Orden')).toBeTruthy();
+    expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+  });
+
+  it('clears recovery and the reusable key only after authoritative no-charge evidence', async () => {
+    const key = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    expect(key).toBeTruthy();
+    getMock.mockResolvedValue(session('confirmed_no_charge', true));
+    renderPage();
+
+    await screen.findByText(/confirmó que no se completó un cobro/);
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
+
+    expect(await screen.findByText('Orden')).toBeTruthy();
+    expect(loadProviderPaymentResume(checkoutId)).toBeNull();
+    expect(window.sessionStorage.getItem(
+      paymentIdempotencyStorageKey(checkoutId, 'placetopay', 'card'),
+    )).toBeNull();
+  });
+
+  it('presents a verified PayPhone cancellation neutrally and releases only its recovery key', async () => {
+    saveProviderPaymentResume({
+      version: 1,
+      checkoutId,
+      attemptId,
+      provider: 'payphone',
+      paymentMethod: 'payphone_wallet',
+      lookupToken: 'secure-checkout-lookup-token',
+      returnPath: '/orden',
+      createdAt: Date.now(),
+    });
+    loadOrCreatePaymentIdempotencyKey(checkoutId, 'payphone', 'payphone_wallet');
+    const otherKey = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    getMock.mockResolvedValue({ ...session('confirmed_no_charge', true), provider: 'payphone' });
+    renderPage();
+
+    await screen.findByText(/confirmó que no se completó un cobro/);
+    expect(screen.queryByText(/rechazado|cancelaste|rechazo del banco/i)).toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
+
+    expect(await screen.findByText('Orden')).toBeTruthy();
+    expect(loadProviderPaymentResume(checkoutId)).toBeNull();
+    expect(window.sessionStorage.getItem(
+      paymentIdempotencyStorageKey(checkoutId, 'payphone', 'payphone_wallet'),
+    )).toBeNull();
+    expect(window.sessionStorage.getItem(
+      paymentIdempotencyStorageKey(checkoutId, 'placetopay', 'card'),
+    )).toBe(otherKey);
+  });
+});

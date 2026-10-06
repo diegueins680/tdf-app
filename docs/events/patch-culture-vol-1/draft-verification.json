@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-05T04:34:22.376Z",
+  "eventId": "141",
+  "venueId": "22",
+  "artistIds": [
+    "42",
+    "36",
+    "51"
+  ],
+  "tierId": "2",
+  "mutations": 0,
+  "workflow": "planning",
+  "public": false,
+  "salesEnabled": false,
+  "imageUrl": "https://api.tdfrecords.net/assets/serve/social-events/events/141/662b8aa0-be87-4765-b348-c1f352439c20-patch-culture-original-frame.png",
+  "candidateUrl": "https://www.tdfrecords.net/eventos/141",
+  "unlinkedParticipants": [
+    {
+      "name": "Diego Saá",
+      "reason": "Existing IDs 4 and 12 have matching names and neither has a canonical party link; preserve both and do not create a third."
+    }
+  ]
+}

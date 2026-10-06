@@ -1,3 +1,5 @@
+> Aprobada por Diego: «Approved. Continue». Implementación y validación en curso; cobros aún sin activar.
+
 # PATCH CULTURE Vol. 1 — propuesta de condiciones v1
 
 **Borrador para incorporar a la única aprobación final del evento.** Los datos confirmados por Diego se separan de las condiciones propuestas. Este archivo no activa ventas, descuentos, reembolsos ni liquidaciones y no acredita su implementación.
@@ -53,6 +55,13 @@ No son previsiones de demanda ni netos. Si `F` son comisiones reales y `T` oblig
 
 ## Estado y aprobación
 
-Estos términos están **propuestos, no aprobados ni activados**. La respuesta del organizador confirma datos, precio y reparto; no habilita por sí sola los primeros cobros, según su instrucción original. Esta propuesta se presentará junto con política fiscal/fees resuelta, evento draft, métodos realmente probados y evidencia E2E en una única aprobación final. No solicitar una microaprobación de este borrador.
+Estos términos fueron **aprobados** por el organizador mediante «Approved. Continue». El evento y su tier ya existen como borradores sin venta activa. No se solicita nuevamente aprobación de estos mismos términos. La política fiscal, los fees verificables y la prueba oficial de pago siguen pendientes; no se habilitan cobros ni se afirma E2E completo con esos requisitos abiertos.
 
-Pendientes técnicos conservados: corrección del check-in concurrente/QR legacy, entrega durable, guest recovery, funnel, rutas reales de pago, staff/RBAC, pruebas de último cupo, sandbox, CI/deploy. La consulta de entorno de esta sesión no encontró las variables candidatas de token administrativo TDF ni PayPal sandbox; esto no prueba que no existan en un gestor externo. No se buscaron secretos en perfiles de navegador ni se usó una identidad administrativa fabricada.
+Fusionados en PR480: check-in atómico con auditoría, códigos opacos de mayor entropía, QR web, reservas concurrentes de último cupo y transferencia con rotación de credenciales y protección frente al acceso del comprador anterior. La continuación implementa el límite de cuatro entradas por orden como una política reutilizable. Pendientes: configurar la política fiscal y de transferencia del evento, entrega durable, recuperación para invitados, funnel, prueba oficial de pagos, staff/scanner, aceptación móvil completa y despliegue del backend. Acceso administrativo verificado mediante el secreto existente en GitHub Actions; no se extrajo su valor. El diagnóstico de pagos /admin/commerce/overview devuelve 404 en la API canónica actual. No se verificó un sandbox oficial ni se fabricó evidencia de pago.
+
+
+Actualización del emisor, 5 oct 2026: Diego confirmó **TDF Records, RUC 1793215092001**. El mismo RUC y beneficiario **TDF Records S.A.S.** constan en la plantilla de cobro existente (`TDF.Email`). Esto resuelve la identidad del emisor indicada por el organizador, pero no acredita por sí solo la tarifa del paquete. No se cambian los USD20 finales aprobados.
+
+La [guía vigente del SRI sobre servicios artísticos y culturales](https://www.sri.gob.ec/servicios-artisticos-y-culturales) condiciona la tarifa cero al servicio efectivamente prestado y a la actividad registrada; las operaciones con distintas tarifas requieren bases separadas. Sigue pendiente confirmar el tratamiento del taller y de la pinta incluida. No se trata el reparto interno USD15/USD5 como una clasificación tributaria automática. La [información oficial de facturación electrónica](https://www.sri.gob.ec/facturacion-electronica) advierte que los RUC de sociedades no deben rechazarse mediante un supuesto algoritmo general de validación; no se modifica ni “corrige” el número confirmado.
+
+Control de activación: el checkout vigente calcula el impuesto como adicional a la base. Si el tratamiento confirmado implica IVA, se debe verificar la configuración/cálculo para que selección, checkout, cobro y comprobante mantengan USD20 finales por entrada. No se activará un total de USD23 ni se configurará artificialmente tasa cero para ocultar el impuesto.

@@ -1,0 +1,195 @@
+name: Universal interaction verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      native_ios_run:
+        description: Successful TDF-mobile simulator build run to qualify (blank skips iOS).
+        type: string
+        default: ''
+      application_sha:
+        description: Exact root commit whose backend, migrations and pinned mobile source are tested.
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  postgres-properties:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local-ci-only
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: local-ci-only
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Generated constraints and authoritative counter properties
+        run: bash scripts/interactions/test-schema.sh
+      - name: Full migration, policy, moderation, compatibility, privacy and concurrency properties
+        run: bash scripts/interactions/test-database.sh
+
+  native-ios-e2e:
+    if: github.event_name == 'workflow_dispatch' && inputs.native_ios_run != ''
+    runs-on: macos-15
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      STACK_ROOT: ${{ github.workspace }}/.stack-root-ios
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+      # Allow bounded cold XCTest startup on hosted Macs; app assertions still fail normally.
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: '300000'
+    steps:
+      - name: Validate immutable application identity
+        env:
+          APPLICATION_SHA: ${{ inputs.application_sha }}
+          MOBILE_RUN: ${{ inputs.native_ios_run }}
+        run: |
+          [[ "$APPLICATION_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$MOBILE_RUN" =~ ^[0-9]+$ ]]
+      - uses: actions/checkout@v7
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
+        with:
+          ref: ${{ inputs.application_sha }}
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify and download the original simulator artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MOBILE_RUN: ${{ inputs.native_ios_run }}
+        run: |
+          gh api "repos/diegueins680/TDF-mobile/actions/runs/$MOBILE_RUN" > "$RUNNER_TEMP/mobile-run.json"
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          run=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'mobile-run.json').read_text())
+          assert run['conclusion']=='success'
+          assert run['path']=='.github/workflows/interaction-simulator.yml'
+          source=run['head_sha']
+          assert len(source)==40 and all(c in '0123456789abcdef' for c in source)
+          subprocess.run(['git','-C','tdf-mobile','fetch','--no-tags','--depth=1','origin',source],check=True)
+          def tree(ref):
+              return subprocess.check_output(['git','-C','tdf-mobile','rev-parse',ref+'^{tree}'],text=True).strip()
+          assert tree(source)==tree('HEAD'), 'Simulator source tree differs from the pinned mobile source'
+          print('Verified exact native source tree:',tree(source))
+          PY
+          gh run download "$MOBILE_RUN" --repo diegueins680/TDF-mobile --pattern 'interaction-simulator-*' --dir "$RUNNER_TEMP/interaction-simulator"
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          run=json.loads((root/'mobile-run.json').read_text())
+          receipts=list((root/'interaction-simulator').rglob('tdf-interaction-source.txt'))
+          archives=list((root/'interaction-simulator').rglob('tdf-interaction-simulator.tgz'))
+          assert len(receipts)==len(archives)==1
+          # PR builds record GitHub's tested merge commit, while run metadata
+          # identifies the branch head. Both must have the exact pinned tree.
+          source=receipts[0].read_text().strip()
+          assert len(source)==40 and all(c in '0123456789abcdef' for c in source)
+          subprocess.run(['git','-C','tdf-mobile','fetch','--no-tags','--depth=1','origin',source],check=True)
+          def tree(ref):
+              return subprocess.check_output(['git','-C','tdf-mobile','rev-parse',ref+'^{tree}'],text=True).strip()
+          assert tree(source)==tree('HEAD'), 'Artifact receipt source differs from the pinned native tree'
+          PY
+          mkdir "$RUNNER_TEMP/interaction-app"
+          tar -xzf "$(find "$RUNNER_TEMP/interaction-simulator" -name tdf-interaction-simulator.tgz -print -quit)" -C "$RUNNER_TEMP/interaction-app"
+          codesign --verify --deep --strict "$RUNNER_TEMP/interaction-app/TDFRecords.app"
+          test -s "$RUNNER_TEMP/interaction-app/TDFRecords.app/main.jsbundle"
+      - name: Install PostgreSQL 17 and build the pinned vector extension
+        run: |
+          brew install postgresql@17 pkg-config
+          interaction_pg="$(brew --prefix postgresql@17)"
+          echo "$interaction_pg/bin" >> "$GITHUB_PATH"
+          git init "$RUNNER_TEMP/pgvector"
+          git -C "$RUNNER_TEMP/pgvector" remote add origin https://github.com/pgvector/pgvector.git
+          git -C "$RUNNER_TEMP/pgvector" fetch --depth=1 origin 778dacf20c07caf904557a88705142631818d8cb
+          git -C "$RUNNER_TEMP/pgvector" checkout --detach FETCH_HEAD
+          make -C "$RUNNER_TEMP/pgvector" PG_CONFIG="$interaction_pg/bin/pg_config" OPTFLAGS=''
+          make -C "$RUNNER_TEMP/pgvector" PG_CONFIG="$interaction_pg/bin/pg_config" install
+          "$interaction_pg/bin/initdb" -D "$RUNNER_TEMP/interaction-postgres" -A trust -U postgres
+          "$interaction_pg/bin/pg_ctl" -D "$RUNNER_TEMP/interaction-postgres" -l "$RUNNER_TEMP/interaction-postgres.log" -o '-h 127.0.0.1 -p 5432' -w start
+      - name: Restore macOS Stack dependencies
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.STACK_ROOT }}
+          key: interaction-mac-stack-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+      - uses: haskell-actions/setup@7fd2bb5ca789761088fbc831406b2910e47e56f1 # v2
+        with:
+          ghc-version: '9.10.3'
+          stack-version: '3.11.1'
+          enable-stack: true
+          stack-no-global: true
+          stack-setup-ghc: true
+          cabal-update: false
+      - name: Build the exact application backend with Stack
+        working-directory: tdf-hq
+        run: |
+          stack --no-terminal build tdf-hq:exe:tdf-hq-exe --copy-bins --local-bin-path "$RUNNER_TEMP/interaction-backend" --extra-include-dirs="$(brew --prefix postgresql@17)/include" --extra-lib-dirs="$(brew --prefix postgresql@17)/lib"
+      - name: Install the checksum-pinned Maestro runtime
+        run: |
+          curl --fail --location --silent --show-error https://github.com/mobile-dev-inc/Maestro/releases/download/cli-2.5.1/maestro.zip -o "$RUNNER_TEMP/maestro.zip"
+          printf '%s  %s\n' '2d924bfd37cccabca438a727213648cbfe4f8bb711559ec8e9d199dc09a5ce52' "$RUNNER_TEMP/maestro.zip" | shasum -a 256 --check
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP/maestro-cli"
+          echo "$RUNNER_TEMP/maestro-cli/maestro/bin" >> "$GITHUB_PATH"
+      - name: Boot a dedicated simulator and install the unchanged artifact
+        run: |
+          interaction_runtime=$(xcrun simctl list runtimes available --json | python3 -c 'import json,sys; r=[r for r in json.load(sys.stdin)["runtimes"] if r.get("isAvailable") and r["name"].startswith("iOS 18")]; assert r,"No iOS 18 runtime"; print(sorted(r,key=lambda v:tuple(map(int,v["version"].split("."))))[-1]["identifier"])')
+          interaction_device=$(xcrun simctl create TDFInteractionCI com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$interaction_runtime")
+          echo "TDF_INTERACTION_NATIVE_DEVICE=$interaction_device" >> "$GITHUB_ENV"
+          xcrun simctl boot "$interaction_device"
+          xcrun simctl bootstatus "$interaction_device" -b
+          xcrun simctl install "$interaction_device" "$RUNNER_TEMP/interaction-app/TDFRecords.app"
+      - name: Run the real HTTP and installed iOS discussion journeys
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: unused-local-test-value
+          TDF_INTERACTION_SERVER_BIN: ${{ runner.temp }}/interaction-backend/tdf-hq-exe
+          TDF_INTERACTION_SERVER_PORT: '18128'
+        run: bash scripts/interactions/test-http.sh
+      - name: Stop the owned test services
+        if: always()
+        run: |
+          if test -n "${TDF_INTERACTION_NATIVE_DEVICE:-}"; then xcrun simctl shutdown "$TDF_INTERACTION_NATIVE_DEVICE" || true; fi
+          if test -f "$RUNNER_TEMP/interaction-postgres/postmaster.pid"; then "$(brew --prefix postgresql@17)/bin/pg_ctl" -D "$RUNNER_TEMP/interaction-postgres" -m fast -w stop; fi
+      - name: Retain only synthetic native screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: interaction-ios-evidence-${{ inputs.application_sha }}
+          path: /tmp/tdf-interaction-native-*.png
+          if-no-files-found: ignore
+          retention-days: 7

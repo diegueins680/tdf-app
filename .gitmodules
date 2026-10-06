@@ -1,3 +1,5 @@
 [submodule "tdf-mobile"]
 	path = tdf-mobile
 	url = https://github.com/diegueins680/tdf-mobile.git
+	# Web deployments do not need access to the mobile repository.
+	update = none

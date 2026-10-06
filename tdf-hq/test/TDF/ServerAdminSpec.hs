@@ -42,6 +42,8 @@ import TDF.API.Admin
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
+import qualified TDF.API.RecordsIngestion as RI
+import TDF.Server.RecordsIngestion (recordsIngestionServer)
 import TDF.API.Types
     ( DropdownOptionCreate
     , DropdownOptionDTO
@@ -999,6 +1001,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected multiline broadcast subject to be rejected, got " <> show value)
 
+    describe "records ingestion route authorization" $ do
+        it "rejects non-admin roles and malformed Admin grants before database or provider access" $ do
+            let users = map (mkUser . pure) [StudioManager, Webmaster, Fan]
+                    ++ [(mkUser [Admin]) { auModules = modulesForRoles [] }]
+                checkUser user = do
+                    let overview :<|> saveSource :<|> control :<|> run = recordsIngestionServer user
+                        actions = [ overview
+                            , saveSource (RI.SourceRequest "UCx9Jpaw_XDrMtIdzWYlU51g" False Nothing "" Nothing Nothing)
+                            , control (RI.ControlRequest False 3600)
+                            , run (RI.RunRequest 1 "authorization-test" False True)
+                            ]
+                    results <- mapM runAdminTest actions
+                    mapM_ (\result -> case result of
+                        Left err -> errHTTPCode err `shouldBe` 403
+                        Right value -> expectationFailure ("Unauthorized ingestion access: " <> show value)) results
+            mapM_ checkUser users
+
     describe "artist enrichment route authorization" $ do
         it "requires the literal Admin role for read-only research and audit data" $ do
             let assertRejected role = do
@@ -1824,6 +1843,8 @@ mkUser roles =
         { auPartyId = toSqlKey 1
         , auRoles = roles
         , auModules = modulesForRoles roles
+        , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 expectBadRequestContaining :: Show a => String -> Either ServerError a -> Expectation
@@ -2209,5 +2230,6 @@ socialHandlersFor user =
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
-            :<|> socialRouter ->
+            :<|> socialRouter
+            :<|> _recordsIngestion ->
                 socialRouter

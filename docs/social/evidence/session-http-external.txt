@@ -1,0 +1,156 @@
+Session tests require an empty tdf_hq_social_session_test database
+CREATE TABLE
+CREATE TABLE
+INSERT 0 5
+INSERT 0 5
+CREATE TABLE
+INSERT 0 5
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 1
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 1
+BEGIN
+CREATE TABLE
+INSERT 0 1
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+COMMIT
+BEGIN
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+REVOKE
+REVOKE
+REVOKE
+CREATE FUNCTION
+REVOKE
+CREATE FUNCTION
+REVOKE
+COMMIT
+/Users/diegosaa/GitHub/tdf-app-social-enforcement-20260915/tdf-hq/tdf-hq.cabal was modified manually. Ignoring /Users/diegosaa/GitHub/tdf-app-social-enforcement-20260915/tdf-hq/package.yaml in favor of the Cabal file.
+If you want to use the package.yaml file instead of the Cabal file,
+then please delete the Cabal file.
+
+requires real bearer authentication even when the process gate is closed [✔]
+requires both process and database gates [✔]
+derives the actor from the token and rejects identity injection [✔]
+withdraws only the caller's consent and leaves the other intent intact [✔]
+denies blocked reads and stale acceptance but preserves the owner's unblock control [✔]
+serves an authorized Following page and rejects malformed cursors and page sizes [✔]
+rechecks authoritative membership on the next HTTP request [✔]
+denies inactive tokens and organization identities [✔]
+session authority on real PostgreSQL
+  refines checked model Read case 1 [✔]
+  refines checked model Read case 2 [✔]
+  refines checked model Read case 3 [✔]
+  refines checked model Read case 4 [✔]
+  refines checked model Read case 5 [✔]
+  refines checked model Read case 6 [✔]
+  refines checked model Read case 7 [✔]
+  refines checked model Read case 8 [✔]
+  refines checked model Read case 9 [✔]
+  refines checked model Read case 10 [✔]
+  refines checked model Read case 11 [✔]
+  refines checked model Read case 12 [✔]
+  refines checked model Read case 13 [✔]
+  refines checked model Read case 14 [✔]
+  refines checked model Read case 15 [✔]
+  refines checked model Read case 16 [✔]
+  refines checked model Read case 17 [✔]
+  refines checked model Read case 18 [✔]
+  refines checked model Read case 19 [✔]
+  refines checked model Read case 20 [✔]
+  refines checked model Read case 21 [✔]
+  refines checked model Read case 22 [✔]
+  refines checked model Read case 23 [✔]
+  refines checked model Read case 24 [✔]
+  refines checked model Read case 25 [✔]
+  refines checked model Read case 26 [✔]
+  refines checked model Read case 27 [✔]
+  refines checked model Read case 28 [✔]
+  refines checked model Read case 29 [✔]
+  refines checked model Read case 30 [✔]
+  refines checked model Read case 31 [✔]
+  refines checked model Read case 32 [✔]
+  refines checked model Read case 33 [✔]
+  refines checked model Read case 34 [✔]
+  refines checked model Read case 35 [✔]
+  refines checked model Read case 36 [✔]
+  refines checked model Read case 37 [✔]
+  refines checked model Read case 38 [✔]
+  refines checked model Read case 39 [✔]
+  refines checked model Read case 40 [✔]
+  refines checked model Read case 41 [✔]
+  refines checked model Read case 42 [✔]
+  refines checked model Read case 43 [✔]
+  refines checked model Read case 44 [✔]
+  refines checked model Read case 45 [✔]
+  refines checked model Read case 46 [✔]
+  refines checked model Read case 47 [✔]
+  refines checked model Read case 48 [✔]
+  refines checked model Read case 49 [✔]
+  refines checked model Read case 50 [✔]
+  refines checked model Read case 51 [✔]
+  refines checked model Read case 52 [✔]
+  refines checked model Read case 53 [✔]
+  refines checked model Read case 54 [✔]
+  refines checked model Read case 55 [✔]
+  refines checked model Read case 56 [✔]
+  refines checked model Read case 57 [✔]
+  refines checked model Read case 58 [✔]
+  refines checked model Read case 59 [✔]
+  refines checked model Read case 60 [✔]
+  refines checked model Read case 61 [✔]
+  refines checked model Read case 62 [✔]
+  refines checked model Read case 63 [✔]
+  refines checked model Read case 64 [✔]
+  denies both handler reads and writes after their captured token is revoked [✔]
+  revalidates reset-only purpose using the same Unicode-aware rule as authentication [✔]
+  denies a token whose owner changed after authentication [✔]
+  denies a deleted token even though its account remains active [✔]
+  denies a socially closed account with an otherwise active token [✔]
+  rejects synthetic actors with no captured token identity [✔]
+  serializes a write that wins the race before token revocation [✔]
+  denies a write waiting behind a committed token revocation [✔]
+  allows simultaneous shared reads while revocation waits for the held read [✔]
+  keeps password-reset credential-before-token locking free of inversion [✔]
+
+Finished in 2.0169 seconds
+82 examples, 0 failures
+Session tests require an empty tdf_hq_social_session_test database
+PASS: external empty database, wrong-name denial, populated-database denial and preserved fixture rows

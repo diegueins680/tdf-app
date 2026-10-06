@@ -6,6 +6,7 @@ const ConfigurationIndexRedirect = lazy(() => import('./AppShell').then((module)
   default: module.ConfigurationIndexRedirect,
 })));
 
+const NotificationPage = lazy(() => import('../pages/NotificationPage'));
 const AboutPage = lazy(() => import('../pages/AboutPage'));
 const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
@@ -30,6 +31,7 @@ const DocsPage = lazy(() => import('../pages/DocsPage'));
 const DirectoryManagePage = lazy(() => import('../pages/DirectoryManagePage'));
 const DirectoryAdminPage = lazy(() => import('../pages/DirectoryAdminPage'));
 const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
+const RecordsIngestionPage = lazy(() => import('../pages/RecordsIngestionPage'));
 const EventDiscoverySourcesPage = lazy(() => import('../pages/EventDiscoverySourcesPage'));
 const DavidCelayaReportPage = lazy(() => import('../pages/DavidCelayaReportPage'));
 const WorkAccountReportBuilderPage = lazy(() => import('../pages/WorkAccountReportBuilderPage'));
@@ -81,7 +83,7 @@ const SecurityPage = lazy(() => import('../pages/SecurityPage'));
 const ServiceTypesPage = lazy(() => import('../pages/ServiceTypesPage'));
 const SocialEventsPage = lazy(() => import('../pages/SocialEventsPage'));
 const CollaborativeEventCreatorPage = lazy(() => import('../pages/CollaborativeEventCreatorPage'));
-const SocialEventDetailPage = lazy(() => import('../pages/SocialEventDetailPage'));
+const SocialEventDetailPage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const EventLogisticsPage = lazy(() => import('../pages/EventLogisticsPage'));
 const RecentlyDiscoveredEventsPage = lazy(() => import('../pages/RecentlyDiscoveredEventsPage'));
 const SocialInboxPage = lazy(() => import('../pages/SocialInboxPage'));
@@ -123,6 +125,7 @@ export function renderProtectedRoutes() {
         <Route path="/mis-clasificados" element={<DirectoryManagePage />} />
         <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
+        <Route path="/notificaciones/:notificationId" element={<NotificationPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/reputation/preferences" element={<ReputationPreferencesPage />} />
         <Route path="/reputation/consents" element={<ReputationConsentsPage />} />
@@ -240,6 +243,7 @@ export function renderProtectedRoutes() {
           <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
           <Route path="cms" element={<CmsAdminPage />} />
           <Route path="campanas-automaticas" element={<CampaignAutomationsPage />} />
+          <Route path="fuentes-videos" element={<RecordsIngestionPage />} />
           <Route path="fuentes-eventos" element={<EventDiscoverySourcesPage />} />
           <Route path="whatsapp-consentimiento" element={<WhatsAppConsentPage />} />
           <Route path="opciones-ux" element={<UxOptionsPage />} />

@@ -17,7 +17,14 @@ function isRootDependencyFile(file) {
 }
 
 function affectsContracts(file) {
-  return file === 'tdf-hq/docs/openapi/api.yaml'
+  return file === 'tdf-mobile'
+    || isPathOrChild(file, 'tdf-hq/docs/openapi')
+    || file === 'tdf-hq/src/TDF/API.hs'
+    || isPathOrChild(file, 'tdf-hq/src/TDF/API')
+    || file === 'tdf-hq/src/TDF/DTO.hs'
+    || isPathOrChild(file, 'tdf-hq/src/TDF/DTO')
+    || file === 'scripts/check-generated-api.mjs'
+    || file === 'scripts/__tests__/generated-api-conformance.test.mjs'
     || file === 'tdf-hq-ui/src/api/generated/types.ts'
     || file === 'tdf-mobile/src/api/generated/types.ts'
     || file === 'tdf-hq-ui/package.json'
@@ -27,6 +34,8 @@ function affectsContracts(file) {
 
 function affectsMigrations(file) {
   return isPathOrChild(file, 'tdf-hq/sql')
+    || file === 'scripts/test-artist-merch-storefronts-migration.sh'
+    || file === 'tdf-hq/test/integration/merch_checkout_expiry_assertions.sql'
     || file === 'tdf-hq/production-entrypoint.sh'
     || file === 'tdf-hq/Dockerfile'
     || file === 'tdf-hq/Dockerfile.runtime'
@@ -72,13 +81,19 @@ export function classifyChangedFiles(files, options = {}) {
       || changed.some((file) => isPathOrChild(file, 'tdf-hq-ui')),
     mobile: pipelineChanged
       || rootDependenciesChanged
-      || changed.some((file) => isPathOrChild(file, 'tdf-mobile')),
+      || changed.some((file) => isPathOrChild(file, 'tdf-mobile')
+        || file === 'tdf-hq-ui/src/components/notificationTarget.ts'
+        || file === 'scripts/generate-notification-navigation.mjs'),
     backend: options.forceBackend === true
       || pipelineChanged
       || changed.some((file) => isPathOrChild(file, 'tdf-hq')
         || file === 'fly.toml'
         || file === '.dockerignore'
-        || file === 'scripts/test-public-booking-http-concurrency.sh'),
+        || file === 'scripts/test-public-booking-http-concurrency.sh'
+        || file === 'scripts/test-event-operations-http.sh'
+        || file === 'scripts/test-event-operations-http-ci.sh'
+        || file === 'scripts/run-event-operations-http-harness.sh'
+        || file === 'scripts/__tests__/event-operations-http-runner.test.mjs'),
     contracts: pipelineChanged || changed.some(affectsContracts),
     migrations: pipelineChanged || changed.some(affectsMigrations),
   };

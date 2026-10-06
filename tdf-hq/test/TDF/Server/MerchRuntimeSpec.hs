@@ -346,6 +346,46 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
           ]
         checkoutHeaders = ("Idempotency-Key","runtime-http-checkout-001") : cartHeaders
 
+    -- Invalid server-loaded prices must reject before shipping decisions or
+    -- order/stock effects; retry the same cart normally after correction.
+    runSqlPool (do
+      rawExecute "UPDATE merch_product_variant SET price_minor=? WHERE id=?::uuid"
+        [PersistInt64 (maxBound :: Int64), PersistText variantId]
+      rawExecute "UPDATE merch_cart_item SET quantity=2 WHERE cart_id=?::uuid"
+        [PersistText cartId]) pool
+    let moneySnapshot = runSqlPool (rawSql
+          "SELECT jsonb_build_object('orders',(SELECT count(*) FROM merch_order),\
+          \ 'checkouts',(SELECT count(*) FROM commerce_checkout_session),\
+          \ 'reservations',(SELECT jsonb_agg(to_jsonb(r) ORDER BY r.id) FROM merch_inventory_reservation r),\
+          \ 'stock',(SELECT jsonb_agg(jsonb_build_object('id',v.id,'onHand',v.stock_on_hand,\
+          \ 'reserved',v.stock_reserved,'sold',v.stock_sold) ORDER BY v.id) FROM merch_product_variant v),\
+          \ 'cart',(SELECT to_jsonb(c) FROM merch_cart c WHERE id=?::uuid))::text"
+          [PersistText cartId] :: SqlPersistT IO [Single Text]) pool
+    beforeInvalidMoney <- moneySnapshot
+    _ <- httpJson manager port "POST" (cartPath "/checkout") checkoutHeaders (Just checkoutBody)
+      >>= expectStatus 409 "Overflowing merchandise product snapshot"
+    afterInvalidMoney <- moneySnapshot
+    assert (afterInvalidMoney == beforeInvalidMoney) "Rejected merchandise amount committed order, stock or cart effects"
+    runSqlPool (do
+      rawExecute "UPDATE merch_product_variant SET price_minor=5000 WHERE id=?::uuid" [PersistText variantId]
+      rawExecute "UPDATE merch_cart_item SET quantity=1 WHERE cart_id=?::uuid" [PersistText cartId]) pool
+
+    -- Exercise the actual storage CHECK at a valid maximal commission, without
+    -- payment, fulfillment or provider activity. Roll back this synthetic row.
+    runSqlPool (do
+      rawExecute "SAVEPOINT merch_money_boundary" []
+      rawExecute
+        "INSERT INTO merch_order SELECT (jsonb_populate_record(NULL::merch_order,\
+        \ (SELECT to_jsonb(o) FROM merch_order o WHERE id='98000000-0000-4000-8000-000000000004')\
+        \ || jsonb_build_object('id',gen_random_uuid(),'order_number','TDF-MERCH-MAXMONEY01',\
+        \ 'checkout_id',NULL,'cart_id',NULL,'lookup_token_hash','synthetic-max-money',\
+        \ 'create_idempotency_key','synthetic-max-money','product_subtotal_minor',9223372036854775807::bigint,\
+        \ 'discount_minor',0,'tax_minor',0,'shipping_minor',0,'processor_fee_minor',0,\
+        \ 'tdf_commission_bps',10000,'tdf_commission_minor',9223372036854775807::bigint,\
+        \ 'seller_net_minor',0,'total_minor',9223372036854775807::bigint))).*"
+        []
+      rawExecute "ROLLBACK TO SAVEPOINT merch_money_boundary" []) pool
+
     wrongZoneCart <- httpJson manager port "POST" "/merch/carts" []
       (Just (Aeson.object ["storeSlug" Aeson..= ("runtime-band" :: Text)]))
       >>= expectStatus 201 "Wrong-subdivision cart creation"
@@ -674,10 +714,10 @@ runChecks databaseUrl = do
       orderId = requiredUuid "98000000-0000-4000-8000-000000000004"
       shippingIssueId = requiredUuid "94000000-0000-4000-8000-000000000001"
       refundIssueId = requiredUuid "94000000-0000-4000-8000-000000000002"
-      owner = AuthedUser (toSqlKey 900002) [] empty
-      collaborator = AuthedUser (toSqlKey 900003) [] empty
-      otherSeller = AuthedUser (toSqlKey 900004) [] empty
-      strictAdmin = AuthedUser (toSqlKey 900005) [Admin] (modulesForRoles [Admin])
+      owner = AuthedUser (toSqlKey 900002) [] empty Nothing Nothing
+      collaborator = AuthedUser (toSqlKey 900003) [] empty Nothing Nothing
+      otherSeller = AuthedUser (toSqlKey 900004) [] empty Nothing Nothing
+      strictAdmin = AuthedUser (toSqlKey 900005) [Admin] (modulesForRoles [Admin]) Nothing Nothing
       _capabilities
         :<|> _storefronts
         :<|> _storefront

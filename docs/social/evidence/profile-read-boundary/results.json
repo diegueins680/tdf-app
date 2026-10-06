@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-15 America/Guayaquil",
+  "base": "44a1c7bededf0ba4b54068d482667ac24299f8e4",
+  "tlc": {
+    "distribution": "1.7.2",
+    "generated": 20166,
+    "distinct": 5760,
+    "depth": 11,
+    "positive_exit": 0,
+    "negative_controls": 3,
+    "generated_cases": 2880
+  },
+  "verification": {
+    "native_postgresql_http_examples": 104,
+    "http_failures": 0,
+    "bulk_benchmark_exit": 0,
+    "scalar_benchmark_exit": 1,
+    "complete_schema_pg17_exit": 0,
+    "stack_examples": 2542,
+    "stack_failures": 0,
+    "stack_exit": 0,
+    "catalog_audit_exit": 0
+  },
+  "hosted_ci": "not yet run for this branch",
+  "production_activation": false,
+  "deployment_command_issued": false
+}

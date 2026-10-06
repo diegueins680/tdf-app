@@ -1,16 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const artifactRoot = process.env.PLAYWRIGHT_ARTIFACT_DIR || 'artifacts/persona-playwright';
-const requestedPort = Number.parseInt(process.env.PLAYWRIGHT_PORT ?? '4173', 10);
-const serverPort = Number.isSafeInteger(requestedPort) && requestedPort >= 1024 && requestedPort <= 65_535
-  ? requestedPort
-  : 4173;
-const serverUrl = `http://127.0.0.1:${serverPort}`;
 
 export default defineConfig({
   testDir: './e2e/web',
-  // These suites require their own synthetic-media or API/S3 lifecycle.
-  testIgnore: [/music-player-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/],
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
@@ -24,7 +17,7 @@ export default defineConfig({
     ['html', { outputFolder: `${artifactRoot}/html`, open: 'never' }],
   ],
   use: {
-    baseURL: serverUrl,
+    baseURL: 'http://127.0.0.1:4173',
     locale: 'es-EC',
     timezoneId: 'America/Guayaquil',
     colorScheme: 'dark',
@@ -34,10 +27,15 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: `npm run dev --workspace=tdf-hq-ui -- --host 127.0.0.1 --port ${serverPort}`,
-    url: `${serverUrl}/inicio`,
+    // Synthetic browser fixtures exercise the enabled workflow; production defaults off.
+    env: {
+      VITE_ACCOUNT_DELETION_FORM_ENABLED: process.env.PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED === 'false' ? 'false' : 'true',
+      VITE_ACCOUNT_DELETION_QUEUE_ENABLED: 'true',
+    },
+    command: 'npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui',
+    url: 'http://127.0.0.1:4173/inicio',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 300_000,
   },
   projects: [
     { name: 'chromium-desktop', use: { ...devices['Desktop Chrome'] } },

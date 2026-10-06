@@ -20,7 +20,12 @@ That preflight checks:
 
 ## Canonical Sources
 
+- System requirements, authority, traceability and open conformance obligations: `formal/system/README.md`. `specs.yaml` is historical v1 material.
+- Current production operations: `ops/hetzner/README.md`. Use `scripts/inspect-hetzner-production.mjs` for read-only runtime evidence; the historical Fly preflight/release commands are retired. A successful inspection is not release readiness.
+- Inventories require the exact initialized Mobile gitlink: `python3 scripts/specification-inventory.py --check` and `python3 scripts/specification-conformance.py --check`.
+- After API regeneration, run `node scripts/check-generated-api.mjs`; root Git pathspecs cannot detect generated-file drift inside Mobile.
 - Personal/session behavior: `AGENTS.md`, `SOUL.md`, `USER.md`
+- Backend build authority: `tdf-hq/stack.yaml` selects the toolchain and `tdf-hq/tdf-hq.cabal` defines the package. Retired Hpack input is preserved only in `docs/archive/backend-package-legacy.yaml`; do not regenerate the active Cabal file from it.
 - Backend contract used by generated clients: `tdf-hq/docs/openapi/api.yaml`
 - Generated client outputs:
   - `tdf-hq-ui/src/api/generated/types.ts`
@@ -86,7 +91,7 @@ Recommended guardrails:
 - Some older docs still implied the backend OpenAPI was auto-generated. For client generation in this repo, `tdf-hq/docs/openapi/api.yaml` is the spec that matters.
 - Older agent docs also claimed the backend or mobile lacked automated tests. That is stale: both exist now.
 - `FORMAL_VERIFICATION.md` is the source of truth for when to add invariants, model checks, and property tests.
-- `tdf-mobile/` is a submodule. If it is missing or incomplete, root mobile scripts will skip unless `REQUIRE_MOBILE_WORKSPACE=1`.
+- `tdf-mobile/` is an opt-in submodule (`update = none`) so web deployments can check out without mobile repository access. For mobile work, run `git submodule update --init --checkout --recursive`. Mobile CI checkout steps override the default with `submodule.tdf-mobile.update=checkout`. If mobile is missing or incomplete, root mobile scripts skip unless `REQUIRE_MOBILE_WORKSPACE=1`.
 - `gh auth` can be shadowed by stale `GH_TOKEN` / `GITHUB_TOKEN` / `GITHUB_PAT` values; re-auth or clear them if polling looks broken.
 
 ## When Updating AI Tooling

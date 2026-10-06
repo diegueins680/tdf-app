@@ -1,3 +1,6 @@
+import RecordThumbnail from '../features/records/RecordThumbnail';
+import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
+import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
@@ -69,9 +72,10 @@ import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
-import { completeOnboardingProgress, loadOnboardingProgress } from '../api/session';
 import { firstNonEmptyString } from '../utils/stringValues';
 import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
+import { useTranslation } from 'react-i18next';
+import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -117,22 +121,21 @@ interface CatalogRecoveryCard {
   eyebrow: string;
   title: string;
   description: string;
-  image: string;
+  resource: RecordsResourceDTO | undefined;
+  fallbackResources: RecordsResourceDTO[];
   to: string;
   action: string;
 }
 
-const primaryRecordsImage = (resources: RecordsResourceDTO[]): string =>
-  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??
-  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??
-  '';
-
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
-  const { session } = useSession();
+  const { session, loading: sessionLoading } = useSession();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
+  const activePartyRef = useRef(viewerId);
+  activePartyRef.current = viewerId;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const recordsFeedQuery = useQuery({
     queryKey: ['records', 'feed', 'es'],
@@ -169,7 +172,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           eyebrow: firstNonEmptyString(contributorNames(release.contributors), collection?.name, release.code),
           title: release.title,
           description: firstNonEmptyString(collection?.description, collection?.name, release.title),
-          image: primaryRecordsImage(release.resources),
+          resource: primaryRecordsResource(release.resources),
+          fallbackResources: release.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver lanzamientos'),
         };
@@ -185,7 +189,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             collection?.name,
             recording.title,
           ),
-          image: primaryRecordsImage(recording.resources),
+          resource: primaryRecordsResource(recording.resources),
+          fallbackResources: recording.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver grabaciones'),
         };
@@ -201,7 +206,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             collection?.name,
             sessionItem.title,
           ),
-          image: primaryRecordsImage(sessionItem.resources),
+          resource: primaryRecordsResource(sessionItem.resources),
+          fallbackResources: sessionItem.resources,
           to: firstNonEmptyString(collection?.publicRoute, '/records'),
           action: firstNonEmptyString(collection?.name, 'Ver sesiones'),
         };
@@ -243,6 +249,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     [session?.modules, session?.roles],
   );
   const isHomeManagerView = location.pathname === '/inicio' && isAuthenticated && canManageReleases;
+  const onboarding = useFanHubOnboarding(session, sessionLoading, isHomeManagerView);
   const radioTargetPath = `${location.pathname}#radio`;
   const loginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -352,51 +359,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
-  const activeOnboardingPartyIdRef = useRef(viewerId);
-  activeOnboardingPartyIdRef.current = viewerId;
-  const onboardingQuery = useQuery({
-    queryKey: ['onboarding-progress', viewerId],
-    queryFn: loadOnboardingProgress,
-    enabled: Boolean(viewerId && !isHomeManagerView),
-    retry: false,
-  });
-  const completeOnboardingMutation = useMutation({
-    mutationFn: async (partyId: number) => {
-      await completeOnboardingProgress();
-      return partyId;
-    },
-    onSuccess: (partyId) => {
-      if (activeOnboardingPartyIdRef.current === partyId) {
-        setOnboardingDismissed(true);
-      }
-      void qc.invalidateQueries({ queryKey: ['onboarding-progress', partyId] });
-    },
-    onError: (_error, partyId) => {
-      if (activeOnboardingPartyIdRef.current === partyId) {
-        setOnboardingDismissed(false);
-      }
-    },
-  });
-  const managerTipsDismissalKey = viewerId
-    ? `fanhub-manager-tips-dismissed:${viewerId}`
-    : null;
-  const onboardingVisible = !onboardingDismissed && (
-    isHomeManagerView
-      ? Boolean(
-          managerTipsDismissalKey
-            && (typeof window === 'undefined' || window.localStorage.getItem(managerTipsDismissalKey) !== '1'),
-        )
-      : !isAuthenticated || onboardingQuery.data?.eligible === true
-  );
-  const onboardingLoadFailed = isAuthenticated
-    && !isHomeManagerView
-    && onboardingQuery.isError;
-  const onboardingCompletionFailed = isAuthenticated
-    && !isHomeManagerView
-    && completeOnboardingMutation.isError
-    && completeOnboardingMutation.variables === viewerId;
-
+  const [pendingFollowArtistId, setPendingFollowArtistId] = useState<number | null>(null);
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
       const dto = artistProfileQuery.data;
@@ -425,27 +388,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     if (!partyId) return;
     setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
   }, [session?.partyId]);
-
-  useEffect(() => {
-    setOnboardingDismissed(false);
-  }, [isHomeManagerView, viewerId]);
-
-  const dismissOnboarding = () => {
-    setOnboardingDismissed(true);
-    if (isHomeManagerView && managerTipsDismissalKey) {
-      window.localStorage.setItem(managerTipsDismissalKey, '1');
-      return;
-    }
-    if (isAuthenticated && viewerId && onboardingQuery.data?.eligible === true) {
-      completeOnboardingMutation.mutate(viewerId);
-    }
-  };
-
-  const retryOnboardingCompletion = () => {
-    if (!viewerId) return;
-    setOnboardingDismissed(true);
-    completeOnboardingMutation.mutate(viewerId);
-  };
 
   useEffect(() => {
     if (focusArtist && artistSectionRef.current) {
@@ -482,12 +424,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed')
-        .then((newlyCompleted) => {
-          if (!newlyCompleted) return;
-          setOnboardingDismissed(true);
-          void qc.invalidateQueries({ queryKey: ['onboarding-progress', viewerId] });
-        });
+      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed').catch(() => undefined);
     },
   });
 
@@ -596,6 +533,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const handleFollowToggle = (artistId: number, currentlyFollowing: boolean) => {
     if (!viewerId) {
+      setPendingFollowArtistId(artistId);
       setLoginPromptOpen(true);
       return;
     }
@@ -871,7 +809,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       />
       <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
         <Stack spacing={1}>
-          <Typography variant="h3" fontWeight={700}>
+          <Typography variant="h3" fontWeight={700} color="text.primary">
             {isHomeManagerView ? 'Inicio — Gestión del hub' : cmsPayload?.heroTitle ?? 'Comunidad — Conecta con tus artistas'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -882,7 +820,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           {!isAuthenticated && (
             <Typography variant="body2">
               ¿Quieres guardar tus artistas?{' '}
-              <Link component={RouterLink} to={loginPath} underline="hover">
+              <Link component={RouterLink} to={loginPath} underline="always">
                 Inicia sesión o crea una cuenta
               </Link>
               .
@@ -894,13 +832,27 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
-        {onboardingVisible && (
+        {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
+        {onboarding.loadError && (
+          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
+            {t('fanHubOnboarding.loadError')}
+          </Alert>
+        )}
+        {onboarding.saveError && (
+          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.dismiss}>{t('fanHubOnboarding.retry')}</Button>}>
+            {t('fanHubOnboarding.saveError')}
+          </Alert>
+        )}
+        {onboarding.saving && <Alert severity="info" role="status">{t('fanHubOnboarding.saving')}</Alert>}
+        {onboarding.visible && (
           <Alert
             severity="info"
-            onClose={dismissOnboarding}
+            onClose={onboarding.saving ? undefined : onboarding.dismiss}
+            closeText={t('fanHubOnboarding.close')}
+            sx={{ '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' } }}
             icon={<VisibilityIcon />}
           >
-            <AlertTitle>{isHomeManagerView ? 'Lo más útil ahora' : 'Primeros pasos'}</AlertTitle>
+            <AlertTitle>{t(isHomeManagerView ? 'fanHubOnboarding.managerTitle' : 'fanHubOnboarding.title')}</AlertTitle>
             {isHomeManagerView ? (
               <Stack spacing={1}>
                 <Typography variant="body2">Atajos rápidos para operar el hub desde este inicio:</Typography>
@@ -968,30 +920,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             )}
           </Alert>
         )}
-        {onboardingLoadFailed && (
-          <Alert
-            severity="warning"
-            action={(
-              <Button color="inherit" size="small" onClick={() => { void onboardingQuery.refetch(); }}>
-                Reintentar
-              </Button>
-            )}
-          >
-            No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.
-          </Alert>
-        )}
-        {onboardingCompletionFailed && (
-          <Alert
-            severity="error"
-            action={(
-              <Button color="inherit" size="small" onClick={retryOnboardingCompletion}>
-                Reintentar
-              </Button>
-            )}
-          >
-            No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.
-          </Alert>
-        )}
         {showHubDataAlert && (
           <Alert
             severity={hasArtistCatalogError ? 'info' : 'warning'}
@@ -1049,7 +977,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <PlayArrowIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Lanzamientos activos</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Lanzamientos activos</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Publica, corrige enlaces a plataformas y revisa qué lanzamientos ya están listos para salir al hub.
@@ -1078,7 +1006,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EditIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700}>Artistas y perfil</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Artistas y perfil</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Ajusta bio, portada y slugs desde el panel del sello sin perder el contexto del inicio.
@@ -1107,7 +1035,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700}>CMS y visibilidad</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">CMS y visibilidad</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Cambia hero, texto y bloques visibles del hub antes de revisar cómo sale en público.
@@ -1136,7 +1064,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EventAvailableIcon color="secondary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Reservas y activaciones</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Reservas y activaciones</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Revisa el flujo público de reservas y mantén a mano los accesos a sesiones y radio.
@@ -1171,7 +1099,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EventAvailableIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Experiencias y reservas</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Experiencias y reservas</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Agenda sesiones privadas, escuchas guiadas o transmisiones con tus artistas favoritos.
@@ -1203,7 +1131,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <WorkspacePremiumIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700}>Membresías y niveles</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Membresías y niveles</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Accede a beneficios, lanzamientos anticipados y contenido exclusivo por artista.
@@ -1237,7 +1165,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700}>Tienda</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Tienda</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Compra merch, paquetes digitales y ediciones limitadas directo del artista o del sello.
@@ -1266,7 +1194,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <RadioIcon color="secondary" />
-                      <Typography variant="subtitle1" fontWeight={700}>Radio y audio</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Radio y audio</Typography>
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       Únete a transmisiones en vivo o escucha la radio curada mientras sigues artistas.
@@ -1425,7 +1353,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           }}
                         >
                           <Stack spacing={1}>
-                            <Typography variant="subtitle1" fontWeight={700}>
+                            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                               {action.title}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -1464,7 +1392,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                   <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
                                   <Box>
-                                    <Typography variant="subtitle1" fontWeight={700}>
+                                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                                       {artist.apDisplayName}
                                     </Typography>
                                     {artist.apCity && (
@@ -1542,6 +1470,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           />
         )}
 
+        {focusArtist && session && !canEditArtist && (
+          <Alert severity="info" action={<Button component={RouterLink} to="/artista/crear">Crear mi perfil</Button>}>
+            Activa tu perfil de artista y empieza a editarlo, sin esperar aprobación.
+          </Alert>
+        )}
+
         {canEditArtist && (
           <div ref={artistSectionRef}>
             <ProfileSectionCard
@@ -1606,7 +1540,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Stack spacing={2}>
                   {artistProfileQuery.isLoading && (
                     <Box display="flex" justifyContent="center" py={1}>
-                      <CircularProgress size={20} />
+                      <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />
                     </Box>
                   )}
                   {artistProfileQuery.isError && (
@@ -1642,7 +1576,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               ) : (
                 <>
-                  {artistProfileQuery.isLoading && <CircularProgress size={20} />}
+                  {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />}
                   {artistProfileQuery.isError && (
                     <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
                   )}
@@ -1882,8 +1816,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && isLoading && (
           <Card sx={{ p: 3, borderRadius: 3 }}>
             <Stack spacing={1.5} alignItems="center" textAlign="center">
-              <CircularProgress size={22} />
-              <Typography variant="subtitle1" fontWeight={700}>
+              <CircularProgress size={22} aria-label={t('fanHubOnboarding.catalogLoading')} />
+              <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                 Cargando catálogo de artistas
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -1921,7 +1855,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         flexDirection: 'column',
                       }}
                     >
-                      {card.image && <CardMedia component="img" height="180" image={card.image} alt={card.title} />}
+                      {card.resource && <Box sx={{ height: 180 }}><RecordThumbnail resource={card.resource} fallbackResources={card.fallbackResources} title={card.title} /></Box>}
                       <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
                         <Typography variant="overline" color="text.secondary">
                           {card.eyebrow}
@@ -2068,16 +2002,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       outlineOffset: 2,
                     },
                   }}
-                  tabIndex={0}
-                  role="link"
-                  aria-label={`Ver perfil de ${artist.apDisplayName}`}
                   onClick={() => navigate(artistProfilePath)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      navigate(artistProfilePath);
-                    }
-                  }}
                 >
                   {displayHeroImage && (
                     <CardMedia component="img" height="220" image={displayHeroImage} alt={artist.apDisplayName} />
@@ -2090,9 +2015,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       alignItems="flex-start"
                       rowGap={2}
                     >
-                      <Box flex={1} minWidth={0}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Typography variant="h5">{artist.apDisplayName}</Typography>
+                      <Box flex={1} minWidth={0} sx={{ width: { xs: '100%', md: 'auto' } }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} flexWrap="wrap">
+                          <Typography
+                            variant="h5"
+                            component={RouterLink}
+                            to={artistProfilePath}
+                            sx={{ overflowWrap: 'anywhere', minWidth: 0, color: 'inherit' }}
+                          >
+                            {artist.apDisplayName}
+                          </Typography>
                           <Chip label={`${artist.apFollowerCount} fans`} size="small" />
                         </Stack>
                         {artist.apCity && (
@@ -2112,7 +2044,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
                             ))}
                         </Stack>
-                        <Stack direction="row" spacing={1} mt={2}>
+                        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" mt={2}>
                           <Button
                             {...spotifyButtonProps}
                             variant="contained"
@@ -2264,7 +2196,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             variant="contained"
             onClick={() => {
               setLoginPromptOpen(false);
-              navigate('/login');
+              const artist = artists.find((candidate) => candidate.apArtistId === pendingFollowArtistId);
+              const profilePath = artist ? `/a/${artist.apSlug?.trim() ? artist.apSlug : artist.apArtistId}` : null;
+              navigate(buildArtistFollowAuthPath(profilePath, artist?.apArtistId ?? null));
             }}
           >
             Ir a login

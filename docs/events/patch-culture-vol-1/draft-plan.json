@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "approval": "draft-authorized",
+  "sourceUrl": "https://www.instagram.com/p/DeFRIIplgpU/",
+  "eventTypeCode": "workshop",
+  "event": {
+    "eventTitle": "PATCH CULTURE Vol. 1",
+    "eventDescription": "Taller introductorio de síntesis modular en Andes Brewing — La Pradera, Quito.\nPuertas: 13:30. Taller: 14:00–16:30. Jam de máquinas desde las 16:30. Cierre con showcase de Llama Este Pez a las 21:00.\nParticipan Kevin Montenegro, Diego Saá y Emanuele Pilo-Pais. Diego y Emanuele forman parte de Llama Este Pez.\nEntrada al taller: USD 20 finales, incluye jam, showcase y una pinta de cerveza. 20 cupos. Mayores de 18 años.\nFuente: https://www.instagram.com/p/DeFRIIplgpU/\nInformación confirmada por el organizador. Borrador: venta aún no habilitada.",
+    "eventStart": "2026-10-24T19:00:00Z",
+    "eventEnd": "2026-10-25T02:00:00Z",
+    "eventTimezone": "America/Guayaquil",
+    "eventPriceCents": 2000,
+    "eventCapacity": 20,
+    "eventCurrency": "USD",
+    "eventIsPublic": false
+  },
+  "venueMatch": "Andes",
+  "venue": {
+    "venueName": "Andes Brewing — La Pradera",
+    "venueCity": "Quito",
+    "venueCountry": "Ecuador",
+    "venueLat": -0.1945826,
+    "venueLng": -78.4855891,
+    "venueWebsite": "https://linktr.ee/andesbrewing"
+  },
+  "artists": [
+    "Llama Este Pez",
+    "Emanuele Pilo-Pais",
+    "Kevin Montenegro"
+  ],
+  "unlinkedParticipants": [
+    {
+      "name": "Diego Saá",
+      "reason": "Existing IDs 4 and 12 have matching names and neither has a canonical party link; preserve both and do not create a third."
+    }
+  ],
+  "flyer": "evidence/flyer-video-frame.png",
+  "tier": {
+    "ticketTierCode": "TALLER",
+    "ticketTierName": "Taller + jam + showcase + pinta",
+    "ticketTierDescription": "USD 20 finales. Mayores de 18 años. Una pinta de cerveza incluida. Condiciones aprobadas en propuesta-condiciones.md; configuración operativa pendiente.",
+    "ticketTierPriceCents": 2000,
+    "ticketTierCurrency": "USD",
+    "ticketTierQuantityTotal": 20,
+    "ticketTierQuantitySold": 0,
+    "ticketTierActive": false,
+    "ticketTierPosition": 1
+  }
+}

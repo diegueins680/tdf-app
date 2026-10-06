@@ -13,16 +13,15 @@ const analyticsResetMock = jest.fn();
 
 jest.unstable_mockModule('../api/session', () => ({
   completeOnboardingProgress: jest.fn(),
+  reconcileOnboardingProgress: async () => ({
+    newlyCompleted: false,
+    progress: { eligible: true, completedAt: null, firstValue: null },
+  }),
   loadSessionSnapshot: () => loadSessionSnapshotMock(),
   logoutSessionRequest: () => logoutSessionRequestMock(),
   reconcileOnboardingProgress: jest.fn(async () => ({
     newlyCompleted: false,
-    progress: {
-      completed: false,
-      completedAt: null,
-      firstValue: null,
-      onboardingIntent: null,
-    },
+    progress: { eligible: false },
   })),
 }));
 

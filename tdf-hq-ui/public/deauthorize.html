@@ -11,7 +11,7 @@
         --card: #ffffff;
         --text: #0f172a;
         --muted: #475569;
-        --accent: #4c8bf5;
+        --accent: #2456a6;
         --border: rgba(148, 163, 184, 0.25);
       }
       * {
@@ -23,6 +23,7 @@
         background: var(--bg);
         color: var(--text);
         line-height: 1.6;
+        overflow-wrap: anywhere;
       }
       main {
         max-width: 900px;
@@ -54,10 +55,12 @@
       }
       a {
         color: var(--accent);
-        text-decoration: none;
-      }
-      a:hover {
         text-decoration: underline;
+      }
+      a:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 2px;
       }
       .meta {
         color: var(--muted);

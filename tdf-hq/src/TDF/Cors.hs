@@ -4,8 +4,10 @@ module TDF.Cors
   , deriveCorsOriginFromAppBase
   , isTrustedPreviewOrigin
   , lookupFirstNonEmptyEnv
+  , isAccountDeletionRequestAllowed
   ) where
-import Network.Wai (Middleware, Request, requestHeaders)
+import Network.Wai (Middleware, Request, requestHeaders, requestMethod, pathInfo, responseLBS)
+import Network.HTTP.Types.Status (status403)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
@@ -21,9 +23,11 @@ import Data.Char
 import Data.List (dropWhileEnd, intercalate, isInfixOf, isSuffixOf, nub)
 import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
+import TDF.Config (isProductionRuntime, productionRuntimeKeys)
 
 corsPolicy :: IO Middleware
 corsPolicy = do
+  runtimeValues <- mapM lookupEnv productionRuntimeKeys
   originsEnv <- lookupFirstNonEmptyEnv
     [ "ALLOWED_ORIGINS"
     , "ALLOW_ORIGINS"
@@ -52,6 +56,11 @@ corsPolicy = do
       hqBaseCandidates = filter (not . null . trim) (maybe [] pure hqBaseEnv)
       parsed = maybe [] splitComma originsEnv
       configuredOrigins = parsed
+      isProduction = isProductionRuntime (zip productionRuntimeKeys runtimeValues)
+  if isProduction && (allowAllFlag || "*" `elem` map trim configuredOrigins)
+    then ioError . userError $
+      "Production CORS requires explicit trusted origins; allow-all and wildcard origins are forbidden"
+    else pure ()
   hqBaseDefaults <- either (ioError . userError) pure $
     traverse deriveCorsOriginFromAppBase hqBaseCandidates
   filtered <- either (ioError . userError) pure $
@@ -59,7 +68,7 @@ corsPolicy = do
       >>= traverse normalizeConfiguredCorsOrigin
       >>= validateUniqueConfiguredCorsOrigins
   let
-      defaults = defaultsCore ++ hqBaseDefaults
+      defaults = (if isProduction then [] else defaultsCore) ++ hqBaseDefaults
       includeDefaults = not disableDefaultsFlag
       merged = (if includeDefaults then defaults else []) ++ filtered
       deduped = nub merged
@@ -72,12 +81,12 @@ corsPolicy = do
       explicitOriginSetting = Just (map BS.pack effective, True)
       basePolicy = simpleCorsResourcePolicy
         { corsOrigins            = explicitOriginSetting
-        , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":"idempotency-key":simpleHeaders
+        , corsRequestHeaders     = "authorization":"content-type":"x-requested-with":"idempotency-key":"x-order-lookup-token":simpleHeaders
         , corsMethods            = ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
         , corsRequireOrigin      = False
         , corsIgnoreFailures     = False
         }
-      allowPagesDevWildcard = True
+      allowPagesDevWildcard = not isProduction
       allowAllPolicy = basePolicy { corsOrigins = Nothing }
       allowOriginPolicy origin = basePolicy { corsOrigins = Just ([origin], True) }
       choosePolicy :: Request -> Maybe CorsResourcePolicy
@@ -98,7 +107,23 @@ corsPolicy = do
           <> (if null deduped && includeDefaults && not allowAll then " (fallback to defaults)" else "")
   putStrLn $ "[cors] origins=" <> originLog <> notes
   putStrLn $ "[cors] trusted preview wildcard=" <> show allowPagesDevWildcard
-  pure (cors choosePolicy)
+  -- Multipart forms are simple cross-origin requests. Require a non-simple
+  -- header as well as a trusted Origin; a permissive CORS development setting
+  -- must never opt this cookie-authenticated action into arbitrary origins.
+  let deletionGuard app req respond
+        | requestMethod req == "POST"
+          && filter (/= "") (pathInfo req) == ["feedback", "account-deletion"]
+          && not (isAccountDeletionRequestAllowed (map BS.pack effective)
+                    (lookup "origin" (requestHeaders req))
+                    (lookup "x-requested-with" (requestHeaders req))) =
+            respond (responseLBS status403 [("Content-Type", "text/plain"), ("Cache-Control", "no-store")] "Account deletion request origin proof required")
+        | otherwise = app req respond
+  pure (deletionGuard . cors choosePolicy)
+
+isAccountDeletionRequestAllowed :: [BS.ByteString] -> Maybe BS.ByteString -> Maybe BS.ByteString -> Bool
+isAccountDeletionRequestAllowed origins origin proof =
+  proof == Just "TDF-Account-Deletion"
+    && maybe True (\value -> value /= "null" && (value `elem` filter (/= "*") origins || isTrustedPreviewOrigin value)) origin
 
 -- | Allow credentialed preview origins only for known TDF Pages projects.
 isTrustedPreviewOrigin :: BS.ByteString -> Bool

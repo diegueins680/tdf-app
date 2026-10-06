@@ -5,6 +5,7 @@
 
 module TDF.API.Admin where
 
+import TDF.API.RecordsIngestion (RecordsIngestionAPI)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text     (Text)
 import qualified Data.Text     as T
@@ -169,6 +170,7 @@ type AdminAPI =
   :<|> BrainAdminAPI
   :<|> RagAdminAPI
   :<|> SocialAdminAPI
+  :<|> "records-ingestion" :> RecordsIngestionAPI
 
 -- | Unhold a social inbound message so the auto-reply worker can retry.
 -- One of externalId/ids should be provided.

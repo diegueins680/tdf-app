@@ -1,6 +1,9 @@
 # TDF Records Platform - AI Agent Guidelines
 
 See `AI_WORKFLOW.md` for the current repo-wide AI workflow and preflight checks.
+Use `formal/system/README.md` for specification authority and conformance. `specs.yaml`
+is historical v1 material. Inventory and generated-client checks require the exact
+initialized Mobile gitlink; run `node scripts/check-generated-api.mjs` after generation.
 
 ## Architecture Overview
 This is a **monorepo** with three main applications serving TDF Records' business management platform:
@@ -134,4 +137,4 @@ npm install         # Install all workspace dependencies
 - **Workspaces**: Run commands from correct directory (root for npm workspaces, `tdf-hq/` for Stack)
 - **Currency precision**: Always use integer cents, never floating-point dollars
 - **Time zones**: Respect `VITE_TZ`/`EXPO_PUBLIC_TZ` settings for consistent display
-- **Submodules**: Run `git submodule update --init --recursive` after cloning or pulling mobile app changes
+- **Submodules**: Run `git submodule update --init --checkout --recursive` after cloning or pulling mobile app changes

@@ -6,6 +6,12 @@
 
 module TDF.API where
 
+import qualified TDF.API.Chat as Chat
+import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
+import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
+import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
+import TDF.Social.API (SocialV2API)
+import TDF.Interactions.API (InteractionsAPI, PublicInteractionsAPI)
 import           Control.Applicative ((<|>))
 import           Servant
 import           Database.Persist          (Entity)
@@ -16,6 +22,7 @@ import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           Data.UUID (UUID)
 import           GHC.Generics (Generic)
+import           Data.Typeable (TypeRep, Typeable, splitTyConApp, typeRep, tyConModule, tyConName)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
@@ -71,9 +78,25 @@ import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRev
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.API.PaymentCapabilities (PaymentCapabilitiesAPI)
+import           TDF.API.ProviderExecution (ProviderExecutionAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
+import           TDF.EventOperations.API (EventOperationsAPI)
+
+-- Compiler-derived API syntax, not a claim about handler authorization or JSON
+-- instance behavior. No custom parser of Haskell source or catch-all route rule.
+describeApiType :: Typeable api => Proxy api -> Value
+describeApiType = describeTypeRep . typeRep
+
+describeTypeRep :: TypeRep -> Value
+describeTypeRep representation =
+  let (constructor, arguments) = splitTyConApp representation
+  in object
+    [ "module" .= tyConModule constructor
+    , "name" .= tyConName constructor
+    , "args" .= map describeTypeRep arguments
+    ]
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -98,7 +121,7 @@ type InputListSeedAPI =
 type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
 type AdsPublicAPI =
-       "ads" :> "inquiry" :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
+       "ads" :> "inquiry" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
   :<|> "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
 
 type AdsAdminAPI =
@@ -133,7 +156,7 @@ type CmsAdminAPI =
 
 type PartyAPI =
        QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [PartyDTO]
-  :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
+  :<|> Header "Idempotency-Key" Text :> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
   :<|> "search" :>
          QueryParam "q" Text :>
          QueryParam "context" Text :>
@@ -151,27 +174,18 @@ type PartyAPI =
       )
 
 type SocialAPI =
-       "followers" :> Get '[JSON] [PartyFollowDTO]
-  :<|> "following" :> Get '[JSON] [PartyFollowDTO]
-  :<|> "vcard-exchange" :> ReqBody '[JSON] VCardExchangeRequest :> Post '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Get '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
-  :<|> "friends" :> Capture "partyId" Int64 :> Delete '[JSON] NoContent
-  :<|> "profiles" :> QueryParams "partyId" Int64 :> Get '[JSON] [SocialPartyProfileDTO]
-  :<|> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] SocialPartyProfileDTO
-  :<|> "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
+       FollowersAPI
+  :<|> FollowingAPI
+  :<|> VCardAPI
+  :<|> FriendsAPI
+  :<|> AddFriendAPI
+  :<|> RemoveFriendAPI
+  :<|> ProfileListAPI
+  :<|> ProfileGetAPI
+  :<|> SuggestionsAPI
+  :<|> SocialV2API
 
-type ChatAPI =
-       "chat" :> "threads" :> Get '[JSON] [ChatThreadDTO]
-  :<|> "chat" :> "threads" :> "dm" :> Capture "otherPartyId" Int64 :> Post '[JSON] ChatThreadDTO
-  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
-         :> QueryParam "limit" Int
-         :> QueryParam "beforeId" Int64
-         :> QueryParam "afterId" Int64
-         :> Get '[JSON] [ChatMessageDTO]
-  :<|> "chat" :> "threads" :> Capture "threadId" Int64 :> "messages"
-         :> ReqBody '[JSON] ChatSendMessageRequest
-         :> Post '[JSON] ChatMessageDTO
+type ChatAPI = Chat.ChatAPI
 
 type ChatKitSessionAPI =
        "chatkit" :> "sessions" :> ReqBody '[JSON] ChatKitSessionRequest :> Post '[JSON] ChatKitSessionResponse
@@ -416,7 +430,7 @@ type ReceiptAPI =
   :<|> ReqBody '[JSON] CreateReceiptReq :> Post '[JSON] ReceiptDTO
   :<|> Capture "receiptId" Int64 :> Get '[JSON] ReceiptDTO
 
-type HealthAPI = Get '[JSON] HealthStatus
+type HealthAPI = Get '[JSON] (Headers '[Header "Cache-Control" Text] HealthStatus)
 type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
@@ -426,7 +440,7 @@ type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (Sessio
 
 type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
-type PasswordResetAPI = ReqBody '[JSON] PasswordResetRequest :> Post '[JSON] NoContent
+type PasswordResetAPI = QueryParam "redirect" Text :> QueryParam "locale" Text :> ReqBody '[JSON] PasswordResetRequest :> Post '[JSON] NoContent
 
 type PasswordResetConfirmAPI = ReqBody '[JSON] PasswordResetConfirmRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
@@ -460,9 +474,6 @@ type ArtistPublicAPI =
   :<|> Capture "artistRef" Text :> "public" :> Get '[JSON] ArtistProfileDTO
   :<|> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
 
-type RadioPublicAPI =
-       "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
-
 type FanSecureAPI =
        "me" :> "profile" :>
          ( Get '[JSON] FanProfileDTO
@@ -470,8 +481,8 @@ type FanSecureAPI =
          )
   :<|> "me" :> "follows" :>
          ( Get '[JSON] [FanFollowDTO]
-      :<|> Capture "artistId" Int64 :> Post '[JSON] FanFollowDTO
-      :<|> Capture "artistId" Int64 :> Delete '[JSON] NoContent
+      :<|> FollowArtistAPI
+      :<|> UnfollowArtistAPI
          )
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO
@@ -480,6 +491,7 @@ type FanSecureAPI =
   :<|> "me" :> "notifications" :>
          ( QueryParam "unreadOnly" Bool :> Get '[JSON] [NotificationDTO]
       :<|> "count" :> Get '[JSON] NotificationCountDTO
+      :<|> Capture "notifId" Int64 :> Get '[JSON] NotificationDTO
       :<|> Capture "notifId" Int64 :> "read" :> Post '[JSON] NoContent
       :<|> "read-all" :> Post '[JSON] NoContent
          )
@@ -524,7 +536,8 @@ type FanSecureAPI =
          )
 
 type ArtistSecureAPI =
-       "me" :> "profile" :>
+       "me" :> "activate" :> Post '[JSON] ArtistProfileDTO
+  :<|> "me" :> "profile" :>
          ( Get '[JSON] ArtistProfileDTO
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
@@ -544,11 +557,14 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "complete" :> ReqBody '[JSON] OnboardingCompletionRequest :> Post '[JSON] OnboardingCompletionResult
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "reconcile" :> Post '[JSON] OnboardingCompletionResult
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "artist-invitation" :> ReqBody '[JSON] ArtistInvitationRedeemRequest :> Post '[JSON] SessionResponse
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "assignment" :> Get '[JSON] ExperimentAssignmentDTO
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "exposure" :> Post '[JSON] ExperimentExposureResult
 
 type AccessRequestsAPI =
        Get '[JSON] [FeatureAccessRequestDTO]
   :<|> ReqBody '[JSON] FeatureAccessRequestCreate :> Post '[JSON] FeatureAccessRequestDTO
   :<|> "review" :> QueryParam "status" Text :> Get '[JSON] [FeatureAccessRequestDTO]
+  :<|> Capture "requestId" Int64 :> Get '[JSON] Value
   :<|> Capture "requestId" Int64 :> "decision"
          :> ReqBody '[JSON] FeatureAccessRequestDecision
          :> Patch '[JSON] FeatureAccessRequestDTO
@@ -625,9 +641,11 @@ type ProtectedAPI =
   :<|> DirectoryProtectedAPI
   :<|> MerchProtectedAPI
   :<|> OperationsAPI
+  :<|> EventOperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
   :<|> MusicReleaseProtectedAPI
+  :<|> InteractionsAPI
 
 type API =
        VersionAPI
@@ -658,17 +676,18 @@ type API =
   :<|> InventoryPublicAPI
   :<|> FeedbackAPI
   :<|> PublicCatalogAPI
+  :<|> PublicInteractionsAPI
   :<|> DirectoryPublicAPI
   :<|> MerchPublicAPI
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI
   :<|> PaymentCapabilitiesAPI
   :<|> MusicReleasePublicAPI
+  :<|> ProviderExecutionAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
   :<|> "marketplace" :> MarketplaceAPI
-  :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI
   :<|> ServiceStorefrontPublicAPI
@@ -1039,6 +1058,8 @@ data AdsInquiry = AdsInquiry
   , aiMessage :: Maybe Text
   , aiChannel :: Maybe Text
   } deriving (Show, Generic)
+instance ToJSON AdsInquiry where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
 instance FromJSON AdsInquiry where
   parseJSON raw = do
     withObject "AdsInquiry" rejectNullInquiryFallbacks raw
@@ -1081,6 +1102,8 @@ data AdsInquiryOut = AdsInquiryOut
   } deriving (Show, Generic)
 instance ToJSON AdsInquiryOut where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+instance FromJSON AdsInquiryOut where
+  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
 
 data CmsContentIn = CmsContentIn
   { cciContentId :: Text

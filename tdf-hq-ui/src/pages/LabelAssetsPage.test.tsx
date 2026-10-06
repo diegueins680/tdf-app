@@ -3,12 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, PageResponse, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, RoomDTO, PageResponse } from '../api/types';
 import { ToastProvider } from '../contexts/ToastContext';
 
-const listAssetsMock = jest.fn<
-  (params?: { page?: number; pageSize?: number }) => Promise<AssetDTO[] | PageResponse<AssetDTO>>
->();
+const listAssetsMock = jest.fn<(params?: { page?: number; pageSize?: number }) => Promise<AssetDTO[] | PageResponse<AssetDTO>>>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
 const listDropdownsMock = jest.fn<() => Promise<DropdownOptionDTO[]>>();
 const historyMock = jest.fn<(assetId: string) => Promise<AssetCheckoutDTO[]>>();
@@ -242,6 +240,19 @@ describe('LabelAssetsPage', () => {
     historyMock.mockResolvedValue([]);
   });
 
+  it('loads every inventory page using the API maximum instead of a rejected size', async () => {
+    listAssetsMock.mockResolvedValueOnce({ items: [buildAsset()], page: 1, pageSize: 100, total: 2 })
+      .mockResolvedValueOnce({ items: [buildAsset({ assetId: 'asset-2', name: 'Second page asset' })], page: 2, pageSize: 100, total: 2 });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(container.textContent).toContain('Second page asset'));
+      expect(listAssetsMock.mock.calls).toEqual([[{ page: 1, pageSize: 100 }], [{ page: 2, pageSize: 100 }]]);
+      expect(container.textContent).toContain('Sintetizador Uno');
+    } finally { await cleanup(); }
+  });
+
   it('loads all inventory pages within the API limit and searches later pages', async () => {
     const firstPage = Array.from({ length: 100 }, (_, index) =>
       buildAsset({ assetId: `asset-${index}`, name: `Equipo ${index}` }));
@@ -275,6 +286,38 @@ describe('LabelAssetsPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('No se pudo cargar el inventario.');
         expect(container.textContent).not.toContain('Todavía no hay assets.');
+      });
+      listAssetsMock.mockResolvedValue([buildAsset()]);
+      await clickElement(getButtonByText(container, 'Actualizar'));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Sintetizador Uno');
+        expect(container.textContent).not.toContain('No se pudo cargar el inventario.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not claim a filtered inventory is empty when a pending search request fails', async () => {
+    let rejectRequest!: (reason: Error) => void;
+    listAssetsMock.mockReturnValueOnce(new Promise((_resolve, reject) => { rejectRequest = reject; }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Sintetizador');
+      expect(container.textContent).not.toContain('Todos (0)');
+      await act(async () => {
+        rejectRequest(new Error('Request failed after filter input'));
+        await flushPromises();
+      });
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar el inventario.');
+        expect(container.textContent).not.toContain('No hay assets con los filtros actuales');
+        expect(container.textContent).not.toContain('Todavía no hay assets.');
+        expect(container.textContent).not.toContain('Mostrando 0 de 0 assets');
+        expect(getElementByAriaLabel(container, 'Filtrar assets por estado Todos').textContent).toBe('Todos');
+        expect(getInputByLabel(container, 'Buscar assets').value).toBe('Sintetizador');
       });
       listAssetsMock.mockResolvedValue([buildAsset()]);
       await clickElement(getButtonByText(container, 'Actualizar'));

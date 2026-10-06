@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-09-18T06:31:00.248748+00:00",
+  "package": "com.tdf.records",
+  "versionCode": 10,
+  "track": "alpha",
+  "source": "Actual Play Console publishing overview in existing authorized Brave tab",
+  "state": "Changes in review",
+  "changes": [
+    "1.0.1 (10) Start full rollout",
+    "Add 1 email list"
+  ],
+  "invitationsSent": 0,
+  "available": false,
+  "availabilityMeaning": "Not established by current review status; no claim of tester installation access."
+}

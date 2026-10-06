@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -37,6 +37,7 @@ import {
   getFeatureById,
   type FeatureAction,
 } from '../features/featureRegistry';
+import { positiveNotificationId } from '../components/notificationTarget';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 
@@ -190,6 +191,37 @@ function History({ request }: { request: FeatureAccessRequestDTO }) {
 }
 
 export default function AccessRequestsPage() {
+  const [params] = useSearchParams();
+  if (params.has('request')) return <AccessRequestDetail requestId={params.get('request')} />;
+  return <AccessRequestList />;
+}
+
+function AccessRequestDetail({ requestId }: { requestId: string | null }) {
+  const { locale, text } = useAccessCopy();
+  const { session } = useSession();
+  const client = useQueryClient();
+  const id = requestId && /^\d+$/.test(requestId) ? positiveNotificationId(Number(requestId)) : null;
+  const query = useQuery({ queryKey: ['access-requests', session?.partyId, 'detail', id],
+    queryFn: () => AccessRequests.get(Number(id)), enabled: Boolean(id), retry: false });
+  const cancel = useMutation({ mutationFn: () => AccessRequests.cancel(Number(id)),
+    onSuccess: () => { void client.invalidateQueries({ queryKey: ['access-requests'] }); } });
+  const detail = query.isError ? undefined : query.data;
+  return <Stack spacing={3}>
+    <Typography component="h1" variant="h4">{text.requestReference}{id ? ` #${id}` : ''}</Typography>
+    {query.isPending && id ? <CircularProgress /> : null}
+    {(!id || query.isError) && <Alert severity="info">{locale === 'en'
+      ? 'This request is unavailable to your account. It may no longer exist or your access may have changed.'
+      : 'Esta solicitud no está disponible para tu cuenta. Puede que ya no exista o que tu acceso haya cambiado.'}</Alert>}
+    {detail && <ReviewCard request={detail.request} canReview={detail.canReview}
+      onChanged={() => { void client.invalidateQueries({ queryKey: ['access-requests'] }); }} />}
+    {detail?.canCancel && detail.request.status === 'pending' && <Button color="error"
+      disabled={cancel.isPending} onClick={() => cancel.mutate()}>{text.cancel}</Button>}
+    {cancel.isError && <Alert severity="error">{text.loadError}</Alert>}
+    <Button component={RouterLink} to="/solicitudes-acceso">{text.back}</Button>
+  </Stack>;
+}
+
+function AccessRequestList() {
   const { locale, text } = useAccessCopy();
   const { session } = useSession();
   const queryClient = useQueryClient();
@@ -310,6 +342,10 @@ export function NewAccessRequestPage() {
     },
   });
 
+  if (requestedFeatureId === 'artist.onboarding' && action === 'create') {
+    return <Navigate to="/artista/crear" replace />;
+  }
+
   return (
     <Stack spacing={3} component="section" aria-labelledby="new-access-request-title" sx={{ maxWidth: 720 }}>
       <Typography id="new-access-request-title" variant="h4" component="h1">{text.createTitle}</Typography>
@@ -361,7 +397,7 @@ export function NewAccessRequestPage() {
   );
 }
 
-function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; onChanged: () => void }) {
+function ReviewCard({ request, onChanged, canReview = true }: { request: FeatureAccessRequestDTO; onChanged: () => void; canReview?: boolean }) {
   const { locale, text } = useAccessCopy();
   const [notes, setNotes] = useState('');
   const decisionMutation = useMutation({
@@ -388,6 +424,8 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
       <CardContent>
         <Typography variant="h6" component="h2">{requestTitle(request, locale)}</Typography>
         <Typography>{text.requestReference}: #{request.id}</Typography>
+        <Chip label={text[request.status]} color={statusTone[request.status]} />
+        <Typography>{text.requested}: {formatDate(request.requestedAt, locale)}</Typography>
         <Typography>{text.requester}: {requesterName(request, locale)}</Typography>
         <Typography>{text.action}: {request.action}</Typography>
         <Typography color="text.secondary">{text.currentContext}: {context.join(', ') || '—'}</Typography>
@@ -395,7 +433,7 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
         <Alert severity={provisionsArtistRole ? 'warning' : 'info'} sx={{ mt: 2 }}>
           {provisionsArtistRole ? text.automaticProvisioning : text.manualProvisioning}
         </Alert>
-        {request.status === 'pending' ? (
+        {canReview && request.status === 'pending' ? (
           <TextField
             label={text.reviewerNote}
             value={notes}
@@ -412,7 +450,7 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
         {decisionMutation.isError ? <Alert severity="error" sx={{ mt: 2 }}>{decisionMutation.error.message}</Alert> : null}
         <History request={request} />
       </CardContent>
-      {request.status === 'pending' ? (
+      {canReview && request.status === 'pending' ? (
         <CardActions sx={{ flexWrap: 'wrap', gap: 1 }}>
           <Button
             variant="contained"

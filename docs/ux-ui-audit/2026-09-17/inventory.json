@@ -1,0 +1,1139 @@
+{
+  "rootSha": "d6244296925e20ccb6b2261290204415201843f3",
+  "mobileSha": "092785f828f6154189b6aa8ef2455859141d6788",
+  "features": 155,
+  "routeDeclarations": 188,
+  "roleCount": 31,
+  "roleCombinations": 498,
+  "surfaces": 409,
+  "sourceRoutes": [
+    {
+      "path": "\"/\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 64,
+      "declaration": "<Route path=\"/\" element={<Navigate to=\"/inicio\" replace />} />"
+    },
+    {
+      "path": "\"/instagram\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 65,
+      "declaration": "<Route path=\"/instagram\" element={<Navigate to=\"/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile\" replace />} />"
+    },
+    {
+      "path": "\"/ig\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 66,
+      "declaration": "<Route path=\"/ig\" element={<Navigate to=\"/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile\" replace />} />"
+    },
+    {
+      "path": "\"/tdf\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 67,
+      "declaration": "<Route path=\"/tdf\" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/comercio\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 68,
+      "declaration": "<Route path=\"/comercio\" element={<PublicBranding><CommerceHubPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/commerce\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 69,
+      "declaration": "<Route path=\"/commerce\" element={<Navigate to=\"/comercio\" replace />} />"
+    },
+    {
+      "path": "\"/distribucion\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 70,
+      "declaration": "<Route path=\"/distribucion\" element={<PublicBranding><DistributionLandingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/distribution\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 71,
+      "declaration": "<Route path=\"/distribution\" element={<Navigate to=\"/distribucion\" replace />} />"
+    },
+    {
+      "path": "\"/sobre-tdf\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 72,
+      "declaration": "<Route path=\"/sobre-tdf\" element={<Navigate to=\"/tdf\" replace />} />"
+    },
+    {
+      "path": "\"/inicio\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 73,
+      "declaration": "<Route path=\"/inicio\" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/buscar\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 74,
+      "declaration": "<Route path=\"/buscar\" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/directorio/:slug\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 75,
+      "declaration": "<Route path=\"/directorio/:slug\" element={<PublicBranding><DirectoryPublicDetailPage kind=\"profile\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/clasificados/:slug\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 76,
+      "declaration": "<Route path=\"/clasificados/:slug\" element={<PublicBranding><DirectoryPublicDetailPage kind=\"classified\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/eventos/:eventId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 77,
+      "declaration": "<Route path=\"/eventos/:eventId\" element={<PublicBranding><DirectoryPublicDetailPage kind=\"event\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/eventos/:eventId/entradas\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 78,
+      "declaration": "<Route path=\"/eventos/:eventId/entradas\" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/eventos/:eventId/orden/:orderId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 79,
+      "declaration": "<Route path=\"/eventos/:eventId/orden/:orderId\" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/venues/:venueId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 80,
+      "declaration": "<Route path=\"/venues/:venueId\" element={<PublicBranding><DirectoryPublicDetailPage kind=\"venue\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/fans\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 81,
+      "declaration": "<Route path=\"/fans\" element={<PublicBranding><FanHubPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/fans/clubs/:artistId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 82,
+      "declaration": "<Route path=\"/fans/clubs/:artistId\" element={<PublicBranding><FanClubPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/mi-artista\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 83,
+      "declaration": "<Route path=\"/mi-artista\" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/artista/crear\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 84,
+      "declaration": "<Route path=\"/artista/crear\" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/artista/:slugOrId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 85,
+      "declaration": "<Route path=\"/artista/:slugOrId\" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/a/:slugOrId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 86,
+      "declaration": "<Route path=\"/a/:slugOrId\" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/marketplace\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 87,
+      "declaration": "<Route path=\"/marketplace\" element={<PublicBranding><MarketplacePage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/merch/tiendas/:storeId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 88,
+      "declaration": "<Route path=\"/merch/tiendas/:storeId\" element={<PublicBranding><MerchReputationPage kind=\"store\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/merch/productos/:productId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 89,
+      "declaration": "<Route path=\"/merch/productos/:productId\" element={<PublicBranding><MerchReputationPage kind=\"product\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/tiendas\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 90,
+      "declaration": "<Route path=\"/tiendas\" element={<PublicBranding><MerchDiscoveryPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/tienda/:storeSlug\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 91,
+      "declaration": "<Route path=\"/tienda/:storeSlug\" element={<PublicBranding><MerchStorefrontPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/tienda/:storeSlug/producto/:productSlug\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 92,
+      "declaration": "<Route path=\"/tienda/:storeSlug/producto/:productSlug\" element={<PublicBranding><MerchProductPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/tienda/:storeSlug/carrito\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 93,
+      "declaration": "<Route path=\"/tienda/:storeSlug/carrito\" element={<PublicBranding><MerchCartPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/tienda/orden/:orderId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 94,
+      "declaration": "<Route path=\"/tienda/orden/:orderId\" element={<PublicBranding><MerchOrderTrackingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/marketplace/orden/:orderId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 95,
+      "declaration": "<Route path=\"/marketplace/orden/:orderId\" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/mezcla-mastering\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 96,
+      "declaration": "<Route path=\"/mezcla-mastering\" element={<PublicBranding><MixingMasteringPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/mezcla-mastering/pago-datafast\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 97,
+      "declaration": "<Route path=\"/mezcla-mastering/pago-datafast\" element={<PublicBranding><ServiceDatafastReturnPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/mezcla-mastering/pedido/:orderNumber\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 98,
+      "declaration": "<Route path=\"/mezcla-mastering/pedido/:orderNumber\" element={<PublicBranding><ServiceOrderTrackingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/services/mixing-mastering\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 99,
+      "declaration": "<Route path=\"/services/mixing-mastering\" element={<Navigate to=\"/mezcla-mastering\" replace />} />"
+    },
+    {
+      "path": "\"/marketplace/pago-datafast\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 100,
+      "declaration": "<Route path=\"/marketplace/pago-datafast\" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/oauth/google-drive/callback\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 101,
+      "declaration": "<Route path=\"/oauth/google-drive/callback\" element={<PublicBranding><GoogleDriveCallbackPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/oauth/instagram/callback\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 102,
+      "declaration": "<Route path=\"/oauth/instagram/callback\" element={<PublicBranding><InstagramCallbackPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/curso/produccion-musical-dic-2025\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 103,
+      "declaration": "<Route path=\"/curso/produccion-musical-dic-2025\" element={<Navigate to=\"/curso/produccion-musical-jun-2026\" replace />} />"
+    },
+    {
+      "path": "\"/curso/produccion-musical-abr-2026\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 104,
+      "declaration": "<Route path=\"/curso/produccion-musical-abr-2026\" element={<Navigate to=\"/curso/produccion-musical-jun-2026\" replace />} />"
+    },
+    {
+      "path": "\"/curso/:slug/orden/:registrationId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 105,
+      "declaration": "<Route path=\"/curso/:slug/orden/:registrationId\" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/curso/:slug\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 106,
+      "declaration": "<Route path=\"/curso/:slug\" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/inscripcion/:slug\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 107,
+      "declaration": "<Route path=\"/inscripcion/:slug\" element={<PublicBranding><InscripcionPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/trials\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 108,
+      "declaration": "<Route path=\"/trials\" element={<PublicBranding><TrialsPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/live-sessions/registro\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 109,
+      "declaration": "<Route path=\"/live-sessions/registro\" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/feedback\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 110,
+      "declaration": "<Route path=\"/feedback\" element={<PublicBranding><FeedbackPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/privacidad\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 111,
+      "declaration": "<Route path=\"/privacidad\" element={<PublicBranding><PublicReputationRightsPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/apelaciones\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 112,
+      "declaration": "<Route path=\"/apelaciones\" element={<PublicBranding><PublicReputationRightsPage view=\"appeal\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/reputacion/como-se-calcula\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 113,
+      "declaration": "<Route path=\"/reputacion/como-se-calcula\" element={<PublicBranding><PublicReputationRightsPage view=\"calculation\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/whatsapp/consentimiento\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 114,
+      "declaration": "<Route path=\"/whatsapp/consentimiento\" element={<PublicBranding><PublicWhatsAppConsentPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/whatsapp/ok\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 115,
+      "declaration": "<Route path=\"/whatsapp/ok\" element={<PublicBranding><PublicWhatsAppConsentSuccessPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/records\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 116,
+      "declaration": "<Route path=\"/records\" element={<PublicBranding><RecordsPublicPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/social/events/*\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 117,
+      "declaration": "<Route path=\"/social/events/*\" element={<LegacySocialEventsRedirect />} />"
+    },
+    {
+      "path": "\"/inventario/scan/:token\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 118,
+      "declaration": "<Route path=\"/inventario/scan/:token\" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/donar\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 119,
+      "declaration": "<Route path=\"/donar\" element={<PublicBranding><DonationPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/reservar\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 120,
+      "declaration": "<Route path=\"/reservar\" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/reservas/orden/:bookingId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 121,
+      "declaration": "<Route path=\"/reservas/orden/:bookingId\" element={<PublicBranding><PublicBookingOrderTrackingPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/dj-booth\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 122,
+      "declaration": "<Route path=\"/dj-booth\" element={<PublicBranding><PublicBookingPage preset=\"dj-booth\" /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/reservar/dj-booth\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 123,
+      "declaration": "<Route path=\"/reservar/dj-booth\" element={<Navigate to=\"/dj-booth\" replace />} />"
+    },
+    {
+      "path": "\"/domo-del-pululahua\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 124,
+      "declaration": "<Route path=\"/domo-del-pululahua\" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/domo-del-pululahua/cotizaciones/:quoteId\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 125,
+      "declaration": "<Route path=\"/domo-del-pululahua/cotizaciones/:quoteId\" element={<PublicBranding><DomoQuoteCheckoutPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/venues/domo-del-pululahua\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 126,
+      "declaration": "<Route path=\"/venues/domo-del-pululahua\" element={<Navigate to=\"/domo-del-pululahua\" replace />} />"
+    },
+    {
+      "path": "\"/login\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 127,
+      "declaration": "<Route path=\"/login\" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/reset\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 128,
+      "declaration": "<Route path=\"/reset\" element={<PublicBranding showHeader showLoginButton={false}><ResetPasswordPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"/herramientas/creador-musical\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 129,
+      "declaration": "<Route path=\"/herramientas/creador-musical\" element={<PublicBranding><MusicMakerPage /></PublicBranding>} />"
+    },
+    {
+      "path": "\"*\"",
+      "source": "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "line": 130,
+      "declaration": "<Route path=\"*\" element={<PublicBranding><NotFoundPage /></PublicBranding>} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 109,
+      "declaration": "<Route element={<Shell />}>"
+    },
+    {
+      "path": "\"/parties\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 110,
+      "declaration": "<Route path=\"/parties\" element={<Navigate to=\"/crm/contactos\" replace />} />"
+    },
+    {
+      "path": "\"/bookings\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 111,
+      "declaration": "<Route path=\"/bookings\" element={<Navigate to=\"/estudio/calendario\" replace />} />"
+    },
+    {
+      "path": "\"/pipelines\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 112,
+      "declaration": "<Route path=\"/pipelines\" element={<Navigate to=\"/estudio/pipelines\" replace />} />"
+    },
+    {
+      "path": "\"/kanban\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 113,
+      "declaration": "<Route path=\"/kanban\" element={<Navigate to=\"/estudio/pipelines\" replace />} />"
+    },
+    {
+      "path": "\"/contactos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 114,
+      "declaration": "<Route path=\"/contactos\" element={<Navigate to=\"/crm/contactos\" replace />} />"
+    },
+    {
+      "path": "\"/system\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 115,
+      "declaration": "<Route path=\"/system\" element={<Navigate to=\"/configuracion/preferencias\" replace />} />"
+    },
+    {
+      "path": "\"/admin/roles\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 116,
+      "declaration": "<Route path=\"/admin/roles\" element={<Navigate to=\"/configuracion/roles-permisos\" replace />} />"
+    },
+    {
+      "path": "\"/operacion/control\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 117,
+      "declaration": "<Route path=\"/operacion/control\" element={<Navigate to=\"/dashboard/operations\" replace />} />"
+    },
+    {
+      "path": "\"/dashboard/operations\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 119,
+      "declaration": "<Route path=\"/dashboard/operations\" element={<OperationsControlCenterPage />} />"
+    },
+    {
+      "path": "\"/mis-clasificados\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 120,
+      "declaration": "<Route path=\"/mis-clasificados\" element={<DirectoryManagePage />} />"
+    },
+    {
+      "path": "\"/admin/directorio\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 121,
+      "declaration": "<Route path=\"/admin/directorio\" element={<DirectoryAdminPage />} />"
+    },
+    {
+      "path": "\"/mi-profesor\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 122,
+      "declaration": "<Route path=\"/mi-profesor\" element={<TeacherPortalPage />} />"
+    },
+    {
+      "path": "\"/perfil/:partyId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 123,
+      "declaration": "<Route path=\"/perfil/:partyId\" element={<PublicProfilePage />} />"
+    },
+    {
+      "path": "\"/reputation/preferences\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 124,
+      "declaration": "<Route path=\"/reputation/preferences\" element={<ReputationPreferencesPage />} />"
+    },
+    {
+      "path": "\"/reputation/consents\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 125,
+      "declaration": "<Route path=\"/reputation/consents\" element={<ReputationConsentsPage />} />"
+    },
+    {
+      "path": "\"/merch/orden/:orderId/evaluar\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 126,
+      "declaration": "<Route path=\"/merch/orden/:orderId/evaluar\" element={<MerchOrderReviewPage />} />"
+    },
+    {
+      "path": "\"/merch/reputacion/preferencias\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 127,
+      "declaration": "<Route path=\"/merch/reputacion/preferencias\" element={<MerchReputationPreferencesPage />} />"
+    },
+    {
+      "path": "\"/merch/vendedor/tiendas/:storeId/reputacion\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 128,
+      "declaration": "<Route path=\"/merch/vendedor/tiendas/:storeId/reputacion\" element={<MerchSellerReputationPage />} />"
+    },
+    {
+      "path": "\"/admin/merch/reputacion\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 129,
+      "declaration": "<Route path=\"/admin/merch/reputacion\" element={<MerchReputationModerationPage />} />"
+    },
+    {
+      "path": "\"/social\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 130,
+      "declaration": "<Route path=\"/social\" element={<SocialPageView />} />"
+    },
+    {
+      "path": "\"/social/instagram\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 131,
+      "declaration": "<Route path=\"/social/instagram\" element={<InstagramConnectPage />} />"
+    },
+    {
+      "path": "\"/social/inbox\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 132,
+      "declaration": "<Route path=\"/social/inbox\" element={<SocialInboxPage />} />"
+    },
+    {
+      "path": "\"/social/eventos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 133,
+      "declaration": "<Route path=\"/social/eventos\" element={<SocialEventsPage />} />"
+    },
+    {
+      "path": "\"/social/eventos/nuevo\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 134,
+      "declaration": "<Route path=\"/social/eventos/nuevo\" element={<CollaborativeEventCreatorPage />} />"
+    },
+    {
+      "path": "\"/social/eventos/:eventId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 135,
+      "declaration": "<Route path=\"/social/eventos/:eventId\" element={<SocialEventDetailPage />} />"
+    },
+    {
+      "path": "\"/social/eventos/:eventId/logistica\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 136,
+      "declaration": "<Route path=\"/social/eventos/:eventId/logistica\" element={<EventLogisticsPage />} />"
+    },
+    {
+      "path": "\"/social/eventos-descubiertos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 137,
+      "declaration": "<Route path=\"/social/eventos-descubiertos\" element={<RecentlyDiscoveredEventsPage />} />"
+    },
+    {
+      "path": "\"/chat\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 138,
+      "declaration": "<Route path=\"/chat\" element={<ChatPage />} />"
+    },
+    {
+      "path": "\"/docs\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 139,
+      "declaration": "<Route path=\"/docs\" element={<DocsPage />} />"
+    },
+    {
+      "path": "\"/manual\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 140,
+      "declaration": "<Route path=\"/manual\" element={<ManualPage />} />"
+    },
+    {
+      "path": "\"/acerca\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 141,
+      "declaration": "<Route path=\"/acerca\" element={<AboutPage />} />"
+    },
+    {
+      "path": "\"/seguridad\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 142,
+      "declaration": "<Route path=\"/seguridad\" element={<SecurityPage />} />"
+    },
+    {
+      "path": "\"/solicitudes-acceso\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 143,
+      "declaration": "<Route path=\"/solicitudes-acceso\" element={<AccessRequestsPage />} />"
+    },
+    {
+      "path": "\"/solicitudes-acceso/nueva\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 144,
+      "declaration": "<Route path=\"/solicitudes-acceso/nueva\" element={<NewAccessRequestPage />} />"
+    },
+    {
+      "path": "\"/solicitudes-acceso/revision\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 145,
+      "declaration": "<Route path=\"/solicitudes-acceso/revision\" element={<AccessRequestReviewPage />} />"
+    },
+    {
+      "path": "\"/fans/clubs/:artistId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 146,
+      "declaration": "<Route path=\"/fans/clubs/:artistId\" element={<FanClubPage />} />"
+    },
+    {
+      "path": "\"/fans/clubs/:artistId/members\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 147,
+      "declaration": "<Route path=\"/fans/clubs/:artistId/members\" element={<FanClubMemberProfilePage />} />"
+    },
+    {
+      "path": "\"/fans/clubs/:artistId/members/:partyId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 148,
+      "declaration": "<Route path=\"/fans/clubs/:artistId/members/:partyId\" element={<FanClubMemberProfilePage />} />"
+    },
+    {
+      "path": "\"/practicas\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 149,
+      "declaration": "<Route path=\"/practicas\" element={<InternshipsPage />} />"
+    },
+    {
+      "path": "\"/practicas/tareas/:taskId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 150,
+      "declaration": "<Route path=\"/practicas/tareas/:taskId\" element={<InternTaskDetailPage />} />"
+    },
+    {
+      "path": "\"/practicas/auditorias/:planId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 151,
+      "declaration": "<Route path=\"/practicas/auditorias/:planId\" element={<InternAuditPlanPage />} />"
+    },
+    {
+      "path": "\"/feedback/interno\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 152,
+      "declaration": "<Route path=\"/feedback/interno\" element={<InternalFeedbackPage />} />"
+    },
+    {
+      "path": "\"/feedback/interno/:reportId\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 153,
+      "declaration": "<Route path=\"/feedback/interno/:reportId\" element={<InternalFeedbackPage />} />"
+    },
+    {
+      "path": "\"/admin/diagnosticos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 154,
+      "declaration": "<Route path=\"/admin/diagnosticos\" element={<AdminDiagnosticsPage />} />"
+    },
+    {
+      "path": "\"/admin/commerce/provider-events\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 155,
+      "declaration": "<Route path=\"/admin/commerce/provider-events\" element={<CommerceProviderEventsPage />} />"
+    },
+    {
+      "path": "\"/admin/merch\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 156,
+      "declaration": "<Route path=\"/admin/merch\" element={<MerchAdminPage />} />"
+    },
+    {
+      "path": "\"/admin/artistas-enriquecimiento\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 157,
+      "declaration": "<Route path=\"/admin/artistas-enriquecimiento\" element={<ArtistEnrichmentReviewPage />} />"
+    },
+    {
+      "path": "\"/admin/artists/enrichment\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 158,
+      "declaration": "<Route path=\"/admin/artists/enrichment\" element={<ArtistEnrichmentReviewPage />} />"
+    },
+    {
+      "path": "\"/herramientas/chatkit\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 159,
+      "declaration": "<Route path=\"/herramientas/chatkit\" element={<ChatKitPage />} />"
+    },
+    {
+      "path": "\"/herramientas/tidal-agent\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 160,
+      "declaration": "<Route path=\"/herramientas/tidal-agent\" element={<TidalAgentPage />} />"
+    },
+    {
+      "path": "\"/herramientas/token-admin\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 161,
+      "declaration": "<Route path=\"/herramientas/token-admin\" element={<AdminTokenPage />} />"
+    },
+    {
+      "path": "\"/crm\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 162,
+      "declaration": "<Route path=\"/crm\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"contactos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 163,
+      "declaration": "<Route path=\"contactos\" element={<PartiesPage />} />"
+    },
+    {
+      "path": "\"empresas\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 164,
+      "declaration": "<Route path=\"empresas\" element={<CompaniesPage />} />"
+    },
+    {
+      "path": "\"leads\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 165,
+      "declaration": "<Route path=\"leads\" element={<LeadsPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 166,
+      "declaration": "<Route index element={<Navigate to=\"contactos\" replace />} />"
+    },
+    {
+      "path": "\"/estudio\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 169,
+      "declaration": "<Route path=\"/estudio\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"calendario\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 170,
+      "declaration": "<Route path=\"calendario\" element={<BookingsPage />} />"
+    },
+    {
+      "path": "\"salas\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 171,
+      "declaration": "<Route path=\"salas\" element={<RoomsPage />} />"
+    },
+    {
+      "path": "\"ordenes\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 172,
+      "declaration": "<Route path=\"ordenes\" element={<OrdersPage />} />"
+    },
+    {
+      "path": "\"servicios\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 173,
+      "declaration": "<Route path=\"servicios\" element={<ServiceTypesPage />} />"
+    },
+    {
+      "path": "\"pipelines\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 174,
+      "declaration": "<Route path=\"pipelines\" element={<KanbanPage />} />"
+    },
+    {
+      "path": "\"live-sessions\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 175,
+      "declaration": "<Route path=\"live-sessions\" element={<LiveSessionIntakePage />} />"
+    },
+    {
+      "path": "\"campanas/tdf-sessions-domo\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 176,
+      "declaration": "<Route path=\"campanas/tdf-sessions-domo\" element={<TdfDomoCampaignPage />} />"
+    },
+    {
+      "path": "\"reportes\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 177,
+      "declaration": "<Route path=\"reportes\" element={<ReportsPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 178,
+      "declaration": "<Route index element={<Navigate to=\"calendario\" replace />} />"
+    },
+    {
+      "path": "\"/label\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 181,
+      "declaration": "<Route path=\"/label\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"artistas\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 182,
+      "declaration": "<Route path=\"artistas\" element={<LabelArtistsPage />} />"
+    },
+    {
+      "path": "\"proyectos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 183,
+      "declaration": "<Route path=\"proyectos\" element={<LabelProjectsPage />} />"
+    },
+    {
+      "path": "\"releases\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 184,
+      "declaration": "<Route path=\"releases\" element={<LabelReleasesPage />} />"
+    },
+    {
+      "path": "\"assets\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 185,
+      "declaration": "<Route path=\"assets\" element={<LabelAssetsPage />} />"
+    },
+    {
+      "path": "\"tracks\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 186,
+      "declaration": "<Route path=\"tracks\" element={<LabelTracksPage />} />"
+    },
+    {
+      "path": "\"ddex\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 187,
+      "declaration": "<Route path=\"ddex\" element={<DdexInboxPage />} />"
+    },
+    {
+      "path": "\"ddex/documents/:id\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 188,
+      "declaration": "<Route path=\"ddex/documents/:id\" element={<DdexDocumentPage />} />"
+    },
+    {
+      "path": "\"ddex/documents/:id/import\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 189,
+      "declaration": "<Route path=\"ddex/documents/:id/import\" element={<DdexDocumentPage />} />"
+    },
+    {
+      "path": "\"ddex/partners\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 190,
+      "declaration": "<Route path=\"ddex/partners\" element={<PartnerManagementPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 191,
+      "declaration": "<Route index element={<Navigate to=\"artistas\" replace />} />"
+    },
+    {
+      "path": "\"/escuela\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 194,
+      "declaration": "<Route path=\"/escuela\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"profesores\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 195,
+      "declaration": "<Route path=\"profesores\" element={<TeachersPage />} />"
+    },
+    {
+      "path": "\"clases\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 196,
+      "declaration": "<Route path=\"clases\" element={<ClassesPage />} />"
+    },
+    {
+      "path": "\"trial-lessons\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 197,
+      "declaration": "<Route path=\"trial-lessons\" element={<TrialLessonsPage />} />"
+    },
+    {
+      "path": "\"trial-queue\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 198,
+      "declaration": "<Route path=\"trial-queue\" element={<AdsInboxPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 199,
+      "declaration": "<Route index element={<Navigate to=\"trial-lessons\" replace />} />"
+    },
+    {
+      "path": "\"/finanzas\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 202,
+      "declaration": "<Route path=\"/finanzas\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"pagos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 203,
+      "declaration": "<Route path=\"pagos\" element={<PaymentsPage />} />"
+    },
+    {
+      "path": "\"creador-reporte-cuenta\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 204,
+      "declaration": "<Route path=\"creador-reporte-cuenta\" element={<WorkAccountReportBuilderPage />} />"
+    },
+    {
+      "path": "\"reporte-esteban-munoz\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 205,
+      "declaration": "<Route path=\"reporte-esteban-munoz\" element={<EstebanMunozReportPage />} />"
+    },
+    {
+      "path": "\"reporte-david-celaya\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 206,
+      "declaration": "<Route path=\"reporte-david-celaya\" element={<DavidCelayaReportPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 207,
+      "declaration": "<Route index element={<Navigate to=\"pagos\" replace />} />"
+    },
+    {
+      "path": "\"/operacion\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 210,
+      "declaration": "<Route path=\"/operacion\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"inventario\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 211,
+      "declaration": "<Route path=\"inventario\" element={<InventoryPage />} />"
+    },
+    {
+      "path": "\"ordenes-marketplace\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 212,
+      "declaration": "<Route path=\"ordenes-marketplace\" element={<MarketplaceOrdersPage />} />"
+    },
+    {
+      "path": "\"reservas-equipo\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 213,
+      "declaration": "<Route path=\"reservas-equipo\" element={<ReservasEquipoPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 214,
+      "declaration": "<Route index element={<Navigate to=\"inventario\" replace />} />"
+    },
+    {
+      "path": "\"/mi-tienda\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 217,
+      "declaration": "<Route path=\"/mi-tienda\" element={<MerchSellerPage />} />"
+    },
+    {
+      "path": "\"/configuracion\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 219,
+      "declaration": "<Route path=\"/configuracion\" element={<Outlet />}>"
+    },
+    {
+      "path": "\"catalogos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 220,
+      "declaration": "<Route path=\"catalogos\" element={<CatalogsPage />} />"
+    },
+    {
+      "path": "\"catalogos/radio-auto-stop\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 221,
+      "declaration": "<Route path=\"catalogos/radio-auto-stop\" element={<RadioAutoStopCatalogPage />} />"
+    },
+    {
+      "path": "\"catalogos/apariencia\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 222,
+      "declaration": "<Route path=\"catalogos/apariencia\" element={<AppearanceModeCatalogPage />} />"
+    },
+    {
+      "path": "\"catalogos/feedback\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 223,
+      "declaration": "<Route path=\"catalogos/feedback\" element={<FeedbackCatalogPage />} />"
+    },
+    {
+      "path": "\"catalogos/reacciones\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 224,
+      "declaration": "<Route path=\"catalogos/reacciones\" element={<ReactionTypesCatalogPage />} />"
+    },
+    {
+      "path": "\"catalogos/reacciones-contenido\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 225,
+      "declaration": "<Route path=\"catalogos/reacciones-contenido\" element={<ReactionTypesCatalogPage catalogCode=\"content-reaction-types\" />} />"
+    },
+    {
+      "path": "\"catalogos/insignias-creadores\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 226,
+      "declaration": "<Route path=\"catalogos/insignias-creadores\" element={<ReactionTypesCatalogPage catalogCode=\"creator-badge-types\" />} />"
+    },
+    {
+      "path": "\"inscripciones-curso\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 227,
+      "declaration": "<Route path=\"inscripciones-curso\" element={<CourseRegistrationsAdminPage />} />"
+    },
+    {
+      "path": "\"cursos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 228,
+      "declaration": "<Route path=\"cursos\" element={<CourseBuilderPage />} />"
+    },
+    {
+      "path": "\"usuarios-admin\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 229,
+      "declaration": "<Route path=\"usuarios-admin\" element={<AdminUsersPage />} />"
+    },
+    {
+      "path": "\"estado\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 230,
+      "declaration": "<Route path=\"estado\" element={<SystemStatusPage />} />"
+    },
+    {
+      "path": "\"actividad\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 231,
+      "declaration": "<Route path=\"actividad\" element={<UserActivityPage />} />"
+    },
+    {
+      "path": "\"logs\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 232,
+      "declaration": "<Route path=\"logs\" element={<LogsPage />} />"
+    },
+    {
+      "path": "\"brain\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 233,
+      "declaration": "<Route path=\"brain\" element={<BrainAdminPage />} />"
+    },
+    {
+      "path": "\"roles-permisos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 234,
+      "declaration": "<Route path=\"roles-permisos\" element={<UserRoleManagement />} />"
+    },
+    {
+      "path": "\"integraciones/calendario\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 235,
+      "declaration": "<Route path=\"integraciones/calendario\" element={<CalendarSyncPage />} />"
+    },
+    {
+      "path": "\"cms\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 236,
+      "declaration": "<Route path=\"cms\" element={<CmsAdminPage />} />"
+    },
+    {
+      "path": "\"campanas-automaticas\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 237,
+      "declaration": "<Route path=\"campanas-automaticas\" element={<CampaignAutomationsPage />} />"
+    },
+    {
+      "path": "\"fuentes-eventos\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 238,
+      "declaration": "<Route path=\"fuentes-eventos\" element={<EventDiscoverySourcesPage />} />"
+    },
+    {
+      "path": "\"whatsapp-consentimiento\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 239,
+      "declaration": "<Route path=\"whatsapp-consentimiento\" element={<WhatsAppConsentPage />} />"
+    },
+    {
+      "path": "\"opciones-ux\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 240,
+      "declaration": "<Route path=\"opciones-ux\" element={<UxOptionsPage />} />"
+    },
+    {
+      "path": "\"preferencias\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 241,
+      "declaration": "<Route path=\"preferencias\" element={<SystemPage />} />"
+    },
+    {
+      "path": "(pathless/index wrapper)",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 242,
+      "declaration": "<Route index element={<ConfigurationIndexRedirect />} />"
+    },
+    {
+      "path": "\"*\"",
+      "source": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+      "line": 245,
+      "declaration": "<Route path=\"*\" element={<NotFoundPage />} />"
+    }
+  ]
+}

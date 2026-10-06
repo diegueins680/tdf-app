@@ -1,0 +1,5 @@
+97600550266978de70911e7ba4ebe93de95abf53d2bbf2de25ba801a264c700f  tdf-hq-ui/src/pages/ChatPage.tsx
+f0af38ca2b084257aaf7155b1f28511f79739077abc79ad726d8449212aae0f8  tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx
+81cbfa55a1156b2bdfb4a7d93832eeaaa6b2352b1a92b59c45d098f4fd8be23a  tdf-hq-ui/src/hooks/useChatUnreadCount.ts
+0f87c8fabfe4f4acd16a9c70c264e410482ac6b903333ce9b6781eac0a149461  tdf-hq-ui/src/utils/chatReadState.ts
+2feb84d6bc5dce5838f8b4f021ea59012297aa0cbf9679356c6fd4469c9b89f7  tdf-hq-ui/src/utils/chatReadState.test.ts

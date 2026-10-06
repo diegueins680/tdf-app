@@ -1,0 +1,117 @@
+Development failures, retained as failures. Final successful runs are separate.
+
+social-fan-effects-stack.txt SHA-256 d2970a0d8075dface2f8fe67728a4a3a4283e483509a09c662696b3963588f03
+21043 |   contentType <- runDB (get (Catalog.authoredContentContentTypeId authoredContent)) >>= maybe
+      |   ^^^^^^^^^^^
+
+/Users/diegosaa/GitHub/tdf-app-social-fanclub-20260916/tdf-hq/src/TDF/Server.hs:21065:26: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘contentType’ shadows the existing binding
+      imported from ‘Servant’ at src/TDF/Server.hs:84:1-24
+      (and originally defined in ‘Servant.API.ContentTypes’)
+      |
+21065 | validateCmsPayloadSchema contentType payload =
+      |                          ^^^^^^^^^^^
+
+<no location info>: error:
+    /var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/ghc81068_0/ghc_19.s: hPutBuf: resource exhausted (No space left on device)
+
+
+Error: [S-7282]
+       Stack failed to execute the build plan.
+
+       While executing the build plan, Stack encountered the error:
+
+       [S-7011]
+       While building package tdf-hq-0.1.0.0 (scroll up to its section to see the error) using:
+       /Users/diegosaa/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_w2MFVN35_3.12.1.0_ghc-9.10.3 --verbose=1 --builddir=.stack-work/dist/x86_64-osx/ghc-9.10.3 build exe:tdf-hq-exe test:tdf-hq-test --ghc-options ""
+       Process exited with code: ExitFailure 1
+
+social-fan-effects-stack-final.txt SHA-256 0c1c14a41aeae57b2d2de3827079d2680d6a5eb49e0a6ee2a9275e9f52daa2bd
+
+/Users/diegosaa/GitHub/tdf-app-social-fanclub-20260916/tdf-hq/src/TDF/Server.hs:8111:43: error: [GHC-88464]
+    Variable not in scope: artistKey :: Key record0
+     |
+8111 |   -> Maybe Int
+     |                                           ^^^^^^^^^
+
+/Users/diegosaa/GitHub/tdf-app-social-fanclub-20260916/tdf-hq/src/TDF/Server.hs:8114:11: error: [GHC-88464]
+    Variable not in scope: now
+    Suggested fix: Perhaps use ‘not’ (imported from Prelude)
+     |
+8114 |   -> UTCTime
+     |           ^^^
+
+
+Error: [S-7282]
+       Stack failed to execute the build plan.
+
+       While executing the build plan, Stack encountered the error:
+
+       [S-7011]
+       While building package tdf-hq-0.1.0.0 (scroll up to its section to see the error) using:
+       /Users/diegosaa/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_w2MFVN35_3.12.1.0_ghc-9.10.3 --verbose=1 --builddir=.stack-work/dist/x86_64-osx/ghc-9.10.3 build exe:tdf-hq-exe test:tdf-hq-test --ghc-options ""
+       Process exited with code: ExitFailure 1
+
+social-fan-effects-stack-verified.txt SHA-256 6b52dfce6a09c9fc60cb61eef1e7e6d947636009acb4cd218518e6dc32fffba0
+       "Selecciona otro artista para actualizar el seguimiento." does not contain "No puedes dejar de seguirte a ti mismo"
+
+  To rerun use: --match "/TDF.Server helpers/fanUnfollowArtist/rejects invalid fan follow targets before deleting can return a misleading no-op/" --seed 392809432
+
+Randomized with seed 392809432
+
+Finished in 9.2220 seconds
+2542 examples, 1 failure
+
+
+
+tdf-hq> Test suite tdf-hq-test failed
+Completed 2 action(s).
+
+Error: [S-7282]
+       Stack failed to execute the build plan.
+
+       While executing the build plan, Stack encountered the error:
+
+       Error: [S-1995]
+       Test suite failure for package tdf-hq-0.1.0.0
+           tdf-hq-test:  exited with: ExitFailure 1
+       Logs printed to console
+
+
+social-fan-effects-schema.txt SHA-256 89dc5c96b249b683a4e3b35e7eaa8abecc50f7112d119ed6de96d767ded85b0b
+127.0.0.1:5432 - accepting connections
+PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+102
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  could not open file "base/16384/1259": Read-only file system
+
+social-fan-effects-http-final.txt SHA-256 50a2f770fea0446f5705eeb646ac5ef160f5d637e4cc8e0dcb259d5b9ef311df
+  refines checked FanEffects Commit 708 [✔]
+  uses the exact old DTO and named notification before cutover, with idempotent retry [✔]
+  keeps artist subscriptions after activation and pause without creating member profiles, follows or alerts [✔]
+  does not even read the member roster or notification relation after retirement [✔]
+  retires effects for unrelated canonical closure while preserving the requested subscription [✔]
+  requires Fan or Customer, rejects malformed identities, and never treats an Admin role as a fan grant [✔]
+  fails closed for a missing adapter and keeps the no-foundation compatibility contract [✔]
+  lets the owner unfollow a blocked or socially closed target, preserving historical artifacts [✔]
+  reauthorizes unfollow's captured token instead of removing a subscription after revocation [✔]
+  serializes a subscription removal ahead of a waiting follow, which may then recreate it [✘]
+
+Failures:
+
+  scripts/social/FanEffectsSpec.hs:144:3:
+  1) artist-follow production handler, bearer HTTP and fan effects serializes a subscription removal ahead of a waiting follow, which may then recreate it
+       uncaught exception: IOException of type UserError
+       user error (Fan effect race timed out)
+
+  To rerun use: --match "/artist-follow production handler, bearer HTTP and fan effects/serializes a subscription removal ahead of a waiting follow, which may then recreate it/" --seed 713995570
+
+Randomized with seed 713995570
+
+Finished in 213.3894 seconds
+1134 examples, 1 failure
+
+social-fan-effects-ui-tsc.txt SHA-256 6b7686e3fcb84a12883b8dae5a5c2a77e5290a6b1a2eae6a1cc23a897ea9144a
+zsh:27: no such file or directory: ./node_modules/.bin/tsc
+
+social-fan-effects-ui-tests.txt SHA-256 b28657a1fefe0d7e04b771cea467796c572d8c4fde40d6eae02f1baa623c797a
+zsh:1: no such file or directory: ../node_modules/.bin/vitest

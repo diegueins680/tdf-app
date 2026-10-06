@@ -28,11 +28,9 @@ case listToMaybe dtos of
 
 ## 2. Enhanced Compiler Warnings
 
-**Location**: `package.yaml`
+**Current authority**: `tdf-hq/tdf-hq.cabal`, built with Stack.
 
-**Changes**:
-- Added `-Wmissing-signatures` flag to library build options
-- Added `-Wmissing-export-lists` flag to library build options
+The historical Hpack configuration was ignored by the actual build and has been removed. Its proposed `-Wmissing-signatures` and `-Wmissing-export-lists` flags were not effective compiler gates. The executable and test suite currently enable `-Wall`, `-Wcompat`, `-Wincomplete-uni-patterns`, `-Wincomplete-record-updates` and `-Wredundant-constraints`. The additional flags discussed below remain recommendations, not claims about enforced build options.
 
 **Rationale**:
 - `-Wmissing-signatures`: Ensures all top-level functions have explicit type signatures, improving code documentation and catch errors early

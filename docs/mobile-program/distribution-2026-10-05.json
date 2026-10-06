@@ -1,0 +1,178 @@
+{
+  "checkedAt": "2026-10-05T04:57:43.308Z",
+  "source": "Authenticated App Store Connect and Google Play Developer APIs; no tester identities or credentials retained",
+  "ios": {
+    "appId": "6779786470",
+    "bundleId": "com.tdfrecords.app",
+    "version": "1.0.1",
+    "build": "31",
+    "sourceCommit": "7a1fca3696dada4263c70716c70b763e492807cc",
+    "buildRun": "https://github.com/diegueins680/TDF-mobile/actions/runs/37261008115",
+    "sha256": "fd25ff1b382801ea2e906cd59f84f651df9f086d9053f72c8cc88f006695fd67",
+    "processingState": "VALID",
+    "betaReviewState": "APPROVED",
+    "externalGroupAssigned": true,
+    "testFlightUrl": "https://testflight.apple.com/join/7k3VE2JJ",
+    "appStoreState": "REJECTED",
+    "releaseType": "MANUAL",
+    "physicalGoogleOAuthVerified": false
+  },
+  "android": {
+    "checkedAt": "2026-10-05T21:12:29.366Z",
+    "packageName": "com.tdf.records",
+    "tracks": [
+      {
+        "track": "production"
+      },
+      {
+        "track": "beta"
+      },
+      {
+        "track": "alpha",
+        "releases": [
+          {
+            "name": "1.0.1 (24) - TDF tester analytics",
+            "versionCodes": [
+              "24"
+            ],
+            "releaseNotes": [
+              {
+                "language": "en-US",
+                "text": "Help improve TDF. This beta enables product analytics to understand app usage and the tester program. Feedback from Profile or About is voluntary; technical details and screenshots are optional. Read the updated privacy notice."
+              },
+              {
+                "language": "es-419",
+                "text": "Ayuda a mejorar TDF. Esta beta activa analytics para entender el uso de la app y el programa de testers. El feedback desde Perfil o Acerca de es voluntario; los detalles t\u00e9cnicos y capturas son opcionales. Consulta el aviso de privacidad actualizado."
+              }
+            ],
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "track": "internal",
+        "releases": [
+          {
+            "name": "1.0.1 (11) - Notification navigation",
+            "versionCodes": [
+              "12"
+            ],
+            "releaseNotes": [
+              {
+                "language": "en-US",
+                "text": "Notifications now open the follower profile, access request, or related resource they refer to. Links preserve your destination through sign-in and show current request status. Opening a notification does not approve requests or change permissions."
+              }
+            ],
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "closedCountryCount": 177,
+    "closedIncludesEcuador": true,
+    "closedRestOfWorld": true,
+    "sourceCommit22": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "artifact22Sha256": "c9dbbf560702ddc60b5e9634300bd19cbcf12dfb218828e31c4a930af1061aae",
+    "emailListAdmissionVerified": true,
+    "openTestingValidation": "FAILED_PRECONDITION",
+    "inspectionEditsDeleted": true,
+    "publicAvailabilityVerified": false,
+    "playSigningAssociation": {
+      "checkedAt": "2026-10-05T05:29:38.101Z",
+      "versionCode": 23,
+      "status": 200,
+      "certificateSha256Hashes": [
+        "08:76:1D:24:F5:A8:45:2C:89:11:65:82:C7:C8:5D:0A:E2:B1:A7:24:C1:B4:8B:C0:7B:B1:9F:A2:8A:80:8E:B0"
+      ],
+      "assetlinksStatus": 200,
+      "allCertificatesAssociated": true,
+      "physicalHandoffVerified": false
+    },
+    "sourceCommit23": "7a1fca3696dada4263c70716c70b763e492807cc",
+    "artifact23Sha256": "28aed605fa104b2b0c0867f01262c2403cb0a2badc8b77691375d36375547aa0",
+    "build23Run": "https://github.com/diegueins680/TDF-mobile/actions/runs/37265560883",
+    "closedTrackCommitAccepted": true,
+    "reviewRequested": true,
+    "reviewApprovalVerified": true,
+    "consoleObservation": {
+      "checkedAt": "2026-10-05T21:13:38.053080+00:00",
+      "source": "Authenticated Google Play Console closed alpha track and tester settings",
+      "releaseState": "Available to selected testers",
+      "versionCode": 24,
+      "publishedDate": "2026-10-05",
+      "consoleDisplayedReleaseTime": "3:57 PM",
+      "managedPublishing": false,
+      "consoleCountryRegionCount": 178,
+      "admission": "selected_email_lists",
+      "selectedListSizes": [
+        68,
+        1,
+        11
+      ],
+      "listCountsAreUniqueOrOptedIn": false,
+      "existingListsPreserved": true,
+      "physicalInstallVerified": false,
+      "publicAvailabilityVerified": false
+    },
+    "previousConsoleObservation": {
+      "checkedAt": "2026-10-05T12:37:34.407635Z",
+      "source": "Authenticated Google Play Console; aggregate counts only",
+      "releaseState": "Available to selected testers",
+      "versionCode": 23,
+      "publishedDate": "2026-10-05",
+      "managedPublishing": false,
+      "consoleCountryRegionCount": 178,
+      "admission": "selected_email_lists",
+      "selectedListSizes": [
+        68,
+        1,
+        11
+      ],
+      "listCountsAreUniqueOrOptedIn": false,
+      "optedInTesters": 4,
+      "productionAccess": false,
+      "productionRequirement": {
+        "minimumContinuouslyOptedInTesters": 12,
+        "days": 14
+      },
+      "openTestingGate": "Requires production access",
+      "feedbackUrl": "https://www.tdfrecords.net/app?feedback=1&utm_source=google_play&utm_medium=closed_testing",
+      "feedbackMetadataReview": "submitted",
+      "existingListsPreserved": true,
+      "physicalInstallVerified": false,
+      "eligibleAccountVerification": {
+        "checkedAt": "2026-10-05T12:45:36.406363Z",
+        "optInPage": "You are a tester",
+        "storeListing": "TDF, install option available, updated October 5, 2026",
+        "membershipChanged": false,
+        "remoteInstallRequested": false
+      }
+    },
+    "sourceCommit24": "6ebe6c5fee3efb8712c673f102c44ec4913710e2",
+    "artifact24Sha256": "62836a384ae866297149ffff546e467edce893238203c5b21927f01898409483",
+    "build24Run": "https://github.com/diegueins680/TDF-mobile/actions/runs/37325943662"
+  },
+  "analytics": {
+    "existingProvider": "PostHog",
+    "productionProjectKeyConfigured": true,
+    "liveProviderReceiptVerified": true,
+    "historicalPreActivationObservation": {
+      "productionProjectKeyConfigured": false,
+      "liveProviderReceiptVerified": false,
+      "browserAccess": {
+        "checkedAt": "2026-10-05T12:43:08.654593Z",
+        "regions": [
+          "EU",
+          "US"
+        ],
+        "result": "Existing Google session reaches organization creation in both regions; no accessible organization",
+        "organizationCreated": false,
+        "termsAccepted": false
+      }
+    },
+    "webEvidenceCheckedAt": "2026-10-05T18:24:00Z",
+    "projectId": 294698,
+    "region": "EU",
+    "nativeProviderReceiptVerified": false
+  }
+}

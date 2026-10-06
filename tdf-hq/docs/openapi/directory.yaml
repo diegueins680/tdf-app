@@ -279,6 +279,28 @@ paths:
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SavedSearchCreate' } } } }
       responses: { '201': { description: Idempotent saved search; alert deliveries are deduplicated by result version } }
+  /directory/artist-claim-targets/{partyId}:
+    put:
+      operationId: prepareArtistManagementClaim
+      summary: Prepare a core artist for a reviewed management claim
+      description: Authenticated, idempotent preparation. Reuses an existing canonical directory target or creates a private draft under a per-artist lock. Returns only an opaque target ID and the core artist public name. Does not publish, grant permissions, or transfer identity. Archived, suspended and blocked targets are denied.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: partyId, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        '200':
+          description: Persisted claim target; no management access granted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [id, name]
+                properties:
+                  id: { type: string, format: uuid }
+                  name: { type: string }
+        '401': { description: Authentication required }
+        '404': { description: Artist unavailable for claims }
   /directory/claims:
     post:
       tags: [Music directory trust]
@@ -316,7 +338,14 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters: [{ name: claimId, in: path, required: true, schema: { type: string, format: uuid } }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
-      responses: { '200': { description: Reviewed claim; only approval can create a manager grant } }
+      description: Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants.
+      responses:
+        '200': { description: Reviewed claim; only a new approval transition creates a manager grant }
+        '401': { description: Authentication required }
+        '403': { description: Missing Admin role or module or attempted self-review }
+        '404': { description: Claim not found }
+        '409': { description: Current claim state forbids this transition }
+        '500': { description: Transaction failed; decision and grant rolled back }
   /directory/admin/verifications:
     get:
       tags: [Music directory administration]

@@ -1,0 +1,2 @@
+Executed node_modules/.bin/tsc --noEmit -p tdf-hq-ui/tsconfig.json on parent web tree at 44a1c7bed and candidate web tree. Both exited 2. Diagnostics are byte-identical: 24634 bytes, 134 lines. SHA-256: 2a48230f0eeb648aa65f695a26f5dbb6dc34834af63f3ab3f726ce30746e07d0
+Application-only typecheck and focused tests passed separately. This does not mark the broader test-inclusive check as passing.

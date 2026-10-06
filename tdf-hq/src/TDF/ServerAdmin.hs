@@ -40,6 +40,7 @@ module TDF.ServerAdmin
   , normalizeBrainEntryTags
   ) where
 
+import TDF.Server.RecordsIngestion (recordsIngestionServer)
 import           Control.Exception      (SomeException, try)
 import           Control.Applicative    ((<|>))
 import           Control.Monad          (forM, unless, when)
@@ -135,6 +136,8 @@ import           TDF.DTO                ( ArtistProfileUpsert(..)
 import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
                                         , auPartyId
+                                        , lockCredentialForSession
+                                        , revokeInteractiveSessions
                                         , hasStrictAdminAccess
                                         , validateModuleAccess
                                         , moduleName
@@ -147,6 +150,8 @@ import           TDF.Config             ( defaultLocale
                                         , seedTriggerToken
                                         , stripeSecretKey
                                         , stripeWebhookSecret
+                                        , isWebadorSmtpHost
+                                        , smtpHost
                                         )
 import           TDF.Models
 import           TDF.Internationalization (normalizeCountryCode)
@@ -254,6 +259,7 @@ adminServer user =
   :<|> brainRouter
   :<|> ragRouter
   :<|> socialRouter
+  :<|> recordsIngestionServer user
   where
     seedHandler rawToken = do
       ensureStrictAdmin user
@@ -1219,37 +1225,41 @@ adminServer user =
         Just rawPwd -> do
           passwordValue <- either throwError pure (validateAdminPassword rawPwd)
           Just <$> liftIO (hashPasswordText passwordValue)
-      mCred <- withPool $ getEntity credKey
-      case mCred of
-        Nothing -> throwError err404
-        Just (Entity _ cred) -> do
-          for_ usernameUpdate $ \newUsername ->
-            when (newUsername /= userCredentialUsername cred) $ do
-              conflict <- withPool $ getBy (UniqueCredentialUsername newUsername)
-              case conflict of
-                Just (Entity otherId _) | otherId /= credKey ->
-                  throwError err409 { errBody = "Username already exists" }
-                _ -> pure ()
-          let updates :: [Update UserCredential]
-              updates = concat
-                [ maybe [] (\newUsername -> [UserCredentialUsername =. newUsername]) usernameUpdate
-                , maybe [] (\flag -> [UserCredentialActive =. flag]) uauActive
-                , maybe [] (\hash -> [UserCredentialPasswordHash =. hash]) passwordHash
-                ]
-          when (not (null updates)) $
-            withPool $ update credKey updates
-          account <- withPool $ do
-            fresh <- getJustEntity credKey
-            loadUserAccount fresh
-          recordActivity "user_account" (T.pack (show userIdValid)) "update" $
-            Just (object
-              [ "fields" .= catMaybes
-                [ ("username" :: Text) <$ usernameUpdate
-                , ("active" :: Text) <$ uauActive
-                , ("password" :: Text) <$ passwordHash
-                ]
-              ])
-          pure account
+      result <- withPool $ do
+        mCred <- lockCredentialForSession credKey
+        case mCred of
+          Nothing -> pure (Left err404)
+          Just (Entity _ cred) -> do
+            conflict <- case usernameUpdate of
+              Just newUsername | newUsername /= userCredentialUsername cred ->
+                getBy (UniqueCredentialUsername newUsername)
+              _ -> pure Nothing
+            case conflict of
+              Just (Entity otherId _) | otherId /= credKey ->
+                pure (Left err409 { errBody = "Username already exists" })
+              _ -> do
+                let updates :: [Update UserCredential]
+                    updates = concat
+                      [ maybe [] (\name -> [UserCredentialUsername =. name]) usernameUpdate
+                      , maybe [] (\flag -> [UserCredentialActive =. flag]) uauActive
+                      , maybe [] (\hash -> [UserCredentialPasswordHash =. hash]) passwordHash
+                      ]
+                    mustRevoke = uauActive == Just False || isJust passwordHash
+                      || maybe False (/= userCredentialUsername cred) usernameUpdate
+                unless (null updates) $ update credKey updates
+                when mustRevoke $ revokeInteractiveSessions (userCredentialPartyId cred)
+                fresh <- getJustEntity credKey
+                Right <$> loadUserAccount fresh
+      account <- either throwError pure result
+      recordActivity "user_account" (T.pack (show userIdValid)) "update" $
+        Just (object
+          [ "fields" .= catMaybes
+            [ ("username" :: Text) <$ usernameUpdate
+            , ("active" :: Text) <$ uauActive
+            , ("password" :: Text) <$ passwordHash
+            ]
+          ])
+      pure account
 
     userCommunicationHistoryHandler userId mLimit = do
       ensureStrictAdmin user
@@ -1349,6 +1359,9 @@ adminServer user =
       let emailSvc = EmailSvc.mkEmailService cfg
       when (not dryRun && isNothing (EmailSvc.esConfig emailSvc)) $
         throwError err409 { errBody = "SMTP not configured" }
+      when (not dryRun && maybe False (isWebadorSmtpHost . smtpHost) (EmailSvc.esConfig emailSvc)) $
+        throwError err409
+          { errBody = "Webador does not support bulk campaigns. Sending is paused; preview remains available. Configure a consent-based campaign service before sending." }
       rawRecipients <- withPool (loadRegisteredUserEmailRecipients includeInactive)
       let matchedUsers = length rawRecipients
           uniqueRecipients = dedupeAdminEmailRecipients rawRecipients

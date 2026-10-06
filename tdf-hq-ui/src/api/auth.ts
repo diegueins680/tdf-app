@@ -1,7 +1,9 @@
+import { AuthRequestError } from '../utils/authErrorMessage';
 import type { components } from './generated/types';
 import { extractErrorDetails } from './errorMessage';
 import { resolveApiBase } from '../config/apiBase';
 import type { OnboardingIntent } from './session';
+import { sanitizeRedirectPath } from '../utils/loginRouting';
 
 const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
@@ -73,7 +75,7 @@ const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<
     return await fetch(input, { ...init, signal: controller.signal });
   } catch (err) {
     const timeout = controller.signal.aborted && !callerSignal?.aborted;
-    const wrapped = new Error(timeout ? AUTH_TIMEOUT_ERROR_MESSAGE : AUTH_NETWORK_ERROR_MESSAGE);
+    const wrapped = new AuthRequestError(timeout ? 'timeout' : 'network', timeout ? AUTH_TIMEOUT_ERROR_MESSAGE : AUTH_NETWORK_ERROR_MESSAGE);
     (wrapped as Error & { cause?: unknown }).cause = err;
     throw wrapped;
   } finally {
@@ -122,7 +124,9 @@ async function postAuthJson<T>(
       continue;
     }
 
-    throw new Error(await readErrorMessage(res, fallback));
+    const message = await readErrorMessage(res, fallback);
+    const code = res.status === 401 ? 'credentials' : message === SERVICE_STARTING_MESSAGE ? 'starting' : 'response';
+    throw new AuthRequestError(code, message);
   }
 
   throw new Error(fallback);
@@ -140,8 +144,13 @@ export async function googleLoginRequest(payload: GoogleLoginRequestDTO): Promis
   });
 }
 
-export async function requestPasswordReset(email: string): Promise<void> {
-  const res = await authFetch(`${API_BASE}/v1/password-reset`, {
+export async function requestPasswordReset(email: string, redirect?: string | null, locale?: string): Promise<void> {
+  const destination = sanitizeRedirectPath(redirect);
+  const params = new URLSearchParams();
+  if (destination) params.set('redirect', destination);
+  if (locale) params.set('locale', locale.toLowerCase().startsWith('es') ? 'es' : 'en');
+  const query = params.size ? `?${params.toString()}` : '';
+  const res = await authFetch(`${API_BASE}/v1/password-reset${query}`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },

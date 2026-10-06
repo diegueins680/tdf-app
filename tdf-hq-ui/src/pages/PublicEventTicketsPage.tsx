@@ -31,8 +31,13 @@ import {
   type PublicEventTicketCheckoutRequest,
 } from '../api/eventTickets';
 import type { DatafastCheckoutDTO } from '../api/types';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
+import TicketCredentialQR from '../components/TicketCredentialQR';
+import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { env } from '../utils/env';
+import { useTicketFunnel } from '../analytics/useTicketFunnel';
 
 const makeIdempotencyKey = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -75,11 +80,19 @@ export default function PublicEventTicketsPage() {
   const validOrderId = routeOrderId == null
     || (Number.isSafeInteger(routeOrderId) && routeOrderId > 0);
   const location = useLocation();
+  const trackFunnel = useTicketFunnel();
   const navigate = useNavigate();
   const { locale, timezone } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
-  const [tierId, setTierId] = useState('');
-  const [quantity, setQuantity] = useState('1');
+  const checkoutPrefill = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const prefilledTierId = checkoutPrefill.get('tierId') ?? '';
+  const prefilledQuantity = checkoutPrefill.get('quantity') ?? '1';
+  const [tierId, setTierId] = useState(() =>
+    /^[1-9]\d*$/.test(prefilledTierId) ? prefilledTierId : '');
+  const [quantity, setQuantity] = useState(() => {
+    const parsed = Number(prefilledQuantity);
+    return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 10 ? String(parsed) : '1';
+  });
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -88,6 +101,7 @@ export default function PublicEventTicketsPage() {
   const [checkout, setCheckout] = useState<PublicEventTicketCheckout | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
@@ -97,8 +111,8 @@ export default function PublicEventTicketsPage() {
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalOpen, setPaypalOpen] = useState(false);
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
-  const paypalButtonRef = useRef<HTMLDivElement | null>(null);
-  const paypalClientId = import.meta.env?.VITE_PAYPAL_CLIENT_ID?.trim() ?? '';
+  const [paypalButtonContainer, setPaypalButtonContainer] = useState<HTMLDivElement | null>(null);
+  const paypalClientId = env.read('VITE_PAYPAL_CLIENT_ID') ?? '';
 
   const storefront = useQuery({
     queryKey: ['public-event-ticket-storefront', eventId],
@@ -108,10 +122,29 @@ export default function PublicEventTicketsPage() {
   });
 
   useEffect(() => {
-    if (tierId) return;
+    if (tierId && storefront.data?.tiers.some((tier) => String(tier.tierId) === tierId)) return;
     const firstTier = storefront.data?.tiers[0];
     if (firstTier) setTierId(String(firstTier.tierId));
   }, [storefront.data?.tiers, tierId]);
+
+  useEffect(() => {
+    const selected = storefront.data?.tiers.find((tier) => String(tier.tierId) === tierId);
+    const count = Number(quantity);
+    if (routeOrderId != null || checkout || !storefront.data?.checkoutAvailable || !selected || !Number.isSafeInteger(count)
+        || count < 1 || count > selected.remaining || count > (storefront.data.policy?.maxTicketsPerOrder ?? 100)) return;
+    trackFunnel('ticket_selected', { eventId, tierId: selected.tierId, quantity: count });
+  }, [checkout, eventId, quantity, routeOrderId, storefront.data, tierId, trackFunnel]);
+
+  useEffect(() => {
+    if (checkout?.paymentStatus !== 'paid') return;
+    const observation = { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+      privateScope: `order:${checkout.orderId}` };
+    trackFunnel('payment_completed', observation);
+    if (checkout.fulfillmentStatus === 'issued' && checkout.tickets.some((ticket) => ticket.status === 'issued')) {
+      trackFunnel('ticket_issued', observation);
+      trackFunnel('ticket_opened', observation);
+    }
+  }, [checkout, trackFunnel]);
 
   const checkoutLookupToken = useMemo(() => {
     if (!checkout) return null;
@@ -149,24 +182,14 @@ export default function PublicEventTicketsPage() {
   const description = storefront.data?.description
     ?? (english ? 'Secure guest ticket checkout from TDF Records.' : 'Checkout seguro de entradas de TDF Records.');
   useMetaTags({
-    title: `${title} · TDF Records`,
+    title,
     description,
-    canonical: typeof window === 'undefined' ? undefined : `${window.location.origin}/eventos/${params.eventId}/entradas`,
+    canonical: validEventId && typeof window !== 'undefined'
+      ? `${window.location.origin}/eventos/${eventId}` : undefined,
     ogType: 'website',
-    structuredData: storefront.data ? {
-      '@context': 'https://schema.org',
-      '@type': 'MusicEvent',
-      name: storefront.data.title,
-      description,
-      startDate: storefront.data.startsAt,
-      ...(storefront.data.endsAt ? { endDate: storefront.data.endsAt } : {}),
-      offers: storefront.data.tiers.map((tier) => ({
-        '@type': 'Offer',
-        price: (tier.unitPriceMinor / 100).toFixed(2),
-        priceCurrency: tier.currency,
-        availability: tier.remaining > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
-      })),
-    } : undefined,
+    // The event detail is the discovery page. Checkout/receipt routes must not
+    // advertise face value as the final price or stock as verified payment access.
+    robots: 'noindex,follow',
   });
 
   const money = (minor: number, currency: string) => new Intl.NumberFormat(locale, {
@@ -194,6 +217,13 @@ export default function PublicEventTicketsPage() {
       setMessage(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
       return;
     }
+    const maximumQuantity = storefront.data.policy?.maxTicketsPerOrder ?? 100;
+    if (selectedQuantity > maximumQuantity) {
+      setMessage(english
+        ? `You can buy up to ${maximumQuantity} tickets per order.`
+        : `Puedes comprar hasta ${maximumQuantity} entradas por orden.`);
+      return;
+    }
     const payload: PublicEventTicketCheckoutRequest = {
       tierId: selectedTierId,
       quantity: selectedQuantity,
@@ -207,6 +237,8 @@ export default function PublicEventTicketsPage() {
     if (idempotency.current?.fingerprint !== fingerprint) {
       idempotency.current = { fingerprint, key: makeIdempotencyKey() };
     }
+    trackFunnel('checkout_started', { eventId, tierId: selectedTierId, quantity: selectedQuantity,
+      hasPromotion: Boolean(promoCode.trim()), privateScope: idempotency.current.key });
     setSubmitting(true);
     setMessage(null);
     try {
@@ -238,6 +270,8 @@ export default function PublicEventTicketsPage() {
         checkout.orderId,
         checkoutLookupToken,
       );
+      trackFunnel('payment_initiated', { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+        provider: 'datafast', privateScope: `order:${checkout.orderId}` });
       setDatafastCheckout(provider);
       setDatafastOpen(true);
       setDatafastWidgetKey((current) => current + 1);
@@ -260,6 +294,8 @@ export default function PublicEventTicketsPage() {
         checkout.orderId,
         checkoutLookupToken,
       );
+      trackFunnel('payment_initiated', { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+        provider: 'paypal', privateScope: `order:${checkout.orderId}` });
       setPaypalOrderId(provider.pcPaypalOrderId);
       setPaypalOpen(true);
     } catch {
@@ -304,8 +340,8 @@ export default function PublicEventTicketsPage() {
 
   useEffect(() => {
     if (!paypalOpen || !paypalReady || !paypalOrderId || !checkout || !checkoutLookupToken
-        || !paypalButtonRef.current || typeof window === 'undefined' || !window.paypal) return;
-    paypalButtonRef.current.innerHTML = '';
+        || !paypalButtonContainer || typeof window === 'undefined' || !window.paypal) return;
+    paypalButtonContainer.innerHTML = '';
     const buttons = window.paypal.Buttons({
       createOrder: () => paypalOrderId,
       onApprove: async (data) => {
@@ -344,9 +380,9 @@ export default function PublicEventTicketsPage() {
         ? 'PayPal did not complete. No payment was confirmed.'
         : 'PayPal no completó la operación. No se confirmó ningún pago.'),
     });
-    void buttons.render(paypalButtonRef.current);
+    void buttons.render(paypalButtonContainer);
     return () => buttons.close?.();
-  }, [checkout, checkoutLookupToken, english, paypalOpen, paypalOrderId, paypalReady]);
+  }, [checkout, checkoutLookupToken, english, paypalButtonContainer, paypalOpen, paypalOrderId, paypalReady]);
 
   if (!validEventId || !validOrderId) {
     return <Container sx={{ py: 8 }}><Alert severity="error">Invalid event or order.</Alert></Container>;
@@ -385,8 +421,8 @@ export default function PublicEventTicketsPage() {
                   {storefront.data.venueName && <Chip icon={<PlaceIcon />} label={storefront.data.venueName} variant="outlined" />}
                 </Stack>
                 <Alert severity="info">{english
-                  ? 'Prices, discounts, fees, taxes, capacity, and the temporary hold are calculated and enforced by the server.'
-                  : 'Precios, descuentos, tarifas, impuestos, capacidad y retención temporal se calculan y validan en el servidor.'}</Alert>
+                  ? 'Review the full total before paying. Your tickets are held for the time shown.'
+                  : 'Revisa el total antes de pagar. Tus entradas se reservan durante el tiempo indicado.'}</Alert>
               </Stack>
             </CardContent>
           </Card>
@@ -407,7 +443,11 @@ export default function PublicEventTicketsPage() {
                       </MenuItem>
                     ))}
                   </TextField>
-                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)} inputProps={{ min: 1, max: Math.min(100, selectedTier?.remaining ?? 1), step: 1 }} />
+                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)} inputProps={{ min: 1, max: Math.min(storefront.data.policy?.maxTicketsPerOrder ?? 100, selectedTier?.remaining ?? 1), step: 1 }}
+                    helperText={english
+                      ? `Up to ${storefront.data.policy?.maxTicketsPerOrder ?? 100} tickets per order.`
+                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`}
+                  />
                   <TextField required label={english ? 'Full name' : 'Nombre completo'} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} inputProps={{ maxLength: 160 }} />
                   <TextField required type="email" label="Email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
                   <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />
@@ -425,7 +465,7 @@ export default function PublicEventTicketsPage() {
                         <Typography variant="body2">
                           {english ? 'Buyer fee' : 'Tarifa al comprador'}: {percentage(storefront.data.policy.buyerFeeBps, locale)} ·{' '}
                           {english ? 'Organizer fee (deducted from payout)' : 'Tarifa al organizador (descontada del pago)'}: {percentage(storefront.data.policy.organizerFeeBps, locale)} ·{' '}
-                          {english ? 'Tax' : 'Impuesto'}: {percentage(storefront.data.policy.taxBps, locale)}
+                          {storefront.data.policy.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Additional tax' : 'Impuesto adicional')}: {percentage(storefront.data.policy.taxBps, locale)}
                         </Typography>
                         <Typography variant="body2">
                           {english ? 'Temporary inventory hold' : 'Retención temporal de inventario'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
@@ -469,7 +509,7 @@ export default function PublicEventTicketsPage() {
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                     <Chip label={`${english ? 'Face value' : 'Valor entradas'}: ${money(checkout.quote.netFaceValueMinor, checkout.quote.currency)}`} />
                     <Chip label={`${english ? 'Buyer fee' : 'Tarifa comprador'}: ${money(checkout.quote.buyerPlatformFeeMinor, checkout.quote.currency)}`} />
-                    {checkout.quote.taxMinor > 0 && <Chip label={`${english ? 'Tax' : 'Impuesto'}: ${money(checkout.quote.taxMinor, checkout.quote.currency)}`} />}
+                    {checkout.quote.taxMinor > 0 && <Chip label={`${checkout.quote.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Tax' : 'Impuesto')}: ${money(checkout.quote.taxMinor, checkout.quote.currency)}`} />}
                     <Chip color="primary" label={`${english ? 'Total' : 'Total'}: ${money(checkout.quote.checkoutTotalMinor, checkout.quote.currency)}`} />
                   </Stack>
                   {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
@@ -477,23 +517,54 @@ export default function PublicEventTicketsPage() {
                   {!paid && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
-                  {!paid && (
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy} onClick={() => void handleDatafast()}>Datafast</Button>}
-                      {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                    </Stack>
-                  )}
-                  {paid && checkout.tickets.length > 0 && (
+                  <Stack spacing={1.5}>
+                    {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
+                        {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                    </Stack>}
+                    {checkoutLookupToken && (
+                        <HostedProviderCheckout
+                          checkout={{
+                            checkoutId: checkout.checkoutId,
+                            lookupToken: checkoutLookupToken,
+                            returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
+                          }}
+                          offeredMethods={paid ? [] : checkout.paymentMethods}
+                          disabled={paid || paymentBusy || datafastOpen || paypalOpen}
+                          english={english}
+                          initialBuyerPhone={buyerPhone}
+                          onSafetyLockChange={setHostedPaymentLocked}
+                          onSessionChange={(session) => {
+                            trackFunnel('payment_initiated', { eventId: checkout.eventId,
+                              quantity: checkout.quote.quantity, provider: session.provider,
+                              privateScope: `order:${checkout.orderId}` });
+                          }}
+                          onPaymentConfirmed={async () => {
+                            setCheckout(await EventTickets.getCheckout(
+                              checkout.eventId,
+                              checkout.orderId,
+                              checkoutLookupToken,
+                            ));
+                          }}
+                        />
+                    )}
+                  </Stack>
+                  {paid && issued && checkout.tickets.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="h6">{english ? 'Issued tickets' : 'Entradas emitidas'}</Typography>
-                      {checkout.tickets.map((ticket) => <Alert key={ticket.ticketId} severity="success" icon={<ConfirmationNumberIcon />}>
-                        {ticket.ticketCode} · {ticket.status}
-                      </Alert>)}
+                      {checkout.tickets.map((ticket) => <Card key={ticket.ticketId} variant="outlined">
+                        <CardContent>
+                          <Typography gutterBottom>{ticket.holderName ?? title}</Typography>
+                          {ticket.status === 'issued' && ticket.ticketCode
+                            ? <TicketCredentialQR code={ticket.ticketCode} english={english} />
+                            : <Alert severity="info">{ticket.status === 'checked_in'
+                              ? (english ? 'Already used' : 'Entrada ya utilizada')
+                              : (english ? 'Not available for entry' : 'No disponible para el acceso')}</Alert>}
+                        </CardContent>
+                      </Card>)}
+                      <MobilePromo surface="ticket_confirmation" />
                     </Stack>
                   )}
-                  <Typography variant="caption" color="text.secondary">{english
-                    ? `Payment status: ${checkout.paymentStatus}. Fulfillment status: ${checkout.fulfillmentStatus}. These states are independent.`
-                    : `Pago: ${checkout.paymentStatus}. Cumplimiento: ${checkout.fulfillmentStatus}. Son estados independientes.`}</Typography>
                 </Stack>
               </CardContent>
             </Card>
@@ -506,8 +577,8 @@ export default function PublicEventTicketsPage() {
         <DialogContent dividers>
           <Stack spacing={1.5}>
             <Alert severity="info">{english
-              ? 'Datafast hosts the card form. Returning to TDF does not mean payment; the server verifies the provider resource, amount, currency, merchant, and order.'
-              : 'Datafast aloja el formulario. Volver a TDF no significa pago; el servidor verifica recurso, importe, moneda, comercio y orden.'}</Alert>
+              ? 'Complete payment in the secure form. Your tickets will appear here once payment is confirmed.'
+              : 'Completa el pago en el formulario seguro. Tus entradas aparecerán aquí cuando se confirme el pago.'}</Alert>
             {datafastCheckout && datafastReturnUrl && <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
               <form action={datafastReturnUrl} className="paymentWidgets" data-brands="VISA MASTER DINERS AMEX DISCOVER" />
             </Box>}
@@ -524,9 +595,9 @@ export default function PublicEventTicketsPage() {
         <DialogContent dividers>
           <Stack spacing={1.5}>
             <Alert severity="info">{english
-              ? 'PayPal approval is not payment success. TDF captures and verifies the immutable order on the server.'
-              : 'Aprobar en PayPal no significa pago exitoso. TDF captura y verifica la orden inmutable en el servidor.'}</Alert>
-            <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
+              ? 'Complete payment with PayPal. Your tickets will appear here once payment is confirmed.'
+              : 'Completa el pago con PayPal. Tus entradas aparecerán aquí cuando se confirme el pago.'}</Alert>
+            <Box ref={setPaypalButtonContainer} sx={{ minHeight: 48 }} />
           </Stack>
         </DialogContent>
         <DialogActions><Button color="inherit" onClick={() => setPaypalOpen(false)}>{english ? 'Close' : 'Cerrar'}</Button></DialogActions>

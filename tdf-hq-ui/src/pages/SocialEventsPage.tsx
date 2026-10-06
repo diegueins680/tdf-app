@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
   Alert,
@@ -407,6 +408,7 @@ const buildEventFinanceCsvRows = (
 };
 
 export default function SocialEventsPage() {
+  const trackFunnel = useTicketFunnel();
   useDocumentTitle('Social / Eventos');
   const qc = useQueryClient();
   const { session } = useSession();
@@ -763,6 +765,9 @@ export default function SocialEventsPage() {
     onSuccess: (_resp, { eventId }) => {
       setCheckInCodes((prev) => ({ ...prev, [eventId]: '' }));
       void qc.invalidateQueries({ queryKey: ['social-ticket-orders', eventId] });
+      if (_resp.ticketId && _resp.ticketStatus === 'checked_in' && _resp.ticketCheckedInAt) {
+        trackFunnel('check_in', { eventId: Number(eventId), quantity: 1, privateScope: `ticket:${_resp.ticketId}` });
+      }
       setFeedback({ kind: 'success', message: 'Ticket marcado como check-in.' });
     },
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),

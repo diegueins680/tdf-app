@@ -1,0 +1,24 @@
+{
+  "sourceSHA": "751d261fd162fd6a0e9c8b0ea9969c4c1a5e2572",
+  "runId": "35370877715",
+  "runAttempt": "1",
+  "bundleIdentifier": "com.tdfrecords.app",
+  "version": "1.0.1",
+  "build": "23",
+  "sdk": "iphoneos26.2",
+  "xcode": "2620",
+  "artifact": "TDFRecords.ipa",
+  "bytes": 45495788,
+  "sha256": "6d5b3c3a2b658314b7c04db1719a522f5e54d964d0029444471ff4754fad9cbe",
+  "signatureVerified": true,
+  "embeddedProductionAPI": true,
+  "publication": "not uploaded or submitted",
+  "physicalGoogleOAuth": "required separately before production",
+  "appleValidation": {
+    "observedAt": "2026-09-18T17:18:19.850Z",
+    "tool": "altool8.003.16003",
+    "exitCode": 0,
+    "result": "No errors validating archive",
+    "upload": false
+  }
+}

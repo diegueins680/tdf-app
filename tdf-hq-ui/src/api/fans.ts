@@ -80,6 +80,8 @@ export const Fans = {
   unfollow: async (artistId: number) => {
     await remove(`/fans/me/follows/${artistId}`);
   },
+  activateMyArtistProfile: async () =>
+    (await send('/artists/me/activate', {})) as ArtistProfileDTO,
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
   updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
     (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
@@ -190,6 +192,7 @@ export const Fans = {
   },
 
   // Notifications
+  getNotification: async (id: number) => (await read(`/fans/me/notifications/${id}`)) as NotificationDTO,
   listNotifications: async (unreadOnly?: boolean) => {
     const notificationsQuery = unreadOnly ? '?unreadOnly=true' : '';
     try {

@@ -365,6 +365,10 @@ data RecordsResourceDTO = RecordsResourceDTO
   , rrLabel :: Maybe Text
   , rrDurationMs :: Maybe Int
   , rrThumbnailUrl :: Maybe Text
+  , rrAvailability :: Maybe Text
+  , rrAvailabilityReason :: Maybe Text
+  , rrVerifiedAt :: Maybe UTCTime
+  , rrProviderMetadata :: Maybe Value
   , rrRelationKind :: Text
   , rrPrimary :: Bool
   , rrSortOrder :: Int

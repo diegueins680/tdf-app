@@ -1,3 +1,6 @@
+import { resolveApiBase } from '../config/apiBase';
+import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
+import { useTranslation } from 'react-i18next';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -72,15 +75,14 @@ import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
 import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
 import {
   clearSessionPersonalData,
   readSessionPersonalData,
   writeSessionPersonalData,
 } from '../utils/sessionPersonalData';
 
-const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
-  ? import.meta.env.VITE_API_BASE
-  : 'https://api.tdfrecords.net');
+const API_BASE = resolveApiBase();
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
   if (trimmed === '') return null;
@@ -425,6 +427,7 @@ const fireCartMetaEvent = () => {
 };
 
 export default function MarketplacePage() {
+  const { t } = useTranslation();
   useMetaTags({
     title: 'Marketplace',
     description: 'Descubre equipos, instrumentos y servicios disponibles en TDF Records.',
@@ -456,7 +459,7 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return DEFAULT_MARKETPLACE_VIEW_STATE;
     return resolveMarketplaceInitialViewState(
       window.location.search,
-      parseSavedFilters(localStorage.getItem(FILTERS_KEY)),
+      parseSavedFilters(readOptionalBrowserStorage('local', FILTERS_KEY)),
     );
   });
   const [initialBuyerSnapshot] = useState<SavedBuyer>(() => {
@@ -472,7 +475,7 @@ export default function MarketplacePage() {
   const [pendingPhotoUrl, setPendingPhotoUrl] = useState<string | null>(null);
   const [cartId, setCartId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(CART_STORAGE_KEY);
+    return readOptionalBrowserStorage('local', CART_STORAGE_KEY);
   });
   const [category, setCategory] = useState<string>(initialViewState.category);
   const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>(initialViewState.purpose);
@@ -494,7 +497,7 @@ export default function MarketplacePage() {
   const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string; lookupToken: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
   const showStripeOption = false;
-  const paypalEnabled = Boolean(paypalClientId);
+  const paypalConfiguredInBrowser = Boolean(paypalClientId);
   const columnScrollHeight = { xs: 'auto', md: 'calc(100vh - 240px)' };
   const datafastFormRef = useRef<HTMLDivElement>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -502,11 +505,9 @@ export default function MarketplacePage() {
   const [datafastError, setDatafastError] = useState<string | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
   const [datafastUnavailable, setDatafastUnavailable] = useState(false);
-  const showPaypalOption = paypalEnabled;
-  const showDatafastOption = !datafastUnavailable;
   const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>(() => {
     if (typeof window === 'undefined') return 'contact';
-    const saved = localStorage.getItem(PAYMENT_PREF_KEY);
+    const saved = readOptionalBrowserStorage('local', PAYMENT_PREF_KEY);
     return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
   });
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -544,10 +545,30 @@ export default function MarketplacePage() {
   const rentalCartItem = cartItems.find((item) => item.mciPurpose === 'rent') ?? null;
   const isRentalCart = Boolean(rentalCartItem);
   const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() ?? null;
+  const marketplacePaymentMethodsQuery = useQuery({
+    queryKey: [
+      'marketplacePaymentMethods',
+      cart?.mcCurrency ?? '',
+      cart?.mcSubtotalCents ?? 0,
+      isRentalCart,
+    ],
+    enabled: Boolean(cart && cart.mcSubtotalCents > 0),
+    retry: false,
+    queryFn: () => loadAvailableCheckoutMethods({
+      currency: cart?.mcCurrency ?? 'USD',
+      amountMinor: cart?.mcSubtotalCents ?? 0,
+      productFlow: 'marketplace',
+      marketplace: true,
+    }),
+  });
+  const showPaypalOption = paypalConfiguredInBrowser
+    && Boolean(marketplacePaymentMethodsQuery.data?.paypal);
+  const showDatafastOption = !datafastUnavailable
+    && Boolean(marketplacePaymentMethodsQuery.data?.datafast);
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
-      const raw = localStorage.getItem(CART_META_KEY);
+      const raw = readOptionalBrowserStorage('local', CART_META_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed?.cartId) return null;
@@ -610,19 +631,19 @@ export default function MarketplacePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (cartId) {
-      localStorage.setItem(CART_STORAGE_KEY, cartId);
+      writeOptionalBrowserPreference(CART_STORAGE_KEY, cartId);
       return;
     }
-    localStorage.removeItem(CART_STORAGE_KEY);
+    removeOptionalBrowserPreference(CART_STORAGE_KEY);
   }, [cartId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(PAYMENT_PREF_KEY, paymentMethod);
+    writeOptionalBrowserPreference(PAYMENT_PREF_KEY, paymentMethod);
   }, [paymentMethod]);
 
   useEffect(() => {
-    if (!paypalClientId || !paypalCurrency || typeof window === 'undefined') return;
+    if (!showPaypalOption || !paypalClientId || !paypalCurrency || typeof window === 'undefined') return;
     if (window.paypal) {
       setPaypalReady(true);
       return;
@@ -636,7 +657,7 @@ export default function MarketplacePage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [paypalClientId, paypalCurrency]);
+  }, [paypalClientId, paypalCurrency, showPaypalOption]);
 
   useEffect(() => {
     if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
@@ -665,7 +686,7 @@ export default function MarketplacePage() {
     );
     if (typeof window === 'undefined') return;
     if (count <= 0) {
-      localStorage.removeItem(CART_META_KEY);
+      removeOptionalBrowserPreference(CART_META_KEY);
       setSavedCartMeta(null);
       fireCartMetaEvent();
       return;
@@ -676,7 +697,7 @@ export default function MarketplacePage() {
       title: it.mciTitle,
       subtotal: it.mciSubtotalDisplay,
     }));
-    localStorage.setItem(
+    writeOptionalBrowserPreference(
       CART_META_KEY,
       JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview, updatedAt }),
     );
@@ -728,7 +749,7 @@ export default function MarketplacePage() {
       const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
       if (typeof window !== 'undefined') {
         if (count <= 0) {
-          localStorage.removeItem(CART_META_KEY);
+          removeOptionalBrowserPreference(CART_META_KEY);
           setSavedCartMeta(null);
         } else {
           const updatedAt = Date.now();
@@ -736,7 +757,7 @@ export default function MarketplacePage() {
             title: it.mciTitle,
             subtotal: it.mciSubtotalDisplay,
           }));
-          localStorage.setItem(
+          writeOptionalBrowserPreference(
             CART_META_KEY,
             JSON.stringify({ cartId: data.mcCartId, count, preview, updatedAt }),
           );
@@ -754,8 +775,8 @@ export default function MarketplacePage() {
     setSavedCartMeta(null);
     setShowRestoreBanner(false);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(CART_STORAGE_KEY);
-      localStorage.removeItem(CART_META_KEY);
+      removeOptionalBrowserPreference(CART_STORAGE_KEY);
+      removeOptionalBrowserPreference(CART_META_KEY);
     }
     fireCartMetaEvent();
   }, [qc]);
@@ -802,8 +823,8 @@ export default function MarketplacePage() {
       setSavedCartMeta(null);
       setShowRestoreBanner(false);
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(CART_STORAGE_KEY);
-        localStorage.removeItem(CART_META_KEY);
+        removeOptionalBrowserPreference(CART_STORAGE_KEY);
+        removeOptionalBrowserPreference(CART_META_KEY);
       }
       setToast(
         `Pedido creado y pendiente de pago. Te contactaremos por ${
@@ -910,8 +931,8 @@ export default function MarketplacePage() {
       setSavedCartMeta(null);
       setShowRestoreBanner(false);
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(CART_STORAGE_KEY);
-        localStorage.removeItem(CART_META_KEY);
+        removeOptionalBrowserPreference(CART_STORAGE_KEY);
+        removeOptionalBrowserPreference(CART_META_KEY);
       }
       setToast('Pago verificado con PayPal. Gracias por tu compra.');
       fireCartMetaEvent();
@@ -1069,10 +1090,10 @@ export default function MarketplacePage() {
     rentalTermsAccepted,
   ]);
   useEffect(() => {
-    if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
+    if (!paypalConfiguredInBrowser && (modules.has('ops') || modules.has('admin'))) {
       logger.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
     }
-  }, [paypalEnabled, modules]);
+  }, [paypalConfiguredInBrowser, modules]);
 
   useEffect(() => {
     if (!listingsQuery.isSuccess) return;
@@ -1165,7 +1186,7 @@ export default function MarketplacePage() {
     if (typeof window === 'undefined') return;
     try {
       const payload = { search, category, sort, purpose, condition };
-      localStorage.setItem(FILTERS_KEY, JSON.stringify(payload));
+      writeOptionalBrowserPreference(FILTERS_KEY, JSON.stringify(payload));
       const params = new URLSearchParams(window.location.search);
       if (search) params.set('q', search); else params.delete('q');
       if (category !== 'all') params.set('cat', category); else params.delete('cat');
@@ -1680,7 +1701,7 @@ export default function MarketplacePage() {
 
         {listingsQuery.isLoading && (
           <Box display="flex" justifyContent="center">
-            <CircularProgress />
+            <CircularProgress aria-label={t('auditAccessibility.loadingMarketplace')} />
           </Box>
         )}
 
@@ -1802,10 +1823,12 @@ export default function MarketplacePage() {
                   ))}
                 </Stack>
               )}
-              <FormControl size="small" sx={{ minWidth: 180 }}>
+              <FormControl size="small" sx={{ minWidth: 180, maxWidth: '100%' }}>
                 <InputLabel id="marketplace-sort-label">Ordenar por</InputLabel>
                 <Select
                   labelId="marketplace-sort-label"
+                  sx={{ '& .MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere' } }}
+                  MenuProps={{ sx: { '& .MuiMenuItem-root': { whiteSpace: 'normal', overflowWrap: 'anywhere' } } }}
                   value={sort}
                   label="Ordenar por"
                   onChange={(event: SelectChangeEvent<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>) =>
@@ -2437,6 +2460,11 @@ export default function MarketplacePage() {
                               />
                             )}
                           </Stack>
+                          {marketplacePaymentMethodsQuery.isError && (
+                            <Alert severity="warning" variant="outlined">
+                              Los pagos en línea no están disponibles. Puedes enviar una solicitud sin pago.
+                            </Alert>
+                          )}
                           {paymentMethod === 'card' && (
                             <Stack direction="row" spacing={0.5} alignItems="center">
                               <CreditCardIcon fontSize="small" color="primary" />

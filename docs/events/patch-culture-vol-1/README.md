@@ -1,8 +1,18 @@
+> Continuación 5 oct 2026, 17:08 UTC: Diego autorizó expresamente **activar cobros** con los términos existentes. Se localizaron y verificaron OAuth y webhook PayPal live desde el servidor canónico; sus cuentas de plataforma siguen deshabilitadas. Se encontró el certificado RUC de TDF. Ver [evidencia de activación](activation-readiness-2026-10-05.md). No se ejecutó una compra ni se activaron ventas; no falta una nueva aprobación comercial.
+
+> Actualización 5 oct 2026 UTC: propuesta aprobada; borrador privado TDF **141**, venue **22**, tier **2** (20 × USD 20, inactivo), artistas **42/36/51**. Flyer original subido y hash SHA-256 verificado. Checkout público devuelve 404. El pago oficial sandbox y el flujo completo todavía no están verificados.
+
+La infraestructura de inventario, admisión, QR y transferencias se fusionó en [PR480](https://github.com/diegueins680/tdf-app/pull/480), commit `b06a4d3926e03a0b72a23732e454a33c72eb9705`; la web de ese commit fue verificada en producción. Esto no acredita despliegue del backend ni compra de proveedor. Emisor confirmado por Diego: TDF Records, RUC 1793215092001. El tratamiento tributario sigue pendiente y el total aprobado permanece en USD 20.
+
+La continuación añade un límite reutilizable por orden a la política existente, con validación de servidor y PostgreSQL y exposición en el checkout. El valor aprobado para este evento es cuatro. No se activa una política provisional con tarifa fiscal inventada: configurar cuatro, retención de diez minutos y el límite de transferencia de 13:30 al preparar la política fiscal definitiva, manteniendo el evento privado hasta completar la validación. Este límite no se presenta como cuota acumulada por comprador. Una migración adicional impide regresar políticas aprobadas o retiradas a borrador y mantiene inmutables sus condiciones comerciales. Para el historial anterior a la columna nueva, agrega correcciones explícitas con el límite heredado de 100 y referencias al registro/fecha original; no reescribe el autor, contenido ni fecha de la evidencia original. Estas correcciones de migración no son aprobaciones comerciales.
+
+La confirmación de compra pública se está extendiendo con una cola durable: emisión y envío pendiente se guardan juntos, con reintentos y bloqueo entre workers. El mensaje incluye códigos de acceso y enlace web; usar la app es opcional. Ver [diseño y límites de entrega](../../../formal/ticket-admission/confirmation-delivery.md). El worker permanece apagado hasta verificar SMTP; una prueba local no acredita entrega a una bandeja externa.
+
 # PATCH CULTURE Vol. 1 — investigación y auditoría inicial
 
-Estado actualizado: el organizador respondió el bloque consolidado. Ver [propuesta de condiciones v1](propuesta-condiciones.md) y `event-candidate.json` para la información vigente. **No creado en producción, no publicado, no cobros activados, no E2E acreditado.**
+Estado actualizado: condiciones comerciales aprobadas por el organizador («Approved. Continue»). Borrador creado en TDF; **sin publicación, cobros activados ni E2E de proveedor acreditado**. Ver [condiciones aprobadas v1](propuesta-condiciones.md) y `event-candidate.json`.
 
-Confirmados ahora: puertas13:30, jam16:30 incluida para compradores del taller, cierre con showcase de Llama Este Pez a las21:00, participantes Kevin Montenegro/Diego Saá/Emanuele Pilo-Pais, cero compromisos previos, ninguna venta Meet2Go, 18años y USD20 finales repartidos USD15TDF/USD5Andes. Los apartados siguientes conservan la auditoría inicial; sus faltantes ya respondidos se resuelven en el candidato actualizado. Condiciones nuevas continúan como propuesta para la única aprobación final.
+Confirmados ahora: puertas13:30, jam16:30 incluida para compradores del taller, cierre con showcase de Llama Este Pez a las21:00, participantes Kevin Montenegro/Diego Saá/Emanuele Pilo-Pais, cero compromisos previos, ninguna venta Meet2Go, 18años y USD20 finales repartidos USD15TDF/USD5Andes. Los apartados siguientes conservan la auditoría inicial; sus faltantes ya respondidos se resuelven en el candidato actualizado. La aprobación de la propuesta queda registrada; la activación continúa bloqueada por la validación técnica y fiscal pendiente.
 
 ## Fuentes y alcance
 
@@ -34,7 +44,7 @@ La imagen `evidence/instagram-preview.jpg` es la **preview publicada**, no una a
 | Marcas visibles | Elemental Zoser Sound Studio, Andes Brewing Co., TDF Records; Meet2Go únicamente en preview publicada |
 | Inscripción | Caption remite a link en bio, destino no recuperado |
 
-## Inferencias y propuestas, todavía sin activar
+## Inferencias y propuesta inicial (histórico; respuestas posteriores arriba)
 
 - **2026-10-24**, confianza alta: publicación fechada 2026-10-04, referencia a la fecha próxima y coincidencia de sábado. No se deduce el año del nombre del archivo.
 - Timezone `America/Guayaquil`, por ubicación en Quito; inicio propuesto `2026-10-24T14:00:00-05:00`.
@@ -43,7 +53,7 @@ La imagen `evidence/instagram-preview.jpg` es la **preview publicada**, no una a
 - Una página canónica de TDF puede presentar ambos bloques; el cupo del taller debe distinguirse del aforo de la jam y del venue. No usar automáticamente `SocialEvent.capacity=20` para toda la jornada.
 - Slug editorial propuesto `patch-culture-vol-1`; las rutas públicas existentes usan ID `/eventos/:eventId`. Cualquier alias futuro debe resolver a una única URL canónica, sin duplicar evento.
 
-## Faltantes e inconsistencias
+## Faltantes e inconsistencias de la investigación inicial (histórico)
 
 1. Horario final del taller/jam, apertura de puertas y fin de jornada. Se preserva `endTime=null` hasta tener evidencia, permitido por la arquitectura.
 2. Jam abierta no significa necesariamente gratuita. Faltan precio/registro/aforo y condiciones para participar con máquinas.

@@ -1,0 +1,15 @@
+EXCERPT of /private/tmp/social-relationship-stack.txt
+Command: (cd tdf-hq && stack test --fast); observed wrapper exit 0.
+Original full-log SHA-256: dd9527d3b9f39af1cc78c64d5e1fd19ad3f3221678ea8937a31f5963cb1b7684
+Only compilation/result summary lines retained; full original remains at the path above.
+
+[ 92 of 212] Compiling TDF.API.SocialRelationships
+[138 of 212] Compiling TDF.Social.RelationshipReads
+[213 of 213] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test [Objects changed]
+[ 92 of 193] Compiling TDF.API.SocialRelationships
+[136 of 193] Compiling TDF.Social.RelationshipReads
+[194 of 194] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-exe/tdf-hq-exe [Objects changed]
+Finished in 4.9402 seconds
+2542 examples, 0 failures
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).

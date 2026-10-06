@@ -5,6 +5,7 @@ module Main (main) where
 
 import Control.Exception (IOException, bracket)
 import Control.Monad (forM_)
+import qualified Data.Set as Set
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
@@ -21,6 +22,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
+import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
@@ -28,12 +30,14 @@ import qualified Data.UUID as UUID
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word8)
-import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
+import Database.Persist (Entity (..), Key, PersistValue (..), insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import qualified Network.HTTP.Client as HTTP
 import Network.Wai (defaultRequest)
-import Network.Wai.Internal (Request (..))
+import qualified Network.Wai as Wai
+import qualified Network.HTTP.Types as HTTPTypes
+import Network.Wai.Internal (Request (..), ResponseReceived (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import Servant.Server.Internal.Handler (runHandler)
@@ -43,17 +47,25 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
+import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
+import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
+import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
+import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback
     ( FeedbackPayload (..),
+      InternalFeedbackAPI,
+      AccountDeletionResolution (..),
       InternalFeedbackSummaryDTO (..),
       InternalFeedbackUpdate (..) )
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.API.CommerceOperations as CommerceOperationsAPI
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
@@ -89,6 +101,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
+import qualified TDF.StartupResponseSpec as StartupResponseSpec
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import TDF.Reputation.Worker
     ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
@@ -102,8 +115,13 @@ import TDF.Merch.Reputation
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
+import qualified TDF.CorsSpec as CorsSpec
+import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
+import qualified TDF.ReadinessSpec as ReadinessSpec
+import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
 import TDF.Cors
     ( corsPolicy,
+      isAccountDeletionRequestAllowed,
       deriveCorsOriginFromAppBase,
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
@@ -119,6 +137,7 @@ import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
 import qualified TDF.Commerce.DomoQuotes as DomoQuotes
 import qualified TDF.Commerce.EventTickets as EventTickets
+import qualified TDF.Server.SocialEventsHandlers as EventMetadataServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
@@ -128,6 +147,9 @@ import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
+import qualified TDF.Commerce.ProviderExecutionStore as ProviderExecutionStore
+import qualified TDF.Commerce.ProviderRetrySpec as ProviderRetrySpec
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntimeStore
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
 import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhoneAdapter
@@ -141,14 +163,22 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
-import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
+import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
+import qualified TDF.Services.RecordsIngestionSpec as RecordsIngestion
+import qualified TDF.Services.YouTubeSpec as YouTubeSpec
+import qualified TDF.EventOperations.TypesSpec as EventOperationsTypesSpec
+import qualified TDF.EventOperations.DatabaseBoundarySpec as EventOperationsDatabaseBoundarySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailabilityServer
+import qualified TDF.Server.ProviderExecution as ProviderExecutionServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
+import qualified TDF.Server.PaymentAuditSpec as PaymentAuditSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -184,12 +214,13 @@ import TDF.Models.SocialEventsModels
     ( EventBudgetLine (..),
       EventFinanceEntry (..),
       EventInvitationId,
+      EventLogisticsDependency (..),
       EventTicket (..),
       EventTicketOrder (..),
       EventTicketTier (..),
       SocialEvent (..),
       SocialEventId )
-import TDF.Auth (AuthedUser (..), moduleName, modulesForRoles)
+import TDF.Auth (AuthedUser (..), ModuleAccess (..), moduleName, modulesForRoles)
 import TDF.FeatureRegistry
     ( RegistryFeature(registryFeatureId),
       allRegistryFeatures,
@@ -200,6 +231,7 @@ import TDF.FeatureRegistry
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.Profiles.ArtistActivationSpec as ArtistActivationSpec
 import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.DDEX.Detect as DDEXDetect
@@ -208,16 +240,12 @@ import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DDEXBusinessRulesSpec
 import qualified TDF.DDEX.ERN.V432.Convert as DDEXConvert
 import qualified TDF.DDEX.ERN.V432.ParseSpec as DDEXParseSpec
 import qualified TDF.DDEX.Types as DDEXTypes
-import qualified TDF.MusicRelease.DomainSpec as MusicReleaseDomainSpec
-import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicReleaseErn432Spec
-import qualified TDF.MusicRelease.ContentSpec as MusicReleaseContentSpec
-import qualified TDF.MusicRelease.Storage.S3Spec as MusicReleaseS3Spec
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
       radioServer,
-      resolveRadioTransmissionEnvBase,
+      isLegacyBroadcastUrl,
       resolveRadioNowPlayingFetchResult,
       validateRadioFetchedMetadata,
       validateRadioImportLimit,
@@ -298,8 +326,14 @@ import TDF.ServerProposals
       validateTemplateKey )
 import TDF.ServerFeedback
     ( csvField,
+      internalFeedbackServer,
       filterInternalReportSummaries,
       internalReportTypeForCategoryCode,
+      validateAccountDeletionIdentity,
+      validateAccountDeletionOutcome,
+      normalizeAccountDeletionDescription,
+      accountDeletionOwnerMatches,
+      feedbackNotificationRecipients,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -426,6 +460,7 @@ import TDF.Server.SocialSync
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
+    replaceLogisticsActivityDependencies,
     normalizeBudgetLineType,
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
@@ -519,6 +554,7 @@ import TDF.Config
       chatKitApiBase,
       chatKitWorkflowId,
       contextualReputationEnabled,
+      singleFeatureOnboardingExperimentEnabled,
       courseInstructorAvatarFallback,
       courseMapFallback,
       courseSlugFallback,
@@ -578,10 +614,18 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
+import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
+import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
+import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
+import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
+import qualified TDF.DriveReplaySpec as DriveReplaySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
+import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
@@ -818,6 +862,15 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    FailureBoundarySpec.spec
+    ReadinessSpec.spec
+    ReceiptSpec.spec
+    StartupResponseSpec.spec
+    WorkerLoggingSpec.spec
+    PaymentArithmeticSpec.spec
+    CheckoutMoneySpec.spec
+    EmailHeadersSpec.spec
+    TicketConfirmationSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
@@ -979,6 +1032,7 @@ main = hspec $ do
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec
+    PaymentAuditSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do
@@ -1174,6 +1228,7 @@ main = hspec $ do
                   , CheckoutStore.vpProviderResource = "evidence-1"
                   , CheckoutStore.vpProviderResourcePath = Nothing
                   , CheckoutStore.vpOrderReference = "booking-1"
+                  , CheckoutStore.vpProviderReference = "booking-1"
                   , CheckoutStore.vpAmountMinor = 5000
                   , CheckoutStore.vpCurrency = "USD"
                   , CheckoutStore.vpEvidence = "staff_verified_manual"
@@ -1266,6 +1321,29 @@ main = hspec $ do
                 ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
                 ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
 
+        it "requires an exact provider-order readback before accepting captured ticket money" $ do
+            let snapshot ident = A.object
+                  [ "id" .= (ident :: Text), "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .= [A.object
+                      [ "custom_id" .= ("ticket-order" :: Text)
+                      , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                      , "payments" .= A.object ["captures" .= [A.object
+                          [ "id" .= ("CAPTURE-1" :: Text), "status" .= ("COMPLETED" :: Text)
+                          , "amount" .= A.object ["value" .= ("20.00" :: Text), "currency_code" .= ("USD" :: Text)] ]]] ]]]
+                parse = ServiceStorefront.parsePaypalBoundCaptureOutcome "PAYPAL-ORDER"
+            parse (snapshot "OTHER-ORDER") `shouldSatisfy` isLeft
+            parse (A.object ["status" .= ("COMPLETED" :: Text)]) `shouldSatisfy` isLeft
+            case parse (snapshot "PAYPAL-ORDER") of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "COMPLETED"
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "MERCHANT" outcome
+                  `shouldBe` Right ()
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2001 "USD" "MERCHANT" outcome
+                  `shouldSatisfy` isLeft
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "OTHER" outcome
+                  `shouldSatisfy` isLeft
+
         it "rejects ambiguous multi-capture PayPal responses" $ do
             let capture captureId = A.object
                   [ "id" .= (captureId :: Text)
@@ -1329,6 +1407,8 @@ main = hspec $ do
                   , ProviderEventStore.pepMerchantRef = "MERCHANT-RETRY"
                   , ProviderEventStore.pepProviderEventId = "WH-RETRY-1"
                   , ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.COMPLETED"
+                  , ProviderEventStore.pepEvidenceType = "signature_verified"
+                  , ProviderEventStore.pepSignatureVerified = True
                   , ProviderEventStore.pepProviderCreatedAt = Just createdAt
                   , ProviderEventStore.pepProviderResourceId = Just "CAPTURE-RETRY-1"
                   , ProviderEventStore.pepRawPayload = rawEvent
@@ -1459,6 +1539,31 @@ main = hspec $ do
             Data.Text.length first `shouldSatisfy` (<= 38)
             first `shouldBe` replay
             first `shouldNotBe` other
+
+        it "binds real refund-shaped webhooks to their capture, preserving minimized evidence" $ do
+            let now = UTCTime (fromGregorian 2026 10 5) 0
+                resource href = A.object
+                  [ "id" .= ("REFUND-1" :: Text), "status" .= ("COMPLETED" :: Text)
+                  , "amount" .= A.object ["value" .= ("20.00" :: Text), "currency_code" .= ("USD" :: Text)]
+                  , "payer" .= A.object ["email_address" .= ("private@example.invalid" :: Text)]
+                  , "links" .= [A.object ["rel" .= ("up" :: Text), "method" .= ("GET" :: Text), "href" .= href]] ]
+                envelope href = ServiceStorefront.PaypalWebhookEnvelope
+                  "WH-REFUND-1" "PAYMENT.CAPTURE.REFUNDED" now (resource href)
+                validUrl = "https://api.sandbox.paypal.com/v2/payments/captures/CAPTURE-1" :: Text
+                parse = ServiceStorefront.parsePaypalExternalCaptureChange CheckoutStore.CheckoutSandbox
+            parse (envelope validUrl) `shouldBe` Right ("CAPTURE-1", 2000, "USD")
+            parse (envelope ("https://api.paypal.com/v2/payments/captures/CAPTURE-1" :: Text)) `shouldSatisfy` isLeft
+            parse (envelope ("https://api.sandbox.paypal.com.attacker.invalid/v2/payments/captures/CAPTURE-1" :: Text)) `shouldSatisfy` isLeft
+            parse (envelope (validUrl <> "?other=1")) `shouldSatisfy` isLeft
+            let raw = BL.toStrict $ A.encode $ A.object
+                  [ "id" .= ("WH-REFUND-1" :: Text), "event_type" .= ("PAYMENT.CAPTURE.REFUNDED" :: Text)
+                  , "create_time" .= ("2026-10-05T00:00:00Z" :: Text), "resource" .= resource validUrl ]
+            case ProviderEventStore.minimizeProviderEventPayload CheckoutStore.ProviderPayPal raw of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right retained -> do
+                BS.isInfixOf "private@example.invalid" retained `shouldBe` False
+                (ServiceStorefront.parsePaypalWebhookEnvelope (BL.fromStrict retained) >>= parse)
+                  `shouldBe` Right ("CAPTURE-1", 2000, "USD")
 
         it "parses only represented PayPal refund evidence" $ do
             let payload = A.object
@@ -1975,6 +2080,9 @@ main = hspec $ do
                   "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"totalMinor\":1}"
             (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
               `shouldSatisfy` isLeft
+            let taxPayload = "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"taxIncluded\":true}"
+            (eitherDecode taxPayload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
 
         it "snapshots buyer and organizer fee allocations in integer minor units" $ do
             EventTickets.calculateTicketPrice 2500 2 0 200 200 0
@@ -1989,6 +2097,27 @@ main = hspec $ do
                 , EventTickets.tpbOrganizerPayableMinor = 4900
                 , EventTickets.tpbPlatformFeeMinor = 200
                 }
+
+        it "keeps an inclusive advertised price exact for one through four tickets" $ do
+            let quote q = EventTickets.calculateTicketPriceWithTaxMode True 2000 q 0 0 0 1500
+            map (fmap EventTickets.tpbCheckoutTotalMinor . quote) [1..4]
+              `shouldBe` map Right [2000,4000,6000,8000]
+            map (fmap EventTickets.tpbTaxMinor . quote) [1..4]
+              `shouldBe` map Right [261,522,783,1043]
+
+        it "conserves inclusive discounts, tax, fees and organizer liability" $ do
+            let quote = EventTickets.calculateTicketPriceWithTaxMode True 2000 4 1000 200 300 1500
+            fmap (\b -> (EventTickets.tpbCheckoutTotalMinor b, EventTickets.tpbTaxMinor b,
+                         EventTickets.tpbPlatformFeeMinor b, EventTickets.tpbOrganizerPayableMinor b)) quote
+              `shouldBe` Right (7140,931,350,5859)
+            EventTickets.calculateTicketPriceWithTaxMode True 2000 1 0 0 10000 1500
+              `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPriceWithTaxMode True maxBound 2 0 0 0 1500
+              `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPriceWithTaxMode True 2000 1 0 0 0 10001
+              `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPriceWithTaxMode True 2000 1 0 0 0 0
+              `shouldBe` EventTickets.calculateTicketPrice 2000 1 0 0 0 0
 
         it "rejects quantity, discount, fee, tax, and overflow tampering" $ do
             EventTickets.calculateTicketPrice 2500 0 0 200 200 0 `shouldSatisfy` isLeft
@@ -2087,9 +2216,94 @@ main = hspec $ do
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
 
+    describe "manual transfer instruction scope" $ do
+        it "does not use merch-only instructions to qualify other product flows" $
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic merch instructions")] $ do
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` True
+                mapM PaymentAvailability.manualTransferInstructionsConfigured
+                  [ ProviderCapabilities.FlowBooking, ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.FlowCourse, ProviderCapabilities.FlowEventTicket
+                  , ProviderCapabilities.FlowDigitalProduct, ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.FlowMarketplace ] `shouldReturn` replicate 7 False
+        it "allows generic instructions and rejects empty configuration" $ do
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic generic instructions"),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowBooking
+                  `shouldReturn` True
+            withEnvOverrides
+              [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "  "),
+               ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Just "  ")] $
+                PaymentAvailability.manualTransferInstructionsConfigured ProviderCapabilities.FlowMerchandise
+                  `shouldReturn` False
+
+    describe "operator payment intent summaries" $ do
+        it "runs the real overview query without mixing environments and aggregates within each environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (checkout_id TEXT, status TEXT, currency TEXT, amount_minor BIGINT, authorized_minor BIGINT, captured_minor BIGINT, refunded_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('sandbox-one','sandbox'),('sandbox-two','sandbox'),('production-one','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('sandbox-one','captured','USD',5000,5000,5000,500),('sandbox-two','captured','USD',2000,2000,2000,0),('production-one','captured','USD',9000,9000,9000,100)" []
+                    CommerceOperationsServer.loadPaymentIntentSummaries) pool
+                map (\summary ->
+                    ( CommerceOperationsAPI.cpiEnvironment summary
+                    , CommerceOperationsAPI.cpiStatus summary
+                    , CommerceOperationsAPI.cpiCurrency summary
+                    , CommerceOperationsAPI.cpiCount summary
+                    , CommerceOperationsAPI.cpiAmountMinor summary
+                    , CommerceOperationsAPI.cpiAuthorizedMinor summary
+                    , CommerceOperationsAPI.cpiCapturedMinor summary
+                    , CommerceOperationsAPI.cpiRefundedMinor summary
+                    )) summaries `shouldBe`
+                      [ ("production", "captured", "USD", 1, 9000, 9000, 9000, 100)
+                      , ("sandbox", "captured", "USD", 2, 7000, 7000, 7000, 500)
+                      ]
+
+        it "aggregates amount components only within the checkout environment" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                summaries <- runSqlPool (do
+                    rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY, environment TEXT NOT NULL)" []
+                    rawExecute "CREATE TABLE commerce_payment_intent (id TEXT PRIMARY KEY, checkout_id TEXT)" []
+                    rawExecute "CREATE TABLE commerce_payment_amount_component (payment_intent_id TEXT, component_type TEXT, source TEXT, currency TEXT, amount_minor BIGINT)" []
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('s','sandbox'),('p','production')" []
+                    rawExecute "INSERT INTO commerce_payment_intent VALUES ('si','s'),('pi','p')" []
+                    rawExecute "INSERT INTO commerce_payment_amount_component VALUES ('si','tax','tax_document','USD',100),('si','tax','tax_document','USD',200),('pi','tax','tax_document','USD',900)" []
+                    CommerceOperationsServer.loadAmountComponentSummaries) pool
+                summaries `shouldBe`
+                    [ CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "production" "tax" "tax_document" "USD" 1 900
+                    , CommerceOperationsAPI.CommerceAmountComponentSummaryDTO "sandbox" "tax" "tax_document" "USD" 2 300
+                    ]
+
+    describe "manual transfer runtime configuration" $ do
+        it "uses merchandise instructions only for merchandise and general instructions for all flows" $
+            forM_ [minBound .. maxBound] $ \flow -> do
+                PaymentAvailability.bankTransferInstructionsReady flow False True
+                    `shouldBe` (flow == ProviderCapabilities.FlowMerchandise)
+                PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
+                PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
+
+    describe "marketplace contact checkout boundary" $ do
+        it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
+            source <- readFile "src/TDF/Server.hs"
+            let handler = unlines . takeWhile (/= "prepareMarketplaceSaleCheckout")
+                        . dropWhile (/= "checkoutCart rawId mIdempotency payload = do")
+                        $ lines source
+            handler `shouldContain` "prepareMarketplaceSaleCheckout \"contact\""
+            handler `shouldContain` "loadMarketplaceOrderWithLookup context"
+            handler `shouldContain` "when (msccCreated context)"
+            handler `shouldNotContain` "beginPaymentAttempt"
+            handler `shouldNotContain` "recordManualPaymentSelection"
+            handler `shouldNotContain` "MarketplaceOrderPaymentProvider"
+            handler `shouldNotContain` "MarketplaceOrderStatus"
+
     describe "provider-neutral payment routing" $ do
         let active provider = ProviderCapabilities.ProviderActivation
               { ProviderCapabilities.paProvider = provider
+              , ProviderCapabilities.paMerchantRef = Just "merchant-test"
               , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
               , ProviderCapabilities.paFeatureEnabled = True
               , ProviderCapabilities.paCredentialsValidated = True
@@ -2126,6 +2340,28 @@ main = hspec $ do
               , CheckoutStore.ProviderPlaceToPay
               ]
 
+        it "uses exact public labels for each executable provider-method pair" $ do
+            let label provider method = PaymentAvailabilityServer.publicPaymentRouteLabel
+                  ProviderCapabilities.PaymentRoute
+                    { ProviderCapabilities.routeProvider = provider
+                    , ProviderCapabilities.routeMethod = method
+                    , ProviderCapabilities.routeCapabilities =
+                        [ProviderCapabilities.CapabilityOneTime]
+                    , ProviderCapabilities.routePriority = 10
+                    }
+            label CheckoutStore.ProviderDatafast ProviderCapabilities.MethodCard
+              `shouldBe` Just "datafast"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodCard
+              `shouldBe` Just "placetopay_card"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodBankRedirect
+              `shouldBe` Just "placetopay_bank_redirect"
+            label CheckoutStore.ProviderPlaceToPay ProviderCapabilities.MethodDeunaQr
+              `shouldBe` Just "placetopay_deuna_qr"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodPayPhoneWallet
+              `shouldBe` Just "payphone_wallet"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodCard
+              `shouldBe` Nothing
+
         it "does not route a documented capability until every runtime gate is true" $ do
             let disabled = (active CheckoutStore.ProviderPlaceToPay)
                   { ProviderCapabilities.paContractApproved = False }
@@ -2149,6 +2385,25 @@ main = hspec $ do
                       [ProviderCapabilities.CapabilityPartialRefund]
                   }
             ProviderCapabilities.routePayments [methodOnly] request `shouldBe` []
+
+        it "never routes a method that has no environment-specific verification evidence" $ do
+            let capabilityWithoutMethod = (active CheckoutStore.ProviderBankTransfer)
+                  { ProviderCapabilities.paVerifiedMethods = []
+                  , ProviderCapabilities.paVerifiedCapabilities =
+                      [ProviderCapabilities.CapabilityOneTime]
+                  , ProviderCapabilities.paVerifiedMethodCapabilities =
+                      [ ( ProviderCapabilities.MethodManualBankTransfer
+                        , ProviderCapabilities.CapabilityOneTime
+                        )
+                      ]
+                  }
+                request = cardRequest
+                  { ProviderCapabilities.prMethod =
+                      ProviderCapabilities.MethodManualBankTransfer
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowBooking
+                  }
+            ProviderCapabilities.routePayments [capabilityWithoutMethod] request
+              `shouldBe` []
 
         it "never combines a capability verified for one method with another method" $ do
             let mismatched = (active CheckoutStore.ProviderPlaceToPay)
@@ -2230,6 +2485,248 @@ main = hspec $ do
               `shouldBe` Right ProviderCapabilities.CapabilityPartialRefund
             PaymentCapabilitiesServer.parsePaymentMethod "crypto" `shouldSatisfy` isLeft
 
+        it "binds only unambiguous selected rails into legacy payment flows" $ do
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderDatafast
+              `shouldBe` Just ProviderCapabilities.MethodCard
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderPayPal
+              `shouldBe` Just ProviderCapabilities.MethodPayPalWallet
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderBankTransfer
+              `shouldBe` Just ProviderCapabilities.MethodManualBankTransfer
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderPlaceToPay
+              `shouldBe` Nothing
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderStripe
+              `shouldBe` Nothing
+
+        it "requires marketplace money movement capabilities at the attempt boundary" $ do
+            PaymentRuntimeStore.operationCapabilities
+              ProviderCapabilities.FlowMarketplace
+              CheckoutStore.OperationCreate
+              `shouldBe`
+                [ ProviderCapabilities.CapabilityOneTime
+                , ProviderCapabilities.CapabilityConnectedAccounts
+                , ProviderCapabilities.CapabilitySplitSettlement
+                , ProviderCapabilities.CapabilitySellerPayouts
+                ]
+            PaymentRuntimeStore.operationCapabilities
+              ProviderCapabilities.FlowBooking
+              CheckoutStore.OperationCapture
+              `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "rejects creating or authorizing payments without verified completion capabilities" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification, [CheckoutStore.OperationCreate])
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture, [CheckoutStore.OperationCreate, CheckoutStore.OperationAuthorize])
+              ] $ \(provider, method, completion, operations) ->
+              forM_ operations $ \operation -> do
+                let verified = active provider
+                    incomplete = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= completion) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                    request = cardRequest
+                      { ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities =
+                          PaymentRuntimeStore.providerOperationCapabilities provider
+                            ProviderCapabilities.FlowBooking operation
+                      }
+                ProviderCapabilities.routePayments [incomplete] request `shouldBe` []
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+
+        it "routes Datafast confirmation only with verified one-time and server capabilities" $ do
+            let request = cardRequest
+                  { ProviderCapabilities.prFlow = ProviderCapabilities.FlowProfessionalService
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      PaymentRuntimeStore.providerOperationCapabilities
+                        CheckoutStore.ProviderDatafast
+                        ProviderCapabilities.FlowProfessionalService
+                        CheckoutStore.OperationCapture
+                  }
+                verified = active CheckoutStore.ProviderDatafast
+                without capability = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= capability) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+                routes activation = map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [activation] request)
+            routes verified `shouldBe` [CheckoutStore.ProviderDatafast]
+            routes (without ProviderCapabilities.CapabilityServerVerification) `shouldBe` []
+            routes (without ProviderCapabilities.CapabilityOneTime) `shouldBe` []
+            routes verified { ProviderCapabilities.paContractApproved = False } `shouldBe` []
+            ProviderCapabilities.routePayments [verified]
+              request { ProviderCapabilities.prEnvironment = CheckoutStore.CheckoutProduction }
+              `shouldBe` []
+            PaymentRuntimeStore.providerOperationCapabilities
+              CheckoutStore.ProviderPayPal ProviderCapabilities.FlowBooking
+              CheckoutStore.OperationCapture `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "hides PayPal until capture is verified even when public callers omit capabilities" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                createOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityCapture) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.routePayments [createOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [verified] request)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+
+        it "requires recurring and completion evidence for public subscription routes" $ do
+            forM_
+              [ (CheckoutStore.ProviderDatafast, ProviderCapabilities.MethodCard, ProviderCapabilities.CapabilityServerVerification)
+              , (CheckoutStore.ProviderPayPal, ProviderCapabilities.MethodPayPalWallet, ProviderCapabilities.CapabilityCapture)
+              ] $ \(provider, method, completion) -> do
+                let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                      { ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                      , ProviderCapabilities.prMethod = method
+                      , ProviderCapabilities.prRequiredCapabilities = []
+                      }
+                    verified = active provider
+                    without capability = verified
+                      { ProviderCapabilities.paVerifiedMethodCapabilities =
+                          filter ((/= capability) . snd)
+                            (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                      }
+                map ProviderCapabilities.routeProvider
+                  (ProviderCapabilities.routePayments [verified] request) `shouldBe` [provider]
+                forM_ [ProviderCapabilities.CapabilityRecurring, completion, ProviderCapabilities.CapabilityOneTime] $ \capability ->
+                  ProviderCapabilities.routePayments [without capability] request `shouldBe` []
+
+        it "preserves caller and marketplace restrictions when qualifying complete checkout" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      [ProviderCapabilities.CapabilityPartialRefund]
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                missing capability = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= capability) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [verified] request)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+            forM_
+              [ ProviderCapabilities.CapabilityPartialRefund
+              , ProviderCapabilities.CapabilityOneTime
+              , ProviderCapabilities.CapabilityCapture
+              , ProviderCapabilities.CapabilityConnectedAccounts
+              , ProviderCapabilities.CapabilitySplitSettlement
+              , ProviderCapabilities.CapabilitySellerPayouts
+              ] $ \capability ->
+                ProviderCapabilities.routePayments [missing capability] request `shouldBe` []
+
+        it "advertises manual bank transfer only for the settlement merchant used by checkout" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                flip runSqlPool pool $ do
+                    rawExecute "CREATE TABLE commerce_provider_account (id TEXT, provider TEXT, environment TEXT, enabled BOOLEAN, credential_status TEXT, contract_status TEXT, feature_flag_key TEXT, merchant_account_ref TEXT)" []
+                    rawExecute "CREATE TABLE commerce_provider_capability (provider_account_id TEXT, payment_method TEXT, capability TEXT, verification_status TEXT)" []
+                    rawExecute "CREATE TABLE revenue_feature_flag (flag_key TEXT, environment TEXT, enabled BOOLEAN)" []
+                    rawExecute "INSERT INTO commerce_provider_account VALUES ('b','bank_transfer','sandbox',1,'validated','approved','bank_transfer','wrong-merchant')" []
+                    rawExecute "INSERT INTO commerce_provider_capability VALUES ('b','manual_bank_transfer','one_time','sandbox_verified')" []
+                let routes = fmap (fmap (map ProviderCapabilities.routeProvider)) $
+                      runHandler $ runReaderT
+                        (PaymentAvailability.loadRuntimeReadyRoutes cardRequest
+                          { ProviderCapabilities.prMethod = ProviderCapabilities.MethodManualBankTransfer
+                          , ProviderCapabilities.prFlow = ProviderCapabilities.FlowBooking })
+                        (Env pool (error "Availability must not read unrelated application configuration"))
+                    setMerchant value = flip runSqlPool pool $
+                      rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=?" [value]
+                withEnvOverrides [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Just "Synthetic bank instructions")] $ do
+                    routes `shouldReturn` Right []
+                    setMerchant (PersistText "tdf-manual-settlement")
+                    routes `shouldReturn` Right [CheckoutStore.ProviderBankTransfer]
+                    setMerchant PersistNull
+                    routes `shouldReturn` Right []
+                    setMerchant (PersistText "tdf-manual-settlement")
+                    withEnvOverrides [("COMMERCE_BANK_TRANSFER_INSTRUCTIONS", Nothing), ("MERCH_BANK_TRANSFER_INSTRUCTIONS", Nothing)] $
+                      routes `shouldReturn` Right []
+
+        it "advertises PayPal and Datafast only for the configured approved merchant" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                flip runSqlPool pool $ do
+                    rawExecute "CREATE TABLE commerce_provider_account (id TEXT, provider TEXT, environment TEXT, enabled BOOLEAN, credential_status TEXT, contract_status TEXT, feature_flag_key TEXT, merchant_account_ref TEXT)" []
+                    rawExecute "CREATE TABLE commerce_provider_capability (provider_account_id TEXT, payment_method TEXT, capability TEXT, verification_status TEXT)" []
+                    rawExecute "CREATE TABLE revenue_feature_flag (flag_key TEXT, environment TEXT, enabled BOOLEAN)" []
+                    rawExecute "INSERT INTO commerce_provider_account VALUES ('p','paypal','sandbox',1,'validated','approved','paypal','merchant-A'),('d','datafast','sandbox',1,'validated','approved','datafast','merchant-A')" []
+                    rawExecute "INSERT INTO commerce_provider_capability VALUES ('p','paypal_wallet','one_time','sandbox_verified'),('p','paypal_wallet','capture','sandbox_verified'),('d','card','one_time','sandbox_verified'),('d','card','server_verification','sandbox_verified')" []
+                let routes method = fmap (fmap (map ProviderCapabilities.routeProvider)) $
+                      runHandler $ runReaderT
+                        (PaymentAvailability.loadRuntimeReadyRoutes cardRequest
+                          { ProviderCapabilities.prMethod = method })
+                        (Env pool (error "Availability must not read unrelated application configuration"))
+                    checkBoth paypal datafast = do
+                      routes ProviderCapabilities.MethodPayPalWallet `shouldReturn` Right paypal
+                      routes ProviderCapabilities.MethodCard `shouldReturn` Right datafast
+                    fixture merchant =
+                      [ ("PAYPAL_CLIENT_ID", Just "synthetic-client")
+                      , ("PAYPAL_CLIENT_SECRET", Just "synthetic-secret")
+                      , ("PAYPAL_MERCHANT_ID", Just merchant)
+                      , ("PAYPAL_ENV", Just "sandbox")
+                      , ("PAYPAL_WEBHOOK_ID", Just "synthetic-webhook")
+                      , ("COMMERCE_EVENT_ENCRYPTION_KEY", Just (replicate 32 'x'))
+                      , ("DATAFAST_ENTITY_ID", Just merchant)
+                      , ("DATAFAST_BEARER_TOKEN", Just "synthetic-token")
+                      , ("DATAFAST_BASE_URL", Just "https://eu-test.oppwa.com")
+                      , ("DATAFAST_ENV", Just "sandbox")
+                      , ("DATAFAST_TEST_MODE", Nothing)
+                      ]
+                -- Only local environment parsing and SQLite queries; no provider requests.
+                withEnvOverrides (fixture "merchant-A") $
+                  checkBoth [CheckoutStore.ProviderPayPal] [CheckoutStore.ProviderDatafast]
+                withEnvOverrides (fixture "merchant-B") $ checkBoth [] []
+                withEnvOverrides (fixture "") $ checkBoth [] []
+                withEnvOverrides (fixture "merchant-A") $
+                  withEnvOverrides [("PAYPAL_ENV", Just "production"), ("DATAFAST_ENV", Just "production")] $
+                    checkBoth [] []
+                flip runSqlPool pool $
+                  rawExecute "UPDATE commerce_provider_account SET merchant_account_ref=NULL" []
+                withEnvOverrides (fixture "merchant-A") $ checkBoth [] []
+
+        it "requires recurring verification in addition to completion for subscriptions" $ do
+            let request = ProviderCapabilities.requireCheckoutCompletion cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowSubscription
+                  , ProviderCapabilities.prRequiredCapabilities = []
+                  }
+                verified = active CheckoutStore.ProviderPayPal
+                oneTimeOnly = verified
+                  { ProviderCapabilities.paVerifiedMethodCapabilities =
+                      filter ((/= ProviderCapabilities.CapabilityRecurring) . snd)
+                        (ProviderCapabilities.paVerifiedMethodCapabilities verified)
+                  }
+            ProviderCapabilities.prRequiredCapabilities request `shouldMatchList`
+                [ ProviderCapabilities.CapabilityOneTime
+                , ProviderCapabilities.CapabilityRecurring
+                , ProviderCapabilities.CapabilityCapture
+                ]
+            ProviderCapabilities.routePayments [oneTimeOnly] request `shouldBe` []
+            map ProviderCapabilities.routeProvider
+                (ProviderCapabilities.routePayments [verified] request)
+                `shouldBe` [CheckoutStore.ProviderPayPal]
+
+        it "derives routing policy from the immutable checkout domain" $ do
+            PaymentRuntimeStore.productFlowForDomain "event_ticket_order"
+              `shouldBe` Just ProviderCapabilities.FlowEventTicket
+            PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            PaymentRuntimeStore.productFlowForDomain "unknown"
+              `shouldBe` Nothing
+
     describe "provider adapter contracts" $ do
         let now = UTCTime (fromGregorian 2026 9 10)
               (secondsToDiffTime (22 * 60 * 60))
@@ -2247,7 +2744,8 @@ main = hspec $ do
               , ProviderAdapter.mbTipMinor = 0
               }
             createPayment = ProviderAdapter.CreatePayment
-              { ProviderAdapter.cpReference = "TDF-payment-001"
+              { ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodCard
+              , ProviderAdapter.cpReference = "TDF-payment-001"
               , ProviderAdapter.cpDescription = "TDF order payment"
               , ProviderAdapter.cpMoney = money
               , ProviderAdapter.cpReturnUrl = "https://app.tdfrecords.com/payments/return"
@@ -2272,6 +2770,8 @@ main = hspec $ do
                 { PlaceToPayAdapter.ptpEnvironment = CheckoutStore.CheckoutSandbox
                 , PlaceToPayAdapter.ptpLogin = "test-login"
                 , PlaceToPayAdapter.ptpSecretKey = "test-secret"
+                , PlaceToPayAdapter.ptpPaymentMethods =
+                    [(ProviderCapabilities.MethodCard, "visa,master")]
                 })
             payPhone = fromRight (error "valid PayPhone fixture config")
               (PayPhoneAdapter.payPhoneAdapter PayPhoneAdapter.PayPhoneConfig
@@ -2287,6 +2787,14 @@ main = hspec $ do
               money { ProviderAdapter.mbTaxMinor = 314 }
               `shouldSatisfy` isLeft
 
+        it "rejects an Int64 component sum that wraps back to a positive total" $ do
+            ProviderAdapter.validateUsdMoney money
+              { ProviderAdapter.mbTotalMinor = 1
+              , ProviderAdapter.mbWithoutTaxMinor = maxBound
+              , ProviderAdapter.mbTaxableBaseMinor = maxBound
+              , ProviderAdapter.mbTaxMinor = 3
+              } `shouldSatisfy` isLeft
+
         it "builds a fixed-host PlaceToPay session with a stable retry reference" $ do
             let request = fromRight (error "valid PlaceToPay create fixture")
                   (ProviderAdapter.adapterBuildCreate ptp adapterContext createPayment)
@@ -2294,11 +2802,22 @@ main = hspec $ do
             ProviderAdapter.arUrl request
               `shouldBe` "https://checkout-test.placetopay.ec/api/session"
             ProviderAdapter.arRetryPolicy request
-              `shouldBe` ProviderAdapter.ReuseStableReference
+              `shouldBe` ProviderAdapter.QueryBeforeRetry
+            maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
+              `shouldContain` "\"paymentMethod\":\"visa,master\""
             show summary `shouldNotContain` "test-login"
             show summary `shouldNotContain` "test-secret"
             Data.Text.length (PlaceToPayAdapter.placeToPayReference
               "c07196fb-aedf-4a8d-ac50-0f97291c29f9") `shouldBe` 32
+
+        it "fails closed when a PlaceToPay method has no exact site mapping" $ do
+            either (const True) (const False)
+              (ProviderAdapter.adapterBuildCreate ptp adapterContext
+                createPayment
+                  { ProviderAdapter.cpPaymentMethod =
+                      ProviderCapabilities.MethodBankRedirect
+                  })
+              `shouldBe` True
 
         it "accepts only a PlaceToPay create redirect on the configured Ecuador host" $ do
             let good = A.object
@@ -2348,6 +2867,13 @@ main = hspec $ do
                       [ A.object
                           [ "status" .= A.object
                               ["status" .= ("APPROVED" :: Text)]
+                          , "internalReference" .= (456 :: Int)
+                          , "reference" .= (reference :: Text)
+                          , "refunded" .= False
+                          , "amount" .= A.object
+                              [ "from" .= A.object ["currency" .= currency, "total" .= amount]
+                              , "to" .= A.object ["currency" .= currency, "total" .= amount]
+                              ]
                           ]
                       ]
                   ]
@@ -2360,6 +2886,73 @@ main = hspec $ do
               `shouldSatisfy` isLeft
             ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator changedReference
               `shouldSatisfy` isLeft
+
+        describe "PlaceToPay provider transaction evidence" $ do
+            let ptpLocator = locator { ProviderAdapter.plExternalId = "9911" }
+                transaction status amount reference currency refunded = A.object
+                  [ "status" .= A.object ["status" .= (status :: Text)]
+                  , "internalReference" .= (456 :: Int)
+                  , "reference" .= (reference :: Text)
+                  , "refunded" .= (refunded :: Bool)
+                  , "amount" .= A.object
+                      [ "from" .= A.object ["currency" .= (currency :: Text), "total" .= (amount :: A.Value)]
+                      , "to" .= A.object ["currency" .= currency, "total" .= amount]
+                      ]
+                  ]
+                good = transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "USD" False
+                rejected = transaction "REJECTED" (A.Number 125.15) "TDF-payment-001" "USD" False
+                session status payments = A.object
+                  [ "requestId" .= (9911 :: Int)
+                  , "status" .= A.object ["status" .= (status :: Text)]
+                  , "request" .= A.object
+                      [ "payment" .= A.object
+                          [ "reference" .= ("TDF-payment-001" :: Text)
+                          , "amount" .= A.object
+                              ["currency" .= ("USD" :: Text), "total" .= A.Number 125.15]
+                          ]
+                      ]
+                  , "payment" .= (payments :: [A.Value])
+                  ]
+                parse = ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator
+            it "accepts exactly one complete sale after rejected attempts" $ do
+                fmap ProviderAdapter.adapterResultCertainty (parse (session "APPROVED" [rejected, good]))
+                  `shouldBe` Right ProviderCapabilities.ProviderSucceeded
+            it "rejects underpayment, overpayment, foreign currency, wrong reference and refunded sale" $ do
+                forM_
+                  [ transaction "APPROVED" (A.Number 1) "TDF-payment-001" "USD" False
+                  , transaction "APPROVED" (A.Number 126) "TDF-payment-001" "USD" False
+                  , transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "EUR" False
+                  , transaction "APPROVED" (A.Number 125.15) "another-order" "USD" False
+                  , transaction "APPROVED" (A.Number 125.15) "TDF-payment-001" "USD" True
+                  , transaction "APPROVED" (A.Number 125.151) "TDF-payment-001" "USD" False
+                  , A.object ["status" .= A.object ["status" .= ("APPROVED" :: Text)]]
+                  ] $ \invalid -> parse (session "APPROVED" [invalid]) `shouldSatisfy` isLeft
+            it "rejects duplicate or missing approvals" $ do
+                parse (session "APPROVED" [good, good]) `shouldSatisfy` isLeft
+                parse (session "APPROVED" []) `shouldSatisfy` isLeft
+            it "never permits fallback for contradictory or partial session evidence" $ do
+                forM_ ["REJECTED", "EXPIRED", "CANCELLED", "APPROVED_PARTIAL", "PARTIAL_EXPIRED"] $
+                  \status -> fmap ProviderAdapter.adapterResultCertainty (parse (session status [good]))
+                    `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+            it "does not mistake a pending confirmation for a confirmed decline" $ do
+                let pending = transaction "PENDING_CONFIRMATION" (A.Number 125.15)
+                      "TDF-payment-001" "USD" False
+                fmap ProviderAdapter.adapterResultCertainty (parse (session "REJECTED" [pending]))
+                  `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+                parse (session "APPROVED" [good, pending]) `shouldSatisfy` isLeft
+            it "permits fallback only for terminal sessions without any non-rejected transaction" $ do
+                forM_ ["REJECTED", "EXPIRED", "CANCELLED"] $ \status ->
+                  forM_ [[], [rejected]] $ \payments ->
+                    fmap ProviderAdapter.adapterResultCertainty (parse (session status payments))
+                      `shouldBe` Right ProviderCapabilities.ProviderConfirmedNoCharge
+            it "requires cancellation to contain the exact bound session and no-charge evidence" $ do
+                let cancel value = ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterCancel
+                      ptpLocator (A.object ["status" .= A.object ["status" .= ("OK" :: Text)], "session" .= value])
+                fmap ProviderAdapter.adapterResultState (cancel (session "REJECTED" []))
+                  `shouldBe` Right ProviderAdapter.AdapterCancelled
+                cancel (session "APPROVED" [good]) `shouldSatisfy` isLeft
+                cancel (session "REJECTED" [good]) `shouldSatisfy` isLeft
+                cancel A.Null `shouldSatisfy` isLeft
 
         it "verifies PlaceToPay SHA-256 notifications but still requires reconciliation" $ do
             let status = "APPROVED"
@@ -2384,7 +2977,11 @@ main = hspec $ do
 
         it "builds PayPhone API Sale with integer cents and query-before-retry" $ do
             let request = fromRight (error "valid PayPhone create fixture")
-                  (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
+                  (ProviderAdapter.adapterBuildCreate payPhone adapterContext
+                    createPayment
+                      { ProviderAdapter.cpPaymentMethod =
+                          ProviderCapabilities.MethodPayPhoneWallet
+                      })
                 encodedBody = maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
                 summary = ProviderAdapter.safeRequestSummary request
             ProviderAdapter.arUrl request
@@ -2393,6 +2990,9 @@ main = hspec $ do
             encodedBody `shouldContain` "\"amount\":12515"
             encodedBody `shouldContain` "\"tax\":315"
             show summary `shouldNotContain` "test-token"
+            either (const True) (const False)
+              (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
+              `shouldBe` True
 
         it "trusts PayPhone success only after an authenticated exact-binding query" $ do
             let response amount reference currency statusCode = A.object
@@ -2404,6 +3004,13 @@ main = hspec $ do
                   ]
                 good = response 12515 "TDF-payment-001" "USD" 3
                 tampered = response 12516 "TDF-payment-001" "USD" 3
+                wrongTransaction = A.object
+                  [ "amount" .= (12515 :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (3 :: Int)
+                  , "transactionId" .= (45441138 :: Int)
+                  ]
                 parsed = ProviderAdapter.adapterParseResponse
                   payPhone ProviderAdapter.AdapterQuery locator good
             fmap ProviderAdapter.adapterResultState parsed
@@ -2413,6 +3020,29 @@ main = hspec $ do
             ProviderAdapter.adapterParseResponse
               payPhone ProviderAdapter.AdapterQuery locator tampered
               `shouldSatisfy` isLeft
+            ProviderAdapter.adapterParseResponse
+              payPhone ProviderAdapter.AdapterQuery locator wrongTransaction
+              `shouldSatisfy` isLeft
+
+        it "classifies PayPhone code 2 as canceled without inferring an issuer decline" $ do
+            let response code = A.object
+                  [ "amount" .= (12515 :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (code :: Int)
+                  , "transactionId" .= (45441137 :: Int)
+                  ]
+                parse = ProviderAdapter.adapterParseResponse
+                  payPhone ProviderAdapter.AdapterQuery locator
+                cancelled = parse (response 2)
+            fmap ProviderAdapter.adapterResultState cancelled
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            fmap ProviderAdapter.adapterResultCertainty cancelled
+              `shouldBe` Right ProviderCapabilities.ProviderConfirmedNoCharge
+            fmap ProviderAdapter.adapterResultState (parse (response 1))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            fmap ProviderAdapter.adapterResultCertainty (parse (response 99))
+              `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
 
         it "never treats an unsigned PayPhone browser callback as payment evidence" $ do
             let callback = A.object
@@ -2422,6 +3052,30 @@ main = hspec $ do
                 assessed = ProviderAdapter.adapterAssessNotification payPhone callback
             fmap ProviderAdapter.notificationAuthenticated assessed `shouldBe` Right False
             fmap ProviderAdapter.notificationRequiresQuery assessed `shouldBe` Right True
+
+        it "parses the official PayPhone external notification only as an untrusted query trigger" $ do
+            let notification storeId = A.object
+                  [ "Amount" .= (12515 :: Int)
+                  , "AuthorizationCode" .= ("W32805807" :: Text)
+                  , "ClientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "StatusCode" .= (3 :: Int)
+                  , "TransactionStatus" .= ("Approved" :: Text)
+                  , "StoreId" .= (storeId :: Text)
+                  , "Currency" .= ("USD" :: Text)
+                  , "TransactionId" .= (45441137 :: Int)
+                  ]
+                assessed = ProviderAdapter.adapterAssessNotification payPhone
+                  (notification "test-store")
+            fmap ProviderAdapter.notificationExternalId assessed
+              `shouldBe` Right "45441137"
+            fmap ProviderAdapter.notificationMerchantReference assessed
+              `shouldBe` Right (Just "TDF-payment-001")
+            fmap ProviderAdapter.notificationProviderStatus assessed
+              `shouldBe` Right (Just "3")
+            fmap ProviderAdapter.notificationAuthenticated assessed
+              `shouldBe` Right False
+            ProviderAdapter.adapterAssessNotification payPhone
+              (notification "another-store") `shouldSatisfy` isLeft
 
         it "enforces PayPhone's full-only same-day 20:00 Ecuador reversal cutoff" $ do
             let actionAt = UTCTime (fromGregorian 2026 9 10)
@@ -2452,6 +3106,7 @@ main = hspec $ do
         it "advertises only adapter-backed methods and operations" $ do
             let activePayPhone = ProviderCapabilities.ProviderActivation
                   { ProviderCapabilities.paProvider = CheckoutStore.ProviderPayPhone
+                  , ProviderCapabilities.paMerchantRef = Just "merchant-test"
                   , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
                   , ProviderCapabilities.paFeatureEnabled = True
                   , ProviderCapabilities.paCredentialsValidated = True
@@ -2487,6 +3142,39 @@ main = hspec $ do
             placeToPayCapabilities
               `shouldNotContain` [ProviderCapabilities.CapabilityPartialRefund]
 
+        it "derives provider-safe references and exact checkout amount components" $ do
+            let checkout = ProviderExecutionStore.CheckoutExecution
+                  { ProviderExecutionStore.ceCheckout =
+                      CheckoutStore.CheckoutReference
+                        "c07196fb-aedf-4a8d-ac50-0f97291c29f9"
+                  , ProviderExecutionStore.ceDomainOrderId =
+                      "internal-order-reference-that-may-exceed-provider-limits"
+                  , ProviderExecutionStore.ceDomainType = "event_ticket_order"
+                  , ProviderExecutionStore.ceEnvironment = CheckoutStore.CheckoutSandbox
+                  , ProviderExecutionStore.ceCurrency = "USD"
+                  , ProviderExecutionStore.ceSubtotalMinor = 12000
+                  , ProviderExecutionStore.ceDiscountMinor = 500
+                  , ProviderExecutionStore.ceTaxMinor = 1725
+                  , ProviderExecutionStore.ceFeeMinor = 290
+                  , ProviderExecutionStore.ceTotalMinor = 13515
+                  , ProviderExecutionStore.ceCustomerEmail = "buyer@example.test"
+                  }
+                breakdown = ProviderExecutionServer.checkoutMoneyBreakdown checkout
+                placeToPayReference = ProviderExecutionServer.providerReference
+                  CheckoutStore.ProviderPlaceToPay
+                  (CheckoutStore.checkoutReferenceId
+                    (ProviderExecutionStore.ceCheckout checkout))
+                payPhoneReference = ProviderExecutionServer.providerReference
+                  CheckoutStore.ProviderPayPhone
+                  (CheckoutStore.checkoutReferenceId
+                    (ProviderExecutionStore.ceCheckout checkout))
+            Data.Text.length placeToPayReference `shouldBe` 32
+            Data.Text.length payPhoneReference `shouldBe` 32
+            placeToPayReference `shouldNotBe` payPhoneReference
+            ProviderAdapter.mbTaxableBaseMinor breakdown `shouldBe` 11500
+            ProviderAdapter.mbWithoutTaxMinor breakdown `shouldBe` 0
+            ProviderAdapter.validateUsdMoney breakdown `shouldBe` Right ()
+
     describe "provider-neutral payment lifecycle" $ do
         let created = Commerce.PaymentLifecycle
               { Commerce.paymentState = Commerce.PaymentRequiresMethod
@@ -2513,6 +3201,30 @@ main = hspec $ do
             fmap Commerce.paymentState captured `shouldBe` Right Commerce.PaymentCaptured
             Commerce.transitionPayment created (Commerce.PaymentCaptureVerified 10001)
               `shouldSatisfy` isLeft
+
+        it "rejects capture and refund overflow before adding Int64 amounts" $ do
+            let maximumAmount = maxBound :: Int64
+                partialCapture = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyCaptured maximumAmount maximumAmount 1 0
+                partialRefund = Commerce.PaymentLifecycle
+                  Commerce.PaymentPartiallyRefunded maximumAmount maximumAmount maximumAmount 1
+            Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified maximumAmount)
+              `shouldSatisfy` isLeft
+            fmap Commerce.paymentCapturedMinor
+              (Commerce.transitionPayment partialCapture (Commerce.PaymentCaptureVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+            fmap Commerce.paymentRefundedMinor
+              (Commerce.transitionPayment partialRefund (Commerce.PaymentRefundVerified (maximumAmount - 1)))
+              `shouldBe` Right maximumAmount
+
+        it "checks exact ledger sums instead of Int64 modular zero" $ do
+            let maximumAmount = maxBound :: Int64
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount), ("USD", 2)]
+              `shouldBe` False
+            Commerce.ledgerBalances [("USD", maximumAmount), ("USD", maximumAmount),
+              ("USD", -maximumAmount), ("USD", -maximumAmount)] `shouldBe` True
 
         it "voids only the exact remaining authorization" $ do
             let partiallyCaptured =
@@ -2675,6 +3387,29 @@ main = hspec $ do
             normalizeTimeZone "Europe/Berlin" `shouldBe` Just "Europe/Berlin"
             normalizeTimeZone "../etc/passwd" `shouldBe` Nothing
 
+    describe "event logistics dependency replacement" $ do
+        it "preserves unchanged edge identity and provenance while applying only the requested delta" $
+            bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+                let oldTime = UTCTime (fromGregorian 2026 9 14) 0
+                    now = addUTCTime 60 oldTime
+                dependencies <- runSqlPool (do
+                    rawExecute "CREATE TABLE event_logistics_dependency (id INTEGER PRIMARY KEY, activity_id INTEGER NOT NULL, depends_on_activity_id INTEGER NOT NULL, created_at TIMESTAMP NOT NULL, UNIQUE(activity_id,depends_on_activity_id))" []
+                    insertKey (toSqlKey 1) (EventLogisticsDependency (toSqlKey 100) (toSqlKey 101) oldTime)
+                    insertKey (toSqlKey 2) (EventLogisticsDependency (toSqlKey 100) (toSqlKey 102) oldTime)
+                    insertKey (toSqlKey 3) (EventLogisticsDependency (toSqlKey 200) (toSqlKey 201) oldTime)
+                    replaceLogisticsActivityDependencies (toSqlKey 100)
+                        [toSqlKey 101, toSqlKey 103, toSqlKey 103] now
+                    selectList [] []) pool
+                map (\(Entity _ dependency) ->
+                    ( fromSqlKey (eventLogisticsDependencyActivityId dependency)
+                    , fromSqlKey (eventLogisticsDependencyDependsOnActivityId dependency)
+                    , eventLogisticsDependencyCreatedAt dependency
+                    )) dependencies `shouldMatchList`
+                      [(100, 101, oldTime), (100, 103, now), (200, 201, oldTime)]
+                [fromSqlKey key | Entity key dependency <- dependencies,
+                    eventLogisticsDependencyDependsOnActivityId dependency == toSqlKey 101]
+                    `shouldBe` [1]
+
     describe "event logistics route parsing" $ do
         it "parses Google durations including fractional seconds" $ do
             parseGoogleDurationSeconds "901s" `shouldBe` Just 901
@@ -2768,6 +3503,47 @@ main = hspec $ do
         it "uses the provided refund timeline verbatim" $
             resolveRefundTimelineMessage (Just "Tu banco lo verá en 48 horas.")
                 `shouldBe` "Tu banco lo verá en 48 horas."
+
+    describe "passwordResetLink" $ do
+        it "preserves a local destination through the email query string" $
+            passwordResetLink (Just "https://tdf.example/") "synthetic-token" (Just "/fans?artist=42&tab=eventos#próximo")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&redirect=%2Ffans%3Fartist%3D42%26tab%3Deventos%23pr%C3%B3ximo"
+        it "retains the legacy link for clients without a destination" $
+            passwordResetLink (Just "https://tdf.example") "synthetic-token" Nothing
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token"
+        it "does not put external, control-character or oversized destinations in email" $
+            forM_ ["https://evil.example", "//evil.example", "/\\evil.example", "/fans\n", "/x\ty", "/" <> Data.Text.replicate 501 "x"] $ \destination ->
+                passwordResetLink (Just "https://tdf.example") "synthetic-token" (Just destination)
+                    `shouldBe` "https://tdf.example/reset?token=synthetic-token"
+        it "encodes query delimiters in tokens rather than adding parameters" $
+            passwordResetLink (Just "https://tdf.example") "a&redirect=//evil.example" Nothing
+                `shouldBe` "https://tdf.example/reset?token=a%26redirect%3D%2F%2Fevil.example"
+
+        it "preserves English recovery on a fresh device without changing legacy links" $ do
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" (Just "/fans") (Just "en-US")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&redirect=%2Ffans&lang=en"
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" Nothing Nothing
+                `shouldBe` passwordResetLink (Just "https://tdf.example") "synthetic-token" Nothing
+            passwordResetLinkWithLocale (Just "https://tdf.example") "synthetic-token" Nothing (Just "es-EC")
+                `shouldBe` "https://tdf.example/reset?token=synthetic-token&lang=es"
+        it "uses the English auth fallback for other supplied languages" $ do
+            let (subject, preheader, greeting, bodyLines) = passwordResetEmailContent (Just "fr") "Ana" "synthetic-token" "https://tdf.example/reset"
+            subject `shouldBe` "Reset your TDF Records password"
+            preheader `shouldBe` "Use your token to reset your account password."
+            greeting `shouldBe` "Hello Ana,"
+            bodyLines `shouldContain` ["Security token: synthetic-token"]
+        it "keeps omitted-locale emails Spanish and never reflects arbitrary locale text" $ do
+            let (subject, _, greeting, _) = passwordResetEmailContent Nothing "Ana" "synthetic-token" "https://tdf.example/reset"
+            subject `shouldBe` "Restablecer tu contraseña de TDF Records"
+            greeting `shouldBe` "Hola Ana,"
+            passwordResetLinkWithLocale Nothing "synthetic-token" Nothing (Just "en&redirect=//evil.example")
+                `shouldSatisfy` Data.Text.isSuffixOf "&lang=en"
+
+        it "keeps arbitrary untrusted destinations on the configured origin" $
+            QC.property $ \raw ->
+                let link = passwordResetLink (Just "https://tdf.example") "synthetic-token" (Just (Data.Text.pack raw))
+                in "https://tdf.example/reset?token=synthetic-token" `Data.Text.isPrefixOf` link
+                    && not (Data.Text.any (\c -> c == '\n' || c == '\r' || c == '\t') link)
 
     describe "accountCreatedEmailContent" $ do
         it "never includes a credential or reset token" $ do
@@ -3720,6 +4496,20 @@ main = hspec $ do
             withEnvOverrides [("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "not-a-boolean")]
                 $ loadConfig `shouldThrow` \err ->
                     "PUBLIC_REPUTATION_PROJECTION_ENABLED must be a boolean flag"
+                        `isInfixOf` (show (err :: IOException))
+
+        it "keeps single-feature onboarding experiments paused by default and validates activation explicitly" $ do
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Nothing)] $ do
+                cfg <- loadConfig
+                singleFeatureOnboardingExperimentEnabled cfg `shouldBe` False
+
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Just "true")] $ do
+                cfg <- loadConfig
+                singleFeatureOnboardingExperimentEnabled cfg `shouldBe` True
+
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Just "not-a-boolean")]
+                $ loadConfig `shouldThrow` \err ->
+                    "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
 
         it "loads and validates international defaults from the environment" $ do
@@ -4144,6 +4934,16 @@ main = hspec $ do
             assertInvalid "0"
             assertInvalid "-1"
             assertInvalid "thirty-days"
+
+        it "defaults generated public links to the canonical web and asset hosts" $
+            withEnvOverrides
+                [ ("HQ_APP_URL", Nothing)
+                , ("HQ_ASSETS_BASE_URL", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    resolveConfiguredAppBase cfg `shouldBe` "https://www.tdfrecords.net"
+                    resolveConfiguredAssetsBase cfg `shouldBe` "https://api.tdfrecords.net/assets/serve"
 
         it "normalizes configured backend public base URLs before generating fallback links" $
             withEnvOverrides
@@ -7607,6 +8407,27 @@ main = hspec $ do
                 ]
                 "CORS_DISABLE_DEFAULTS must be a boolean CORS flag"
 
+    CorsSpec.spec
+
+    describe "CORS contact request idempotency" $ do
+        it "permits the actor-scoped request header from an allowed web origin" $ do
+            middleware <- corsPolicy
+            let preflight = defaultRequest
+                    { requestMethod = "OPTIONS"
+                    , requestHeaders =
+                        [ ("Origin", "https://tdfui.pages.dev")
+                        , ("Access-Control-Request-Method", "POST")
+                        , ("Access-Control-Request-Headers", "authorization,content-type,idempotency-key")
+                        ]
+                    }
+                application _ respond = respond (Wai.responseLBS HTTPTypes.status200 [] "")
+            _ <- middleware application preflight $ \response -> do
+                Wai.responseStatus response `shouldBe` HTTPTypes.status200
+                let allowed = fromMaybe "" (lookup "Access-Control-Allow-Headers" (Wai.responseHeaders response))
+                allowed `shouldSatisfy` BS.isInfixOf "idempotency-key"
+                pure ResponseReceived
+            pure ()
+
     describe "CORS trusted preview origins" $ do
         it "allows only the known TDF Pages projects and their preview subdomains" $ do
             isTrustedPreviewOrigin "https://tdfui.pages.dev" `shouldBe` True
@@ -8170,6 +8991,8 @@ main = hspec $ do
                         { auPartyId = toSqlKey 7
                         , auRoles = [Fan]
                         , auModules = modulesForRoles [Fan]
+                        , auApiTokenId = Nothing
+                        , auSessionWitness = Nothing
                         }
                 payload =
                     InstagramOAuth.InstagramOAuthExchangeRequest
@@ -8827,6 +9650,97 @@ main = hspec $ do
                 ( validateWhatsAppOptOutReason
                     (Just (Data.Text.replicate 501 "x"))
                 )
+
+    describe "isAccountDeletionRequestAllowed" $ do
+        it "rejects simple forms, hostile and opaque origins even with a wildcard setting" $ do
+            isAccountDeletionRequestAllowed ["*"] Nothing Nothing `shouldBe` False
+            isAccountDeletionRequestAllowed ["*"] (Just "https://attacker.example") (Just "TDF-Account-Deletion") `shouldBe` False
+            isAccountDeletionRequestAllowed ["*"] (Just "null") (Just "TDF-Account-Deletion") `shouldBe` False
+        it "requires the non-simple header for trusted web clients and originless API clients" $ do
+            isAccountDeletionRequestAllowed ["https://www.tdfrecords.net"] (Just "https://www.tdfrecords.net") (Just "TDF-Account-Deletion") `shouldBe` True
+            isAccountDeletionRequestAllowed [] Nothing (Just "TDF-Account-Deletion") `shouldBe` True
+            isAccountDeletionRequestAllowed [] (Just "https://preview.tdf-app.pages.dev") Nothing `shouldBe` False
+
+    describe "accountDeletionOwnerMatches" $ do
+        it "rejects mismatched, missing and duplicated owner claims, including legacy generic records" $ do
+            accountDeletionOwnerMatches 42 "account_deletion_request\nrequested_account_party_id: 43\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\nrequested_account_party_id: 42\nrequested_account_party_id: 43\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\r\nrequested_account_party_id: 42\r\n" `shouldBe` True
+
+    describe "normalizeAccountDeletionDescription" $ do
+        it "accepts the browser multipart CRLF representation and stores the canonical marker" $
+            normalizeAccountDeletionDescription "account_deletion_request\r\nowner: 42\r\n"
+                `shouldBe` "account_deletion_request\nowner: 42\n"
+        it "is idempotent and removes carriage returns for arbitrary descriptions" $
+            QC.property $ \raw ->
+                let normalized = normalizeAccountDeletionDescription (Data.Text.pack raw)
+                in normalizeAccountDeletionDescription normalized == normalized
+                    && not (Data.Text.any (== '\r') normalized)
+
+    describe "internal feedback administrator module boundary" $ do
+        forM_ [Admin, Manager, StudioManager] $ \role ->
+            it ("rejects direct queue and resolution calls without internships access: " <> show role) $ do
+                let user = AuthedUser
+                        { auPartyId = toSqlKey 7
+                        , auRoles = [role]
+                        , auModules = Set.singleton ModuleAdmin
+                        , auApiTokenId = Nothing
+                        , auSessionWitness = Nothing
+                        }
+                    handler = internalFeedbackServer user
+                        :: ServerT InternalFeedbackAPI (ReaderT Env (ExceptT ServerError IO))
+                    _ :<|> _ :<|> _ :<|> listLegacy :<|> resolveDeletion :<|> _ :<|> _ = handler
+                    unusedEnv = Env
+                        { envPool = error "Denied privacy access must not query or mutate the database"
+                        , envConfig = error "Denied privacy access must not inspect runtime config"
+                        }
+                    assertForbidden action = do
+                        result <- runExceptT (runReaderT action unusedEnv)
+                        case result of
+                            Left serverErr -> errHTTPCode serverErr `shouldBe` 403
+                            Right _ -> expectationFailure "Missing internships module must deny access"
+                assertForbidden (listLegacy (Just True) (Just 0))
+                assertForbidden (listLegacy Nothing Nothing)
+                forM_ ["completed", "rejected"] $ \outcome ->
+                    assertForbidden (resolveDeletion "00000000-0000-4000-8000-000000000001"
+                        (AccountDeletionResolution outcome "Synthetic resolution; no real erasure"))
+
+    describe "feedbackNotificationRecipients" $ do
+        it "restricts every authenticated deletion notice to the confirmed privacy inbox" $
+            QC.property $ \owner ->
+                map snd (feedbackNotificationRecipients (Just owner)) == ["info@tdfrecords.net"]
+        it "preserves the ordinary feedback audience independently" $
+            map snd (feedbackNotificationRecipients Nothing) `shouldBe`
+                ["diego@tdfrecords.net", "info@tdfrecords.net", "tdfestudiodegrabacion@gmail.com"]
+
+    describe "validateAccountDeletionOutcome" $ do
+        it "accepts exactly a first valid resolution with ownership required for completion" $
+            QC.property $ \resolved identified raw ->
+                let outcome = Data.Text.pack raw
+                    accepted = either (const False) (const True) (validateAccountDeletionOutcome resolved identified outcome)
+                in accepted == (not resolved && (outcome == "rejected" || (outcome == "completed" && identified)))
+        it "never overwrites completed or rejected work" $ do
+            map (\outcome -> either errHTTPCode (const 200) (validateAccountDeletionOutcome True True outcome)) ["completed", "rejected"] `shouldBe` [409, 409]
+        it "permits rejecting unidentified requests but never completing them" $ do
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False False "rejected") `shouldBe` 200
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False False "completed") `shouldBe` 400
+        it "records completion for an identified pending request" $
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False True "completed") `shouldBe` 200
+
+    describe "validateAccountDeletionIdentity" $ do
+        it "accepts exactly positive matching authenticated identities for arbitrary account IDs" $
+            QC.property $ \expected actual ->
+                either (const False) (const True) (validateAccountDeletionIdentity expected actual)
+                    == (expected > 0 && actual == Just expected)
+        it "requires authentication at acceptance, even after a prior successful session read" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 42 Nothing)) `shouldBe` Just 401
+        it "rejects a different authenticated owner" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 42 (Just 43))) `shouldBe` Just 403
+        it "rejects invalid account identifiers" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 0 (Just 42))) `shouldBe` Just 400
+        it "accepts only the authenticated requested owner" $
+            either (const False) (const True) (validateAccountDeletionIdentity 42 (Just 42)) `shouldBe` True
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do
@@ -10757,6 +11671,10 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure ("Expected unexpected event update keys to be rejected, got " <> show parsed)
 
+        it "rejects attempts to supply the private ingestion ownership namespace in public updates" $
+            (eitherDecode "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"_discoveryOwned\":{\"isPublic\":true}}"
+                :: Either String EventUpdateDTO) `shouldSatisfy` isLeft
+
         it "captures venue contact nulls and invitation message nulls in update payloads" $ do
             let venuePayload = "{\"venueName\":\"Sala Uno\",\"venuePhone\":null}"
                 invitationPayload = "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null}"
@@ -11815,6 +12733,35 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
 
+    describe "stored discovery ownership metadata boundary" $ do
+        it "accepts internal evidence without exposing it through the public projection" $ do
+            let raw = "{\"isPublic\":true,\"ticketUrl\":\"https://tickets.example/event\",\"_discoveryOwned\":{\"isPublic\":true}}"
+            case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
+                Left err -> expectationFailure (show err)
+                Right metadata -> do
+                    EventMetadataServer.emIsPublic metadata `shouldBe` Just True
+                    EventMetadataServer.emTicketUrl metadata `shouldBe` Just "https://tickets.example/event"
+                    BL.unpack (A.encode metadata) `shouldSatisfy` (not . isInfixOf "_discoveryOwned")
+            validateTicketPurchaseEventEligibility (Just raw) True `shouldSatisfy` isRight
+
+        it "keeps ownership evidence out of public projections for arbitrary stored titles and visibility" $
+            QC.property $ \title public ->
+                let raw = TE.decodeUtf8 . BL.toStrict . A.encode $ A.object
+                        [ "isPublic" .= (public :: Bool)
+                        , "_discoveryOwned" .= A.object ["title" .= (title :: String), "isPublic" .= public]
+                        ]
+                 in case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
+                        Left _ -> False
+                        Right metadata -> EventMetadataServer.emIsPublic metadata == Just public
+                            && not ("_discoveryOwned" `isInfixOf` BL.unpack (A.encode metadata))
+
+        it "retains strict validation for unknown fields, malformed evidence and duplicate namespaces" $ do
+            forM_
+                [ "{\"isPublic\":true,\"rogue\":1,\"_discoveryOwned\":{}}"
+                , "{\"isPublic\":true,\"_discoveryOwned\":true}"
+                , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
+                ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
+
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do
             case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") True of
@@ -11854,6 +12801,10 @@ main = hspec $ do
                         ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
     describe "normalizeTicketStatus" $ do
+        it "preserves refund holds instead of presenting the ticket as issued" $ do
+            normalizeTicketStatus (Just "refund_pending") `shouldBe` "refund_pending"
+            normalizeTicketStatus (Just " REFUND_PENDING ") `shouldBe` "refund_pending"
+
         it "defaults to issued when missing" $ do
             normalizeTicketStatus Nothing `shouldBe` "issued"
 
@@ -12615,67 +13566,20 @@ main = hspec $ do
                 "https://radio.example.com//live"
                 "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments"
 
-    describe "resolveRadioTransmissionEnvBase" $ do
-        it "uses fallback bases only when transmission env vars are absent" $ do
-            resolveRadioTransmissionEnvBase
-                "RADIO_PUBLIC_BASE"
-                "https://api.tdfrecords.net/live"
-                Nothing
-                `shouldBe` Right "https://api.tdfrecords.net/live"
-            resolveRadioTransmissionEnvBase
-                "RADIO_PUBLIC_BASE"
-                "https://api.tdfrecords.net/live"
-                (Just "  https://radio.example.com/live  ")
-                `shouldBe` Right "https://radio.example.com/live"
-
-        it "rejects explicitly blank transmission env vars instead of silently falling back" $ do
-            let assertBlank label rawValue =
-                    case
-                        resolveRadioTransmissionEnvBase
-                            label
-                            "https://fallback.example.com"
-                            (Just rawValue)
-                    of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 500
-                            BL.unpack (errBody err)
-                                `shouldContain`
-                                    Data.Text.unpack (label <> " is configured but blank")
-                        Right value ->
-                            expectationFailure
-                                ("Expected blank radio base env to be rejected, got " <> show value)
-            assertBlank "RADIO_PUBLIC_BASE" "   "
-            assertBlank "RADIO_INGEST_BASE" "\t\n"
-            assertBlank "RADIO_WHIP_BASE" ""
-
-        it "rejects malformed transmission env vars as server config errors" $ do
-            let assertInvalid label rawValue expectedMessage =
-                    case
-                        resolveRadioTransmissionEnvBase
-                            label
-                            "https://fallback.example.com"
-                            (Just rawValue)
-                    of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 500
-                            BL.unpack (errBody err)
-                                `shouldContain`
-                                    Data.Text.unpack (label <> expectedMessage)
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid radio base env to be rejected, got " <> show value)
-            assertInvalid
-                "RADIO_PUBLIC_BASE"
-                "https://radio.example.com/live stream"
-                " must not contain whitespace"
-            assertInvalid
-                "RADIO_WHIP_BASE"
-                "https://radio.example.com/whip\NUL"
-                " must not contain control characters"
-            assertInvalid
-                "RADIO_PUBLIC_BASE"
-                ("https://radio.example.com/live" <> "\x200B")
-                " must not contain hidden formatting characters"
+    describe "legacy native broadcast URL quarantine" $ do
+        it "withholds the historical UUID publisher-key path across hosts and suffixes" $ do
+            let key = "01234567-89ab-4def-8123-456789abcdef"
+            mapM_ (\url -> isLegacyBroadcastUrl url `shouldBe` True)
+                ["https://old.example/live/" <> key,
+                 "https://new.example/hls/" <> key <> "/index.m3u8",
+                 "https://new.example/" <> key <> "?x=1#play",
+                 "https://new.example/%30" <> Data.Text.drop 1 key,
+                 "https://new.example/%2530" <> Data.Text.drop 1 key]
+        it "preserves ordinary external stations and documents conservative UUID collisions" $ do
+            isLegacyBroadcastUrl "https://radio.example/stream.mp3" `shouldBe` False
+            isLegacyBroadcastUrl "https://radio.example/hls/index.m3u8" `shouldBe` False
+            isLegacyBroadcastUrl "https://public.example/01234567-89ab-4def-8123-456789abcdef"
+                `shouldBe` True
 
     describe "validateRadioTransmission endpoint bases" $ do
         it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do
@@ -13495,6 +14399,8 @@ main = hspec $ do
                     { auPartyId = toSqlKey 1
                     , auRoles = roles
                     , auModules = modulesForRoles roles
+                    , auApiTokenId = Nothing
+                    , auSessionWitness = Nothing
                     }
 
         it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
@@ -15949,11 +16855,10 @@ main = hspec $ do
             assertRejected
                 "referenced musician partyIds must be distinct"
                 [mkMusician (Just 7) Nothing, mkMusician (Just 7) Nothing]
-            assertRejected
-                "musician emails must be distinct"
+            validateLiveSessionMusicianCount
                 [ mkMusician Nothing (Just " Player@Example.com ")
                 , mkMusician Nothing (Just "player@example.com")
-                ]
+                ] `shouldBe` Right ()
 
     describe "validateLiveSessionBandName" $ do
         it "trims live-session band names before intake persistence" $
@@ -16394,29 +17299,18 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected null/value musician aliases to be rejected, got: " <> show payload)
 
-        it "rejects null optional nested aliases instead of treating them as omitted" $ do
+        it "accepts nullable optional nested fields from supported clients" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
-                    , ( "musicians"
-                      , "[{\"name\":\"Keys\",\"email\":null,\"isExisting\":false}]"
-                      )
+                    , ("musicians", "[{\"name\":\"Keys\",\"partyId\":null,\"email\":null,\"instrumentId\":null,\"notes\":null,\"isExisting\":false}]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"bpm\":null,\"songKey\":null,\"lyrics\":null,\"sortOrder\":null}]")
                     ]) :: Either String LiveSessionIntakePayload of
-                Left err ->
-                    err `shouldContain` "email must be omitted instead of null"
-                Right payload ->
-                    expectationFailure ("Expected null musician email to be rejected, got: " <> show payload)
-
-            case fromMultipart (mkLiveSessionMultipart
-                    [ ("bandName", "The House Band")
-                    , ("musicians", "[]")
-                    , ( "setlist"
-                      , "[{\"title\":\"Intro Jam\",\"songKey\":null}]"
-                      )
-                    ]) :: Either String LiveSessionIntakePayload of
-                Left err ->
-                    err `shouldContain` "songKey must be omitted instead of null"
-                Right payload ->
-                    expectationFailure ("Expected null setlist songKey to be rejected, got: " <> show payload)
+                Left err -> expectationFailure err
+                Right payload -> do
+                    map lsmEmail (lsiMusicians payload) `shouldBe` [Nothing]
+                    map lsmPartyId (lsiMusicians payload) `shouldBe` [Nothing]
+                    map lssSongKey (lsiSetlist payload) `shouldBe` [Nothing]
+                    map lssBpm (lsiSetlist payload) `shouldBe` [Nothing]
 
         it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
             case fromMultipart (mkLiveSessionMultipart
@@ -16900,6 +17794,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ProviderRetrySpec.spec
     ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     CatalogRecordsSpec.spec
@@ -16907,15 +17802,23 @@ main = hspec $ do
     CatalogPipelineSpec.spec
     DDEXParseSpec.spec
     DDEXBusinessRulesSpec.spec
-    MusicReleaseDomainSpec.spec
-    MusicReleaseContentSpec.spec
-    MusicReleaseErn432Spec.spec
-    MusicReleaseS3Spec.spec
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
+    RecordsIngestion.spec
+    YouTubeSpec.spec
+    EventOperationsTypesSpec.spec
+    EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
     ArtistSpec.spec
+    ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    ProviderIdentitySpec.spec
+    CredentialLifecycleSpec.spec
+    DriveReplaySpec.spec
+    LiveIntakeIdentitySpec.spec
+    TrialIdentitySpec.spec
+    CourseIdentitySpec.spec
+    MarketplaceIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
@@ -16923,6 +17826,7 @@ main = hspec $ do
     ServerFanClubSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
+    EventRelationsSpec.spec
     PublicLeadSpec.spec
     WhatsAppHistorySpec.spec
 
@@ -17065,6 +17969,8 @@ socialSyncAdminUser =
         { auPartyId = toSqlKey 1
         , auRoles = [Admin]
         , auModules = modulesForRoles [Admin]
+        , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 socialSyncListHandlerFor
@@ -17097,6 +18003,8 @@ radioPresenceUser =
         { auPartyId = toSqlKey 1
         , auRoles = [Fan]
         , auModules = modulesForRoles [Fan]
+        , auApiTokenId = Nothing
+        , auSessionWitness = Nothing
         }
 
 runRadioPresenceTest :: RadioPresenceTestM a -> IO (Either ServerError a)

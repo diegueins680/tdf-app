@@ -1,0 +1,86 @@
+[
+  {
+    "engine": "chromium",
+    "width": 320,
+    "failure": "getter",
+    "violations": [],
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "lang": "es"
+    },
+    "passed": true,
+    "errors": [],
+    "requests": []
+  },
+  {
+    "engine": "chromium",
+    "width": 1280,
+    "failure": "getter",
+    "violations": [],
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "lang": "es"
+    },
+    "passed": true,
+    "errors": [],
+    "requests": []
+  },
+  {
+    "engine": "firefox",
+    "width": 320,
+    "failure": "getter",
+    "violations": [],
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "lang": "es"
+    },
+    "passed": true,
+    "errors": [],
+    "requests": []
+  },
+  {
+    "engine": "firefox",
+    "width": 1280,
+    "failure": "getter",
+    "violations": [],
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "lang": "es"
+    },
+    "passed": true,
+    "errors": [],
+    "requests": []
+  },
+  {
+    "engine": "webkit",
+    "width": 320,
+    "failure": "getter",
+    "violations": [],
+    "geometry": {
+      "width": 320,
+      "scroll": 320,
+      "lang": "es"
+    },
+    "passed": true,
+    "errors": [],
+    "requests": []
+  },
+  {
+    "engine": "webkit",
+    "width": 1280,
+    "failure": "getter",
+    "violations": [],
+    "geometry": {
+      "width": 1280,
+      "scroll": 1280,
+      "lang": "es"
+    },
+    "passed": true,
+    "errors": [],
+    "requests": []
+  }
+]

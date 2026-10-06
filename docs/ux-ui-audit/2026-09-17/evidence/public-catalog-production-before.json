@@ -1,0 +1,30 @@
+{
+  "observedAt": "2026-09-18T10:01:37.072602+00:00",
+  "requests": [
+    {
+      "path": "/fans/artists",
+      "status": 200,
+      "elapsedSeconds": 2.511,
+      "bytes": 1882891,
+      "shape": "list",
+      "items": 53
+    },
+    {
+      "path": "/records/feed?locale=es",
+      "status": 200,
+      "elapsedSeconds": 10.566,
+      "bytes": 81693,
+      "shape": "dict",
+      "items": null
+    },
+    {
+      "path": "/marketplace",
+      "status": 200,
+      "elapsedSeconds": 38.924,
+      "bytes": 46746,
+      "shape": "list",
+      "items": 57
+    }
+  ],
+  "limit": "Single lab request per public endpoint, not field percentile or complete journey."
+}

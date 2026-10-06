@@ -1,5 +1,7 @@
+import i18n from '../i18n';
 import { jest } from '@jest/globals';
 import { act } from 'react';
+import { waitFor } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
@@ -22,15 +24,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
   }),
 }));
 
-jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => ({
-      'sessionMenu.noRoles': 'Sin roles asignados',
-      'sessionMenu.logout': 'Cerrar sesión',
-      'sessionMenu.open': 'Abrir menú de sesión',
-    })[key] ?? key,
-  }),
-}));
+
 
 jest.unstable_mockModule('./BrandLogo', () => ({
   default: () => <span>TDF Records</span>,
@@ -40,7 +34,7 @@ const { default: PublicBranding } = await import('./PublicBranding');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const renderBranding = async (container: HTMLElement, route: string) => {
+const renderBranding = async (container: HTMLElement, route: string | { pathname: string; state: { mobileInvitation: boolean } }) => {
   let root: Root | null = createRoot(container);
   await act(async () => {
     root?.render(
@@ -80,7 +74,8 @@ describe('PublicBranding', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     activeSession = null;
     logoutMock.mockClear();
     window.sessionStorage.clear();
@@ -209,4 +204,27 @@ describe('PublicBranding', () => {
       await cleanup();
     }
   });
+});
+
+it('does not duplicate profile recruitment with a generic mobile banner', async () => {
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Android' });
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/artista/demo');
+  try {
+    await waitFor(() => expect(container.querySelector('main aside[aria-label="TDF Mobile"]')).toBeTruthy());
+    expect(container.querySelectorAll('main aside[aria-label="TDF Mobile"]').length).toBe(1);
+    expect(Array.from(container.querySelectorAll('button')).some(button => button.textContent === 'Ahora no')).toBe(false);
+  } finally { await view.cleanup(); }
+});
+it('places the signup invitation before public destination content inside main', async () => {
+  activeSession = { username: 'tester', displayName: 'Tester', roles: ['fan'], partyId: 1 };
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, { pathname: '/fans', state: { mobileInvitation: true } });
+  try {
+    await waitFor(() => expect(container.querySelector('main aside[aria-label="TDF Mobile"]')).toBeTruthy());
+    const invitation = container.querySelector('main aside[aria-label="TDF Mobile"]')!;
+    const content = Array.from(container.querySelectorAll('main div')).find(node => node.textContent === 'Contenido publico')!;
+    expect(invitation.compareDocumentPosition(content) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelectorAll('main aside[aria-label="TDF Mobile"]').length).toBe(1);
+  } finally { await view.cleanup(); activeSession = null; }
 });

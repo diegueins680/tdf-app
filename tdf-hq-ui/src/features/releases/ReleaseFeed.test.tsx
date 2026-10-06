@@ -2,7 +2,8 @@ import { jest } from '@jest/globals';
 import { createRef } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { ReleaseFeed } from './ReleaseFeed';
+jest.unstable_mockModule('../interactions/InteractionPanel', () => ({ InteractionPanel: ({ kind, entityKey }: { kind: string; entityKey: string }) => <div data-testid="release-discussion" data-kind={kind} data-entity={entityKey} /> }));
+const { ReleaseFeed } = await import('./ReleaseFeed');
 import type { ReleaseFeedItem } from './ReleasePlayerActions';
 
 const release: ReleaseFeedItem = {
@@ -122,4 +123,10 @@ describe('ReleaseFeed', () => {
     fireEvent.click(saveButton);
     expect(onSaveReleaseLink).not.toHaveBeenCalled();
   });
+});
+
+ it('attaches each release to its canonical discussion identity', () => {
+  renderReleaseFeed();
+  expect(screen.getByTestId('release-discussion').getAttribute('data-kind')).toBe('artist_release');
+  expect(screen.getByTestId('release-discussion').getAttribute('data-entity')).toBe('42');
 });

@@ -1,0 +1,12 @@
+[Unit]
+Description=TDF PostgreSQL logical backup
+Requires=docker.service
+After=docker.service
+ConditionPathExists=/opt/tdf/production/compose.yaml
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/opt/tdf/production/backup-postgres.sh
+TimeoutStartSec=15min

@@ -1,0 +1,16 @@
+{
+  "observedAt": "2026-09-18T07:29:13.361139+00:00",
+  "source": "6d49c0f055b24743a13991a5fbb94e3774c07c9a",
+  "production": "https://tdf-app.pages.dev",
+  "immutableDeployment": "https://345dbb80.tdf-app.pages.dev",
+  "publicAssetsMatch": true,
+  "assets": [
+    "/assets/index-CQ48aJZ2.css",
+    "/assets/index-CvSmhI41.js",
+    "/assets/mui-BkTjoAS1.js",
+    "/assets/react-vendor-s3czTHiP.js",
+    "/assets/router-CZIUCrU9.js",
+    "/assets/tanstack-ByjpnR1t.js",
+    "/assets/vendor-Bc2UTHvs.js"
+  ]
+}

@@ -149,6 +149,26 @@ describe('RefundManagementPanel', () => {
     rejectRefundMock.mockResolvedValue(buildRefund({ refundStatus: 'rejected' }));
   });
 
+  it('offers a status query for processing refunds without another approval or rejection', async () => {
+    listRefundsMock.mockResolvedValue([buildRefund({ refundStatus: 'processing' })]);
+    approveRefundMock.mockResolvedValue(buildRefund({ refundStatus: 'processing' }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPanel(container);
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Processing with provider');
+        expect(getButtonByText(container, 'Check payment status')).toBeTruthy();
+      });
+      expect(Array.from(container.querySelectorAll('button')).map(buttonText)).not.toContain('Approve');
+      expect(Array.from(container.querySelectorAll('button')).map(buttonText)).not.toContain('Reject');
+      await clickButton(getButtonByText(container, 'Check payment status'));
+      await waitForExpectation(() => expect(approveRefundMock).toHaveBeenCalledWith('event-7', buildRefund().refundId));
+      expect(rejectRefundMock).not.toHaveBeenCalled();
+      expect(document.body.textContent).not.toContain('Approve refund for');
+    } finally { await cleanup(); }
+  });
+
   it('rejects the selected refund with trimmed identifiers and reason text', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -5974,16 +5974,22 @@ spec = do
             inventoryUser
               { auRoles = [M.Fan]
               , auModules = modulesForRoles [M.Fan]
+              , auApiTokenId = Nothing
+              , auSessionWitness = Nothing
               }
           independentlyGrantedUser =
             inventoryUser
               { auRoles = [M.Fan, M.Customer]
               , auModules = modulesForRoles [M.Admin]
+              , auApiTokenId = Nothing
+              , auSessionWitness = Nothing
               }
           duplicatedRoleUser =
             inventoryUser
               { auRoles = [M.Reception, M.Reception]
               , auModules = modulesForRoles [M.Reception]
+              , auApiTokenId = Nothing
+              , auSessionWitness = Nothing
               }
           assertRejected expected user = do
             result <- runExceptT (ensureModule ModuleScheduling user)
@@ -6585,6 +6591,8 @@ inventoryUser =
     { auPartyId = toSqlKey 1
     , auRoles = [M.Admin]
     , auModules = modulesForRoles [M.Admin]
+    , auApiTokenId = Nothing
+    , auSessionWitness = Nothing
     }
 
 listAssetsHandlerFor

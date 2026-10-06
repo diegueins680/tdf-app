@@ -5,12 +5,13 @@
 module TDF.Commerce.ProviderEventWorker
   ( ProviderEventWorkerStats(..)
   , providerEventWorkerTick
+  , providerEventWorkerIterationWith
   , startProviderEventWorker
   , validateStoredPaypalEvent
   ) where
 
 import           Control.Concurrent (forkIO, threadDelay)
-import           Control.Exception.Safe (displayException, tryAny)
+import           Control.Exception.Safe (tryAny)
 import           Control.Monad (foldM, forever, void)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text (Text)
@@ -23,6 +24,7 @@ import           System.IO (hPutStrLn, stderr)
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
+import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import           TDF.DB (Env(..))
 import           TDF.Server.ServiceStorefront
   ( PaypalEventProcessResult(..)
@@ -47,23 +49,31 @@ startProviderEventWorker :: Env -> IO ()
 startProviderEventWorker env = do
   rawKey <- lookupEnv "COMMERCE_EVENT_ENCRYPTION_KEY"
   case validateEncryptionKey (T.pack <$> rawKey) of
-    Left message ->
-      hPutStrLn stderr
-        ("{\"component\":\"provider-event-worker\",\"level\":\"warning\",\"message\":\""
-          <> redactLogValue (T.unpack message) <> "\"}")
+    Left _ -> void $ tryAny $ hPutStrLn stderr
+      ("{\"component\":\"provider-event-worker\",\"level\":\"warning\","
+        <> "\"message\":\"worker disabled: COMMERCE_EVENT_ENCRYPTION_KEY is missing or invalid\"}")
     Right encryptionKey -> void (forkIO (workerLoop env encryptionKey))
 
 workerLoop :: Env -> Text -> IO ()
 workerLoop env encryptionKey = forever $ do
-  result <- tryAny (providerEventWorkerTick env encryptionKey)
+  providerEventWorkerIterationWith (providerEventWorkerTick env encryptionKey)
+    (hPutStrLn stderr) putStrLn
+  threadDelay (5 * 1000000)
+
+-- The loop and tests share this single-iteration exception/logging boundary.
+providerEventWorkerIterationWith
+  :: IO ProviderEventWorkerStats -> (String -> IO ()) -> (String -> IO ()) -> IO ()
+providerEventWorkerIterationWith tick logError logInfo = do
+  result <- tryAny tick
   case result of
-    Left err ->
-      hPutStrLn stderr
-        ("{\"component\":\"provider-event-worker\",\"level\":\"error\",\"message\":\"tick failed\",\"error\":\""
-          <> redactLogValue (displayException err) <> "\"}")
+    -- Exception text can contain credentials, SQL parameters or provider payloads.
+    -- Diagnostics must neither render it nor repeat a tick when its sink fails.
+    Left _ -> void $ tryAny $ logError
+      ("{\"component\":\"provider-event-worker\",\"level\":\"error\","
+        <> "\"message\":\"tick failed\"}")
     Right stats
       | stats /= emptyStats ->
-          putStrLn
+          void $ tryAny $ logInfo
             ("{\"component\":\"provider-event-worker\",\"level\":\"info\",\"claimed\":"
               <> show (pewClaimed stats)
               <> ",\"processed\":" <> show (pewProcessed stats)
@@ -71,7 +81,6 @@ workerLoop env encryptionKey = forever $ do
               <> ",\"retried\":" <> show (pewRetried stats)
               <> ",\"deadLettered\":" <> show (pewDeadLettered stats) <> "}")
       | otherwise -> pure ()
-  threadDelay (5 * 1000000)
 
 providerEventWorkerTick :: Env -> Text -> IO ProviderEventWorkerStats
 providerEventWorkerTick env@Env{envPool} encryptionKey = do
@@ -109,22 +118,73 @@ processReference env@Env{envPool} encryptionKey stats eventRef = do
               eventRef Nothing Nothing Nothing summary now) envPool
           pure claimedStats
             { pewDeadLettered = pewDeadLettered claimedStats + 1 }
-        Right (Right payload) ->
-          case validateStoredPaypalEvent payload of
-            Left summary -> do
-              runSqlPool
-                (ProviderEvent.markProviderEventDeadLetter
-                  eventRef Nothing Nothing Nothing summary now) envPool
-              pure claimedStats
-                { pewDeadLettered = pewDeadLettered claimedStats + 1 }
-            Right (environment, envelope) -> do
-              processed <- tryAny $ processPaypalWebhookEventIO
-                env environment (ProviderEvent.pepMerchantRef payload) envelope now
-              case processed of
-                Left _ -> markRetry envPool eventRef attemptCount
-                  "Provider event processing failed" now claimedStats
-                Right outcome ->
-                  applyOutcome envPool eventRef attemptCount now claimedStats outcome
+        Right (Right payload) -> case ProviderEvent.pepProvider payload of
+          "paypal" -> processPaypalPayload env envPool eventRef attemptCount
+            now claimedStats payload
+          "placetopay" -> processHostedPayload env envPool eventRef attemptCount
+            now claimedStats payload
+          "payphone" -> processHostedPayload env envPool eventRef attemptCount
+            now claimedStats payload
+          _ -> do
+            runSqlPool
+              (ProviderEvent.markProviderEventDeadLetter eventRef Nothing Nothing Nothing
+                "Unsupported provider event" now) envPool
+            pure claimedStats
+              { pewDeadLettered = pewDeadLettered claimedStats + 1 }
+
+processPaypalPayload
+  :: Env
+  -> ConnectionPool
+  -> ProviderEvent.ProviderEventReference
+  -> Int
+  -> UTCTime
+  -> ProviderEventWorkerStats
+  -> ProviderEvent.ProviderEventPayload
+  -> IO ProviderEventWorkerStats
+processPaypalPayload env envPool eventRef attemptCount now stats payload =
+  case validateStoredPaypalEvent payload of
+    Left summary -> do
+      runSqlPool
+        (ProviderEvent.markProviderEventDeadLetter
+          eventRef Nothing Nothing Nothing summary now) envPool
+      pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
+    Right (environment, envelope) -> do
+      processed <- tryAny $ processPaypalWebhookEventIO
+        env environment (ProviderEvent.pepMerchantRef payload) envelope now
+      case processed of
+        Left _ -> markRetry envPool eventRef attemptCount
+          "Provider event processing failed" now stats
+        Right outcome ->
+          applyOutcome envPool eventRef attemptCount now stats outcome
+
+processHostedPayload
+  :: Env
+  -> ConnectionPool
+  -> ProviderEvent.ProviderEventReference
+  -> Int
+  -> UTCTime
+  -> ProviderEventWorkerStats
+  -> ProviderEvent.ProviderEventPayload
+  -> IO ProviderEventWorkerStats
+processHostedPayload env envPool eventRef attemptCount now stats payload = do
+  processed <- tryAny (Reconciliation.processProviderEventIO env payload now)
+  case processed of
+    Left _ -> markRetry envPool eventRef attemptCount
+      "Hosted provider reconciliation failed" now stats
+    Right Reconciliation.ProviderReconciliationResult{..} ->
+      case prrDisposition of
+        Reconciliation.ReconciliationProcessed -> do
+          runSqlPool
+            (ProviderEvent.markProviderEventProcessed eventRef
+              prrCheckoutId prrAttemptId Nothing now) envPool
+          pure stats { pewProcessed = pewProcessed stats + 1 }
+        Reconciliation.ReconciliationRetry ->
+          markRetry envPool eventRef attemptCount prrSummary now stats
+        Reconciliation.ReconciliationDeadLetter -> do
+          runSqlPool
+            (ProviderEvent.markProviderEventDeadLetter eventRef
+              prrCheckoutId prrAttemptId Nothing prrSummary now) envPool
+          pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
 
 applyOutcome
   :: ConnectionPool
@@ -176,6 +236,9 @@ validateStoredPaypalEvent ProviderEvent.ProviderEventPayload{..} = do
   if pepProvider == "paypal"
     then pure ()
     else Left "Unsupported provider event was routed to the PayPal worker"
+  if pepEvidenceType == "signature_verified" && pepSignatureVerified
+    then pure ()
+    else Left "Stored PayPal event lacks verified signature evidence"
   environment <- case pepEnvironment of
     "sandbox" -> Right Checkout.CheckoutSandbox
     "production" -> Right Checkout.CheckoutProduction
@@ -203,10 +266,3 @@ validateEncryptionKey mRawKey = do
       && T.all (\character -> character >= '!' && character <= '~') key
     then Right key
     else Left "worker disabled: COMMERCE_EVENT_ENCRYPTION_KEY is invalid"
-
-redactLogValue :: String -> String
-redactLogValue = take 500 . map replaceUnsafe
-  where
-    replaceUnsafe character
-      | character `elem` ['\n', '\r', '\t', '"'] = ' '
-      | otherwise = character

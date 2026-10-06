@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Box,
@@ -46,11 +47,48 @@ import {
   type ManagedClassified,
   type ManagedDirectoryProfile,
 } from '../api/directory';
+import { useSession } from '../session/SessionContext';
 import { firstNonEmptyString } from '../utils/stringValues';
 
 const slugify = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 120);
 
 export default function DirectoryManagePage() {
+  const [params] = useSearchParams();
+  const kind = ['application', 'invitation', 'review', 'alert'].find((value) => params.has(value));
+  return kind ? <DirectoryNotificationContext kind={kind} id={params.get(kind) ?? ''} /> : <DirectoryManagement />;
+}
+
+function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }) {
+  const { session } = useSession();
+  const valid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const query = useQuery({ queryKey: ['directory', kind === 'invitation' ? 'invitations' : 'applications', 'notification-context', session?.partyId, kind, id],
+    queryFn: () => Directory.notificationContext(kind, id), enabled: valid, retry: false });
+  const data = query.isError ? undefined : query.data;
+  const value = (key: string) => typeof data?.[key] === 'string' ? data[key] : '';
+  const profileName = (key: string) => {
+    const profile = data?.[key];
+    return profile && typeof profile === 'object' && 'name' in profile && typeof profile.name === 'string' ? profile.name : '';
+  };
+  const resultType = value('resultType');
+  const resultId = value('resultId');
+  const slug = value('slug');
+  const path = resultType === 'profile' && slug ? `/directorio/${encodeURIComponent(slug)}`
+    : resultType === 'classified' && slug ? `/clasificados/${encodeURIComponent(slug)}`
+    : /^(event|venue)$/.test(resultType) && /^\d+$/.test(resultId)
+      ? `/${resultType === 'event' ? 'eventos' : 'venues'}/${resultId}` : null;
+  return <Container sx={{ py: 4 }}><Stack spacing={2}>
+    <Typography variant="h4" component="h1">{kind === 'application' ? 'Postulación' : kind === 'invitation' ? 'Invitación' : kind === 'review' ? 'Reseña' : 'Resultado de tu alerta'}</Typography>
+    {query.isPending && valid && <CircularProgress />}
+    {(!valid || query.isError) && <Alert severity="info">Este recurso ya no está disponible para tu cuenta o tu acceso ha cambiado.</Alert>}
+    {data && kind === 'application' && <><Typography>{value('title')}</Typography><ApplicationRow application={data} authorProfileId={value('authorProfileId')} /></>}
+    {data && kind === 'invitation' && <InvitationCard invitation={data as unknown as DirectoryInvitation} />}
+    {data && kind === 'review' && <><Typography>{profileName('authorProfile')} → {profileName('subjectProfile')}</Typography><Typography>{typeof data['rating'] === 'number' ? data['rating'] : ''} / 5</Typography><Typography>{value('body')}</Typography><Chip label={value('status')} /></>}
+    {data && kind === 'alert' && <><Typography>{value('searchName')}</Typography><Typography>{value('title')}</Typography>{path && <Button component={RouterLink} to={path}>Ver resultado</Button>}</>}
+    <Button component={RouterLink} to="/mis-clasificados">Volver a mis perfiles y clasificados</Button>
+  </Stack></Container>;
+}
+
+function DirectoryManagement() {
   const client = useQueryClient();
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : 0);
@@ -73,7 +111,7 @@ export default function DirectoryManagePage() {
   });
 
   return (
-    <Container component="main" id="main-content" maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack spacing={3}>
         <Box>
           <Typography component="h1" variant="h3" fontWeight={900}>Mis perfiles y clasificados</Typography>
@@ -103,8 +141,9 @@ export default function DirectoryManagePage() {
 }
 
 function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { profiles: ManagedDirectoryProfile[]; loading: boolean; onCreate: () => void; onEdit: (profile: ManagedDirectoryProfile) => void; onRefresh: () => Promise<unknown> }) {
+  const { t } = useTranslation();
   const status = useMutation({ mutationFn: ({ id, value }: { id: string; value: string }) => Directory.setProfileStatus(id, value), onSuccess: onRefresh });
-  if (loading) return <CircularProgress />;
+  if (loading) return <CircularProgress aria-label={t('auditAccessibility.loadingProfiles')} />;
   return <Stack spacing={2}>
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Crear perfil</Button>
     {profiles.length === 0 && <Alert severity="info">Crea tu primer perfil profesional. Una misma cuenta puede administrar varios perfiles autorizados.</Alert>}
@@ -115,14 +154,15 @@ function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { prof
 }
 
 function ClassifiedPanel({ classifieds, loading, onCreate, onRefresh }: { classifieds: ManagedClassified[]; loading: boolean; onCreate: () => void; onRefresh: () => Promise<unknown> }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string | null>(null);
   const applications = useQuery({ queryKey: ['directory', 'applications', selected], queryFn: () => Directory.applications(selected!), enabled: Boolean(selected) });
   const status = useMutation({ mutationFn: ({ id, value }: { id: string; value: string }) => Directory.setClassifiedStatus(id, value), onSuccess: onRefresh });
-  if (loading) return <CircularProgress />;
+  if (loading) return <CircularProgress aria-label={t('auditAccessibility.loadingClassifieds')} />;
   return <Stack spacing={2}>
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Publicar oportunidad</Button>
     {classifieds.length === 0 && <Alert severity="info">Todavía no tienes clasificados. Los anuncios básicos son gratuitos.</Alert>}
-    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">Vence: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} authorProfileId={item.authorProfileId} />)}</Stack>}</Paper>)}
+    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">Vence: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} aria-label={t('auditAccessibility.loadingApplications')} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} authorProfileId={item.authorProfileId} />)}</Stack>}</Paper>)}
   </Stack>;
 }
 
@@ -149,8 +189,9 @@ function ApplicationRow({ application, authorProfileId }: { application: Record<
 }
 
 function InvitationPanel() {
+  const { t } = useTranslation();
   const invitations = useQuery({ queryKey: ['directory', 'invitations'], queryFn: Directory.invitations });
-  if (invitations.isLoading) return <CircularProgress />;
+  if (invitations.isLoading) return <CircularProgress aria-label={t('auditAccessibility.loadingInvitations')} />;
   if (invitations.isError) return <Alert severity="error">No se pudieron cargar tus invitaciones.</Alert>;
   if (!invitations.data?.length) return <Alert severity="info">Todavía no tienes invitaciones enviadas o recibidas.</Alert>;
   return <Stack spacing={2}>{invitations.data.map((invitation) => <InvitationCard key={invitation.id} invitation={invitation} />)}</Stack>;

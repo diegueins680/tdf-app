@@ -1,0 +1,51 @@
+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 78 and seed -8842301295057519977 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 30020] (Mac OS X 14.7.7 x86_64, Homebrew 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /Users/diegosaa/tdf-branch-audit-20260915/social/formal/social/RequestReplay.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/FiniteSets.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/TLC.tla
+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module RequestReplay
+Starting... (2026-09-15 09:27:50)
+Implied-temporal checking--satisfiability problem has 2 branches.
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Finished computing initial states: 16 distinct states generated at 2026-09-15 09:27:51.
+Error: Invariant ReplayEquality is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ effects = (request1 :> 0 @@ request2 :> 0)
+/\ reply = [present |-> FALSE, matched |-> FALSE, accepted |-> FALSE]
+/\ bound = ( request1 :> [recipient |-> a, payload |-> message1] @@
+  request2 :> [recipient |-> a, payload |-> message1] )
+/\ terminal = {}
+/\ admitted = {}
+
+State 2: <Submit line 12, col 3 to line 20, col 36 of module RequestReplay>
+/\ effects = (request1 :> 0 @@ request2 :> 0)
+/\ reply = [present |-> TRUE, matched |-> TRUE, accepted |-> TRUE]
+/\ bound = ( request1 :> [recipient |-> a, payload |-> message1] @@
+  request2 :> [recipient |-> a, payload |-> message1] )
+/\ terminal = {}
+/\ admitted = {request1}
+
+State 3: <Submit line 12, col 3 to line 20, col 36 of module RequestReplay>
+/\ effects = (request1 :> 0 @@ request2 :> 0)
+/\ reply = [present |-> TRUE, matched |-> FALSE, accepted |-> TRUE]
+/\ bound = ( request1 :> [recipient |-> a, payload |-> message1] @@
+  request2 :> [recipient |-> a, payload |-> message1] )
+/\ terminal = {}
+/\ admitted = {request1}
+
+147 states generated, 50 distinct states found, 32 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 8 and the 95th percentile is 8).
+Finished in 01s at (2026-09-15 09:27:51)

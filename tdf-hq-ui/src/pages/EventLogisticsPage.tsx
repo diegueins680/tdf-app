@@ -24,7 +24,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import PrintIcon from '@mui/icons-material/Print';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RouteIcon from '@mui/icons-material/Route';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { UserSelector } from '../components/party-selector/PartySelector';
@@ -307,6 +307,8 @@ function PlaceMapPicker({ draft, onChange }: { draft: PlaceDraft; onChange: (nex
 export default function EventLogisticsPage() {
   const { timezone: preferredTimezone, locale } = useLocalePreferences();
   const { eventId = '' } = useParams();
+  const [notificationParams] = useSearchParams();
+  const notificationActivity = notificationParams.get('activity');
   const qc = useQueryClient();
   const eventQuery = useQuery({ queryKey: ['social-event', eventId], queryFn: () => SocialEventsAPI.getEvent(eventId), enabled: Boolean(eventId) });
   const planQuery = useQuery({ queryKey: ['event-logistics', eventId], queryFn: () => SocialEventsAPI.getLogisticsPlan(eventId), enabled: Boolean(eventId) });
@@ -625,12 +627,15 @@ export default function EventLogisticsPage() {
 
         <Stack spacing={1.25}>
           <Typography variant="h5">Cronograma</Typography>
+          {notificationActivity && plan && <Alert severity="info">{plan.elgActivities.some((activity) => String(activity.eacId) === notificationActivity)
+            ? 'La actividad de esta notificación está resaltada en el cronograma.'
+            : 'La actividad de esta notificación ya no está disponible. Consulta el cronograma actual.'}</Alert>}
           {visibleActivities.length ? visibleActivities.map((activity) => {
             const verification = activity.eacLatestVerification;
             const origin = activity.eacOriginPlaceId ? placesById.get(activity.eacOriginPlaceId) : undefined;
             const destination = activity.eacDestinationPlaceId ? placesById.get(activity.eacDestinationPlaceId) : undefined;
             const routeUrl = origin && destination ? `https://www.google.com/maps/dir/?api=1&origin=${origin.elpLatitude},${origin.elpLongitude}&destination=${destination.elpLatitude},${destination.elpLongitude}` : '';
-            return <Card key={activity.eacId} variant="outlined" sx={{ borderLeft: 5, borderLeftColor: activity.eacPriority === 'critical' ? 'error.main' : activity.eacPriority === 'high' ? 'warning.main' : 'primary.main' }}><CardContent><Stack spacing={1}>
+            return <Card key={activity.eacId} variant="outlined" sx={{ outline: String(activity.eacId) === notificationActivity ? '3px solid' : undefined, outlineColor: 'primary.main', borderLeft: 5, borderLeftColor: activity.eacPriority === 'critical' ? 'error.main' : activity.eacPriority === 'high' ? 'warning.main' : 'primary.main' }}><CardContent><Stack spacing={1}>
               <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
                 <Box><Typography variant="caption" color="text.secondary">{new Date(activity.eacStart).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}{activity.eacEnd ? ` – ${new Date(activity.eacEnd).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap><Chip size="small" label={activity.eacType} /><Chip size="small" label={activity.eacStatus} /><Chip size="small" label={activity.eacPriority} /></Stack>

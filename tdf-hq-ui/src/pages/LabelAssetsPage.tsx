@@ -1,3 +1,4 @@
+import { resolveApiBase } from '../config/apiBase';
 import { useMemo, useRef, useState, type MouseEvent } from 'react';
 import {
   Alert,
@@ -66,9 +67,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
   return payload.items ?? [];
 }
 
-const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
-  ? import.meta.env.VITE_API_BASE
-  : 'https://api.tdfrecords.net');
+const API_BASE = resolveApiBase();
 const ASSET_CATEGORY_KEY = 'asset-category';
 
 const normalizeGoogleDriveUrl = (url: string): string | null => {
@@ -529,7 +528,7 @@ export default function LabelAssetsPage() {
     ...(statusFilterLabel ? [`Estado: ${statusFilterLabel}`] : []),
   ];
   const filtersActiveCount = activeFilterLabels.length;
-  const showFilteredEmptyState = !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
+  const showFilteredEmptyState = !assetsQuery.isError && !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
   const filterSummaryLabels = showFilteredEmptyState ? [] : activeFilterLabels;
   const filteredEmptyStateMessage =
     activeFilterLabels.length > 0
@@ -555,7 +554,7 @@ export default function LabelAssetsPage() {
       ? 'Todos los assets visibles están sin sala asignada.'
       : `Mostrando una sola ubicación: ${onlyLocation}.`;
   }, [filteredAssets, roomMap]);
-  const showFilterSummary = !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
+  const showFilterSummary = !assetsQuery.isError && !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
@@ -840,7 +839,7 @@ export default function LabelAssetsPage() {
                   {visibleStatusOptions.map((opt) => {
                     const count = opt.value === 'all' ? assetsMatchingSearchAndCategory.length : (visibleStatusCounts[opt.value] ?? 0);
                     const isActive = statusFilter === opt.value;
-                    const showCount = opt.value === 'all' || count > 0;
+                    const showCount = !assetsQuery.isError && !assetsQuery.isLoading && (opt.value === 'all' || count > 0);
                     return (
                       <Chip
                         key={opt.value}
