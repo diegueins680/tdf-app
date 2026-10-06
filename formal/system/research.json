@@ -615,6 +615,280 @@
       "decision": "adopted",
       "rationale": "Compare exact trusted system identifier and shut-down state; this complements copied bytes and does not establish source writer fencing.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-DURABILITY-001",
+      "source": "https://man7.org/linux/man-pages/man2/fsync.2.html",
+      "title": "Linux file and directory synchronization",
+      "recommendation": "Synchronize file data and the containing directory separately; treat synchronization errors as failures. Calls can block until storage reports completion.",
+      "applicability": "Durable ciphertext retention, retrieval and release-journal files",
+      "decision": "adopted within trusted filesystem assumptions",
+      "rationale": "File fsync alone does not establish directory-entry persistence. Reopen/hash validates readable retained bytes; an outer supervisor must bound potentially stalled filesystem calls. No claim of power-loss testing or dishonest-storage tolerance.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-LEGACY-UPLOADS-001",
+      "source": "https://man7.org/linux/man-pages/man7/namespaces.7.html",
+      "supportingSource": "https://docs.docker.com/reference/cli/docker/container/export/",
+      "title": "Retained Linux mount namespace for legacy writable-layer recovery",
+      "recommendation": "An open namespace descriptor retains the namespace after its processes exit; Docker export excludes mounted volumes and is not an independent complete filesystem inventory.",
+      "applicability": "Capturing legacy /app/uploads after the admitted application stops and before replacement",
+      "decision": "adopted for Linux rootful Docker; coordinated production fencing remains pending",
+      "rationale": "Pin process, actual root and mount namespace while live, reject mounts covering uploads and require the same stopped instance before/after descriptor-based metadata capture. Avoid assuming GraphDriver paths or archive metadata completeness. Root host, kernel and Docker remain trusted; unsupported namespace/process layouts fail closed.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-COLD-RECOVERY-004",
+      "source": "https://www.postgresql.org/docs/17/app-initdb.html",
+      "title": "Explicit encoding for synthetic PostgreSQL17 recovery fixtures",
+      "recommendation": "With libc and no-locale, initdb defaults to SQL_ASCII; set encoding explicitly for Unicode migration/application fixtures.",
+      "applicability": "Synthetic cold-copy plus application CI gate; production cold copies retain their original encoding.",
+      "decision": "adopted",
+      "rationale": "ActualPG17 SQL_ASCII fixture failed a Unicode migration while a freshUTF8 fixture applied181migrations and passedreplay. Initialize only the synthetic source asUTF8 and verifyencoding againaftercoldrestore. Never runinitdb torepair a realrecoverycopy.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-OFFLINE-CAPACITY-001",
+      "source": "https://www.kernel.org/doc/html/latest/filesystems/proc.html",
+      "supportingSource": "https://docs.docker.com/engine/containers/resource_constraints/",
+      "title": "Estimated available memory and bounded container memory",
+      "recommendation": "MemAvailable estimates memory for new applications without swapping. A positive equal Docker memory and memory-swap limit disables container swap. Neither observation reserves host memory.",
+      "applicability": "Separate admission for coordinated offline PG17/application recovery",
+      "decision": "adopted with explicit TDF sizing policy",
+      "rationale": "Derive the two container caps from implementation and add512MiB local headroom policy. Preserve the online2GiB gate. Sample stopped sources twice, count all retained archive/replay forms and filesystem allocation/inodes, and disclose remaining host activity assumptions. The margin is not a vendor sizing guarantee.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-HOST-SCHEDULERS-001",
+      "source": "https://github.com/systemd/systemd/blob/main/man/systemctl.xml",
+      "title": "System and user service-manager scope",
+      "recommendation": "System and user managers are separate scopes; system-manager enumeration does not inventory user timers.",
+      "applicability": "Production root user manager and system scheduler admission",
+      "decision": "adopted",
+      "rationale": "Independent review found the initial system-only query omitted the running root user manager. Explicitly inspect its fixed local bus and reject unknown managers, timers or changed unit definitions; repeat configuration observations. Matching samples still do not establish arbitrary process or continuous writer exclusion.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-HOST-PROCESSES-001",
+      "source": "https://www.kernel.org/doc/html/latest/filesystems/proc.html",
+      "title": "Proc descriptors and task identity",
+      "recommendation": "An open proc task descriptor does not prevent PID reuse, but its operations do not resolve a new task that later has the same numeric PID.",
+      "applicability": "Sampled host process identity before coordinated capture",
+      "decision": "adopted with bounded observation scope",
+      "rationale": "Use an open task directory plus start-time/parent/cgroup and executable identity checks; reject missing executable of a still-present task. Repeat samples and explicitly exclude process-memory attestation and continuous writer guarantees.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ABORT-QUIESCENCE-001",
+      "source": "https://raw.githubusercontent.com/moby/moby/docker-v29.1.3/daemon/stop.go",
+      "supportingSource": "https://raw.githubusercontent.com/moby/moby/docker-v29.1.3/daemon/kill.go",
+      "title": "Pinned Docker stop and detached cleanup",
+      "recommendation": "Client cancellation does not cancel stop; a detached kill fallback means a stop event alone is not a transitive task-completion barrier.",
+      "applicability": "Interrupted shutdown before restarting original container IDs",
+      "decision": "reject event-only quiescence; adopt full-host reboot abort barrier",
+      "rationale": "Independent source review identifies a possible delayed cleanup schedule, not an experimentally reproduced Docker bug. A fresh host boot removes prior in-memory tasks; runtime/storage admission remains mandatory.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ABORT-QUIESCENCE-002",
+      "source": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+      "supportingSource": "https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#random",
+      "title": "Restart policies and boot identity",
+      "recommendation": "Stopped unless-stopped containers and still-eligible originals differ across restart; boot identity is kernel evidence, not host authentication.",
+      "applicability": "Abort recovery permits original deployment availability and preserves its current storage",
+      "decision": "adopted with explicit trusted-host and availability assumptions",
+      "rationale": "Record possible writes before reboot, require changed boot on independently authenticated same host, inspect actual service state and preserve current database. Do not claim uninterrupted maintenance or clean shutdown from reboot.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ABORT-CLUSTER-001",
+      "source": "https://raw.githubusercontent.com/docker-library/postgres/master/17/bookworm/docker-entrypoint.sh",
+      "title": "PostgreSQL image existing-cluster detection",
+      "recommendation": "The entrypoint uses nonempty PG_VERSION to detect an existing cluster; missing data can enter initialization.",
+      "applicability": "Original database start during interrupted-release recovery",
+      "decision": "adopt pre-start existing-cluster guard",
+      "rationale": "Require exact PG17 marker and existing no-follow control/directory structure before start. Verify actual system ID and unchanged ledger afterward. Do not claim checksum or binary-format verification; actual pinned PG17 component fixture separately exercises exit137 recovery.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-SHUTDOWN-001",
+      "source": "https://man7.org/linux/man-pages/man7/pid_namespaces.7.html",
+      "title": "Linux PID namespace init signal semantics; pinned Warp3.4.9 source",
+      "recommendation": "Install explicit process handlers for container PID1; distinguish a completed graceful drain from timeout.",
+      "applicability": "Observed exit137 from Docker stop of the synthetic actual API; Warp3.4.9 Run.hs discards its internal timeout result.",
+      "decision": "adopted",
+      "rationale": "Early TERM/INT supervisor owns cancellation and30-second deadline. Exact installed Warp package source was inspected via Stack unpack; HTTP, signal, negative-control and image gates remain distinct evidence boundaries."
+    },
+    {
+      "id": "RES-EDGE-TLS-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9525.html",
+      "title": "RFC9525 service identity in TLS",
+      "recommendation": "Verify the expected service identity against the certificate as well as the certificate chain.",
+      "applicability": "Original edge probe reaches a fixed namespace-local loopback address but must authenticate api.tdfrecords.net.",
+      "decision": "adopted",
+      "rationale": "Keep the reference service hostname for SNI, certificate verification and HTTP Host while pinning transport separately; use default CA validation and reject TLS failures without downgrade. No public-network reachability claim follows."
+    },
+    {
+      "id": "RES-DISPOSABLE-RESTART-001",
+      "source": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+      "title": "Docker container restart policy",
+      "recommendation": "Use the no policy when container restart must require explicit action.",
+      "applicability": "Owned logical restores, physical clones and isolated application canaries",
+      "decision": "adopted",
+      "rationale": "Create with explicit --restart=no, admit the full no/zero-retry policy and AutoRemove=false. Preserve uncertain resource identity for deliberate cleanup; a reboot must not silently resurrect a disposable. This does not establish post-crash cleanup authority."
+    },
+    {
+      "id": "RES-RIDER-LINUX-001",
+      "source": "https://man7.org/linux/man-pages/man2/rename.2.html",
+      "title": "Linux renameat2 exclusive publication",
+      "recommendation": "RENAME_NOREPLACE rejects an existing destination and requires filesystem support; ordinary rename can replace it.",
+      "applicability": "Complete local rider file publication on Linux",
+      "decision": "adopted",
+      "rationale": "Publish synchronized staging using exclusive rename. Unsupported operation fails closed; avoid both overwriting and a temporary multi-link state rejected by recovery."
+    },
+    {
+      "id": "RES-RIDER-DARWIN-001",
+      "source": "https://developer.apple.com/documentation/foundation/urlresourcevalues/volumesupportsexclusiverenaming",
+      "title": "Apple exclusive filesystem rename support",
+      "recommendation": "Exclusive renaming uses renamex_np with RENAME_EXCL where the volume supports it.",
+      "applicability": "Native macOS backend development and filesystem conformance tests",
+      "decision": "adopted",
+      "rationale": "Use the platform exclusive primitive and actual filesystem tests; do not emulate with an overwriting rename or infer Linux qualification from Mac results."
+    },
+    {
+      "id": "RES-OUTBOUND-001",
+      "recommendation": "Preserve unknown send outcomes; serialize durable claims before external dispatch. A database lock does not make SMTP or Graph effects transactional.",
+      "applicability": "TDF social auto replies and course reminder post-send persistence leave a crash/replay gap.",
+      "decision": "adopted for containment; durable claims pending",
+      "rationale": "SMTP can accept before acknowledgement is lost; transaction locks serialize participating database writers only.",
+      "source": "https://www.rfc-editor.org/rfc/rfc5321.html#section-4.5.3.2.6",
+      "title": "RFC5321 section 4.5.3.2.6: DATA termination timeout"
+    },
+    {
+      "id": "RES-SOCIAL-TRANSPORT-001",
+      "source": "https://github.com/snoyberg/http-client/blob/http-client-0.7.19/http-client/Network/HTTP/Client/Core.hs",
+      "title": "Pinned http-client0.7.19 reused-connection retry behavior",
+      "recommendation": "The low-level retry path can repeat a request on a reused connection without checking method; configure no automatic retries for non-idempotent sends.",
+      "applicability": "Instagram/Facebook/WhatsApp share pooled HTTP managers and lack provider idempotency keys.",
+      "decision": "adopted",
+      "rationale": "Use dedicated messaging settings with managerRetryableException constFalse and a warmed-connection negative control; preserve other client settings."
+    },
+    {
+      "id": "RES-OPS-NETFILTER-001",
+      "source": "https://wiki.nftables.org/wiki-nftables/index.php/Matching_connection_tracking_stateful_metainformation",
+      "title": "nftables connection tracking direction",
+      "recommendation": "Connection state and original/reply direction are separate properties.",
+      "applicability": "Already-open provider connections during legacy recovery",
+      "decision": "adopted",
+      "rationale": "Allow incoming reply direction, never blanket established traffic; use unconditional denial for remaining Docker-origin packets."
+    },
+    {
+      "id": "RES-OPS-FLOWTABLE-001",
+      "source": "https://wiki.nftables.org/wiki-nftables/index.php/Flowtable",
+      "title": "nftables flowtable forwarding",
+      "recommendation": "Flowtable forwarding can bypass the classic forwarding path.",
+      "applicability": "Host assumptions of recovery quarantine",
+      "decision": "adopted as admission obligation",
+      "rationale": "Packet tests do not establish absence of offload/flowtable bypass. Production host admission must reject unqualified bypass configuration."
+    },
+    {
+      "id": "RES-OPS-SYSTEMD-001",
+      "source": "https://github.com/systemd/systemd/blob/main/man/systemd.unit.xml",
+      "title": "systemd unit requirements and ordering",
+      "recommendation": "Requires and ordering are independent; readiness depends on service type.",
+      "applicability": "Persistent quarantine before Docker restoration",
+      "decision": "adopted",
+      "rationale": "Docker requires and follows the guard, and independently verifies live policy on every start. The synthetic receiver uses notify readiness to cover the startup leakage window."
+    },
+    {
+      "id": "RES-OPS-ND-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc4861#section-7.1.1",
+      "title": "RFC4861 Neighbor Discovery validation",
+      "recommendation": "Neighbor Solicitation and Advertisement validation requires hop limit255 and code0.",
+      "applicability": "IPv6 host/container neighbor resolution during outbound restriction",
+      "decision": "adopted",
+      "rationale": "Actual packet tracing exposed rejected Neighbor Advertisements and intermittent incoming reply loss. Permit only the required local input control packets and explicitly flush fixture caches; removal is a failing negative control."
+    },
+    {
+      "id": "RES-OPS-UFW-001",
+      "source": "https://manpages.ubuntu.com/manpages/noble/man8/ufw-framework.8.html",
+      "title": "Ubuntu UFW framework and lifecycle hooks",
+      "recommendation": "UFW lifecycle behavior depends on MANAGE_BUILTINS, executable custom hooks and its rules/configuration files.",
+      "applicability": "Coexistence of recovery restriction with the configured production firewall loader",
+      "decision": "adopted as qualification obligation",
+      "rationale": "Observe whether filtering is actually enabled; an active systemd unit alone is insufficient. Exercise matching-package reload/restart/reboot with continuously attempted synthetic connections and bind reviewed configuration/backend identity. Do not change production filtering merely to match a fixture."
+    },
+    {
+      "id": "RES-OPS-DORMANT-001",
+      "source": "https://raw.githubusercontent.com/moby/moby/docker-v29.1.3/daemon/internal/restartmanager/restartmanager.go",
+      "title": "Moby29.1.3 restart policy and persisted manual stop",
+      "recommendation": "unless-stopped automatic restart depends on the persisted manually-stopped flag; always and on-failure have different rules.",
+      "applicability": "Dormant legacy containers must not unexpectedly restart during recovery reboot.",
+      "decision": "adopted as version-bound admission",
+      "rationale": "Read persisted metadata without rewriting it; bind exact daemon identity and all containers. Qualify actual restart and reboot on a separate owned daemon, including a deliberately cleared flag. No blanket restart-policy mutation is required."
+    },
+    {
+      "id": "RES-OPS-BPF-001",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/include/uapi/linux/bpf.h",
+      "title": "Linux6.8 BPF information and query interfaces",
+      "recommendation": "Distinguish read/query operations from loading, attachment, update and execution; bind held object descriptors and actual relationships.",
+      "applicability": "Read-only recovery host BPF inventory",
+      "decision": "adopted with narrow Linux x86_64 scope",
+      "rationale": "Use an explicit read-only syscall allowlist, bounded object/byte counts and repeated observations. Unsupported metadata fails admission; no automatic program removal."
+    },
+    {
+      "id": "RES-OPS-BPF-002",
+      "source": "https://raw.githubusercontent.com/systemd/systemd/v255/src/core/bpf-firewall.c",
+      "title": "systemd255 generated address-verdict instructions",
+      "recommendation": "Generated address checks copy a packet address to stack, look up an LPM trie and combine allow/deny verdict bits.",
+      "applicability": "Two observed production cgroup packet programs",
+      "decision": "adopted as exact structural template",
+      "rationale": "Names alone are insufficient. Match complete bytecode, map identity and fixed stack writes; permit only proven read/lookup calls. LPM contents change the verdict but cannot add redirection in this template."
+    },
+    {
+      "id": "RES-OPS-BPF-003",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/kernel/bpf/verifier.c",
+      "title": "Linux6.8 verifier call and map-lookup rewriting",
+      "recommendation": "Translated calls can contain signed kernel-relative offsets and specialized map operations rather than original helper IDs.",
+      "applicability": "Production BPF call evidence",
+      "decision": "adopted",
+      "rationale": "Resolve each actual encoded call against the running kernel and bind the result to index and immediate; reject stale resolution, unexpected targets and VM-offset substitution."
+    },
+    {
+      "id": "RES-OPS-BPF-004",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/hid/bpf/entrypoints/entrypoints.bpf.c",
+      "title": "Linux6.8 HID BPF tracing entrypoint",
+      "recommendation": "The HID entrypoint tail-calls through a1024-entry program array and returns zero when no target is present.",
+      "applicability": "Observed built-in tracing program during network-bypass admission",
+      "decision": "adopted as bounded exception",
+      "rationale": "Require exact template, actual HID BTF attachment and a complete empty-array scan; kernel identity and program name alone do not establish that property."
+    },
+    {
+      "id": "RES-OPS-NETWORK-001",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/core/net_namespace.c",
+      "title": "Linux6.8 namespace-relative IDs and read-only RTM_GETNSID",
+      "recommendation": "Bind a namespace-local peer ID to a held opposite namespace FD using RTM_GETNSID with NETNSA_FD; interface indices alone are not global identities.",
+      "applicability": "Docker veth topology admission before outbound restriction",
+      "decision": "adopted",
+      "rationale": "Query both directions with held namespace/process descriptors; reject absent or mismatched peer mappings. The kernel GETNSID path uses peernet2id, without allocating an ID. A three-namespace Linux fixture verifies duplicate-index discrimination and non-allocation."
+    },
+    {
+      "id": "RES-OPS-NETWORK-002",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/ipv4/netfilter/nf_dup_ipv4.c",
+      "title": "Linux6.8 netfilter duplication output path",
+      "recommendation": "Packet duplication may route a clone through local output, so ordinary forward/input filtering alone is not a complete bypass argument.",
+      "applicability": "Host packet-path admission for recovery restriction",
+      "decision": "adopted as exclusion",
+      "rationale": "Reject dup/fwd/queue/TEE/NFQUEUE, unknown nft syntax, legacy rules, TC/XDP attachments and unsupported routes; separately qualify BPF, privileged processes, mounts, devices and persistent policy. No automatic removal of existing host configuration."
+    },
+    {
+      "id": "RES-OPS-NETWORK-003",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/core/rtnetlink.c",
+      "title": "Linux6.8 GETLINK peer namespace reporting",
+      "recommendation": "Distinguish requested configuration writes from namespace-ID bookkeeping that the kernel may create while reporting interface peers.",
+      "applicability": "Scope of read-only network observation claims",
+      "decision": "adopted as documented limitation",
+      "rationale": "rtnl_fill_link_netnsid calls peernet2id_alloc during GETLINK. The collector never sends NEWNSID or network mutation requests, but must not claim all observation leaves kernel bookkeeping unchanged."
     }
   ]
 }

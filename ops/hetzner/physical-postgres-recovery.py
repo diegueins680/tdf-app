@@ -124,7 +124,7 @@ def control_identity(text, expected_system_id):
 
 
 class PhysicalClone(restore.IsolatedRestore):
-    def __init__(self, source, image, image_id, nonce, directory, system_id):
+    def __init__(self, source, image, image_id, nonce, directory, system_id, *, creation_records=None):
         super().__init__(source, image, image_id, nonce)
         require(Path(directory) == HOST_ROOT/('rehearsal-'+nonce))
         require(re.fullmatch('[1-9][0-9]{0,19}', system_id) is not None)
@@ -135,6 +135,59 @@ class PhysicalClone(restore.IsolatedRestore):
         self.evidence = None
         self.start_attempted = False
         self.reservation_pid = None
+        self.active_application = None
+        self.creation_records = creation_records
+
+    def require_application_owner(self, application):
+        require(self.reservation_pid == os.getpid()
+                and self.active_application is application
+                and application.database is self and application.nonce == self.nonce
+                and application.directory == self.directory)
+
+    def admit_application_content(self, application, manifests):
+        """Verify previously restored copies, without changing their metadata.
+
+        The coordinator binds manifests to its trusted, retrieved bundle. This
+        check establishes copy correspondence, not that capture was coherent.
+        """
+        self.require_application_owner(application)
+        require(isinstance(manifests, dict) and set(manifests) == {'assets', 'uploads'})
+        verify_mounts()
+        evidence = {}
+        with files.directory(str(self.directory), private=True):
+            for name, manifest in manifests.items():
+                rows = files.validate_manifest(manifest)
+                # Image UID1000 must own and traverse/write the restored root.
+                # Do not normalize ownership to hide a failed recovery check.
+                require(rows['']['uid'] == 1000 and rows['']['gid'] == 1000
+                        and rows['']['mode'] & 0o700 == 0o700)
+                with files.directory(str(self.directory/('canary-'+name))) as fd:
+                    require(files.walk(fd) == manifest)
+                evidence[name] = {'manifestSha256': hashlib.sha256(canonical(manifest)).hexdigest(),
+                                  'bytes': manifest['bytes'], 'entries': len(rows)}
+        return evidence
+
+    @contextmanager
+    def with_application(self, application):
+        """Register dependency before Docker creation; remove it before the DB.
+
+        An uncertain cleanup deliberately leaves active_application set. The
+        enclosing reservation must then preserve its database and durable marker.
+        """
+        require(self.reservation_pid == os.getpid() and self.target is not None
+                and self.active_application is None)
+        require(application.database is self and application.nonce == self.nonce
+                and application.directory == self.directory and application.target is None
+                and not application.creation_attempted and not application.paused)
+        self.active_application = application
+        try:
+            yield application
+        finally:
+            self.require_application_owner(application)
+            application.cleanup()
+            require(application.target is None and not application.creation_attempted
+                    and not application.paused)
+            self.active_application = None
 
     def prepare(self, manifest):
         """Verify every copied byte first; record clone-only configuration changes."""
@@ -191,7 +244,7 @@ class PhysicalClone(restore.IsolatedRestore):
     def create_command(self):
         require(self.prepared_manifest is not None)
         return restore.DOCKER + ['create', '--pull=never', '--name', 'tdf-audit-restore-'+self.nonce,
-            '--label', restore.LABEL+'='+self.nonce, '--network=none', '--read-only',
+            '--label', restore.LABEL+'='+self.nonce, '--network=none', '--read-only', '--restart=no',
             '--user', USER, '--entrypoint', '/bin/sleep', '--cap-drop=ALL',
             '--security-opt=no-new-privileges:true', '--memory='+str(restore.MEMORY_LIMIT),
             '--memory-swap='+str(restore.MEMORY_LIMIT), '--cpus=0.5', '--pids-limit=64',
@@ -205,6 +258,7 @@ class PhysicalClone(restore.IsolatedRestore):
         require(re.fullmatch('[a-f0-9]{64}', target) is not None and target != self.source)
         require(self.target is None or self.target == target)
         cfg, host = container['Config'], container['HostConfig']
+        require(host.get('RestartPolicy') == {'Name':'no','MaximumRetryCount':0} and host.get('AutoRemove') is False)
         require(cfg['Labels'].get(restore.LABEL) == self.nonce and cfg['Image'] == self.image
                 and container['Image'] == self.image_id and cfg['User'] == USER
                 and cfg['Entrypoint'] == ['/bin/sleep'] and cfg['Cmd'] == COMMAND)
@@ -233,6 +287,8 @@ class PhysicalClone(restore.IsolatedRestore):
         require(self.reservation_pid == os.getpid())
         require(self.target is None and not self.creation_attempted and not self.start_attempted)
         self.verify_prepared()
+        if self.creation_records is not None:
+            self.creation_records.publish('physical-database', self)
         self.creation_attempted = True
         target = restore.execute(self.create_command()).strip()
         require(re.fullmatch('[a-f0-9]{64}', target) is not None)
@@ -263,8 +319,10 @@ class PhysicalClone(restore.IsolatedRestore):
     @contextmanager
     def reserved(self):
         """Serialize with logical restores and retain uncertain daemon work."""
-        require(self.reservation_pid is None and not self.creation_attempted)
-        with files.directory(str(HOST_ROOT), private=True), restore.rehearsal_lock(HOST_ROOT):
+        require(self.reservation_pid is None and not self.creation_attempted
+                and self.active_application is None)
+        coordinated = self.creation_records is not None and hasattr(self.creation_records, 'reserve')
+        with files.directory(str(HOST_ROOT), private=True), restore.rehearsal_lock(HOST_ROOT) as descriptor:
             require(not os.path.lexists(HOST_ROOT/restore.PENDING_NAME))
             for label in (restore.LABEL, 'net.tdf.application-canary'):
                 require(restore.execute(restore.DOCKER+['ps', '--all', '--quiet',
@@ -273,16 +331,28 @@ class PhysicalClone(restore.IsolatedRestore):
                           if line.startswith('MemAvailable:'))
             disk = os.statvfs(HOST_ROOT)
             require(memory >= 1024**3 and disk.f_bavail*disk.f_frsize >= 2*1024**3)
-            restore.reserve_creation(HOST_ROOT, self.nonce, self.image)
+            if coordinated:
+                self.creation_records.reserve(self, descriptor)
+            else:
+                restore.reserve_creation(HOST_ROOT, self.nonce, self.image)
             self.reservation_pid = os.getpid()
             try:
                 yield self
             finally:
-                require(self.reservation_pid == os.getpid())
-                self.reservation_pid = None
-                self.cleanup()
-                require(self.target is None and not self.creation_attempted)
-                restore.release_creation(HOST_ROOT, self.nonce, self.image)
+                try:
+                    require(self.reservation_pid == os.getpid())
+                    self.reservation_pid = None
+                    # Do not destroy a dependent application's DB or release its
+                    # reservation after an uncertain application cleanup.
+                    require(self.active_application is None)
+                    self.cleanup()
+                    require(self.target is None and not self.creation_attempted)
+                    if coordinated:
+                        self.creation_records.release(self)
+                    else:
+                        restore.release_creation(HOST_ROOT, self.nonce, self.image)
+                finally:
+                    if coordinated:self.creation_records.close()
 
     def write_command(self, program, arguments):
         require(self.target is not None and self.target != self.source)

@@ -23,7 +23,7 @@ SQL
 export COMMERCE_CHECKOUT_ENV=production
 export TDF_COURSE_IDENTITY_TEST_DB="host=$PGHOST dbname=$test_database"
 cd "$repo_root/tdf-hq"
-stack test tdf-hq:test:tdf-hq-test --fast --ghc-options=-O0 --jobs 1 --test-arguments='--match course-identity-postgresql'
+stack test tdf-hq:test:tdf-hq-test --jobs 1 --test-arguments='--match course-identity-postgresql'
 if psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_course_identity_requests_rollback.sql" >/dev/null 2>&1; then
   echo 'Rollback incorrectly removed accepted course receipts' >&2
   exit 1

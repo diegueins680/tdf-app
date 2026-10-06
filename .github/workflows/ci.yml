@@ -140,6 +140,14 @@ jobs:
           python3 scripts/install-recovery-tools.py --destination "$tdf_recovery_tools"
           printf 'TDF_RECOVERY_TOOLS=%s\n' "$tdf_recovery_tools" >> "$GITHUB_ENV"
 
+      - name: Setup specification verification Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install pinned specification verification dependencies
+        run: python -m pip install -r formal/system/requirements-verification.txt
+
       - name: Run repository checks
         run: npm run quality:repo
 
@@ -163,6 +171,49 @@ jobs:
           docker pull "$tdf_physical_image"
           sudo install -d -m 700 /opt/tdf/backups
           sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-physical-postgres-docker.py
+          sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 timeout --signal=TERM --kill-after=15 180 python3 scripts/test-stopped-application-docker.py
+
+  quarantine-packets:
+    needs: changes
+    if: needs.changes.outputs.repo == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        ufw: ['0', '1']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install packet fixture tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends nftables ufw=0.36.2-6
+          docker pull pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21
+      - name: Configure permissive UFW on this disposable runner
+        if: matrix.ufw == '1'
+        run: |
+          test -z "$(docker ps --all --quiet)"
+          test ! -e /opt/tdf/production
+          sudo ufw default allow incoming
+          sudo ufw default allow outgoing
+          sudo ufw default allow routed
+          sudo ufw --force enable
+          sudo systemctl enable --now ufw.service
+      - name: Verify held namespace identity and duplicate-index negative controls
+        run: |
+          sudo env TDF_NETWORK_FIXTURE_MACHINE="$(cat /etc/machine-id)" \
+            PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-network-namespace-linux.py
+      - name: Verify real IPv4 and IPv6 packet restrictions and negative controls
+        env:
+          TDF_QUARANTINE_TEST_UFW: ${{ matrix.ufw }}
+        run: |
+          sudo env TDF_SYNTHETIC_QUARANTINE_HOST="$(cat /etc/machine-id)" \
+            TDF_QUARANTINE_TEST_UFW="$TDF_QUARANTINE_TEST_UFW" \
+            TDF_QUARANTINE_TEST_IMAGE=pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21 \
+            python3 scripts/test-outbound-quarantine-linux.py
 
   ui-quality:
     needs: changes

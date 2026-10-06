@@ -123,7 +123,7 @@ class IsolatedRestore:
 
     def create_command(self):
         return DOCKER + ['create', '--pull=never', '--name', 'tdf-audit-restore-' + self.nonce,
-                '--label', LABEL + '=' + self.nonce, '--network=none', '--read-only',
+                '--label', LABEL + '=' + self.nonce, '--network=none', '--read-only', '--restart=no',
                 '--memory=' + str(MEMORY_LIMIT), '--memory-swap=' + str(MEMORY_LIMIT),
                 '--cpus=0.5', '--pids-limit=64', '--security-opt=no-new-privileges:true',
                 '--tmpfs', DATA + ':rw,nosuid,nodev,size=268435456',
@@ -140,6 +140,7 @@ class IsolatedRestore:
         require(container['Image'] == self.image_id and container['Config']['Image'] == self.image)
         require(container['Config']['Cmd'] == POSTGRES_COMMAND)
         host = container['HostConfig']
+        require(host.get('RestartPolicy') == {'Name':'no','MaximumRetryCount':0} and host.get('AutoRemove') is False)
         require(host['NetworkMode'] == 'none' and not host.get('PortBindings'))
         require(host['ReadonlyRootfs'] and host['Memory'] == MEMORY_LIMIT and host['MemorySwap'] == MEMORY_LIMIT)
         require(host['NanoCpus'] == 500000000 and host['PidsLimit'] == 64)
@@ -201,7 +202,7 @@ def rehearsal_lock(directory):
         require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and
                 info.st_uid == os.geteuid() and info.st_mode & 0o077 == 0)
         fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield
+        yield descriptor
     finally:
         os.close(descriptor)
 

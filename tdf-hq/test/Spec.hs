@@ -102,6 +102,8 @@ import TDF.API.WhatsApp
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.StartupResponseSpec as StartupResponseSpec
+import qualified TDF.ShutdownSpec as ShutdownSpec
+import qualified TDF.SocialTransportSpec as SocialTransportSpec
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import TDF.Reputation.Worker
     ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
@@ -581,6 +583,8 @@ import TDF.Config
       llmProviderApiBase,
       llmProviderDefaultChatModel,
       loadConfig,
+      socialAutoReplyEnabled,
+      coursePaymentReminderEnabled,
       openAiApiKey,
       openAiEmbedModel,
       openAiModel,
@@ -614,6 +618,8 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.AtomicPublicationSpec as AtomicPublicationSpec
+import qualified TDF.ContractStorageSpec as ContractStorageSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
@@ -866,6 +872,8 @@ main = hspec $ do
     ReadinessSpec.spec
     ReceiptSpec.spec
     StartupResponseSpec.spec
+    ShutdownSpec.spec
+    SocialTransportSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
     CheckoutMoneySpec.spec
@@ -4471,6 +4479,37 @@ main = hspec $ do
                     DTO.ccaExchangeRate audit `shouldBe` 150
 
     describe "loadConfig" $ do
+        it "keeps outbound background dispatch disabled unless explicitly enabled" $ do
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Nothing), ("COURSE_PAYMENT_REMINDER_ENABLED", Nothing)] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` False
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just "true"), ("COURSE_PAYMENT_REMINDER_ENABLED", Just "false")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` True
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just "false"), ("COURSE_PAYMENT_REMINDER_ENABLED", Just "true")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` False
+                coursePaymentReminderEnabled cfg `shouldBe` True
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just ""), ("COURSE_PAYMENT_REMINDER_ENABLED", Just " ")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` False
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just "on"), ("COURSE_PAYMENT_REMINDER_ENABLED", Just "0")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` True
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            forM_ ["SOCIAL_AUTO_REPLY_ENABLED", "COURSE_PAYMENT_REMINDER_ENABLED"] $ \flag ->
+                withEnvOverrides [(flag, Just "invalid")] $
+                    loadConfig `shouldThrow` \err ->
+                        (flag <> " must be a boolean flag") `isInfixOf` show (err :: IOException)
+
         it "keeps contextual reputation and its public projection dark by default" $ do
             withEnvOverrides
                 [ ("CONTEXTUAL_REPUTATION_ENABLED", Nothing)
@@ -17812,6 +17851,8 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    AtomicPublicationSpec.spec
+    ContractStorageSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     DriveReplaySpec.spec

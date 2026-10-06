@@ -12,7 +12,7 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted. The mapped PostgreSQL identity runners exercise applicable writer protections and reject destructive rollback after retained bindings or request receipts exist; they do not execute a production recovery.",
       "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -49,7 +49,15 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/test-provider-identity.sh",
+        "scripts/test-live-intake-identity.sh",
+        "scripts/test-course-identity.sh",
+        "scripts/test-trial-identity.sh",
+        "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/TrialIdentitySpec.hs"
       ],
       "formalModels": [
         "formal/event-operations/ProviderRollback.tla"
@@ -2575,7 +2583,8 @@
         "Restore through host networking, production mounts, unknown image or changed ownership",
         "Emit passing receipt before cleanup or after source drift",
         "Do not accept missing/changed/unknown applied history, incomplete candidate ledger, rewritten history or unstable second-application controls.",
-        "Crash releases process lock -> admit another isolate while the prior labelled container remains."
+        "Crash releases process lock -> admit another isolate while the prior labelled container remains.",
+        "Admit a disposable with automatic restart or automatic removal; its inspected restart policy must be no with zero retries and AutoRemove false."
       ],
       "effects": [
         "Create private host archives and a temporary resource-bounded isolate; remove only that admitted isolate",
@@ -3316,7 +3325,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5694,12 +5703,14 @@
         "Clean source revision and completed canonical candidate migration rehearsal",
         "Preloaded immutable TDF image digest",
         "Existing durable restore reservation",
-        "Private new archive directory and host resource capacity"
+        "Private new archive directory and host resource capacity",
+        "The isolated restored database provides exactly one enabled default locale and currency; a read-only projection supplies only validated public regional references to the cleared application environment."
       ],
       "inputs": [
         "Candidate image digest",
         "Exact source revision",
-        "Existing admitted disposable restore target"
+        "Existing admitted disposable restore target",
+        "Optional trusted asset and private-upload manifests bound by the physical-copy coordinator to its retrieved recovery bundle"
       ],
       "state": {
         "states": [
@@ -5728,7 +5739,10 @@
         "Provider connectivity or inherited production/image credentials",
         "Accept malformed HTTP as an unavailable database",
         "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
-        "Release reservation while an application create request or container may remain"
+        "Release reservation while an application create request or container may remain",
+        "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership",
+        "Use compiled regional defaults that disagree with the restored deployment registry, or copy arbitrary configuration/credentials from the restored database into the canary environment.",
+        "Admit a disposable with automatic restart or automatic removal; its inspected restart policy must be no with zero retries and AutoRemove false."
       ],
       "effects": [
         "Temporary bounded application and empty private asset/upload directories",
@@ -5753,7 +5767,9 @@
         "scripts/test-hetzner-restore.py",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/quality-repo.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-physical-application-docker.py",
+        ".github/workflows/build.yml"
       ],
       "formalModels": [
         "formal/event-operations/ApplicationCanary.tla"
@@ -5761,7 +5777,8 @@
       "status": "specified and implemented",
       "confidence": "Deterministic controls and bounded model; real Docker execution unverified.",
       "ambiguity": [
-        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established."
+        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established.",
+        "Restored-copy admission verifies bytes and metadata; coherent production capture, secret decryption and customer-file workflows require separate evidence."
       ],
       "verification": "Two-run bounded TLA+ safety and three named-invariant negative controls; hostile admission/cleanup tests and real synthetic HTTP protocol tests. No Docker/filesystem/HTTP refinement proof.",
       "conformance": {
@@ -5787,13 +5804,15 @@
       "preconditions": [
         "Caller establishes writer fence and admits all storage roots/nested mounts",
         "Private owned archive and destination parents",
-        "Trusted manifest bound to separately verified bundle evidence"
+        "Trusted manifest bound to separately verified bundle evidence",
+        "Canonical source admission checks immutable api/db/edge identity, local named volumes, exact bind topology and sampled Docker writer state; host worker fencing, mount/inode admission and clean PG shutdown remain separate obligations."
       ],
       "inputs": [
         "Absolute source directory",
         "New archive path",
         "Trusted private manifest",
-        "New restore path"
+        "New restore path",
+        "Caller-admitted live container identity and image for retained-root legacy uploads"
       ],
       "state": {
         "states": [
@@ -5812,14 +5831,18 @@
       },
       "allowedTransitions": [
         "Admit paths -> capture contents/metadata -> recheck -> return private manifest",
-        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified"
+        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified",
+        "Bind live container/process/root/mount namespace -> caller stops and fences writers -> require same cleanly exited instance -> capture actual uploads through retained descriptors",
+        "Capture all six caller-fenced component trees under one release/runtime/manifest/PG identity -> seal private outer archive -> verify trusted outer and every inner manifest -> replay to fresh targets"
       ],
       "forbiddenTransitions": [
         "Follow symlink components or restore outside new target",
         "Overwrite existing archives or target contents",
         "Accept links, special files, unsupported metadata or missing/extra/duplicate members",
         "Return success after changed source, incorrect bytes or metadata",
-        "Infer database coordination or off-host recovery from file replay"
+        "Infer database coordination or off-host recovery from file replay",
+        "Capture legacy uploads from a running, restarted, mounted-over or unadmitted container",
+        "Replay a bundle with mismatched release binding, missing/extra component, changed bytes or an invalid inner manifest"
       ],
       "effects": [
         "Private exclusive archive",
@@ -5828,17 +5851,25 @@
       ],
       "authorization": "Operator-local library; no implicit production execution, remote transfer or deployment. Caller must establish release-level target and writer admission.",
       "privacy": "Archive, manifest paths and diagnostics remain private. Public evidence contains only aggregate counts/hashes. No credential or customer content logging.",
-      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement.",
+      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement. Legacy helper holds pidfd, root and mount namespace descriptors across caller-owned shutdown; checks actual namespace topology and same container start identity before and after capture. Privileged host tampering is excluded.",
       "idempotency": "Exclusive creation rejects retries using an existing archive or restore destination; independent attempts require new paths.",
-      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics.",
+      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics. Bundle replay validates all inner components before replaying any; a failed outer or partial inner restore stays private and never reports complete recovery.",
       "recovery": "Inspect failed output under ownership boundary; independently retry into new paths. Never overwrite production or infer successful restore from archive existence.",
       "observability": "Return private exact manifest and aggregate file-tree-restored result with coordinatedDatabase=false and offHost=false. Caller supplies durable authenticated bundle receipt.",
       "implementation": [
-        "ops/hetzner/recovery-files.py"
+        "ops/hetzner/recovery-files.py",
+        "ops/hetzner/stopped-application-storage.py",
+        "ops/hetzner/coordinated-recovery-bundle.py",
+        "ops/hetzner/production-recovery-sources.py"
       ],
       "tests": [
         "scripts/test-recovery-files.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-stopped-application-storage.py",
+        "scripts/test-stopped-application-docker.py",
+        "scripts/test-coordinated-recovery-bundle.py",
+        "scripts/test-recovery-bundle-ssh.py",
+        "scripts/test-production-recovery-sources.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5871,7 +5902,10 @@
         "Supported Linux sealed memfd runtime",
         "Pinned private age binary",
         "Private native X25519 identity held independently of production for actual off-host recovery",
-        "Independently trusted capture and transfer content hashes"
+        "Independently trusted capture and transfer content hashes",
+        "Transfer caller authenticates both endpoints and supplies only ciphertext with the independently trusted encryption receipt; channel ownership is exclusive.",
+        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
+        "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md."
       ],
       "inputs": [
         "Private captured bundle or transferred ciphertext",
@@ -5898,7 +5932,10 @@
       },
       "allowedTransitions": [
         "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
-        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified"
+        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified",
+        "Trusted ciphertext -> nonce/size/hash-bound offer -> exclusive private durable retention and reopen/hash -> return persisted bytes -> trusted round-trip verification; decryption/restoration remain false.",
+        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
+        "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation."
       ],
       "forbiddenTransitions": [
         "Execute a subsequently replaced pathname instead of verified bytes",
@@ -5906,7 +5943,10 @@
         "Expose identity or plaintext through logs, arguments or environment",
         "Overwrite an output or accept partial decryption",
         "Treat public-key encryption as sender authentication",
-        "Infer transfer or restored system from encryption/decryption"
+        "Infer transfer or restored system from encryption/decryption",
+        "A changed nonce, frame kind, byte count, hash, truncated stream, persistence failure or substituted path must not complete transfer; existing output cannot be overwritten.",
+        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
+        "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel."
       ],
       "effects": [
         "Exclusive private ciphertext or plaintext output",
@@ -5923,20 +5963,28 @@
         "ops/hetzner/recovery-envelope.py",
         "ops/hetzner/recovery-tools.json",
         "scripts/install-recovery-tools.py",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "ops/hetzner/recovery-transfer.py",
+        "ops/hetzner/coordinated-encryption.py",
+        "ops/hetzner/coordinated-retrieval.py"
       ],
       "tests": [
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-tools.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-recovery-transfer.py",
+        "scripts/test-recovery-transfer-ssh.py",
+        "scripts/test-recovery-bundle-ssh.py",
+        "scripts/test-coordinated-encryption.py",
+        "scripts/test-coordinated-retrieval.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Real age integration and scheduling controls; no cryptographic or whole-system proof.",
       "ambiguity": [
-        "Production key custody, coordinated capture, trusted bundle evidence and off-host transfer/retrieval remain unimplemented."
+        "Production key custody, coordinated capture, trusted complete-bundle evidence and integrated off-host restoration remain unimplemented. The transfer primitive and sandboxed SSH test do not establish production retention or recovery."
       ],
-      "verification": "Linux real-tool negative/scheduling controls and deterministic installer tests; unsupported platforms cannot stand in for Linux runtime evidence.",
+      "verification": "Linux real-tool controls, deterministic installer tests, private-file/socket transfer negative controls and explicit synthetic canonical-SSH round trip; production coordinated recovery remains separate.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Encryption primitive and controlled checks exist; integrated production key/backup/transfer/restoration workflow remains outstanding."
@@ -5961,7 +6009,17 @@
         "One fixed private global control directory durably provisioned by coordinator",
         "All cooperating operations use its permanent lock",
         "Filesystem honors fsync",
-        "Coordinator independently validates effect-specific evidence"
+        "Coordinator independently validates effect-specific evidence",
+        "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery.",
+        "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md.",
+        "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md.",
+        "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md.",
+        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
+        "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md.",
+        "Interrupted pre-write abort requires independently durable original admission and authenticated same-host fresh boot; see formal/system/interrupted-release-recovery.md.",
+        "Actual original-deployment admission must be privately and durably prepared before any shutdown intent; live assets/uploads bind-directory identities must match host sources. See formal/system/original-deployment-admission.md.",
+        "Original service recovery requires a recorded fresh-boot epoch and the common restore reservation; see formal/system/original-service-recovery.md.",
+        "An old API image without a SIGTERM shutdown handler can exit137 and fail clean capture; original recovery is not a resolution of this initial-release limitation."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5985,53 +6043,142 @@
       },
       "allowedTransitions": [
         "Initialize once -> ready",
-        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
+        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state.",
+        "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation.",
+        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
+        "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation.",
+        "Recognized frozen pre-write journal -> irreversible abort latch -> durable write-possible reboot intent -> observe changed boot on same trusted host. Original database and API recovery have separate adapters; cleanup/controller integration remains unfinished.",
+        "Single journal plan -> actual original deployment sample -> exclusive private admission -> matching closing sample -> durable preparation receipt; mutation and late mismatch never authorize shutdown.",
+        "Recorded fresh recovery epoch -> fixed stage intent -> admitted exact original database start only if stopped -> same system identifier and migration ledger -> bound stage observation; uncertain stages require another recorded reboot before retry.",
+        "Completed database stage -> exact API start only if stopped -> namespace-bound health/version/public-database-read and anonymous-booking denial -> unchanged database identity/history -> API observation.",
+        "Completed API stage -> exact original edge start only if stopped -> namespace-bound default-verified TLS and four redacted probes -> unchanged database history -> edge observation; public writes may resume.",
+        "Completed edge stage -> admitted original enabled timer start only if inactive -> unchanged units/services/database and active waiting timer -> scheduling-restored observation; backup completion is not inferred.",
+        "Completed timer stage -> fresh original runtime/database/timer admission and eight namespace API/TLS probes -> terminal abort observation; normal release stays permanently latched.",
+        "Fresh abort epoch and shared restore lock -> exactly the three saved original CIDs and no pending restore marker at repeated observations -> empty-disposable first-stage receipt without deletion."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
         "Replay an unresolved intent or initialize another nonce",
         "Skip, duplicate or reorder stages",
         "Treat receipt hash as validation of external effect",
-        "Restore old database over possible new writes"
+        "Restore old database over possible new writes",
+        "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit.",
+        "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers.",
+        "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion.",
+        "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion.",
+        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
+        "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel.",
+        "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command.",
+        "Prepare original admission after any shutdown intent, overwrite uncertain evidence, admit replaced live bind directories, or publish raw original container configuration.",
+        "Retry an uncertain recovery effect in the same boot, initialize an absent original cluster, weaken normal capture exit policy, or infer API/edge recovery from database readiness.",
+        "Treat missing live processes, labels, an empty response, missing originals or legacy nonce/image markers as authority to remove or adopt an uncertain disposable; the empty-disposable adapter must reject every extra container and every pending marker."
       ],
       "effects": [
         "Private immutable records and permanent lock",
         "Caller effect only after durable admission"
       ],
       "authorization": "Caller must authorize target and effect; the journal is not deployment authority or an external-effect verifier.",
-      "privacy": "Only digests, fixed phase names, sequence and nonce recorded; no raw secret, target document or exception output.",
+      "privacy": "Normal records contain digests, phase and nonce; the abort latch additionally holds full private original-deployment admission and must never be published.",
       "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
       "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
       "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
-      "recovery": "Explicit operator recovery and terminal rotation remain unimplemented; retain records and preserve all possible writes from database restart intent onward.",
+      "recovery": "Abort latch, fresh-boot service journal, original database/API/TLS-edge recovery, original timer scheduling restoration and terminal observation are implemented. Disposable cleanup, integrated controller and malformed-publication recovery remain open; preserve all possible writes.",
       "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
       "implementation": [
         "ops/hetzner/release-journal.py",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "ops/hetzner/production-writer-fence.py",
+        "ops/hetzner/production-recovery-sources.py",
+        "ops/hetzner/host-scheduler-admission.py",
+        "ops/hetzner/host-scheduler-policy.json",
+        "ops/hetzner/host-process-admission.py",
+        "ops/hetzner/host-process-policy.json",
+        "ops/hetzner/coordinated-capture.py",
+        "ops/hetzner/coordinated-encryption.py",
+        "ops/hetzner/coordinated-retrieval.py",
+        "ops/hetzner/interrupted-release-recovery.py",
+        "ops/hetzner/original-deployment-admission.py",
+        "ops/hetzner/abort-service-journal.py",
+        "ops/hetzner/original-database-recovery.py",
+        "ops/hetzner/original-application-recovery.py",
+        "ops/hetzner/original-edge-recovery.py",
+        "ops/hetzner/original-timer-recovery.py",
+        "ops/hetzner/original-recovery-completion.py",
+        "ops/hetzner/original-disposable-absence.py",
+        "ops/hetzner/disposable-creation-spec.py",
+        "ops/hetzner/durable-disposable-records.py",
+        "ops/hetzner/coordinated-disposable-creation.py",
+        "ops/hetzner/original-disposable-cleanup.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-production-writer-fence.py",
+        "scripts/test-production-writer-fence-linux.py",
+        "scripts/test-production-recovery-sources.py",
+        "scripts/test-writer-fence-fixture-ownership.py",
+        "scripts/test-host-scheduler-admission.py",
+        "scripts/test-host-process-admission.py",
+        "scripts/test-coordinated-capture.py",
+        "scripts/test-coordinated-encryption.py",
+        "scripts/test-coordinated-retrieval.py",
+        "scripts/test-interrupted-release-recovery.py",
+        "scripts/test-interrupted-release-recovery-linux.py",
+        "scripts/test-original-deployment-admission.py",
+        "scripts/test-abort-service-journal.py",
+        "scripts/test-original-database-recovery.py",
+        "scripts/test-original-application-recovery.py",
+        "scripts/test-original-edge-recovery.py",
+        "scripts/test-original-edge-tls.py",
+        "scripts/test-original-timer-recovery.py",
+        "scripts/test-original-recovery-completion.py",
+        "scripts/test-original-disposable-absence.py",
+        "scripts/test-disposable-creation-spec.py",
+        "scripts/test-durable-disposable-records.py",
+        "scripts/test-coordinated-disposable-creation.py",
+        "scripts/test-original-disposable-cleanup.py",
+        "scripts/test-coordinated-disposable-linux.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
         "formal/event-operations/ReleaseJournal.cfg",
         "formal/event-operations/ReleaseJournalNoIntent.cfg",
         "formal/event-operations/ReleaseJournalNewNonce.cfg",
-        "formal/event-operations/ReleaseJournalWrongObservation.cfg"
+        "formal/event-operations/ReleaseJournalWrongObservation.cfg",
+        "formal/event-operations/AbortRecovery.tla",
+        "formal/event-operations/AbortRecovery.cfg",
+        "formal/event-operations/AbortRecoveryIgnoreLatch.cfg",
+        "formal/event-operations/AbortRecoveryNoIntent.cfg",
+        "formal/event-operations/AbortRecoverySameBoot.cfg",
+        "formal/event-operations/AbortRecoveryPostWrite.cfg",
+        "formal/event-operations/AbortServiceRecovery.cfg",
+        "formal/event-operations/AbortServiceRecovery.tla",
+        "formal/event-operations/AbortServiceRecoveryEmptyCluster.cfg",
+        "formal/event-operations/AbortServiceRecoveryNoIntent.cfg",
+        "formal/event-operations/AbortServiceRecoveryReplay.cfg",
+        "formal/event-operations/AbortServiceRecoverySameBoot.cfg",
+        "formal/event-operations/AbortServiceRecoveryUnbound.cfg",
+        "formal/event-operations/DisposableCleanup.tla",
+        "formal/event-operations/DisposableCleanup.cfg",
+        "formal/event-operations/DisposableCleanupOriginal.cfg",
+        "formal/event-operations/DisposableCleanupOrder.cfg",
+        "formal/event-operations/DisposableCleanupReplay.cfg",
+        "formal/event-operations/DisposableCleanupAbsence.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
       "ambiguity": [
-        "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
+        "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open.",
+        "Versioned creation and abort cleanup are implemented as components with real-journal controls and owned Docker composition; synthetic boot/crypto observations do not qualify actual reboot, first legacy shutdown, off-host key custody or the full coordinator."
       ],
-      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release. Empty-disposable controls preserve pending markers/symlinks and extra containers, reject changed inventories and lost-read replay, and check two exact complete inventory reads without deletion.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
       },
       "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
-      "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
+      "evidence": "Source-qualified filesystem/process controls and synthetic Linux receipts; no production shutdown or recovery claim."
     },
     {
       "id": "MOB-ONBOARD-001",
@@ -6642,14 +6789,21 @@
         "Reserve durably before Docker create",
         "Admit container and clean cluster control before direct PostgreSQL startup",
         "Verify live system identifier before reporting startup",
-        "Remove only admitted owned container before clearing reservation"
+        "Remove only admitted owned container before clearing reservation",
+        "Under the registered application dependency, verify fixed restored asset/upload copies before application creation without modifying their ownership",
+        "Under a live reservation, admit backup topology before complete bundle replay; bind nonce/cluster, verify inner manifests and preserved content ownership, then move only replayed trees into fresh disposable targets.",
+        "Sample offline capacity only under live matching reservation/journal and stopped canonical writers, preserving online capacity admission."
       ],
       "forbiddenTransitions": [
         "Mutate a production bind alias",
         "Initialize missing or incompatible data",
         "Start crashed or wrong-cluster files",
         "Use copied production auto-conf or provider/network access",
-        "Clear reservation after uncertain cleanup"
+        "Clear reservation after uncertain cleanup",
+        "Remove the database or release its reservation while a registered dependent application has uncertain cleanup.",
+        "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources.",
+        "Treat a sampled capacity estimate as a resource reservation, complete host-worker exclusion or deployment authorization.",
+        "Admit a disposable with automatic restart or automatic removal; its inspected restart policy must be no with zero retries and AutoRemove false."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",
@@ -6666,12 +6820,20 @@
       "implementation": [
         "ops/hetzner/physical-postgres-recovery.py",
         "ops/hetzner/recovery-files.py",
-        "ops/hetzner/rehearse-postgres-restore.py"
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "ops/hetzner/isolated-application-canary.py",
+        "ops/hetzner/recovered-application-content.py",
+        "ops/hetzner/offline-recovery-capacity.py"
       ],
       "tests": [
         "scripts/test-physical-postgres-recovery.py",
         "scripts/test-physical-postgres-docker.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-isolated-application-canary.py",
+        "scripts/test-physical-application-docker.py",
+        ".github/workflows/build.yml",
+        "scripts/test-recovered-application-content.py",
+        "scripts/test-offline-recovery-capacity.py"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",
@@ -6682,7 +6844,7 @@
       "ambiguity": [
         "Integrated writer-fenced capture, complete storage/configuration coverage, off-host custody, application recovery and guarded deployment remain outstanding."
       ],
-      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only.",
+      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only. Complete synthetic bundle-to-PG/application composition and filesystem substitution controls; encrypted retrieval remains a separate caller obligation.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Physical copy startup boundary implemented; complete coordinated production recovery and deployment are not established."
@@ -6885,6 +7047,280 @@
       }
     },
     {
+      "id": "OPS-SHUTDOWN-001",
+      "title": "Supervise startup and distinguish drained shutdown from failure",
+      "domain": "OPS",
+      "statement": "The backend shall handle TERM/INT before configuration startup, reject startup publication after accepted stop, join initialization and drain HTTP before clean exit, and report deadline or fatal errors as failure.",
+      "authority": "User deployment, worker failure and concurrency requirements; source-derived PID1 shutdown defect",
+      "source": "formal/system/application-shutdown.md",
+      "contract": "formal/system/application-shutdown.md",
+      "critical": true,
+      "actors": [
+        "Backend process",
+        "Authorized runtime operator"
+      ],
+      "preconditions": [
+        "Unix signal support",
+        "Main propagates supervisor errors",
+        "Warp3.4.9 internal graceful timeout disabled",
+        "No concurrent signal-handler replacement"
+      ],
+      "inputs": [
+        "SIGTERM",
+        "SIGINT",
+        "Startup result",
+        "Listener registration",
+        "HTTP completion",
+        "30-second stop budget"
+      ],
+      "state": {
+        "states": [
+          "preparing",
+          "serving-initializing",
+          "stopping",
+          "clean",
+          "failed"
+        ],
+        "initial": "preparing",
+        "terminal": [
+          "clean",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Preparation success -> supervised serving/initializing",
+        "Stop -> cancellation dispatch -> admission closure -> initialization join and HTTP drain -> clean",
+        "Fatal error or deadline -> failed"
+      ],
+      "forbiddenTransitions": [
+        "Clean after expired drain",
+        "Publication after accepted stop",
+        "Unclosed late listener",
+        "Clean without initialization join",
+        "Retry asynchronous cancellation as database error"
+      ],
+      "effects": [
+        "Close listener",
+        "Cancel initialization",
+        "Stop admission",
+        "Process exits with success or propagated error"
+      ],
+      "authorization": "Runtime operator/process signals; this does not authorize application data operations.",
+      "privacy": "Tests use synthetic HTTP and temporary processes; no provider or customer payload is required.",
+      "concurrency": "Stop latch coalesces signals; shared state linearizes registration/publication and accepted stop. Cancel initialization before taking its possible admission lock.",
+      "idempotency": "Repeated signals enqueue one stop request; listener registration occurs once.",
+      "failure": "Deadline and fatal errors propagate to Main, never clean. Cancellation sender prevents blocked throwTo from hiding the supervisor deadline.",
+      "recovery": "Runtime restart uses normal startup checks. Existing production image and first capture/release admission remain separate unresolved obligations.",
+      "observability": "Exit classification, source-qualified test/mutation results, built-image clean-stop evidence.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Shutdown.hs",
+        "tdf-hq/src/TDF/App/DatabaseRetry.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/Cron.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ShutdownSpec.hs",
+        "scripts/verify-shutdown.py",
+        "scripts/quality-backend.sh",
+        "scripts/test-production-writer-fence-linux.py",
+        ".github/workflows/build.yml",
+        "scripts/test-legacy-shutdown-linux.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/ApplicationShutdown.cfg",
+        "formal/event-operations/ApplicationShutdown.tla",
+        "formal/event-operations/ApplicationShutdownFalseDrain.cfg",
+        "formal/event-operations/ApplicationShutdownLateListener.cfg",
+        "formal/event-operations/ApplicationShutdownLatePublication.cfg",
+        "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Working Haskell request/cancellation/signal controls passed; final source and PID1 image validation pending.",
+      "ambiguity": [
+        "Detached worker and external-provider drainage is excluded; initial production stop remains unresolved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Supervisor and source controls implemented; final exact-candidate and image gates pending."
+      },
+      "property": "Clean completion implies joined initialization and drained HTTP; accepted stop forbids later publication and leaves no open late listener.",
+      "evidence": "Bounded state model plus actual Haskell/HTTP/signal/source-mutation tests; no whole-program refinement or production shutdown claim.",
+      "verification": "Actual Haskell supervisor and retry controls, held Warp request, five detected source mutations, four Unix-signal children, bounded state model and four model mutations; built-image gate requires clean Docker stop."
+    },
+    {
+      "id": "MEDIA-RIDER-001",
+      "title": "Complete exclusive rider publication and durable replay",
+      "statement": "Live Session rider publication must never expose a partially written final path or replace an existing final; identical replay must validate and synchronize retained bytes and the containing directory before success, while conflicting bytes remain preserved for review.",
+      "domain": "MEDIA",
+      "authority": "inferred",
+      "source": "User-requested storage/concurrency audit; tdf-hq/src/TDF/ServerLiveSessions.hs; formal/system/research.json",
+      "property": "Final absent or complete; existing final never overwritten; unsuccessful synchronization never reported as successful publication; accepted replay reestablishes file and directory synchronization.",
+      "contract": "formal/system/atomic-rider-publication.md",
+      "actors": [
+        "Authenticated Live Session intake actor",
+        "Backend file writer",
+        "Recovery operator"
+      ],
+      "preconditions": [
+        "Existing intake authorization, actor/key transaction fence and validated file name/size/content digest.",
+        "Trusted stable uploads directory/ancestors; production persistent mount independently admitted; Linux or Darwin filesystem supports exclusive rename and fsync."
+      ],
+      "inputs": [
+        "Actor/request/content-derived path",
+        "Validated rider bytes, at most the existing 10 MiB limit"
+      ],
+      "state": {
+        "initial": "Final absent or retained from prior attempt",
+        "terminal": [
+          "Complete final and synchronized acknowledgement",
+          "Existing differing final retained;409",
+          "Failure or lost acknowledgement; files retained as observed"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> private staging -> complete synchronized staging -> exclusive final -> synchronized directory -> success",
+        "Existing identical final -> validate bytes -> synchronize file and directory -> replay success",
+        "Existing different final ->409 without replacement",
+        "Interruption before publication -> absent final and possible private staging orphan",
+        "Interruption after publication -> complete final with uncertain acknowledgement"
+      ],
+      "forbiddenTransitions": [
+        "Expose incomplete staging as final",
+        "Overwrite an existing final",
+        "Turn fsync/unsupported-rename failure into success",
+        "Infer database or provider rollback from transport failure",
+        "Automatically delete pre-existing partial finals or crash orphans"
+      ],
+      "effects": [
+        "Publish one complete private final or retain an existing name; normal cleanup only removes this attempt's staging name.",
+        "Caller preserves request-bound receipt semantics; database commit is a separate effect."
+      ],
+      "authorization": "Existing backend intake actor/module authorization and actor/request locking remain required; file helper alone grants no API authority.",
+      "privacy": "Staging files mode0600 inside the admitted upload tree; do not log rider bytes or treat staging as public content.",
+      "concurrency": "Atomic exclusive rename selects at most one winner for a final path; actor/request database fence additionally serializes intake. Privileged directory replacement is excluded.",
+      "idempotency": "Final path includes actor, request key and content hash. Compare retained bytes; identical retry synchronizes before acknowledgement and differing bytes require review.",
+      "failure": "Propagate IO/synchronization errors. Existing mismatching bytes produce409. SIGKILL may leave private single-link staging; acknowledgement can be lost after complete publication.",
+      "recovery": "Retain final and crash staging evidence. Identical replay validates and synchronizes. Legacy partial finals and complete unreferenced files require separate identity-bound operational review.",
+      "observability": "Record exact source, platform, commands, filesystem tests, process-kill outcome and runtime mutation counterexamples without uploading file payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+        "tdf-hq/src/TDF/ServerLiveSessions.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AtomicPublicationSpec.hs",
+        "tdf-hq/test/AtomicPublicationMain.hs",
+        "scripts/verify-atomic-publication.py",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Actual filesystem tests, compiled source mutations and owned-child SIGKILL; separate native and Linux execution required. No filesystem refinement proof.",
+      "evidence": "Exact candidate backend gate and atomic publication verifier receipts; earlier exploratory runs remain scoped to their recorded bytes.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the scoped local publication sequence after platform verification; no whole-operation atomicity claim.",
+      "ambiguity": [
+        "No automatic reconciliation of legacy partial uploads or externally delivered notifications.",
+        "File/database commit and hardware power-loss guarantees remain outside this helper."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Mac helper checks pass on working bytes; final exact-candidate Linux/full-backend/integration/deployment evidence remains required."
+      }
+    },
+    {
+      "id": "DATA-CONTRACT-001",
+      "title": "Persistent private contract evidence and honest delivery status",
+      "statement": "Successful creation requires complete immutable private contract bytes in persistent uploads/contracts. Preserve and validate legacy reads, fail on conflicting copies, forbid uncaptured legacy evidence at cutover, and never claim delivery without a delivery implementation.",
+      "domain": "DATA",
+      "authority": "inferred",
+      "source": "User specification/conformance repair instruction; AUTHORITY-047; mounted ContractsAPI and event finance references.",
+      "property": "No incomplete acknowledged document, no overwritten retained ID, no uncaptured legacy discard and no false delivery acknowledgement.",
+      "contract": "formal/system/contract-storage.md",
+      "actors": [
+        "Authenticated Operations actor",
+        "Backend contract store",
+        "Recovery operator"
+      ],
+      "preconditions": [
+        "Existing authenticated backend Operations authorization; canonical non-nil UUID and validated payload.",
+        "Stable trusted directory ancestors; production persistent uploads mount and supported exclusive rename/fsync."
+      ],
+      "inputs": [
+        "Validated arbitrary contract JSON with kind; server owns id and created_at.",
+        "Canonical UUID for reads and valid email-only body for unavailable delivery."
+      ],
+      "state": {
+        "initial": "Absent or retained immutable document",
+        "terminal": [
+          "New complete private document",
+          "Validated current or legacy document",
+          "Unavailable delivery",
+          "Rejected conflict or storage failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> complete synchronized exclusive publication -> created acknowledgement",
+        "Current absent -> validate legacy bytes -> read without migration",
+        "Identical duplicate copies -> validate bytes -> read",
+        "Existing valid document + validated send request ->503 with no delivery",
+        "Stopped original root + empty or absent legacy store -> scoped capture admission"
+      ],
+      "forbiddenTransitions": [
+        "Overwrite or acknowledge a UUID collision",
+        "Silently choose between different copies or hide corrupt current data with legacy",
+        "Claim sent or queued without a provider effect",
+        "Treat an earlier live absence sample or persistent uploads mount as proof legacy contracts are absent",
+        "Discard uncaptured legacy contract data"
+      ],
+      "effects": [
+        "Private immutable JSON publication; generated PDFs depend on existing rendering toolchain.",
+        "No external delivery, automatic legacy migration or deletion."
+      ],
+      "authorization": "Existing backend hasOperationsAccess predicate applies before create, PDF and send. Static upload/document paths confer no read authority.",
+      "privacy": "Contract files private0600 under private0700 contracts directory. Neither document tree is a public static mount; legacy bytes remain protected by existing Operations boundary.",
+      "concurrency": "Exclusive rename selects one creator for a UUID. Trusted stable ancestors and no concurrent legacy writer are deployment assumptions. File and event-finance database reference are separate commits.",
+      "idempotency": "Create generates a new UUID per request and has no external replay key. A lost response can leave an unreferenced complete file; retry may create another document. Collision always fails.",
+      "failure": "Invalid request400, unauthenticated401, unauthorized403, absent404, corrupt/conflicting/storage failures500, valid send503. File synchronization failure is not success.",
+      "recovery": "Keep original files and references. Legacy fallback is read-only. Capture requires retained stopped-root absence inspection in both upload modes; populated legacy store requires a separately reviewed preservation/migration procedure. Persistent-upload sources without qualified root inspection fail closed.",
+      "observability": "Record exact source, commands, storage/HTTP/collision/negative-control results and scoped Linux capture evidence without customer contents.",
+      "implementation": [
+        "tdf-hq/src/TDF/Contracts/API.hs",
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/Contracts/Storage.hs",
+        "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "ops/hetzner/stopped-application-storage.py",
+        "ops/hetzner/coordinated-capture.py",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ContractStorageSpec.hs",
+        "tdf-hq/test/ContractStorageMain.hs",
+        "scripts/verify-contract-storage.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/test-stopped-application-storage.py",
+        "scripts/test-stopped-application-docker.py",
+        "scripts/test-coordinated-capture.py"
+      ],
+      "formalModels": [],
+      "verification": "Real filesystem concurrency and compiled source counterexamples, HTTP integration and retained Linux namespace tests. No whole-filesystem refinement proof.",
+      "evidence": "Exact source receipts required separately; working native tests do not establish Linux or deployed conformance.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation repaired; exact final backend, Linux, HTTP and deployment acceptance pending.",
+      "ambiguity": [
+        "No automated migration for nonempty legacy stores; source preservation must precede rollout.",
+        "Production recovery coordinator and retained-root inspection for persistent-upload source containers remain unfinished.",
+        "No contract delivery integration or cross-file/database transaction is claimed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and executable controls implemented; final exact candidate, Linux/HTTP gates and deployed acceptance remain required."
+      }
+    },
+    {
       "id": "EVT-FUNNEL-001",
       "title": "Observe the public ticket funnel without exporting private ticket data",
       "domain": "EVT",
@@ -6961,6 +7397,279 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Browser observation boundaries are implemented and tested; deployed ingestion, consent configuration and canonical revenue-attribution joins require separate verification."
+      }
+    },
+    {
+      "id": "NOTIF-WORKER-001",
+      "title": "Explicit outbound background worker admission",
+      "statement": "Social auto-replies and course payment reminders require separately validated explicit enablement; absence disables startup and queue/provider access.",
+      "domain": "NOTIF",
+      "authority": "inferred",
+      "source": "Audit of TDF.Cron dispatch ordering; formal/system/outbound-worker-admission.md",
+      "property": "not enabled implies no worker scheduled and no dispatch from its entrypoint",
+      "contract": "formal/system/outbound-worker-admission.md",
+      "actors": [
+        "Deployment operator",
+        "Social auto-reply worker",
+        "Course reminder worker"
+      ],
+      "preconditions": [
+        "Configuration loads before supervised worker admission."
+      ],
+      "inputs": [
+        "SOCIAL_AUTO_REPLY_ENABLED",
+        "COURSE_PAYMENT_REMINDER_ENABLED"
+      ],
+      "state": {
+        "initial": "unconfigured",
+        "states": [
+          "disabled",
+          "enabled",
+          "invalid"
+        ]
+      },
+      "allowedTransitions": [
+        "absent or false -> disabled",
+        "true -> enabled",
+        "malformed -> startup failure"
+      ],
+      "forbiddenTransitions": [
+        "absent configuration -> automatic dispatch",
+        "disabled -> fork worker",
+        "asynchronous cancellation -> routine failure in the changed outer Cron handlers"
+      ],
+      "effects": [
+        "Log disabled or scheduled without customer content; schedule only explicitly enabled workers."
+      ],
+      "authorization": "Deployment configuration is trusted operator input; feature activation remains separately qualified.",
+      "privacy": "Admission logs contain no recipients, payloads or credentials.",
+      "concurrency": "Startup gates are process-local; do not fence already-running replicas or legacy images.",
+      "idempotency": "No provider idempotency claim. Existing enabled sends can have ambiguous external outcomes.",
+      "failure": "Malformed flags fail startup; blank uses default false and existing boolean aliases remain accepted. Asynchronous cancellation escapes the changed outer Cron handlers; provider-internal broad catches remain a separate gap.",
+      "recovery": "Keep both gates disabled during first upgrade. Legacy original-image recovery requires separately verified outbound restriction/reconciliation.",
+      "observability": "Content-free admission logs and exact source/test evidence. The read-only collector records missing worker flags explicitly; preparation retains observed values and requires both false without authorizing execution.",
+      "implementation": [
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/config/default.env.example",
+        "ops/hetzner/inspect-runtime.py",
+        "scripts/lib/hetzner-preparation.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Configuration and actual worker entrypoint regressions; no provider or concurrency proof.",
+      "evidence": "Exact candidate backend tests required.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Source containment implemented; backend execution and deployed acceptance pending.",
+      "ambiguity": [
+        "Durable pre-dispatch claims and unknown-outcome reconciliation remain unimplemented.",
+        "Legacy image does not honor candidate gates; original recovery is not qualified.",
+        "Provider adapters still catch some asynchronous exceptions internally; enabled transport cancellation is not qualified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Admission containment only; replay repair, current tests and rollout remain outstanding."
+      }
+    },
+    {
+      "id": "NOTIF-TRANSPORT-001",
+      "title": "No automatic replay of ambiguous social message sends",
+      "statement": "One production social-message transport invocation selects one account, refuses redirects and suppresses connection-level automatic retries; cancellation and unknown external outcomes must not trigger another send.",
+      "domain": "NOTIF",
+      "authority": "inferred",
+      "source": "Source audit of social provider adapters and pinned http-client0.7.19; formal/system/social-transport.md",
+      "property": "One invocation has at most one application/message HTTP request dispatch under the specified production manager; ambiguous outcome does not authorize a fallback.",
+      "contract": "formal/system/social-transport.md",
+      "actors": [
+        "Authorized calling handler or worker",
+        "Instagram adapter",
+        "Facebook adapter",
+        "WhatsApp adapter",
+        "External provider"
+      ],
+      "preconditions": [
+        "Existing caller authorization and consent checks apply independently.",
+        "Production adapter constructs the dedicated no-retry messaging manager; injected managers are trusted."
+      ],
+      "inputs": [
+        "Validated recipient/body",
+        "Validated configured or explicit account and token",
+        "Provider response or transport exception"
+      ],
+      "state": {
+        "initial": "unvalidated",
+        "states": [
+          "rejected",
+          "ready",
+          "dispatched",
+          "response",
+          "unknown",
+          "cancelled"
+        ]
+      },
+      "allowedTransitions": [
+        "unvalidated -> rejected or ready",
+        "ready -> dispatched once",
+        "dispatched -> response, unknown or cancelled"
+      ],
+      "forbiddenTransitions": [
+        "unknown -> automatic second dispatch",
+        "redirect -> another message POST",
+        "explicit account failure -> platform account fallback",
+        "asynchronous cancellation -> routine transport error"
+      ],
+      "effects": [
+        "One selected endpoint may receive a message; return response/error without retrying the external effect."
+      ],
+      "authorization": "Retain caller authorization. Explicit Instagram context cannot silently cross to configured account authority.",
+      "privacy": "Transport exception errors do not expose request headers, recipient or payload; provider response formatting retains its existing scope.",
+      "concurrency": "Shared pooled manager disables automatic retry on reused connections. No cross-invocation, queue or provider-internal duplicate guarantee.",
+      "idempotency": "No provider idempotency key is asserted. Ambiguous external outcomes require reconciliation before another call.",
+      "failure": "Validation rejects before dispatch. Synchronous transport failure returns unknown outcome. Async cancellation escapes. Redirect is an error.",
+      "recovery": "Caller must preserve ambiguous state. Do not activate default-off background workers until durable claim/reconciliation repairs qualify.",
+      "observability": "Source-bound local loopback request counts, mutation results and exact source gate receipts; no production messages.",
+      "implementation": [
+        "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
+        "tdf-hq/src/TDF/Services/MessagingManager.hs",
+        "tdf-hq/src/TDF/WhatsApp/Client.hs",
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/WhatsApp/Service.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/SocialTransportSpec.hs",
+        "scripts/verify-social-transport.py"
+      ],
+      "formalModels": [],
+      "verification": "Twelve actual loopback cases and four deliberately invalid compiled source controls. No provider or whole-program refinement proof.",
+      "evidence": "Exact candidate transport and backend gate receipts required.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Implementation and local source controls under evaluation; deployment not verified.",
+      "ambiguity": [
+        "Durable queue claims, caller retries, SMTP and provider reconciliation remain separate open requirements.",
+        "Injected low-level managers require the stated no-retry policy; production bindings have static correspondence checks."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped transport repair; full final backend gates and deployed acceptance remain outstanding."
+      }
+    },
+    {
+      "id": "DEPLOY-QUARANTINE-001",
+      "title": "Persistent outbound restriction for legacy recovery",
+      "statement": "An admitted legacy upgrade or abort must prevent new and resumed provider transports before stopping writers and before restoring any original container, including automatic Docker startup after reboot; missing or changed restriction must deny recovery qualification.",
+      "domain": "DEPLOY",
+      "authority": "inferred",
+      "source": "Legacy outbound worker and original-image restart audit; independent recovery review; formal/system/outbound-quarantine.md",
+      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic and validated local IPv6 Neighbor Discovery; Docker start revalidates the live policy.",
+      "contract": "formal/system/outbound-quarantine.md",
+      "actors": [
+        "Release operator",
+        "Docker daemon",
+        "Linux packet filter",
+        "Original or candidate API",
+        "External provider"
+      ],
+      "preconditions": [
+        "Dedicated host network/bypass admission and operational acceptance are required before production use.",
+        "Privileged noncooperating changes, host DNS relay and provider effects accepted before restriction are outside the packet boundary."
+      ],
+      "inputs": [
+        "Admitted bridge identifiers",
+        "Root-private guard and policy files",
+        "Observed nftables rules and systemd dependencies"
+      ],
+      "state": {
+        "initial": "unqualified",
+        "states": [
+          "unqualified",
+          "installed",
+          "restricted",
+          "reboot",
+          "denied",
+          "recovered-restricted"
+        ]
+      },
+      "allowedTransitions": [
+        "unqualified -> installed on separately authorized persistent installation",
+        "installed -> restricted after exact live and boot-order observations",
+        "reboot -> restricted before Docker startup",
+        "restricted -> recovered-restricted after all other recovery checks"
+      ],
+      "forbiddenTransitions": [
+        "missing or changed live policy -> Docker startup",
+        "candidate-only worker flag -> legacy recovery qualification",
+        "restriction -> assume prior external effect never occurred",
+        "automatic recovery -> remove restriction"
+      ],
+      "effects": [
+        "Scoped kernel packet denial; startup failure on policy drift. The component does not deploy, migrate, stop production services or remove restrictions."
+      ],
+      "authorization": "Production installation requires operator authorization and admitted dedicated host ownership. Local fixtures require explicit machine identity and empty Docker inventory.",
+      "privacy": "No customer data or provider credentials are needed for tests or policy observation. Packet bodies are not logged.",
+      "concurrency": "Atomic nftables load and exact resampling; the coordinator must retain release ownership. Concurrent privileged policy/routing changes remain excluded.",
+      "idempotency": "Boot may load a missing table. Existing changed tables are never overwritten. Every Docker start independently verifies presence and equality.",
+      "failure": "Failed live or persistent validation denies startup/qualification. Unknown delivery outcomes and partial application files remain evidence; no sent records are invented.",
+      "recovery": "Keep restriction through original-image or candidate recovery. Removal requires a separate qualified transition. Integrated first-stop and coordinator admission remain open.",
+      "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
+      "implementation": [
+        "ops/hetzner/outbound-quarantine.py",
+        "ops/hetzner/ufw-recovery-admission.py",
+        "ops/hetzner/dormant-container-admission.py",
+        "ops/hetzner/bpf-recovery-admission.py",
+        "ops/hetzner/network-recovery-admission.py",
+        "ops/hetzner/legacy-stop-policy.py",
+        "ops/hetzner/cold-container-admission.py",
+        "ops/hetzner/production-writer-fence.py"
+      ],
+      "tests": [
+        "scripts/test-outbound-quarantine.py",
+        "scripts/test-outbound-quarantine-linux.py",
+        "scripts/test-outbound-quarantine-reboot-linux.py",
+        "scripts/test-ufw-recovery-admission.py",
+        "scripts/test-dormant-container-admission.py",
+        "scripts/test-dormant-container-reboot-linux.py",
+        "scripts/test-bpf-recovery-admission.py",
+        "scripts/test-network-recovery-admission.py",
+        "scripts/test-network-namespace-linux.py",
+        "scripts/test-legacy-stop-policy.py",
+        "scripts/test-cold-container-admission.py",
+        "scripts/test-production-writer-fence.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/LegacyInterruptedStop.cfg",
+        "formal/event-operations/LegacyInterruptedStop.tla",
+        "formal/event-operations/LegacyInterruptedStopDirtyDatabase.cfg",
+        "formal/event-operations/LegacyInterruptedStopEarlyRelease.cfg",
+        "formal/event-operations/LegacyInterruptedStopFalseCompletion.cfg",
+        "formal/event-operations/LegacyInterruptedStopLostReply.cfg",
+        "formal/event-operations/LegacyInterruptedStopNoIntent.cfg",
+        "formal/event-operations/LegacyInterruptedStopUnrestrictedRecovery.cfg",
+        "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
+        "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg"
+      ],
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission. A same-boot completed-prefix check binds the independently reviewed initial container snapshot to the prepared original full configuration and derives running original services from the durable journal. Twelve real-file journal tests use synthetic Docker observations; no actual stop or recovery occurs. Pending intents, daemon/host restart and disposable phases reject. This predicate neither verifies exit-code/drain evidence nor authenticates qualification references. A separate restricted systemd observer admits only the exact persistent quarantine unit in addition to the ordinary backup units, with opening/closing inventory and live-policy equality. Synthetic negative controls cover missing, additional, duplicate and changed units/policy; ordinary WriterFence authority is unchanged.",
+      "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation and executable fixtures; host-bypass and coordinator integration unqualified.",
+      "ambiguity": [
+        "Host bypass admission, durable production installation, coordinator integration and exact legacy interrupted-stop mode remain open.",
+        "DNS relay and privileged host/root changes are excluded. Caddy renewal and other container-origin external calls are unavailable while restricted.",
+        "Operational acceptance of temporary restriction remains pending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "No production activation or integrated recovery qualification; explicit host assumptions and unresolved integration obligations."
       }
     }
   ]

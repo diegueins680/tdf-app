@@ -88,3 +88,69 @@ reopening: a historical observation does not prove a fence remains effective.
 Completion-publication fsync controls exercise all three completion sync points;
 only the fully published canonical observation can continue after successful fresh
 admission, without repeating its effect. Partial publication remains blocked.
+
+## Canonical shutdown adapter
+
+`production-writer-fence.py` supplies three actual stop effects to this journal.
+It is a library with no command-line execution path. Maintenance stops the
+registered backup timer, rejects an already dispatched backup service, then stops
+the admitted edge container. The next phase stops the exact API after checking
+its caller-retained legacy root, and the following phase stops the exact database.
+Each stop is followed by source/configuration and registered-unit resampling.
+The service set, image identities, mount topology, configuration digest and
+installed unit hashes must remain admitted throughout this sequence.
+
+`production-recovery-sources.py` admits the exact declared subset of stopped
+canonical services during these intermediate phases. Undeclared stopped services,
+unknown running containers and unacceptable exit states still reject admission.
+Unit checks reject unregistered TDF units, overrides, pending daemon reloads,
+transient units, dispatched jobs, changed unit bytes and changed enablement.
+Only the already-enabled backup timer is admitted; stopping it preserves that
+enablement and its restoration remains an explicit coordinator responsibility.
+
+The coordinator must first hold the shared restore reservation and complete host
+worker inventory, pin legacy root descriptors before maintenance, and later
+verify actual clean PostgreSQL control state. The adapter's receipt explicitly
+leaves host-worker inventory and clean shutdown unverified. It does not prove
+continuous exclusion of privileged/noncooperating writers. It offers no automatic
+restart, rollback or retry after an interrupted journal intent.
+
+`test-production-writer-fence.py` uses actual private journal files with synthetic
+daemon observations and effects. It checks stop order, partial state admission,
+configuration changes, a backup dispatch race and lost stop responses. No actual
+Docker/systemd stop or production recovery is claimed by those tests. The bounded
+release-journal model covers intent ordering only; it does not refine systemd,
+Docker, kernel descriptors or these exact effect implementations.
+
+`test-production-writer-fence-linux.py` additionally exercises actual systemd units,
+Docker stop effects, canonical source resampling, retained legacy uploads and the
+private journal on an exclusively owned synthetic Linux host. It requires explicit
+machine-id acknowledgement, an empty Docker inventory and absence of the canonical
+production directory, networks, volumes and TDF units before setup. API and edge
+are inert shell processes; PostgreSQL17 is real. Nonce-labelled resources are
+identity-checked before fixture cleanup, and files/journal evidence are retained.
+Never invoke this fixture on production. It does not qualify complete host-worker
+exclusion, production recovery, migration, restart or application behavior.
+
+Actual Docker execution exposed that `Mounts` can reorder during a stop. Source
+fingerprinting now sorts this already destination-unique collection by destination,
+while preserving every field. Permutation controls require stable identity, changed
+mount fields still change identity, and duplicate destinations still reject. No
+configuration field is dropped to make the shutdown observation pass.
+
+The separate [host scheduler admission](host-schedulers.md) checks reviewed cron,
+system timers and root-user timers/configuration without lifecycle effects. It
+does not replace process admission or the production writer fence.
+
+[Sampled host process admission](host-processes.md) complements scheduler policy
+with executable/invocation classes and observer ancestry. It does not establish
+continuous writer exclusion or replace effect-specific lifecycle checks.
+
+[Journaled capture](coordinated-capture.md) binds the next stage to this same
+reservation and exact plan, preserving a durable private receipt before completion.
+Complete deployment and interrupted-intent recovery remain unimplemented.
+
+The [interrupted-release abort boundary](interrupted-release-recovery.md) uses this
+same permanent lock and an irreversible abort directory. Normal journal admission
+and effects reject even an incomplete abort directory. It preserves the original
+sequence; production restart and terminal recovery remain separate obligations.

@@ -32,7 +32,7 @@ def make():
 def container():
     return {'Id':APP,'Image':IMAGE_ID,'Config':{'Labels':{canary.LABEL:NONCE},'Image':IMAGE,
             'Cmd':canary.COMMAND.copy(),'Entrypoint':None,'User':'1000:1000','WorkingDir':'/app'},
-        'HostConfig':{'NetworkMode':'container:'+DB,'ReadonlyRootfs':True,'Memory':canary.MEMORY,
+        'HostConfig':{'RestartPolicy': {'Name':'no','MaximumRetryCount':0}, 'AutoRemove': False, 'NetworkMode':'container:'+DB,'ReadonlyRootfs':True,'Memory':canary.MEMORY,
             'MemorySwap':canary.MEMORY,'NanoCpus':500000000,'PidsLimit':128,'CapDrop':['ALL'],
             'IpcMode':'private','SecurityOpt':['no-new-privileges:true'],
             'Tmpfs':{'/tmp':'rw,nosuid,nodev,size=16777216'}},
@@ -43,6 +43,72 @@ def container():
 
 
 class CanaryTests(unittest.TestCase):
+    def test_durable_creation_failure_prevents_canary_dispatch(self):
+        subject=make();publisher=Mock(side_effect=ValueError('synthetic uncertain publication'))
+        subject.creation_records=SimpleNamespace(publish=publisher)
+        with patch.object(subject,'prepare'),patch.object(subject,'execute') as execute:
+            with self.assertRaises(ValueError):subject.run()
+        publisher.assert_called_once_with('application-canary',subject)
+        execute.assert_not_called();self.assertFalse(subject.creation_attempted)
+
+    def test_durable_record_precedes_uncertain_canary_create(self):
+        subject=make();events=[]
+        subject.creation_records=SimpleNamespace(publish=lambda role,obj:events.append('published'))
+        def lost(command):events.append('create');raise TimeoutError('synthetic lost creation reply')
+        with patch.object(subject,'prepare'),patch.object(subject,'execute',side_effect=lost):
+            with self.assertRaises(TimeoutError):subject.run()
+        self.assertEqual(events,['published','create']);self.assertTrue(subject.creation_attempted)
+
+    def test_disposable_never_restarts_or_auto_removes(self):
+        for policy in ({"Name":"always","MaximumRetryCount":0},{"Name":"unless-stopped","MaximumRetryCount":0},{"Name":"on-failure","MaximumRetryCount":3},{"Name":"no","MaximumRetryCount":1},None):
+            data=container();data["HostConfig"]["RestartPolicy"]=policy
+            with self.subTest(policy=policy),self.assertRaises(ValueError):make().admit(data)
+        data=container();data["HostConfig"]["AutoRemove"]=True
+        with self.assertRaises(ValueError):make().admit(data)
+
+    def test_synthetic_startup_diagnostics_reject_real_source_before_inspection(self):
+        spec=importlib.util.spec_from_file_location('synthetic_diagnostics',ROOT/'scripts/test-physical-application-docker.py')
+        fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)
+        application=SimpleNamespace(database=SimpleNamespace(source=SOURCE),inspect=Mock(),target=APP)
+        with patch.object(fixture.subprocess,'run') as run:
+            with self.assertRaises(ValueError):fixture.synthetic_application_diagnostics(application)
+        application.inspect.assert_not_called();run.assert_not_called()
+
+    def test_synthetic_diagnostics_bound_logs_and_preserve_exit_state(self):
+        spec=importlib.util.spec_from_file_location('synthetic_diagnostics',ROOT/'scripts/test-physical-application-docker.py')
+        fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)
+        application=SimpleNamespace(database=SimpleNamespace(source='0'*64),target=APP,
+            inspect=Mock(return_value={'State':{'ExitCode':1,'OOMKilled':False,'Running':False}}))
+        with patch.object(fixture.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout='x'*20000,stderr='')):
+            result=fixture.synthetic_application_diagnostics(application)
+        self.assertEqual(result['exitCode'],1);self.assertEqual(len(result['startupLog']),16384)
+        with patch.object(fixture.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout='x'*65537,stderr='')):
+            with self.assertRaises(ValueError):fixture.synthetic_application_diagnostics(application)
+
+    def test_persisted_regional_defaults_replace_compiled_defaults_only(self):
+        value = {'locales': [{'code':'en','default':False},{'code':'es','default':True}],
+                 'currencies': [{'code':'USD','default':True}]}
+        environment = canary.regional_environment(value)
+        self.assertEqual(environment, {'SUPPORTED_LOCALES':'en,es','DEFAULT_LOCALE':'es',
+                                      'SUPPORTED_CURRENCIES':'USD','DEFAULT_CURRENCY':'USD'})
+        value['locales'][1]['code']='fr'
+        self.assertEqual(environment['DEFAULT_LOCALE'],'es')
+
+    def test_regional_projection_rejects_environment_injection_and_ambiguous_defaults(self):
+        valid = {'locales':[{'code':'es','default':True}], 'currencies':[{'code':'USD','default':True}]}
+        invalids=[]
+        for code in ('es,fr','es\nPAYPAL_CLIENT_SECRET=bad','../es','ES',''):
+            value=copy.deepcopy(valid);value['locales'][0]['code']=code;invalids.append(value)
+        for default in (False,1,'true',None):
+            value=copy.deepcopy(valid);value['locales'][0]['default']=default;invalids.append(value)
+        value=copy.deepcopy(valid);value['locales'].append({'code':'en','default':True});invalids.append(value)
+        value=copy.deepcopy(valid);value['locales'].append({'code':'es','default':False});invalids.append(value)
+        value=copy.deepcopy(valid);value['currencies']=[];invalids.append(value)
+        value=copy.deepcopy(valid);value['PAYPAL_CLIENT_SECRET']='synthetic';invalids.append(value)
+        value=copy.deepcopy(valid);value['currencies'][0]['code']='usd';invalids.append(value)
+        for value in invalids:
+            with self.subTest(value=value),self.assertRaises(ValueError):canary.regional_environment(value)
+
     def test_admits_exact_owned_disposable_runtime(self):
         subject=make();subject.admit(container());self.assertEqual(subject.target,APP)
 
@@ -92,6 +158,20 @@ class CanaryTests(unittest.TestCase):
         for bad in ['--env-file','--publish','--privileged',SOURCE]:self.assertNotIn(bad,command)
         for key in ['GIT_SHA','SOURCE_COMMIT','PAYPAL_CLIENT_SECRET','SMTP_PASSWORD','DATABASE_URL']:
             self.assertNotIn(key,canary.ENVIRONMENT)
+
+    def test_physical_database_requires_dependency_registration_before_docker(self):
+        subject=make()
+        subject.database.require_application_owner=lambda app: (_ for _ in ()).throw(ValueError('Unregistered application'))
+        with patch.object(subject,'execute') as execute,patch.object(subject,'inspect_database') as inspect:
+            with self.assertRaisesRegex(ValueError,'Unregistered application'):subject.prepare()
+        execute.assert_not_called();inspect.assert_not_called()
+
+    def test_restored_content_input_is_not_a_mutable_caller_alias(self):
+        manifests = {'assets': {'sentinel': ['original']}, 'uploads': {}}
+        subject = canary.Canary(make().restore, make().database, DIRECTORY, IMAGE, REV,
+                                restored_content=manifests)
+        manifests['assets']['sentinel'].append('changed')
+        self.assertEqual(subject.restored_content['assets']['sentinel'], ['original'])
 
     def test_database_network_must_still_be_disconnected(self):
         subject=make();data={'NetworkSettings':{'Networks':{'none':{}}},'State':{'Running':True,'Pid':123}}

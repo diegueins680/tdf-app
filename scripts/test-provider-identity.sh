@@ -20,7 +20,7 @@ psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$migration"
 export TDF_PROVIDER_IDENTITY_TEST_DB="host=$PGHOST dbname=$test_database"
 cd "$repo_root/tdf-hq"
-stack test tdf-hq:test:tdf-hq-test --fast --ghc-options=-O0 --jobs 1 --test-arguments='--match provider-identity-postgresql'
+stack test tdf-hq:test:tdf-hq-test --jobs 1 --test-arguments='--match provider-identity-postgresql'
 
 if psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$repo_root/tdf-hq/sql/2026-09-18_provider_subject_identity_rollback.sql" >/dev/null 2>&1; then
   echo 'Rollback incorrectly removed established provider bindings' >&2

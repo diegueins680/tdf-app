@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Requires backend Operations access. Stores a private immutable document under persistent uploads/contracts. kind is normalized to a lowercase ASCII slug of at most 64 characters, beginning and ending with a letter or digit. id and created_at are server managed and rejected in input; encoded payload is limited to 256 KiB and LaTeX verbatim terminators are rejected recursively. Other JSON properties are document content, not a payment instruction. This creation has no idempotency key: a lost response can leave an unreferenced complete document and retry creates another UUID. */
+        post: operations["createContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contracts/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Requires backend Operations access. Reads the persistent document or legacy contracts/store only when absent; differing duplicate copies or invalid stored JSON fail closed. Neither storage tree is a public static mount. PDF rendering requires the configured local rendering toolchain. */
+        get: operations["getContractPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contracts/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Delivery is unavailable. Authorization, canonical UUID, email-only body and stored-document validation still apply. A valid existing document returns 503 and causes no delivery; no successful sent or queued acknowledgement is supported. */
+        post: operations["sendContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/invoices": {
         parameters: {
             query?: never;
@@ -15820,6 +15871,194 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    createContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    kind: string;
+                } & {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Complete persisted document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "created";
+                        /** Format: uuid */
+                        id: string;
+                        kind: string;
+                        payload: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid UUID or body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or missing session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence conflict, invalid document, persistence or rendering failure */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getContractPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical lowercase non-nil UUID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Generated PDF bytes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Invalid UUID or body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or missing session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence conflict, invalid document, persistence or rendering failure */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sendContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical lowercase non-nil UUID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: email */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Invalid UUID or body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or missing session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence conflict, invalid document, persistence or rendering failure */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract delivery is unavailable; no message was sent */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
     listInvoices: {
         parameters: {
             query?: never;

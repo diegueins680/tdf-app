@@ -80,6 +80,19 @@ class Boundaries(unittest.TestCase):
             self.assertFalse(result['privateUploads']['canonicalWritableBind'])
             self.assertNotIn(SECRET, json.dumps(result))
 
+    def test_outbound_worker_flags_preserve_absence_and_explicit_configuration(self):
+        value = container('api')
+        keys = ['SOCIAL_AUTO_REPLY_ENABLED', 'COURSE_PAYMENT_REMINDER_ENABLED']
+        missing = module.summarize_container('api', value)
+        for key in keys:
+            self.assertIn(key, missing['missingBooleanConfiguration'])
+            self.assertNotIn(key, missing['booleanConfiguration'])
+        value['Config']['Env'] += [keys[0] + '=true', keys[1] + '=false']
+        present = module.summarize_container('api', value)
+        self.assertEqual(present['booleanConfiguration'][keys[0]], 'true')
+        self.assertEqual(present['booleanConfiguration'][keys[1]], 'false')
+        self.assertTrue(set(keys).isdisjoint(present['missingBooleanConfiguration']))
+
     def test_database_container_is_private_and_has_expected_volume(self):
         self.assertEqual(module.summarize_container('db',container('db'))['volume'],module.VOLUME)
         for mutation in [

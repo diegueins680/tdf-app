@@ -4,6 +4,7 @@
 No production mounts, credentials, published ports, image pulls or provider routes.
 The restore owner must retain its durable pending reservation until cleanup succeeds.
 """
+import copy
 import json
 import os
 from pathlib import Path
@@ -27,6 +28,13 @@ ENVIRONMENT = {
     'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false', 'TICKET_CONFIRMATION_WORKER_ENABLED': 'false',
 }
 COMMAND = ['env', '-i', *[key+'='+value for key,value in ENVIRONMENT.items()], '/app/production-entrypoint.sh']
+REGIONAL_SQL = """SELECT json_build_object(
+ 'locales',(SELECT json_agg(json_build_object('code',item.code,'default',enabled.default_locale) ORDER BY item.code)
+ FROM deployment_locale_enablement enabled JOIN locale_reference item ON item.id=enabled.locale_id
+ WHERE enabled.deployment_code='default' AND enabled.enabled AND item.active AND item.deprecated_at IS NULL),
+ 'currencies',(SELECT json_agg(json_build_object('code',item.code,'default',enabled.default_currency) ORDER BY item.code)
+ FROM deployment_currency_enablement enabled JOIN currency_reference item ON item.id=enabled.currency_id
+ WHERE enabled.deployment_code='default' AND enabled.enabled AND item.active AND item.deprecated_at IS NULL));"""
 HOST_ENV = {'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8'}
 # Executed in a pinned Linux namespace fd, using host Python and no proxy/redirect.
 # Only fixed metadata endpoints are reachable from this probe interface.
@@ -60,8 +68,29 @@ def require(condition):
     if not condition: raise ValueError('Isolated application canary boundary rejected')
 
 
+def regional_environment(value):
+    """Only persisted public regional references may extend the cleared environment."""
+    require(isinstance(value, dict) and set(value) == {'locales', 'currencies'})
+    result = {}
+    for name, pattern, supported, default in (
+            ('locales', r'[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*', 'SUPPORTED_LOCALES', 'DEFAULT_LOCALE'),
+            ('currencies', r'[A-Z]{3}', 'SUPPORTED_CURRENCIES', 'DEFAULT_CURRENCY')):
+        rows = value[name]
+        require(isinstance(rows, list) and 0 < len(rows) <= 256)
+        codes, defaults = [], []
+        for row in rows:
+            require(isinstance(row, dict) and set(row) == {'code', 'default'}
+                    and isinstance(row['code'], str) and len(row['code']) <= 64
+                    and re.fullmatch(pattern, row['code']) and type(row['default']) is bool)
+            codes.append(row['code'])
+            if row['default']: defaults.append(row['code'])
+        require(len(set(codes)) == len(codes) and len(defaults) == 1)
+        result[supported] = ','.join(sorted(codes)); result[default] = defaults[0]
+    return result
+
+
 class Canary:
-    def __init__(self, restore, target, directory, image, revision):
+    def __init__(self, restore, target, directory, image, revision, *, restored_content=None):
         require(re.fullmatch(r'diegueins680/tdf-hq@sha256:[a-f0-9]{64}', image))
         require(re.fullmatch(r'[a-f0-9]{40}', revision))
         require(target.target is not None and target.target != target.source)
@@ -70,6 +99,11 @@ class Canary:
         self.image, self.revision, self.nonce = image, revision, target.nonce
         self.target, self.creation_attempted, self.paused = None, False, False
         self.image_id = None
+        self.runtime_command = COMMAND.copy()
+        self.regional_configuration = None
+        self.restored_content = copy.deepcopy(restored_content)
+        self.content_evidence = None
+        self.creation_records = getattr(target, 'creation_records', None)
         self.name = 'tdf-audit-canary-'+self.nonce
         require(self.directory == Path('/opt/tdf/backups')/('rehearsal-'+self.nonce))
 
@@ -90,7 +124,22 @@ class Canary:
         return data
 
     def prepare(self):
+        owner_guard = getattr(self.database, 'require_application_owner', None)
+        if owner_guard is not None:
+            owner_guard(self)  # physical copies require registered cleanup order
         self.inspect_database()
+        # Read from the admitted disposable DB only, using one read-only query.
+        # Compiled defaults can differ from persisted deployment defaults (es in
+        # the current catalog). Never rewrite the restored registry to hide it.
+        raw = self.execute(['exec', self.database.target, 'env', '-i',
+            'PATH=/usr/lib/postgresql/17/bin:/usr/local/bin:/usr/bin:/bin',
+            'PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=5000',
+            'psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-h', '127.0.0.1',
+            '-p', '5432', '-U', 'postgres', '-d', 'tdf_hq', '-c', REGIONAL_SQL])
+        self.regional_configuration = regional_environment(json.loads(raw))
+        environment = {**ENVIRONMENT, **self.regional_configuration}
+        self.runtime_command = ['env', '-i', *[key+'='+value for key,value in environment.items()],
+                                '/app/production-entrypoint.sh']
         require(self.execute(['ps','--all','--quiet','--filter','label='+LABEL]).strip() == '')
         rows=json.loads(self.execute(['image','inspect', self.image]))
         require(len(rows)==1 and self.image in rows[0]['RepoDigests'])
@@ -99,29 +148,37 @@ class Canary:
         self.image_id=rows[0]['Id']
         info=self.directory.lstat()
         require(stat.S_ISDIR(info.st_mode) and info.st_uid==0 and info.st_mode & 0o077==0)
-        for name in ('canary-assets','canary-uploads'):
-            path=self.directory/name
-            path.mkdir(mode=0o700)  # exclusive; never reuse pre-existing content
-            os.chown(path,1000,1000)
+        if self.restored_content is None:
+            for name in ('canary-assets','canary-uploads'):
+                path=self.directory/name
+                path.mkdir(mode=0o700)  # exclusive; never reuse pre-existing content
+                os.chown(path,1000,1000)
+            self.content_evidence = {'mode': 'new-empty-directories'}
+        else:
+            verifier = getattr(self.database, 'admit_application_content', None)
+            require(callable(verifier))
+            self.content_evidence = {'mode': 'restored-copy-verified',
+                                    'copies': verifier(self, self.restored_content)}
 
     def command(self):
         require(self.image_id is not None)
         args=['create','--pull=never','--name',self.name,'--label',LABEL+'='+self.nonce,
-              '--network=container:'+self.database.target,'--read-only','--user','1000:1000',
+              '--network=container:'+self.database.target,'--read-only', '--restart=no','--user','1000:1000',
               '--workdir','/app','--memory='+str(MEMORY),'--memory-swap='+str(MEMORY),
               '--cpus=0.5','--pids-limit=128','--cap-drop=ALL','--security-opt=no-new-privileges:true',
               '--tmpfs','/tmp:rw,nosuid,nodev,size=16777216']
         for name,destination in [('canary-assets','/data/assets'),('canary-uploads','/app/uploads')]:
             args += ['--mount','type=bind,src='+str(self.directory/name)+',dst='+destination]
-        return args+[self.image,*COMMAND]
+        return args+[self.image,*self.runtime_command]
 
     def admit(self,data):
         target=data['Id']
         require(re.fullmatch(r'[a-f0-9]{64}',target) and target not in (self.database.source,self.database.target))
         require(self.target is None or target==self.target)
         cfg=data['Config'];host=data['HostConfig']
+        require(host.get('RestartPolicy') == {'Name':'no','MaximumRetryCount':0} and host.get('AutoRemove') is False)
         require(cfg['Labels'].get(LABEL)==self.nonce and cfg['Image']==self.image and data['Image']==self.image_id)
-        require(cfg['Cmd']==COMMAND and not cfg.get('Entrypoint') and cfg['User']=='1000:1000' and cfg['WorkingDir']=='/app')
+        require(cfg['Cmd']==self.runtime_command and not cfg.get('Entrypoint') and cfg['User']=='1000:1000' and cfg['WorkingDir']=='/app')
         require(host['NetworkMode']=='container:'+self.database.target and not data['NetworkSettings']['Networks'])
         require(host['ReadonlyRootfs'] and host['Memory']==MEMORY and host['MemorySwap']==MEMORY)
         require(host['NanoCpus']==500000000 and host['PidsLimit']==128 and host['CapDrop']==['ALL'])
@@ -179,6 +236,8 @@ class Canary:
 
     def run(self):
         self.prepare()
+        if self.creation_records is not None:
+            self.creation_records.publish('application-canary', self)
         self.creation_attempted=True
         self.target=self.execute(self.command()).strip()
         self.inspect()
@@ -206,6 +265,8 @@ class Canary:
             self.paused=False
         self.await_ready()
         return {'image':self.image,'imageId':self.image_id,'sourceRevision':self.revision,'binarySha256':binary_hash,
+                'content':self.content_evidence,
+                'regionalConfiguration':self.regional_configuration,
                 'databasePauseProbe':unavailable['code'],'databaseRecovery':'passed',
                 'network':'disposable-database-only','productionCredentialsProvided':False,
                 'providerConnectivity':False,'scope':'Startup, version and readiness failure/recovery only; not full API conformance.'}

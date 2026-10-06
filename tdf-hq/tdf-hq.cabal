@@ -11,8 +11,12 @@ executable tdf-hq-exe
   main-is:          Main.hs
   hs-source-dirs:   app, src
   other-modules:
+    TDF.Storage.AtomicPublication
+    TDF.Contracts.Storage
     TDF.App.Boot
     TDF.App.StartupResponse
+    TDF.App.Shutdown
+    TDF.App.DatabaseRetry
     TDF.App.FailureBoundary
     TDF.App.Readiness
     TDF.API.Admin
@@ -114,6 +118,7 @@ executable tdf-hq-exe
     TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cron
+    TDF.Services.MessagingManager
     TDF.Cors
     TDF.DB
     TDF.DB.ReputationConsent
@@ -269,6 +274,7 @@ executable tdf-hq-exe
     , postgresql-simple
     , http-types
     , http-media
+    , unix
     , warp                 >=3.3
     , wai
     , wai-cors
@@ -306,6 +312,10 @@ test-suite tdf-hq-test
   hs-source-dirs:    test, src
   main-is:           Spec.hs
   other-modules:
+    TDF.Storage.AtomicPublication
+    TDF.Contracts.Storage
+    TDF.AtomicPublicationSpec
+    TDF.ContractStorageSpec
     TDF.LiveIntakeIdentitySpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
@@ -327,6 +337,8 @@ test-suite tdf-hq-test
     TDF.API.Admin
     TDF.App.Boot
     TDF.App.StartupResponse
+    TDF.App.Shutdown
+    TDF.App.DatabaseRetry
     TDF.App.FailureBoundary
     TDF.App.Readiness
     TDF.API.Bands
@@ -425,6 +437,7 @@ test-suite tdf-hq-test
     TDF.Config
     TDF.Cors
     TDF.Cron
+    TDF.Services.MessagingManager
     TDF.Courses.Production
     TDF.DB
     TDF.DB.ReputationConsent
@@ -520,6 +533,8 @@ test-suite tdf-hq-test
     TDF.ServerFanClubSpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
+    TDF.ShutdownSpec
+    TDF.SocialTransportSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
@@ -591,6 +606,7 @@ test-suite tdf-hq-test
     , http-types
     , http-media
     , wai
+    , unix
     , warp                 >=3.3
     , wai-cors
     , http2                >=5.0 && <5.3

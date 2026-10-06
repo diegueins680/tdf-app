@@ -159,3 +159,18 @@ test('preparation negative controls reject stale/provenance/target/identity/dest
     const args = await input(); mutate(args); assert.throws(() => prepareHetznerRelease(args));
   }
 });
+
+test('preparation requires outbound containment without rewriting observed operator values', async () => {
+  const args = await input();
+  args.receipt.snapshot.containers.api.booleanConfiguration.SOCIAL_AUTO_REPLY_ENABLED = 'true';
+  const before = structuredClone(args);
+  const plan = prepareHetznerRelease(args);
+  assert.deepEqual(args, before);
+  assert.equal(plan.observedFlags.SOCIAL_AUTO_REPLY_ENABLED, 'true');
+  assert.equal(plan.observedFlags.COURSE_PAYMENT_REMINDER_ENABLED, undefined);
+  assert.deepEqual(plan.requiredOutboundConfiguration, {
+    SOCIAL_AUTO_REPLY_ENABLED: 'false', COURSE_PAYMENT_REMINDER_ENABLED: 'false',
+  });
+  assert.equal(plan.executionAllowed, false);
+  assert.ok(plan.remainingGates.some(gate => gate.includes('legacy-image recovery')));
+});

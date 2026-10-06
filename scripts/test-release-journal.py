@@ -181,7 +181,8 @@ class ReleaseJournalTests(unittest.TestCase):
         self.initialize()
         pidfile = self.root.parent/(self.root.name+'-child.pid')
         self.addCleanup(lambda: pidfile.unlink(missing_ok=True))
-        child_code = 'import pathlib,os,time;pathlib.Path(%r).write_text(str(os.getpid()));time.sleep(30)' % str(pidfile)
+        self.addCleanup(lambda: pidfile.with_suffix('.pending').unlink(missing_ok=True))
+        child_code = 'import pathlib,os,time;p=pathlib.Path(%r);t=p.with_suffix(".pending");t.write_text(str(os.getpid()));t.rename(p);time.sleep(30)' % str(pidfile)
         parent_code = ('import importlib.util,pathlib,subprocess,sys,time\n'
             + 's=importlib.util.spec_from_file_location("journal",%r);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\n' % str(ROOT/'ops/hetzner/release-journal.py')
             + 'def effect(context):\n subprocess.Popen(%r);time.sleep(30)\n' % [sys.executable, '-c', child_code]

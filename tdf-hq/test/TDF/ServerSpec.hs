@@ -37,6 +37,8 @@ import Database.Persist.Sql
     , toSqlKey
     )
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
+import qualified TDF.Cron as Cron
+import qualified TDF.LogBuffer as WorkerLog
 import TDF.API
     ( AdsInquiry (..)
     , ServiceMarketplaceBookingReq (..)
@@ -738,6 +740,19 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    it "keeps disabled outbound workers unscheduled without accessing their database" $ do
+        WorkerLog.clearLogs
+        let env = Env
+                { envPool = error "disabled worker must not access a database"
+                , envConfig = marketplaceTestConfig False
+                }
+        Cron.startSocialAutoReplyJob env
+        Cron.startCoursePaymentReminderJob env
+        logs <- map WorkerLog.logMessage <$> WorkerLog.getRecentLogs 10
+        logs `shouldContain` ["[Cron][SocialAutoReply] Disabled by configuration."]
+        logs `shouldContain` ["[Cron][CoursePayment] Disabled by configuration."]
+        any (T.isInfixOf "Scheduled") logs `shouldBe` False
+
     describe "live database readiness" $ do
         it "returns503 rather than success when the handler cannot acquire its database" $ do
             let env = Env (error "PRIVATE_DATABASE_CONNECTION_DETAILS") (marketplaceTestConfig False)
@@ -15665,6 +15680,8 @@ marketplaceTestConfig seedFlag =
         , eventDiscoveryCountryCode = Nothing
         , googleRoutesApiKey = Nothing
         , googleRoutesApiBase = "https://routes.googleapis.com"
+        , socialAutoReplyEnabled = False
+        , coursePaymentReminderEnabled = False
         , eventLogisticsRecheckEnabled = False
         , artistEnrichmentEnabled = False
         , artistEnrichmentAutoPublish = False

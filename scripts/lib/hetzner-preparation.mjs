@@ -59,11 +59,13 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
       providerAccounts: database.providerAccounts ?? null, socialRuntime: database.socialRuntime ?? null },
     requiredCorsConfiguration: { ALLOW_ALL_ORIGINS: 'false', CORS_DISABLE_DEFAULTS: 'true',
       ALLOWED_ORIGINS: 'https://www.tdfrecords.net,https://tdfrecords.net' },
+    requiredOutboundConfiguration: { SOCIAL_AUTO_REPLY_ENABLED: 'false', COURSE_PAYMENT_REMINDER_ENABLED: 'false' },
     remainingGates: [
       'Current exact-head review, all quality gates, normal merge and post-merge CI',
       'Registry image digest and embedded version bound to merged source; compatible reviewed recovery image',
       'Exclusive release lock; recheck runtime identity, ledger, effective Compose configuration and provider/feature flags',
       'Drain all old writers, including background workers; do not treat a stop request as proof of drainage',
+      'Keep automatic social replies and course payment reminders disabled pending durable claims/reconciliation; candidate-only flags do not qualify legacy-image recovery',
       'Preserve and verify legacy /app/uploads under the writer fence; provision the private host bind with the image user ownership before replacing the API container',
       'Consistent database, public assets and private uploads backup; actual isolated restore and schema/content verification',
       'Apply reviewed pending migrations and verify full schema; preserve operator provider/feature choices',

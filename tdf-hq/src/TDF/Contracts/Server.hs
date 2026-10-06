@@ -24,8 +24,7 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, defaultTimeLocale, formatTime, getCurrentTime)
 import           GHC.Generics (Generic)
 import           Servant
-import           System.Directory (createDirectoryIfMissing, doesFileExist)
-import           System.FilePath ((</>))
+import           TDF.Contracts.Storage (storeContractBytes, readContractBytes)
 import           TDF.Contracts.API
 import qualified TDF.Handlers.InputList as InputList
 import           Data.UUID (toText)
@@ -65,12 +64,6 @@ instance A.FromJSON StoredContract where
         , "payload"
         , "created_at"
         ]
-
-contractsDir :: FilePath
-contractsDir = "contracts" </> "store"
-
-contractPath :: Text -> FilePath
-contractPath cid = contractsDir </> T.unpack cid <> ".json"
 
 server :: Server ContractsAPI
 server = createH :<|> pdfH :<|> sendH
@@ -113,29 +106,22 @@ server = createH :<|> pdfH :<|> sendH
     sendH :: Text -> A.Value -> Handler A.Value
     sendH cid body = do
       contractId <- either throwError pure (validateContractId cid)
-      recipientEmail <- either throwError pure (validateContractSendPayload body)
+      _recipientEmail <- either throwError pure (validateContractSendPayload body)
       storedResult <- liftIO (loadContract contractId)
       case storedResult of
         Left errMsg ->
           throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
         Right Nothing -> throwError err404 { errBody = "Contract not found" }
         Right (Just _)  ->
-          pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId, "email" .= recipientEmail])
+          throwError err503 { errBody = "Contract delivery is unavailable" }
 
 persistContract :: StoredContract -> IO ()
-persistContract stored = do
-  createDirectoryIfMissing True contractsDir
-  BL.writeFile (contractPath (scId stored)) (A.encode stored)
+persistContract stored = storeContractBytes "." (scId stored) (A.encode stored)
 
 loadContract :: Text -> IO (Either Text (Maybe StoredContract))
 loadContract cid = do
-  let path = contractPath cid
-  exists <- doesFileExist path
-  if not exists
-    then pure (Right Nothing)
-    else do
-      bytes <- BL.readFile path
-      pure (Just <$> decodeStoredContractFor cid bytes)
+  bytes <- readContractBytes "." cid
+  pure (traverse (decodeStoredContractFor cid) bytes)
 
 decodeStoredContract :: BL.ByteString -> Either Text StoredContract
 decodeStoredContract bytes =

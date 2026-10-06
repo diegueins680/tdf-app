@@ -690,6 +690,10 @@ for (const locale of ['es', 'en']) {
     await expect(page).not.toHaveURL(/token=/);
   });
   test(`@critical PW-PER-LOCALE ${locale} signup and recovery retain language and destination`, async ({ page }, testInfo) => {
+    // Four sequential accessibility scans include animation/font settlement.
+    // Keep each assertion's existing deadline; the complete WebKit journey can
+    // exceed the default 30s without a failed assertion (CI run37405113649).
+    test.setTimeout(60_000);
     const en = locale === 'en';
     await page.addInitScript(language => localStorage.setItem('tdf-hq-ui/locale', language), locale);
     await page.goto('/login?signup=1&intent=follow_artists&redirect=%2Ffans');

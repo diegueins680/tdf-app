@@ -43,8 +43,12 @@ def hash_value(value, length=64):
 
 
 def validate_plan(plan):
-    require(isinstance(plan, dict) and set(plan) == PLAN_KEYS)
+    require(isinstance(plan, dict))
+    versioned = set(plan) == PLAN_KEYS | {'schemaVersion', 'legacyStopPolicyHash'}
+    require(set(plan) == PLAN_KEYS or (versioned and type(plan['schemaVersion']) is int
+            and plan['schemaVersion'] == 2 and hash_value(plan['legacyStopPolicyHash'])))
     for key, value in plan.items():
+        if key == 'schemaVersion':continue
         if key.endswith('Revision'):
             require(hash_value(value, 40))
         elif key.endswith('Image'):
@@ -68,6 +72,8 @@ class Journal:
 
     def guard(self):
         require(not self.closed and self.pid == os.getpid())
+        # Even an incomplete abort latch permanently prevents release continuation.
+        require('abort' not in os.listdir(self.directory_fd))
         locked = private_file(self.lock_fd)
         named = os.stat('release.lock', dir_fd=self.directory_fd, follow_symlinks=False)
         require((locked.st_dev, locked.st_ino) == (named.st_dev, named.st_ino))

@@ -39,6 +39,31 @@ The caller must durably publish and authenticate the bundle manifest and bind th
 entire archive digest, including padding, before any later release admission.
 An attacker able to replace both inputs is outside this primitive's trust boundary.
 
+## Legacy application writable layer
+
+`ops/hetzner/stopped-application-storage.py` retains an admitted Linux rootful
+Docker container's actual root and mount namespace before its caller stops it.
+Admission binds the full container ID, immutable image, process cgroup, pidfd,
+start timestamp and configured mounts. A child checks the actual held namespace's
+mount table; mounts covering or below `/app/uploads` are rejected. The host Python
+must support `setns` and `pidfd_open`; namespace entry requires host privileges.
+The helper does not stop containers or establish the production writer fence.
+
+After caller-owned shutdown, capture requires that same instance to be exited,
+without OOM/restart and with exit code0 or143. It reads `/app/uploads` through the
+retained root descriptor, with no-follow component traversal and the same complete
+metadata checks as normal file capture. Missing uploads are recorded explicitly.
+Actual namespace and Docker identity checks repeat after capture. A restarted
+instance cannot reuse the old descriptors. Descriptor ownership ends when the
+context closes; the caller must capture before replacing the old container.
+Privileged host tampering and concurrent external writers remain outside the
+primitive's guarantees. No Docker archive metadata or storage-driver path is
+assumed to be complete or stable.
+
+`capture_directory_fd` borrows a caller-admitted directory descriptor and never
+closes it. This allows capture after the original pathname/process disappears;
+the caller remains responsible for source authorization and writer exclusion.
+
 ## Executable evidence
 
 `python3 scripts/test-recovery-files.py` creates actual synthetic archives and files.
@@ -49,6 +74,86 @@ and metadata, invalid manifests, extended attributes and numeric PAX headers.
 The repository quality gate runs these checks. Linux execution and macOS checks
 are distinct evidence; neither establishes an actual production content restore.
 No filesystem formal refinement proof is claimed.
+
+`test-stopped-application-storage.py` checks lifecycle/mount/descriptor controls.
+The opt-in Linux `test-stopped-application-docker.py` creates only a new64MiB
+network-isolated synthetic container. It tests actual namespace retention through
+shutdown, full file metadata replay, rejection of a real unsupported xattr, and
+running/restarted-source rejection. Its image stop signal is explicitly SIGTERM;
+image defaults must not make unrelated failures satisfy a negative control.
+The fixture checks identity before every lifecycle mutation and retains the
+durable reservation if cleanup cannot be verified. CI runs this fixture; production
+container shutdown and production data recovery are separate evidence.
+
+## One bound recovery bundle
+
+`coordinated-recovery-bundle.py` packages exactly six caller-admitted trees:
+`database`, `production`, `edge-data`, `edge-config`, `host-units` and
+`legacy-uploads`. The production tree includes its assets, persistent uploads and
+protected configuration/secrets. Host units are staged by the coordinator with
+original metadata and source evidence; missing legacy uploads require an explicit
+empty staged tree and separately retained absence evidence. The bundle helper
+cannot establish that caller-supplied roots are the actual production roots.
+
+All components share a source revision, Mobile revision, runtime-observation hash,
+migration-manifest hash, release nonce and PostgreSQL system identifier. The helper
+holds all source directory descriptors while capturing and rechecks every tree
+and named root identity before sealing. Overlapping or identical roots, output
+inside any source/workspace, missing roles and unexpected roles reject capture.
+These checks complement the caller's full-duration writer fence and mount
+admission; sampled rechecks do not establish an atomic snapshot.
+
+The exclusive private outer archive contains exact inner archives and one canonical
+private index with their full manifests/digests. The complete outer manifest and
+digest must be retained as trusted evidence alongside the encryption receipt.
+Replay requires that trusted receipt plus an independently expected binding. It
+first checks/restores the outer bytes, then validates all six inner manifests and
+digests before replaying any component into new destinations. No overwrite or
+partial-success receipt is supported. Failed private output remains for diagnosis.
+The existing2GiB aggregate archive bound also applies to the assembled bundle;
+exceeding it rejects instead of silently dropping a component.
+
+`test-coordinated-recovery-bundle.py` exercises exact six-tree metadata replay,
+release-binding mismatch, source changes across component captures, pathname
+replacement, missing/extra/overlapping roots, changed bytes and invalid inner
+indices. The return value expressly does not establish database recovery, usable
+secrets, encryption or off-host recovery. Those checks must consume the same bundle
+through the coordinator before release. This is executable file correspondence,
+not a filesystem refinement proof or an operational release command.
+
+## Synthetic encryption and off-host integration
+
+The opt-in `scripts/test-recovery-bundle-ssh.py` joins the bundle, pinned age and
+transfer primitives. It generates a temporary **synthetic** identity on the
+operator host, uses the existing strictly verified SSH connection and executes
+only in a transient DynamicUser sandbox with private network/tmp, read-only
+system/home,256MiB memory and220-second lifetime. The six component trees and
+secret sentinel are synthetic. It does not access Docker or production data.
+
+The operator retains ciphertext in a caller-supplied private directory, fsyncs and
+reopens it, then returns that same copy. The remote decrypts those retrieved bytes
+and verifies all restored file metadata and the synthetic secret. Negative controls
+reject changed ciphertext against its original trusted hash and a mismatched
+release binding. The ciphertext control is not an independent age-authentication
+test after rebinding its trusted hash; those crypto controls live in the envelope
+suite. Local identity cleanup is ordinary temporary-file deletion, not secure
+erasure, and is not a production key-custody design.
+
+Run only with already installed, checksum-pinned local and Linux age tool bundles:
+
+```sh
+python3 scripts/test-recovery-bundle-ssh.py \
+  --identity-file /absolute/operator/ssh-key \
+  --tools-directory /absolute/private/local-age-tools \
+  --linux-tools-directory /absolute/private/linux-age-tools \
+  --output-directory /absolute/private/existing-new-evidence
+```
+
+The helper has no network or production credential fallback. Receipts contain
+source hashes, revision, aggregate protocol facts and explicit production exclusions.
+CI remains deterministic and does not require this external SSH connection.
+An empirical synthetic pass is not production database recovery, coherent source
+capture, usable real credentials or independent durable production key custody.
 
 ## Remaining coordinated recovery sequence
 
@@ -69,3 +174,26 @@ never restore an older database over accepted production data.
 
 This sequence is an implementation plan with explicit prerequisites, not a working
 operator deployment command. Current command authority remains `ops/hetzner/README.md`.
+
+## Canonical source admission
+
+`production-recovery-sources.py` samples the fixed local Docker socket, requires
+the trusted plan's exact API, database and edge container/image identities, and
+admits only canonical bind mounts and the three local named volumes. Added
+capabilities normalize Docker's optional `CAP_` prefix; only edge
+`NET_BIND_SERVICE` is permitted. Unknown running/restarting containers, ambiguous
+canonical services, unsafe restart policies, remote volumes, unexpected mounts
+and overlapping configured roots reject admission. Raw environment values never
+leave the observer; a private configuration digest binds the sample.
+
+The initial sample requires the three canonical services running. A later
+`stopped=True` sample requires their same identities stopped with admitted exit
+statuses. Neither sample stops anything or proves a continuous writer fence.
+The coordinator must hold release/rehearsal ownership, separately admit host
+workers and filesystem mounts/inodes, stop writers, resample, and verify actual
+PostgreSQL clean shutdown. A stopped sample alone never claims those properties.
+Concurrent privileged host changes remain outside this sampled boundary.
+
+`test-production-recovery-sources.py` checks identities, lifecycle states,
+capability spelling variants, unexpected writers, storage aliases and the sole
+canonical persistent-upload bind. The repository quality gate runs these controls.

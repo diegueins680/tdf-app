@@ -39,4 +39,4 @@ END $$;
 SQL
 export TDF_MARKETPLACE_IDENTITY_TEST_DB="host=$PGHOST dbname=$test_database"
 cd "$repo_root/tdf-hq"
-stack test tdf-hq:test:tdf-hq-test --fast --ghc-options=-O0 --jobs 1 --test-arguments='--match marketplace-contact-identity-postgresql'
+stack test tdf-hq:test:tdf-hq-test --jobs 1 --test-arguments='--match marketplace-contact-identity-postgresql'
