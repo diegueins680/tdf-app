@@ -7,6 +7,7 @@ import Control.Exception (IOException, bracket)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
 import Data.Proxy (Proxy(..))
+import qualified Data.ByteString.Char8 as BS
 import Network.Wai (defaultRequest, requestHeaders)
 import qualified Network.Wai as Wai
 import Network.Wai.Internal (ResponseReceived (..))
@@ -77,6 +78,29 @@ spec = do
                         `shouldNotBe` Just "true"
                     pure ResponseReceived
                 pure ()
+        forM_ ["GET", "POST"] $ \verb ->
+            it ("accepts public checkout lookup-token preflight for trusted origin: " <> show verb) $
+                withProductionCors [("ALLOW_ORIGINS", Just "https://www.tdfrecords.net")] $ do
+                    middleware <- corsPolicy
+                    let preflight origin = defaultRequest
+                          { Wai.requestMethod = "OPTIONS"
+                          , requestHeaders = [("Origin", origin)
+                            , ("Access-Control-Request-Method", verb)
+                            , ("Access-Control-Request-Headers", "content-type,x-order-lookup-token,idempotency-key")]
+                          }
+                        noHandler _ _ = expectationFailure "Preflight reached application" >> pure ResponseReceived
+                    _ <- middleware noHandler (preflight "https://www.tdfrecords.net") $ \response -> do
+                        Wai.responseStatus response `shouldBe` HTTPTypes.status200
+                        lookup "Access-Control-Allow-Origin" (Wai.responseHeaders response)
+                            `shouldBe` Just "https://www.tdfrecords.net"
+                        lookup "Access-Control-Allow-Headers" (Wai.responseHeaders response)
+                            `shouldSatisfy` maybe False (BS.isInfixOf "x-order-lookup-token")
+                        pure ResponseReceived
+                    _ <- middleware noHandler (preflight "https://checkout.attacker.invalid") $ \response -> do
+                        Wai.responseStatus response `shouldNotBe` HTTPTypes.status200
+                        lookup "Access-Control-Allow-Origin" (Wai.responseHeaders response) `shouldBe` Nothing
+                        pure ResponseReceived
+                    pure ()
         forM_ ["https://tdfui.pages.dev", "https://pr-123.tdfui.pages.dev", "https://pr-123.tdf-app.pages.dev", "http://localhost:5173"] $ \origin ->
             it ("does not implicitly trust production origin " <> show origin) $
                 withProductionCors [("CORS_DISABLE_DEFAULTS", Just "false")] $ do

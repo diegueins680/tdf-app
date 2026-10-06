@@ -2028,6 +2028,9 @@ main = hspec $ do
                   "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"totalMinor\":1}"
             (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
               `shouldSatisfy` isLeft
+            let taxPayload = "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"taxIncluded\":true}"
+            (eitherDecode taxPayload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
 
         it "snapshots buyer and organizer fee allocations in integer minor units" $ do
             EventTickets.calculateTicketPrice 2500 2 0 200 200 0
@@ -2042,6 +2045,27 @@ main = hspec $ do
                 , EventTickets.tpbOrganizerPayableMinor = 4900
                 , EventTickets.tpbPlatformFeeMinor = 200
                 }
+
+        it "keeps an inclusive advertised price exact for one through four tickets" $ do
+            let quote q = EventTickets.calculateTicketPriceWithTaxMode True 2000 q 0 0 0 1500
+            map (fmap EventTickets.tpbCheckoutTotalMinor . quote) [1..4]
+              `shouldBe` map Right [2000,4000,6000,8000]
+            map (fmap EventTickets.tpbTaxMinor . quote) [1..4]
+              `shouldBe` map Right [261,522,783,1043]
+
+        it "conserves inclusive discounts, tax, fees and organizer liability" $ do
+            let quote = EventTickets.calculateTicketPriceWithTaxMode True 2000 4 1000 200 300 1500
+            fmap (\b -> (EventTickets.tpbCheckoutTotalMinor b, EventTickets.tpbTaxMinor b,
+                         EventTickets.tpbPlatformFeeMinor b, EventTickets.tpbOrganizerPayableMinor b)) quote
+              `shouldBe` Right (7140,931,350,5859)
+            EventTickets.calculateTicketPriceWithTaxMode True 2000 1 0 0 10000 1500
+              `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPriceWithTaxMode True maxBound 2 0 0 0 1500
+              `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPriceWithTaxMode True 2000 1 0 0 0 10001
+              `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPriceWithTaxMode True 2000 1 0 0 0 0
+              `shouldBe` EventTickets.calculateTicketPrice 2000 1 0 0 0 0
 
         it "rejects quantity, discount, fee, tax, and overflow tampering" $ do
             EventTickets.calculateTicketPrice 2500 0 0 200 200 0 `shouldSatisfy` isLeft

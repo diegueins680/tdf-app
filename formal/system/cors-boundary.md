@@ -77,3 +77,10 @@ restores the old exact-path comparison and must fail the two trailing-slash
 proof/origin checks. This establishes the middleware/routing boundary only;
 identity, persistence, manual fulfilment and deployed behavior have separate tests
 and requirements in `PRIV-INTAKE-001` and `PRIV-DELETE-001`.
+Public checkout uses `X-Order-Lookup-Token` as a guest order capability. Explicitly
+trusted origins must be able to send this existing header on GET/POST requests.
+The CORS preflight must advertise that header without admitting an untrusted
+origin or widening the origin allowlist. Endpoint token validation and order
+binding remain mandatory; CORS header permission grants no order authority.
+`TDF.CorsSpec` executes both methods through actual WAI middleware and denies
+the same preflight from an untrusted origin.
