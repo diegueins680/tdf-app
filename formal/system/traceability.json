@@ -1007,7 +1007,7 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database and nine negative controls",
+      "evidence": "Gate output on the migrated CI database and twelve negative controls",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
@@ -1017,7 +1017,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Gate and controls pass on a local PG16 rehearsal; PG17 CI execution and application-level transition evidence remain."
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
       }
     },
     {
@@ -2924,7 +2924,7 @@
       "statement": "Customer-facing knowledge retrieval may rank existing public courses using cached embeddings, but must render current public metadata, never raw indexed private content, and omit a course absent when its metadata is read.",
       "domain": "PRIV",
       "actors": [
-        "Anonymous assistant visitor",
+        "Authenticated Social Inbox staff using the assistant",
         "Instagram/Facebook/WhatsApp automated reply recipient"
       ],
       "preconditions": [
@@ -2957,7 +2957,7 @@
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
       ],
-      "authorization": "Anonymous and customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
+      "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
       "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
@@ -4944,7 +4944,7 @@
         "classification": "PARTIAL",
         "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
       },
-      "evidence": "Gate output, twelve negative controls and served-application HTTP status checks",
+      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
       "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
@@ -4986,8 +4986,9 @@
       ],
       "effects": [
         "Legacy course Stripe payment-intent/checkout-session routes retired.",
-        "/ads/assist limited to authenticated Social Inbox staff.",
-        "Public session input-list routes retired; scheduling-module routes remain."
+        "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
+        "Public session input-list routes retired; scheduling-module routes remain.",
+        "Public inventory list rejects session-scoped availability filters."
       ],
       "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
@@ -5005,7 +5006,8 @@
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "scripts/test-public-routes.py"
+        "scripts/test-public-routes.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [],
       "ambiguity": [
@@ -7219,7 +7221,7 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "6672c5dcbdabbe66800ea7ebf9ffb8b7d0309876628dca90d6ca9dfa617e117b",
-    "formal/system/public-routes.json": "e4abf2df153d6bc43d1d82f792c0ee52dc9c53fa3ed6792e561915c5971c73ba",
+    "formal/system/public-routes.json": "80db901322baf857897bb16edb3b0bab067fed3c27ea1ddd671d6c957b8b328d",
     "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
@@ -7287,8 +7289,8 @@
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
-    "scripts/check-public-routes.py": "bcdcb5978079d4da7886f2099649bfad1bc8f6eaa19020c2fb69261f386264b6",
-    "scripts/check-state-machines.py": "a240a0e3a14b6c69bac32fe0e7da5bf3d7514dd8b09f71f20c020a90be4c0658",
+    "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+    "scripts/check-state-machines.py": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -7336,7 +7338,7 @@
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+    "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
@@ -7351,7 +7353,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
-    "scripts/test-public-routes.py": "dbd3a288a15c71a8990d3bf5509a59239b61ce980db14b6ad3200ef1a89890b9",
+    "scripts/test-public-routes.py": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -7360,7 +7362,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "62925dd2a6dc21887a841a602eaa35ac047bdabfc73842a961113d8fd1c75d71",
+    "scripts/test-state-machines.py": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -7552,9 +7554,9 @@
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
-    "tdf-hq/src/TDF/Routes/Courses.hs": "2786ba150d258d1d9a161ddc07873bcad75a8c1caae024ea714f94ee233e919c",
+    "tdf-hq/src/TDF/Routes/Courses.hs": "5bdb685e621d0ef7dd2e1b4237b7a811f2ef425ae69ef66efa826e7321b8bfd2",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "862658d97d324eac0cfd3f0c1d853effbadc97379a0f8072b0462401497ed534",
-    "tdf-hq/src/TDF/Server.hs": "0ecf2e1e0fc6881bfff7ac6e8ebea6e087e345cead0db1caf35ca2429dcca9a0",
+    "tdf-hq/src/TDF/Server.hs": "34d32a48006af10bd01a54341a9b26c38b558fd4c09dd160b33aec307b396605",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -7606,7 +7608,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
-    "tdf-hq/test/TDF/ServerSpec.hs": "90272d72d4a3b671feb929778a8ccae0d00ec24d6156e23a2c3128101a66d81e",
+    "tdf-hq/test/TDF/ServerSpec.hs": "388aed9085138bb7e02c80a2f479a794ef84b2ca460148283c17b5529e0a9cf3",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -9597,6 +9599,10 @@
       },
       {
         "requirement": "AUTH-OPS-READ-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
       },
       {
@@ -13764,7 +13770,7 @@
     {
       "id": "SURFACE-4c692dca29529ca7",
       "path": "scripts/check-public-routes.py",
-      "sha256": "bcdcb5978079d4da7886f2099649bfad1bc8f6eaa19020c2fb69261f386264b6",
+      "sha256": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13776,7 +13782,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "a240a0e3a14b6c69bac32fe0e7da5bf3d7514dd8b09f71f20c020a90be4c0658",
+      "sha256": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15435,7 +15441,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15500,6 +15506,10 @@
         },
         {
           "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "tests"
         },
         {
@@ -16056,7 +16066,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "dbd3a288a15c71a8990d3bf5509a59239b61ce980db14b6ad3200ef1a89890b9",
+      "sha256": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16222,7 +16232,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "62925dd2a6dc21887a841a602eaa35ac047bdabfc73842a961113d8fd1c75d71",
+      "sha256": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26315,7 +26325,7 @@
     {
       "id": "SURFACE-3d1a28f3fa60015b",
       "path": "tdf-hq/src/TDF/Handlers/InputList.hs",
-      "sha256": "03544e71376bafd54820e74e4efbc63075f7984c95ef93955428f30e9bd7cbc0",
+      "sha256": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -26580,7 +26590,7 @@
     {
       "id": "SURFACE-52b73c408ae18bc0",
       "path": "tdf-hq/src/TDF/Routes/Courses.hs",
-      "sha256": "2786ba150d258d1d9a161ddc07873bcad75a8c1caae024ea714f94ee233e919c",
+      "sha256": "5bdb685e621d0ef7dd2e1b4237b7a811f2ef425ae69ef66efa826e7321b8bfd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26622,7 +26632,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "0ecf2e1e0fc6881bfff7ac6e8ebea6e087e345cead0db1caf35ca2429dcca9a0",
+      "sha256": "34d32a48006af10bd01a54341a9b26c38b558fd4c09dd160b33aec307b396605",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27100,7 +27110,7 @@
     {
       "id": "SURFACE-1ac6ca33fd4e0411",
       "path": "tdf-hq/src/TDF/Services/Stripe.hs",
-      "sha256": "140847798e0aca5f7feb308afd0deb3e59c1ef2e4b33ce1049a8111e7da83d36",
+      "sha256": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -27928,7 +27938,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "90272d72d4a3b671feb929778a8ccae0d00ec24d6156e23a2c3128101a66d81e",
+      "sha256": "388aed9085138bb7e02c80a2f479a794ef84b2ca460148283c17b5529e0a9cf3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34497,7 +34507,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8bd794e4e5c38e474cf8c10af85493114f5af7c2f2d6dddb3b4f67bca8f2d01f",
+      "sourceSha256": "755ff3973c601bdfffb6714c06c4db3be81cf89ae36c1392abea129e864435fb",
       "definition": {
         "states": [
           "absent",
