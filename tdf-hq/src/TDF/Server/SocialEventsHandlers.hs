@@ -8303,6 +8303,7 @@ parseTicketStatus raw =
         "cancelled" -> Just "cancelled"
         "canceled" -> Just "cancelled"
         "refunded" -> Just "refunded"
+        "refund_pending" -> Just "refund_pending"
         _ -> Nothing
 
 -- | Parse event and invitation ids, returning a typed pair or an HTTP 400 error.

@@ -12696,6 +12696,10 @@ main = hspec $ do
                         ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
     describe "normalizeTicketStatus" $ do
+        it "preserves refund holds instead of presenting the ticket as issued" $ do
+            normalizeTicketStatus (Just "refund_pending") `shouldBe` "refund_pending"
+            normalizeTicketStatus (Just " REFUND_PENDING ") `shouldBe` "refund_pending"
+
         it "defaults to issued when missing" $ do
             normalizeTicketStatus Nothing `shouldBe` "issued"
 
