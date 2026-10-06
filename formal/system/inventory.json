@@ -12757,7 +12757,7 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "02a23cd346152bd94a518f68d5a7a89a2410e3513e8c0871144da143d51e534e",
+      "sha256": "503ac751cd434a62bc9b391e71b76be0cf35e889c85e4ab17e9dcf3fcdda0a88",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13171,7 +13171,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "6610a68b866be03c48a9f8264828e0025806e6f963372825c9cb9fde9364a111",
+      "sha256": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17259,7 +17259,7 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/activation-readiness-2026-10-05.md",
-      "sha256": "ec0046ff501b4bdbed18981314fc94143c331ac1d3d9ec4b16d3a31d0c5c4c88",
+      "sha256": "7a68a09751fbe8a475fe39502b4792478c48d6a5ddc229f9cb210265478c2ee7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21599,7 +21599,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b19651504bb66029ddf081e8250bcb4778f586da9786d2e16d0df2be63877d1e",
+      "sha256": "09ee7791939a27e37f66dd3b426776bc940693d01f45cbdbf7ea47609aad985a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21662,7 +21662,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "0b8360bfa640d8aaef707f8c66218c4ac6ced324716d90fa5f0937f3255dd138",
+      "sha256": "1c5551eacda943a7956d9fc2b1a2db5009cdeb2db33a92169a4a8cc118fbcb06",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

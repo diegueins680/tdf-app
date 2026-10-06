@@ -199,7 +199,7 @@
       }
     },
     "refund-api-resource-cleanup.json": {
-      "sha256": "8d54da5e54a0643d1c5efc81a885a52c8fa24ab13c4c10ca715127168c806b9b",
+      "sha256": "45744fc42d52ae48957ae09ef45ce62a2423cb3a7023596e639ba505e4bd20bd",
       "result": {
         "temporaryWebhookRemoved": true,
         "stoppedOwnedGroups": [
@@ -209,7 +209,8 @@
           "ui",
           "smtp",
           "api"
-        ]
+        ],
+        "browserControllerConfirmedClosed": true
       }
     },
     "refund-api-final-native-report.json": {

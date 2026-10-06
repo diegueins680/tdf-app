@@ -4406,7 +4406,8 @@
         "scripts/test-provider-retry-runtime.sh",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
-        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -6010,7 +6011,7 @@
     ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "2ab7075be8e5535dd8fc945d378d5a0a54d85099fbc0af60d13aad8e2a936d52",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9b909a41b75dc75874a65804a865bcb1549809d54275037dd5a4f7c1b5e7f310",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -6363,7 +6364,7 @@
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "98d78a12d3ca2ecd33851155470ff77b71b6434616594b109c2fe4ed8fae20ca",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
-    "tdf-hq/src/TDF/Ticketing/Refund.hs": "02a23cd346152bd94a518f68d5a7a89a2410e3513e8c0871144da143d51e534e",
+    "tdf-hq/src/TDF/Ticketing/Refund.hs": "503ac751cd434a62bc9b391e71b76be0cf35e889c85e4ab17e9dcf3fcdda0a88",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "1a97ef0a0fea72f14df03fec59336faf3eac4eccb89a665e32cb1605722dfbe4",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
@@ -6390,6 +6391,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "5731f99ce1425b5671fdb70e773f181d433941c9e8a544ebf08a23295bc73fcf",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
@@ -9170,6 +9172,12 @@
       }
     ],
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": [
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "tests"
@@ -24315,7 +24323,7 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "02a23cd346152bd94a518f68d5a7a89a2410e3513e8c0871144da143d51e534e",
+      "sha256": "503ac751cd434a62bc9b391e71b76be0cf35e889c85e4ab17e9dcf3fcdda0a88",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25009,9 +25017,14 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "6610a68b866be03c48a9f8264828e0025806e6f963372825c9cb9fde9364a111",
+      "sha256": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3871c8d09b71bf61",
@@ -30004,7 +30017,6 @@
     "SURFACE-916f8955abd0c6a2",
     "SURFACE-b84bbb40486fa4d8",
     "SURFACE-eef0c0019f0d35ca",
-    "SURFACE-0874fb5da2116211",
     "SURFACE-3871c8d09b71bf61",
     "SURFACE-6e0e63efd78f6dcd",
     "SURFACE-6a608596a0a41e90",

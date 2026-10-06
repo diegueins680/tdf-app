@@ -4405,7 +4405,8 @@
         "scripts/test-provider-retry-runtime.sh",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
-        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
