@@ -677,6 +677,28 @@
       "decision": "adopted with bounded observation scope",
       "rationale": "Use an open task directory plus start-time/parent/cgroup and executable identity checks; reject missing executable of a still-present task. Repeat samples and explicitly exclude process-memory attestation and continuous writer guarantees.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ABORT-QUIESCENCE-001",
+      "source": "https://raw.githubusercontent.com/moby/moby/docker-v29.1.3/daemon/stop.go",
+      "supportingSource": "https://raw.githubusercontent.com/moby/moby/docker-v29.1.3/daemon/kill.go",
+      "title": "Pinned Docker stop and detached cleanup",
+      "recommendation": "Client cancellation does not cancel stop; a detached kill fallback means a stop event alone is not a transitive task-completion barrier.",
+      "applicability": "Interrupted shutdown before restarting original container IDs",
+      "decision": "reject event-only quiescence; adopt full-host reboot abort barrier",
+      "rationale": "Independent source review identifies a possible delayed cleanup schedule, not an experimentally reproduced Docker bug. A fresh host boot removes prior in-memory tasks; runtime/storage admission remains mandatory.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ABORT-QUIESCENCE-002",
+      "source": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+      "supportingSource": "https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#random",
+      "title": "Restart policies and boot identity",
+      "recommendation": "Stopped unless-stopped containers and still-eligible originals differ across restart; boot identity is kernel evidence, not host authentication.",
+      "applicability": "Abort recovery permits original deployment availability and preserves its current storage",
+      "decision": "adopted with explicit trusted-host and availability assumptions",
+      "rationale": "Record possible writes before reboot, require changed boot on independently authenticated same host, inspect actual service state and preserve current database. Do not claim uninterrupted maintenance or clean shutdown from reboot.",
+      "verifiedAt": "2026-10-06"
     }
   ]
 }

@@ -68,6 +68,8 @@ class Journal:
 
     def guard(self):
         require(not self.closed and self.pid == os.getpid())
+        # Even an incomplete abort latch permanently prevents release continuation.
+        require('abort' not in os.listdir(self.directory_fd))
         locked = private_file(self.lock_fd)
         named = os.stat('release.lock', dir_fd=self.directory_fd, follow_symlinks=False)
         require((locked.st_dev, locked.st_ino) == (named.st_dev, named.st_ino))

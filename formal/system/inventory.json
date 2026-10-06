@@ -77,6 +77,7 @@
       "ops/hetzner/host-scheduler-admission.py",
       "ops/hetzner/host-scheduler-policy.json",
       "ops/hetzner/inspect-runtime.py",
+      "ops/hetzner/interrupted-release-recovery.py",
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/offline-recovery-capacity.py",
@@ -421,6 +422,8 @@
       "scripts/test-host-process-admission.py",
       "scripts/test-host-scheduler-admission.py",
       "scripts/test-identity-reconciliation.sh",
+      "scripts/test-interrupted-release-recovery-linux.py",
+      "scripts/test-interrupted-release-recovery.py",
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-isolated-application-canary.py",
       "scripts/test-live-intake-identity.sh",
@@ -2733,6 +2736,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b44e78965a5c5434",
+      "path": "ops/hetzner/interrupted-release-recovery.py",
+      "sha256": "7807d7bec3099b19348fae0020e30f8117528672dde737b41a6afa2281c59a91",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
       "sha256": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
@@ -2807,7 +2816,7 @@
     {
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
-      "sha256": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
+      "sha256": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3995,7 +4004,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "49e3641d980d72d040b54d00aca431cd2ed01f012d409ade073e3c92033ba179",
+      "sha256": "384efb849367c2e55e7b620df55653da78592147fd5c248276232ece618a3332",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4761,6 +4770,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-07daae1965acae82",
+      "path": "scripts/test-interrupted-release-recovery-linux.py",
+      "sha256": "2f596d8b107520765b5ad791827f680451abfda465dddbb0eec25d733c16fc8a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c014e1cdf87429f",
+      "path": "scripts/test-interrupted-release-recovery.py",
+      "sha256": "e477198a3adcefb951fd985e681fee2d3df071b06627dc056a941c45a54bbe8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-180b5ac69cd86e73",
       "path": "scripts/test-invitation-update-concurrency.sh",
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
@@ -5207,7 +5228,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "5b0629a4409c7e8c891d076ac7574e75f91d352b2e3d02277dc674b11234b596",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19316,6 +19337,48 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/event-operations/AbortRecovery.cfg",
+      "sha256": "935dea80e4c8ab6dcef38b0aa106a8f7777fac404e8696c53e76b6caaf9fc880",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortRecovery.tla",
+      "sha256": "24a0269987a5787ea50443984f69728e9b48aabbf606f788902448b83e42291a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AbortRecoveryIgnoreLatch.cfg",
+      "sha256": "fd68bea0d400e46099955b1ad0b52e46b379d61022b361725e69115eab9bd072",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortRecoveryNoIntent.cfg",
+      "sha256": "ae22bed151a82c041491284f4094f461d4fb6883e654d2c4f74edd998d23b477",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortRecoveryPostWrite.cfg",
+      "sha256": "3ba4862e6807d01670e3ebae061247e920389fb85f280ba8a5d57e10014a2fce",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortRecoverySameBoot.cfg",
+      "sha256": "e2d10fbd404f80474359ba8eb685b9ff4718e4416f49fc21047cfdd703fb162e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/AccessCodeValidation.cfg",
       "sha256": "4a29f764763dbfba0ee6e790329799965083118660bfce5f1f16df597a3f2dca",
       "authority": "inferred",
@@ -22277,6 +22340,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/interrupted-release-recovery.md",
+      "sha256": "39098d3da625fca8923788764391ebe65298b9d4b7db03a1618e3341a7c990fc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/invoice-receipts.md",
       "sha256": "325f44f68a6491d38e1782037f83365222ada188ca5a2f2acd74a5de3643e90d",
       "authority": "inferred",
@@ -22404,7 +22474,7 @@
     },
     {
       "path": "formal/system/release-journal.md",
-      "sha256": "2362574efdbb52aa912e56712478d30ef1f04a29bbf78763a3ab16a556865161",
+      "sha256": "6c9f2a20c211572ddb0ca3b2a360e0364b3278e8573260a2299c3018e8cf4144",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22418,14 +22488,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "629b6837f13bfaa7ae3231b1979ed004305f339e2415668a21a7db2c8afc30af",
+      "sha256": "3a88d916b57ce420a2204b50d192da2704b2fde1421075e53c51b3044b11f297",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "d05204636cff3c2df3a03d219d1c59c5bc4018256149a657c6a974efd96045f8",
+      "sha256": "a300165e04fc235e988757a74e247717038dccac7d453e29310d4f6f126475af",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29539,6 +29609,81 @@
     }
   ],
   "modelConfigurations": [
+    {
+      "configuration": "formal/event-operations/AbortRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  HonorLatch = TRUE",
+        "  PersistIntent = TRUE",
+        "  RequireFreshBoot = TRUE",
+        "  RejectPostWrite = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK IntentBeforeReboot FreshBootAdmission PreWriteAbortOnly"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortRecoveryIgnoreLatch.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  HonorLatch = FALSE",
+        "  PersistIntent = TRUE",
+        "  RequireFreshBoot = TRUE",
+        "  RejectPostWrite = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK IntentBeforeReboot FreshBootAdmission NoReleaseResume"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortRecoveryNoIntent.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  HonorLatch = TRUE",
+        "  PersistIntent = FALSE",
+        "  RequireFreshBoot = TRUE",
+        "  RejectPostWrite = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK IntentBeforeReboot FreshBootAdmission PreWriteAbortOnly"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortRecoveryPostWrite.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  HonorLatch = TRUE",
+        "  PersistIntent = TRUE",
+        "  RequireFreshBoot = TRUE",
+        "  RejectPostWrite = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK IntentBeforeReboot FreshBootAdmission PreWriteAbortOnly"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortRecoverySameBoot.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  HonorLatch = TRUE",
+        "  PersistIntent = TRUE",
+        "  RequireFreshBoot = FALSE",
+        "  RejectPostWrite = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK IntentBeforeReboot FreshBootAdmission PreWriteAbortOnly"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
     {
       "configuration": "formal/event-operations/AccessCodeValidation.cfg",
       "declarations": [

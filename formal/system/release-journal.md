@@ -149,3 +149,8 @@ continuous writer exclusion or replace effect-specific lifecycle checks.
 [Journaled capture](coordinated-capture.md) binds the next stage to this same
 reservation and exact plan, preserving a durable private receipt before completion.
 Complete deployment and interrupted-intent recovery remain unimplemented.
+
+The [interrupted-release abort boundary](interrupted-release-recovery.md) uses this
+same permanent lock and an irreversible abort directory. Normal journal admission
+and effects reject even an incomplete abort directory. It preserves the original
+sequence; production restart and terminal recovery remain separate obligations.

@@ -102,6 +102,11 @@ run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invarian
 run_negative_tlc ApplicationCanaryCleanup.cfg applicationcanarycleanup 'Invariant DatabaseOutlivesApp is violated' ApplicationCanary.tla
 run_negative_tlc ApplicationCanaryFalseGreen.cfg applicationcanaryfalsegreen 'Invariant VerifiedReceipt is violated' ApplicationCanary.tla
 run_tlc ReleaseJournal.tla ReleaseJournal.cfg releasejournal
+run_tlc AbortRecovery.tla AbortRecovery.cfg abortrecovery
+run_negative_tlc AbortRecoveryIgnoreLatch.cfg abortignorelatch 'Invariant NoReleaseResume is violated' AbortRecovery.tla
+run_negative_tlc AbortRecoveryNoIntent.cfg abortnointent 'Invariant IntentBeforeReboot is violated' AbortRecovery.tla
+run_negative_tlc AbortRecoverySameBoot.cfg abortsameboot 'Invariant FreshBootAdmission is violated' AbortRecovery.tla
+run_negative_tlc AbortRecoveryPostWrite.cfg abortpostwrite 'Invariant PreWriteAbortOnly is violated' AbortRecovery.tla
 run_negative_tlc ReleaseJournalNoIntent.cfg releasejournalnointent 'Invariant DurableIntentBeforeEffect is violated' ReleaseJournal.tla
 run_negative_tlc ReleaseJournalNewNonce.cfg releasejournalnewnonce 'Invariant OneReservedRelease is violated' ReleaseJournal.tla
 run_negative_tlc ReleaseJournalWrongObservation.cfg releasejournalwrongobservation 'Invariant BoundCompletion is violated' ReleaseJournal.tla

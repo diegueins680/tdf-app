@@ -5976,7 +5976,8 @@
         "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md.",
         "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md.",
         "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
-        "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md."
+        "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md.",
+        "Interrupted pre-write abort requires independently durable original admission and authenticated same-host fresh boot; see formal/system/interrupted-release-recovery.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -6004,7 +6005,8 @@
         "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state.",
         "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation.",
         "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
-        "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation."
+        "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation.",
+        "Recognized frozen pre-write journal -> irreversible abort latch -> durable write-possible reboot intent -> observe changed boot on same trusted host. Original service recovery remains separately unimplemented."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6017,18 +6019,19 @@
         "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion.",
         "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion.",
         "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
-        "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel."
+        "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel.",
+        "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command."
       ],
       "effects": [
         "Private immutable records and permanent lock",
         "Caller effect only after durable admission"
       ],
       "authorization": "Caller must authorize target and effect; the journal is not deployment authority or an external-effect verifier.",
-      "privacy": "Only digests, fixed phase names, sequence and nonce recorded; no raw secret, target document or exception output.",
+      "privacy": "Normal records contain digests, phase and nonce; the abort latch additionally holds full private original-deployment admission and must never be published.",
       "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
       "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
       "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
-      "recovery": "Explicit operator recovery and terminal rotation remain unimplemented; retain records and preserve all possible writes from database restart intent onward.",
+      "recovery": "Abort latch and fresh-boot boundary implemented; original runtime readmission/restarts, malformed-publication recovery and terminal rotation remain open. Preserve current data and all possible writes.",
       "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
       "implementation": [
         "ops/hetzner/release-journal.py",
@@ -6041,7 +6044,8 @@
         "ops/hetzner/host-process-policy.json",
         "ops/hetzner/coordinated-capture.py",
         "ops/hetzner/coordinated-encryption.py",
-        "ops/hetzner/coordinated-retrieval.py"
+        "ops/hetzner/coordinated-retrieval.py",
+        "ops/hetzner/interrupted-release-recovery.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6054,14 +6058,22 @@
         "scripts/test-host-process-admission.py",
         "scripts/test-coordinated-capture.py",
         "scripts/test-coordinated-encryption.py",
-        "scripts/test-coordinated-retrieval.py"
+        "scripts/test-coordinated-retrieval.py",
+        "scripts/test-interrupted-release-recovery.py",
+        "scripts/test-interrupted-release-recovery-linux.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
         "formal/event-operations/ReleaseJournal.cfg",
         "formal/event-operations/ReleaseJournalNoIntent.cfg",
         "formal/event-operations/ReleaseJournalNewNonce.cfg",
-        "formal/event-operations/ReleaseJournalWrongObservation.cfg"
+        "formal/event-operations/ReleaseJournalWrongObservation.cfg",
+        "formal/event-operations/AbortRecovery.tla",
+        "formal/event-operations/AbortRecovery.cfg",
+        "formal/event-operations/AbortRecoveryIgnoreLatch.cfg",
+        "formal/event-operations/AbortRecoveryNoIntent.cfg",
+        "formal/event-operations/AbortRecoverySameBoot.cfg",
+        "formal/event-operations/AbortRecoveryPostWrite.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
@@ -6954,6 +6966,12 @@
     "e2e/web/persona-public.spec.mjs": "80baeedb18b6f93197e1a8f45a68d73610effd4fbec46bc1d416f1cfab1b2a1f",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+    "formal/event-operations/AbortRecovery.cfg": "935dea80e4c8ab6dcef38b0aa106a8f7777fac404e8696c53e76b6caaf9fc880",
+    "formal/event-operations/AbortRecovery.tla": "24a0269987a5787ea50443984f69728e9b48aabbf606f788902448b83e42291a",
+    "formal/event-operations/AbortRecoveryIgnoreLatch.cfg": "fd68bea0d400e46099955b1ad0b52e46b379d61022b361725e69115eab9bd072",
+    "formal/event-operations/AbortRecoveryNoIntent.cfg": "ae22bed151a82c041491284f4094f461d4fb6883e654d2c4f74edd998d23b477",
+    "formal/event-operations/AbortRecoveryPostWrite.cfg": "3ba4862e6807d01670e3ebae061247e920389fb85f280ba8a5d57e10014a2fce",
+    "formal/event-operations/AbortRecoverySameBoot.cfg": "e2d10fbd404f80474359ba8eb685b9ff4718e4416f49fc21047cfdd703fb162e",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
     "formal/event-operations/AccountDeletionAuthority.tla": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
     "formal/event-operations/AccountDeletionAuthorityNoGrantLock.cfg": "20756b6a3bdc85fb904bc8c81a6e0a7c8bcb2c38e06f7bc17c7f52dca93fc8e4",
@@ -7057,6 +7075,7 @@
     "ops/hetzner/host-scheduler-admission.py": "5c98446d3fc788bad2c81a231a80b8d33c72d212ab04f966cdf046fe747850ab",
     "ops/hetzner/host-scheduler-policy.json": "134dd49cfd8c7017a80cbfa9466db4d911f6e8e285fad1f884b1981ee53cb4ca",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+    "ops/hetzner/interrupted-release-recovery.py": "7807d7bec3099b19348fae0020e30f8117528672dde737b41a6afa2281c59a91",
     "ops/hetzner/isolated-application-canary.py": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
     "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
@@ -7068,7 +7087,7 @@
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
-    "ops/hetzner/release-journal.py": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
+    "ops/hetzner/release-journal.py": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
     "ops/hetzner/stopped-application-storage.py": "5072c12f9d3c8584af02d3c54da8855713436205d64dad75465ff4c146bcc8ad",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
@@ -7153,7 +7172,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "49e3641d980d72d040b54d00aca431cd2ed01f012d409ade073e3c92033ba179",
+    "scripts/quality-repo.sh": "384efb849367c2e55e7b620df55653da78592147fd5c248276232ece618a3332",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7177,6 +7196,8 @@
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-host-process-admission.py": "877ff9d02d2f09320ae9b400b0afb8895a4664d1023833b72eb19678266dc375",
     "scripts/test-host-scheduler-admission.py": "4385af0ac2c32f450fc00458379d683b094c7a17d937e02335b2bcc0c298effc",
+    "scripts/test-interrupted-release-recovery-linux.py": "2f596d8b107520765b5ad791827f680451abfda465dddbb0eec25d733c16fc8a",
+    "scripts/test-interrupted-release-recovery.py": "e477198a3adcefb951fd985e681fee2d3df071b06627dc056a941c45a54bbe8f",
     "scripts/test-isolated-application-canary.py": "76c4fccedb8b34234f27e327f740ac674da8c0db6192146767e7af5484073d60",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -7219,7 +7240,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+    "scripts/verify-event-operations-formal.sh": "5b0629a4409c7e8c891d076ac7574e75f91d352b2e3d02277dc674b11234b596",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11004,6 +11025,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/interrupted-release-recovery.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-release-journal.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -11046,6 +11073,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-interrupted-release-recovery.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-interrupted-release-recovery-linux.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ReleaseJournal.tla": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -11071,6 +11110,42 @@
       }
     ],
     "formal/event-operations/ReleaseJournalWrongObservation.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AbortRecovery.tla": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AbortRecovery.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AbortRecoveryIgnoreLatch.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AbortRecoveryNoIntent.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AbortRecoverySameBoot.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/AbortRecoveryPostWrite.cfg": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "formalModels"
@@ -12502,6 +12577,18 @@
       ]
     },
     {
+      "id": "SURFACE-b44e78965a5c5434",
+      "path": "ops/hetzner/interrupted-release-recovery.py",
+      "sha256": "7807d7bec3099b19348fae0020e30f8117528672dde737b41a6afa2281c59a91",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
       "sha256": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
@@ -12663,7 +12750,7 @@
     {
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
-      "sha256": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
+      "sha256": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14655,7 +14742,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "49e3641d980d72d040b54d00aca431cd2ed01f012d409ade073e3c92033ba179",
+      "sha256": "384efb849367c2e55e7b620df55653da78592147fd5c248276232ece618a3332",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15825,6 +15912,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-07daae1965acae82",
+      "path": "scripts/test-interrupted-release-recovery-linux.py",
+      "sha256": "2f596d8b107520765b5ad791827f680451abfda465dddbb0eec25d733c16fc8a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7c014e1cdf87429f",
+      "path": "scripts/test-interrupted-release-recovery.py",
+      "sha256": "e477198a3adcefb951fd985e681fee2d3df071b06627dc056a941c45a54bbe8f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-180b5ac69cd86e73",
       "path": "scripts/test-invitation-update-concurrency.sh",
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
@@ -16615,7 +16726,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "5b0629a4409c7e8c891d076ac7574e75f91d352b2e3d02277dc674b11234b596",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34418,7 +34529,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "629b6837f13bfaa7ae3231b1979ed004305f339e2415668a21a7db2c8afc30af",
+      "sourceSha256": "3a88d916b57ce420a2204b50d192da2704b2fde1421075e53c51b3044b11f297",
       "definition": {
         "states": [
           "absent",
