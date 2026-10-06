@@ -273,7 +273,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
 
   it "preserves capture binding fields and the existing capture idempotency header" $ do
     let captured = BL.toStrict $ A.encode $ A.object
-          [ "purchase_units" A..= [A.object
+          [ "id" A..= ("SYNTHETIC-ORDER" :: Text)
+          , "purchase_units" A..= [A.object
               [ "custom_id" A..= ("synthetic-internal-order" :: Text)
               , "payee" A..= A.object ["merchant_id" A..= ("synthetic-merchant" :: Text)]
               , "payments" A..= A.object ["captures" A..= [A.object
@@ -281,7 +282,7 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
                   , "status" A..= ("COMPLETED" :: Text)
                   , "amount" A..= A.object ["value" A..= ("125.15" :: Text)
                       , "currency_code" A..= ("USD" :: Text)] ]]] ]]]
-    reader <- chunkReader [jsonWire oauthFixture, jsonWire captured]
+    reader <- chunkReader [jsonWire oauthFixture, jsonWire "{\"status\":\"COMPLETED\"}", jsonWire captured]
     withProviderWire reader $ \manager _ writes _ -> do
       outcome <- runHandler (runReaderT
         (Storefront.capturePaypalOrderRemoteForService manager "synthetic-client" "synthetic-secret"
@@ -292,6 +293,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
       sent <- writes
       sent `shouldSatisfy` BS.isInfixOf "POST /v2/checkout/orders/SYNTHETIC-ORDER/capture"
       sent `shouldSatisfy` BS.isInfixOf "PayPal-Request-Id: capture-"
+      sent `shouldSatisfy` BS.isInfixOf "GET /v2/checkout/orders/SYNTHETIC-ORDER "
+      length (filter (BS.isPrefixOf "PayPal-Request-Id:") (BS.lines sent)) `shouldBe` 1
 
   it "keeps generic provider response errors redacted at the legacy API boundary" $ do
     reader <- chunkReader [jsonWire "synthetic-private-invalid-json"]

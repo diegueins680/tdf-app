@@ -6337,7 +6337,7 @@
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c2f751fafee1747598deddd76fb7579fbadffbc82e0cf02e3c16d9252004c36e",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -24341,7 +24341,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
+      "sha256": "c2f751fafee1747598deddd76fb7579fbadffbc82e0cf02e3c16d9252004c36e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

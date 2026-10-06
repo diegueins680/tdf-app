@@ -12900,7 +12900,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
+      "sha256": "c2f751fafee1747598deddd76fb7579fbadffbc82e0cf02e3c16d9252004c36e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17210,7 +17210,7 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/activation-readiness-2026-10-05.md",
-      "sha256": "8ea8b39f0f505a7f9eb995a49dd0ee08885402a998137410b10410415c718923",
+      "sha256": "ec0046ff501b4bdbed18981314fc94143c331ac1d3d9ec4b16d3a31d0c5c4c88",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
