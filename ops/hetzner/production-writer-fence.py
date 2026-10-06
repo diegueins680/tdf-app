@@ -24,6 +24,7 @@ def load(name, filename):
 
 sources = load('fence_sources', 'production-recovery-sources.py')
 files = load('fence_files', 'recovery-files.py')
+quarantine = load('fence_quarantine', 'outbound-quarantine.py')
 SERVICE = 'tdf-postgres-backup.service'
 TIMER = 'tdf-postgres-backup.timer'
 UNITS = frozenset((SERVICE, TIMER))
@@ -83,12 +84,15 @@ def admit_units(rows, expected_hashes, *, timer_stopped):
             'scope': 'Registered TDF systemd units only; unrelated host process authority is excluded'}
 
 
-def observe_units(expected_hashes, *, timer_stopped):
+def observe_unit_inventory(expected):
     # The loaded and installed inventories independently reject unknown TDF units.
     for operation in ('list-units', 'list-unit-files'):
         text = execute(['systemctl', operation, '--all', '--plain', '--no-legend', '--no-pager', 'tdf*'])
         names = [line.split()[0] for line in text.splitlines() if line.strip()]
-        require(len(names) == len(set(names)) and set(names) == UNITS)
+        require(len(names) == len(set(names)) and set(names) == expected)
+
+
+def observe_backup_units(expected_hashes, *, timer_stopped):
     rows = {}
     for name in sorted(UNITS):
         properties = parse_properties(execute(['systemctl', 'show', name,
@@ -106,6 +110,30 @@ def observe_units(expected_hashes, *, timer_stopped):
                               'uid': info.st_uid, 'mode': stat.S_IMODE(info.st_mode), 'bytes': len(data)}
             finally: os.close(fd)
     return admit_units(rows, expected_hashes, timer_stopped=timer_stopped)
+
+
+def observe_units(expected_hashes, *, timer_stopped):
+    observe_unit_inventory(UNITS)
+    result=observe_backup_units(expected_hashes,timer_stopped=timer_stopped)
+    observe_unit_inventory(UNITS)
+    return result
+
+
+def observe_restricted_units(expected_hashes, restriction_hash, *, timer_stopped):
+    """Read-only exact quarantine unit admission, not an install/start adapter.
+
+    The caller must authenticate restriction_hash against its immutable release
+    authority. Never derive it from the observation being admitted.
+    """
+    require(isinstance(restriction_hash,str) and re.fullmatch('[a-f0-9]{64}',restriction_hash))
+    before=quarantine.observe_persistent()
+    require(before['persistentConfigurationSha256']==restriction_hash)
+    expected=UNITS | {quarantine.UNIT}
+    observe_unit_inventory(expected)
+    result=observe_backup_units(expected_hashes,timer_stopped=timer_stopped)
+    observe_unit_inventory(expected)
+    require(quarantine.observe_persistent()==before)
+    return {**result,'restriction':before,'stopAuthorized':False,'recoveryAuthorized':False}
 
 
 class WriterFence:

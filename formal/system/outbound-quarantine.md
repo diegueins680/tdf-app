@@ -352,3 +352,22 @@ checks remain required. Fresh-boot recovery, descriptor-bound disposable phases
 and the composite host guard remain separate integration obligations. The twelve
 portable tests use real journal files but synthetic Docker/host observations;
 they do not establish an actual production cold-stop qualification.
+
+## Restricted systemd inventory
+
+The ordinary `production-writer-fence.py` inventory continues to require exactly
+the two backup units. `observe_restricted_units` is a separate read-only admission
+path that permits only the additional fixed quarantine service. Before and after
+backup-unit inspection it verifies the live restriction and exact persistent
+configuration through `observe_persistent`; the configuration hash must equal an
+independently authenticated input. Both loaded and installed TDF inventories are
+checked before and after the observation. Missing, duplicate, unknown or newly
+appearing units reject. Backup file hashes, scheduled state, permissions and jobs
+retain their existing checks.
+
+This helper does not install units, enroll a newly observed hash as authority,
+change the ordinary WriterFence, or admit a release/recovery transition. Its new
+controls use synthetic systemd/guard responses; the existing persistent packet
+guard has separate owned-VM evidence. Restricted original preparation and the
+composite host guard must explicitly select this path and seal its policy identity
+before the first maintenance intent. Those callers remain unimplemented.

@@ -2952,7 +2952,7 @@
     {
       "id": "SURFACE-af69c694d5d15a09",
       "path": "ops/hetzner/production-writer-fence.py",
-      "sha256": "5ae7c5fde442799c679b80ff6ba5c3cad9171c1667c4e24fb8c17a2f12551405",
+      "sha256": "1ac1c6ae149c362b18827724feda705b23a136992406a789a312a026352091ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5268,7 +5268,7 @@
     {
       "id": "SURFACE-07cbab2707e7245c",
       "path": "scripts/test-production-writer-fence.py",
-      "sha256": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
+      "sha256": "157260ff1b9a8f94e65a9bc2747f6dbed23f717e4f6ccfdf822c59e147b18af8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23174,7 +23174,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "491aa1fc5454928de691586bb332f19e788b0dfff678cb473ad47fb4cbec1820",
+      "sha256": "3bdd2da8aed82f015aea7627b395b17a5e17299de55cb9b83a35734678fea5ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23251,7 +23251,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "af15897819270ef11b9ce7a6f0c0de003c49e1b6896febfb45f5bcdd4c952f92",
+      "sha256": "4a79270988e4a34c2c40b1d8678f198f6f07ef6617d069ce01dae1c456bd2397",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
