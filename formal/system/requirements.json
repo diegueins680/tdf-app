@@ -4381,7 +4381,12 @@
         "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
         "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
-        "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts"
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
+        "tdf-hq-ui/src/i18n/locales/de.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/fr.ts",
+        "tdf-hq-ui/src/i18n/locales/pt.ts"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",

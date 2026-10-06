@@ -4382,7 +4382,12 @@
         "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
         "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
-        "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts"
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
+        "tdf-hq-ui/src/i18n/locales/de.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/fr.ts",
+        "tdf-hq-ui/src/i18n/locales/pt.ts"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -6227,6 +6232,11 @@
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
+    "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
+    "tdf-hq-ui/src/i18n/locales/en.ts": "8dcee617bf335b4a8a8f71579c4c7978e26e09b8ef32c63c6d3d584863f218e5",
+    "tdf-hq-ui/src/i18n/locales/es.ts": "7ed602851a744cf45c89f0bdd3c42c11164b365fd7dd0dd16bb1eb2f7da5deb1",
+    "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
+    "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
     "tdf-hq-ui/src/main.tsx": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
@@ -9052,6 +9062,36 @@
       }
     ],
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/de.ts": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/en.ts": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/es.ts": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/fr.ts": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/pt.ts": [
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
@@ -16624,7 +16664,12 @@
       "path": "tdf-hq-ui/src/i18n/locales/de.ts",
       "sha256": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7e096967d3a00d3b",
@@ -16645,21 +16690,36 @@
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
       "sha256": "8dcee617bf335b4a8a8f71579c4c7978e26e09b8ef32c63c6d3d584863f218e5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
       "sha256": "7ed602851a744cf45c89f0bdd3c42c11164b365fd7dd0dd16bb1eb2f7da5deb1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-90a473fead52aa3c",
       "path": "tdf-hq-ui/src/i18n/locales/fr.ts",
       "sha256": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-81e227132420f964",
@@ -16680,7 +16740,12 @@
       "path": "tdf-hq-ui/src/i18n/locales/pt.ts",
       "sha256": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b354b9104200a96e",
@@ -29058,15 +29123,10 @@
     "SURFACE-51294f78fb44c49b",
     "SURFACE-23c5b7dd2d415a8c",
     "SURFACE-4349420430226168",
-    "SURFACE-c15c4de32f8d549b",
     "SURFACE-7e096967d3a00d3b",
     "SURFACE-31dfb712c6445325",
-    "SURFACE-844ef4d7558a76f8",
-    "SURFACE-40770a4aba9f94ce",
-    "SURFACE-90a473fead52aa3c",
     "SURFACE-81e227132420f964",
     "SURFACE-7ffb652987ca6eb6",
-    "SURFACE-eb51f33c8df76f33",
     "SURFACE-b354b9104200a96e",
     "SURFACE-f2804d98461b2053",
     "SURFACE-faf0ef2a53a46622",
