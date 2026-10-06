@@ -5001,7 +5001,9 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "formal/system/public-routes.json",
-        "scripts/check-public-routes.py"
+        "scripts/check-public-routes.py",
+        "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -7544,6 +7546,7 @@
     "tdf-hq/src/TDF/DTO.hs": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+    "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
     "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
@@ -7575,6 +7578,7 @@
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
+    "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
@@ -10829,6 +10833,18 @@
       }
     ],
     "scripts/check-public-routes.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Handlers/InputList.hs": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/Stripe.hs": [
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
@@ -26327,7 +26343,12 @@
       "path": "tdf-hq/src/TDF/Handlers/InputList.hs",
       "sha256": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bda51e050e7f3792",
@@ -27112,7 +27133,12 @@
       "path": "tdf-hq/src/TDF/Services/Stripe.hs",
       "sha256": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4053a4f2498e072d",
@@ -32887,7 +32913,6 @@
     "SURFACE-aca7f2ab6043b0da",
     "SURFACE-4b41640bebd528e2",
     "SURFACE-6c2b99a15ac48184",
-    "SURFACE-3d1a28f3fa60015b",
     "SURFACE-bda51e050e7f3792",
     "SURFACE-5dc54f64fc1fc3e9",
     "SURFACE-cf5eaa02e907e90b",
@@ -32926,7 +32951,6 @@
     "SURFACE-f70cbdf0bd82961f",
     "SURFACE-b4b451c7f0a9bfab",
     "SURFACE-9aa25107f33c9fd3",
-    "SURFACE-1ac6ca33fd4e0411",
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
     "SURFACE-b16b93ab1b670275",
@@ -34507,7 +34531,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "755ff3973c601bdfffb6714c06c4db3be81cf89ae36c1392abea129e864435fb",
+      "sourceSha256": "37555ce78fb401303b5d127a5bf1dfc275ec4b326a73f0a505016d1761f91192",
       "definition": {
         "states": [
           "absent",

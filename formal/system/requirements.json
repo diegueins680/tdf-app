@@ -5000,7 +5000,9 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "formal/system/public-routes.json",
-        "scripts/check-public-routes.py"
+        "scripts/check-public-routes.py",
+        "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
