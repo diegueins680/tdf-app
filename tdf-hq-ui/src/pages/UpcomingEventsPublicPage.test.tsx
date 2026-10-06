@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { PublicUpcomingEventDTO } from '../api/socialEvents';
@@ -67,16 +67,24 @@ describe('UpcomingEventsPublicPage', () => {
   });
 
   it('includes the trimmed city in the query sent to the API', async () => {
-    renderPage();
-
-    await waitFor(() => expect(listPublicUpcomingEventsMock).toHaveBeenCalledTimes(1));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Filtrar próximos eventos por ciudad' }), {
-      target: { value: '  Quito  ' },
-    });
-
-    await waitFor(() => expect(listPublicUpcomingEventsMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ city: 'Quito', limit: 50 }),
-    ));
+    jest.useFakeTimers();
+    const view = renderPage();
+    try {
+      await act(async () => { await jest.advanceTimersByTimeAsync(0); });
+      expect(listPublicUpcomingEventsMock).toHaveBeenCalledTimes(1);
+      fireEvent.change(screen.getByRole('textbox', { name: 'Filtrar próximos eventos por ciudad' }), {
+        target: { value: '  Quito  ' },
+      });
+      await act(async () => { await jest.advanceTimersByTimeAsync(349); });
+      expect(listPublicUpcomingEventsMock).toHaveBeenCalledTimes(1);
+      await act(async () => { await jest.advanceTimersByTimeAsync(1); });
+      expect(listPublicUpcomingEventsMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ city: 'Quito', limit: 50 }),
+      );
+    } finally {
+      view.unmount();
+      jest.useRealTimers();
+    }
   });
 
   it('renders each event with its poster or the event fallback', async () => {
