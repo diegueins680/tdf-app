@@ -410,6 +410,7 @@ spec = do
         captureReplaySpec
         ticketLedgerSpec
         ticketAllocationSpec
+        latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
         RefundSafety.databaseSpec $ \pool provider amounts ->
@@ -3444,3 +3445,47 @@ ticketAllocationFixture pool = do
     pure (eventKey,orderKey,tickets)) pool
   runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
   pure (payment,eventKey,orderKey,tickets)
+
+-- A signed refund/reversal is not terminally ignored merely because its
+-- capture binding has not committed yet. Reprocessing must retain the fence.
+latePaypalRefundSpec :: SpecWith ConnectionPool
+latePaypalRefundSpec = describe "out-of-order PayPal refunds" $
+  forM_ ["PAYMENT.CAPTURE.REFUNDED","PAYMENT.CAPTURE.REVERSED"] $ \eventType ->
+    it ("retries before binding then reconciles " <> T.unpack eventType) $ \pool -> do
+      seed <- newCheckoutForDomain "service_booking" pool
+      let creation = seed { Checkout.pacProvider=Checkout.ProviderPayPal }
+      attempt <- runSqlPool (Runtime.beginPaymentAttemptForMethod MethodPayPalWallet creation) pool >>= requireRight
+      let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+          capture = "late-" <> Checkout.paymentAttemptReferenceId attempt
+          envelope = Storefront.PaypalWebhookEnvelope ("WH-" <> checkoutId) eventType notificationTime
+            (A.object ["id" A..= (if eventType == "PAYMENT.CAPTURE.REFUNDED" then "refund-" <> checkoutId else capture)
+              , "status" A..= ("COMPLETED" :: Text)
+              , "amount" A..= A.object ["currency_code" A..= ("USD" :: Text),"value" A..= ("125.15" :: Text)]
+              , "links" A..= [A.object ["rel" A..= ("up" :: Text),"method" A..= ("GET" :: Text)
+                  ,"href" A..= ("https://api.sandbox.paypal.com/v2/payments/captures/" <> capture)]]])
+          process = Storefront.processPaypalWebhookEventIO
+            (Env pool (error "Synthetic callback processing must not use configuration"))
+            Checkout.CheckoutSandbox (Checkout.pacMerchantRef creation) envelope notificationTime
+      _ <- runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
+        { Checkout.pbcAttempt=attempt,Checkout.pbcCheckout=Checkout.pacCheckout creation
+        , Checkout.pbcProvider=Checkout.ProviderPayPal,Checkout.pbcEnvironment=Checkout.CheckoutSandbox
+        , Checkout.pbcMerchantRef=Checkout.pacMerchantRef creation,Checkout.pbcResourceType="order"
+        , Checkout.pbcProviderResource="order-" <> checkoutId,Checkout.pbcResourcePath=Nothing
+        , Checkout.pbcOrderReference=checkoutId,Checkout.pbcAmountMinor=12515,Checkout.pbcCurrency="USD"
+        , Checkout.pbcStage=Checkout.AttemptProcessing,Checkout.pbcOccurredAt=notificationTime
+        , Checkout.pbcCorrelationId="late-order-binding" }) pool >>= requireRight
+      process `shouldReturn` Storefront.PaypalEventRetry "PayPal capture binding is not available yet"
+      _ <- runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
+        { Checkout.pbcAttempt=attempt,Checkout.pbcCheckout=Checkout.pacCheckout creation
+        , Checkout.pbcProvider=Checkout.ProviderPayPal,Checkout.pbcEnvironment=Checkout.CheckoutSandbox
+        , Checkout.pbcMerchantRef=Checkout.pacMerchantRef creation,Checkout.pbcResourceType="capture"
+        , Checkout.pbcProviderResource=capture,Checkout.pbcResourcePath=Nothing
+        , Checkout.pbcOrderReference=checkoutId,Checkout.pbcAmountMinor=12515,Checkout.pbcCurrency="USD"
+        , Checkout.pbcStage=Checkout.AttemptProcessing,Checkout.pbcOccurredAt=notificationTime
+        , Checkout.pbcCorrelationId="late-capture-binding" }) pool >>= requireRight
+      process `shouldReturn` Storefront.PaypalEventProcessed (Just checkoutId)
+        (Just (Checkout.paymentAttemptReferenceId attempt)) Nothing
+      process `shouldReturn` Storefront.PaypalEventProcessed (Just checkoutId)
+        (Just (Checkout.paymentAttemptReferenceId attempt)) Nothing
+      runSqlPool (rawSql "SELECT count(*) FROM commerce_reconciliation_exception WHERE provider='paypal' AND provider_reference=? AND internal_reference=?"
+        [PersistText capture,PersistText checkoutId]) pool `shouldReturn` [Single (1 :: Int64)]

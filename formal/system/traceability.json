@@ -6321,7 +6321,7 @@
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "35e75dc494e4a73bad79b989eeb11efcc1a250f3aa5c121be5f62216fd8a37d7",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "ef7927515025270857fedf10fad9bb51ced6ef54de282c47b5febe2792c37104",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "f0601a84a89789d4756982ab3f3cb0477a285cbf182f705f1c1ec9d037fba595",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
@@ -6345,7 +6345,7 @@
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "e5e153a0e36c7f872b3591037cc0830036d6033335f98ac080d3214cd2eaf63b",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "eb38c2a7b1fb65fbb3462d87e58c09441a5146cc7efe0f2d5ccd21df65b2f310",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -23728,7 +23728,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "35e75dc494e4a73bad79b989eeb11efcc1a250f3aa5c121be5f62216fd8a37d7",
+      "sha256": "ef7927515025270857fedf10fad9bb51ced6ef54de282c47b5febe2792c37104",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24415,7 +24415,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "e5e153a0e36c7f872b3591037cc0830036d6033335f98ac080d3214cd2eaf63b",
+      "sha256": "eb38c2a7b1fb65fbb3462d87e58c09441a5146cc7efe0f2d5ccd21df65b2f310",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

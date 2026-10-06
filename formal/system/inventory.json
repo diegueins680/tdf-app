@@ -12507,7 +12507,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "35e75dc494e4a73bad79b989eeb11efcc1a250f3aa5c121be5f62216fd8a37d7",
+      "sha256": "ef7927515025270857fedf10fad9bb51ced6ef54de282c47b5febe2792c37104",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12921,7 +12921,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "e5e153a0e36c7f872b3591037cc0830036d6033335f98ac080d3214cd2eaf63b",
+      "sha256": "eb38c2a7b1fb65fbb3462d87e58c09441a5146cc7efe0f2d5ccd21df65b2f310",
       "semanticConformance": "not-established-by-discovery"
     },
     {
