@@ -6378,11 +6378,11 @@
     {
       "id": "MEDIA-INVENTORY-001",
       "title": "Authenticated uploads and complete inventory pagination",
-      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
-      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
+      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
+      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
       "domain": "MEDIA",
       "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
-      "source": "Root #468 production cookie-upload and pagination regression",
+      "source": "Root #468 production cookie-upload and pagination regression; #492 loading/error/filter review correction",
       "contract": "formal/system/web-cutover-correspondence.md",
       "actors": [
         "Authenticated inventory operator",
@@ -6410,7 +6410,8 @@
       ],
       "forbiddenTransitions": [
         "Cookie-only session -> silently omit credentials",
-        "First page -> claim complete inventory when total is larger"
+        "First page -> claim complete inventory when total is larger",
+        "Failed inventory load -> empty inventory or zero-result count assertion"
       ],
       "effects": [
         "Upload one selected file; reading pages creates no asset records."
@@ -6440,7 +6441,7 @@
       "privacy": "Do not copy HttpOnly credentials into readable tokens or audit logs.",
       "concurrency": "Pages are sequential reads and not an atomic inventory snapshot; concurrent inventory changes remain possible.",
       "idempotency": "Listing retries are reads. Upload retries can create multiple blobs and are not claimed exactly once.",
-      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning.",
+      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning. Error state takes precedence over empty-result messaging; partial failed page collections are not presented as complete inventory.",
       "recovery": "Retry under a valid session; production smoke must use the unmodified deployed UI and compare uploaded bytes.",
       "observability": "XHR cookie/bearer/QR tests and multi-page regression; deployed Google login/upload acceptance remains separately recorded."
     },

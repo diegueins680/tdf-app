@@ -528,7 +528,7 @@ export default function LabelAssetsPage() {
     ...(statusFilterLabel ? [`Estado: ${statusFilterLabel}`] : []),
   ];
   const filtersActiveCount = activeFilterLabels.length;
-  const showFilteredEmptyState = !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
+  const showFilteredEmptyState = !assetsQuery.isError && !assetsQuery.isLoading && filteredAssets.length === 0 && filtersActiveCount > 0;
   const filterSummaryLabels = showFilteredEmptyState ? [] : activeFilterLabels;
   const filteredEmptyStateMessage =
     activeFilterLabels.length > 0
@@ -554,7 +554,7 @@ export default function LabelAssetsPage() {
       ? 'Todos los assets visibles están sin sala asignada.'
       : `Mostrando una sola ubicación: ${onlyLocation}.`;
   }, [filteredAssets, roomMap]);
-  const showFilterSummary = !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
+  const showFilterSummary = !assetsQuery.isError && !showFilteredEmptyState && !assetsQuery.isLoading && (assets.length > 0 || filtersActiveCount > 0);
   const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
@@ -839,7 +839,7 @@ export default function LabelAssetsPage() {
                   {visibleStatusOptions.map((opt) => {
                     const count = opt.value === 'all' ? assetsMatchingSearchAndCategory.length : (visibleStatusCounts[opt.value] ?? 0);
                     const isActive = statusFilter === opt.value;
-                    const showCount = opt.value === 'all' || count > 0;
+                    const showCount = !assetsQuery.isError && !assetsQuery.isLoading && (opt.value === 'all' || count > 0);
                     return (
                       <Chip
                         key={opt.value}
@@ -923,7 +923,7 @@ export default function LabelAssetsPage() {
             <Typography variant="body2" color="text.secondary">
               Cargando inventario…
             </Typography>
-          ) : assets.length === 0 ? (
+          ) : assetsQuery.isError && assets.length === 0 ? null : assets.length === 0 ? (
             <Alert severity="info" variant="outlined">
               Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.
             </Alert>
