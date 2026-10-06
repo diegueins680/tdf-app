@@ -27,7 +27,8 @@ Payloads contain only the public event/tier identifiers, bounded quantity, known
 provider, promotion-presence boolean, web platform and optionally bounded source,
 medium and campaign codes from the existing attribution store. Direct event/checkout
 landing parameters are captured before observation; a new campaign replaces stale
-attribution. Only the canonical public event path is retained, never a private
+attribution, including a revisit whose observation is deduplicated. Only the
+canonical public event path is retained, never a private
 order path or lookup query. Disabled analytics does not write attribution. They explicitly
 exclude buyer/holder details, order/ticket IDs, QR codes, credentials, raw referral
 or promotion values, landing URLs, and financial amounts. Campaign labels must

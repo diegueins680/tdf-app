@@ -7228,11 +7228,11 @@
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
     "tdf-hq-ui/public/mobile-distribution.json": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "2f44364fa8560586a5b5e88d07ceb344f5314fa4b087a810787edfede06fe14c",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "baba7127f9ccd9af2b78947767d9f65e50d3edb9eceee4d4b969aa613a41d737",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
     "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
-    "tdf-hq-ui/src/analytics/ticketFunnel.ts": "be1ffd6d7413b75f822961e667ef7ae114fe04d372fdf798dce32d9e18681069",
+    "tdf-hq-ui/src/analytics/ticketFunnel.ts": "b49c98810927cb91e4ff8bc4662508a000353795cfecceba5c88bc6bcf51a35f",
     "tdf-hq-ui/src/analytics/useTicketFunnel.ts": "d71e28707630aabb3681977a3faf2ea23393dd80586f07dda7d338ef0347fd32",
     "tdf-hq-ui/src/api/accountDeletion.test.ts": "5a039f2ef3658b1aabee56a51f1f1e4a23c2e895ed22d863879fd245e95a4785",
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
@@ -16625,7 +16625,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "2f44364fa8560586a5b5e88d07ceb344f5314fa4b087a810787edfede06fe14c",
+      "sha256": "baba7127f9ccd9af2b78947767d9f65e50d3edb9eceee4d4b969aa613a41d737",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16744,7 +16744,7 @@
     {
       "id": "SURFACE-198d3c85cd960b15",
       "path": "tdf-hq-ui/src/analytics/ticketFunnel.ts",
-      "sha256": "be1ffd6d7413b75f822961e667ef7ae114fe04d372fdf798dce32d9e18681069",
+      "sha256": "b49c98810927cb91e4ff8bc4662508a000353795cfecceba5c88bc6bcf51a35f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

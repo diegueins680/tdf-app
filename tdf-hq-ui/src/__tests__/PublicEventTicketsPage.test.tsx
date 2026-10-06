@@ -393,6 +393,19 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/private-capability|orden|92|stale/);
   });
 
+  it('updates a revisited landing campaign even when its payment observation is deduplicated', async () => {
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));
+    await renderTracking('/eventos/41/orden/92?utm_source=old&utm_campaign=previous');
+    await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledTimes(1));
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    funnelCaptureMock.mockClear();
+    await renderTracking('/eventos/41/orden/92?utm_source=instagram&utm_campaign=patch');
+    await waitForExpectation(() => expect(JSON.parse(window.localStorage.getItem('tdf:growth-attribution:v1') ?? '{}'))
+      .toEqual(expect.objectContaining({ source: 'instagram', campaign: 'patch', landingPath: '/eventos/41' })));
+    expect(funnelCaptureMock).not.toHaveBeenCalled();
+  });
+
   it('does not persist campaign attribution when analytics is disabled', async () => {
     analytics.ready = false;
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));

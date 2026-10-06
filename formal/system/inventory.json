@@ -5263,7 +5263,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "2f44364fa8560586a5b5e88d07ceb344f5314fa4b087a810787edfede06fe14c",
+      "sha256": "baba7127f9ccd9af2b78947767d9f65e50d3edb9eceee4d4b969aa613a41d737",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5341,7 +5341,7 @@
     {
       "id": "SURFACE-198d3c85cd960b15",
       "path": "tdf-hq-ui/src/analytics/ticketFunnel.ts",
-      "sha256": "be1ffd6d7413b75f822961e667ef7ae114fe04d372fdf798dce32d9e18681069",
+      "sha256": "b49c98810927cb91e4ff8bc4662508a000353795cfecceba5c88bc6bcf51a35f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17574,7 +17574,7 @@
     },
     {
       "path": "docs/events/ticket-funnel-observations.md",
-      "sha256": "1af029a7e2fe614277f411bab6667391cf73778899c117fdca0b52f80876c00c",
+      "sha256": "0b1744719e2a58f074b74174740f0f4854e14e7c3fb181dfbc0dd1e3ce0ebea4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

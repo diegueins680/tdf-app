@@ -57,6 +57,10 @@ export function createTicketFunnelTracker(
     // Components share session storage: merge before checking/writing so mounting
     // multiple event cards cannot discard observations from another component.
     readSeen();
+    // A revisit can carry a new campaign even when this observation is already
+    // counted. Refresh attribution before deduplication so the next phase uses it.
+    let source: GrowthAttribution | null;
+    try { source = attribution(); } catch { return; }
     if (seen.has(key)) return;
     const properties: Record<string, unknown> = {
       platform: 'web', event_id: observation.eventId, evidence: 'browser_observation',
@@ -68,7 +72,6 @@ export function createTicketFunnelTracker(
     }
     if (typeof observation.hasPromotion === 'boolean') properties['has_promotion'] = observation.hasPromotion;
     try {
-      const source = attribution();
       for (const name of ['source', 'medium', 'campaign'] as const) {
         const code = campaignCode(source?.[name]);
         if (code) properties[`attribution_${name}`] = code;
