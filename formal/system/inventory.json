@@ -7917,13 +7917,13 @@
     {
       "id": "SURFACE-e69a77d56fe70d3a",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx",
-      "sha256": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
+      "sha256": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-      "sha256": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
+      "sha256": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22159,7 +22159,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "23e7392d580cc940d284895909848820022cdec45b497a5bb89675f07b4988ac",
+      "sha256": "37f7537507301217ddda630672c4996f8b9d869b7c7de8c3f5963b7ee7463f76",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -22201,7 +22201,7 @@
     },
     {
       "path": "formal/system/web-cutover-correspondence.md",
-      "sha256": "e768a735c699d7f80e43940845521ece4436f34c2bf184284a47e33cd55677d1",
+      "sha256": "7d2d4a80ba8affb90817add3d27c4eaa53eae76181f9b7920de85808d47f90c9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
