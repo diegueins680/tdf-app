@@ -7061,7 +7061,7 @@
       "id": "EVT-TICKET-INVOICE-001",
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
-      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown.",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
       "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
@@ -7130,13 +7130,19 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-        "tdf-hq-ui/src/api/generated/types.ts"
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
+        "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql",
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Ticketing/Refund.hs",
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_tax_invoices.sql",
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
       "formalModels": [],
       "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
@@ -7145,7 +7151,7 @@
       "critical": true,
       "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
-        "Credit notes for refunds and regime legends are not automated."
+        "Regime legends (e.g. RIMPE) are not automated."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -7159,7 +7165,7 @@
     ".github/workflows/ci.yml": "5b9888d91eb875416d6f34cb93e4c17dcb7c373c69f5c42652cd6f44385cbd75",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "3a4886d164da41da3327080340435a7dd65be31d871eacf19ad3e79e98dc4b55",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c98f7b75ce1f04f177a677b17e2a9f9d1d292086a68844786e839f7750f0176f",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
@@ -7250,7 +7256,7 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "7a83d389ccdc364bc45bbd514b9dbe2b840cf7fc67658154222265a0db59526e",
+    "formal/system/compiled-api-surface.json": "3e3067587529748c52e980b3ed074c8fdb7b7b2535547456aadd140c2f697534",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
@@ -7346,7 +7352,7 @@
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "14aed8e2866359810b7b36b672ed8b15a5940541624fb25f68e85ebe2496618e",
+    "scripts/production-migrations.json": "192c177e6be4cb4ac8ef032ed661fae81ff4ab0ef5e2c133625b2f1cd55433ea",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -7379,7 +7385,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
-    "scripts/test-public-ticket-checkout-runtime-migration.sh": "62a856fb0f7fb8f4cc2f29ed03b49f53a2d3948418de9d85cc0014d77f39539b",
+    "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
@@ -7436,7 +7442,7 @@
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
-    "tdf-hq-ui/src/api/socialEvents.ts": "0a640d646e03e00fe310223d1b2ca4db1f8b8333ac493ad01eb87a746288dba8",
+    "tdf-hq-ui/src/api/socialEvents.ts": "d2a41072887bfce5156ba3599c4b77828b0e88e99e3cceadbb82ee18e40e549e",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "e44b0092e64730479c4742b9d1e0ba8719d6dd9d835e628f31ac6de1362436f3",
@@ -7446,11 +7452,11 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
-    "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "3f8d613ebb75e4b256b3afcebb7f6c981abf0e82004704775134f1b654c52a0b",
+    "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
-    "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "19e46d9ec8b7109ce119b3dd26cd0912607eca2a4da6eabcabccdf9391437963",
+    "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -7487,7 +7493,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "3716fa4cadc32802443e1ef60319e74d71c4db765e7ba15aa9cb3cec0b05ee5e",
-    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "4a1e178a21cfc91a7bd5d6fcd6662a78e883a75a832693d64b5445ac158d7568",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "4f2025acbc29657ec9a2b1f289aae38edebe56c135b465912e8f57455628dce0",
@@ -7544,6 +7550,8 @@
     "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql": "122da89f6fba38f427f2597a7e571c511f3742c1baf9059bebf1fda210e3f184",
     "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql": "5d70e228298a52845d787ce81e6e8253c63ace984d7bbf56325979ebc25d8ae1",
     "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql": "1a894d76675d34502166ec71db1961b4079ed4d2b9f8172be387632be943e517",
+    "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql": "6e90779023be01eca45c048a690602b94230673c6f9e64fe9d4ac346cf7a2c43",
+    "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql": "9d6dc0aa6c9f5aff03bdfc62c16a38681892c1923d9413f4eaf505af86894302",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql": "c74e42fe9a9b45d2456e0eef00e1a93811d27f816da525519a2920ba0c09b7d5",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/src/TDF/API.hs": "b52a050b44bc032682a8be161b320bb1cea5aba710a641d1ab5e6996c8bcf5b7",
@@ -7553,7 +7561,7 @@
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
-    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "0680051ce8b8696579d4f5f8e05833072cba0f52eb9f278f8d52425d1bdb6c54",
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "482550244d657c508ae4ac02fab442d72054ebce72f9ba7d487f69c449c0b180",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "57c86179cffe22308c646d23eb781b4bfd0da4222e75da16f0d4fe4fe3424c27",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
@@ -7578,13 +7586,13 @@
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
-    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "00027edaa9bac40ffd2216ed9b724a0b521cb7908982e67fcb395814f7e4b6b8",
+    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "31d28e0d44d18fe0b559f23d7c7f20f194bacb0f7c392231d8e3c2b4b9c728b8",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
     "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
     "tdf-hq/src/TDF/Invoice/AccessKey.hs": "dd2e63c42a8107b7c5eb12f9d9442da59988969254f58eb0515b790626de4b3f",
     "tdf-hq/src/TDF/Invoice/BuyerIdentity.hs": "6d4f8227ace8821694e85016823f3e66174a9fa36bd74ab7e572f9a2fd2ca2be",
-    "tdf-hq/src/TDF/Invoice/Datil.hs": "7f588505993790511d67080704d1ffdb9ecd81c498691601ad39ab8b4c59ba8c",
+    "tdf-hq/src/TDF/Invoice/Datil.hs": "ff99ae5b699a63b7ebe810d8ff4b545d40317aba4930850d34c52519f8af19da",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
@@ -7607,10 +7615,10 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "797b9aeb3f32ff68986ddb8b3b904831950b8e3599268520de27a4761ecde060",
-    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "34c47aaef76268fc9a363852fe9ab1a04155ca4d6926899873a71c78f6362eb2",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
-    "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "437cd77f7298f5cc4ab4d706e1bb954ad89f92ed7d263b50a32811a3b3f923e3",
+    "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
     "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
@@ -7622,7 +7630,7 @@
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
-    "tdf-hq/src/TDF/Ticketing/Refund.hs": "a0c6d29fa7c83b6342c9905be9c805bad9006ebee97d664120600ca27f1ea002",
+    "tdf-hq/src/TDF/Ticketing/Refund.hs": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "edfefec16e7943820a62c0f655677db2045a311ee6b324b63b7999b5501e8791",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
@@ -7645,14 +7653,14 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
-    "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "54907a96a507a54c281a31bdd7a74c2743d3e2abc562cfaea6fdba8123e53ea8",
+    "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "84df889c8457e98e2c27ff0af1866d4c6d1e2ada9eab4246567c048be31129d2",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
@@ -10535,6 +10543,10 @@
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql": [
@@ -10576,6 +10588,10 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": [
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "implementation"
       }
     ],
@@ -10718,6 +10734,10 @@
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": [
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "tests"
       }
     ],
@@ -12161,6 +12181,10 @@
       {
         "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx": [
@@ -12266,6 +12290,18 @@
       }
     ],
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": [
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql": [
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql": [
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "implementation"
@@ -14781,7 +14817,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "14aed8e2866359810b7b36b672ed8b15a5940541624fb25f68e85ebe2496618e",
+      "sha256": "192c177e6be4cb4ac8ef032ed661fae81ff4ab0ef5e2c133625b2f1cd55433ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16235,7 +16271,7 @@
     {
       "id": "SURFACE-73f84c14f54480df",
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
-      "sha256": "62a856fb0f7fb8f4cc2f29ed03b49f53a2d3948418de9d85cc0014d77f39539b",
+      "sha256": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18075,7 +18111,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "0a640d646e03e00fe310223d1b2ca4db1f8b8333ac493ad01eb87a746288dba8",
+      "sha256": "d2a41072887bfce5156ba3599c4b77828b0e88e99e3cceadbb82ee18e40e549e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18542,11 +18578,15 @@
     {
       "id": "SURFACE-31c6a7a7f7bdbbcb",
       "path": "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
-      "sha256": "3f8d613ebb75e4b256b3afcebb7f6c981abf0e82004704775134f1b654c52a0b",
+      "sha256": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -18719,6 +18759,10 @@
         {
           "requirement": "EVT-TICKET-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -18793,7 +18837,7 @@
     {
       "id": "SURFACE-32b83043961bf6cd",
       "path": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
-      "sha256": "19e46d9ec8b7109ce119b3dd26cd0912607eca2a4da6eabcabccdf9391437963",
+      "sha256": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21258,7 +21302,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "4a1e178a21cfc91a7bd5d6fcd6662a78e883a75a832693d64b5445ac158d7568",
+      "sha256": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25420,6 +25464,30 @@
       ]
     },
     {
+      "id": "SURFACE-36280aaa9355d1c5",
+      "path": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
+      "sha256": "6e90779023be01eca45c048a690602b94230673c6f9e64fe9d4ac346cf7a2c43",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-46018081eceace5d",
+      "path": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql",
+      "sha256": "9d6dc0aa6c9f5aff03bdfc62c16a38681892c1923d9413f4eaf505af86894302",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2464c6179db61785",
       "path": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
       "sha256": "c74e42fe9a9b45d2456e0eef00e1a93811d27f816da525519a2920ba0c09b7d5",
@@ -25798,7 +25866,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "0680051ce8b8696579d4f5f8e05833072cba0f52eb9f278f8d52425d1bdb6c54",
+      "sha256": "482550244d657c508ae4ac02fab442d72054ebce72f9ba7d487f69c449c0b180",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26552,7 +26620,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "00027edaa9bac40ffd2216ed9b724a0b521cb7908982e67fcb395814f7e4b6b8",
+      "sha256": "31d28e0d44d18fe0b559f23d7c7f20f194bacb0f7c392231d8e3c2b4b9c728b8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26726,7 +26794,7 @@
     {
       "id": "SURFACE-93b6cd6234c2c39a",
       "path": "tdf-hq/src/TDF/Invoice/Datil.hs",
-      "sha256": "7f588505993790511d67080704d1ffdb9ecd81c498691601ad39ab8b4c59ba8c",
+      "sha256": "ff99ae5b699a63b7ebe810d8ff4b545d40317aba4930850d34c52519f8af19da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27250,7 +27318,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "797b9aeb3f32ff68986ddb8b3b904831950b8e3599268520de27a4761ecde060",
+      "sha256": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27285,11 +27353,15 @@
     {
       "id": "SURFACE-4f6a7b230d53af08",
       "path": "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-      "sha256": "34c47aaef76268fc9a363852fe9ab1a04155ca4d6926899873a71c78f6362eb2",
+      "sha256": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -27309,7 +27381,7 @@
     {
       "id": "SURFACE-250c996838d09301",
       "path": "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
-      "sha256": "437cd77f7298f5cc4ab4d706e1bb954ad89f92ed7d263b50a32811a3b3f923e3",
+      "sha256": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27643,11 +27715,15 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "a0c6d29fa7c83b6342c9905be9c805bad9006ebee97d664120600ca27f1ea002",
+      "sha256": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-INVOICE-001",
           "relationship": "implementation"
         }
       ]
@@ -28199,7 +28275,7 @@
     {
       "id": "SURFACE-1bf88093e2bf7bcc",
       "path": "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
-      "sha256": "54907a96a507a54c281a31bdd7a74c2743d3e2abc562cfaea6fdba8123e53ea8",
+      "sha256": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28401,7 +28477,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "84df889c8457e98e2c27ff0af1866d4c6d1e2ada9eab4246567c048be31129d2",
+      "sha256": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34941,7 +35017,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4928151c4506e0dd2310f7cfa1f27f05502775b34cf0a4924b13461614e6af5a",
+      "sourceSha256": "4544c8d40f4001a2695fb3b0aaff69de4bd7803f37d1843b3ed7c1e7c2b328e9",
       "definition": {
         "states": [
           "absent",

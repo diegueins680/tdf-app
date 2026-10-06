@@ -7060,7 +7060,7 @@
       "id": "EVT-TICKET-INVOICE-001",
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
-      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown.",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
       "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
@@ -7129,13 +7129,19 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-        "tdf-hq-ui/src/api/generated/types.ts"
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
+        "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql",
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Ticketing/Refund.hs",
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_tax_invoices.sql",
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
       "formalModels": [],
       "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
@@ -7144,7 +7150,7 @@
       "critical": true,
       "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
-        "Credit notes for refunds and regime legends are not automated."
+        "Regime legends (e.g. RIMPE) are not automated."
       ],
       "conformance": {
         "classification": "PARTIAL",

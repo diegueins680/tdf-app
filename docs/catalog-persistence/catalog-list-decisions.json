@@ -1370,34 +1370,34 @@
       "reviewed": true
     },
     {
-      "id": "c69afb90768a2e78770a",
+      "id": "620eb81ffe787eca6636",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+      "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "ticket-tax-invoices-2026-10-06",
+      "reviewBatch": "ticket-credit-notes-2026-10-06",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 576
+        "line": 577
       },
       "mergedDecision": {
-        "id": "e858a9fa43eea647e38e",
+        "id": "c69afb90768a2e78770a",
         "classification": "genuine-technical-constant",
         "disposition": "retain-in-code",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P3-retain",
         "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
         "reviewed": true,
         "reviewMethod": "successor-of-reviewed-decision",
-        "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+        "reviewBatch": "ticket-tax-invoices-2026-10-06",
         "evidence": {
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
-          "line": 562
+          "line": 576
         }
       }
     },
@@ -15545,19 +15545,19 @@
       }
     },
     {
-      "id": "69cdb78be851110faed4",
+      "id": "7cf054414f50446f625b",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 186-entry manifest keeps the reviewed 185 entries unchanged and appends the additive ticket electronic invoice migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 187-entry manifest keeps the reviewed 186 entries unchanged and appends the additive ticket credit note migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "ticket-tax-invoices-2026-10-06",
+      "reviewBatch": "ticket-credit-notes-2026-10-06",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57152,19 +57152,19 @@
         ]
       },
       "mergedDecision": {
-        "id": "be304ef51a5f288f27e3",
+        "id": "69cdb78be851110faed4",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 185-entry manifest: the reviewed 184 entries unchanged, then the additive manual bank transfer hold migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 186-entry manifest keeps the reviewed 185 entries unchanged and appends the additive ticket electronic invoice migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+        "reviewBatch": "ticket-tax-invoices-2026-10-06",
         "reviewMethod": "successor-of-reviewed-decision"
       }
     },
@@ -57347,6 +57347,36 @@
         "line": 75
       },
       "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "af79e37df87cfa1831d7",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
+        "line": 18
+      },
+      "reviewBatch": "ticket-credit-notes-2026-10-06"
+    },
+    {
+      "id": "3c14bb5479deac772300",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Confusing a deferral with a refusal could fail a credit note that only waits for its invoice.",
+      "justification": "Closed internal outcome type of invoice preparation (wait versus refuse); implementation dispatch, not a business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Invoice/Datil.hs",
+        "line": 437
+      },
+      "reviewBatch": "ticket-credit-notes-2026-10-06"
     }
   ]
 }

@@ -27,6 +27,18 @@ CULTURE vol. 1 (event 141).
   `uncertain` (outcome unknown — reconcile in the Dátil dashboard; never resent
   automatically).
 
+## Refunds and credit notes
+
+- Orders paid by bank transfer are refunded through the same canonical ticket
+  refund request. Staff return the money by bank transfer, then a staff member
+  other than the requester records the transfer reference
+  (`POST /social-events/events/{id}/refunds/{refundId}/bank-transfer-complete`).
+  That completes the refund, invalidates the selected tickets and releases
+  inventory. PayPal orders keep the provider-executed refund.
+- Every verified refund of an invoiced order enqueues one SRI credit note
+  (own numbering series, bound to the invoice). The worker waits until the
+  invoice is authorized, then submits it to Dátil's credit-note endpoint.
+
 ## Operator configuration (API host secrets)
 
 `DATIL_API_KEY`, `DATIL_CERTIFICATE_PASSWORD`, `DATIL_ENVIRONMENT`,
@@ -50,6 +62,7 @@ emission point not used by any other invoicing tool to avoid number collisions.
 
 ## Limits
 
-Only IVA 0% is supported; other rates are refused rather than guessed. Credit
-notes for refunds are not automated yet. Taxpayer regime legends (for example
-RIMPE) are not added automatically.
+Only IVA 0% is supported; other rates are refused rather than guessed.
+Taxpayer regime legends (for example RIMPE) are not added automatically. The
+credit-note payload was validated against Dátil's schema with an invalid key
+(401 after schema validation); a real authorization still requires credentials.
