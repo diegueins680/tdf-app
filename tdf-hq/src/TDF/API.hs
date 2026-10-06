@@ -110,8 +110,6 @@ type InputListPublicAPI =
          :> QueryParam "sessionId" Text
          :> QueryParam "channel" Int
          :> Get '[JSON] [Entity InventoryItem]
-  :<|> "sessions" :> QueryParam "index" Int :> QueryParam "sessionId" Text :> Get '[JSON] [Entity InputListEntry]
-  :<|> "sessions" :> "pdf" :> QueryParam "index" Int :> QueryParam "sessionId" Text :> Get '[OctetStream] (Headers '[Header "Content-Disposition" Text] BL.ByteString)
 
 type InputListSeedAPI =
        "inventory" :> "seed" :> SeedAPI

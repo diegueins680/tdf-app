@@ -149,7 +149,6 @@ import TDF.Server
     , PayPalToken(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
-    , SessionInputLookup(..)
     , WAInbound(..)
     , extractWhatsAppInbound
     , normalizeOptionalInput
@@ -293,7 +292,6 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validateSessionPathId
-    , validateSessionInputLookup
     , validateInputListInventoryFilters
     , listInventory
     , resolveSocialTargetPartyId
@@ -1377,42 +1375,6 @@ spec = describe "TDF.Server helpers" $ do
             partySelectorVisibleLegalName "event_invitation" legalName `shouldBe` Nothing
             partySelectorVisibleLegalName "social_connection" legalName `shouldBe` Nothing
             partySelectorVisibleLegalName "crm_assignment" legalName `shouldBe` legalName
-
-    describe "validateSessionInputLookup" $ do
-        it "accepts exactly one public input-list session selector" $ do
-            let validSessionId = "00000000-0000-0000-0000-000000000084"
-            validateSessionInputLookup Nothing Nothing `shouldBe` Right (SessionInputByIndex 1)
-            validateSessionInputLookup (Just 2) Nothing `shouldBe` Right (SessionInputByIndex 2)
-            case validateSessionInputLookup Nothing (Just validSessionId) of
-                Right (SessionInputByKey keyVal) ->
-                    toPathPiece keyVal `shouldBe` validSessionId
-                Right other ->
-                    expectationFailure ("Expected sessionId lookup, got: " <> show other)
-                Left serverErr ->
-                    expectationFailure ("Expected valid sessionId lookup, got: " <> show serverErr)
-
-        it "rejects ambiguous or malformed public input-list session selectors" $ do
-            let validSessionId = "00000000-0000-0000-0000-000000000084"
-            let assertInvalid expectedMessage result =
-                    case result of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid input-list selector to be rejected, got: " <> show value)
-            assertInvalid
-                "Provide either index or sessionId, not both"
-                (validateSessionInputLookup (Just 1) (Just validSessionId))
-            assertInvalid
-                "index must be greater than or equal to 1"
-                (validateSessionInputLookup (Just 0) Nothing)
-            assertInvalid
-                "Invalid sessionId"
-                (validateSessionInputLookup Nothing (Just "not-a-session-id"))
-            assertInvalid
-                "Invalid sessionId"
-                (validateSessionInputLookup Nothing (Just "AAAAAAAA-0000-0000-0000-000000000084"))
 
     describe "listInventory" $
         it "rejects non-canonical public session ids before inventory fallback lookup" $ do

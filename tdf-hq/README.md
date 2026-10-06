@@ -108,7 +108,7 @@ Override `APP_BASE_URL` when using the `version` Make target, or export environm
 ## Feature overview
 
 - **CRM & parties**: Manage parties, roles, and tokens with module-based access control.
-- **Scheduling**: Bookings, sessions, trial lesson flows, and PDF input lists (`/input-list/sessions` + PDF rendering).
+- **Scheduling**: Bookings, sessions, trial lesson flows, and PDF input lists (authenticated `/sessions/{id}/input-list` and its PDF, scheduling module).
 - **Packages & invoicing**: Package catalog, purchases, invoices, and receipts tied to payments (see `docs/openapi/lessons-and-receipts.yaml`).
 - **Inventory & rooms**: Track assets, room setups, and inventory seeding utilities.
 - **Pipelines & bands**: Sales/production pipelines and performance band management.

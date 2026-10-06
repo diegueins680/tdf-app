@@ -1011,8 +1011,6 @@ inputListServer = publicRoutes :<|> seedRoutes
   where
     publicRoutes =
            listInventory
-      :<|> getSessionInputList
-      :<|> getSessionInputListPdf
 
     seedRoutes =
            seedInventory
@@ -1073,44 +1071,6 @@ requireSeedToken rawToken = do
   when (token /= secret) invalid
   pure ()
 
-getSessionInputList :: Maybe Int -> Maybe Text -> AppM [Entity InputList.InputListEntry]
-getSessionInputList mIndex mSessionId = do
-  (_session, rows) <- resolveSessionInputData mIndex mSessionId
-  pure rows
-
-getSessionInputListPdf
-  :: Maybe Int
-  -> Maybe Text
-  -> AppM (Headers '[Header "Content-Disposition" Text] BL.ByteString)
-getSessionInputListPdf mIndex mSessionId = do
-  (Entity _ session, rows) <- resolveSessionInputData mIndex mSessionId
-  let title = fromMaybe (ME.sessionService session <> " session") (ME.sessionClientPartyRef session)
-      latex = InputList.renderInputListLatex title rows
-  pdfResult <- liftIO (InputList.generateInputListPdf latex)
-  case pdfResult of
-    Left errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-    Right pdf -> do
-      let fileName    = InputList.sanitizeFileName title <> ".pdf"
-          disposition = T.concat ["attachment; filename=\"", fileName, "\""]
-      pure (addHeader disposition pdf)
-
-data SessionInputLookup
-  = SessionInputByIndex Int
-  | SessionInputByKey ME.SessionId
-  deriving (Eq, Show)
-
-validateSessionInputLookup :: Maybe Int -> Maybe Text -> Either ServerError SessionInputLookup
-validateSessionInputLookup (Just _) (Just _) =
-  Left err400 { errBody = "Provide either index or sessionId, not both" }
-validateSessionInputLookup _ (Just rawId) =
-  SessionInputByKey <$> validatePublicSessionIdParam rawId
-validateSessionInputLookup mIndex Nothing =
-  case mIndex of
-    Nothing -> Right (SessionInputByIndex 1)
-    Just n
-      | n >= 1    -> Right (SessionInputByIndex n)
-      | otherwise -> Left err400 { errBody = "index must be greater than or equal to 1" }
-
 validatePublicSessionIdParam :: Text -> Either ServerError ME.SessionId
 validatePublicSessionIdParam rawId =
   case validateSessionPathId rawId of
@@ -1131,20 +1091,6 @@ validateInputListInventoryFilters mField mSession mChannel = do
     Left err400 { errBody = "sessionId requires field" }
   when (isJust mChannel && isNothing mSession) $
     Left err400 { errBody = "channel requires sessionId" }
-
-resolveSessionInputData
-  :: Maybe Int
-  -> Maybe Text
-  -> AppM (Entity ME.Session, [Entity InputList.InputListEntry])
-resolveSessionInputData mIndex mSessionId = do
-  Env{..} <- ask
-  lookupMode <- either throwError pure (validateSessionInputLookup mIndex mSessionId)
-  let action =
-        case lookupMode of
-          SessionInputByKey keyVal -> InputList.fetchSessionInputRowsByKey keyVal
-          SessionInputByIndex idx  -> InputList.fetchSessionInputRowsByIndex idx
-  result <- liftIO $ flip runSqlPool envPool action
-  maybe (throwError err404) pure result
 
 fanPublicServer :: ServerT FanPublicAPI AppM
 fanPublicServer =
