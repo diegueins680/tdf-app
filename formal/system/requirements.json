@@ -4397,7 +4397,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
         "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-        "scripts/test-provider-retry-runtime.sh"
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"

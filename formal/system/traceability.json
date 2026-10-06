@@ -4398,7 +4398,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
         "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-        "scripts/test-provider-retry-runtime.sh"
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -6212,9 +6215,12 @@
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
+    "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
+    "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "3f8d613ebb75e4b256b3afcebb7f6c981abf0e82004704775134f1b654c52a0b",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
+    "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
@@ -9106,6 +9112,24 @@
       }
     ],
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": [
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "tests"
@@ -15574,7 +15598,12 @@
       "path": "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
       "sha256": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-fded008243a7eca3",
@@ -15593,7 +15622,12 @@
       "path": "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
       "sha256": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-31c6a7a7f7bdbbcb",
@@ -15771,7 +15805,12 @@
       "path": "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
       "sha256": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b09be6a71cc01631",
@@ -28893,8 +28932,6 @@
     "SURFACE-e89e4f0a2bd61051",
     "SURFACE-6c3af6d67bd751d6",
     "SURFACE-517c2af5fa3973c0",
-    "SURFACE-c898cac2a6591ca7",
-    "SURFACE-00ed01bf2c7169b0",
     "SURFACE-86fcc61cfe3835da",
     "SURFACE-a3ba5100eb601c90",
     "SURFACE-e24458b8f868963c",
@@ -28916,7 +28953,6 @@
     "SURFACE-b0d628cd2525fda6",
     "SURFACE-0d9e88b38295744d",
     "SURFACE-6628113be1d1b41f",
-    "SURFACE-1257b65d3309b68d",
     "SURFACE-b09be6a71cc01631",
     "SURFACE-ae65f170b258f02b",
     "SURFACE-615a78e009691805",
