@@ -24,6 +24,7 @@ module TDF.Auth
   , isAuthenticatableApiTokenLabel
   , withCurrentAuthSession
   , withCurrentModuleAccess
+  , withCurrentAuthorization
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
@@ -156,7 +157,14 @@ withCurrentAuthSession user action = case auSessionWitness user of
 withCurrentModuleAccess
   :: ModuleAccess -> AuthedUser -> SqlPersistT IO a
   -> SqlPersistT IO (Either ServerError a)
-withCurrentModuleAccess required original action = do
+withCurrentModuleAccess required = withCurrentAuthorization (validateModuleAccess required)
+
+-- Evaluate the caller's complete predicate on current locked roles/modules, not
+-- on request-captured grants. Locks remain held through all transactional effects.
+withCurrentAuthorization
+  :: (AuthedUser -> Either ServerError ()) -> AuthedUser -> SqlPersistT IO a
+  -> SqlPersistT IO (Either ServerError a)
+withCurrentAuthorization validate original action = do
   admitted <- withCurrentAuthSession original $ do
     assigned <- rawSql
       "SELECT assignment.id::text,role.code,role.active FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id WHERE assignment.party_id=? AND assignment.active ORDER BY assignment.id,role.id FOR SHARE OF assignment,role"
@@ -176,7 +184,7 @@ withCurrentModuleAccess required original action = do
           assignmentIds :: SqlPersistT IO [Single Text]
         case traverse (\(Single code) -> moduleFromRegistryCode code) moduleRows of
           Nothing -> pure (Left err401)
-          Just modules -> case validateModuleAccess required original
+          Just modules -> case validate original
             { auRoles = Set.toAscList (Set.fromList currentRoles)
             , auModules = Set.fromList modules
             } of

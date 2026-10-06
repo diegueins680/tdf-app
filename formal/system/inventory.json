@@ -4359,7 +4359,7 @@
     {
       "id": "SURFACE-1185f571edd4c1d3",
       "path": "scripts/test-account-deletion-api.mjs",
-      "sha256": "d68ef989158ba20b7559b52a9df5befef50fd926c6859146654ea696fd4879d9",
+      "sha256": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4983,7 +4983,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "30cebaa4e21e2b3f5430df9005c3a2883a05fc2d8a27461c002278aaa1b60868",
+      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12009,7 +12009,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "f3865228ef047b25298fbf94860c972fed5f6b572247bca21adcaa5d0ce5c652",
+      "sha256": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12801,7 +12801,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "1a941f08a34bb86bfb37957f0edcb0feb735c89be7142445ce464dc3096e1d5b",
+      "sha256": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17952,7 +17952,7 @@
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "d5dba2e5fba53f885d45aa59a6e59ace2e8612a86b7578b3d0b1977250fbcb8b",
+      "sha256": "18e384ad1c0018db3150a77bc31e554d5b425950a2faf48e5fb762d9ed879052",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19115,6 +19115,41 @@
     {
       "path": "formal/event-operations/AccessCodeValidationSuperficial.cfg",
       "sha256": "ec79cb02c3f008d2e109d914823841736f16aca69f3377ad30e14d3fee896217",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionAuthority.cfg",
+      "sha256": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionAuthority.tla",
+      "sha256": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionAuthorityNoGrantLock.cfg",
+      "sha256": "20756b6a3bdc85fb904bc8c81a6e0a7c8bcb2c38e06f7bc17c7f52dca93fc8e4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionAuthorityNoSessionLock.cfg",
+      "sha256": "9ffa7bfe70a0ab31e818013caee13450114df13e9a504769e4885b9aa6d59698",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionAuthorityStale.cfg",
+      "sha256": "c6b8a18baf61e628545983beeca81dc434d65e16095c23ce6275edf1311d3161",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -22124,7 +22159,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "826f0e4dec379a3d4b4381f43b5cc913ecedf86879ee6ae8f076a9704f394bed",
+      "sha256": "23e7392d580cc940d284895909848820022cdec45b497a5bb89675f07b4988ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -29276,6 +29311,62 @@
         "CONSTANTS FenceGeneration = TRUE CheckAccount = FALSE",
         "INVARIANTS CurrentCredential VerifiedAccount",
         "PROPERTY Terminates",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionAuthority.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireCurrent = TRUE",
+        "  HoldSession = TRUE",
+        "  HoldGrants = TRUE",
+        "INVARIANT CurrentAuthorityAtEffect",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionAuthorityNoGrantLock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireCurrent = TRUE",
+        "  HoldSession = TRUE",
+        "  HoldGrants = FALSE",
+        "INVARIANT CurrentAuthorityAtEffect",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionAuthorityNoSessionLock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireCurrent = TRUE",
+        "  HoldSession = FALSE",
+        "  HoldGrants = TRUE",
+        "INVARIANT CurrentAuthorityAtEffect",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionAuthorityStale.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireCurrent = FALSE",
+        "  HoldSession = TRUE",
+        "  HoldGrants = TRUE",
+        "INVARIANT CurrentAuthorityAtEffect",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

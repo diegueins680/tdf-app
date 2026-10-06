@@ -128,6 +128,10 @@ run_negative_tlc OperationsApprovalReopen.cfg operationsapprovalreopen 'Invarian
 run_negative_tlc OperationsApprovalIgnoreExpiry.cfg operationsapprovalignoreexpiry 'Invariant DecisionGuard is violated' OperationsApproval.tla
 run_negative_tlc OperationsApprovalSelfApprove.cfg operationsapprovalselfapprove 'Invariant DecisionGuard is violated' OperationsApproval.tla
 run_tlc AccountDeletionOperator.tla AccountDeletionOperator.cfg account-deletion-operator
+run_tlc AccountDeletionAuthority.tla AccountDeletionAuthority.cfg account-deletion-authority
+run_negative_tlc AccountDeletionAuthorityStale.cfg deletion-authority-stale 'Invariant CurrentAuthorityAtEffect is violated' AccountDeletionAuthority.tla
+run_negative_tlc AccountDeletionAuthorityNoSessionLock.cfg deletion-authority-session 'Invariant CurrentAuthorityAtEffect is violated' AccountDeletionAuthority.tla
+run_negative_tlc AccountDeletionAuthorityNoGrantLock.cfg deletion-authority-grants 'Invariant CurrentAuthorityAtEffect is violated' AccountDeletionAuthority.tla
 run_negative_tlc AccountDeletionOperatorRoleOnly.cfg deletion-operator-role-only 'Invariant OnlyAuthorizedPrivacyEffects is violated' AccountDeletionOperator.tla
 run_negative_tlc AccountDeletionOperatorModuleOnly.cfg deletion-operator-module-only 'Invariant OnlyAuthorizedPrivacyEffects is violated' AccountDeletionOperator.tla
 run_tlc AccountDeletionIntake.tla AccountDeletionIntake.cfg account-deletion-intake

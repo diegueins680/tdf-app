@@ -204,6 +204,79 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   }
   console.log('Legacy CRLF and CR deletion requests remain visible, reusable and immutably resolvable.');
 
+  // Authentication may have captured grants before revocation commits. Hold
+  // only the token row, observe the handler's real lock wait, commit a role or
+  // permission revocation independently, then let authorization continue.
+  const operatorIds = sql(`SELECT string_agg(quote_literal(psr.id::text)||'::uuid',',')
+    FROM party_security_role psr JOIN security_role r ON r.id=psr.role_id
+    WHERE psr.party_id=${admin.partyId} AND psr.active AND r.code IN ('admin','manager','studio-manager')`);
+  const permissionIds = sql(`SELECT string_agg(DISTINCT quote_literal(rp.id::text)||'::uuid',',')
+    FROM party_security_role psr JOIN role_permission rp ON rp.role_id=psr.role_id
+    JOIN security_permission p ON p.id=rp.permission_id JOIN security_module m ON m.id=p.module_id
+    JOIN security_action a ON a.id=p.action_id
+    WHERE psr.party_id=${admin.partyId} AND psr.active AND rp.active
+      AND m.code='internships' AND a.code='access' AND p.resource_scope='module'`);
+  assert.ok(operatorIds && permissionIds, 'Fixture must have actual operator and module grants');
+  for (const kind of ['operator-role', 'module-permission']) {
+    let addedIntern = '';
+    try {
+      if (kind === 'operator-role') {
+        addedIntern = sql(`INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
+          SELECT ${admin.partyId},r.id,'bootstrap',true FROM security_role r
+          WHERE r.code='intern' AND NOT EXISTS (SELECT 1 FROM party_security_role psr WHERE psr.party_id=${admin.partyId} AND psr.role_id=r.id)
+          RETURNING id`).split('\n').filter(value => /^[0-9a-f-]{36}$/i.test(value)).join('');
+      }
+      const table = kind === 'operator-role' ? 'party_security_role' : 'role_permission';
+      const ids = kind === 'operator-role' ? operatorIds : permissionIds;
+      const pending = await request(endpoint, { token: account.token, method: 'POST', body: form(28) });
+      const paths = [
+        [`/feedback/internal/account-deletion/${pending.adrRequestId}`, { method: 'POST', json: resolution }],
+        [queue, {}], ['/feedback/internal/legacy', {}],
+      ];
+      for (const [path, options] of paths) {
+        const gate = spawn('psql', ['-X', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-d', database], { stdio: ['pipe', 'pipe', 'pipe'] });
+        let output = ''; let errors = ''; let response; let settled = false;
+        gate.stdout.on('data', chunk => { output += chunk; });
+        gate.stderr.on('data', chunk => { errors += chunk; });
+        const closed = new Promise((resolve, reject) => {
+          gate.once('error', reject);
+          gate.once('close', code => code === 0 ? resolve() : reject(new Error(`Authority gate failed: ${errors}`)));
+        });
+        void closed.catch(() => {});
+        try {
+          gate.stdin.write(`BEGIN; SELECT id FROM api_token WHERE party_id=${admin.partyId} FOR UPDATE; SELECT 'AUTHORITY_LOCK_READY';\n`);
+          await until(() => output.includes('AUTHORITY_LOCK_READY'));
+          response = requestStatus(path, { token: admin.token, ...options });
+          void response.then(() => { settled = true; }, () => { settled = true; });
+          await until(() => {
+            assert.equal(settled, false, 'Privacy effect must wait for current session/authority admission');
+            return sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query LIKE '%FROM api_token WHERE id=%FOR SHARE%'") === '1';
+          });
+          sql(`UPDATE ${table} SET active=false WHERE id IN (${ids})`);
+          if (kind === 'operator-role') {
+            assert.equal(sql(`SELECT EXISTS(SELECT 1 FROM party_security_role psr
+              JOIN security_role r ON r.id=psr.role_id JOIN role_permission rp ON rp.role_id=r.id
+              JOIN security_permission p ON p.id=rp.permission_id JOIN security_module m ON m.id=p.module_id
+              JOIN security_action a ON a.id=p.action_id WHERE psr.party_id=${admin.partyId}
+              AND psr.active AND r.active AND rp.active AND p.active AND m.active AND a.active
+              AND r.code='intern' AND m.code='internships' AND a.code='access' AND p.resource_scope='module')`),
+            't', 'Intern and internships must remain active after operator revocation');
+          }
+          gate.stdin.end('COMMIT;\n'); await closed;
+          assert.equal(await response, 403, `Committed ${kind} revocation must deny ${path}`);
+          assert.equal(sql(`SELECT count(*) FROM audit_log WHERE entity='account_deletion_request' AND entity_id='${pending.adrRequestId}'`), '0', 'Denied resolution must append no terminal evidence');
+        } finally {
+          if (!gate.stdin.writableEnded) gate.stdin.end('ROLLBACK;\n');
+          await closed; await Promise.allSettled([response].filter(Boolean));
+          sql(`UPDATE ${table} SET active=true WHERE id IN (${ids})`);
+        }
+      }
+    } finally {
+      if (addedIntern) sql(`UPDATE party_security_role SET active=false WHERE id='${addedIntern}'`);
+    }
+  }
+  console.log('Deletion authority: six witnessed session-lock races reject committed role/module revocation; retained Intern access cannot replace operator authority.');
+
 
 
 }
