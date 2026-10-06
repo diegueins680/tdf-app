@@ -229,7 +229,7 @@ cancelTicketRefundWithAuthority strictAdmin actor ref now = do
 -- separate immutable binding, never stored in the Stripe-specific column.
 loadTicketRefundReference :: M.TicketRefundRequestId -> SqlPersistT IO (Maybe R.RefundReference)
 loadTicketRefundReference key = do
-  rows <- rawSql "SELECT refund_id::text FROM event_ticket_refund_request_binding WHERE request_id=?"
+  rows <- rawSql "SELECT CAST(refund_id AS TEXT) FROM event_ticket_refund_request_binding WHERE request_id=?"
     [toPersistValue key]
   case rows of
     [] -> pure Nothing

@@ -143,8 +143,11 @@ No se aplicó ninguno de esos dos atajos en producción.
    y comprobar totales USD20/40/60/80 sin modificar órdenes históricas.
 3. Ejecutar una compra de proveedor y reembolso en un entorno oficial utilizable,
    incluyendo callback/webhook, emisión, QR, check-in y entrega de confirmación.
-   La compra, emisión y check-in sandbox ya pasaron; falta el ciclo financiero
-   completo del reembolso en TDF y la entrega externa de confirmación.
+   La compra, emisión, QR y check-in sandbox ya pasaron. El 6 de octubre también
+   pasaron reembolso parcial y total desde TDF, ledger, nota interna de crédito,
+   bloqueo del ticket devuelto y reenvíos de webhooks firmados. Ver
+   [evidencia y versiones exactas](ticket-refund-api-sandbox-2026-10-06.json).
+   La confirmación llegó al SMTP aislado; la entrega externa sigue pendiente.
 4. Activar la ruta PayPal y la política del evento solamente con la evidencia
    anterior, luego publicar y comprobar el checkout canónico. La autorización
    del organizador ya está registrada; no constituye una prueba de estos pasos.
@@ -153,4 +156,6 @@ Fuentes técnicas consultadas:
 [autenticación PayPal](https://developer.paypal.com/api/rest/authentication/) y
 [consulta de webhooks](https://developer.paypal.com/api/webhooks/v1).
 Los recibos operativos completos y los scripts de inspección sin secretos se
-conservan fuera del repositorio público. No se enviaron emails, cobros ni payouts.
+conservan fuera del repositorio público. La inspección inicial no envió emails, cobros ni payouts. La cualificación posterior
+realizó compras y reembolsos exclusivamente en PayPal sandbox y aceptó dos
+confirmaciones en SMTP local; no habilitó cobros reales ni envió correo externo.

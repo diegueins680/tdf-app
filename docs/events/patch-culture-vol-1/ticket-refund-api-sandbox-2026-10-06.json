@@ -211,6 +211,21 @@
           "api"
         ]
       }
+    },
+    "refund-api-final-native-report.json": {
+      "sha256": "8ddc562fd4d49ea280ca17ad6c834e83dfce5f1ca954a0cc8461e255d4564063",
+      "result": {
+        "sourceCommit": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+        "nativeBuildTime": "2026-10-06T02:13:35Z",
+        "anonymousFinanceHttp": 401,
+        "organizerFinanceHttp": 200,
+        "grossMinor": 14000,
+        "refundedMinor": 8000,
+        "matchesCanonicalLedger": true,
+        "refundedOrderAndTicketPreserved": true,
+        "newProviderTransactions": 0,
+        "productionWritten": false
+      }
     }
   },
   "purchase": {
@@ -262,20 +277,40 @@
         "ticketAllocations": 20,
         "providerQueryJobs": 41
       }
+    },
+    "catalogAudit": {
+      "tests": 6,
+      "failures": 0,
+      "unreviewedOrStaleDecisions": 0,
+      "scope": "183-entry migration registry, allocation protocol, bounded test fixture and status presentation reviewed; prior decisions retained."
+    },
+    "repositoryQuality": "passed at 8cb4b6385 before final legacy SQLite fixture compatibility correction",
+    "legacyVisibilityCompatibility": {
+      "examples": 1,
+      "failures": 0,
+      "scope": "Existing hidden-event buyer refund, unrelated buyer denial and strict-admin rejection against SQLite legacy fixture; portable CAST preserves PostgreSQL UUID binding semantics."
+    },
+    "portableBindingPostgresRegression": {
+      "examples": 28,
+      "failures": 0,
+      "scope": "Final CAST binding syntax on real PostgreSQL; request, query, callback, refund, inventory and finance projection cases."
     }
   },
   "limitations": [
-    "Official native purchase/refund/check-in source is a058dc0; later ticket-state display and finance reporting corrections require separate exact native verification.",
+    "Official native purchase/refund/check-in qualification uses source a058dc0; later source8aa554 native build and read-only finance/refunded-order HTTP verification passed separately without new provider transactions.",
     "First order: native partial refund USD20; remaining USD20 refunded directly through official provider for test cleanup after its retained ticket had checked in. That external cleanup is not claimed as a canonical allocated refund or inventory release.",
     "Sandbox merchant/capability configuration does not establish live merchant readiness.",
     "Local SMTP acceptance is not external email delivery.",
     "No native Android/iOS refund journey or offline check-in qualification.",
-    "Protected branch integration, exact deployed artifact, production recovery gates and live event activation remain outstanding."
+    "Protected branch integration, exact deployed artifact, production recovery gates and live event activation remain outstanding.",
+    "Final legacy-test compatibility changes CAST syntax and supplies empty lookup tables in SQLite; it is qualified separately from the native8aa HTTP receipt."
   ],
   "localLogSha256": {
     "ticket-refund-request-final-full.log": "b1af3a2c05bc83a437a65740d33cd48ee5a8b063ea74d4384f6eda9079b322d3",
     "ticket-refund-request-finance.log": "68b503f7c51dea1484f1665d7d4e50da2cc5d63b523a0533f9588338894a5d31",
     "ticket-refund-status-normalization.log": "aac41d90f3ca071347e7e5955420ab42f4179c628b5ad1b1cc49fe9b086330a0",
-    "ticket-refund-request-ui-final.log": "f3780a2618a0138d65616a6d6ec8a54671ac47d2c8b29967a40b4a1658c901fb"
+    "ticket-refund-request-ui-final.log": "f3780a2618a0138d65616a6d6ec8a54671ac47d2c8b29967a40b4a1658c901fb",
+    "ticket-refund-legacy-visibility.log": "45762ed02d8892eeb0c4f6115afbd017635dfea3b9c5288af01e2d1e9143cd0d",
+    "ticket-refund-final-postgres-cast.log": "cb5299e9271a7b34f7607580c0b39d953a14f2785df47238d503a45d1512e069"
   }
 }
