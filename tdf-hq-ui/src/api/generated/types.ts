@@ -4016,6 +4016,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/feedback/account-deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate manual account deletion with authenticated acceptance
+         * @description Requires a live authenticated session belonging to accountId. Rejects expired, anonymous or mismatched sessions before insertion or notification. Returns the authoritative owner and request ID; does not erase the account. Requires the non-simple X-Requested-With header and validates any Origin against configured TDF origins, independently of permissive CORS settings.
+         */
+        post: operations["requestAccountDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/feedback/internal": {
         parameters: {
             query?: never;
@@ -4079,6 +4099,26 @@ export interface paths {
         get: operations["listLegacyFeedbackForAdmin"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/account-deletion/{feedbackId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record manual deletion fulfilment with an authenticated administrator audit
+         * @description Records completion or rejection once; does not erase account data. Concurrent repeated resolution returns 409.
+         */
+        post: operations["resolveAccountDeletion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -13755,7 +13795,17 @@ export interface components {
             ifrRetests: components["schemas"]["InternalFeedbackRetest"][];
             ifrPotentialDuplicates: components["schemas"]["InternalFeedbackSummary"][];
         };
+        AccountDeletionAction: {
+            /** @enum {string} */
+            adaOutcome: "completed" | "rejected";
+            adaNote: string;
+            /** Format: int64 */
+            adaActor: number | null;
+            /** Format: date-time */
+            adaCreatedAt: string;
+        };
         LegacyFeedback: {
+            lfdDeletionHistory?: components["schemas"]["AccountDeletionAction"][];
             /** Format: uuid */
             lfdId: string;
             lfdTitle: string;
@@ -13982,6 +14032,11 @@ export interface components {
             ifsCreatedAt: string;
             /** Format: date-time */
             ifsUpdatedAt: string;
+        };
+        AccountDeletionReceipt: {
+            adrRequestId: string;
+            /** Format: int64 */
+            adrCreatedBy: number;
         };
         FeedbackMultipart: {
             title: string;
@@ -25297,6 +25352,55 @@ export interface operations {
             };
         };
     };
+    requestAccountDeletion: {
+        parameters: {
+            query: {
+                accountId: number;
+            };
+            header: {
+                "X-Requested-With": "TDF-Account-Deletion";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["FeedbackMultipart"];
+            };
+        };
+        responses: {
+            /** @description Authenticated request accepted for manual fulfilment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionReceipt"];
+                };
+            };
+            /** @description Invalid request, catalog reference, marker or attachment */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated account mismatch or invalid request origin proof */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInternalFeedback: {
         parameters: {
             query?: {
@@ -25415,7 +25519,11 @@ export interface operations {
     };
     listLegacyFeedbackForAdmin: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filter privacy requests before pagination; returns up to 20 records including normalized ones. */
+                accountDeletionOnly?: boolean;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -25433,6 +25541,71 @@ export interface operations {
             };
             /** @description Administrator access required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolveAccountDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    adrOutcome: "completed" | "rejected";
+                    adrNote: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Audit recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionAction"];
+                };
+            };
+            /** @description Invalid outcome or missing note or unidentified completion */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Administrator required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deletion request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request already resolved */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

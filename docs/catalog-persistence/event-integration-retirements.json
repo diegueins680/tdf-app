@@ -125,78 +125,14 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "0bd23196640f34d2ea12",
-      "reason": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
+      "replacementId": "66c48cc059727856b6f1",
+      "reason": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
       "previousReplacementId": "21babc54d68f0c44d55e",
       "currentResolution": {
-        "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
-        "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
-        "reason": "Reviewed admin.video-sources strict-admin concealed client mirror; prior 157 entries unchanged."
-      },
-      "previousResolutions": [
-        {
-          "replacementId": "5147eb2751a01d8b4c73",
-          "currentResolution": {
-            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-            "valueCount": 157,
-            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-          }
-        }
-      ],
-      "consolidatedMainResolution": {
-        "originalDecision": {
-          "id": "ffb84e8fd3972fd0730d",
-          "classification": "security-system-registry",
-          "disposition": "generated-consumer-pending-governance-cutover",
-          "specializedModel": "navigation_item, navigation_item_permission",
-          "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-          "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-          "reviewed": true
-        },
-        "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-        "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-        "source": {
-          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-          "kind": "array",
-          "name": "mobileFeatureRegistry"
-        },
-        "replacementId": "0eafdd9f0a8bbebf9a23",
-        "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
-        "previousReplacementId": "21babc54d68f0c44d55e",
-        "currentResolution": {
-          "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-          "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-          "valueCount": 157,
-          "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-        },
-        "previousResolution": {
-          "originalDecision": {
-            "id": "ffb84e8fd3972fd0730d",
-            "classification": "security-system-registry",
-            "disposition": "generated-consumer-pending-governance-cutover",
-            "specializedModel": "navigation_item, navigation_item_permission",
-            "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-            "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-            "reviewed": true
-          },
-          "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-          "source": {
-            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-            "kind": "array",
-            "name": "mobileFeatureRegistry"
-          },
-          "replacementId": "5147eb2751a01d8b4c73",
-          "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
-          "previousReplacementId": "21babc54d68f0c44d55e",
-          "currentResolution": {
-            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-            "valueCount": 157,
-            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-          }
-        }
+        "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+        "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+        "valueCount": 157,
+        "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
       },
       "previousResolution": {
         "originalDecision": {
@@ -215,26 +151,24 @@
           "kind": "array",
           "name": "mobileFeatureRegistry"
         },
-        "replacementId": "714645381e4ae8080a3a",
-        "reason": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
+        "replacementId": "5147eb2751a01d8b4c73",
+        "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
         "previousReplacementId": "21babc54d68f0c44d55e",
         "currentResolution": {
-          "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
-          "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
-          "reason": "Reviewed admin.video-sources strict-admin concealed client mirror; prior 157 entries unchanged."
-        },
-        "previousResolutions": [
-          {
-            "replacementId": "5147eb2751a01d8b4c73",
-            "currentResolution": {
-              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-              "valueCount": 157,
-              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-            }
-          }
-        ],
-        "consolidatedMainResolution": {
+          "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+          "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+          "valueCount": 157,
+          "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+        }
+      },
+      "latestResolution": {
+        "previousReplacementId": "44c80a6dd2f154d0d59a",
+        "mobileRevision": "13c5d98a7c9e6aa9c815d64e2631b3a5c947bf3f",
+        "valueCount": 161,
+        "reason": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents."
+      },
+      "concurrentReviewHistory": [
+        {
           "originalDecision": {
             "id": "ffb84e8fd3972fd0730d",
             "classification": "security-system-registry",
@@ -251,62 +185,8 @@
             "kind": "array",
             "name": "mobileFeatureRegistry"
           },
-          "replacementId": "0eafdd9f0a8bbebf9a23",
-          "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
-          "previousReplacementId": "21babc54d68f0c44d55e",
-          "currentResolution": {
-            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-            "valueCount": 157,
-            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-          },
-          "previousResolution": {
-            "originalDecision": {
-              "id": "ffb84e8fd3972fd0730d",
-              "classification": "security-system-registry",
-              "disposition": "generated-consumer-pending-governance-cutover",
-              "specializedModel": "navigation_item, navigation_item_permission",
-              "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-              "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-              "reviewed": true
-            },
-            "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-            "source": {
-              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-              "kind": "array",
-              "name": "mobileFeatureRegistry"
-            },
-            "replacementId": "5147eb2751a01d8b4c73",
-            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
-            "previousReplacementId": "21babc54d68f0c44d55e",
-            "currentResolution": {
-              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-              "valueCount": 157,
-              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-            }
-          }
-        },
-        "previousResolution": {
-          "originalDecision": {
-            "id": "ffb84e8fd3972fd0730d",
-            "classification": "security-system-registry",
-            "disposition": "generated-consumer-pending-governance-cutover",
-            "specializedModel": "navigation_item, navigation_item_permission",
-            "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-            "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-            "reviewed": true
-          },
-          "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-          "source": {
-            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-            "kind": "array",
-            "name": "mobileFeatureRegistry"
-          },
-          "replacementId": "e9fb532f768747ee20c0",
-          "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+          "replacementId": "0bd23196640f34d2ea12",
+          "reason": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
           "previousReplacementId": "21babc54d68f0c44d55e",
           "currentResolution": {
             "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
@@ -377,91 +257,6 @@
                 "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
               }
             }
-          }
-        },
-        "concurrentReviewHistory": [
-          {
-            "originalDecision": {
-              "id": "ffb84e8fd3972fd0730d",
-              "classification": "security-system-registry",
-              "disposition": "generated-consumer-pending-governance-cutover",
-              "specializedModel": "navigation_item, navigation_item_permission",
-              "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-              "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-              "reviewed": true
-            },
-            "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-            "source": {
-              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-              "kind": "array",
-              "name": "mobileFeatureRegistry"
-            },
-            "replacementId": "44c80a6dd2f154d0d59a",
-            "reason": "The current canonical generated registry preserves every definition from payment main and adds the public tester landing. Previous reviewed successor decisions remain archived unchanged in catalog-list-decisions.json.",
-            "previousReplacementId": "21babc54d68f0c44d55e",
-            "currentResolution": {
-              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-              "valueCount": 157,
-              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-            },
-            "previousResolution": {
-              "originalDecision": {
-                "id": "ffb84e8fd3972fd0730d",
-                "classification": "security-system-registry",
-                "disposition": "generated-consumer-pending-governance-cutover",
-                "specializedModel": "navigation_item, navigation_item_permission",
-                "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-                "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-                "reviewed": true
-              },
-              "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-              "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-              "source": {
-                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-                "kind": "array",
-                "name": "mobileFeatureRegistry"
-              },
-              "replacementId": "5147eb2751a01d8b4c73",
-              "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
-              "previousReplacementId": "21babc54d68f0c44d55e",
-              "currentResolution": {
-                "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-                "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-                "valueCount": 157,
-                "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-              }
-            }
-          }
-        ]
-      },
-      "concurrentReviewHistory": [
-        {
-          "originalDecision": {
-            "id": "ffb84e8fd3972fd0730d",
-            "classification": "security-system-registry",
-            "disposition": "generated-consumer-pending-governance-cutover",
-            "specializedModel": "navigation_item, navigation_item_permission",
-            "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
-            "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
-            "reviewed": true
-          },
-          "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
-          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
-          "source": {
-            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-            "kind": "array",
-            "name": "mobileFeatureRegistry"
-          },
-          "replacementId": "44c80a6dd2f154d0d59a",
-          "reason": "The current canonical generated registry preserves every definition from payment main and adds the public tester landing. Previous reviewed successor decisions remain archived unchanged in catalog-list-decisions.json.",
-          "previousReplacementId": "21babc54d68f0c44d55e",
-          "currentResolution": {
-            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-            "valueCount": 157,
-            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
           },
           "previousResolution": {
             "originalDecision": {
@@ -480,19 +275,286 @@
               "kind": "array",
               "name": "mobileFeatureRegistry"
             },
-            "replacementId": "5147eb2751a01d8b4c73",
-            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+            "replacementId": "714645381e4ae8080a3a",
+            "reason": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
             "previousReplacementId": "21babc54d68f0c44d55e",
             "currentResolution": {
-              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-              "valueCount": 157,
-              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+              "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
+              "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+              "reason": "Reviewed admin.video-sources strict-admin concealed client mirror; prior 157 entries unchanged."
+            },
+            "previousResolutions": [
+              {
+                "replacementId": "5147eb2751a01d8b4c73",
+                "currentResolution": {
+                  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                  "valueCount": 157,
+                  "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                }
+              }
+            ],
+            "consolidatedMainResolution": {
+              "originalDecision": {
+                "id": "ffb84e8fd3972fd0730d",
+                "classification": "security-system-registry",
+                "disposition": "generated-consumer-pending-governance-cutover",
+                "specializedModel": "navigation_item, navigation_item_permission",
+                "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                "reviewed": true
+              },
+              "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+              "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+              "source": {
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry"
+              },
+              "replacementId": "0eafdd9f0a8bbebf9a23",
+              "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
+              "previousReplacementId": "21babc54d68f0c44d55e",
+              "currentResolution": {
+                "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                "valueCount": 157,
+                "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+              },
+              "previousResolution": {
+                "originalDecision": {
+                  "id": "ffb84e8fd3972fd0730d",
+                  "classification": "security-system-registry",
+                  "disposition": "generated-consumer-pending-governance-cutover",
+                  "specializedModel": "navigation_item, navigation_item_permission",
+                  "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                  "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                  "reviewed": true
+                },
+                "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+                "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+                "source": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry"
+                },
+                "replacementId": "5147eb2751a01d8b4c73",
+                "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+                "previousReplacementId": "21babc54d68f0c44d55e",
+                "currentResolution": {
+                  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                  "valueCount": 157,
+                  "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                }
+              }
+            },
+            "previousResolution": {
+              "originalDecision": {
+                "id": "ffb84e8fd3972fd0730d",
+                "classification": "security-system-registry",
+                "disposition": "generated-consumer-pending-governance-cutover",
+                "specializedModel": "navigation_item, navigation_item_permission",
+                "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                "reviewed": true
+              },
+              "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+              "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+              "source": {
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry"
+              },
+              "replacementId": "e9fb532f768747ee20c0",
+              "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+              "previousReplacementId": "21babc54d68f0c44d55e",
+              "currentResolution": {
+                "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
+                "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+                "reason": "Reviewed admin.video-sources strict-admin concealed client mirror; prior 157 entries unchanged."
+              },
+              "previousResolutions": [
+                {
+                  "replacementId": "5147eb2751a01d8b4c73",
+                  "currentResolution": {
+                    "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                    "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                    "valueCount": 157,
+                    "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                  }
+                }
+              ],
+              "consolidatedMainResolution": {
+                "originalDecision": {
+                  "id": "ffb84e8fd3972fd0730d",
+                  "classification": "security-system-registry",
+                  "disposition": "generated-consumer-pending-governance-cutover",
+                  "specializedModel": "navigation_item, navigation_item_permission",
+                  "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                  "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                  "reviewed": true
+                },
+                "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+                "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+                "source": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry"
+                },
+                "replacementId": "0eafdd9f0a8bbebf9a23",
+                "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
+                "previousReplacementId": "21babc54d68f0c44d55e",
+                "currentResolution": {
+                  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                  "valueCount": 157,
+                  "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                },
+                "previousResolution": {
+                  "originalDecision": {
+                    "id": "ffb84e8fd3972fd0730d",
+                    "classification": "security-system-registry",
+                    "disposition": "generated-consumer-pending-governance-cutover",
+                    "specializedModel": "navigation_item, navigation_item_permission",
+                    "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                    "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                    "reviewed": true
+                  },
+                  "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+                  "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+                  "source": {
+                    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                    "kind": "array",
+                    "name": "mobileFeatureRegistry"
+                  },
+                  "replacementId": "5147eb2751a01d8b4c73",
+                  "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+                  "previousReplacementId": "21babc54d68f0c44d55e",
+                  "currentResolution": {
+                    "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                    "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                    "valueCount": 157,
+                    "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                  }
+                }
+              }
+            },
+            "concurrentReviewHistory": [
+              {
+                "originalDecision": {
+                  "id": "ffb84e8fd3972fd0730d",
+                  "classification": "security-system-registry",
+                  "disposition": "generated-consumer-pending-governance-cutover",
+                  "specializedModel": "navigation_item, navigation_item_permission",
+                  "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                  "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                  "reviewed": true
+                },
+                "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+                "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+                "source": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry"
+                },
+                "replacementId": "44c80a6dd2f154d0d59a",
+                "reason": "The current canonical generated registry preserves every definition from payment main and adds the public tester landing. Previous reviewed successor decisions remain archived unchanged in catalog-list-decisions.json.",
+                "previousReplacementId": "21babc54d68f0c44d55e",
+                "currentResolution": {
+                  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                  "valueCount": 157,
+                  "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                },
+                "previousResolution": {
+                  "originalDecision": {
+                    "id": "ffb84e8fd3972fd0730d",
+                    "classification": "security-system-registry",
+                    "disposition": "generated-consumer-pending-governance-cutover",
+                    "specializedModel": "navigation_item, navigation_item_permission",
+                    "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                    "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                    "reviewed": true
+                  },
+                  "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+                  "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+                  "source": {
+                    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                    "kind": "array",
+                    "name": "mobileFeatureRegistry"
+                  },
+                  "replacementId": "5147eb2751a01d8b4c73",
+                  "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+                  "previousReplacementId": "21babc54d68f0c44d55e",
+                  "currentResolution": {
+                    "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                    "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                    "valueCount": 157,
+                    "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                  }
+                }
+              }
+            ]
+          },
+          "concurrentReviewHistory": [
+            {
+              "originalDecision": {
+                "id": "ffb84e8fd3972fd0730d",
+                "classification": "security-system-registry",
+                "disposition": "generated-consumer-pending-governance-cutover",
+                "specializedModel": "navigation_item, navigation_item_permission",
+                "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                "reviewed": true
+              },
+              "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+              "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+              "source": {
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry"
+              },
+              "replacementId": "44c80a6dd2f154d0d59a",
+              "reason": "The current canonical generated registry preserves every definition from payment main and adds the public tester landing. Previous reviewed successor decisions remain archived unchanged in catalog-list-decisions.json.",
+              "previousReplacementId": "21babc54d68f0c44d55e",
+              "currentResolution": {
+                "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                "valueCount": 157,
+                "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+              },
+              "previousResolution": {
+                "originalDecision": {
+                  "id": "ffb84e8fd3972fd0730d",
+                  "classification": "security-system-registry",
+                  "disposition": "generated-consumer-pending-governance-cutover",
+                  "specializedModel": "navigation_item, navigation_item_permission",
+                  "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+                  "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+                  "reviewed": true
+                },
+                "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+                "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+                "source": {
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry"
+                },
+                "replacementId": "5147eb2751a01d8b4c73",
+                "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+                "previousReplacementId": "21babc54d68f0c44d55e",
+                "currentResolution": {
+                  "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                  "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                  "valueCount": 157,
+                  "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                }
+              }
             }
-          }
+          ],
+          "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches."
         }
-      ],
-      "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches."
+      ]
     },
     {
       "originalDecision": {
@@ -699,7 +761,7 @@
                 "name": "migrations"
               },
               "replacementId": "2527a9c1e7a4951491dd",
-              "reason": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+              "reason": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
               "previousReplacementId": "c6a62c7c7469e8974ff1",
               "currentResolution": {
                 "mainRevision": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
@@ -725,7 +787,7 @@
                   "name": "migrations"
                 },
                 "replacementId": "2be7a048fab31c7e895c",
-                "reason": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                "reason": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                 "previousReplacementId": "c6a62c7c7469e8974ff1",
                 "currentResolution": {
                   "mainRevision": "9abd8551bd77b2c29039ffdb94cdaa1e241d4287",

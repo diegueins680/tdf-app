@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "6f63aa4e825d261b3fdff2e7b9d2432e0176dddd",
+  "mobileRevision": "c98a397e3895cf44008bab472773ade3985d6b2e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -25,6 +25,8 @@
     "e2e": [
       "e2e/integration/event-raci-browser.spec.mjs",
       "e2e/interactions/interactions.spec.mjs",
+      "e2e/web/account-deletion-rollout.spec.mjs",
+      "e2e/web/account-deletion.spec.mjs",
       "e2e/web/artist-follow.spec.mjs",
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
@@ -347,6 +349,7 @@
       "scripts/sync-concerts-with-apis.py",
       "scripts/sync-country-reference.mjs",
       "scripts/test-access-request-notification-migration.sh",
+      "scripts/test-account-deletion-api.mjs",
       "scripts/test-artist-claim-target-http.sh",
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
@@ -503,6 +506,8 @@
       "tdf-hq-ui/src/analytics/useAnalytics.ts",
       "tdf-hq-ui/src/analytics/webVitals.ts",
       "tdf-hq-ui/src/api/accessRequests.ts",
+      "tdf-hq-ui/src/api/accountDeletion.test.ts",
+      "tdf-hq-ui/src/api/accountDeletion.ts",
       "tdf-hq-ui/src/api/admin.ts",
       "tdf-hq-ui/src/api/ads.ts",
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
@@ -618,6 +623,8 @@
       "tdf-hq-ui/src/api/types.ts",
       "tdf-hq-ui/src/api/whatsappConsent.ts",
       "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
+      "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+      "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
       "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
@@ -722,6 +729,8 @@
       "tdf-hq-ui/src/components/reputation/PublicReputationSummary.tsx",
       "tdf-hq-ui/src/components/reviews/ExperienceReviews.test.tsx",
       "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
+      "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
+      "tdf-hq-ui/src/config/accountDeletionRollout.ts",
       "tdf-hq-ui/src/config/apiBase.test.ts",
       "tdf-hq-ui/src/config/apiBase.ts",
       "tdf-hq-ui/src/config/appConfig.ts",
@@ -798,6 +807,8 @@
       "tdf-hq-ui/src/hooks/useNavigationPreferences.ts",
       "tdf-hq-ui/src/hooks/useOffline.ts",
       "tdf-hq-ui/src/i18n/index.ts",
+      "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+      "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
       "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
       "tdf-hq-ui/src/i18n/locales/de.ts",
@@ -823,6 +834,8 @@
       "tdf-hq-ui/src/pages/AboutPage.tsx",
       "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
       "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+      "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+      "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
       "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
       "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
       "tdf-hq-ui/src/pages/AdminTokenPage.tsx",
@@ -2316,7 +2329,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
+      "sha256": "202b91f9035f814e0539771601a81d90e4d790d9a91a0280ee3268fecc599a57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2383,6 +2396,18 @@
       "id": "SURFACE-b6a53fc19d550b31",
       "path": "e2e/interactions/interactions.spec.mjs",
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ed82a4ad1ffc2408",
+      "path": "e2e/web/account-deletion-rollout.spec.mjs",
+      "sha256": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9258b3c42ab418b4",
+      "path": "e2e/web/account-deletion.spec.mjs",
+      "sha256": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2502,7 +2527,7 @@
     {
       "id": "SURFACE-03b376e5c1e5769e",
       "path": "e2e/web/studio-internship-audit.spec.mjs",
-      "sha256": "a1476f348af89e8c1bc1f2e41573a6b8acb8fa2db257c919236457c1a11f484a",
+      "sha256": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4246,6 +4271,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1185f571edd4c1d3",
+      "path": "scripts/test-account-deletion-api.mjs",
+      "sha256": "d68ef989158ba20b7559b52a9df5befef50fd926c6859146654ea696fd4879d9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a8dfded8bd6214c5",
       "path": "scripts/test-artist-claim-target-http.sh",
       "sha256": "ea13d891593d2b2951a59b256df5de6bea5518c4b416ffd2366efd08ef051cc5",
@@ -4698,13 +4729,13 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "889996bfee1d3934ad9eb5f35e37c05b8f15f11c43dbfa94ecba095e18158da1",
+      "sha256": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-712726a891f46cde",
       "path": "scripts/test-studio-internship-audit-api-e2e.sh",
-      "sha256": "2d3b7e61467078e968499231822d4f80b172d2f3f3646be427df0bcf3a4c00c5",
+      "sha256": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4812,13 +4843,13 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
+      "sha256": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
+      "sha256": "100d7c8b9d7791af89f20ccb68c01aea580ae8c9384c6c7c72fcaa0b4068acb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4950,7 +4981,7 @@
     {
       "id": "SURFACE-6bf3e8831a095bee",
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+      "sha256": "93271be8eb80d03703b19a71d45625c876b758e7b08636b986c3f83b39425666",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4980,7 +5011,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "c4ae01681008e3588976812895addb26ce9461b4734c898228593f11d731b686",
+      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5155,6 +5186,18 @@
       "id": "SURFACE-5f61a01aa269f351",
       "path": "tdf-hq-ui/src/api/accessRequests.ts",
       "sha256": "6989c7101cd4a221461cbcc97f0ef65425aea589a263b86423119707d58461fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f8ed9b53a433074a",
+      "path": "tdf-hq-ui/src/api/accountDeletion.test.ts",
+      "sha256": "5a039f2ef3658b1aabee56a51f1f1e4a23c2e895ed22d863879fd245e95a4785",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e0156ec387afe64c",
+      "path": "tdf-hq-ui/src/api/accountDeletion.ts",
+      "sha256": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5430,13 +5473,13 @@
     {
       "id": "SURFACE-69a704f4fb55bf52",
       "path": "tdf-hq-ui/src/api/feedback.test.ts",
-      "sha256": "dbd23e43cd43994667b8745df7039f56234880342bdb5b0bdda25d521a73819e",
+      "sha256": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-07a03f2b6135fe72",
       "path": "tdf-hq-ui/src/api/feedback.ts",
-      "sha256": "8c8a95930d681cecbaab367ed68ea17fd431751951569fdb33d20b7f9b174041",
+      "sha256": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5460,7 +5503,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "8668130e98a5b2cfee0fd6b08a9558d9a936f80cad9c9e4ef2c99b41b344ab50",
+      "sha256": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5490,7 +5533,7 @@
     {
       "id": "SURFACE-7f274ed7ae3d4fde",
       "path": "tdf-hq-ui/src/api/internalFeedback.ts",
-      "sha256": "fc5eaf580debc8784f27ab934aa5ace331d31fa1810f32ec796af0c4e28c8022",
+      "sha256": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5832,7 +5875,7 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "71af45fd6a302b5b2a52ee54106522aa8faba612550298cb07748a807cc35cf4",
+      "sha256": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5845,6 +5888,18 @@
       "id": "SURFACE-53ccbdf692a3b60f",
       "path": "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
       "sha256": "e679e1b41bc86a3fdf357030af08149cc08f1948ba726de9043d9e955ed99e08",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-526786b1dccd2ea9",
+      "path": "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+      "sha256": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d0c4c8db8120be10",
+      "path": "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+      "sha256": "e44b0092e64730479c4742b9d1e0ba8719d6dd9d835e628f31ac6de1362436f3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6078,7 +6133,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "1f43956a75a96472fe0020ddeda0d203b32be8b242606f1f55303ce290a48861",
+      "sha256": "7b611aa98fbd9f7a80236089e593265e6b95f579c8b6b91b38bd72a41e66f1a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6472,6 +6527,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6c9f7b2d3a5a98d",
+      "path": "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
+      "sha256": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-241db15517dc01fb",
+      "path": "tdf-hq-ui/src/config/accountDeletionRollout.ts",
+      "sha256": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fbf0f55a9fd055a5",
       "path": "tdf-hq-ui/src/config/apiBase.test.ts",
       "sha256": "7eff07045820dc7207544801c5931298846bbbc58f74c20512399b54632e1927",
@@ -6618,7 +6685,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
+      "sha256": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6928,6 +6995,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c97910a5593293cd",
+      "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+      "sha256": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5e55534c6210f093",
+      "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+      "sha256": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "sha256": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
@@ -6960,13 +7039,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "969c9406f05d0f7fa189cca0e7cf4f720be0d305b97b2293b98dee30f146d355",
+      "sha256": "3f2bad72c74df51d522a433a3c1c97a6ea6b8dcf5b8a9d4657af3515cd6d4ebf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "2095866bbdbfb6727ae75c944b9f229bf520beafefafde6978998eba0b920d70",
+      "sha256": "e7e93c77deb6043f650aeb71e0b10538c480918d702af78e9ab17f756aaabd0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7075,6 +7154,18 @@
       "id": "SURFACE-53c8ba4f1cec8bc4",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
       "sha256": "5ac2140b9ba524b837e15d82113cd7b75af91eb5c3efe2a0e2c0cd366267eb41",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7eb3d6265bbc7ec8",
+      "path": "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+      "sha256": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c46fe8f1aff9a4d8",
+      "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+      "sha256": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7608,7 +7699,7 @@
     {
       "id": "SURFACE-48b0e7098c6f5184",
       "path": "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
-      "sha256": "e2ff9e1cbe79bb4f9a92c69072f2cb3999381dfd04b7341f79bc82f254fd487c",
+      "sha256": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8496,7 +8587,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "549e3dba76f23f8606285e0f4382731e1fd778c018a6e4c21e14ce971a6778a5",
+      "sha256": "4f2025acbc29657ec9a2b1f289aae38edebe56c135b465912e8f57455628dce0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9084,7 +9175,7 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "e0e7d07962ba4562509ff653f287c7e01d29599d1e2f1e9abcea45f82fcdc870",
+      "sha256": "f61b48185ea9d328e2700e29617e83b0b18cafe84459d12e723d8abdde95ac2b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9186,7 +9277,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
+      "sha256": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9246,7 +9337,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1728de134f85d286c51e0ce3bbb859e8590b7e79fd3b87480beee05d1e0133bd",
+      "sha256": "445da4d1d8ea64aee6c0fb40bd1800f7bd44bd01478aa88d8156745fd516bd12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11532,7 +11623,7 @@
     {
       "id": "SURFACE-b512bf606a31fa6e",
       "path": "tdf-hq/src/TDF/API/Feedback.hs",
-      "sha256": "b3a4660be280fa6aabb8cc0a39958f8eeb60a61bce687e1042c14f1893cdbd3b",
+      "sha256": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12012,7 +12103,7 @@
     {
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
-      "sha256": "53b4f194ffdd118805585962fc6a2f9c9e9121a6c55d0990581dfe531ba9284f",
+      "sha256": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12540,7 +12631,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
+      "sha256": "1a941f08a34bb86bfb37957f0edcb0feb735c89be7142445ce464dc3096e1d5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12846,7 +12937,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "60cb6cbe19131fdcf54e51567fa2192018580f2e9da9f3e48903f8fa79329096",
+      "sha256": "0b4cfd2ac12ccdd9a1b677178d2cf516b383013b0305b95fe5674fcde2ccf558",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12924,7 +13015,7 @@
     {
       "id": "SURFACE-56829a36e8042830",
       "path": "tdf-hq/test/TDF/CorsSpec.hs",
-      "sha256": "8be7f01a94ab4c4141534db48843adc3e6db345770b2f0425f457b6100488694",
+      "sha256": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13962,7 +14053,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "44a816ddc9c953522502961694eb4115d46e1f2ed6d59e5ffd257d0d0477d533",
+      "sha256": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14856,7 +14947,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "8668130e98a5b2cfee0fd6b08a9558d9a936f80cad9c9e4ef2c99b41b344ab50",
+      "sha256": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15186,7 +15277,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+      "sha256": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17672,14 +17763,28 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "df0a067dd63abe59f013bae91b465e106ca0daf343b9aace825d5c28d99ceacd",
+      "sha256": "197f55215f79c6b185f74a1271582f5142aef297f8c3ff82b8262a5c3d249a7c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/mobile-program/account-deletion-operations.md",
+      "sha256": "d5dba2e5fba53f885d45aa59a6e59ace2e8612a86b7578b3d0b1977250fbcb8b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/mobile-program/account-deletion-rollout.md",
+      "sha256": "4ef47c16757539377f1b83c1d23205a7e6b1dd11b821df255f0399421e1e829c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "8e6d5502fb3958fc99801d14657ec214a486aa480b7dcaf01421a52fd90b8721",
+      "sha256": "86e4b29ce6897f42858ad81de778d0af0f6613caf5487b7b7a84576c28ed776b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18828,6 +18933,97 @@
     {
       "path": "formal/event-operations/AccessCodeValidationSuperficial.cfg",
       "sha256": "ec79cb02c3f008d2e109d914823841736f16aca69f3377ad30e14d3fee896217",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntake.cfg",
+      "sha256": "05217a45c108319eb9594bc15d1a70e6e20ff3b3cc3e72a1105dc3ec22279294",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntake.tla",
+      "sha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg",
+      "sha256": "4031ae0a1e98fb7b6dfb4854f2e5c5b9c382be56ac1d796cfd95f3b2c8e36689",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntakeInvalidLegacy.cfg",
+      "sha256": "fe6bc325b6cc089743e2cd9782ff95c9b7d4248b4e26ee8dabb732ade77c380c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
+      "sha256": "5497ef8adbb266d1efa5e70a038d1155199125722a1df85aec17398084dbaa20",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
+      "sha256": "dffc751ceaaa5be8d4f4fd359b51997d3e120a291f0b2da542d979bb42291b38",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperator.cfg",
+      "sha256": "99cd30c1adbb18bbfe816436629af126b771a8db0547d4cd5b4d9cc82c372215",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperator.tla",
+      "sha256": "3d9906c8ad39be476c4a91b360d6fe31a7abe598e18466fea16d14934632d6e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg",
+      "sha256": "ef3187d5ca6caa1ee13bf6363fb28f4b7387ba611d470c6bf8b49b18fa315c06",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+      "sha256": "4e23f0abecc00bee64ce49bab3b529314041cf087766ca7aa8bcc4172b306e7e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionResolution.cfg",
+      "sha256": "1db4f2bab187d1b59ffae4b5595064904110e18344926b03a7a8c65f870a8b80",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionResolution.tla",
+      "sha256": "8796ed24b3e872a7eca305f2e962f1c226965a489847f55038c9c849b9054fa1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionResolutionNoOwnerLock.cfg",
+      "sha256": "330e3713093f7c592335b71c217ad048f7ddb6a00df471f5f8690fb6d4825982",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -21382,7 +21578,7 @@
     },
     {
       "path": "formal/system/cors-boundary.md",
-      "sha256": "7ef3c77469631cde749bed3041c22462efa4c0d441c377b0e43b580a9f6d67bf",
+      "sha256": "f38d760a8c5c331767874b7c35c91760d9b09055a7b2670f825d859a79b4da3d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21543,7 +21739,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "036f97b6e93af48a280922205e4a3d23437299e8495639961b2e3e109090b22a",
+      "sha256": "6bc0e14f3a622284a27af86016dbf1ce49c079a127034cd0f4a33a6c512f05e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21655,7 +21851,7 @@
     },
     {
       "path": "ops/privacy/README.md",
-      "sha256": "15dd5ffaece32e4a0743de8af92c34e3d899643b250df7dc4385b123549eb3a6",
+      "sha256": "474f2535e1ffd9f5f986fdf8eebaa83c96970a32058f9437b4893765e0c583ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21746,7 +21942,7 @@
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+      "sha256": "93271be8eb80d03703b19a71d45625c876b758e7b08636b986c3f83b39425666",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
@@ -21851,7 +22047,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1728de134f85d286c51e0ce3bbb859e8590b7e79fd3b87480beee05d1e0133bd",
+      "sha256": "445da4d1d8ea64aee6c0fb40bd1800f7bd44bd01478aa88d8156745fd516bd12",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -28696,6 +28892,162 @@
         "INVARIANTS CurrentCredential VerifiedAccount",
         "PROPERTY Terminates",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionIntake.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  ValidateLegacy = TRUE",
+        "  SerializeOwner = TRUE",
+        "  NotifyOnlyNew = TRUE",
+        "  PrivacyAudience = TRUE",
+        "INVARIANTS",
+        "  OnePendingOwnerReceipt",
+        "  OneNoticePerNewReceipt",
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  ValidateLegacy = TRUE",
+        "  SerializeOwner = TRUE",
+        "  NotifyOnlyNew = TRUE",
+        "  PrivacyAudience = FALSE",
+        "INVARIANTS",
+        "  OnePendingOwnerReceipt",
+        "  OneNoticePerNewReceipt",
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionIntakeInvalidLegacy.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  ValidateLegacy = FALSE",
+        "  SerializeOwner = TRUE",
+        "  NotifyOnlyNew = TRUE",
+        "  PrivacyAudience = TRUE",
+        "INVARIANTS",
+        "  OnePendingOwnerReceipt",
+        "  OneNoticePerNewReceipt",
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  ValidateLegacy = TRUE",
+        "  SerializeOwner = FALSE",
+        "  NotifyOnlyNew = TRUE",
+        "  PrivacyAudience = TRUE",
+        "INVARIANTS",
+        "  OnePendingOwnerReceipt",
+        "  OneNoticePerNewReceipt",
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  ValidateLegacy = TRUE",
+        "  SerializeOwner = TRUE",
+        "  NotifyOnlyNew = FALSE",
+        "  PrivacyAudience = TRUE",
+        "INVARIANTS",
+        "  OnePendingOwnerReceipt",
+        "  OneNoticePerNewReceipt",
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionOperator.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireRole = TRUE",
+        "  RequireModule = TRUE",
+        "INVARIANT OnlyAuthorizedPrivacyEffects",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireRole = FALSE",
+        "  RequireModule = TRUE",
+        "INVARIANT OnlyAuthorizedPrivacyEffects",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  RequireRole = TRUE",
+        "  RequireModule = FALSE",
+        "INVARIANT OnlyAuthorizedPrivacyEffects",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionResolution.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANT SerializeResolution = TRUE",
+        "INVARIANT ResolutionFirstGetsFreshReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionResolutionNoOwnerLock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANT SerializeResolution = FALSE",
+        "INVARIANT ResolutionFirstGetsFreshReceipt"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -5,6 +5,7 @@ module Main (main) where
 
 import Control.Exception (IOException, bracket)
 import Control.Monad (forM_)
+import qualified Data.Set as Set
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
@@ -57,6 +58,8 @@ import Web.PathPieces (toPathPiece)
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback
     ( FeedbackPayload (..),
+      InternalFeedbackAPI,
+      AccountDeletionResolution (..),
       InternalFeedbackSummaryDTO (..),
       InternalFeedbackUpdate (..) )
 import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
@@ -116,6 +119,7 @@ import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import TDF.Cors
     ( corsPolicy,
+      isAccountDeletionRequestAllowed,
       deriveCorsOriginFromAppBase,
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
@@ -214,7 +218,7 @@ import TDF.Models.SocialEventsModels
       EventTicketTier (..),
       SocialEvent (..),
       SocialEventId )
-import TDF.Auth (AuthedUser (..), moduleName, modulesForRoles)
+import TDF.Auth (AuthedUser (..), ModuleAccess (..), moduleName, modulesForRoles)
 import TDF.FeatureRegistry
     ( RegistryFeature(registryFeatureId),
       allRegistryFeatures,
@@ -320,8 +324,14 @@ import TDF.ServerProposals
       validateTemplateKey )
 import TDF.ServerFeedback
     ( csvField,
+      internalFeedbackServer,
       filterInternalReportSummaries,
       internalReportTypeForCategoryCode,
+      validateAccountDeletionIdentity,
+      validateAccountDeletionOutcome,
+      normalizeAccountDeletionDescription,
+      accountDeletionOwnerMatches,
+      feedbackNotificationRecipients,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -9588,6 +9598,97 @@ main = hspec $ do
                 ( validateWhatsAppOptOutReason
                     (Just (Data.Text.replicate 501 "x"))
                 )
+
+    describe "isAccountDeletionRequestAllowed" $ do
+        it "rejects simple forms, hostile and opaque origins even with a wildcard setting" $ do
+            isAccountDeletionRequestAllowed ["*"] Nothing Nothing `shouldBe` False
+            isAccountDeletionRequestAllowed ["*"] (Just "https://attacker.example") (Just "TDF-Account-Deletion") `shouldBe` False
+            isAccountDeletionRequestAllowed ["*"] (Just "null") (Just "TDF-Account-Deletion") `shouldBe` False
+        it "requires the non-simple header for trusted web clients and originless API clients" $ do
+            isAccountDeletionRequestAllowed ["https://www.tdfrecords.net"] (Just "https://www.tdfrecords.net") (Just "TDF-Account-Deletion") `shouldBe` True
+            isAccountDeletionRequestAllowed [] Nothing (Just "TDF-Account-Deletion") `shouldBe` True
+            isAccountDeletionRequestAllowed [] (Just "https://preview.tdf-app.pages.dev") Nothing `shouldBe` False
+
+    describe "accountDeletionOwnerMatches" $ do
+        it "rejects mismatched, missing and duplicated owner claims, including legacy generic records" $ do
+            accountDeletionOwnerMatches 42 "account_deletion_request\nrequested_account_party_id: 43\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\nrequested_account_party_id: 42\nrequested_account_party_id: 43\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\r\nrequested_account_party_id: 42\r\n" `shouldBe` True
+
+    describe "normalizeAccountDeletionDescription" $ do
+        it "accepts the browser multipart CRLF representation and stores the canonical marker" $
+            normalizeAccountDeletionDescription "account_deletion_request\r\nowner: 42\r\n"
+                `shouldBe` "account_deletion_request\nowner: 42\n"
+        it "is idempotent and removes carriage returns for arbitrary descriptions" $
+            QC.property $ \raw ->
+                let normalized = normalizeAccountDeletionDescription (Data.Text.pack raw)
+                in normalizeAccountDeletionDescription normalized == normalized
+                    && not (Data.Text.any (== '\r') normalized)
+
+    describe "internal feedback administrator module boundary" $ do
+        forM_ [Admin, Manager, StudioManager] $ \role ->
+            it ("rejects direct queue and resolution calls without internships access: " <> show role) $ do
+                let user = AuthedUser
+                        { auPartyId = toSqlKey 7
+                        , auRoles = [role]
+                        , auModules = Set.singleton ModuleAdmin
+                        , auApiTokenId = Nothing
+                        , auSessionWitness = Nothing
+                        }
+                    handler = internalFeedbackServer user
+                        :: ServerT InternalFeedbackAPI (ReaderT Env (ExceptT ServerError IO))
+                    _ :<|> _ :<|> _ :<|> listLegacy :<|> resolveDeletion :<|> _ :<|> _ = handler
+                    unusedEnv = Env
+                        { envPool = error "Denied privacy access must not query or mutate the database"
+                        , envConfig = error "Denied privacy access must not inspect runtime config"
+                        }
+                    assertForbidden action = do
+                        result <- runExceptT (runReaderT action unusedEnv)
+                        case result of
+                            Left serverErr -> errHTTPCode serverErr `shouldBe` 403
+                            Right _ -> expectationFailure "Missing internships module must deny access"
+                assertForbidden (listLegacy (Just True) (Just 0))
+                assertForbidden (listLegacy Nothing Nothing)
+                forM_ ["completed", "rejected"] $ \outcome ->
+                    assertForbidden (resolveDeletion "00000000-0000-4000-8000-000000000001"
+                        (AccountDeletionResolution outcome "Synthetic resolution; no real erasure"))
+
+    describe "feedbackNotificationRecipients" $ do
+        it "restricts every authenticated deletion notice to the confirmed privacy inbox" $
+            QC.property $ \owner ->
+                map snd (feedbackNotificationRecipients (Just owner)) == ["info@tdfrecords.net"]
+        it "preserves the ordinary feedback audience independently" $
+            map snd (feedbackNotificationRecipients Nothing) `shouldBe`
+                ["diego@tdfrecords.net", "info@tdfrecords.net", "tdfestudiodegrabacion@gmail.com"]
+
+    describe "validateAccountDeletionOutcome" $ do
+        it "accepts exactly a first valid resolution with ownership required for completion" $
+            QC.property $ \resolved identified raw ->
+                let outcome = Data.Text.pack raw
+                    accepted = either (const False) (const True) (validateAccountDeletionOutcome resolved identified outcome)
+                in accepted == (not resolved && (outcome == "rejected" || (outcome == "completed" && identified)))
+        it "never overwrites completed or rejected work" $ do
+            map (\outcome -> either errHTTPCode (const 200) (validateAccountDeletionOutcome True True outcome)) ["completed", "rejected"] `shouldBe` [409, 409]
+        it "permits rejecting unidentified requests but never completing them" $ do
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False False "rejected") `shouldBe` 200
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False False "completed") `shouldBe` 400
+        it "records completion for an identified pending request" $
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False True "completed") `shouldBe` 200
+
+    describe "validateAccountDeletionIdentity" $ do
+        it "accepts exactly positive matching authenticated identities for arbitrary account IDs" $
+            QC.property $ \expected actual ->
+                either (const False) (const True) (validateAccountDeletionIdentity expected actual)
+                    == (expected > 0 && actual == Just expected)
+        it "requires authentication at acceptance, even after a prior successful session read" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 42 Nothing)) `shouldBe` Just 401
+        it "rejects a different authenticated owner" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 42 (Just 43))) `shouldBe` Just 403
+        it "rejects invalid account identifiers" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 0 (Just 42))) `shouldBe` Just 400
+        it "accepts only the authenticated requested owner" $
+            either (const False) (const True) (validateAccountDeletionIdentity 42 (Just 42)) `shouldBe` True
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do
