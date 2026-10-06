@@ -11904,7 +11904,7 @@
     {
       "id": "SURFACE-bad06d52157a22f3",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
-      "sha256": "e953dc2ca0822cedcebf56da77bbe620de4a0d909d00eb85401f96f7c7e9aff0",
+      "sha256": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11970,7 +11970,7 @@
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
+      "sha256": "6bb478f115348bd71fb5ddd7ba7dc544348c833aaab87c59cc37db52d24e2697",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12900,19 +12900,19 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
+      "sha256": "c019e7c60492b9d55fa722dff5f2a153ebb8c226147025d42d21aedcf383a604",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6581f3b9e8ac5e68",
       "path": "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
-      "sha256": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
+      "sha256": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c27282be2474402d",
       "path": "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-      "sha256": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
+      "sha256": "f7ee8051627777f516cac14b79d41d09eab2e6ac37aaf4b97e89fcbd51469c41",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17210,7 +17210,7 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/activation-readiness-2026-10-05.md",
-      "sha256": "8ea8b39f0f505a7f9eb995a49dd0ee08885402a998137410b10410415c718923",
+      "sha256": "ec0046ff501b4bdbed18981314fc94143c331ac1d3d9ec4b16d3a31d0c5c4c88",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17224,7 +17224,7 @@
     },
     {
       "path": "docs/events/paypal-refund-admission.md",
-      "sha256": "d1d76c15c8f01608c117f435411aa1960286c679f149bb2dd7018fd132071966",
+      "sha256": "4491229bbbd57a0b89e481398bbc6f6d8df65133d5edc0ea43edfde3fb494319",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -57,6 +57,7 @@ import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import qualified TDF.Commerce.ProviderEventStore as Event
 import qualified TDF.Commerce.ProviderEventWorker as EventWorker
 import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
+import qualified TDF.Commerce.RefundStore as Refund
 import qualified TDF.Commerce.RefundSafetySpec as RefundSafety
 import qualified TDF.Commerce.RefundRecoverySpec as RefundRecovery
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
@@ -273,7 +274,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
 
   it "preserves capture binding fields and the existing capture idempotency header" $ do
     let captured = BL.toStrict $ A.encode $ A.object
-          [ "purchase_units" A..= [A.object
+          [ "id" A..= ("SYNTHETIC-ORDER" :: Text)
+          , "purchase_units" A..= [A.object
               [ "custom_id" A..= ("synthetic-internal-order" :: Text)
               , "payee" A..= A.object ["merchant_id" A..= ("synthetic-merchant" :: Text)]
               , "payments" A..= A.object ["captures" A..= [A.object
@@ -281,7 +283,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
                   , "status" A..= ("COMPLETED" :: Text)
                   , "amount" A..= A.object ["value" A..= ("125.15" :: Text)
                       , "currency_code" A..= ("USD" :: Text)] ]]] ]]]
-    reader <- chunkReader [jsonWire oauthFixture, jsonWire captured]
+    reader <- chunkReader [jsonWire oauthFixture, jsonWire "{\"status\":\"COMPLETED\"}",
+      jsonWire oauthFixture, jsonWire captured]
     withProviderWire reader $ \manager _ writes _ -> do
       outcome <- runHandler (runReaderT
         (Storefront.capturePaypalOrderRemoteForService manager "synthetic-client" "synthetic-secret"
@@ -292,6 +295,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
       sent <- writes
       sent `shouldSatisfy` BS.isInfixOf "POST /v2/checkout/orders/SYNTHETIC-ORDER/capture"
       sent `shouldSatisfy` BS.isInfixOf "PayPal-Request-Id: capture-"
+      sent `shouldSatisfy` BS.isInfixOf "GET /v2/checkout/orders/SYNTHETIC-ORDER "
+      length (filter (BS.isPrefixOf "PayPal-Request-Id:") (BS.lines sent)) `shouldBe` 1
 
   it "keeps generic provider response errors redacted at the legacy API boundary" $ do
     reader <- chunkReader [jsonWire "synthetic-private-invalid-json"]
@@ -2234,6 +2239,72 @@ ticketLedgerSpec = describe "ticket capture ledger" $
       snapshot <- runSqlPool (captureSnapshot payment) pool
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right False
       runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
+      -- Complete partial refunds through the actual canonical state machine,
+      -- then verify the combined refund journals exactly reverse the capture.
+      forM_ (zip [1 :: Int ..] [2000,2000,8515]) $ \(index,amount) -> do
+        key <- toText <$> nextRandom
+        let creation = Refund.RefundCreation
+              { Refund.rcCheckout = Checkout.vpCheckout payment
+              , Refund.rcPaymentAttempt = Checkout.vpAttempt payment
+              , Refund.rcProvider = Checkout.ProviderPayPal
+              , Refund.rcEnvironment = Checkout.CheckoutSandbox
+              , Refund.rcMerchantRef = Checkout.vpMerchantRef payment
+              , Refund.rcAmountMinor = amount
+              , Refund.rcCurrency = "USD"
+              , Refund.rcReasonCode = "customer_request"
+              , Refund.rcIdempotencyKey = key
+              , Refund.rcRequestedBy = 1
+              , Refund.rcCreatedAt = Checkout.vpOccurredAt payment
+              }
+        refund <- runSqlPool (Refund.requestSingleLineRefund creation) pool >>= requireRight
+        (_,claimed) <- runSqlPool (Refund.approveRefundForProcessing (Refund.rrReference refund) 2
+          (Checkout.vpOccurredAt payment)) pool >>= requireRight
+        claimed `shouldBe` True
+        let completion = Refund.VerifiedRefund
+              { Refund.vrRefund = Refund.rrReference refund
+              , Refund.vrProviderRefund = "synthetic-ticket-refund-" <> key
+              , Refund.vrAmountMinor = amount
+              , Refund.vrCurrency = "USD"
+              , Refund.vrOccurredAt = Checkout.vpOccurredAt payment
+              , Refund.vrCorrelationId = "ticket-refund-" <> T.pack (show index)
+              }
+        -- A changed component snapshot must roll back even though verification
+        -- advances the intent before ledger posting. Restore only this synthetic
+        -- fixture after proving the denial; production policies are immutable.
+        if index == 1 then do
+          beforeDenied <- runSqlPool (captureSnapshot payment) pool
+          runSqlPool (rawExecute
+            "UPDATE event_ticket_checkout_runtime SET platform_fee_minor=platform_fee_minor+1,\
+            \ organizer_payable_minor=organizer_payable_minor-1 WHERE checkout_id=?::uuid"
+            [captureCheckoutParameter payment]) pool
+          denied <- try (runSqlPool (Refund.recordVerifiedRefund completion) pool)
+            :: IO (Either IOException (Either Text Bool))
+          denied `shouldSatisfy` isLeft
+          runSqlPool (captureSnapshot payment) pool `shouldReturn` beforeDenied
+          runSqlPool (Refund.loadRefund (Refund.rrReference refund)) pool
+            >>= ((`shouldBe` Just "processing") . fmap Refund.rrStatus)
+          runSqlPool (rawExecute
+            "UPDATE event_ticket_checkout_runtime SET platform_fee_minor=platform_fee_minor-1,\
+            \ organizer_payable_minor=organizer_payable_minor+1 WHERE checkout_id=?::uuid"
+            [captureCheckoutParameter payment]) pool
+        else pure ()
+        runSqlPool (Refund.recordVerifiedRefund completion) pool `shouldReturn` Right True
+        replays <- concurrently (replicate 4 (runSqlPool (Refund.recordVerifiedRefund completion) pool))
+        replays `shouldBe` replicate 4 (Right False)
+      refundedEntries <- runSqlPool (rawSql
+        "SELECT entry.account_code,SUM(entry.amount_minor)::bigint\
+        \ FROM commerce_refund refund JOIN commerce_ledger_transaction txn\
+        \ ON txn.source_type='refund' AND txn.source_id=refund.id::text\
+        \ JOIN commerce_ledger_entry entry ON entry.transaction_id=txn.id\
+        \ WHERE refund.checkout_id=?::uuid AND txn.status='posted'\
+        \ GROUP BY entry.account_code ORDER BY entry.account_code"
+        [captureCheckoutParameter payment]) pool :: IO [(Single Text,Single Int64)]
+      refundedEntries `shouldBe` [(account,Single (negate amount)) | (account,Single amount) <- entries]
+      receiptCounts <- runSqlPool (rawSql
+        "SELECT count(*) FROM commerce_receipt WHERE checkout_id=?::uuid AND kind='credit_note'"
+        [captureCheckoutParameter payment]) pool :: IO [Single Int64]
+      receiptCounts `shouldBe` [Single 3]
 
 captureReplaySpec :: SpecWith ConnectionPool
 captureReplaySpec = describe "verified capture replay integrity" $

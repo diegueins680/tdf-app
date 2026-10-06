@@ -66,6 +66,25 @@ spec = describe "held-refund query adapter" $ do
     parseRefundQuery exampleBinding (payload exampleBinding "COMPLETED" "10.99")
       `shouldBe` Right RefundQueryCompleted
 
+  it "accepts exact official api host aliases only within the bound environment" $
+    forM_ [Checkout.CheckoutSandbox,Checkout.CheckoutProduction] $ \environment -> do
+      let binding = exampleBinding { rqbEnvironment = environment }
+          represented = payload binding "COMPLETED" "10.99"
+          aliasLinks = map (\link -> case link of
+            A.Object fields -> case KM.lookup "href" fields of
+              Just (A.String href) -> A.Object (KM.insert "href" (A.String (T.replace "https://api-m." "https://api." href)) fields)
+              _ -> link
+            _ -> link) (linksFor binding)
+      parseRefundQuery binding (setField "links" (A.toJSON aliasLinks) represented)
+        `shouldBe` Right RefundQueryCompleted
+      forM_ ["?query=1","#fragment","/other"] $ \suffix -> do
+        let changed = map (\link -> case link of
+              A.Object fields -> case KM.lookup "href" fields of
+                Just (A.String href) -> A.Object (KM.insert "href" (A.String (href <> suffix)) fields)
+                _ -> link
+              _ -> link) aliasLinks
+        parseRefundQuery binding (setField "links" (A.toJSON changed) represented) `shouldSatisfy` isLeft
+
   forM_ ["PENDING", "FAILED", "CANCELLED", "DECLINED", "UNKNOWN", "completed", ""] $ \status ->
     it ("never releases a held amount from status " <> show status) $
       parseRefundQuery exampleBinding (payload exampleBinding status "10.99")

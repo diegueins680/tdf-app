@@ -6282,12 +6282,12 @@
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
     "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
-    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "e953dc2ca0822cedcebf56da77bbe620de4a0d909d00eb85401f96f7c7e9aff0",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "9a35b4280d60155852f2686889b53ddf7aa40a9b1e12e962a0e5bbe8c8d3e50d",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
     "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
-    "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": "6bb478f115348bd71fb5ddd7ba7dc544348c833aaab87c59cc37db52d24e2697",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "53b4f194ffdd118805585962fc6a2f9c9e9121a6c55d0990581dfe531ba9284f",
@@ -6337,9 +6337,9 @@
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
-    "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
-    "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c019e7c60492b9d55fa722dff5f2a153ebb8c226147025d42d21aedcf383a604",
+    "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
+    "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "f7ee8051627777f516cac14b79d41d09eab2e6ac37aaf4b97e89fcbd51469c41",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
     "tdf-hq/test/TDF/CorsSpec.hs": "8be7f01a94ab4c4141534db48843adc3e6db345770b2f0425f457b6100488694",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
@@ -22720,7 +22720,7 @@
     {
       "id": "SURFACE-bad06d52157a22f3",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
-      "sha256": "e953dc2ca0822cedcebf56da77bbe620de4a0d909d00eb85401f96f7c7e9aff0",
+      "sha256": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22826,7 +22826,7 @@
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
+      "sha256": "6bb478f115348bd71fb5ddd7ba7dc544348c833aaab87c59cc37db52d24e2697",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24341,7 +24341,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
+      "sha256": "c019e7c60492b9d55fa722dff5f2a153ebb8c226147025d42d21aedcf383a604",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24365,7 +24365,7 @@
     {
       "id": "SURFACE-6581f3b9e8ac5e68",
       "path": "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
-      "sha256": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
+      "sha256": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24377,7 +24377,7 @@
     {
       "id": "SURFACE-c27282be2474402d",
       "path": "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-      "sha256": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
+      "sha256": "f7ee8051627777f516cac14b79d41d09eab2e6ac37aaf4b97e89fcbd51469c41",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
