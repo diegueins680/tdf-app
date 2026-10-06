@@ -3583,6 +3583,15 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
         Refund.rrProviderRefundId recorded `shouldBe` Just refundId
         Refund.rrStatus recorded `shouldBe` "processing"
         forM_ [False,True] $ \exact -> do
+          when exact $ do
+            -- The production query budget remains enforced. Prove the immediate
+            -- retry is denied, then advance only the disposable fixture's clock.
+            heldReader <- chunkReader [jsonWire oauthFixture]
+            withProviderWire heldReader $ \manager _ writes _ -> do
+              approve manager >>= ((`shouldBe` 429) . either errHTTPCode (const 200))
+              sent <- writes
+              sent `shouldSatisfy` (not . BS.isInfixOf "GET /v2/payments/refunds/")
+            resetQueryBudget pool Checkout.ProviderPayPal
           queryReader <- chunkReader [jsonWire oauthFixture,jsonWire
             (if exact then representation "41.72" "USD" else mismatch)]
           withProviderWire queryReader $ \manager _ writes _ -> do
