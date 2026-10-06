@@ -3316,7 +3316,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5863,7 +5863,8 @@
         "Pinned private age binary",
         "Private native X25519 identity held independently of production for actual off-host recovery",
         "Independently trusted capture and transfer content hashes",
-        "Transfer caller authenticates both endpoints and supplies only ciphertext with the independently trusted encryption receipt; channel ownership is exclusive."
+        "Transfer caller authenticates both endpoints and supplies only ciphertext with the independently trusted encryption receipt; channel ownership is exclusive.",
+        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md."
       ],
       "inputs": [
         "Private captured bundle or transferred ciphertext",
@@ -5891,7 +5892,8 @@
       "allowedTransitions": [
         "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
         "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified",
-        "Trusted ciphertext -> nonce/size/hash-bound offer -> exclusive private durable retention and reopen/hash -> return persisted bytes -> trusted round-trip verification; decryption/restoration remain false."
+        "Trusted ciphertext -> nonce/size/hash-bound offer -> exclusive private durable retention and reopen/hash -> return persisted bytes -> trusted round-trip verification; decryption/restoration remain false.",
+        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation."
       ],
       "forbiddenTransitions": [
         "Execute a subsequently replaced pathname instead of verified bytes",
@@ -5900,7 +5902,8 @@
         "Overwrite an output or accept partial decryption",
         "Treat public-key encryption as sender authentication",
         "Infer transfer or restored system from encryption/decryption",
-        "A changed nonce, frame kind, byte count, hash, truncated stream, persistence failure or substituted path must not complete transfer; existing output cannot be overwritten."
+        "A changed nonce, frame kind, byte count, hash, truncated stream, persistence failure or substituted path must not complete transfer; existing output cannot be overwritten.",
+        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone."
       ],
       "effects": [
         "Exclusive private ciphertext or plaintext output",
@@ -5918,7 +5921,8 @@
         "ops/hetzner/recovery-tools.json",
         "scripts/install-recovery-tools.py",
         ".github/workflows/ci.yml",
-        "ops/hetzner/recovery-transfer.py"
+        "ops/hetzner/recovery-transfer.py",
+        "ops/hetzner/coordinated-encryption.py"
       ],
       "tests": [
         "scripts/test-recovery-envelope.py",
@@ -5926,7 +5930,8 @@
         "scripts/quality-repo.sh",
         "scripts/test-recovery-transfer.py",
         "scripts/test-recovery-transfer-ssh.py",
-        "scripts/test-recovery-bundle-ssh.py"
+        "scripts/test-recovery-bundle-ssh.py",
+        "scripts/test-coordinated-encryption.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5963,7 +5968,8 @@
         "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery.",
         "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md.",
         "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md.",
-        "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md."
+        "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md.",
+        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5989,7 +5995,8 @@
         "Initialize once -> ready",
         "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
         "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state.",
-        "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation."
+        "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation.",
+        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6000,7 +6007,8 @@
         "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit.",
         "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers.",
         "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion.",
-        "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion."
+        "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion.",
+        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6022,7 +6030,8 @@
         "ops/hetzner/host-scheduler-policy.json",
         "ops/hetzner/host-process-admission.py",
         "ops/hetzner/host-process-policy.json",
-        "ops/hetzner/coordinated-capture.py"
+        "ops/hetzner/coordinated-capture.py",
+        "ops/hetzner/coordinated-encryption.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6033,7 +6042,8 @@
         "scripts/test-writer-fence-fixture-ownership.py",
         "scripts/test-host-scheduler-admission.py",
         "scripts/test-host-process-admission.py",
-        "scripts/test-coordinated-capture.py"
+        "scripts/test-coordinated-capture.py",
+        "scripts/test-coordinated-encryption.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",

@@ -68,13 +68,16 @@ class Capture:
         self.receipt_path=clone.directory/'coordinated-capture-receipt.json'
         self.receipt=None;self.unit_identities={}
 
-    def guard(self,*,pending=False):
+    def guard(self,*,pending=False,stage='capture'):
+        prefixes={'capture':['maintenance','stop-writers','stop-database'],
+                  'encrypt':['maintenance','stop-writers','stop-database','capture']}
+        require(stage in prefixes)
         require(os.getpid()==self.owner and self.clone.reservation_pid==self.owner
                 and self.clone.target is None and not self.clone.creation_attempted and not self.clone.start_attempted)
         journal=self.fence.journal;journal.guard();status=journal.status()
         require(status['releaseNonce']==self.clone.nonce==self.binding['releaseNonce']
-                and status['completedStages']==['maintenance','stop-writers','stop-database']
-                and status['pendingStage']==('capture' if pending else None)
+                and status['completedStages']==prefixes[stage]
+                and status['pendingStage']==(stage if pending else None)
                 and status['newWritesPossible'] is False
                 and self.clone.source==self.fence.expected['db']['containerId']
                 and self.clone.system_id==self.binding['databaseSystemIdentifier'])

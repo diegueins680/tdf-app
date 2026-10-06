@@ -110,6 +110,9 @@ jobs:
           sudo install -d -m 700 /opt/tdf/backups
           sudo env PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-recovered-application-content.py
           sudo env PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-coordinated-capture.py
+          sudo install -d -m 700 /opt/tdf/recovery-test-tools
+          sudo python3 scripts/install-recovery-tools.py --destination /opt/tdf/recovery-test-tools/age
+          sudo env TDF_RECOVERY_TOOLS=/opt/tdf/recovery-test-tools/age PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-coordinated-encryption.py
           sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" \
             TDF_CANARY_TEST_IMAGE="$TDF_CANARY_TEST_IMAGE" \
             TDF_CANARY_TEST_REVISION="$TDF_CANARY_TEST_REVISION" \
