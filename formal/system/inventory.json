@@ -86,6 +86,7 @@
       "ops/hetzner/interrupted-release-recovery.py",
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
+      "ops/hetzner/network-recovery-admission.py",
       "ops/hetzner/offline-recovery-capacity.py",
       "ops/hetzner/original-application-recovery.py",
       "ops/hetzner/original-database-recovery.py",
@@ -460,6 +461,8 @@
       "scripts/test-merge-admission.py",
       "scripts/test-music-directory-contract.mjs",
       "scripts/test-music-directory-migration.sh",
+      "scripts/test-network-namespace-linux.py",
+      "scripts/test-network-recovery-admission.py",
       "scripts/test-new-specification-surfaces.py",
       "scripts/test-notification-alert-context.mjs",
       "scripts/test-notification-navigation-migration.sh",
@@ -2453,7 +2456,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "2b255da36547955e4433f860916d5da54eeb59dcdbcca17aa6eb6a13b4063cf2",
+      "sha256": "e0247d3a2603cab3b12fbcc6396fd58b026e3ed14611229a67762e25ecbcb382",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2850,6 +2853,12 @@
       "id": "SURFACE-b85ac3ceaf40e5fb",
       "path": "ops/hetzner/migrate-owned-urls.sql",
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-855588bc04576ff3",
+      "path": "ops/hetzner/network-recovery-admission.py",
+      "sha256": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4163,7 +4172,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c2175313b6410f6a28c3ddd98a9a6ab6e91cea0dda1a86202fcaf1707f1fb6db",
+      "sha256": "d3828362f1fbfb9bfb0813702b533937819248140d4b3cb1459411046946d5f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5058,6 +5067,18 @@
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
       "sha256": "5c19d11bb7e1017c1691eca7104aa0bf564efd66c6fbef567862a9484080e8db",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-65ab0555251826cd",
+      "path": "scripts/test-network-namespace-linux.py",
+      "sha256": "39f6c7de81715000327b3b00e5385a089a65481692b050a4bb89c9d29938486e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2cceac75133c9abe",
+      "path": "scripts/test-network-recovery-admission.py",
+      "sha256": "eb6a9a4bf81001006df9f339c9186d8aeb73a73c615ab1efd5a9c99188e421da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23055,7 +23076,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "06f2daafbb06ef7e718a8cac59d05f08c04035c380e4bea249a2ace54e2a0170",
+      "sha256": "3408e34d451ff4a43915f4860eeea5695f6af1ae29423f138a9e21fb1abdaa1c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23132,14 +23153,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "321f90ef93303729b8e68e214eb4f2c33fb40aafb2df65d7f117d28887635df6",
+      "sha256": "a488387ab599068da774ac780043f56599eba1f606c63c301ed8db11be22ed25",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "5d98d30be0ac833af0a5ee0f247501b72f926e82532f97f0f5cf6ce50d6daeba",
+      "sha256": "55e0d3b1d2dde283be126da9858dd2f94140bc28267369342187e308e3978c75",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

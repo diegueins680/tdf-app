@@ -7626,7 +7626,8 @@
         "ops/hetzner/outbound-quarantine.py",
         "ops/hetzner/ufw-recovery-admission.py",
         "ops/hetzner/dormant-container-admission.py",
-        "ops/hetzner/bpf-recovery-admission.py"
+        "ops/hetzner/bpf-recovery-admission.py",
+        "ops/hetzner/network-recovery-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
@@ -7635,10 +7636,12 @@
         "scripts/test-ufw-recovery-admission.py",
         "scripts/test-dormant-container-admission.py",
         "scripts/test-dormant-container-reboot-linux.py",
-        "scripts/test-bpf-recovery-admission.py"
+        "scripts/test-bpf-recovery-admission.py",
+        "scripts/test-network-recovery-admission.py",
+        "scripts/test-network-namespace-linux.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7658,7 +7661,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "99429029f8454e2b5a94c9722de870957b4a3f4925cdce8f322fb984b781c1cf",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "2b255da36547955e4433f860916d5da54eeb59dcdbcca17aa6eb6a13b4063cf2",
+    ".github/workflows/ci.yml": "e0247d3a2603cab3b12fbcc6396fd58b026e3ed14611229a67762e25ecbcb382",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "202dc5228c31baa715a04fe06698fd465a8ffd4f06d8d60fe7cd4c49d34b824c",
@@ -7803,6 +7806,7 @@
     "ops/hetzner/inspect-runtime.py": "cddb703eb9a431f5db4328bf90c87252ef555a9c3c71c8bb30f1c376f8cb36e9",
     "ops/hetzner/interrupted-release-recovery.py": "c6733faceba27b947aa57cb3c556d035d9713e49b12c71178c1263d90d5a0b1a",
     "ops/hetzner/isolated-application-canary.py": "1782d0cc1b5060eb83a7e48840bb3d009a5038cc1a7eed2654173399c424dd99",
+    "ops/hetzner/network-recovery-admission.py": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
     "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
     "ops/hetzner/original-application-recovery.py": "37f59153386b015d565d8da2a7faeeb26db27ecf2a76c4307d1ad4a405be21b5",
     "ops/hetzner/original-database-recovery.py": "94b61ec2db602f4a3a16c9c9b573a8261944c715cbb90e51ff1df24b32183a64",
@@ -7909,7 +7913,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "c2175313b6410f6a28c3ddd98a9a6ab6e91cea0dda1a86202fcaf1707f1fb6db",
+    "scripts/quality-repo.sh": "d3828362f1fbfb9bfb0813702b533937819248140d4b3cb1459411046946d5f2",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7949,6 +7953,8 @@
     "scripts/test-live-intake-identity.sh": "d0f234b038d1f0fb83f65e8d16bc4b8d5f4fbbcfbc028aa09da31064c6e051a5",
     "scripts/test-marketplace-contact-identity.sh": "e8366b9aea5eb474c77acfd0c1816d51fe93e35d19eb46af6f583ed139f24cef",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
+    "scripts/test-network-namespace-linux.py": "39f6c7de81715000327b3b00e5385a089a65481692b050a4bb89c9d29938486e",
+    "scripts/test-network-recovery-admission.py": "eb6a9a4bf81001006df9f339c9186d8aeb73a73c615ab1efd5a9c99188e421da",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-offline-recovery-capacity.py": "8699587b8f72b58f5f12473028605dce43eb9683b12a29af530dd1db06fcf5e8",
     "scripts/test-original-application-recovery.py": "5ddd368a6a106eacf168f61af69cc78310f8e0ea31723ffc0415bd336197da72",
@@ -13561,6 +13567,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/network-recovery-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-outbound-quarantine.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
@@ -13598,6 +13610,18 @@
       }
     ],
     "scripts/test-bpf-recovery-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-network-recovery-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-network-namespace-linux.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
@@ -13666,7 +13690,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "2b255da36547955e4433f860916d5da54eeb59dcdbcca17aa6eb6a13b4063cf2",
+      "sha256": "e0247d3a2603cab3b12fbcc6396fd58b026e3ed14611229a67762e25ecbcb382",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14356,6 +14380,18 @@
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-855588bc04576ff3",
+      "path": "ops/hetzner/network-recovery-admission.py",
+      "sha256": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5d2a33bd01a22c0f",
@@ -16641,7 +16677,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c2175313b6410f6a28c3ddd98a9a6ab6e91cea0dda1a86202fcaf1707f1fb6db",
+      "sha256": "d3828362f1fbfb9bfb0813702b533937819248140d4b3cb1459411046946d5f2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18059,6 +18095,30 @@
       "sha256": "5c19d11bb7e1017c1691eca7104aa0bf564efd66c6fbef567862a9484080e8db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-65ab0555251826cd",
+      "path": "scripts/test-network-namespace-linux.py",
+      "sha256": "39f6c7de81715000327b3b00e5385a089a65481692b050a4bb89c9d29938486e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2cceac75133c9abe",
+      "path": "scripts/test-network-recovery-admission.py",
+      "sha256": "eb6a9a4bf81001006df9f339c9186d8aeb73a73c615ab1efd5a9c99188e421da",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d2e7c2d31e94f861",
@@ -37236,7 +37296,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "321f90ef93303729b8e68e214eb4f2c33fb40aafb2df65d7f117d28887635df6",
+      "sourceSha256": "a488387ab599068da774ac780043f56599eba1f606c63c301ed8db11be22ed25",
       "definition": {
         "states": [
           "absent",

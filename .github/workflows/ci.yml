@@ -202,6 +202,10 @@ jobs:
           sudo ufw default allow routed
           sudo ufw --force enable
           sudo systemctl enable --now ufw.service
+      - name: Verify held namespace identity and duplicate-index negative controls
+        run: |
+          sudo env TDF_NETWORK_FIXTURE_MACHINE="$(cat /etc/machine-id)" \
+            PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-network-namespace-linux.py
       - name: Verify real IPv4 and IPv6 packet restrictions and negative controls
         env:
           TDF_QUARANTINE_TEST_UFW: ${{ matrix.ufw }}

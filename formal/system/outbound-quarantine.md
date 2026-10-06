@@ -176,3 +176,44 @@ While restricted, provider payments/messages, Caddy certificate renewal and othe
 container-origin external calls may fail. Legacy workers can record failures or
 unknown outcomes; preserve those records. Incoming responses and local database
 traffic are intended to remain usable, subject to the complete host admission.
+
+## Namespace and packet-path provenance
+
+`ops/hetzner/network-recovery-admission.py` performs read-only observation of the
+canonical Docker socket, all networks and each running container. The caller
+supplies independently established full container/network IDs and the uplink.
+The collector retains process and namespace descriptors through each sample,
+checks process liveness and unchanged Docker identity, and joins endpoint IDs,
+MACs, interface indices, bridge membership and peer namespace identity. Interface
+indices are namespace-local: reciprocal numbers alone are insufficient. Fixed
+`RTM_GETNSID` requests with `NETNSA_FD` look up the held opposite namespace in each
+direction; each veth's `link_netnsid` must match. Missing mappings reject. No
+namespace mapping, interface, route, firewall rule or Docker object is created
+by the collector.
+
+Only conventional local Docker bridges, accounted veth ports, the declared
+external interface and loopback are accepted. Host/shared namespaces, additional
+capabilities, unknown interfaces or ports, STP/VLAN filtering, unsupported routes,
+legacy rules, TC filters and XDP reject. nftables syntax is deliberately limited
+to observed filtering and NAT classes; duplication, forwarding clones, queues,
+flowtables and unknown actions reject. An AF_PACKET socket is accepted only for
+LLDP bound to the external interface; its owner still requires separate host
+process qualification. The collected receipt omits packet contents and kernel
+pointer columns. Two normalized observations must agree; only explicit counters,
+handles and lifetimes are ignored.
+
+The portable suite includes wrong/missing namespace mappings, third-namespace
+index collisions, changed endpoints/bridges, unsupported packet paths and sampling
+drift. `scripts/test-network-namespace-linux.py` requires an acknowledged owned
+machine and empty Docker inventory. It creates interfaces only inside three
+unshared child namespaces, checks bidirectional descriptor binding, verifies an
+unassigned query does not allocate a mapping, and distinguishes two interfaces
+with the same index in unrelated namespaces. It cleans up only its child processes
+and verifies unchanged host links. CI runs this fixture in both packet-test lanes.
+
+This is sampled structural admission under a trusted kernel/collector and exclusive
+release ownership. It does not establish continuous isolation, evaluate arbitrary
+BPF semantics, admit privileged host processes/devices/mounts, close the explicitly
+excluded Docker DNS relay, or authorize production restriction. The result always
+sets `hostBypassAdmissionVerified` to false; the coordinator must combine separately
+qualified boundaries and boot/policy evidence before treating the host as admitted.

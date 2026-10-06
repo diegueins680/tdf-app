@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -862,6 +862,24 @@
       "applicability": "Observed built-in tracing program during network-bypass admission",
       "decision": "adopted as bounded exception",
       "rationale": "Require exact template, actual HID BTF attachment and a complete empty-array scan; kernel identity and program name alone do not establish that property."
+    },
+    {
+      "id": "RES-OPS-NETWORK-001",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/core/net_namespace.c",
+      "title": "Linux6.8 namespace-relative IDs and read-only RTM_GETNSID",
+      "recommendation": "Bind a namespace-local peer ID to a held opposite namespace FD using RTM_GETNSID with NETNSA_FD; interface indices alone are not global identities.",
+      "applicability": "Docker veth topology admission before outbound restriction",
+      "decision": "adopted",
+      "rationale": "Query both directions with held namespace/process descriptors; reject absent or mismatched peer mappings. The kernel GETNSID path uses peernet2id, without allocating an ID. A three-namespace Linux fixture verifies duplicate-index discrimination and non-allocation."
+    },
+    {
+      "id": "RES-OPS-NETWORK-002",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/ipv4/netfilter/nf_dup_ipv4.c",
+      "title": "Linux6.8 netfilter duplication output path",
+      "recommendation": "Packet duplication may route a clone through local output, so ordinary forward/input filtering alone is not a complete bypass argument.",
+      "applicability": "Host packet-path admission for recovery restriction",
+      "decision": "adopted as exclusion",
+      "rationale": "Reject dup/fwd/queue/TEE/NFQUEUE, unknown nft syntax, legacy rules, TC/XDP attachments and unsupported routes; separately qualify BPF, privileged processes, mounts, devices and persistent policy. No automatic removal of existing host configuration."
     }
   ]
 }
