@@ -31,6 +31,10 @@ legacy policy. Neither live credential presence nor clean database recovery
 establishes absence of external effects. No production setting is changed by this
 component.
 
+The [outbound restriction component](outbound-quarantine.md) now supplies the
+packet/boot boundary and owned-host fixtures. Dedicated-host bypass admission,
+production installation and integration into original-image recovery remain open.
+
 Tests exercise absent, independent true/false and malformed configuration, and
 the actual disabled worker entrypoints. The latter use an unusable database and
 assert disabled rather than scheduled logs. This does not model provider delivery,

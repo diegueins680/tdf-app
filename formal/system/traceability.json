@@ -7563,6 +7563,88 @@
         "classification": "PARTIAL",
         "reason": "Scoped transport repair; full final backend gates and deployed acceptance remain outstanding."
       }
+    },
+    {
+      "id": "DEPLOY-QUARANTINE-001",
+      "title": "Persistent outbound restriction for legacy recovery",
+      "statement": "An admitted legacy upgrade or abort must prevent new and resumed provider transports before stopping writers and before restoring any original container, including automatic Docker startup after reboot; missing or changed restriction must deny recovery qualification.",
+      "domain": "DEPLOY",
+      "authority": "inferred",
+      "source": "Legacy outbound worker and original-image restart audit; independent recovery review; formal/system/outbound-quarantine.md",
+      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic; Docker start revalidates the live policy.",
+      "contract": "formal/system/outbound-quarantine.md",
+      "actors": [
+        "Release operator",
+        "Docker daemon",
+        "Linux packet filter",
+        "Original or candidate API",
+        "External provider"
+      ],
+      "preconditions": [
+        "Dedicated host network/bypass admission and operational acceptance are required before production use.",
+        "Privileged noncooperating changes, host DNS relay and provider effects accepted before restriction are outside the packet boundary."
+      ],
+      "inputs": [
+        "Admitted bridge identifiers",
+        "Root-private guard and policy files",
+        "Observed nftables rules and systemd dependencies"
+      ],
+      "state": {
+        "initial": "unqualified",
+        "states": [
+          "unqualified",
+          "installed",
+          "restricted",
+          "reboot",
+          "denied",
+          "recovered-restricted"
+        ]
+      },
+      "allowedTransitions": [
+        "unqualified -> installed on separately authorized persistent installation",
+        "installed -> restricted after exact live and boot-order observations",
+        "reboot -> restricted before Docker startup",
+        "restricted -> recovered-restricted after all other recovery checks"
+      ],
+      "forbiddenTransitions": [
+        "missing or changed live policy -> Docker startup",
+        "candidate-only worker flag -> legacy recovery qualification",
+        "restriction -> assume prior external effect never occurred",
+        "automatic recovery -> remove restriction"
+      ],
+      "effects": [
+        "Scoped kernel packet denial; startup failure on policy drift. The component does not deploy, migrate, stop production services or remove restrictions."
+      ],
+      "authorization": "Production installation requires operator authorization and admitted dedicated host ownership. Local fixtures require explicit machine identity and empty Docker inventory.",
+      "privacy": "No customer data or provider credentials are needed for tests or policy observation. Packet bodies are not logged.",
+      "concurrency": "Atomic nftables load and exact resampling; the coordinator must retain release ownership. Concurrent privileged policy/routing changes remain excluded.",
+      "idempotency": "Boot may load a missing table. Existing changed tables are never overwritten. Every Docker start independently verifies presence and equality.",
+      "failure": "Failed live or persistent validation denies startup/qualification. Unknown delivery outcomes and partial application files remain evidence; no sent records are invented.",
+      "recovery": "Keep restriction through original-image or candidate recovery. Removal requires a separate qualified transition. Integrated first-stop and coordinator admission remain open.",
+      "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
+      "implementation": [
+        "ops/hetzner/outbound-quarantine.py"
+      ],
+      "tests": [
+        "scripts/test-outbound-quarantine.py",
+        "scripts/test-outbound-quarantine-linux.py",
+        "scripts/test-outbound-quarantine-reboot-linux.py"
+      ],
+      "formalModels": [],
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof.",
+      "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation and executable fixtures; host-bypass and coordinator integration unqualified.",
+      "ambiguity": [
+        "Host bypass admission, durable production installation, coordinator integration and exact legacy interrupted-stop mode remain open.",
+        "DNS relay and privileged host/root changes are excluded. Caddy renewal and other container-origin external calls are unavailable while restricted.",
+        "Operational acceptance of temporary restriction remains pending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "No production activation or integrated recovery qualification; explicit host assumptions and unresolved integration obligations."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7721,6 +7803,7 @@
     "ops/hetzner/original-edge-recovery.py": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
     "ops/hetzner/original-recovery-completion.py": "c130c481e943507ac0894373ab6f31befc2beebf343f70c5480bddbe1a8c1f96",
     "ops/hetzner/original-timer-recovery.py": "a816d29085d590739d189c27e88753e022d0ef2c6fce6aaa7d0401061ec4a297",
+    "ops/hetzner/outbound-quarantine.py": "fc7c04cecf292baa65d2c391042b07f6ecca3ec1f98d398c64140ebb145187b3",
     "ops/hetzner/physical-postgres-recovery.py": "d173e7bfb715a70c79de01b05230dd5e86d9280093a6a3c7c8205f99230dbd69",
     "ops/hetzner/production-recovery-sources.py": "4c47e31e6798f54c89cf8ee2a7bcc92a40de04ceee0dede463a1c37762ac2d2a",
     "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
@@ -7816,7 +7899,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "7d9b973b9dac3b7f506062c7677538b3d5960b0528e37667de96c7a41cfc7ce1",
+    "scripts/quality-repo.sh": "ad96bb3c54d9e05f4943e72f27eb620a4d66fb5cc0163d582d2d348a029db9f9",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7864,6 +7947,9 @@
     "scripts/test-original-edge-tls.py": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
     "scripts/test-original-recovery-completion.py": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
     "scripts/test-original-timer-recovery.py": "2273e2069fedbb15e7ca84cfb0136750700f29c0727dc7f67a5c84ced0bed5a2",
+    "scripts/test-outbound-quarantine-linux.py": "0d619cf8d42faacd2202da7b82a53774cbbc363f8e964972a9be337d166391bc",
+    "scripts/test-outbound-quarantine-reboot-linux.py": "27850773d774f920707ac44bc45e30527754a33aa44cb901abcfaa6a363dbb43",
+    "scripts/test-outbound-quarantine.py": "327001bcab2c4b9ef753baac7e4438eb9dcc296a5e4a04761d28892de93264ed",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-application-docker.py": "b301dc65a18bed233decde7f43586e3fc0a548554e19fbd88911291047a08de0",
@@ -13436,6 +13522,30 @@
         "requirement": "NOTIF-TRANSPORT-001",
         "relationship": "tests"
       }
+    ],
+    "ops/hetzner/outbound-quarantine.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-outbound-quarantine.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-outbound-quarantine-linux.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-outbound-quarantine-reboot-linux.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -14271,6 +14381,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8239e7d394927be7",
+      "path": "ops/hetzner/outbound-quarantine.py",
+      "sha256": "fc7c04cecf292baa65d2c391042b07f6ecca3ec1f98d398c64140ebb145187b3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "implementation"
         }
       ]
@@ -16427,7 +16549,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "7d9b973b9dac3b7f506062c7677538b3d5960b0528e37667de96c7a41cfc7ce1",
+      "sha256": "ad96bb3c54d9e05f4943e72f27eb620a4d66fb5cc0163d582d2d348a029db9f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17952,6 +18074,42 @@
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dad80c98203057e7",
+      "path": "scripts/test-outbound-quarantine-linux.py",
+      "sha256": "0d619cf8d42faacd2202da7b82a53774cbbc363f8e964972a9be337d166391bc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f5285339f83a13bc",
+      "path": "scripts/test-outbound-quarantine-reboot-linux.py",
+      "sha256": "27850773d774f920707ac44bc45e30527754a33aa44cb901abcfaa6a363dbb43",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fa766e097f5bdf89",
+      "path": "scripts/test-outbound-quarantine.py",
+      "sha256": "327001bcab2c4b9ef753baac7e4438eb9dcc296a5e4a04761d28892de93264ed",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "tests"
         }
       ]
@@ -35815,7 +35973,8 @@
     "MEDIA-RIDER-001",
     "DATA-CONTRACT-001",
     "NOTIF-WORKER-001",
-    "NOTIF-TRANSPORT-001"
+    "NOTIF-TRANSPORT-001",
+    "DEPLOY-QUARANTINE-001"
   ],
   "stateMachines": [
     {
@@ -36937,7 +37096,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "49b698abfbec529a0de717e8e38726b3eeab3c7098cb47f67fc5917d65f9b1ec",
+      "sourceSha256": "1d16a3850b0515db9d0a5695248ddfc0fe0afc54fc9ed3d9473ce03d9da18858",
       "definition": {
         "states": [
           "absent",
@@ -58909,7 +59068,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 94,
+    "PARTIAL": 95,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

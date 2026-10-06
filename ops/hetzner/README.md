@@ -63,6 +63,10 @@ and `COURSE_PAYMENT_REMINDER_ENABLED=false` while durable dispatch/reconciliatio
 repairs remain unqualified. Missing observed flags remain unknown; this required
 candidate configuration does not protect recovery into the legacy image.
 It always reports `executionAllowed: false`.
+The scoped [outbound restriction component](../../formal/system/outbound-quarantine.md)
+has separate portable, real-packet and real-reboot fixtures. It does not yet
+provide production host-bypass admission or coordinator integration; passing its
+tests does not authorize starting the legacy image without those boundaries.
 It does not invoke SSH, Docker, a database, or a deployment service. Receipts are
 local evidence, not signed attestations or approval; an executor must re-observe
 runtime state under its release lock.

@@ -772,6 +772,33 @@
       "applicability": "Instagram/Facebook/WhatsApp share pooled HTTP managers and lack provider idempotency keys.",
       "decision": "adopted",
       "rationale": "Use dedicated messaging settings with managerRetryableException constFalse and a warmed-connection negative control; preserve other client settings."
+    },
+    {
+      "id": "RES-OPS-NETFILTER-001",
+      "source": "https://wiki.nftables.org/wiki-nftables/index.php/Matching_connection_tracking_stateful_metainformation",
+      "title": "nftables connection tracking direction",
+      "recommendation": "Connection state and original/reply direction are separate properties.",
+      "applicability": "Already-open provider connections during legacy recovery",
+      "decision": "adopted",
+      "rationale": "Allow incoming reply direction, never blanket established traffic; use unconditional denial for remaining Docker-origin packets."
+    },
+    {
+      "id": "RES-OPS-FLOWTABLE-001",
+      "source": "https://wiki.nftables.org/wiki-nftables/index.php/Flowtable",
+      "title": "nftables flowtable forwarding",
+      "recommendation": "Flowtable forwarding can bypass the classic forwarding path.",
+      "applicability": "Host assumptions of recovery quarantine",
+      "decision": "adopted as admission obligation",
+      "rationale": "Packet tests do not establish absence of offload/flowtable bypass. Production host admission must reject unqualified bypass configuration."
+    },
+    {
+      "id": "RES-OPS-SYSTEMD-001",
+      "source": "https://github.com/systemd/systemd/blob/main/man/systemd.unit.xml",
+      "title": "systemd unit requirements and ordering",
+      "recommendation": "Requires and ordering are independent; readiness depends on service type.",
+      "applicability": "Persistent quarantine before Docker restoration",
+      "decision": "adopted",
+      "rationale": "Docker requires and follows the guard, and independently verifies live policy on every start. The synthetic receiver uses notify readiness to cover the startup leakage window."
     }
   ]
 }

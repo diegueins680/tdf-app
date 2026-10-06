@@ -7562,6 +7562,88 @@
         "classification": "PARTIAL",
         "reason": "Scoped transport repair; full final backend gates and deployed acceptance remain outstanding."
       }
+    },
+    {
+      "id": "DEPLOY-QUARANTINE-001",
+      "title": "Persistent outbound restriction for legacy recovery",
+      "statement": "An admitted legacy upgrade or abort must prevent new and resumed provider transports before stopping writers and before restoring any original container, including automatic Docker startup after reboot; missing or changed restriction must deny recovery qualification.",
+      "domain": "DEPLOY",
+      "authority": "inferred",
+      "source": "Legacy outbound worker and original-image restart audit; independent recovery review; formal/system/outbound-quarantine.md",
+      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic; Docker start revalidates the live policy.",
+      "contract": "formal/system/outbound-quarantine.md",
+      "actors": [
+        "Release operator",
+        "Docker daemon",
+        "Linux packet filter",
+        "Original or candidate API",
+        "External provider"
+      ],
+      "preconditions": [
+        "Dedicated host network/bypass admission and operational acceptance are required before production use.",
+        "Privileged noncooperating changes, host DNS relay and provider effects accepted before restriction are outside the packet boundary."
+      ],
+      "inputs": [
+        "Admitted bridge identifiers",
+        "Root-private guard and policy files",
+        "Observed nftables rules and systemd dependencies"
+      ],
+      "state": {
+        "initial": "unqualified",
+        "states": [
+          "unqualified",
+          "installed",
+          "restricted",
+          "reboot",
+          "denied",
+          "recovered-restricted"
+        ]
+      },
+      "allowedTransitions": [
+        "unqualified -> installed on separately authorized persistent installation",
+        "installed -> restricted after exact live and boot-order observations",
+        "reboot -> restricted before Docker startup",
+        "restricted -> recovered-restricted after all other recovery checks"
+      ],
+      "forbiddenTransitions": [
+        "missing or changed live policy -> Docker startup",
+        "candidate-only worker flag -> legacy recovery qualification",
+        "restriction -> assume prior external effect never occurred",
+        "automatic recovery -> remove restriction"
+      ],
+      "effects": [
+        "Scoped kernel packet denial; startup failure on policy drift. The component does not deploy, migrate, stop production services or remove restrictions."
+      ],
+      "authorization": "Production installation requires operator authorization and admitted dedicated host ownership. Local fixtures require explicit machine identity and empty Docker inventory.",
+      "privacy": "No customer data or provider credentials are needed for tests or policy observation. Packet bodies are not logged.",
+      "concurrency": "Atomic nftables load and exact resampling; the coordinator must retain release ownership. Concurrent privileged policy/routing changes remain excluded.",
+      "idempotency": "Boot may load a missing table. Existing changed tables are never overwritten. Every Docker start independently verifies presence and equality.",
+      "failure": "Failed live or persistent validation denies startup/qualification. Unknown delivery outcomes and partial application files remain evidence; no sent records are invented.",
+      "recovery": "Keep restriction through original-image or candidate recovery. Removal requires a separate qualified transition. Integrated first-stop and coordinator admission remain open.",
+      "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
+      "implementation": [
+        "ops/hetzner/outbound-quarantine.py"
+      ],
+      "tests": [
+        "scripts/test-outbound-quarantine.py",
+        "scripts/test-outbound-quarantine-linux.py",
+        "scripts/test-outbound-quarantine-reboot-linux.py"
+      ],
+      "formalModels": [],
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof.",
+      "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation and executable fixtures; host-bypass and coordinator integration unqualified.",
+      "ambiguity": [
+        "Host bypass admission, durable production installation, coordinator integration and exact legacy interrupted-stop mode remain open.",
+        "DNS relay and privileged host/root changes are excluded. Caddy renewal and other container-origin external calls are unavailable while restricted.",
+        "Operational acceptance of temporary restriction remains pending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "No production activation or integrated recovery qualification; explicit host assumptions and unresolved integration obligations."
+      }
     }
   ]
 }
