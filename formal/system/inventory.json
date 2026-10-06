@@ -12771,7 +12771,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+      "sha256": "6e434efe0dbb5ff075ca3b4614afb08f5896b156e1f701d1638c1ee02cdae950",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12813,7 +12813,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
+      "sha256": "fb3095239fbebc536123ee079617151b736af94c92d9feaa687a603d40d65054",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13677,7 +13677,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "02ef9dac54892ba78541c20f9be97eb89508e2e08d1675d817805bd735fbfbe3",
+      "sha256": "e2c4973de99aa55e3962d1504812456faef9c5b528006ca8532980bab7109f01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13827,7 +13827,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "7d90677791b58728237c0fc3f56484461ee920133b0f97ce452c2edd2a6a23e8",
+      "sha256": "bf9608e2eed1e41272e5e9162f6acae2fe07d214e2016be4feffc31ff73af390",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13953,7 +13953,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
+      "sha256": "4b0da029e03fbf86ebf78458ccf1239d7fd7ebc56fe264d15234d142725912fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22691,7 +22691,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "75b93a90c370b9f6a5a099a0d77efab1c40da20f9181441cdff2e94d8e824bd2",
+      "sha256": "7f3f55797d396ef7daebfdd78ebd36dd72a90b62bdc4b79c0041e6c70d88fcb8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22956,6 +22956,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/outbound-worker-admission.md",
+      "sha256": "38ba0df389baeb75970d80e22f8c3d0653e298c5d69de1a43825f2efbf566495",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -23020,14 +23027,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a70ea90d6d3fdb48d7b87f18ad10569281cbd8333efe80c78e32513c076f09ec",
+      "sha256": "5b88ba2b72420add79bb17e0e7fe6e19be20fd4685ff75a3f9537c709e2e1ce0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "930605bf7226d8479324bfa3b991770f08c67418ec886b26e8cfc6050e760e50",
+      "sha256": "7fb289267aefbba2ea83740820878be1457f1e9ed21c25152b335f65b8a1739b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

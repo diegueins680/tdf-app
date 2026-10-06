@@ -754,6 +754,15 @@
       "applicability": "Native macOS backend development and filesystem conformance tests",
       "decision": "adopted",
       "rationale": "Use the platform exclusive primitive and actual filesystem tests; do not emulate with an overwriting rename or infer Linux qualification from Mac results."
+    },
+    {
+      "id": "RES-OUTBOUND-001",
+      "recommendation": "Preserve unknown send outcomes; serialize durable claims before external dispatch. A database lock does not make SMTP or Graph effects transactional.",
+      "applicability": "TDF social auto replies and course reminder post-send persistence leave a crash/replay gap.",
+      "decision": "adopted for containment; durable claims pending",
+      "rationale": "SMTP can accept before acknowledgement is lost; transaction locks serialize participating database writers only.",
+      "source": "https://www.rfc-editor.org/rfc/rfc5321.html#section-4.5.3.2.6",
+      "title": "RFC5321 section 4.5.3.2.6: DATA termination timeout"
     }
   ]
 }

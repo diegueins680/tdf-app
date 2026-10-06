@@ -115,6 +115,8 @@ data AppConfig = AppConfig
   , eventDiscoveryCountryCode :: Maybe Text
   , googleRoutesApiKey :: Maybe Text
   , googleRoutesApiBase :: Text
+  , socialAutoReplyEnabled :: Bool
+  , coursePaymentReminderEnabled :: Bool
   , eventLogisticsRecheckEnabled :: Bool
   , artistEnrichmentEnabled :: Bool
   , artistEnrichmentAutoPublish :: Bool
@@ -810,6 +812,8 @@ loadConfig = do
   eventDiscoveryCountryCodeEnv <- lookupEnv "EVENT_DISCOVERY_COUNTRY_CODE"
   googleRoutesApiKeyEnv <- lookupEnv "GOOGLE_ROUTES_API_KEY"
   googleRoutesApiBaseEnv <- lookupEnv "GOOGLE_ROUTES_API_BASE"
+  socialAutoReplyEnabledEnv <- lookupEnv "SOCIAL_AUTO_REPLY_ENABLED"
+  coursePaymentReminderEnabledEnv <- lookupEnv "COURSE_PAYMENT_REMINDER_ENABLED"
   eventLogisticsRecheckEnabledEnv <- lookupEnv "EVENT_LOGISTICS_RECHECK_ENABLED"
   artistEnrichmentEnabledEnv <- lookupEnv "ARTIST_ENRICHMENT_ENABLED"
   artistEnrichmentAutoPublishEnv <- lookupEnv "ARTIST_ENRICHMENT_AUTO_PUBLISH"
@@ -930,6 +934,10 @@ loadConfig = do
       "GOOGLE_ROUTES_API_BASE"
       "https://routes.googleapis.com"
       googleRoutesApiBaseEnv
+  socialAutoReplyEnabledVal <-
+    validateStartupBooleanFlag "SOCIAL_AUTO_REPLY_ENABLED" False socialAutoReplyEnabledEnv
+  coursePaymentReminderEnabledVal <-
+    validateStartupBooleanFlag "COURSE_PAYMENT_REMINDER_ENABLED" False coursePaymentReminderEnabledEnv
   eventLogisticsRecheckEnabledVal <-
     validateStartupBooleanFlag
       "EVENT_LOGISTICS_RECHECK_ENABLED"
@@ -1095,6 +1103,8 @@ loadConfig = do
     , eventDiscoveryCountryCode = eventDiscoveryCountryCodeVal
     , googleRoutesApiKey = googleRoutesApiKeyVal
     , googleRoutesApiBase = googleRoutesApiBaseVal
+    , socialAutoReplyEnabled = socialAutoReplyEnabledVal
+    , coursePaymentReminderEnabled = coursePaymentReminderEnabledVal
     , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
     , artistEnrichmentEnabled = artistEnrichmentEnabledVal
     , artistEnrichmentAutoPublish = artistEnrichmentAutoPublishVal

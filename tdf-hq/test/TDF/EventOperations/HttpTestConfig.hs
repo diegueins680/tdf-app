@@ -32,6 +32,8 @@ httpTestConfig = AppConfig
   , ticketmasterApiKey = Nothing, ticketmasterApiBase = disabledEndpoint
   , eventDiscoveryLookaheadDays = 1, eventDiscoveryMaxPagesPerCity = 1, eventDiscoveryHourLocal = 0
   , eventDiscoveryCountryCode = Nothing, googleRoutesApiKey = Nothing, googleRoutesApiBase = disabledEndpoint
+  , socialAutoReplyEnabled = False
+  , coursePaymentReminderEnabled = False
   , eventLogisticsRecheckEnabled = False, artistEnrichmentEnabled = False
   , artistEnrichmentAutoPublish = False, artistEnrichmentHourLocal = 0
   , artistEnrichmentBatchSize = 1, artistEnrichmentStaleDays = 1

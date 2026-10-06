@@ -582,6 +582,8 @@ import TDF.Config
       llmProviderApiBase,
       llmProviderDefaultChatModel,
       loadConfig,
+      socialAutoReplyEnabled,
+      coursePaymentReminderEnabled,
       openAiApiKey,
       openAiEmbedModel,
       openAiModel,
@@ -4475,6 +4477,37 @@ main = hspec $ do
                     DTO.ccaExchangeRate audit `shouldBe` 150
 
     describe "loadConfig" $ do
+        it "keeps outbound background dispatch disabled unless explicitly enabled" $ do
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Nothing), ("COURSE_PAYMENT_REMINDER_ENABLED", Nothing)] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` False
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just "true"), ("COURSE_PAYMENT_REMINDER_ENABLED", Just "false")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` True
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just "false"), ("COURSE_PAYMENT_REMINDER_ENABLED", Just "true")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` False
+                coursePaymentReminderEnabled cfg `shouldBe` True
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just ""), ("COURSE_PAYMENT_REMINDER_ENABLED", Just " ")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` False
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            withEnvOverrides
+                [("SOCIAL_AUTO_REPLY_ENABLED", Just "on"), ("COURSE_PAYMENT_REMINDER_ENABLED", Just "0")] $ do
+                cfg <- loadConfig
+                socialAutoReplyEnabled cfg `shouldBe` True
+                coursePaymentReminderEnabled cfg `shouldBe` False
+            forM_ ["SOCIAL_AUTO_REPLY_ENABLED", "COURSE_PAYMENT_REMINDER_ENABLED"] $ \flag ->
+                withEnvOverrides [(flag, Just "invalid")] $
+                    loadConfig `shouldThrow` \err ->
+                        (flag <> " must be a boolean flag") `isInfixOf` show (err :: IOException)
+
         it "keeps contextual reputation and its public projection dark by default" $ do
             withEnvOverrides
                 [ ("CONTEXTUAL_REPUTATION_ENABLED", Nothing)
