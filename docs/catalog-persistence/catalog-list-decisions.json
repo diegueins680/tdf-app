@@ -1370,22 +1370,22 @@
       "reviewed": true
     },
     {
-      "id": "e858a9fa43eea647e38e",
+      "id": "c69afb90768a2e78770a",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+      "reviewBatch": "ticket-tax-invoices-2026-10-06",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 562
+        "line": 576
       },
       "mergedDecision": {
-        "id": "74f76e178df15df54768",
+        "id": "e858a9fa43eea647e38e",
         "classification": "genuine-technical-constant",
         "disposition": "retain-in-code",
         "specializedModel": "technical_constant_allowlist",
@@ -1393,17 +1393,11 @@
         "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
         "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
         "reviewed": true,
-        "reviewMethod": "deterministic-policy-v3",
-        "reviewBatch": "ci-recovery-2026-09-12",
+        "reviewMethod": "successor-of-reviewed-decision",
+        "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
         "evidence": {
           "file": "tdf-hq-ui/src/api/socialEvents.ts",
-          "line": 539,
-          "kind": "object-registry",
-          "name": "SocialEventsAPI",
-          "valueCount": 66,
-          "consumerCount": 29,
-          "exactDuplicateIds": [],
-          "similarCandidateIds": []
+          "line": 562
         }
       }
     },
@@ -15551,19 +15545,19 @@
       }
     },
     {
-      "id": "be304ef51a5f288f27e3",
+      "id": "69cdb78be851110faed4",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 185-entry manifest: the reviewed 184 entries unchanged, then the additive manual bank transfer hold migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 186-entry manifest keeps the reviewed 185 entries unchanged and appends the additive ticket electronic invoice migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+      "reviewBatch": "ticket-tax-invoices-2026-10-06",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57158,21 +57152,20 @@
         ]
       },
       "mergedDecision": {
-        "id": "8ce8a7e2948f5c0f4c26",
+        "id": "be304ef51a5f288f27e3",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 185-entry manifest: the reviewed 184 entries unchanged, then the additive manual bank transfer hold migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "ticketing-invoice-consolidation-2026-10-06",
-        "reviewMethod": "source-comparison-pending-independent-review",
-        "predecessorChain": "Complete earlier chain retained at 0bd125024f3c139269444d1b85c43b9acbf0490d:docs/catalog-persistence/catalog-list-decisions.json"
+        "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+        "reviewMethod": "successor-of-reviewed-decision"
       }
     },
     {
@@ -57249,6 +57242,111 @@
         "line": 31
       },
       "reviewBatch": "ticket-manual-bank-transfer-2026-10-06"
+    },
+    {
+      "id": "63df59ecea7ce2e19b5f",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Mislabeling an uncertain invoice as failed could invite a duplicate SRI submission.",
+      "justification": "Staff display labels for the closed invoice document state machine enforced by commerce_tax_document; protocol states, not a configurable catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+        "line": 7
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "da49da4793e1dcacab85",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing colors only alters emphasis of invoice states in the staff view.",
+      "justification": "Presentation mapping for the closed invoice document state machine; rendering mechanics, not a business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+        "line": 16
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "bec077367cbcafe55913",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "line": 519
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "519e2f81d0d9f4ad3396",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Contract drift could let clients send identification types the SRI rejects.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 11364
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "43c77ec14da16687c43e",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "line": 28
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "9642392cbd33541a3a2e",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Mixing environments would send test invoices to production or the reverse.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "line": 51
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
+    },
+    {
+      "id": "968a306599a80edd36ce",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Adding states without worker semantics could resend or drop legally required invoices.",
+      "justification": "States of the invoice document state machine enforced by the commerce_tax_document CHECK and worker transitions; protocol values, not configurable catalog entries.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "line": 75
+      },
+      "reviewBatch": "ticket-tax-invoices-2026-10-06"
     }
   ]
 }

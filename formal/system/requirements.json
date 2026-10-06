@@ -7118,7 +7118,18 @@
         "tdf-hq/src/TDF/Invoice/Datil.hs",
         "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx"
+        "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/api/generated/types.ts"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_tax_invoices.sql",
