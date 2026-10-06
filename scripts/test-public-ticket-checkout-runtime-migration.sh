@@ -371,5 +371,10 @@ if apply_file tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql; then
   echo "Invoice rollback discarded invoicing evidence or buyer identification" >&2
   exit 1
 fi
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM commerce_tax_document WHERE kind='invoice';")" "2" "Credit note migration preserves invoices"
 
 echo "Public ticket checkout migration passed rerun, clean rollback, inactive policy preservation, immutable price/fee binding, verified-payment gating, explicit issuance, exact hold expiry, promotion release, manual bank transfer hold bounds, exactly-once invoice enqueueing, and evidence-aware rollback checks."

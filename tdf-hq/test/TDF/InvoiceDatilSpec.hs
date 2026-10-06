@@ -12,6 +12,7 @@ import           Test.Hspec
 import           TDF.Invoice.AccessKey
 import           TDF.Invoice.BuyerIdentity
 import           TDF.Invoice.Datil
+import           TDF.Server.TicketManualPayments (validateBankRefundReference)
 
 config :: DatilConfig
 config = DatilConfig
@@ -74,6 +75,28 @@ spec = describe "Electronic invoices through Datil" $ do
       other -> expectationFailure ("Unexpected payload: " <> show other)
     invoicePayload config input { iiTotalMinor = 4001 } `shouldSatisfy` isLeft
     invoicePayload config input { iiLines = [] } `shouldSatisfy` isLeft
+
+  it "builds a credit note bound to the modified invoice without invoice-only fields" $ do
+    let modified = ModifiedInvoice "001-900-000000002" "2026-10-06T12:00:00.000-05:00" "Devolución de entradas"
+    case creditNotePayload config input modified of
+      Right (A.Object payload) -> do
+        KM.lookup "numero_documento_modificado" payload `shouldBe` Just (A.String "001-900-000000002")
+        KM.lookup "tipo_documento_modificado" payload `shouldBe` Just (A.String "01")
+        KM.member "pagos" payload `shouldBe` False
+        case KM.lookup "totales" payload of
+          Just (A.Object totals) -> do
+            KM.member "descuento" totals `shouldBe` False
+            KM.member "propina" totals `shouldBe` False
+          other -> expectationFailure ("Unexpected totals: " <> show other)
+        case KM.lookup "emisor" payload of
+          Just (A.Object issuer) -> KM.lookup "contribuyente_especial" issuer `shouldBe` Just (A.String "")
+          other -> expectationFailure ("Unexpected issuer: " <> show other)
+      other -> expectationFailure ("Unexpected credit note: " <> show other)
+
+  it "accepts only stable bank refund references" $ do
+    validateBankRefundReference " DEV-001 " `shouldBe` Right "BT-DEV-001"
+    validateBankRefundReference "ab" `shouldSatisfy` isLeft
+    validateBankRefundReference "bad ref!" `shouldSatisfy` isLeft
 
   it "maps settling rails to Datil payment media" $ do
     paymentMedium "bank_transfer" `shouldBe` "transferencia"

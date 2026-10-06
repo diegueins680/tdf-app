@@ -261,6 +261,7 @@ import TDF.DTO.SocialEventsDTO (
     TicketManualPaymentDTO (..),
     TicketManualPaymentReviewDTO (..),
     TicketTaxDocumentDTO (..),
+    BankRefundCompletionDTO (..),
     RsvpCreateDTO (..),
     RsvpDTO (..),
     RsvpSummaryDTO (..),
@@ -4112,6 +4113,7 @@ socialEventsServer user =
             -- SRI electronic invoices
             :<|> listTaxDocuments
             :<|> retryTaxDocument
+            :<|> completeBankTransferRefund
             -- Transfers
             :<|> createTransfer
             :<|> listTransfers
@@ -5312,7 +5314,7 @@ socialEventsServer user =
                 [toPersistValue orderKey] :: SqlPersistT IO [Single T.Text]) envPool
         when (not (null canonical) && length providers /= 1) $
             throwError err409 {errBody = "Refund requires one unambiguous verified payment provider"}
-        if providers == [Single "paypal"] then do
+        if providers `elem` [[Single "paypal"], [Single "bank_transfer"]] then do
             result <- liftIO $ try (runSqlPool
                 (TicketRefund.requestTicketRefundForOrder currentPartyId eventKey orderKey
                     refundRequestAmountCents refundRequestReason now) envPool)
@@ -5574,6 +5576,32 @@ socialEventsServer user =
         unless retried $
             throwError err409{errBody = "Only invoices the provider refused before creating them can be resent"}
         liftIO $ runSqlPool (TaxDocuments.listTicketTaxDocuments eventKey) envPool
+
+    completeBankTransferRefund :: T.Text -> T.Text -> BankRefundCompletionDTO -> AppM RefundDTO
+    completeBankTransferRefund eventIdStr refundIdStr BankRefundCompletionDTO{..} = do
+        Env{..} <- ask
+        now <- liftIO getCurrentTime
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        refundKey <- parseKeyOr400 "refund" refundIdStr
+        providerRefund <- either (\msg -> throwError err400{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure $
+            ManualPayments.validateBankRefundReference brcReference
+        let reviewer =
+                ManualPayments.ManualReviewer
+                    { ManualPayments.mrPartyId = fromSqlKey (auPartyId user)
+                    , ManualPayments.mrStrictAdmin = hasStrictAdminAccess user
+                    }
+        result <- liftIO $ try (runSqlPool
+            (ManualPayments.completeBankTransferTicketRefund reviewer eventKey refundKey providerRefund now) envPool)
+            :: AppM (Either IOException (Either T.Text ()))
+        case result of
+            Left _ -> throwError err409{errBody = "Refund tickets or state do not permit completion"}
+            Right (Left msg) -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}
+            Right (Right ()) -> pure ()
+        mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
+        refund <- maybe (throwError err404{errBody = "Refund request not found"}) pure mRefund
+        mOrder <- liftIO $ runSqlPool (get (ticketRefundRequestOrderId (entityVal refund))) envPool
+        order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
+        pure (refundEntityToDTO (eventTicketOrderCurrency order) refund)
 
     -- Transfers
     createTransfer :: T.Text -> T.Text -> TicketTransferCreateDTO -> AppM TicketTransferDTO

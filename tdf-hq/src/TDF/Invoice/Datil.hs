@@ -16,6 +16,8 @@ module TDF.Invoice.Datil
   , datilEnvironmentFor
   , invoicingReady
   , invoicePayload
+  , creditNotePayload
+  , ModifiedInvoice(..)
   , paymentMedium
   , interpretDatilDocument
   , DatilOutcome(..)
@@ -30,6 +32,7 @@ import           Control.Monad (forever, void, when)
 import           Data.Aeson ((.=), (.:), (.:?))
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isDigit)
@@ -225,6 +228,39 @@ invoicePayload DatilConfig{..} InvoiceInput{..}
           , "valor" .= money 0 ]]
       ]
 
+-- | The authorized invoice a credit note modifies.
+data ModifiedInvoice = ModifiedInvoice
+  { miNumber   :: Text   -- ^ 001-002-000000123
+  , miIssuedOn :: Text   -- ^ ISO-8601 with offset
+  , miReason   :: Text
+  } deriving (Eq, Show)
+
+-- | Credit note: same issuer, buyer, lines and totals rules as an invoice, bound
+-- to the modified invoice; payment media do not apply.
+creditNotePayload :: DatilConfig -> InvoiceInput -> ModifiedInvoice -> Either Text A.Value
+creditNotePayload config input ModifiedInvoice{..} = do
+  base <- invoicePayload config input
+  case base of
+    -- Dátil's credit-note schema (checked 2026-10-06) rejects invoice-only
+    -- totals and requires the special-taxpayer field, empty when not applicable.
+    A.Object fields -> Right $ A.Object $
+      KM.insert "fecha_emision_documento_modificado" (A.String miIssuedOn) $
+      KM.insert "numero_documento_modificado" (A.String miNumber) $
+      KM.insert "tipo_documento_modificado" (A.String "01") $
+      KM.insert "motivo" (A.String (T.take 300 miReason)) $
+      updateField "totales" withoutInvoiceTotals $
+      updateField "emisor" withSpecialTaxpayer $
+      KM.delete "pagos" fields
+    _ -> Left "Credit note payload is not an object"
+  where
+    updateField key f object = maybe object (\value -> KM.insert key (f value) object) (KM.lookup key object)
+    withoutInvoiceTotals (A.Object totals) = A.Object (KM.delete "descuento" (KM.delete "propina" totals))
+    withoutInvoiceTotals other = other
+    withSpecialTaxpayer (A.Object issuer) =
+      A.Object (if KM.member "contribuyente_especial" issuer
+        then issuer else KM.insert "contribuyente_especial" (A.String "") issuer)
+    withSpecialTaxpayer other = other
+
 -- | Dátil payment medium for the settling rail of the order.
 paymentMedium :: Text -> Text
 paymentMedium "bank_transfer" = "transferencia"
@@ -335,8 +371,9 @@ datilRequest DatilConfig{..} httpMethod path body = do
 
 data ClaimedDocument = ClaimedDocument
   { cdId :: Text
+  , cdKind :: Text
   , cdStatus :: Text
-  , cdPriorAttempts :: Int
+  , cdSubmissionStarted :: Bool
   , cdLease :: Text
   , cdProviderId :: Maybe Text
   }
@@ -352,7 +389,8 @@ claimSql =
   \ SET lease_token = ?::uuid, lease_expires_at = clock_timestamp() + INTERVAL '2 minutes',\
   \ attempts = document.attempts + 1\
   \ FROM next_document WHERE document.id = next_document.id\
-  \ RETURNING document.id::text, document.status, document.attempts - 1, document.provider_document_id"
+  \ RETURNING document.id::text, document.kind, document.status, document.submitted_at IS NOT NULL,\
+  \ document.provider_document_id"
 
 -- | Process at most one due document. Returns whether one was claimed.
 processNextTaxDocument :: Env -> DatilConfig -> IO Bool
@@ -360,9 +398,9 @@ processNextTaxDocument Env{envPool} config = do
   lease <- UUID.toText <$> UUID.nextRandom
   let checkoutEnvironment = if dcEnvironment config == 1 then "sandbox" else "production" :: Text
   claimed <- runSqlPool (rawSql claimSql [PersistText checkoutEnvironment, PersistText lease]
-    :: SqlPersistT IO [(Single Text, Single Text, Single Int, Single (Maybe Text))]) envPool
+    :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Bool, Single (Maybe Text))]) envPool
   case claimed of
-    [(Single cdId, Single cdStatus, Single cdPriorAttempts, Single cdProviderId)] -> do
+    [(Single cdId, Single cdKind, Single cdStatus, Single cdSubmissionStarted, Single cdProviderId)] -> do
       let document = ClaimedDocument{ cdLease = lease, .. }
       outcome <- tryAny (handleDocument envPool config document)
       case outcome of
@@ -375,19 +413,37 @@ processNextTaxDocument Env{envPool} config = do
 handleDocument :: ConnectionPool -> DatilConfig -> ClaimedDocument -> IO ()
 handleDocument pool config document@ClaimedDocument{..}
   | cdStatus == "submitted", Just providerId <- cdProviderId = do
-      result <- datilRequest config "GET" ("/invoices/" <> T.unpack providerId) Nothing
+      result <- datilRequest config "GET" (resource <> "/" <> T.unpack providerId) Nothing
       applyResult pool document result
-  | cdStatus == "pending" && cdPriorAttempts > 0 =
-      -- A previous attempt may have reached Dátil before the worker stopped.
+  | cdStatus == "pending" && cdSubmissionStarted =
+      -- A previous submission may have reached Dátil before the worker stopped.
       finish pool document "uncertain" Nothing Nothing Nothing
         (Just "A previous submission outcome is unknown; reconcile in Dátil before resending") Nothing
   | otherwise = do
-      prepared <- prepareInvoice pool config document
+      prepared <- if cdKind == "credit_note"
+        then prepareCreditNote pool config document
+        else prepareInvoice pool config document
       case prepared of
-        Left problem -> finish pool document "failed" Nothing Nothing Nothing (Just problem) Nothing
+        Left (Deferred reason) -> finish pool document "pending" Nothing Nothing Nothing (Just reason) (Just 600)
+        Left (Refused problem) -> finish pool document "failed" Nothing Nothing Nothing (Just problem) Nothing
         Right payload -> do
-          result <- datilRequest config "POST" "/invoices/issue" (Just payload)
-          applyResult pool document result
+          started <- markSubmissionStarted pool document
+          when started $ do
+            result <- datilRequest config "POST" (resource <> "/issue") (Just payload)
+            applyResult pool document result
+  where
+    resource = if cdKind == "credit_note" then "/credit-notes" else "/invoices"
+
+data PreparationProblem = Deferred Text | Refused Text
+
+-- Persist that a provider request is about to be sent; only then may it be sent.
+markSubmissionStarted :: ConnectionPool -> ClaimedDocument -> IO Bool
+markSubmissionStarted pool ClaimedDocument{..} = do
+  rows <- runSqlPool (rawSql
+    "UPDATE commerce_tax_document SET submitted_at = clock_timestamp()\
+    \ WHERE id = ?::uuid AND lease_token = ?::uuid AND submitted_at IS NULL RETURNING id::text"
+    [PersistText cdId, PersistText cdLease] :: SqlPersistT IO [Single Text]) pool
+  pure (length rows == 1)
 
 applyResult :: ConnectionPool -> ClaimedDocument -> TransportResult -> IO ()
 applyResult pool document result = case result of
@@ -437,7 +493,7 @@ ecuadorDay = localDay . utcToLocalTime (hoursToTimeZone (-5))
 
 -- | Bind the issue date and access key on first submission, then build the
 -- payload from the immutable checkout snapshot.
-prepareInvoice :: ConnectionPool -> DatilConfig -> ClaimedDocument -> IO (Either Text A.Value)
+prepareInvoice :: ConnectionPool -> DatilConfig -> ClaimedDocument -> IO (Either PreparationProblem A.Value)
 prepareInvoice pool config ClaimedDocument{..} = do
   now <- getCurrentTime
   rows <- runSqlPool (rawSql
@@ -470,8 +526,8 @@ prepareInvoice pool config ClaimedDocument{..} = do
      , Single eventTitle, Single tierName, Single buyerEmail, Single idType, Single idNumber
      , Single legalName, Single provider
      )]
-      | taxBps /= 0 -> pure (Left "Only IVA 0% ticket invoices are supported")
-      | amountMinor /= totalMinor -> pure (Left "Invoice amount differs from the checkout total")
+      | taxBps /= 0 -> pure (Left (Refused "Only IVA 0% ticket invoices are supported"))
+      | amountMinor /= totalMinor -> pure (Left (Refused "Invoice amount differs from the checkout total"))
       | otherwise -> do
           let issuedOn = fromMaybe (ecuadorDay now) storedDay
               keyResult = maybe (accessKey AccessKeyInput
@@ -479,9 +535,9 @@ prepareInvoice pool config ClaimedDocument{..} = do
                 , akiEnvironment = dcEnvironment config, akiEstablishment = establishment
                 , akiEmissionPoint = emissionPoint, akiSequential = sequential
                 , akiNumericCode = numericCodeFromSeed cdId }) Right storedKey
-          case (keyResult, buyerIdentity idType idNumber legalName) of
-            (Left problem, _) -> pure (Left problem)
-            (_, Left problem) -> pure (Left problem)
+          case (keyResult, buyerIdentityFrom idType idNumber legalName) of
+            (Left problem, _) -> pure (Left (Refused problem))
+            (_, Left problem) -> pure (Left (Refused problem))
             (Right key, Right buyer) -> do
               when (storedKey /= Just key || storedDay /= Just issuedOn) $
                 void $ runSqlPool (rawExecute
@@ -495,7 +551,7 @@ prepareInvoice pool config ClaimedDocument{..} = do
                   feeLine = InvoiceLine
                     { ilCode = "SERVICIO", ilDescription = "Tarifa de servicio TDF"
                     , ilQuantity = 1, ilUnitMinor = buyerFeeMinor, ilDiscountMinor = 0 }
-              pure $ invoicePayload config InvoiceInput
+              pure $ either (Left . Refused) Right $ invoicePayload config InvoiceInput
                 { iiSequential = sequential, iiAccessKey = key
                 , iiIssuedAt = T.pack (show issuedOn) <> "T12:00:00.000-05:00"
                 , iiEstablishment = establishment, iiEmissionPoint = emissionPoint
@@ -504,15 +560,89 @@ prepareInvoice pool config ClaimedDocument{..} = do
                 , iiTotalMinor = totalMinor
                 , iiPaymentMedium = paymentMedium (fromMaybe "" provider)
                 , iiOrderReference = reference }
-    _ -> pure (Left "Invoice source data is missing")
-  where
-    buyerIdentity :: Maybe Text -> Maybe Text -> Maybe Text -> Either Text BuyerIdentity
-    buyerIdentity (Just "cedula") (Just number) (Just name) = Right (Identified "05" number name)
-    buyerIdentity (Just "ruc") (Just number) (Just name) = Right (Identified "04" number name)
-    buyerIdentity (Just "pasaporte") (Just number) (Just name) = Right (Identified "06" number name)
-    buyerIdentity (Just "consumidor_final") _ _ = Right ConsumidorFinal
-    buyerIdentity Nothing _ _ = Right ConsumidorFinal
-    buyerIdentity _ _ _ = Left "Buyer billing identity is incomplete"
+    _ -> pure (Left (Refused "Invoice source data is missing"))
+
+-- | A credit note waits until its invoice is authorized, then reuses the
+-- invoice's buyer and refunds the exact verified amount.
+prepareCreditNote :: ConnectionPool -> DatilConfig -> ClaimedDocument -> IO (Either PreparationProblem A.Value)
+prepareCreditNote pool config ClaimedDocument{..} = do
+  now <- getCurrentTime
+  rows <- runSqlPool (rawSql
+    "SELECT note.sequential, note.establishment, note.emission_point, note.access_key,\
+    \ note.issued_on, note.amount_minor, note.domain_order_id, invoice.status,\
+    \ invoice.establishment, invoice.emission_point, invoice.sequential, invoice.issued_on,\
+    \ event.title, ticket_order.buyer_email, billing.id_type, billing.id_number, billing.legal_name,\
+    \ (SELECT count(*) FROM event_ticket_refund_allocation allocation WHERE allocation.refund_id = note.refund_id)\
+    \ FROM commerce_tax_document note\
+    \ JOIN commerce_tax_document invoice ON invoice.id = note.related_document_id AND invoice.kind = 'invoice'\
+    \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = note.checkout_id\
+    \ JOIN event_ticket_order ticket_order ON ticket_order.id = runtime.order_id\
+    \ JOIN social_event event ON event.id = runtime.event_id\
+    \ LEFT JOIN event_ticket_billing_identity billing ON billing.order_id = runtime.order_id\
+    \ WHERE note.id = ?::uuid AND note.lease_token = ?::uuid AND note.kind = 'credit_note'"
+    [PersistText cdId, PersistText cdLease]
+    :: SqlPersistT IO
+      [( Single Int64, Single Text, Single Text, Single (Maybe Text), Single (Maybe Day)
+       , Single Int64, Single Text, Single Text, Single Text, Single Text, Single Int64
+       , Single (Maybe Day), Single Text, Single (Maybe Text), Single (Maybe Text)
+       , Single (Maybe Text), Single (Maybe Text), Single Int64
+       )]) pool
+  case rows of
+    [( Single sequential, Single establishment, Single emissionPoint, Single storedKey
+     , Single storedDay, Single amountMinor, Single orderId, Single invoiceStatus
+     , Single invoiceEstablishment, Single invoiceEmissionPoint, Single invoiceSequential
+     , Single invoiceDay, Single eventTitle, Single buyerEmail, Single idType, Single idNumber
+     , Single legalName, Single ticketCount
+     )]
+      | invoiceStatus `elem` ["pending", "submitted"] ->
+          pure (Left (Deferred "Waiting for the modified invoice to be authorized"))
+      | invoiceStatus /= "authorized" ->
+          pure (Left (Refused "The modified invoice is not authorized; reconcile it first"))
+      | otherwise -> case invoiceDay of
+          Nothing -> pure (Left (Refused "The modified invoice has no issue date"))
+          Just modifiedDay -> do
+            let issuedOn = fromMaybe (ecuadorDay now) storedDay
+                keyResult = maybe (accessKey AccessKeyInput
+                  { akiIssuedOn = issuedOn, akiDocumentType = "04", akiRuc = dcRuc config
+                  , akiEnvironment = dcEnvironment config, akiEstablishment = establishment
+                  , akiEmissionPoint = emissionPoint, akiSequential = sequential
+                  , akiNumericCode = numericCodeFromSeed cdId }) Right storedKey
+                tickets = max 1 ticketCount
+            case (keyResult, buyerIdentityFrom idType idNumber legalName) of
+              (Left problem, _) -> pure (Left (Refused problem))
+              (_, Left problem) -> pure (Left (Refused problem))
+              (Right key, Right buyer) -> do
+                when (storedKey /= Just key || storedDay /= Just issuedOn) $
+                  void $ runSqlPool (rawExecute
+                    "UPDATE commerce_tax_document SET access_key = ?, issued_on = ?\
+                    \ WHERE id = ?::uuid AND lease_token = ?::uuid"
+                    [PersistText key, PersistDay issuedOn, PersistText cdId, PersistText cdLease]) pool
+                pure $ either (Left . Refused) Right $ creditNotePayload config InvoiceInput
+                  { iiSequential = sequential, iiAccessKey = key
+                  , iiIssuedAt = T.pack (show issuedOn) <> "T12:00:00.000-05:00"
+                  , iiEstablishment = establishment, iiEmissionPoint = emissionPoint
+                  , iiBuyer = buyer, iiBuyerEmail = buyerEmail
+                  , iiLines = [InvoiceLine
+                      { ilCode = "DEVOLUCION"
+                      , ilDescription = T.take 300 ("Devolución de " <> T.pack (show tickets)
+                          <> " entrada(s) - " <> eventTitle)
+                      , ilQuantity = 1, ilUnitMinor = amountMinor, ilDiscountMinor = 0 }]
+                  , iiTotalMinor = amountMinor, iiPaymentMedium = "otros"
+                  , iiOrderReference = "TDF-" <> orderId }
+                  ModifiedInvoice
+                    { miNumber = invoiceEstablishment <> "-" <> invoiceEmissionPoint <> "-"
+                        <> T.justifyRight 9 '0' (T.pack (show invoiceSequential))
+                    , miIssuedOn = T.pack (show modifiedDay) <> "T12:00:00.000-05:00"
+                    , miReason = "Devolución de entradas" }
+    _ -> pure (Left (Refused "Credit note source data is missing"))
+
+buyerIdentityFrom :: Maybe Text -> Maybe Text -> Maybe Text -> Either Text BuyerIdentity
+buyerIdentityFrom (Just "cedula") (Just number) (Just name) = Right (Identified "05" number name)
+buyerIdentityFrom (Just "ruc") (Just number) (Just name) = Right (Identified "04" number name)
+buyerIdentityFrom (Just "pasaporte") (Just number) (Just name) = Right (Identified "06" number name)
+buyerIdentityFrom (Just "consumidor_final") _ _ = Right ConsumidorFinal
+buyerIdentityFrom Nothing _ _ = Right ConsumidorFinal
+buyerIdentityFrom _ _ _ = Left "Buyer billing identity is incomplete"
 
 startTaxInvoiceWorker :: Env -> IO ()
 startTaxInvoiceWorker env = do

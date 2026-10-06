@@ -50,12 +50,14 @@ export default function EventTaxDocumentsPanel({ eventId, formatMoney, formatDat
 
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2" fontWeight={700}>Facturas electrónicas</Typography>
+      <Typography variant="subtitle2" fontWeight={700}>Facturas y notas de crédito electrónicas</Typography>
       {error && <Alert severity="error">{error}</Alert>}
       {rows.map((document) => (
         <Stack key={document.ttdId} spacing={0.5} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-            <Typography variant="body2" fontWeight={700}>{document.ttdNumber}</Typography>
+            <Typography variant="body2" fontWeight={700}>
+              {document.ttdKind === 'credit_note' ? 'Nota de crédito' : 'Factura'} {document.ttdNumber}
+            </Typography>
             <Chip size="small" label={STATUS_LABEL[document.ttdStatus]} color={STATUS_COLOR[document.ttdStatus]} />
             <Typography variant="body2">
               {formatMoney(document.ttdAmountMinor, 'USD')} · Orden TDF-{document.ttdOrderId}

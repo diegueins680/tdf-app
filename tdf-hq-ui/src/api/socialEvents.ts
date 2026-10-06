@@ -431,6 +431,7 @@ export interface TicketManualPaymentDTO {
 
 export interface TicketTaxDocumentDTO {
   ttdId: string;
+  ttdKind: 'invoice' | 'credit_note';
   ttdOrderId: string;
   ttdNumber: string;
   ttdStatus: 'pending' | 'submitted' | 'authorized' | 'rejected' | 'uncertain' | 'failed';
@@ -772,6 +773,8 @@ export const SocialEventsAPI = {
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/manual-payments`) as TicketManualPaymentDTO[],
   reviewManualPayment: async (eventId: string, orderId: string, data: TicketManualPaymentReviewDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/review`, data) as TicketManualPaymentDTO,
+  completeBankTransferRefund: async (eventId: string, refundId: string, reference: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds/${encodeURIComponent(refundId)}/bank-transfer-complete`, { brcReference: reference }) as RefundDTO,
   // SRI electronic invoices
   listTaxDocuments: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tax-documents`) as TicketTaxDocumentDTO[],

@@ -2196,6 +2196,7 @@ socialEventIndirectTicketHandlersFor user =
                     :<|> _reviewManualPayment
                     :<|> _listTaxDocuments
                     :<|> _retryTaxDocument
+                    :<|> _completeBankTransferRefund
                     :<|> _createTransfer
                     :<|> _listTransfers
                     :<|> acceptTransferHandler
