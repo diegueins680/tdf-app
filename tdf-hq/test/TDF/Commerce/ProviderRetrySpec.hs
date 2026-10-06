@@ -282,7 +282,8 @@ providerTransportSpec = describe "provider HTTP transport boundary" $ do
                   , "status" A..= ("COMPLETED" :: Text)
                   , "amount" A..= A.object ["value" A..= ("125.15" :: Text)
                       , "currency_code" A..= ("USD" :: Text)] ]]] ]]]
-    reader <- chunkReader [jsonWire oauthFixture, jsonWire "{\"status\":\"COMPLETED\"}", jsonWire captured]
+    reader <- chunkReader [jsonWire oauthFixture, jsonWire "{\"status\":\"COMPLETED\"}",
+      jsonWire oauthFixture, jsonWire captured]
     withProviderWire reader $ \manager _ writes _ -> do
       outcome <- runHandler (runReaderT
         (Storefront.capturePaypalOrderRemoteForService manager "synthetic-client" "synthetic-secret"
