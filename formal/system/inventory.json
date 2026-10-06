@@ -22005,7 +22005,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "e1fd549c7dd7eee1bb51fe66c5a89b7eeb1195a7f070fe10acc513a017f4dcca",
+      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -22285,7 +22285,7 @@
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "57206d913abfb8c3415817dce8e3b1ecd5a368609166a4d0afc1068572d0c44c",
+      "sha256": "3d6630e4dfe2b3c36d2f95617616e0cb602345c8e7811a1b099bce530799dc76",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -7218,7 +7218,7 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "c0e4699bc5fd5331c75b44c91e2542d7831d511ebd83eb166b732b2e599f0514",
+    "formal/system/compiled-api-surface.json": "6672c5dcbdabbe66800ea7ebf9ffb8b7d0309876628dca90d6ca9dfa617e117b",
     "formal/system/public-routes.json": "e4abf2df153d6bc43d1d82f792c0ee52dc9c53fa3ed6792e561915c5971c73ba",
     "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
