@@ -2,20 +2,8 @@
 set -eu
 umask 077
 
-# Root-owned paths and a non-blocking lock prevent concurrent partial archives.
-cd /opt/tdf/production
-test -f compose.yaml
-install -d -m 0700 /opt/tdf/backups
-exec 9>/opt/tdf/backups/backup.lock
-flock -n 9
-stamp=$(date -u +%Y%m%dT%H%M%SZ)
-archive="/opt/tdf/backups/tdf-hq-${stamp}.pgdump"
-test ! -e "$archive"
-test ! -e "$archive.partial"
-docker compose exec -T db pg_dump -U postgres -d tdf_hq -Fc > "$archive.partial"
-test -s "$archive.partial"
-docker compose exec -T db pg_restore --list < "$archive.partial" > /dev/null
-mv "$archive.partial" "$archive"
-sha256sum "$archive" > "$archive.sha256"
-printf 'Completed logical backup: %s\n' "$archive"
-# Keep archives until the operator verifies retention and an off-host copy.
+# Install the two reviewed Python companions together in this root-owned path.
+# Fail if private storage has not already been provisioned; never chmod an
+# unexpected existing directory or follow an operator-provided output path.
+exec /usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 \
+  /usr/bin/python3 /opt/tdf/production/backup-postgres.py

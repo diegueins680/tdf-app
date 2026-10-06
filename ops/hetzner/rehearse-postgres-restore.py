@@ -283,10 +283,10 @@ def rehearse_candidate(runtime, target, directory, candidate, restored):
             'deploymentAuthorized': False}
 
 
-def rehearse(runtime, candidate=None):
+def rehearse(runtime, candidate=None, *, canary_module=None, canary_image=None):
     require(os.geteuid() == 0)
     with rehearsal_lock(Path('/opt/tdf/backups')):
-        return rehearse_locked(runtime, candidate)
+        return rehearse_locked(runtime, candidate, canary_module=canary_module, canary_image=canary_image)
 
 
 def sync_directory(directory):
@@ -319,12 +319,15 @@ def release_creation(directory, nonce, image):
     sync_directory(directory)
 
 
-def rehearse_locked(runtime, candidate=None):
+def rehearse_locked(runtime, candidate=None, *, canary_module=None, canary_image=None):
+    require((canary_module is None) == (canary_image is None))
+    require(canary_image is None or candidate is not None)
     # flock is released by process death, but Docker containers survive it.
     # Inspect stopped containers too; never stack another memory reservation on
     # an unresolved run or automatically delete a target without its admission.
     require(not os.path.lexists(Path('/opt/tdf/backups') / PENDING_NAME))
     require(execute(DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=' + LABEL], timeout=10).strip() == '')
+    require(execute(DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=net.tdf.application-canary'], timeout=10).strip() == '')
     # runtime is the reviewed read-only collector bundled by the launcher.
     snapshot = runtime.inspect()
     db = snapshot['containers']['db']
@@ -332,7 +335,8 @@ def rehearse_locked(runtime, candidate=None):
     mem = {line.split(':')[0]: int(line.split()[1]) * 1024
            for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:')}
     disk = os.statvfs('/opt/tdf')
-    require(0 < size <= MAX_DATABASE and mem['MemAvailable'] >= 1024 * 1024 * 1024)
+    minimum_memory = (2 if canary_image is not None else 1) * 1024 * 1024 * 1024
+    require(0 < size <= MAX_DATABASE and mem['MemAvailable'] >= minimum_memory)
     require(disk.f_bavail * disk.f_frsize >= 2 * 1024 * 1024 * 1024)
     nonce = uuid.uuid4().hex
     directory = Path('/opt/tdf/backups') / ('rehearsal-' + nonce)
@@ -346,8 +350,12 @@ def rehearse_locked(runtime, candidate=None):
     held = HeldSnapshot(db['containerId'])
     stage = 'snapshot'
     reservation = False
+    application = None
     def cleanup():
         nonlocal reservation
+        if application is not None:
+            application.cleanup()
+            require(not application.creation_attempted and not application.paused)
         target.cleanup()
         if reservation:
             require(not target.creation_attempted)
@@ -410,6 +418,12 @@ def rehearse_locked(runtime, candidate=None):
         if candidate is not None:
             stage = 'candidate-migrations'
             candidate_result = rehearse_candidate(runtime, target, directory, candidate, restored)
+        canary_result = None
+        if canary_image is not None:
+            stage = 'isolated-application-canary'
+            application = canary_module.Canary(restore=__import__('types').SimpleNamespace(DOCKER=DOCKER),
+                target=target, directory=directory, image=canary_image, revision=candidate['sourceRevision'])
+            canary_result = application.run()
         after = runtime.inspect()
         require(after['containers']['db'] == snapshot['containers']['db'])
         require(after['database']['migrations'] == snapshot['database']['migrations'])
@@ -419,14 +433,15 @@ def rehearse_locked(runtime, candidate=None):
                    'rolesSha256': digest_file(roles), 'archiveBytes': archive.stat().st_size,
                    'hostArchiveDirectory': str(directory), 'tableCounts': source_counts,
                    'migrationCount': len(restored['migrations']), 'productionDatabaseWritten': False,
-                   'candidateMigrations': candidate_result,
+                   'candidateMigrations': candidate_result, 'applicationCanary': canary_result,
                    'limitations': ['Online database snapshot only; assets and globals are not snapshot-coordinated.',
-                       'No deployment, restore over production, payment, worker, or API canary was executed.',
+                       'No deployment, restore over production or provider transaction; canary evidence, if requested, is separately scoped.',
                        'Role credentials excluded; secret recovery and off-host recovery are separate obligations.',
                        'Counts and successful archive replay are not byte-for-byte logical data equivalence.']}
         cleanup()
         target.target = None
         receipt['isolateRemoved'] = True
+        if canary_result is not None: canary_result['applicationRemoved'] = True
         (directory / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
         return receipt
     except Exception:

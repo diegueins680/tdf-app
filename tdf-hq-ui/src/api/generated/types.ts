@@ -4,6 +4,80 @@
  */
 
 export interface paths {
+    "/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["listInvoices"];
+        put?: never;
+        /** @description Create a draft invoice. When ciGenerateReceipt is true, invoice, lines, receipt and number allocation commit atomically. Session and canonical invoicing grants are revalidated and locked through the transaction. This endpoint has no external idempotency key: retrying invoice creation can create a second invoice. */
+        post: operations["createInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{invoiceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoiceId: number;
+            };
+            cookie?: never;
+        };
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["getInvoiceById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["listReceipts"];
+        put?: never;
+        /** @description One immutable receipt per invoice. Lock and revalidate the current session, canonical invoicing grants and invoice through commit. Currency must equal invoice currency (422 otherwise). Exact checked minor-unit totals must agree with invoice lines and header. A replay returns the existing snapshot; omitted or null overrides preserve it, and different explicit buyer name, email or nonblank notes return 409. Blank notes normalize to omission. Annual numbers are unique; gaps are permitted. This is a receipt record, not payment capture or SRI authorization. */
+        post: operations["createReceipt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receipts/{receiptId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receiptId: number;
+            };
+            cookie?: never;
+        };
+        /** @description Requires the canonical invoicing module capability. Studio-wide financial data; frontend visibility does not grant access. */
+        get: operations["getReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/operations/work-items": {
         parameters: {
             query?: never;
@@ -1306,7 +1380,7 @@ export interface paths {
         };
         /**
          * Health Check
-         * @description Checks the health of the API server and its database connection.
+         * @description Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
          */
         get: operations["getHealth"];
         put?: never;
@@ -4016,6 +4090,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/feedback/account-deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate manual account deletion with authenticated acceptance
+         * @description Requires a live authenticated session belonging to accountId. Rejects expired, anonymous or mismatched sessions before insertion or notification. Returns the authoritative owner and request ID; does not erase the account. Requires the non-simple X-Requested-With header and validates any Origin against configured TDF origins, independently of permissive CORS settings.
+         */
+        post: operations["requestAccountDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/feedback/internal": {
         parameters: {
             query?: never;
@@ -4079,6 +4173,26 @@ export interface paths {
         get: operations["listLegacyFeedbackForAdmin"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/account-deletion/{feedbackId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record manual deletion fulfilment with an authenticated administrator audit
+         * @description Records completion or rejection once; does not erase account data. Concurrent repeated resolution returns 409.
+         */
+        post: operations["resolveAccountDeletion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8525,6 +8639,105 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        InvoiceLineDTO: {
+            /** Format: int64 */
+            lineId: number;
+            description: string;
+            /** Format: int64 */
+            quantity: number;
+            /** Format: int64 */
+            unitCents: number;
+            /** Format: int64 */
+            taxBps: number;
+            /** Format: int64 */
+            totalCents: number;
+            /** Format: int64 */
+            serviceOrderId: number | null;
+            /** Format: int64 */
+            packagePurchaseId: number | null;
+        };
+        InvoiceDTO: {
+            /** Format: int64 */
+            invId: number;
+            number: string | null;
+            statusI: string;
+            /** Format: int64 */
+            subtotalC: number;
+            /** Format: int64 */
+            taxC: number;
+            /** Format: int64 */
+            totalC: number;
+            currency: string;
+            /** Format: int64 */
+            customerId: number | null;
+            sriDocumentId: string | null;
+            notes: string | null;
+            /** Format: int64 */
+            receiptId: number | null;
+            lineItems: components["schemas"]["InvoiceLineDTO"][];
+        };
+        CreateInvoiceLineReq: {
+            cilDescription: string;
+            cilQuantity: number;
+            cilUnitCents: number;
+            cilTaxBps?: number | null;
+            /** Format: int64 */
+            cilServiceOrderId?: number | null;
+            /** Format: int64 */
+            cilPackagePurchaseId?: number | null;
+        };
+        CreateInvoiceReq: {
+            /** Format: int64 */
+            ciCustomerId: number;
+            ciCurrency?: string | null;
+            ciNumber?: string | null;
+            ciNotes?: string | null;
+            ciGenerateReceipt?: boolean | null;
+            ciLineItems: components["schemas"]["CreateInvoiceLineReq"][];
+        };
+        ReceiptLineDTO: {
+            /** Format: int64 */
+            receiptLineId: number;
+            rlDescription: string;
+            /** Format: int64 */
+            rlQuantity: number;
+            /** Format: int64 */
+            rlUnitCents: number;
+            /** Format: int64 */
+            rlTaxBps: number | null;
+            /** Format: int64 */
+            rlTotalCents: number;
+        };
+        ReceiptDTO: {
+            /** Format: int64 */
+            receiptId: number;
+            receiptNumber: string;
+            /** Format: date-time */
+            issuedAt: string;
+            /** Format: date */
+            issueDate: string;
+            buyerName: string;
+            buyerEmail: string | null;
+            currency: string;
+            /** Format: int64 */
+            subtotalCents: number;
+            /** Format: int64 */
+            taxCents: number;
+            /** Format: int64 */
+            totalCents: number;
+            notes: string | null;
+            /** Format: int64 */
+            invoiceId: number;
+            lineItems: components["schemas"]["ReceiptLineDTO"][];
+        };
+        CreateReceiptReq: {
+            /** Format: int64 */
+            crInvoiceId: number;
+            crBuyerName?: string | null;
+            crBuyerEmail?: string | null;
+            crNotes?: string | null;
+            crCurrency?: string | null;
+        };
         EventLiveBroadcastDTO: {
             elbId: string | null;
             elbEventId: string | null;
@@ -11900,9 +12113,11 @@ export interface components {
              * @description Service status.
              * @enum {string}
              */
-            status?: "ok" | "degraded";
-            /** @description Application version. */
-            version?: string;
+            status: "ok" | "degraded" | "starting";
+            /** @enum {string} */
+            db: "ok" | "unavailable" | "starting";
+            /** @description Optional fixed startup explanation. Database errors never include exception details. */
+            message?: string;
         };
         LoginRequest: {
             /**
@@ -13755,7 +13970,17 @@ export interface components {
             ifrRetests: components["schemas"]["InternalFeedbackRetest"][];
             ifrPotentialDuplicates: components["schemas"]["InternalFeedbackSummary"][];
         };
+        AccountDeletionAction: {
+            /** @enum {string} */
+            adaOutcome: "completed" | "rejected";
+            adaNote: string;
+            /** Format: int64 */
+            adaActor: number | null;
+            /** Format: date-time */
+            adaCreatedAt: string;
+        };
         LegacyFeedback: {
+            lfdDeletionHistory?: components["schemas"]["AccountDeletionAction"][];
             /** Format: uuid */
             lfdId: string;
             lfdTitle: string;
@@ -13982,6 +14207,11 @@ export interface components {
             ifsCreatedAt: string;
             /** Format: date-time */
             ifsUpdatedAt: string;
+        };
+        AccountDeletionReceipt: {
+            adrRequestId: string;
+            /** Format: int64 */
+            adrCreatedBy: number;
         };
         FeedbackMultipart: {
             title: string;
@@ -15590,6 +15820,432 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listInvoices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDTO"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInvoiceReq"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInvoiceById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoiceId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listReceipts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDTO"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReceiptReq"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receiptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDTO"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing module denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referenced object not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored evidence or replay conflict; reload before retrying */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced data or invoice snapshot */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fixed internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     operationsWorkItems: {
         parameters: {
             query?: {
@@ -20305,9 +20961,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful response */
+            /** @description Database round trip succeeded. */
             200: {
                 headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Health"];
+                };
+            };
+            /** @description Initializing, unavailable database, or expired readiness deadline. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    "Retry-After"?: "5";
                     [name: string]: unknown;
                 };
                 content: {
@@ -25297,6 +25965,55 @@ export interface operations {
             };
         };
     };
+    requestAccountDeletion: {
+        parameters: {
+            query: {
+                accountId: number;
+            };
+            header: {
+                "X-Requested-With": "TDF-Account-Deletion";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["FeedbackMultipart"];
+            };
+        };
+        responses: {
+            /** @description Authenticated request accepted for manual fulfilment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionReceipt"];
+                };
+            };
+            /** @description Invalid request, catalog reference, marker or attachment */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated account mismatch or invalid request origin proof */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInternalFeedback: {
         parameters: {
             query?: {
@@ -25415,7 +26132,11 @@ export interface operations {
     };
     listLegacyFeedbackForAdmin: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filter privacy requests before pagination; returns up to 20 records including normalized ones. */
+                accountDeletionOnly?: boolean;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -25433,6 +26154,71 @@ export interface operations {
             };
             /** @description Administrator access required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolveAccountDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    adrOutcome: "completed" | "rejected";
+                    adrNote: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Audit recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionAction"];
+                };
+            };
+            /** @description Invalid outcome or missing note or unidentified completion */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Administrator required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deletion request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request already resolved */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

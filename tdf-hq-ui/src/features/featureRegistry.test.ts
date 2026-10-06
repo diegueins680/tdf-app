@@ -9,6 +9,17 @@ import {
 } from './featureRegistry';
 
 describe('featureRegistry', () => {
+  it('discovers account deletion in both languages and requires an authenticated owner', () => {
+    const feature = getFeatureByPath('/cuenta/eliminar');
+    expect(feature?.id).toBe('account.deletion');
+    expect(feature?.pinEligible).toBe(false);
+    expect(searchFeatures('delete my account').map(item => item.id)).toContain('account.deletion');
+    expect(searchFeatures('borrar mis datos').map(item => item.id)).toContain('account.deletion');
+    expect(evaluateFeatureAccess('account.deletion', { authenticated: false }, 'submit').state).not.toBe('allowed');
+    expect(evaluateFeatureAccess('account.deletion', { authenticated: true }, 'submit').state).toBe('allowed');
+    expect(feature?.mobilePresentation.destination).toBe('https://www.tdfrecords.net/cuenta/eliminar');
+  });
+
   it('maps video-source administration to the strict backend administrator boundary', () => {
     const feature = getFeatureByPath('/configuracion/fuentes-videos');
     expect(feature?.id).toBe('admin.video-sources');

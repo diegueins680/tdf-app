@@ -9,6 +9,9 @@ module TDF.API.Feedback
   ( FeedbackAPI
   , InternalFeedbackAPI
   , FeedbackPayload(..)
+  , AccountDeletionReceipt(..)
+  , AccountDeletionResolution(..)
+  , AccountDeletionActionDTO(..)
   , InternalFeedbackCreate(..)
   , InternalFeedbackUpdate(..)
   , InternalFeedbackDTO(..)
@@ -48,7 +51,10 @@ type FeedbackAPI =
   Header "Authorization" Text :>
     Header "Cookie" Text :>
       "feedback" :>
-        ( MultipartForm Tmp FeedbackPayload :> Post '[JSON] NoContent )
+        ( MultipartForm Tmp FeedbackPayload :> Post '[JSON] NoContent
+        :<|> "account-deletion" :> QueryParam' '[Required, Strict] "accountId" Int64
+               :> MultipartForm Tmp FeedbackPayload :> Post '[JSON] AccountDeletionReceipt
+        )
 
 type InternalFeedbackAPI =
        QueryParam "state" Text
@@ -58,7 +64,9 @@ type InternalFeedbackAPI =
          :> Get '[JSON] [InternalFeedbackSummaryDTO]
   :<|> "export.csv" :> QueryParam "state" Text :> QueryParam "module" Text :> Get '[PlainText] Text
   :<|> "export.json" :> QueryParam "state" Text :> QueryParam "module" Text :> Get '[JSON] [InternalFeedbackSummaryDTO]
-  :<|> "legacy" :> Get '[JSON] [LegacyFeedbackDTO]
+  :<|> "legacy" :> QueryParam "accountDeletionOnly" Bool :> QueryParam "offset" Int :> Get '[JSON] [LegacyFeedbackDTO]
+  :<|> "account-deletion" :> Capture "feedbackId" Text
+         :> ReqBody '[JSON] AccountDeletionResolution :> Post '[JSON] AccountDeletionActionDTO
   :<|> ReqBody '[JSON] InternalFeedbackCreate :> PostCreated '[JSON] InternalFeedbackDTO
   :<|> Capture "reportId" Text :>
          (    Get '[JSON] InternalFeedbackDTO
@@ -71,6 +79,29 @@ type InternalFeedbackAPI =
                 :> Get '[OctetStream] (Headers '[Header "Content-Disposition" Text] BL.ByteString)
          :<|> "retests" :> ReqBody '[JSON] InternalFeedbackRetestCreate :> PostCreated '[JSON] InternalFeedbackRetestDTO
          )
+
+data AccountDeletionReceipt = AccountDeletionReceipt
+  { adrRequestId :: Text
+  , adrCreatedBy :: Int64
+  } deriving (Show, Generic)
+instance ToJSON AccountDeletionReceipt
+instance FromJSON AccountDeletionReceipt
+
+data AccountDeletionResolution = AccountDeletionResolution
+  { adrOutcome :: Text
+  , adrNote :: Text
+  } deriving (Show, Generic)
+instance ToJSON AccountDeletionResolution
+instance FromJSON AccountDeletionResolution
+
+data AccountDeletionActionDTO = AccountDeletionActionDTO
+  { adaOutcome :: Text
+  , adaNote :: Text
+  , adaActor :: Maybe Int64
+  , adaCreatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON AccountDeletionActionDTO
+instance FromJSON AccountDeletionActionDTO
 
 data FeedbackPayload = FeedbackPayload
   { fpTitle        :: Text
@@ -328,6 +359,7 @@ data LegacyFeedbackDTO = LegacyFeedbackDTO
   , lfdCreatedBy     :: Maybe Int64
   , lfdHasAttachment :: Bool
   , lfdCreatedAt     :: UTCTime
+  , lfdDeletionHistory :: [AccountDeletionActionDTO]
   } deriving (Show, Generic)
 instance ToJSON LegacyFeedbackDTO
 instance FromJSON LegacyFeedbackDTO
