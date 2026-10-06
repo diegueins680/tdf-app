@@ -32,6 +32,7 @@ import {
 } from '../api/eventTickets';
 import type { DatafastCheckoutDTO } from '../api/types';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
+import TicketBankTransferPanel from '../components/payments/TicketBankTransferPanel';
 import TicketCredentialQR from '../components/TicketCredentialQR';
 import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -307,6 +308,48 @@ export default function PublicEventTicketsPage() {
     }
   };
 
+  const handleBankTransfer = async () => {
+    if (!checkout || !checkoutLookupToken) return;
+    setPaymentBusy(true);
+    setMessage(null);
+    try {
+      const response = await EventTickets.selectBankTransfer(
+        checkout.eventId,
+        checkout.orderId,
+        checkoutLookupToken,
+      );
+      trackFunnel('payment_initiated', { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+        provider: 'bank_transfer', privateScope: `order:${checkout.orderId}` });
+      setCheckout(response);
+    } catch {
+      setMessage(english
+        ? 'Bank transfer could not be selected. The order remains unpaid.'
+        : 'No pudimos seleccionar la transferencia bancaria. La orden sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  const handleBankTransferEvidence = async (reference: string) => {
+    if (!checkout || !checkoutLookupToken) return;
+    setPaymentBusy(true);
+    setMessage(null);
+    try {
+      setCheckout(await EventTickets.submitBankTransferEvidence(
+        checkout.eventId,
+        checkout.orderId,
+        reference,
+        checkoutLookupToken,
+      ));
+    } catch {
+      setMessage(english
+        ? 'We could not record your transfer reference. Nothing is shown as paid.'
+        : 'No pudimos registrar la referencia de tu transferencia. No mostramos nada como pagado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
   useEffect(() => {
     if (!datafastOpen || !datafastCheckout || typeof window === 'undefined') return;
     if (datafastFormRef.current) datafastFormRef.current.innerHTML = '';
@@ -473,6 +516,13 @@ export default function PublicEventTicketsPage() {
                             ? (english ? 'allowed' : 'permitidas')
                             : (english ? 'not allowed' : 'no permitidas')}
                         </Typography>
+                        {storefront.data.policy.bankTransferAvailableUntil && (
+                          <Typography variant="body2">
+                            {english
+                              ? `Bank transfer available until ${date(storefront.data.policy.bankTransferAvailableUntil)}; tickets are issued after the deposit is confirmed.`
+                              : `Transferencia bancaria disponible hasta el ${date(storefront.data.policy.bankTransferAvailableUntil)}; las entradas se emiten al confirmar el depósito.`}
+                          </Typography>
+                        )}
                         <Typography variant="caption" color="text.secondary">
                           {english ? 'Terms version' : 'Versión de términos'}: {storefront.data.policy.termsVersion}
                         </Typography>
@@ -521,7 +571,18 @@ export default function PublicEventTicketsPage() {
                     {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
                         {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                        {checkout.paymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
                     </Stack>}
+                    {!paid && checkout.bankTransfer && (
+                      <TicketBankTransferPanel
+                        transfer={checkout.bankTransfer}
+                        english={english}
+                        amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
+                        holdExpiresLabel={date(checkout.holdExpiresAt)}
+                        busy={paymentBusy}
+                        onSubmitReference={(reference) => void handleBankTransferEvidence(reference)}
+                      />
+                    )}
                     {checkoutLookupToken && (
                         <HostedProviderCheckout
                           checkout={{

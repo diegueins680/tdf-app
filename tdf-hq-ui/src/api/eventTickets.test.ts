@@ -51,6 +51,26 @@ describe('EventTickets public API contract', () => {
     );
   });
 
+  it('selects bank transfer and reports evidence only with the lookup token', async () => {
+    postMock.mockResolvedValue({ orderId: 11 });
+
+    await EventTickets.selectBankTransfer(4, 11, 'lookup-secret');
+    await EventTickets.submitBankTransferEvidence(4, 11, 'COMP-123', 'lookup-secret');
+
+    expect(postMock).toHaveBeenNthCalledWith(
+      1,
+      '/public/events/4/ticket-orders/11/bank-transfer',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+    expect(postMock).toHaveBeenNthCalledWith(
+      2,
+      '/public/events/4/ticket-orders/11/bank-transfer/evidence',
+      { customerReference: 'COMP-123' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+  });
+
   it('fails locally on invalid public identifiers', () => {
     expect(() => EventTickets.getStorefront(0)).toThrow('eventId');
     expect(() => EventTickets.getCheckout(4, -1, 'lookup')).toThrow('orderId');
