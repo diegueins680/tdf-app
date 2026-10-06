@@ -636,6 +636,16 @@
       "decision": "adopted for Linux rootful Docker; coordinated production fencing remains pending",
       "rationale": "Pin process, actual root and mount namespace while live, reject mounts covering uploads and require the same stopped instance before/after descriptor-based metadata capture. Avoid assuming GraphDriver paths or archive metadata completeness. Root host, kernel and Docker remain trusted; unsupported namespace/process layouts fail closed.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-COLD-RECOVERY-004",
+      "source": "https://www.postgresql.org/docs/17/app-initdb.html",
+      "title": "Explicit encoding for synthetic PostgreSQL17 recovery fixtures",
+      "recommendation": "With libc and no-locale, initdb defaults to SQL_ASCII; set encoding explicitly for Unicode migration/application fixtures.",
+      "applicability": "Synthetic cold-copy plus application CI gate; production cold copies retain their original encoding.",
+      "decision": "adopted",
+      "rationale": "ActualPG17 SQL_ASCII fixture failed a Unicode migration while a freshUTF8 fixture applied181migrations and passedreplay. Initialize only the synthetic source asUTF8 and verifyencoding againaftercoldrestore. Never runinitdb torepair a realrecoverycopy.",
+      "verifiedAt": "2026-10-06"
     }
   ]
 }

@@ -22,8 +22,17 @@ canary = p.load('combined_application', 'isolated-application-canary.py')
 
 
 def sql(target, query, database='tdf_hq'):
-    return r.execute(target.write_command('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', database]),
-                     input=query, timeout=180).strip()
+    # This fixture owns only newly initialized synthetic data. Never expose
+    # production-clone diagnostics through the shared recovery helper.
+    require(target.source == '0'*64 and database in ('postgres', 'tdf_hq'))
+    target.inspect()
+    result = subprocess.run(target.write_command('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', database]),
+                            input=query, text=True, capture_output=True, timeout=180)
+    require(len(result.stdout) <= 4*1024*1024 and len(result.stderr) <= 4*1024*1024)
+    if result.returncode != 0:
+        print('Synthetic migration diagnostic: '+result.stderr[-4096:], file=sys.stderr)
+    require(result.returncode == 0)
+    return result.stdout.strip()
 
 
 def main():
@@ -60,11 +69,12 @@ def main():
         seed.admit(json.loads(r.execute(r.DOCKER+['inspect', target]))[0])
         r.execute(r.DOCKER+['start', target])
         r.execute(r.DOCKER+['exec', target, 'env', '-i', *p.ENV, 'initdb',
-                           '-D', p.DATA, '--auth=trust', '--no-locale'], timeout=60)
+                           '-D', p.DATA, '--auth=trust', '--no-locale', '--encoding=UTF8'], timeout=60)
         r.execute(r.DOCKER+['exec', target, 'env', '-i', *p.ENV, 'pg_ctl', '-D', p.DATA,
                   '-l', '/tmp/postgres.log', '-o', '-c config_file='+p.CONFIG+'/postgresql.conf',
                   '-w', '-t', '30', 'start'])
         sql(seed, 'CREATE DATABASE tdf_hq;', 'postgres')
+        require(sql(seed, "SHOW server_encoding;") == 'UTF8')
         for name in ('production-schema-20260814.sql', 'catalog-production-source-fixture.sql'):
             sql(seed, (ROOT/'scripts/__tests__/fixtures'/name).read_text())
         system_id = sql(seed, 'SELECT system_identifier FROM pg_control_system();', 'postgres')
@@ -87,6 +97,7 @@ def main():
     def migrate_and_run(clone, cleanup_failure=False):
         nonlocal cleanup_injected
         clone.start()
+        require(sql(clone, "SHOW server_encoding;") == 'UTF8')
         sql(clone, batch)
         ledger_query = 'SELECT json_agg(row_to_json(t) ORDER BY migration_id)::text FROM tdf_schema_migration t;'
         first_ledger = sql(clone, ledger_query)

@@ -130,3 +130,12 @@ concurrent privileged mount/file replacement are environment assumptions.
 The PostgreSQL17 filesystem-backup and pg_controldata documentation govern this
 boundary; Docker stop's possible SIGKILL is why stopped-container status alone
 cannot qualify a cold copy. Sources and adoption decisions are in research.json.
+
+The combined synthetic fixture explicitly initializes UTF-8 and checks it again
+in the cold copy. The first packaged-image integration failed because no-locale
+with libc had selected SQL_ASCII and a Unicode migration was rejected. Separate
+actualPG17 synthetic reproductions confirmed that failure and passed all181
+migrations plus replay underUTF8. This fixture correction does not rewrite an
+applied migration or alter recovered production encoding. SQL diagnostics are
+bounded and emitted only by the new-synthetic-source test helper after target
+inspection; the shared production recovery helper continues to suppress them.

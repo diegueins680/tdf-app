@@ -6877,7 +6877,7 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
-    "scripts/test-physical-application-docker.py": "f13143b5c240d15db3baa1e03ac7ed45c369a72b6b425a5f7fb05586c6e44be5",
+    "scripts/test-physical-application-docker.py": "f0bb4c294c6dcfd0ea9a1664507b89ff1cc670a6915442a4b4b6f6e02a2da4c8",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
@@ -14846,7 +14846,7 @@
     {
       "id": "SURFACE-92c4bb8e89807943",
       "path": "scripts/test-physical-application-docker.py",
-      "sha256": "f13143b5c240d15db3baa1e03ac7ed45c369a72b6b425a5f7fb05586c6e44be5",
+      "sha256": "f0bb4c294c6dcfd0ea9a1664507b89ff1cc670a6915442a4b4b6f6e02a2da4c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

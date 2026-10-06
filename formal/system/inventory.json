@@ -4719,7 +4719,7 @@
     {
       "id": "SURFACE-92c4bb8e89807943",
       "path": "scripts/test-physical-application-docker.py",
-      "sha256": "f13143b5c240d15db3baa1e03ac7ed45c369a72b6b425a5f7fb05586c6e44be5",
+      "sha256": "f0bb4c294c6dcfd0ea9a1664507b89ff1cc670a6915442a4b4b6f6e02a2da4c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21914,7 +21914,7 @@
     },
     {
       "path": "formal/system/physical-recovery.md",
-      "sha256": "2781dc61dc684a16635a2959f74cd5039ac6eb28d6530387fecd8e8713992a99",
+      "sha256": "bb1064b7ec87227effff34a916b1673ff077459f8478dd998f3a3bd5b1f41443",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21970,7 +21970,7 @@
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "741e66a8773b3b3e226f298afeec30ba9af9ba229331a5452e600b5623aae600",
+      "sha256": "9c3e05af8d91231d921fca9e500b722cdcc8f1d76f95db921eddea3f9b238470",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
