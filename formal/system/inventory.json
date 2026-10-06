@@ -2887,13 +2887,13 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
+      "sha256": "9f39b97dcc5f96ac6db9a43eda43d7c91f5ed77de65b4f679a94201772fac544",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "f3f77a10e1b8aa74e555d9db534dc2c35b404bded3732abefe1cfc21c83d98ac",
+      "sha256": "09eec3742b073d43514688b8e9fb4562acab0144ea0dab0975625d7ddd6878b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22495,14 +22495,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "b6616e9a4f13afcbd96c4051d4d65cc5f65ac90166b3e283224315f932c0147e",
+      "sha256": "60a1e4137a6007b14731c51e0fc9f5923c65cf159355e12b7b3a173b84f3c36a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "cb5ae6a52cb03b4a4a5da244ef11b8fe1c69186e2641ddb3690aa8f8b15ac7ea",
+      "sha256": "b69a38287c6570ae1b56398efeb34426be26e4cdd35574919b30eba821ac40fe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

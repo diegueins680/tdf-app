@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "Known-advisory regression floors for reviewed dependency series only; not a complete vulnerability scan or reachability proof. New series require review. Removed dependencies need no exception.",
-  "reviewedOn": "2026-10-05",
+  "reviewedOn": "2026-10-06",
   "packages": {
     "brace-expansion": {
       "1": "1.1.21",
@@ -47,6 +47,12 @@
     },
     "undici": {
       "6": "6.28.1"
+    },
+    "source-map-js": {
+      "1": "1.2.2"
+    },
+    "compression": {
+      "1": "1.8.2"
     }
   },
   "remaining": [
@@ -62,8 +68,8 @@
     },
     {
       "package": "stream-json",
-      "advisory": "GHSA-528h-pc64-c93x",
-      "status": "Detox/Bunyamin development dependency; observed Detox uses JSONL Parser, affected filters not proven unreachable across all tooling."
+      "advisory": "GHSA-528h-pc64-c93x;GHSA-hqr4-qq8f-hg3x;GHSA-mjw6-4jj6-33hc",
+      "status": "Detox/Bunyamin development dependency uses 1.9.1; new JSONC/parser and Assembler advisories also apply. Do not force a 3.x API/module upgrade or claim complete unreachability from the observed JSONL call path."
     },
     {
       "package": "uuid",
@@ -84,6 +90,11 @@
       "package": "decode-uri-component",
       "advisory": "GHSA-vcc3-ghjq-m6fr",
       "status": "Runtime-reachable through React Navigation/Expo query-string. Patched0.5.0 is ESM; current query-string expects CommonJS callable. Compatibility repair remains open."
+    },
+    {
+      "package": "sprintf-js",
+      "advisory": "GHSA-hp3w-g68c-fv3c",
+      "status": "Fresh full audit reports unbounded precision denial of service through the Jest/Istanbul/js-yaml/argparse toolchain. No compatible patched release was established; no allowlist or forced Jest major update is admitted by this leaf-package repair."
     }
   ]
 }
