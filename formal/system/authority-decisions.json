@@ -508,6 +508,16 @@
       "conflict": "Contract creation acknowledges files in unmounted container storage while event finance retains their IDs. Sending returns sent without any delivery effect.",
       "authority": "User instruction to repair unsafe implementation rather than redefine requirements to match bugs; existing private persistent upload and honest completion contracts.",
       "resolution": "Publish new immutable documents under persistent private uploads, retain validated side-effect-free legacy fallback and reject conflicts. Require stopped retained-root legacy absence before capture or block for explicit preservation. Return503 after existing send validation; document three existing API operations and regenerate both clients. No provider activation or automatic deletion."
+    },
+    {
+      "id": "AUTHORITY-048",
+      "sources": [
+        "tdf-hq/src/TDF/Cron.hs",
+        "formal/system/outbound-worker-admission.md"
+      ],
+      "conflict": "Unconditional startup treats configured credentials and missing local success as permission to dispatch even though provider acceptance may precede local persistence.",
+      "authority": "User requirement to repair unsafe retries, preserve ambiguous outcomes and avoid experimental activation",
+      "resolution": "Require default-off explicit admission for social replies and course reminders while durable claims/reconciliation are repaired. Do not equate candidate flags with legacy rollback protection or change production configuration."
     }
   ]
 }

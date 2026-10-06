@@ -3325,7 +3325,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7288,6 +7288,80 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repair and executable controls implemented; final exact candidate, Linux/HTTP gates and deployed acceptance remain required."
+      }
+    },
+    {
+      "id": "NOTIF-WORKER-001",
+      "title": "Explicit outbound background worker admission",
+      "statement": "Social auto-replies and course payment reminders require separately validated explicit enablement; absence disables startup and queue/provider access.",
+      "domain": "NOTIF",
+      "authority": "inferred",
+      "source": "Audit of TDF.Cron dispatch ordering; formal/system/outbound-worker-admission.md",
+      "property": "not enabled implies no worker scheduled and no dispatch from its entrypoint",
+      "contract": "formal/system/outbound-worker-admission.md",
+      "actors": [
+        "Deployment operator",
+        "Social auto-reply worker",
+        "Course reminder worker"
+      ],
+      "preconditions": [
+        "Configuration loads before supervised worker admission."
+      ],
+      "inputs": [
+        "SOCIAL_AUTO_REPLY_ENABLED",
+        "COURSE_PAYMENT_REMINDER_ENABLED"
+      ],
+      "state": {
+        "initial": "unconfigured",
+        "states": [
+          "disabled",
+          "enabled",
+          "invalid"
+        ]
+      },
+      "allowedTransitions": [
+        "absent or false -> disabled",
+        "true -> enabled",
+        "malformed -> startup failure"
+      ],
+      "forbiddenTransitions": [
+        "absent configuration -> automatic dispatch",
+        "disabled -> fork worker",
+        "asynchronous cancellation -> routine job failure"
+      ],
+      "effects": [
+        "Log disabled or scheduled without customer content; schedule only explicitly enabled workers."
+      ],
+      "authorization": "Deployment configuration is trusted operator input; feature activation remains separately qualified.",
+      "privacy": "Admission logs contain no recipients, payloads or credentials.",
+      "concurrency": "Startup gates are process-local; do not fence already-running replicas or legacy images.",
+      "idempotency": "No provider idempotency claim. Existing enabled sends can have ambiguous external outcomes.",
+      "failure": "Malformed flags fail startup; asynchronous cancellation escapes job exception handlers.",
+      "recovery": "Keep both gates disabled during first upgrade. Legacy original-image recovery requires separately verified outbound restriction/reconciliation.",
+      "observability": "Content-free admission logs and exact source/test evidence.",
+      "implementation": [
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/config/default.env.example"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs"
+      ],
+      "formalModels": [],
+      "verification": "Configuration and actual worker entrypoint regressions; no provider or concurrency proof.",
+      "evidence": "Exact candidate backend tests required.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Source containment implemented; backend execution and deployed acceptance pending.",
+      "ambiguity": [
+        "Durable pre-dispatch claims and unknown-outcome reconciliation remain unimplemented.",
+        "Legacy image does not honor candidate gates; original recovery is not qualified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Admission containment only; replay repair, current tests and rollout remain outstanding."
       }
     }
   ]

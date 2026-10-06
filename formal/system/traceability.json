@@ -7290,6 +7290,80 @@
         "classification": "PARTIAL",
         "reason": "Repair and executable controls implemented; final exact candidate, Linux/HTTP gates and deployed acceptance remain required."
       }
+    },
+    {
+      "id": "NOTIF-WORKER-001",
+      "title": "Explicit outbound background worker admission",
+      "statement": "Social auto-replies and course payment reminders require separately validated explicit enablement; absence disables startup and queue/provider access.",
+      "domain": "NOTIF",
+      "authority": "inferred",
+      "source": "Audit of TDF.Cron dispatch ordering; formal/system/outbound-worker-admission.md",
+      "property": "not enabled implies no worker scheduled and no dispatch from its entrypoint",
+      "contract": "formal/system/outbound-worker-admission.md",
+      "actors": [
+        "Deployment operator",
+        "Social auto-reply worker",
+        "Course reminder worker"
+      ],
+      "preconditions": [
+        "Configuration loads before supervised worker admission."
+      ],
+      "inputs": [
+        "SOCIAL_AUTO_REPLY_ENABLED",
+        "COURSE_PAYMENT_REMINDER_ENABLED"
+      ],
+      "state": {
+        "initial": "unconfigured",
+        "states": [
+          "disabled",
+          "enabled",
+          "invalid"
+        ]
+      },
+      "allowedTransitions": [
+        "absent or false -> disabled",
+        "true -> enabled",
+        "malformed -> startup failure"
+      ],
+      "forbiddenTransitions": [
+        "absent configuration -> automatic dispatch",
+        "disabled -> fork worker",
+        "asynchronous cancellation -> routine job failure"
+      ],
+      "effects": [
+        "Log disabled or scheduled without customer content; schedule only explicitly enabled workers."
+      ],
+      "authorization": "Deployment configuration is trusted operator input; feature activation remains separately qualified.",
+      "privacy": "Admission logs contain no recipients, payloads or credentials.",
+      "concurrency": "Startup gates are process-local; do not fence already-running replicas or legacy images.",
+      "idempotency": "No provider idempotency claim. Existing enabled sends can have ambiguous external outcomes.",
+      "failure": "Malformed flags fail startup; asynchronous cancellation escapes job exception handlers.",
+      "recovery": "Keep both gates disabled during first upgrade. Legacy original-image recovery requires separately verified outbound restriction/reconciliation.",
+      "observability": "Content-free admission logs and exact source/test evidence.",
+      "implementation": [
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/config/default.env.example"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs"
+      ],
+      "formalModels": [],
+      "verification": "Configuration and actual worker entrypoint regressions; no provider or concurrency proof.",
+      "evidence": "Exact candidate backend tests required.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Source containment implemented; backend execution and deployed acceptance pending.",
+      "ambiguity": [
+        "Durable pre-dispatch claims and unknown-outcome reconciliation remain unimplemented.",
+        "Legacy image does not honor candidate gates; original recovery is not qualified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Admission containment only; replay repair, current tests and rollout remain outstanding."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7718,7 +7792,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
-    "tdf-hq/config/default.env.example": "5681d9b6ae87dd2bb3d6d3540675b10b39d0615de3380b45ef0f98a24a11f8f6",
+    "tdf-hq/config/default.env.example": "40fbd40c90fc03bb0e2c825640f8b1f472575d99a09ba6743f13e9da54a6c1cf",
     "tdf-hq/docs/openapi/api.yaml": "ef358401f0aa975e292b623bf65f135df8bf618aff2cb36bc92778ac43ad834e",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
@@ -7775,12 +7849,12 @@
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
-    "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+    "tdf-hq/src/TDF/Config.hs": "6e434efe0dbb5ff075ca3b4614afb08f5896b156e1f701d1638c1ee02cdae950",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "b73931ae26da32730b7b771b2be364ade88df7b2ef7896d1b37d01b74c66e7fb",
     "tdf-hq/src/TDF/Contracts/Storage.hs": "cee15ae8a004784bb59a29e05174f378701c7a0470de454fefb097dda05a8692",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
-    "tdf-hq/src/TDF/Cron.hs": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
+    "tdf-hq/src/TDF/Cron.hs": "fb3095239fbebc536123ee079617151b736af94c92d9feaa687a603d40d65054",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
@@ -7829,7 +7903,7 @@
     "tdf-hq/tdf-hq.cabal": "dacbaa3d9dd926d4d9860b05cf24479bbec7b335f15b08530ee22ebd6430a3d4",
     "tdf-hq/test/AtomicPublicationMain.hs": "8b996b343e701dc9b9bdd1c357460755edcc79f6db69bd61e7883f6353b01bfa",
     "tdf-hq/test/ContractStorageMain.hs": "41b4e77398fb9409d8bd345987d3500d30c3e71098e745ceffc2730ee8fadf79",
-    "tdf-hq/test/Spec.hs": "092640954125eb5c74aee6ebba1fa2c015c9336accf3bb194ecd3ae558ea06d4",
+    "tdf-hq/test/Spec.hs": "13c3b0b0a3e3fd446e3c6911f22d4bf2466a85db8bdb7b6c1c383d6705d17340",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/AtomicPublicationSpec.hs": "0b9ed0f1d318f7f042767d28ce240a3b8ce1c05f9d50d792dcb11f7a1927a844",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -7846,6 +7920,7 @@
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "f6961640929b6fa59152752a0fc836a5e4e6fc4c7cca02d8425b87830d1aa3f4",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs": "dbe88bfa5007e481cdefacdb1d9d282020369fbe7f03dce439563de5fe199623",
@@ -7854,7 +7929,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
-    "tdf-hq/test/TDF/ServerSpec.hs": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
+    "tdf-hq/test/TDF/ServerSpec.hs": "4b0da029e03fbf86ebf78458ccf1239d7fd7ebc56fe264d15234d142725912fa",
     "tdf-hq/test/TDF/ShutdownSpec.hs": "6994abf744401b992eb891d4faed6b9c860045fd9f5e9ac62ca3d32fba54f6b7",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
@@ -8350,6 +8425,10 @@
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/LoginPage.tsx": [
@@ -8527,6 +8606,10 @@
       },
       {
         "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
         "relationship": "implementation"
       }
     ],
@@ -9283,6 +9366,10 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
         "relationship": "tests"
       }
     ],
@@ -10996,6 +11083,10 @@
       {
         "requirement": "NOTIF-TICKET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql": [
@@ -12708,6 +12799,10 @@
       {
         "requirement": "OPS-SHUTDOWN-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/ShutdownSpec.hs": [
@@ -12825,6 +12920,12 @@
     "scripts/verify-contract-storage.py": [
       {
         "requirement": "DATA-CONTRACT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": [
+      {
+        "requirement": "NOTIF-WORKER-001",
         "relationship": "tests"
       }
     ]
@@ -27418,7 +27519,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+      "sha256": "6e434efe0dbb5ff075ca3b4614afb08f5896b156e1f701d1638c1ee02cdae950",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27431,6 +27532,10 @@
         },
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -27504,11 +27609,15 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
+      "sha256": "fb3095239fbebc536123ee079617151b736af94c92d9feaa687a603d40d65054",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "OPS-SHUTDOWN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -28892,7 +29001,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "092640954125eb5c74aee6ebba1fa2c015c9336accf3bb194ecd3ae558ea06d4",
+      "sha256": "13c3b0b0a3e3fd446e3c6911f22d4bf2466a85db8bdb7b6c1c383d6705d17340",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28929,6 +29038,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "tests"
         }
       ]
@@ -29216,9 +29329,14 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "7d90677791b58728237c0fc3f56484461ee920133b0f97ce452c2edd2a6a23e8",
+      "sha256": "f6961640929b6fa59152752a0fc836a5e4e6fc4c7cca02d8425b87830d1aa3f4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bb5ffc20a8caf0f6",
@@ -29415,7 +29533,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
+      "sha256": "4b0da029e03fbf86ebf78458ccf1239d7fd7ebc56fe264d15234d142725912fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29436,6 +29554,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "tests"
         }
       ]
@@ -34446,7 +34568,6 @@
     "SURFACE-e284c62e82e2c450",
     "SURFACE-57276774edbf18b9",
     "SURFACE-2b52b5009371c78c",
-    "SURFACE-6a2ebecd249230c2",
     "SURFACE-bb5ffc20a8caf0f6",
     "SURFACE-b7c5b68652826d3d",
     "SURFACE-14c41dc429bf98d1",
@@ -34876,7 +34997,8 @@
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
     "MEDIA-RIDER-001",
-    "DATA-CONTRACT-001"
+    "DATA-CONTRACT-001",
+    "NOTIF-WORKER-001"
   ],
   "stateMachines": [
     {
@@ -35998,7 +36120,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fd94975b85c116cafc16a068206e2c1b6de182602b0c3e5e9121ae1833ca436b",
+      "sourceSha256": "8528934f15caaca943024bcdd20b073e827dafe89c56e0d37da4a74dc14b57b2",
       "definition": {
         "states": [
           "absent",
@@ -57970,7 +58092,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 91,
+    "PARTIAL": 92,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
