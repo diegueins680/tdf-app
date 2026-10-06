@@ -3549,6 +3549,56 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
         status `shouldReturn` Just "processing"
         runSqlPool (rawExecute "UPDATE revenue_feature_flag SET enabled=false WHERE flag_key='checkout.paypal.refund_reconciliation' AND environment='sandbox'" []) pool
 
+  forM_ [False,True] $ \wrongCurrency ->
+    it ("retains an accepted refund identity for exact readback after mismatch, currency=" <> show wrongCurrency) $ \pool ->
+      withCompletionEnvironment $ bracket (lookupEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED")
+        (maybe (unsetEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED") (setEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED")) $ \_ -> do
+        setEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED" "true"
+        runSqlPool (do
+          rawExecute "INSERT INTO revenue_feature_flag(flag_key,enabled,environment,reason) VALUES ('checkout.paypal.refund_reconciliation',true,'sandbox','synthetic fixture') ON CONFLICT(flag_key,environment) DO UPDATE SET enabled=true" []
+          rawExecute "DELETE FROM commerce_provider_query_budget WHERE provider='paypal' AND environment='sandbox'" []) pool
+        (payment,eventKey,orderKey,_) <- ticketAllocationFixture pool
+        request <- runSqlPool (TicketRefund.requestTicketRefundForOrder "1" eventKey orderKey (Just 4172) Nothing (Checkout.vpOccurredAt payment)) pool
+        Just ref <- runSqlPool (TicketRefund.loadTicketRefundReference (entityKey request)) pool
+        let refundId = "R-" <> Refund.refundReferenceId ref
+            representation :: Text -> Text -> BS.ByteString
+            representation amount currency = BL.toStrict $ A.encode $ A.object
+              ["id" A..= refundId,"status" A..= ("COMPLETED" :: Text)
+              ,"amount" A..= A.object ["value" A..= amount,"currency_code" A..= currency]
+              ,"links" A..=
+                [A.object ["rel" A..= ("up" :: Text),"method" A..= ("GET" :: Text)
+                  ,"href" A..= ("https://api.sandbox.paypal.com/v2/payments/captures/" <> Checkout.vpProviderResource payment)]
+                ,A.object ["rel" A..= ("self" :: Text),"method" A..= ("GET" :: Text)
+                  ,"href" A..= ("https://api.sandbox.paypal.com/v2/payments/refunds/" <> refundId)]]]
+            mismatch = representation (if wrongCurrency then "41.72" else "41.73")
+              (if wrongCurrency then "EUR" else "USD")
+            approve manager = runHandler (runReaderT (TicketRefundAPI.approvePaypalTicketRefundWithManager
+              manager (AuthedUser (toSqlKey 2) [Admin] mempty Nothing Nothing) eventKey (entityKey request))
+              (Env pool (error "Transport fixture must not load unrelated configuration")))
+            load = runSqlPool (Refund.loadRefund ref) pool >>= maybe (fail "Missing refund") pure
+        reader <- chunkReader [jsonWire oauthFixture,jsonWire mismatch]
+        withProviderWire reader $ \manager _ _ _ ->
+          approve manager >>= ((`shouldBe` 502) . either errHTTPCode (const 200))
+        recorded <- load
+        Refund.rrProviderRefundId recorded `shouldBe` Just refundId
+        Refund.rrStatus recorded `shouldBe` "processing"
+        forM_ [False,True] $ \exact -> do
+          queryReader <- chunkReader [jsonWire oauthFixture,jsonWire
+            (if exact then representation "41.72" "USD" else mismatch)]
+          withProviderWire queryReader $ \manager _ writes _ -> do
+            approve manager >>= ((`shouldBe` (if exact then 200 else 503)) . either errHTTPCode (const 200))
+            sent <- writes
+            sent `shouldSatisfy` BS.isInfixOf ("GET /v2/payments/refunds/" <> TE.encodeUtf8 refundId <> " ")
+            sent `shouldSatisfy` (not . BS.isInfixOf "/refund ")
+          afterQuery <- load
+          Refund.rrStatus afterQuery `shouldBe` (if exact then "succeeded" else "processing")
+        withProviderWire (fail "Completed refund replay must not contact the provider") $ \manager connections _ _ -> do
+          approve manager >>= ((`shouldBe` 200) . either errHTTPCode (const 200))
+          connections `shouldReturn` 0
+        runSqlPool (rawSql "SELECT count(*) FROM commerce_receipt WHERE refund_id=?::uuid AND kind='credit_note'"
+          [PersistText (Refund.refundReferenceId ref)]) pool `shouldReturn` [Single (1 :: Int64)]
+        runSqlPool (rawExecute "UPDATE revenue_feature_flag SET enabled=false WHERE flag_key='checkout.paypal.refund_reconciliation' AND environment='sandbox'" []) pool
+
   it "binds organizer requests atomically, makes double clicks idempotent, and permits successive partial refunds" $ \pool -> do
     (payment,eventKey,orderKey,_) <- ticketAllocationFixture pool
     let now = Checkout.vpOccurredAt payment

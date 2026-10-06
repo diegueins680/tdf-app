@@ -110,3 +110,8 @@ exercise the real handler and PostgreSQL with an in-memory HTTP connection, not
 an official provider or TLS handshake. Whole-ticket partial refunds select a
 matching subset of the two stable cent allocations rather than a ticket-ID prefix;
 integer count enumeration is bounded by the existing maximum of 100 tickets.
+
+An accepted refund response persists its validated provider refund identifier
+before monetary mismatch handling. Mismatches keep money/tickets reserved; an
+authenticated GET must bind the same refund, capture, environment and exact
+amount/currency before completion. Later approvals cannot submit another POST.

@@ -12835,7 +12835,7 @@
     {
       "id": "SURFACE-2531a758cf6e10bc",
       "path": "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-      "sha256": "26f211a5e23875b0139d8baa68e13cf6ede346275d51d181af978b6d54f6b363",
+      "sha256": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13231,7 +13231,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "5c0f3a7a0331407ade60420d7aff00aa3ff8e93071d18832e477723f37552113",
+      "sha256": "9b7404e93b54fb7249406cd1a0aaa67c6ed022386b8939558546357fd46a67b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22243,7 +22243,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "22884db47e9e4f491946040b2bea33a4ba5821bd87369f4366cb76253c8d4887",
+      "sha256": "b0d15bb672777c7b90e99307d77d3cdba8eb3155880ab0ede3eeff76d7a90b5c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -22306,7 +22306,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "3bcb93cd44c47d8f64e16e0942f3c937d4f40b054ad1c4a296f3abec534d6eea",
+      "sha256": "676890e58016b4c5eed72d9356062b146b837ee913a5b7dff07241fd7cfbb709",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

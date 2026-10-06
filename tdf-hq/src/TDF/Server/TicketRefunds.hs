@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | PayPal execution behind the existing organizer refund endpoints. A durable
--- canonical claim precedes HTTP; retries can only query the bound provider refund.
+-- canonical claim precedes the refund POST; retries only query a bound refund.
 module TDF.Server.TicketRefunds
   (approvePaypalTicketRefund, approvePaypalTicketRefundWithManager) where
 
@@ -87,11 +87,13 @@ approvePaypalTicketRefundWithManager manager user eventKey requestKey = do
         `catchError` (\failure -> do
           transaction (R.recordRefundFailure ref "ticket_refund_transport_unknown" now)
           throwError failure)
+      -- Preserve the accepted provider identity even if monetary evidence differs.
+      -- Only an exact authenticated readback may complete its reserved tickets.
+      transaction $ either (fail . T.unpack) pure =<< R.recordRefundPending ref (proRefundId outcome) now
       unless (proCurrency outcome == R.rrCurrency record &&
         proAmount outcome == formatMinorUnitsDecimal (R.rrCurrency record) (fromIntegral (R.rrAmountMinor record))) $ do
         transaction (R.recordRefundFailure ref "ticket_refund_response_mismatch" now)
         throwError err502 { errBody="Refund outcome requires reconciliation; funds remain reserved" }
-      transaction $ either (fail . T.unpack) pure =<< R.recordRefundPending ref (proRefundId outcome) now
     current <- transaction $ R.loadRefund ref >>= maybe (fail "Refund missing") pure
     when (R.rrStatus current == "processing") $ case R.rrProviderRefundId current of
       Nothing -> pure () -- Unknown POST outcome is never permission for another POST.
