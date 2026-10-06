@@ -1,0 +1,125 @@
+{
+  "observedAt": "2026-10-05T23:42:31.842327+00:00",
+  "environment": "official PayPal sandbox + isolated canonical TDF API/PostgreSQL",
+  "backendRevision": "85cd013d91867eb657330a14ff1ef15f069e2922",
+  "frontendPatch": "PublicEventTicketsPage: reactive PayPal portal container; tested through the first modal opening",
+  "productionActivated": false,
+  "commercialEventId": 141,
+  "fixtureIsPublishedProductionEvent": false,
+  "purchase": {
+    "browserViewport": {
+      "width": 390,
+      "height": 844
+    },
+    "currency": "USD",
+    "quantity": 2,
+    "unitPriceMinor": 2000,
+    "totalMinor": 4000,
+    "providerStatus": "COMPLETED",
+    "tdfPaymentStatus": "paid",
+    "tdfFulfillmentStatus": "issued",
+    "taxBps": 1500,
+    "taxIsSyntheticScenarioOnly": true,
+    "horizontalOverflow": false
+  },
+  "qr": {
+    "results": [
+      {
+        "index": 0,
+        "decoded": true,
+        "matchesIssuedCredential": true,
+        "width": 280,
+        "height": 280
+      },
+      {
+        "index": 1,
+        "decoded": true,
+        "matchesIssuedCredential": true,
+        "width": 280,
+        "height": 280
+      }
+    ]
+  },
+  "checkIn": {
+    "unauthenticatedCheckIn": 401,
+    "invalidCode": 400,
+    "concurrentCheckInStatuses": [
+      200,
+      409,
+      409,
+      409,
+      409,
+      409,
+      409,
+      409
+    ],
+    "replayCheckIn": 409
+  },
+  "captureReplay": {
+    "duplicateCaptureResponses": [
+      {
+        "status": 200,
+        "paymentStatus": "paid",
+        "ticketCount": 2
+      },
+      {
+        "status": 200,
+        "paymentStatus": "paid",
+        "ticketCount": 2
+      },
+      {
+        "status": 200,
+        "paymentStatus": "paid",
+        "ticketCount": 2
+      }
+    ]
+  },
+  "webhooks": [
+    {
+      "eventType": "PAYMENT.CAPTURE.REFUNDED",
+      "signatureStatus": "SUCCESS",
+      "backendStatus": 200
+    },
+    {
+      "eventType": "PAYMENT.CAPTURE.COMPLETED",
+      "signatureStatus": "SUCCESS",
+      "backendStatus": 200,
+      "duplicateDeliveryStatuses": [
+        200,
+        200
+      ]
+    }
+  ],
+  "database": {
+    "ticketCount": 2,
+    "distinctCodes": 2,
+    "admissionAudits": 1,
+    "confirmationQueueRows": 1,
+    "confirmationState": "accepted",
+    "captureJournals": 1,
+    "captureLedgerBalance": 0,
+    "externalRefundExceptions": 1
+  },
+  "confirmation": {
+    "queueState": "accepted",
+    "localSmtpMessages": 1,
+    "bothIssuedCodesPresent": true,
+    "eventLinkPresent": true,
+    "externalMailboxDeliveryVerified": false
+  },
+  "refund": {
+    "providerStatus": "COMPLETED",
+    "currency": "USD",
+    "amountMinor": 4000,
+    "unusedTicketAdmissionHttpStatus": 409,
+    "issuedThroughTdfRefundApi": false,
+    "canonicalRefundLedgerPosted": false
+  },
+  "limitations": [
+    "Synthetic event data and tax scenario do not establish production event/fiscal correctness.",
+    "External PayPal refund suspended admission but did not book the TDF refund, issue a credit note or select/refund individual tickets.",
+    "The later reviewed-exception status hardening is covered separately by the real PostgreSQL admission suite; this HTTP runtime predates that stricter predicate.",
+    "Web viewport was tested; native device binaries and external email delivery were not tested here.",
+    "Production activation still requires complete refund lifecycle, fiscal treatment, protected integration and deployment."
+  ]
+}

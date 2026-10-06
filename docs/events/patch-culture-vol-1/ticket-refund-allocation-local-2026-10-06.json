@@ -1,0 +1,53 @@
+{
+  "environment": "isolated local PostgreSQL 16; synthetic payments",
+  "productionWritten": false,
+  "providerCalled": false,
+  "checkedOn": "2026-10-06",
+  "sourceSha256": {
+    "tdf-hq/src/TDF/Ticketing/Refund.hs": "667fcb0ff956ebf60ca37b4fc73454278ff100afc68260a0d439b19a891b6c73",
+    "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql": "663584fe36237bbc6445961b2820165d50be8acd6502d820b60a1c5c7cad08f0",
+    "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql": "122da89f6fba38f427f2597a7e571c511f3742c1baf9059bebf1fda210e3f184",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "eb38c2a7b1fb65fbb3462d87e58c09441a5146cc7efe0f2d5ccd21df65b2f310",
+    "scripts/__tests__/ticket-admission-model.test.mjs": "1ead83c5f84560ccf0e9428fafc0ace7eb5b7a8c374af20933a786b343561f56"
+  },
+  "validation": {
+    "initialWholeProviderSuite": {
+      "examples": 360,
+      "failures": 0,
+      "scope": "Before final legacy-total guard and three additional concurrency/drift cases"
+    },
+    "finalTicketTransactionSuite": {
+      "examples": 12,
+      "failures": 0
+    },
+    "wholeTicketAllocationProperties": {
+      "cases": 1000,
+      "failures": 0
+    },
+    "finiteAdmissionAndRefundModels": {
+      "tests": 4,
+      "failures": 0,
+      "refundNegativeControls": 3,
+      "implementationRefinementClaimed": false
+    },
+    "emptyMigrationApplyReplayRollbackReapply": true,
+    "populatedRollbackRejected": true,
+    "repeatApplyRetainedAllocationCount": 13,
+    "repositoryQuality": "passed on combined source 27093e636809540fb12192ab02430c6cbed5f882",
+    "finalCombinedSuite": {
+      "examples": 365,
+      "failures": 0,
+      "freshDatabase": true,
+      "scope": "Actual PostgreSQL financial, per-ticket allocation, admission races and out-of-order callback processing; arithmetic and simulated HTTP transport tests"
+    },
+    "canonicalProviderQueryPopulatedRollbackRejected": true
+  },
+  "limitations": [
+    "Internal refund projection only; organizer HTTP route/provider execution not connected",
+    "Reduced financial/ticket fixture schema, not a full production-schema rehearsal",
+    "No official-provider E2E claim for this new projection",
+    "Native/mobile refund UI and customer delivery not verified",
+    "No production activation"
+  ],
+  "sourceCommit": "27093e636809540fb12192ab02430c6cbed5f882"
+}

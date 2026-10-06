@@ -6,3 +6,8 @@ CREATE TABLE event_ticket (id BIGSERIAL PRIMARY KEY,event_id INTEGER NOT NULL,ti
 CREATE TABLE ticket_transfer (id BIGSERIAL PRIMARY KEY,ticket_id BIGINT NOT NULL REFERENCES event_ticket(id),from_party_id VARCHAR NULL,to_party_id VARCHAR NULL,to_email VARCHAR NULL,to_name VARCHAR NULL,status VARCHAR NOT NULL DEFAULT 'pending',transfer_code VARCHAR NOT NULL UNIQUE,message VARCHAR NULL,expires_at TIMESTAMPTZ NULL,accepted_at TIMESTAMPTZ NULL,created_at TIMESTAMPTZ NOT NULL,updated_at TIMESTAMPTZ NOT NULL);
 CREATE TABLE event_ticket_checkout_policy (id UUID PRIMARY KEY,event_id BIGINT NOT NULL,approval_status TEXT NOT NULL DEFAULT 'draft',transfer_allowed BOOLEAN NOT NULL DEFAULT TRUE);
 CREATE TABLE event_ticket_checkout_runtime (order_id BIGINT PRIMARY KEY,policy_id UUID NOT NULL REFERENCES event_ticket_checkout_policy(id),event_id BIGINT NOT NULL,payment_status TEXT NOT NULL);
+
+ALTER TABLE event_ticket_checkout_runtime ADD COLUMN checkout_id UUID;
+CREATE TABLE commerce_payment_attempt (id UUID PRIMARY KEY,checkout_id UUID NOT NULL);
+CREATE TABLE commerce_provider_binding (payment_attempt_id UUID NOT NULL,provider TEXT NOT NULL,environment TEXT NOT NULL,merchant_account_ref TEXT NOT NULL,provider_resource_id TEXT NOT NULL,resource_type TEXT NOT NULL);
+CREATE TABLE commerce_reconciliation_exception (provider TEXT NOT NULL,environment TEXT NOT NULL,merchant_account_ref TEXT NOT NULL,provider_reference TEXT NOT NULL,internal_reference TEXT NOT NULL,exception_type TEXT NOT NULL,status TEXT NOT NULL);

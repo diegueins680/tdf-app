@@ -3,6 +3,7 @@ export type RefundStatusColor = 'default' | 'warning' | 'success' | 'error';
 const REFUND_STATUS_COLORS: Readonly<Record<string, RefundStatusColor>> = {
   approved: 'success',
   pending: 'warning',
+  processing: 'warning',
   processed: 'success',
   rejected: 'error',
 };

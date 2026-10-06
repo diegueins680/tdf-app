@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
@@ -22,6 +23,7 @@ module TDF.Server.ServiceStorefront
   , validateServiceFulfillmentTransition
   , ServicePaypalCaptureOutcome(..)
   , parsePaypalCaptureOutcome
+  , parsePaypalBoundCaptureOutcome
   , validatePaypalSuccessfulCapture
   , loadPaypalEnvForService
   , createPaypalOrderRemoteForService
@@ -35,6 +37,7 @@ module TDF.Server.ServiceStorefront
   , BoundPaypalCapture(..)
   , parsePaypalWebhookEnvelope
   , parsePaypalWebhookCapture
+  , parsePaypalExternalCaptureChange
   , paypalWebhookResourceId
   , validatePaypalWebhookHeaders
   , validatePaypalWebhookCaptureBinding
@@ -72,7 +75,7 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, addUTCTime, defaultTimeLocale, formatTime, getCurrentTime)
 import           Data.UUID (UUID, fromText, toText)
 import           Data.UUID.V4 (nextRandom)
-import           Database.Persist (PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
+import           Database.Persist (toPersistValue, PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import           Network.HTTP.Client (Request(..), RequestBody(..), Manager)
 import           Servant
@@ -83,6 +86,7 @@ import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceS
 import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
+import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
@@ -97,6 +101,11 @@ import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO(..))
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
+
+import TDF.Server.ProviderTransport
+  ( PaypalRefundOutcome(..), parsePaypalRefundOutcome, loadPaypalEnvForService
+  , loadRequiredSafeEnv, providerRequest, providerResponse, paypalAccessTokenForService
+  , issuePaypalRefundRemote, isProviderReference )
 
 type AppM = ReaderT Env Handler
 
@@ -994,31 +1003,77 @@ processPaypalWebhookEventIO Env{envPool = pool} environment merchantRef envelope
           Right (outcome, _mConfirmation) -> pure outcome
 
     processExternalCaptureChange exceptionType =
-      case parsePaypalWebhookCapture envelope of
-        Left _ -> do
-          result <- tryAny $ flip runSqlPool pool $
-            Checkout.recordReconciliationException
-              Checkout.ProviderPayPal environment merchantRef exceptionType
-              ("provider-event:" <> pweEventId envelope)
-              (fromMaybe (pweEventId envelope) (paypalWebhookResourceId envelope))
-              0 Nothing "USD" now
-          pure $ case result of
-            Left _ -> PaypalEventRetry "Malformed PayPal refund or reversal event could not be recorded"
-            Right () -> PaypalEventProcessed Nothing Nothing Nothing
-        Right capture -> do
+      case parsePaypalExternalCaptureChange environment envelope of
+        Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
+        Right (captureId, actualAmount, currency) -> do
           result <- tryAny $ flip runSqlPool pool $ do
-            mBound <- loadBoundPaypalCapture environment merchantRef (pwcCaptureId capture)
+            mBound <- loadBoundPaypalCapture environment merchantRef captureId
             case mBound of
-              Nothing -> pure PaypalEventIgnored
-              Just bound -> do
-                let actualAmount = fromIntegral <$> either (const Nothing) Just
-                      (parseDatafastCents (pwcAmount capture))
-                Checkout.recordReconciliationException
-                  Checkout.ProviderPayPal environment merchantRef exceptionType
-                  (bpcDomainOrderId bound) (pwcCaptureId capture)
-                  (bpcExpectedAmount bound) actualAmount (bpcCurrency bound) now
-                pure (PaypalEventProcessed
-                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+              -- Retry exhaustion must not discard the admission fence. Persist
+              -- verified capture-scoped evidence before requesting another retry;
+              -- future binding/admission will join it without another webhook.
+              Nothing -> do
+                Checkout.recordUnmatchedCaptureException Checkout.ProviderPayPal
+                  environment merchantRef exceptionType captureId actualAmount currency now
+                pure (PaypalEventRetry "PayPal capture binding is not available yet")
+              Just bound
+                | currency /= bpcCurrency bound || actualAmount > bpcExpectedAmount bound ->
+                    pure (PaypalEventPermanentFailure
+                      "PayPal external change does not match the bound capture"
+                      (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+                | otherwise -> do
+                    -- Serialize the admission fence with scanning. Do not turn an
+                    -- unallocated external refund into an invented ticket refund.
+                    when (bpcDomainType bound == "event_ticket_order") $ do
+                      lockedEvents <- (rawSql
+                        "SELECT event.id FROM social_event event JOIN event_ticket_order orders\
+                        \ ON orders.event_id=event.id WHERE orders.id::text=? FOR UPDATE OF event"
+                        [PersistText (bpcDomainOrderId bound)] :: SqlPersistT IO [Single Int64])
+                      lockedOrders <- (rawSql
+                        "SELECT id FROM event_ticket_order WHERE id::text=? FOR UPDATE"
+                        [PersistText (bpcDomainOrderId bound)] :: SqlPersistT IO [Single Int64])
+                      unless (length lockedEvents == 1 && length lockedOrders == 1) $
+                        fail "External ticket refund is missing its bound order"
+                    known <- if bpcDomainType bound == "event_ticket_order" &&
+                        pweEventType envelope == "PAYMENT.CAPTURE.REFUNDED" then do
+                      let refundId = paypalWebhookResourceId envelope
+                          customId = case pweResource envelope of
+                            Object fields -> lookupObjectText "custom_id" fields >>= (fmap toText . fromText)
+                            _ -> Nothing
+                      refs <- rawSql
+                        "SELECT refund.id::text FROM commerce_refund refund\
+                        \ WHERE refund.checkout_id=?::uuid AND refund.payment_attempt_id=?::uuid\
+                        \ AND refund.provider='paypal' AND refund.environment=? AND refund.merchant_account_ref=?\
+                        \ AND refund.amount_minor=? AND refund.currency=? AND refund.status IN ('processing','succeeded')\
+                        \ AND refund.approved_by>0 AND refund.approved_by<>refund.requested_by\
+                        \ AND (refund.provider_refund_id=? OR (refund.provider_refund_id IS NULL AND refund.id::text=?))\
+                        \ AND (?::text IS NULL OR refund.id::text=?)\
+                        \ AND EXISTS (SELECT 1 FROM event_ticket_refund_allocation allocation WHERE allocation.refund_id=refund.id)"
+                        [PersistText (bpcCheckoutId bound),PersistText (bpcAttemptId bound),
+                         PersistText (Checkout.checkoutEnvironmentText environment),PersistText merchantRef,
+                         PersistInt64 actualAmount,PersistText currency,toPersistValue refundId,toPersistValue customId,
+                         toPersistValue customId,toPersistValue customId]
+                      case (refs,refundId) of
+                        ([Single ref],Just providerId) -> do
+                          _ <- TicketRefund.completeTicketRefund Refund.VerifiedRefund
+                            { Refund.vrRefund=Refund.RefundReference ref,Refund.vrProviderRefund=providerId
+                            , Refund.vrAmountMinor=actualAmount,Refund.vrCurrency=currency
+                            , Refund.vrOccurredAt=pweCreatedAt envelope
+                            , Refund.vrCorrelationId="paypal-ticket-refund:" <> pweEventId envelope }
+                          pure (Just ref)
+                        _ -> pure Nothing
+                    else pure Nothing
+                    case known of
+                      Just ref -> pure (PaypalEventProcessed
+                        (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) (Just ref))
+                      Nothing -> do
+                        Checkout.recordReconciliationException
+                          Checkout.ProviderPayPal environment merchantRef exceptionType
+                          (bpcDomainOrderId bound) captureId
+                          (bpcExpectedAmount bound) (Just actualAmount) currency now
+                        pure (PaypalEventProcessed
+                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
+
           pure $ case result of
             Left _ -> PaypalEventRetry "PayPal refund or reversal event database processing failed"
             Right outcome -> outcome
@@ -2418,18 +2473,12 @@ data PaypalWebhookCapture = PaypalWebhookCapture
   , pwcPaypalOrderId :: Text
   } deriving (Eq, Show)
 
-data PaypalRefundOutcome = PaypalRefundOutcome
-  { proRefundId :: Text
-  , proStatus   :: Text
-  , proAmount   :: Text
-  , proCurrency :: Text
-  } deriving (Eq, Show)
-
 data PaypalEventProcessResult
   = PaypalEventProcessed (Maybe Text) (Maybe Text) (Maybe Text)
   | PaypalEventIgnored
   | PaypalEventPermanentFailure Text (Maybe Text) (Maybe Text) (Maybe Text)
   | PaypalEventRetry Text
+  deriving (Eq, Show)
 
 data BoundPaypalCapture = BoundPaypalCapture
   { bpcCheckoutId     :: Text
@@ -2539,23 +2588,13 @@ parsePaypalWebhookCapture PaypalWebhookEnvelope{pweResource = Object resource} =
     }
 parsePaypalWebhookCapture _ = Left "PayPal webhook capture resource must be an object"
 
-parsePaypalRefundOutcome :: Value -> Either Text PaypalRefundOutcome
-parsePaypalRefundOutcome (Object obj) = do
-  refundId <- requiredObjectText "id" obj
-  status <- requiredObjectText "status" obj
-  amountObject <- maybe (Left "PayPal refund response omitted amount") Right
-    (lookupObject "amount" obj)
-  amount <- requiredObjectText "value" amountObject
-  currency <- requiredObjectText "currency_code" amountObject
-  unless (isProviderReference refundId) $
-    Left "PayPal refund response contains an invalid refund ID"
-  pure PaypalRefundOutcome
-    { proRefundId = refundId
-    , proStatus = T.toUpper (T.strip status)
-    , proAmount = T.strip amount
-    , proCurrency = T.toUpper (T.strip currency)
-    }
-parsePaypalRefundOutcome _ = Left "PayPal refund response must be an object"
+-- Signature verification and merchant binding remain the caller's authority.
+parsePaypalExternalCaptureChange
+  :: Checkout.CheckoutEnvironment -> PaypalWebhookEnvelope
+  -> Either Text (Text, Int64, Text)
+parsePaypalExternalCaptureChange environment PaypalWebhookEnvelope{pweEventType, pweResource} =
+  RefundQuery.parseExternalCaptureChange environment pweEventType pweResource
+
 
 buildPaypalWebhookVerificationBody
   :: Text
@@ -2637,37 +2676,7 @@ paypalCertUrlMatchesEnvironment environment rawUrl =
     Checkout.CheckoutSandbox -> isSandbox
     Checkout.CheckoutProduction -> not isSandbox
 
--- | Load PayPal environment configuration.
-loadPaypalEnvForService
-  :: AppM (Text, Text, String, Checkout.CheckoutEnvironment, Text)
-loadPaypalEnvForService = do
-  mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
-  mMerchant <- liftIO $ lookupEnv "PAYPAL_MERCHANT_ID"
-  cid <- loadRequiredSafeEnv "PAYPAL_CLIENT_ID" 256
-  secret <- loadRequiredSafeEnv "PAYPAL_CLIENT_SECRET" 512
-  environment <- either (throwError . configurationError) pure
-    (Checkout.resolveCheckoutEnvironment mEnv)
-  merchantRef <- case T.strip . T.pack <$> mMerchant of
-    Just value | isProviderReference value -> pure value
-    _ -> throwError err500
-      { errBody = "PAYPAL_MERCHANT_ID must be configured with the provider merchant account ID" }
-  let baseUrl = case environment of
-        Checkout.CheckoutSandbox -> "https://api-m.sandbox.paypal.com"
-        Checkout.CheckoutProduction -> "https://api-m.paypal.com"
-  pure (cid, secret, baseUrl, environment, merchantRef)
-
-loadRequiredSafeEnv :: String -> Int -> AppM Text
-loadRequiredSafeEnv variableName maxLength = do
-  rawValue <- liftIO (lookupEnv variableName)
-  case T.strip . T.pack <$> rawValue of
-    Just value
-      | not (T.null value)
-      , T.length value <= maxLength
-      , T.all (\character -> character >= '!' && character <= '~') value -> pure value
-    _ -> throwError err500
-      { errBody = BL.fromStrict (TE.encodeUtf8
-          (T.pack variableName <> " must be configured with safe visible ASCII")) }
-
+-- | Load the private provider inbox encryption key.
 loadProviderEventEncryptionKey :: AppM Text
 loadProviderEventEncryptionKey = do
   encryptionKey <- loadRequiredSafeEnv "COMMERCE_EVENT_ENCRYPTION_KEY" 256
@@ -2676,23 +2685,7 @@ loadProviderEventEncryptionKey = do
       { errBody = "COMMERCE_EVENT_ENCRYPTION_KEY must contain at least 32 characters" }
   pure encryptionKey
 
--- Shared with legacy product entrypoints while retaining their public contracts.
--- A transport failure is uncertain evidence, never confirmation of no charge.
-providerRequest :: Checkout.PaymentProvider -> String -> AppM Request
-providerRequest provider url = do
-  result <- liftIO (ProviderHttp.parseProviderRequest provider url)
-  either (throwError . providerTransportError) pure result
-
-providerResponse :: FromJSON a => Manager -> Checkout.PaymentProvider -> Request -> AppM a
-providerResponse manager provider request = do
-  result <- liftIO (ProviderHttp.executeProviderRequest manager provider request)
-  either (throwError . providerTransportError) pure result
-
-providerTransportError :: ProviderHttp.AdapterTransportError -> ServerError
-providerTransportError failure = err502
-  { errBody = BL.fromStrict (TE.encodeUtf8
-      (ProviderHttp.adapterTransportPublicMessage failure)) }
-
+-- Verify the signature through the provider before processing its evidence.
 verifyPaypalWebhookRemote
   :: Manager
   -> Text
@@ -2721,27 +2714,6 @@ verifyPaypalWebhookRemote manager cid sec baseUrl webhookId headers rawBody = do
     _ -> throwError err502 { errBody = "Invalid PayPal webhook verification response" }
 
 -- | Get PayPal access token.
-paypalAccessTokenForService :: Manager -> Text -> Text -> String -> AppM Text
-paypalAccessTokenForService manager cid sec baseUrl = do
-  req0 <- providerRequest Checkout.ProviderPayPal (baseUrl ++ "/v1/oauth2/token")
-  let req = req0
-        { method = "POST"
-        , requestBody = RequestBodyBS "grant_type=client_credentials"
-        , requestHeaders =
-            [ ("Authorization", "Basic " <> encodeBasicAuth cid sec)
-            , ("Content-Type", "application/x-www-form-urlencoded")
-            ]
-        }
-  response <- providerResponse manager Checkout.ProviderPayPal req
-  case response of
-    Object obj -> case (KM.lookup "access_token" obj, KM.lookup "token_type" obj) of
-      (Just (String token), Just (String tokenType))
-        | not (T.null token) && T.length token <= 4096
-        , T.all (\c -> c >= '!' && c <= '~') token
-        , T.toLower tokenType == "bearer" -> pure token
-      _ -> throwError err502 { errBody = "Invalid PayPal access token or token type" }
-    _ -> throwError err502 { errBody = "Invalid PayPal token response format" }
-
 -- | Create a PayPal order remotely.
 createPaypalOrderRemoteForService
   :: Manager -> Text -> Text -> String -> Text -> Int -> Text -> Text -> Text
@@ -2818,10 +2790,16 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
             [ ("Content-Type", "application/json")
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
             , ("PayPal-Request-Id", TE.encodeUtf8 (paypalRequestId "capture" ppOrderId))
+            , ("Prefer", "return=representation")
             ]
         }
-  value <- providerResponse manager Checkout.ProviderPayPal req
-  either (throwError . providerValidationError) pure (parsePaypalCaptureOutcome value)
+  -- A successful capture response can omit purchase-unit custom_id/payee.
+  -- Read the original order from the authenticated provider endpoint instead
+  -- of weakening amount, merchant or internal-order verification. A failed
+  -- read remains an unverified outcome; the stable capture idempotency key
+  -- prevents a retry from creating another capture.
+  _ <- (providerResponse manager Checkout.ProviderPayPal req :: AppM Value)
+  getPaypalOrderRemoteForService manager cid sec baseUrl ppOrderId
 
 getPaypalOrderRemoteForService
   :: Manager
@@ -2841,41 +2819,15 @@ getPaypalOrderRemoteForService manager cid sec baseUrl paypalOrderId = do
         }
   value <- providerResponse manager Checkout.ProviderPayPal req
   either (throwError . providerValidationError) pure
-    (parsePaypalCaptureOutcome value)
+    (parsePaypalBoundCaptureOutcome paypalOrderId value)
 
-issuePaypalRefundRemote
-  :: Manager
-  -> Text
-  -> Text
-  -> String
-  -> Text
-  -> Refund.RefundRecord
-  -> AppM PaypalRefundOutcome
-issuePaypalRefundRemote manager cid sec baseUrl captureId refundRecord = do
-  token <- paypalAccessTokenForService manager cid sec baseUrl
-  req0 <- providerRequest Checkout.ProviderPayPal
-    (baseUrl ++ "/v2/payments/captures/" ++ T.unpack captureId ++ "/refund")
-  let body = object
-        [ "amount" .= object
-            [ "currency_code" .= Refund.rrCurrency refundRecord
-            , "value" .= formatMinorUnitsDecimal
-                (Refund.rrCurrency refundRecord)
-                (fromIntegral (Refund.rrAmountMinor refundRecord))
-            ]
-        ]
-      requestId = Refund.refundReferenceId (Refund.rrReference refundRecord)
-      req = req0
-        { method = "POST"
-        , requestBody = RequestBodyLBS (Aeson.encode body)
-        , requestHeaders =
-            [ ("Content-Type", "application/json")
-            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
-            , ("PayPal-Request-Id", TE.encodeUtf8 requestId)
-            , ("Prefer", "return=representation")
-            ]
-        }
-  value <- providerResponse manager Checkout.ProviderPayPal req
-  either (throwError . providerValidationError) pure (parsePaypalRefundOutcome value)
+-- Bind a readback to the original provider order before its financial fields
+-- are compared with the immutable internal checkout.
+parsePaypalBoundCaptureOutcome :: Text -> Value -> Either Text ServicePaypalCaptureOutcome
+parsePaypalBoundCaptureOutcome expected value@(Object obj)
+  | KM.lookup "id" obj == Just (String expected) = parsePaypalCaptureOutcome value
+  | otherwise = Left "PayPal readback does not match the original provider order"
+parsePaypalBoundCaptureOutcome _ _ = Left "Invalid PayPal order readback"
 
 parsePaypalCaptureOutcome :: Value -> Either Text ServicePaypalCaptureOutcome
 parsePaypalCaptureOutcome (Object obj) =
@@ -2954,32 +2906,3 @@ validatePaypalSuccessfulCapture expectedOrderId expectedCents expectedCurrency e
   unless (capturedCurrency == T.toUpper (T.strip expectedCurrency)) (Left "PayPal captured currency does not match the immutable order currency")
   unless (customId == expectedOrderId) (Left "PayPal custom_id does not match the internal order")
   unless (merchantId == T.strip expectedMerchant) (Left "PayPal payee merchant ID does not match the configured merchant")
-
-isProviderReference :: Text -> Bool
-isProviderReference value =
-  not (T.null value)
-    && T.length value <= 256
-    && T.any (\c -> isAsciiLower c || isAsciiUpper c || isDigit c) value
-    && T.all (\c -> isAsciiLower c || isAsciiUpper c || isDigit c || c `elem` ("-_." :: String)) value
-
--- | Encode Basic auth header.
-encodeBasicAuth :: Text -> Text -> ByteString
-encodeBasicAuth cid sec =
-  let credentials = TE.encodeUtf8 (cid <> ":" <> sec)
-  in TE.encodeUtf8 (T.pack (encodeBase64 credentials))
-
--- | Simple Base64 encoding.
-encodeBase64 :: ByteString -> String
-encodeBase64 bs =
-  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-      toChar n = chars !! (n `mod` 64)
-      bytes = map fromIntegral (BS.unpack bs) :: [Int]
-      triples = splitInto 3 bytes
-      encodeTriple [a] = [toChar (a `div` 4), toChar ((a `mod` 4) * 16)]
-      encodeTriple [a, b] = [toChar (a `div` 4), toChar ((a `mod` 4) * 16 + b `div` 16), toChar ((b `mod` 16) * 4)]
-      encodeTriple [a, b, c] = [toChar (a `div` 4), toChar ((a `mod` 4) * 16 + b `div` 16), toChar ((b `mod` 16) * 4 + c `div` 64), toChar (c `mod` 64)]
-      encodeTriple _ = ""
-      splitInto _ [] = []
-      splitInto n xs = take n xs : splitInto n (drop n xs)
-      pad = let r = BS.length bs `mod` 3 in if r == 0 then "" else replicate (3 - r) '='
-  in concatMap encodeTriple triples ++ pad

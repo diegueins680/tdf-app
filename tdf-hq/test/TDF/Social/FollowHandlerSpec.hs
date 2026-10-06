@@ -2584,6 +2584,15 @@ initializeSocialSchema = do
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_ticket\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"tier_ref_id\" INTEGER NOT NULL,\"order_ref_id\" INTEGER NOT NULL,\"holder_name\" VARCHAR NULL,\"holder_email\" VARCHAR NULL,\"code\" VARCHAR NOT NULL,\"status\" VARCHAR NOT NULL,\"checked_in_at\" TIMESTAMP NULL,\"current_holder_party_id\" VARCHAR NULL,\"current_holder_email\" VARCHAR NULL,\"current_holder_name\" VARCHAR NULL,\"original_holder_party_id\" VARCHAR NULL,\"transfer_history\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"code\"))"
         []
+    -- Legacy visibility cases have no canonical checkout or refund binding.
+    -- Keep these lookup tables empty; PostgreSQL tests separately exercise the
+    -- canonical financial schema, transactions and immutable binding guards.
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS event_ticket_checkout_runtime (order_id INTEGER PRIMARY KEY)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS event_ticket_refund_request_binding (request_id INTEGER PRIMARY KEY, refund_id TEXT NOT NULL UNIQUE)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"ticket_refund_request\" (\
         \\"id\" INTEGER PRIMARY KEY,\

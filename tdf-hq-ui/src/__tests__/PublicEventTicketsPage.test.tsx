@@ -8,6 +8,13 @@ import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
 const createCheckoutMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const createPaypalOrderMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const capturePaypalOrderMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const readEnvMock = jest.fn<(key: string) => string | undefined>();
+const funnelCaptureMock = jest.fn();
+const analytics = { ready: true, capture: funnelCaptureMock };
+jest.unstable_mockModule('../analytics/useAnalytics', () => ({ useAnalytics: () => analytics }));
+jest.unstable_mockModule('../utils/env', () => ({ env: { read: readEnvMock } }));
 const getCheckoutMock = jest.fn<(eventId: number, orderId: number, token: string) => Promise<unknown>>();
 const confirmDatafastStatusMock = jest.fn<(
   eventId: number,
@@ -29,8 +36,8 @@ jest.unstable_mockModule('../api/eventTickets', () => ({
     ) => confirmDatafastStatusMock(eventId, orderId, resourcePath, token),
     createCheckout: createCheckoutMock,
     createDatafastCheckout: jest.fn(),
-    createPaypalOrder: jest.fn(),
-    capturePaypalOrder: jest.fn(),
+    createPaypalOrder: createPaypalOrderMock,
+    capturePaypalOrder: capturePaypalOrderMock,
   },
 }));
 
@@ -44,6 +51,15 @@ jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: metaTagsM
 const qrCanvasMock = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 jest.unstable_mockModule('qrcode', () => ({ default: { toCanvas: qrCanvasMock } }));
 jest.unstable_mockModule('../mobile/MobilePromo', () => ({ default: () => null }));
+
+const hostedCreateMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const hostedGetMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const hostedApi = await import('../api/providerPaymentSessions');
+jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
+  ...hostedApi,
+  createProviderPaymentSession: hostedCreateMock,
+  getProviderPaymentSession: hostedGetMock,
+}));
 
 const { default: PublicEventTicketsPage } = await import('../pages/PublicEventTicketsPage');
 
@@ -133,6 +149,22 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   throw lastError;
 };
 
+// Compare primitive identities, not digit substrings in timestamps. Traverse
+// arrays and objects so an identifier cannot hide in a nested analytics field.
+const expectNoPrivateTicketData = (value: unknown): void => {
+  expect(value).not.toBe(92);
+  expect(value).not.toBe('92');
+  expect(value).not.toBe(501);
+  expect(value).not.toBe('501');
+  if (typeof value === 'string') {
+    expect(value).not.toMatch(/private-capability|orden|stale|TICKET-VERIFIED|secure-lookup|Comprador/);
+  } else if (Array.isArray(value)) {
+    value.forEach(expectNoPrivateTicketData);
+  } else if (value && typeof value === 'object') {
+    Object.entries(value).forEach(expectNoPrivateTicketData);
+  }
+};
+
 describe('PublicEventTicketsPage verified payment boundary', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -148,6 +180,14 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
     getStorefrontMock.mockReset().mockResolvedValue(storefrontFixture);
     createCheckoutMock.mockReset().mockResolvedValue(checkoutFixture());
+    createPaypalOrderMock.mockReset();
+    capturePaypalOrderMock.mockReset();
+    readEnvMock.mockReset();
+    funnelCaptureMock.mockClear();
+    analytics.ready = true;
+    hostedCreateMock.mockReset();
+    hostedGetMock.mockReset();
+    delete window.paypal;
     getCheckoutMock.mockReset();
     confirmDatafastStatusMock.mockReset();
     metaTagsMock.mockReset();
@@ -161,6 +201,8 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => root.unmount());
     queryClient.clear();
     container.remove();
+    delete window.paypal;
+    jest.restoreAllMocks();
   });
 
   const renderTracking = async (route: string) => {
@@ -216,6 +258,36 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(JSON.stringify(metadata)).not.toContain('secure-lookup-token');
   });
 
+  it('mounts already-loaded PayPal buttons on the first portal opening and captures only the bound order', async () => {
+    readEnvMock.mockReturnValue('synthetic-public-client');
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'awaiting_payment' }));
+    createPaypalOrderMock.mockResolvedValue({ pcPaypalOrderId: 'BOUND-PAYPAL-ORDER' });
+    capturePaypalOrderMock.mockResolvedValue(checkoutFixture());
+    const render = jest.fn<(target: string | HTMLElement) => Promise<void>>().mockResolvedValue(undefined);
+    const close = jest.fn<() => void>();
+    const buttons = jest.fn<NonNullable<typeof window.paypal>['Buttons']>(() => ({ render, close }));
+    window.paypal = { Buttons: buttons };
+    await renderTracking('/eventos/41/orden/92');
+    const paypalButton = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'PayPal')!;
+    await waitForExpectation(() => expect(paypalButton()?.disabled).toBe(false));
+    await act(async () => fireEvent.click(paypalButton()));
+    await waitForExpectation(() => expect(render).toHaveBeenCalledTimes(1));
+    expect(render.mock.calls[0]?.[0]).toBeInstanceOf(HTMLElement);
+    expect((render.mock.calls[0]?.[0] as HTMLElement).isConnected).toBe(true);
+    const options = buttons.mock.calls[0]![0];
+    expect(options.createOrder?.()).toBe('BOUND-PAYPAL-ORDER');
+    await act(async () => options.onApprove?.({ orderID: 'OTHER-ORDER' }));
+    expect(capturePaypalOrderMock).not.toHaveBeenCalled();
+    await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
+    expect(capturePaypalOrderMock).toHaveBeenCalledWith(41, 92, 'BOUND-PAYPAL-ORDER', 'secure-lookup-token');
+    expect(container.textContent).toContain('La orden no está pagada');
+    expect(container.querySelector('canvas')).toBeNull();
+    expect(close).toHaveBeenCalled();
+    expect(funnelCaptureMock).toHaveBeenCalledWith('ticketing_payment_initiated', expect.objectContaining({ provider: 'paypal' }));
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
+  });
+
   it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {
     getStorefrontMock.mockResolvedValue({
       ...storefrontFixture,
@@ -232,6 +304,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     });
     expect(container.textContent).toContain('Puedes comprar hasta 4 entradas por orden.');
     expect(createCheckoutMock).not.toHaveBeenCalled();
+    expect(funnelCaptureMock).not.toHaveBeenCalled();
   });
 
   it('permits the exact policy boundary and retains the actual remaining stock display', async () => {
@@ -254,6 +327,8 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     });
     expect(createCheckoutMock).toHaveBeenCalledWith(41,
       expect.objectContaining({ quantity: 4, buyerEmail: 'buyer@example.invalid' }), expect.any(String));
+    expect(funnelCaptureMock).toHaveBeenCalledWith('ticketing_checkout_started', expect.objectContaining({ event_id: 41, quantity: 4 }));
+    expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/buyer@example|Comprador|secure-lookup/);
   });
 
   it('keeps the legacy policy fallback bounded by remaining inventory', async () => {
@@ -274,9 +349,10 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       'secure-lookup-token',
     ));
     expect(container.textContent).toContain('La orden no está pagada');
-    expect(container.textContent).toContain('Pago: processing');
+    expect(container.textContent).not.toContain('processing');
     expect(container.textContent).not.toContain('Pago verificado por el servidor');
     expect(container.textContent).not.toContain('TICKET-');
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
   });
 
   it('reports a failed provider verification without fabricating payment or tickets', async () => {
@@ -288,6 +364,73 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     ));
     expect(container.textContent).not.toContain('El servidor verificó el pago');
     expect(container.textContent).not.toContain('TICKET-');
+    expect(funnelCaptureMock).not.toHaveBeenCalled();
+  });
+
+  it.each(['prepared', 'failed', 'confirmed_no_charge'])('records a %s hosted initiation once without claiming payment', async (state) => {
+    const session = {
+      checkoutId: checkoutFixture().checkoutId,
+      attemptId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      operationId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      provider: 'placetopay', state, externalId: 'request-7', redirectUrl: null,
+      outcomeCertainty: state === 'prepared' ? 'ambiguous' : 'confirmed_no_charge',
+      canRetryOrFallback: state !== 'prepared',
+    };
+    hostedCreateMock.mockResolvedValue(session);
+    hostedGetMock.mockResolvedValue(session);
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'awaiting_payment', paymentMethods: ['placetopay_card'],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Tarjeta · PlaceToPay'));
+    const button = [...container.querySelectorAll('button')].find((item) => item.textContent?.includes('Tarjeta · PlaceToPay'));
+    if (!button) throw new Error('Hosted payment button missing');
+    await act(async () => fireEvent.click(button));
+    await waitForExpectation(() => expect(hostedCreateMock).toHaveBeenCalledTimes(1));
+    await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledWith(
+      'ticketing_payment_initiated', expect.objectContaining({ event_id: 41, provider: 'placetopay' }),
+    ));
+    await renderTracking('/eventos/41/orden/92');
+    expect(funnelCaptureMock.mock.calls.filter(([phase]) => phase === 'ticketing_payment_initiated')).toHaveLength(1);
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
+  });
+
+  it.each([false, true])('captures current landing attribution and replaces stale campaign (previous=%s)', async (previous) => {
+    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('2026-10-06T05:36:12.592Z');
+    if (previous) window.localStorage.setItem('tdf:growth-attribution:v1', JSON.stringify({
+      source: 'stale', campaign: 'old', landingPath: '/old', capturedAt: '2026-01-01T00:00:00Z',
+    }));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));
+    await renderTracking('/eventos/41/orden/92?utm_source=instagram&utm_medium=social&utm_campaign=patch&lookup=private-capability');
+    await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledWith('ticketing_payment_completed', expect.objectContaining({
+      attribution_source: 'instagram', attribution_medium: 'social', attribution_campaign: 'patch',
+    })));
+    const persisted = window.localStorage.getItem('tdf:growth-attribution:v1');
+    expect(JSON.parse(persisted ?? '{}')).toEqual(expect.objectContaining({ landingPath: '/eventos/41', campaign: 'patch' }));
+    expectNoPrivateTicketData(JSON.parse(persisted ?? '{}'));
+    expectNoPrivateTicketData(funnelCaptureMock.mock.calls);
+  });
+
+  it('updates a revisited landing campaign even when its payment observation is deduplicated', async () => {
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));
+    await renderTracking('/eventos/41/orden/92?utm_source=old&utm_campaign=previous');
+    await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledTimes(1));
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    funnelCaptureMock.mockClear();
+    await renderTracking('/eventos/41/orden/92?utm_source=instagram&utm_campaign=patch');
+    await waitForExpectation(() => expect(JSON.parse(window.localStorage.getItem('tdf:growth-attribution:v1') ?? '{}'))
+      .toEqual(expect.objectContaining({ source: 'instagram', campaign: 'patch', landingPath: '/eventos/41' })));
+    expect(funnelCaptureMock).not.toHaveBeenCalled();
+  });
+
+  it('does not persist campaign attribution when analytics is disabled', async () => {
+    analytics.ready = false;
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));
+    await renderTracking('/eventos/41/orden/92?utm_source=instagram&utm_campaign=patch');
+    await waitForExpectation(() => expect(container.textContent).toContain('La emisión de entradas todavía está pendiente.'));
+    expect(funnelCaptureMock).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem('tdf:growth-attribution:v1')).toBeNull();
   });
 
   it('renders only the exact hosted method labels supplied by the server', async () => {
@@ -323,8 +466,14 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     ));
     expect(container.textContent).toContain('El servidor verificó el pago y emitió las entradas.');
     expect(container.textContent).toContain('TICKET-VERIFIED-501');
-    expect(container.textContent).toContain('Pago: paid');
-    expect(container.textContent).toContain('Cumplimiento: issued');
+    expect(container.textContent).toContain('Entradas emitidas');
+    expect(container.querySelector('canvas')).not.toBeNull();
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).toEqual([
+      'ticketing_payment_completed', 'ticketing_ticket_issued', 'ticketing_ticket_opened',
+    ]);
+    expectNoPrivateTicketData(funnelCaptureMock.mock.calls);
+    await renderTracking('/eventos/41/orden/92');
+    expect(funnelCaptureMock).toHaveBeenCalledTimes(3);
   });
   it.each(['checked_in', 'refunded', 'cancelled'])('never displays a QR for a %s ticket', async (status) => {
     qrCanvasMock.mockClear();
@@ -336,6 +485,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(container.textContent).toContain('Titular'));
     expect(container.textContent).not.toContain('PRIVATE-REVOKED-CODE');
     expect(qrCanvasMock).not.toHaveBeenCalled();
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_ticket_opened');
   });
 
   it('does not present a ticket before fulfillment even when payment is paid', async () => {
@@ -344,9 +494,10 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       tickets: [{ ticketId: 503, ticketCode: 'NOT-YET-ISSUED', status: 'issued', holderName: 'Titular' }],
     }));
     await renderTracking('/eventos/41/orden/92');
-    await waitForExpectation(() => expect(container.textContent).toContain('Pago: paid'));
+    await waitForExpectation(() => expect(container.textContent).toContain('La emisión de entradas todavía está pendiente.'));
     expect(container.textContent).not.toContain('NOT-YET-ISSUED');
     expect(container.querySelector('canvas')).toBeNull();
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).toEqual(['ticketing_payment_completed']);
   });
 
   it('labels included tax without adding it again to the server total', async () => {

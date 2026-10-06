@@ -55,7 +55,8 @@ eligible now event order ticket = do
   let policyAllows = case (runtimes, policies) of
         ([Single 0], []) -> True -- Existing orders without the public checkout runtime.
         ([Single 1], [(Single allowed, Single deadline, Single paymentStatus)]) ->
-          allowed && paymentStatus == ("paid" :: Text) && maybe True (now <) deadline
+          allowed && paymentStatus `elem` (["paid", "partially_refunded"] :: [Text])
+            && maybe True (now <) deadline
         _ -> False
   pure $ M.eventTicketOrderStatus order == "paid" && M.eventTicketStatus ticket == "issued"
     && M.eventTicketCheckedInAt ticket == Nothing && now < M.socialEventStartTime event

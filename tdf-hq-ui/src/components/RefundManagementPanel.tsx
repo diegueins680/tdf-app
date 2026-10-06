@@ -149,6 +149,9 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
 
   const panelContent = (
     <Box>
+      {(approveMutation.isError || rejectMutation.isError) && (
+        <Alert severity="error" sx={{ mb: 2 }}>{t('refunds.actionError')}</Alert>
+      )}
       {pendingRefunds.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
           {t('refunds.pendingSummary', { count: pendingRefunds.length })}
@@ -233,6 +236,15 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                               {t('refunds.reject')}
                             </Button>
                           </Stack>
+                        )}
+                        {refund.refundStatus === 'processing' && (
+                          <Button
+                            size="small"
+                            onClick={() => refund.refundId && approveMutation.mutate(refund.refundId)}
+                            disabled={approveMutation.isPending || !refund.refundId}
+                          >
+                            {t('refunds.checkStatus')}
+                          </Button>
                         )}
                         {refund.refundStatus === 'rejected' && refund.refundRejectionReason && (
                           <Typography variant="caption" color="error">
