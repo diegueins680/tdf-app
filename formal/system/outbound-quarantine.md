@@ -42,6 +42,13 @@ incoming responses after explicitly clearing IPv6 neighbor caches, a removed
 Neighbor Discovery allowance and a deliberately removed denial. The three-phase reboot
 fixture uses a real changed kernel boot identity, automatic container restart,
 an already-listening systemd-notify receiver and failed Docker-start controls.
+It also enables live restore in the owned VM and checks that the exact container
+process survives daemon stop and a rejected daemon start while the kernel policy
+continues to block its repeated connection attempts. A stopped Docker daemon is
+therefore not evidence that application processes are stopped. The fixture
+restores the original daemon configuration bytes and mode; when the original
+omits `live-restore`, a qualified owned-daemon restart is needed because reload
+retains the previously enabled value.
 Fixture cleanup removes only nonce-labelled containers/networks and their
 anonymous volumes; other volume identities must remain unchanged.
 

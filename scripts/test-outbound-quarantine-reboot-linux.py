@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -26,6 +27,7 @@ RECEIVER = 'tdf-quarantine-fixture.service'
 RECEIVER_PATH = Path('/etc/systemd/system')/RECEIVER
 LABEL = 'net.tdf.synthetic-quarantine-reboot'
 PORT = 31875
+DAEMON = Path('/etc/docker/daemon.json')
 SERVER = '''import json,os,socket,threading,time
 from pathlib import Path
 root=Path('/etc/tdf-quarantine-fixture')
@@ -77,6 +79,71 @@ def lines(name):
 def boot():return Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 
 
+def daemon_bytes():
+    try:info=DAEMON.lstat()
+    except FileNotFoundError:return None
+    require(stat.S_ISREG(info.st_mode) and info.st_uid==0 and info.st_nlink==1
+            and not info.st_mode & 0o022 and info.st_size<=65536)
+    return DAEMON.read_bytes()
+
+
+def replace_daemon(expected,content,mode=0o644):
+    """Owned VM fixture only; reject a concurrently changed daemon file."""
+    require(daemon_bytes()==expected)
+    if content is None:
+        DAEMON.unlink()
+    else:
+        temporary=DAEMON.with_name('.tdf-quarantine-'+os.urandom(8).hex())
+        write(temporary,content);temporary.chmod(mode)
+        require(daemon_bytes()==expected);temporary.replace(DAEMON)
+    parent=os.open(DAEMON.parent,os.O_RDONLY|os.O_DIRECTORY)
+    try:os.fsync(parent)
+    finally:os.close(parent)
+    run(['systemctl','reload','docker.service'])
+
+
+def enable_live_restore():
+    require(json.loads(run(DOCKER+['info','--format','{{json .LiveRestoreEnabled}}'])) is False)
+    raw=daemon_bytes();mode=stat.S_IMODE(DAEMON.stat().st_mode) if raw is not None else None
+    config=json.loads(raw) if raw is not None else {}
+    require(isinstance(config,dict) and config.get('live-restore') in (None,False))
+    if raw is not None:write(FIXTURE_DIR/'daemon.original',raw)
+    config['live-restore']=True;changed=q.canonical(config)
+    write(FIXTURE_DIR/'daemon.fixture',changed)
+    write(FIXTURE_DIR/'daemon-ownership.json',q.canonical({'originalExists':raw is not None,'originalMode':mode}))
+    replace_daemon(raw,changed)
+    require(json.loads(run(DOCKER+['info','--format','{{json .LiveRestoreEnabled}}'])) is True)
+
+
+def restore_daemon():
+    ownership=json.loads(q.read_private(FIXTURE_DIR/'daemon-ownership.json'))
+    changed=q.read_private(FIXTURE_DIR/'daemon.fixture')
+    original=q.read_private(FIXTURE_DIR/'daemon.original') if ownership['originalExists'] else None
+    if daemon_bytes()!=original:
+        replace_daemon(changed,original,ownership['originalMode'] or 0o644)
+    require(daemon_bytes()==original and (original is None
+            or stat.S_IMODE(DAEMON.lstat().st_mode)==ownership['originalMode']))
+    # Docker reload retains a previously enabled live-restore setting when the
+    # original configuration omits that key. Restart this exclusively owned
+    # fixture daemon with the restored bytes to recover its initial default.
+    if json.loads(run(DOCKER+['info','--format','{{json .LiveRestoreEnabled}}'])) is True:
+        data=saved()
+        require(run(DOCKER+['ps','--all','--quiet','--no-trunc']).split()==[data['container']])
+        require(q.observe_persistent()==data['policy'])
+        run(['systemctl','restart','docker.service'])
+    require(daemon_bytes()==original
+            and json.loads(run(DOCKER+['info','--format','{{json .LiveRestoreEnabled}}'])) is False)
+
+
+def container_process(row):
+    pid=row['State']['Pid'];require(type(pid)is int and pid>0)
+    group=Path('/proc',str(pid),'cgroup').read_text()
+    require('/docker-'+row['Id']+'.scope' in group or '/docker/'+row['Id'] in group)
+    fields=Path('/proc',str(pid),'stat').read_text().rpartition(') ')[2].split()
+    require(fields[0] not in ('Z','X'))
+    return {'pid':pid,'startTicks':int(fields[19]),'group':group}
+
+
 def rejected_start():
     """Restart=always may leave activating/auto-restart after ExecStartPre fails.
 
@@ -119,7 +186,7 @@ def prepare(machine):
         if lines('receiver-boots.jsonl'):break
         time.sleep(.1)
     require(lines('receiver-boots.jsonl'))
-    shell='while :; do printf "attempt\\n"; printf synthetic > /dev/tcp/172.30.250.1/31875 2>/dev/null; sleep 0.2; done'
+    shell='while :; do printf "attempt\\n"; timeout 1 bash -c "printf synthetic > /dev/tcp/172.30.250.1/31875" 2>/dev/null; sleep 0.2; done'
     container=run(DOCKER+['run','--detach','--pull','never','--restart','unless-stopped','--name',name,
                 '--label',LABEL+'='+nonce,'--network',network,'--entrypoint','bash',image,'-c',shell])
     write(FIXTURE_DIR/'container.json',q.canonical({'id':container,'nonce':nonce}))
@@ -133,6 +200,7 @@ def prepare(machine):
     write(q.DROPIN_PATH,q.DROPIN.encode())
     run(['systemctl','daemon-reload']);run(['systemctl','start',q.UNIT])
     evidence=q.observe_persistent()
+    enable_live_restore()
     time.sleep(1);baseline=len(lines('seen.jsonl'));time.sleep(3)
     require(len(lines('seen.jsonl'))==baseline)
     record={'machine':machine,'boot':boot(),'network':network,'container':container,'nonce':nonce,
@@ -143,6 +211,20 @@ def prepare(machine):
 
 def verify():
     data=saved();require(boot()!=data['boot'])
+    # SSH can be ready before dockerd has restored its containers. Poll only
+    # read-only startup observations; receiver readiness is ordered independently
+    # before Docker and covers this entire interval, not just the final sample.
+    deadline=time.monotonic()+60
+    while True:
+        state=q.properties('docker.service',('ActiveState',))['ActiveState']
+        require(state in ('inactive','activating','active'))
+        result=subprocess.run(DOCKER+['inspect',data['container']],env=q.ENV,
+                              capture_output=True,text=True,timeout=5)
+        if result.returncode==0:
+            rows=json.loads(result.stdout)
+            require(len(rows)==1 and rows[0]['Id']==data['container'])
+            if state=='active' and rows[0]['State']['Running']:break
+        require(time.monotonic()<deadline);time.sleep(.25)
     current=q.observe_persistent();require(current==data['policy'])
     row=json.loads(run(DOCKER+['inspect',data['container']]))[0]
     require(row['Id']==data['container'] and row['State']['Running']
@@ -151,7 +233,26 @@ def verify():
     time.sleep(4)
     require(len(lines('seen.jsonl'))==data['baselineAccepted'])
     logs=run(DOCKER+['logs','--since',row['State']['StartedAt'],data['container']])
-    require(logs.count('attempt')>=1)
+    require(logs.count('attempt')>=3)
+    # Production enables live restore. A daemon outage does not stop containers:
+    # preserve the exact process and kernel policy across both a healthy daemon
+    # restart and an intentionally rejected start with policy files unavailable.
+    require(json.loads(run(DOCKER+['info','--format','{{json .LiveRestoreEnabled}}'])) is True)
+    process=container_process(row)
+    run(['systemctl','stop','docker.service','docker.socket'])
+    require(container_process(row)==process)
+    require(q.observe(data['bridges'])['policySha256']==data['policy']['policySha256'])
+    (q.DIRECTORY/'policy.json').rename(q.DIRECTORY/'policy.saved')
+    try:
+        rejected_start()
+        require(container_process(row)==process)
+        require(q.observe(data['bridges'])['policySha256']==data['policy']['policySha256'])
+    finally:(q.DIRECTORY/'policy.saved').rename(q.DIRECTORY/'policy.json')
+    run(['systemctl','reset-failed','docker.service']);run(['systemctl','start','docker.service'])
+    recovered=json.loads(run(DOCKER+['inspect',data['container']]))[0]
+    require(container_process(recovered)==process and recovered['State']['StartedAt']==row['State']['StartedAt'])
+    time.sleep(3);require(len(lines('seen.jsonl'))==data['baselineAccepted'])
+    restore_daemon()
     # A corrupted live policy prevents Docker restart. No table repair is done
     # by enforce, and systemd must fail the dependency rather than start dockerd.
     run(['systemctl','stop','docker.service','docker.socket'])
@@ -175,12 +276,14 @@ def verify():
     require(q.observe_persistent()==data['policy'])
     time.sleep(3);require(len(lines('seen.jsonl'))==data['baselineAccepted'])
     print(json.dumps({'realBootChanged':True,'automaticContainerStartupRestricted':True,
+        'liveRestoreContainerContinuityVerified':True,'failedDaemonStartDoesNotFenceContainer':True,
         'changedPolicyDeniedDockerStart':True,'missingConfigurationDeniedDockerStart':True,
         'acceptedAfterRestriction':0,'syntheticReceiverOnly':True}))
 
 
 def cleanup():
     data=saved()
+    restore_daemon()
     row=json.loads(run(DOCKER+['inspect',data['container']]))[0]
     require(row['Id']==data['container'] and row['Config']['Labels'].get(LABEL)==data['nonce'])
     run(DOCKER+['rm','--force','--volumes',data['container']])

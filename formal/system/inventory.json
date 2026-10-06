@@ -5104,7 +5104,7 @@
     {
       "id": "SURFACE-f5285339f83a13bc",
       "path": "scripts/test-outbound-quarantine-reboot-linux.py",
-      "sha256": "27850773d774f920707ac44bc45e30527754a33aa44cb901abcfaa6a363dbb43",
+      "sha256": "338b5129bd6b87db6b19a516fbdc9e57b9473fcd9c12aeab85d3aa2a3069fc87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23006,7 +23006,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "5c0e865d7eb4d4d6c664b0baa209ae6a9fe7d80cc62a29ad9abc429bf69fb3a5",
+      "sha256": "b999dd4a067dd748d901117846f91f6e5e49bb38f026d8c975e46328cd06d1ca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
