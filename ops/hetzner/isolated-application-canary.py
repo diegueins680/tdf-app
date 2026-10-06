@@ -103,6 +103,7 @@ class Canary:
         self.regional_configuration = None
         self.restored_content = copy.deepcopy(restored_content)
         self.content_evidence = None
+        self.creation_records = getattr(target, 'creation_records', None)
         self.name = 'tdf-audit-canary-'+self.nonce
         require(self.directory == Path('/opt/tdf/backups')/('rehearsal-'+self.nonce))
 
@@ -235,6 +236,8 @@ class Canary:
 
     def run(self):
         self.prepare()
+        if self.creation_records is not None:
+            self.creation_records.publish('application-canary', self)
         self.creation_attempted=True
         self.target=self.execute(self.command()).strip()
         self.inspect()

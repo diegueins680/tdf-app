@@ -43,6 +43,22 @@ def container():
 
 
 class CanaryTests(unittest.TestCase):
+    def test_durable_creation_failure_prevents_canary_dispatch(self):
+        subject=make();publisher=Mock(side_effect=ValueError('synthetic uncertain publication'))
+        subject.creation_records=SimpleNamespace(publish=publisher)
+        with patch.object(subject,'prepare'),patch.object(subject,'execute') as execute:
+            with self.assertRaises(ValueError):subject.run()
+        publisher.assert_called_once_with('application-canary',subject)
+        execute.assert_not_called();self.assertFalse(subject.creation_attempted)
+
+    def test_durable_record_precedes_uncertain_canary_create(self):
+        subject=make();events=[]
+        subject.creation_records=SimpleNamespace(publish=lambda role,obj:events.append('published'))
+        def lost(command):events.append('create');raise TimeoutError('synthetic lost creation reply')
+        with patch.object(subject,'prepare'),patch.object(subject,'execute',side_effect=lost):
+            with self.assertRaises(TimeoutError):subject.run()
+        self.assertEqual(events,['published','create']);self.assertTrue(subject.creation_attempted)
+
     def test_disposable_never_restarts_or_auto_removes(self):
         for policy in ({"Name":"always","MaximumRetryCount":0},{"Name":"unless-stopped","MaximumRetryCount":0},{"Name":"on-failure","MaximumRetryCount":3},{"Name":"no","MaximumRetryCount":1},None):
             data=container();data["HostConfig"]["RestartPolicy"]=policy

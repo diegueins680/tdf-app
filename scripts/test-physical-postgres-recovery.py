@@ -67,6 +67,24 @@ class PhysicalRecoveryTests(unittest.TestCase):
                        {'Destination': physical.CONFIG, 'Type': 'bind', 'Source': str(self.clone.config),
                         'RW': False, 'Propagation': 'rprivate'}, {'Destination': '/tmp', 'Type': 'tmpfs'}]}
 
+    def test_durable_creation_failure_prevents_docker_dispatch(self):
+        self.clone.reservation_pid=os.getpid()
+        publisher=Mock(side_effect=ValueError('synthetic uncertain publication'))
+        self.clone.creation_records=SimpleNamespace(publish=publisher)
+        with patch.object(self.clone,'verify_prepared'),patch.object(physical.restore,'execute') as execute:
+            with self.assertRaises(ValueError):self.clone.start()
+        publisher.assert_called_once_with('physical-database',self.clone)
+        execute.assert_not_called();self.assertFalse(self.clone.creation_attempted)
+
+    def test_durable_record_precedes_uncertain_create_dispatch(self):
+        self.clone.reservation_pid=os.getpid();self.clone.prepared_manifest={}
+        events=[]
+        self.clone.creation_records=SimpleNamespace(publish=lambda role,obj:events.append('published'))
+        def lost(command):events.append('create');raise TimeoutError('synthetic lost creation reply')
+        with patch.object(self.clone,'verify_prepared'),patch.object(physical.restore,'execute',side_effect=lost):
+            with self.assertRaises(TimeoutError):self.clone.start()
+        self.assertEqual(events,['published','create']);self.assertTrue(self.clone.creation_attempted)
+
     def test_cold_cluster_identity_and_forced_stop_rejection(self):
         self.assertEqual(physical.control_identity(CONTROL, '12345')['majorVersion'], 17)
         for value in (CONTROL.replace('shut down', 'in production'),

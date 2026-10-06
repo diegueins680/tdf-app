@@ -124,7 +124,7 @@ def control_identity(text, expected_system_id):
 
 
 class PhysicalClone(restore.IsolatedRestore):
-    def __init__(self, source, image, image_id, nonce, directory, system_id):
+    def __init__(self, source, image, image_id, nonce, directory, system_id, *, creation_records=None):
         super().__init__(source, image, image_id, nonce)
         require(Path(directory) == HOST_ROOT/('rehearsal-'+nonce))
         require(re.fullmatch('[1-9][0-9]{0,19}', system_id) is not None)
@@ -136,6 +136,7 @@ class PhysicalClone(restore.IsolatedRestore):
         self.start_attempted = False
         self.reservation_pid = None
         self.active_application = None
+        self.creation_records = creation_records
 
     def require_application_owner(self, application):
         require(self.reservation_pid == os.getpid()
@@ -286,6 +287,8 @@ class PhysicalClone(restore.IsolatedRestore):
         require(self.reservation_pid == os.getpid())
         require(self.target is None and not self.creation_attempted and not self.start_attempted)
         self.verify_prepared()
+        if self.creation_records is not None:
+            self.creation_records.publish('physical-database', self)
         self.creation_attempted = True
         target = restore.execute(self.create_command()).strip()
         require(re.fullmatch('[a-f0-9]{64}', target) is not None)

@@ -201,3 +201,33 @@ Identity-bound disposable cleanup, full coordinator,
 operational key custody and terminal
 recovery receipt remain unfinished. Do not use this library alone to stop or reboot
 production. The aggregate requirement remains PARTIAL.
+
+
+## Disposable creation records under construction
+
+`disposable-creation-spec.py` reconstructs the existing physical-copy and canary
+admission predicates from typed fields. It stores a hash of the fixed constructed
+command; it never executes a serialized command. Source database, all three
+original CIDs, nonce-derived name/directory, image identity, exact isolation and
+bind-directory identity remain required. A surviving canary can be admitted using
+its recorded database CID without starting or inspecting that missing dependency.
+Regional configuration is reconstructed in a fixed order after canonical JSON
+serialization. Initialization-time policy bytes are bound and later source drift
+rejects publication/reading; trusted stable source installation is an assumption.
+
+`durable-disposable-records.py` publishes private immutable descriptors outside the
+strict journal record namespace. Each binds the complete prepared original
+admission hash, plan hash and release nonce; the specification nonce must match.
+Physical admission precedes the canary descriptor, which hashes its predecessor.
+Publication failure closes the writer and retains evidence. A new writer cannot
+adopt a pre-existing descriptor directory. Optional hooks in both actual creators
+publish before marking/submitting creation; failed publication submits no Docker
+request. Tests separately retain uncertainty when creation loses its response.
+
+These components do not implement the complete cleanup protocol. A caller guard
+must still be wired to the real journal and versioned common reservation. Plan
+image binding, exact admitted physical CID cross-binding, complete inventory,
+recorded fresh boot, canary-before-database removal, uncertain removal handling,
+and release of only the matching marker remain open. Legacy marker adoption is
+not authorized. The existing empty-set abort adapter remains the only complete
+cleanup-stage adapter; no production eligibility follows from descriptor tests.
