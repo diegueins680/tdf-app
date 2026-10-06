@@ -1321,6 +1321,29 @@ main = hspec $ do
                 ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
                 ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
 
+        it "requires an exact provider-order readback before accepting captured ticket money" $ do
+            let snapshot ident = A.object
+                  [ "id" .= (ident :: Text), "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .= [A.object
+                      [ "custom_id" .= ("ticket-order" :: Text)
+                      , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                      , "payments" .= A.object ["captures" .= [A.object
+                          [ "id" .= ("CAPTURE-1" :: Text), "status" .= ("COMPLETED" :: Text)
+                          , "amount" .= A.object ["value" .= ("20.00" :: Text), "currency_code" .= ("USD" :: Text)] ]]] ]]]
+                parse = ServiceStorefront.parsePaypalBoundCaptureOutcome "PAYPAL-ORDER"
+            parse (snapshot "OTHER-ORDER") `shouldSatisfy` isLeft
+            parse (A.object ["status" .= ("COMPLETED" :: Text)]) `shouldSatisfy` isLeft
+            case parse (snapshot "PAYPAL-ORDER") of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "COMPLETED"
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "MERCHANT" outcome
+                  `shouldBe` Right ()
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2001 "USD" "MERCHANT" outcome
+                  `shouldSatisfy` isLeft
+                ServiceStorefront.validatePaypalSuccessfulCapture "ticket-order" 2000 "USD" "OTHER" outcome
+                  `shouldSatisfy` isLeft
+
         it "rejects ambiguous multi-capture PayPal responses" $ do
             let capture captureId = A.object
                   [ "id" .= (captureId :: Text)
@@ -1516,6 +1539,31 @@ main = hspec $ do
             Data.Text.length first `shouldSatisfy` (<= 38)
             first `shouldBe` replay
             first `shouldNotBe` other
+
+        it "binds real refund-shaped webhooks to their capture, preserving minimized evidence" $ do
+            let now = UTCTime (fromGregorian 2026 10 5) 0
+                resource href = A.object
+                  [ "id" .= ("REFUND-1" :: Text), "status" .= ("COMPLETED" :: Text)
+                  , "amount" .= A.object ["value" .= ("20.00" :: Text), "currency_code" .= ("USD" :: Text)]
+                  , "payer" .= A.object ["email_address" .= ("private@example.invalid" :: Text)]
+                  , "links" .= [A.object ["rel" .= ("up" :: Text), "method" .= ("GET" :: Text), "href" .= href]] ]
+                envelope href = ServiceStorefront.PaypalWebhookEnvelope
+                  "WH-REFUND-1" "PAYMENT.CAPTURE.REFUNDED" now (resource href)
+                validUrl = "https://api.sandbox.paypal.com/v2/payments/captures/CAPTURE-1" :: Text
+                parse = ServiceStorefront.parsePaypalExternalCaptureChange CheckoutStore.CheckoutSandbox
+            parse (envelope validUrl) `shouldBe` Right ("CAPTURE-1", 2000, "USD")
+            parse (envelope ("https://api.paypal.com/v2/payments/captures/CAPTURE-1" :: Text)) `shouldSatisfy` isLeft
+            parse (envelope ("https://api.sandbox.paypal.com.attacker.invalid/v2/payments/captures/CAPTURE-1" :: Text)) `shouldSatisfy` isLeft
+            parse (envelope (validUrl <> "?other=1")) `shouldSatisfy` isLeft
+            let raw = BL.toStrict $ A.encode $ A.object
+                  [ "id" .= ("WH-REFUND-1" :: Text), "event_type" .= ("PAYMENT.CAPTURE.REFUNDED" :: Text)
+                  , "create_time" .= ("2026-10-05T00:00:00Z" :: Text), "resource" .= resource validUrl ]
+            case ProviderEventStore.minimizeProviderEventPayload CheckoutStore.ProviderPayPal raw of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right retained -> do
+                BS.isInfixOf "private@example.invalid" retained `shouldBe` False
+                (ServiceStorefront.parsePaypalWebhookEnvelope (BL.fromStrict retained) >>= parse)
+                  `shouldBe` Right ("CAPTURE-1", 2000, "USD")
 
         it "parses only represented PayPal refund evidence" $ do
             let payload = A.object
@@ -12753,6 +12801,10 @@ main = hspec $ do
                         ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
     describe "normalizeTicketStatus" $ do
+        it "preserves refund holds instead of presenting the ticket as issued" $ do
+            normalizeTicketStatus (Just "refund_pending") `shouldBe` "refund_pending"
+            normalizeTicketStatus (Just " REFUND_PENDING ") `shouldBe` "refund_pending"
+
         it "defaults to issued when missing" $ do
             normalizeTicketStatus Nothing `shouldBe` "issued"
 

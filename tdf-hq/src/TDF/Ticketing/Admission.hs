@@ -27,7 +27,7 @@ data AdmissionLookup = AdmissionById M.EventTicketId | AdmissionByCode Text
 data AdmissionError
   = AdmissionNotFound | AdmissionForbidden | AdmissionUnpaid
   | AdmissionCancelled | AdmissionRefunded | AdmissionAlreadyUsed
-  | AdmissionInvalidState
+  | AdmissionInvalidState | AdmissionPaymentReview
   deriving (Eq, Show)
 
 -- Legacy codes stay readable; new credentials retain the full UUID randomness.
@@ -98,7 +98,22 @@ admitTicket actor eventKey lookupValue now = do
                 [(Single runtimeEvent, Single paymentStatus)] -> runtimeEvent == eventKey &&
                   paymentStatus `elem` (["paid", "partially_refunded"] :: [Text])
                 _ -> False
-          if not paymentValid then pure (Left AdmissionUnpaid) else do
+          reviews <- rawSql
+            "SELECT EXISTS(SELECT 1 FROM event_ticket_checkout_runtime runtime\
+            \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
+            \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id=attempt.id\
+            \ JOIN commerce_reconciliation_exception exception\
+            \ ON exception.provider=binding.provider AND exception.environment=binding.environment\
+            \ AND exception.merchant_account_ref=binding.merchant_account_ref\
+            \ AND exception.provider_reference=binding.provider_resource_id\
+            \ AND (exception.internal_reference=runtime.order_id::text\
+            \ OR exception.internal_reference='unmatched-capture:' || binding.provider_resource_id)\
+            \ WHERE runtime.order_id=? AND binding.resource_type='capture'\
+            \ AND exception.exception_type IN ('external_refund_detected','external_reversal_detected'))"
+            [toPersistValue (M.eventTicketOrderRefId ticket)]
+          let reviewRequired = reviews /= [Single False]
+          if not paymentValid then pure (Left AdmissionUnpaid)
+          else if reviewRequired then pure (Left AdmissionPaymentReview) else do
               changed <- updateWhereCount
                 [ M.EventTicketId ==. ticketKey
                 , M.EventTicketStatus ==. M.eventTicketStatus ticket

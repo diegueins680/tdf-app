@@ -20,10 +20,65 @@ import qualified Test.QuickCheck as QC
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Commerce.StateMachine as State
 
 spec :: Spec
 spec = describe "refund-safety money invariants" $ do
+  it "partitions every Int64 ticket total without overflow or order-dependent cents" $
+    QC.withMaxSuccess 1000 $
+      QC.forAll (QC.choose (1,100) :: QC.Gen Int64) $ \count ->
+      QC.forAll (QC.choose (count,maxBound)) $ \total ->
+        case TicketRefund.ticketRefundAmounts total [count,count-1..1] of
+          Left _ -> QC.property False
+          Right amounts -> QC.conjoin
+            [ sum (map (toInteger . snd) amounts) QC.=== toInteger total
+            , QC.property (all ((>0) . snd) amounts)
+            , TicketRefund.ticketRefundAmounts total [1..count] QC.=== Right amounts
+            , QC.property (maximum (map snd amounts) - minimum (map snd amounts) <= 1)
+            ]
+  it "rejects empty, duplicated, underfunded and oversized ticket selections" $
+    forM_ [(20,[]),(20,[1,1]),(1,[1,2]),(200,[1..101]),(20,[0])] $ \(total,keys) ->
+      TicketRefund.ticketRefundAmounts total keys `shouldSatisfy` isLeft
+
+  it "conserves cumulative ticket components without negative rounding adjustments" $
+    QC.withMaxSuccess 1000 $
+      QC.forAll (QC.choose (1,maxBound) :: QC.Gen Int64) $ \total ->
+      QC.forAll (QC.choose (0,total)) $ \tax ->
+      QC.forAll (QC.choose (0,total-tax)) $ \fee ->
+      QC.forAll (QC.choose (0,total-1)) $ \previous ->
+      QC.forAll (QC.choose (1,total-previous)) $ \amount ->
+        case Refund.ticketRefundComponents total fee tax previous amount of
+          Left _ -> QC.property False
+          Right (refundedFee,refundedTax,refundedOrganizer) -> QC.conjoin
+            [ QC.property (refundedFee >= 0), QC.property (refundedTax >= 0), QC.property (refundedOrganizer >= 0)
+            , toInteger refundedFee + toInteger refundedTax + toInteger refundedOrganizer QC.=== toInteger amount
+            , Refund.ticketRefundComponents total fee tax 0 total QC.=== Right (fee,tax,total-fee-tax)
+            ]
+
+  it "exhaustively conserves every component for totals up to twelve minor units" $
+    forM_ [1..12] $ \total -> forM_ [0..total] $ \tax ->
+      forM_ [0..total-tax] $ \fee -> forM_ [0..total-1] $ \previous ->
+        forM_ [1..total-previous] $ \amount -> do
+          let cumulative value = if value == 0 then Right (0,0,0)
+                else Refund.ticketRefundComponents total fee tax 0 value
+          (beforeFee,beforeTax,beforeOrganizer) <- requireRight (cumulative previous)
+          (deltaFee,deltaTax,deltaOrganizer) <- requireRight
+            (Refund.ticketRefundComponents total fee tax previous amount)
+          cumulative (previous+amount) `shouldBe`
+            Right (beforeFee+deltaFee,beforeTax+deltaTax,beforeOrganizer+deltaOrganizer)
+          sum [deltaFee,deltaTax,deltaOrganizer] `shouldBe` amount
+          all (>= 0) [deltaFee,deltaTax,deltaOrganizer] `shouldBe` True
+
+  it "keeps a one-cent refund nonnegative when independent rounding would collide" $
+    Refund.ticketRefundComponents 100 49 49 51 1 `shouldBe` Right (0,1,0)
+
+  it "rejects over-refunds and invalid ticket component snapshots" $ do
+    Refund.ticketRefundComponents maxBound maxBound 1 0 1 `shouldSatisfy` isLeft
+    Refund.ticketRefundComponents maxBound 0 0 maxBound 1 `shouldSatisfy` isLeft
+    Refund.ticketRefundComponents 100 0 0 0 0 `shouldSatisfy` isLeft
+    Refund.ticketRefundComponents 100 (-1) 0 0 1 `shouldSatisfy` isLeft
+
   it "rejects an overflowing sum of already committed balances" $
     Refund.validateRefundAmount 1 maxBound maxBound 1 "USD" "USD"
       `shouldSatisfy` isLeft

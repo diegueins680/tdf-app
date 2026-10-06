@@ -35,6 +35,8 @@ const fr = {
     usesRemaining_one: '{{count}} utilisation restante', usesRemaining_other: '{{count}} utilisations restantes',
   },
   refunds: {
+    actionError: 'L’opération n’a pas pu être confirmée. Actualisez le statut avant de réessayer.',
+    checkStatus: 'Vérifier le paiement',
     loading: 'Chargement des demandes de remboursement', loadError: "Impossible de charger les demandes de remboursement.",
     pendingSummary_one: '{{count}} demande de remboursement en attente de validation',
     pendingSummary_other: '{{count}} demandes de remboursement en attente de validation', itemLabel: 'remboursements',
@@ -43,7 +45,7 @@ const fr = {
     confirmApproval: 'Approuver le remboursement de {{amount}} ?', rejectDialogTitle: 'Refuser la demande de remboursement',
     rejectionReason: 'Motif du refus', rejectionPlaceholder: 'Expliquez pourquoi cette demande de remboursement est refusée…',
     cancel: 'Annuler', rejectRefund: 'Refuser le remboursement',
-    statuses: { pending: 'En attente', approved: 'Approuvé', rejected: 'Refusé', processed: 'Traité' },
+    statuses: { processing: 'En cours auprès du prestataire', pending: 'En attente', approved: 'Approuvé', rejected: 'Refusé', processed: 'Traité' },
   },
   artistFans: {
     loading: 'Chargement des fans…', loadError: 'Impossible de charger les fans.',

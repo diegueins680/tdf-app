@@ -1,117 +1,113 @@
-# PATCH CULTURE — verificación para activar ventas
+# PATCH CULTURE — estado para activar ventas
 
-Actualizado el 5 de octubre de 2026. **Activación autorizada, ventas todavía deshabilitadas.**
+Actualizado el 6 de octubre de 2026. **Activación autorizada; ventas de producción todavía deshabilitadas.**
 
-Diego indicó «Continúa y activa cobros», seguido de «Figure it out and continue».
-La autorización comprende los términos ya aprobados: veinte plazas, USD 20
-finales, una pinta y acceso a jam/showcase. No corresponde solicitar otra
-aprobación comercial para esos mismos términos. Autorización y funcionamiento
-verificado se registran por separado.
+## Términos confirmados
 
-## Continuación: sandbox oficial disponible
+El organizador aprobó veinte plazas a USD 20 finales, con taller, jam, showcase y
+una pinta; acceso para mayores de 18 años. El reparto aprobado es USD 15 para TDF
+y USD 5 para Andes por entrada. Los costos del procesador los absorbe TDF.
+No se requiere repetir la aprobación comercial de estos términos.
 
-Después de que Diego inició sesión en PayPal Developer, se verificó la aplicación
-sandbox existente de Ecuador: OAuth HTTP 200 y registro de webhook real HTTP 201
-el 5 de octubre a las 21:21 UTC. También está disponible el comprador Personal de
-pruebas. Este acceso resuelve el bloqueo anterior de credenciales sandbox.
-Las credenciales permanecen fuera del repositorio en archivos privados; no se
-reutilizan credenciales de producción en el entorno aislado.
+Emisor: TDF Records, RUC 1793215092001. Se configura IVA 0% para el paquete completo
+por confirmación expresa del organizador. El certificado RUC consultado fue
+emitido el 21 de mayo de 2024; acredita la identidad registrada en esa fecha,
+no una determinación tributaria independiente del paquete. La tarifa confirmada
+no se aplica retroactivamente a los escenarios sandbox anteriores.
 
-El webhook temporal expone exclusivamente su ruta de recepción; el resto responde
-404. Reenvía cuerpo y firmas al backend aislado para la verificación oficial.
-La base local aplica el manifiesto canónico de 181 migraciones, conservando sus
-identidades y checksums. La configuración de habilitación del proveedor en esta
-base es una **precondición sintética**, no prueba de una transacción verificada.
-La compra, captura, reembolso y entrega externa siguen pendientes de ejecución.
-El receptor SMTP local prueba procesamiento de la cola, no llegada a una bandeja.
+El [borrador verificado](draft-verification.json) conserva evento 141, venue 22 y
+tier 2. La URL canónica prevista es `https://www.tdfrecords.net/eventos/141`;
+no se presenta como una página de venta ya publicada. La
+[propuesta aprobada](propuesta-condiciones.md) conserva los plazos y condiciones.
+La configuración pendiente mantiene cuatro entradas por orden, reserva de diez
+minutos, cero cortesías y ningún código promocional activo.
 
-La revisión del backend combinado identifica dos puntos que deben comprobarse y
-corregirse antes de habilitar ventas: la aprobación legacy de reembolsos de tickets
-solo llama a Stripe; el webhook PayPal de refund/reversal registra una excepción
-de conciliación sin revocar por sí mismo la entrada. Se usará el sandbox real para
-verificar la transición, siguiendo la [API oficial de reembolsos](https://developer.paypal.com/api/payments/v2)
-y los [eventos oficiales](https://developer.paypal.com/api/rest/webhooks/event-names/).
-No se declara completo el flujo por obtener autenticación o por registrar el webhook.
+| Asistentes | GMV USD | Andes USD | TDF antes del procesador USD |
+|---:|---:|---:|---:|
+| 8 | 160 | 40 | 120 |
+| 14 | 280 | 70 | 210 |
+| 20 | 400 | 100 | 300 |
 
-## Inspección de producción
+Son escenarios aritméticos, no una previsión de demanda. El neto de TDF es la
+última columna menos las comisiones reales del proveedor; no se inventa una
+liquidación ni se presenta una tarifa de sandbox como comisión de producción.
 
-| Comprobación | Resultado observado | Límite de la evidencia |
-|---|---|---|
-| Configuración del servidor canónico | PayPal live, webhook, clave de cifrado y SMTP configurados | Las claves permanecieron en el servidor; presencia no equivale a una compra |
-| PayPal, 17:07:56 UTC | OAuth HTTP 200; consulta del webhook configurado HTTP 200 | Consulta oficial autenticada, sin crear orden, cobro, reembolso ni modificar el webhook |
-| Webhook PayPal | HTTPS en `api.tdfrecords.net/services/storefront/paypal/webhook`; suscripciones `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED` | Registro correcto; aún no se verificó recepción y procesamiento de una transacción del evento |
-| Cuentas de la plataforma en PostgreSQL | Datafast, PayPal, PayPhone y PlaceToPay deshabilitados; metadatos `contract_status=unverified`, `credential_status=absent` | La marca de credenciales PayPal está desactualizada respecto a la configuración comprobada; no cambiarla a «operativo» solo por obtener OAuth |
-| Capacidades públicas, EC/USD 2000/entrada | Los seis métodos responden HTTP 200 con `routes=[]` | No hay ruta pública habilitada para vender esta entrada |
-| Otros proveedores en el entorno del servidor | Sin credenciales Datafast, PlaceToPay o PayPhone | No se afirma que no existan en otro gestor o cuenta inaccesible |
-| Stripe existente | API de cuenta HTTP 200; país US; nombre comercial coincide con TDF; `charges_enabled=false`, `payouts_enabled=false`, `details_submitted=false`, tarjetas pendientes | No utilizar como sustituto funcional; no se verificó que la entidad estadounidense sea el emisor ecuatoriano ni se modificó su alta |
-| SMTP existente | TLS con certificado validado; autenticación 235 y NOOP 250 | Cero mensajes enviados; no prueba llegada a bandeja. El worker de confirmación sigue apagado |
-| API y esquema | Backend `645f56fcc44f81609fbfd0e03d683b40376ce77a`, 159 migraciones | Las correcciones nuevas de tickets aún no están acreditadas en este backend |
+## Flujo verificado en el sandbox oficial
 
-La inspección administrativa reutilizable se ejecutó nuevamente en
-[Actions 37345400601](https://github.com/diegueins680/tdf-app/actions/runs/37345400601)
-y terminó correctamente: evento 141 en planificación, privado y con compra
-deshabilitada. El paso de preparación conservó el borrador e inventario inactivo.
-La suite adicional RACI de PR485 también terminó correctamente en
-[Actions 37340733399](https://github.com/diegueins680/tdf-app/actions/runs/37340733399).
+La [evidencia de compra y reembolso desde TDF](ticket-refund-api-sandbox-2026-10-06.json)
+identifica la fuente nativa `a058dc0bb80dd04e3341fdbcd0df066b6732701c` y la posterior
+comprobación de presentación/finanzas `8aa554edf845be7d32a9acfe4301b6b7d903932f`.
 
-## Emisor y tratamiento fiscal
+Se completaron dos compras desde web móvil por USD 40 y USD 20, con captura oficial
+PayPal, tres tickets y QR decodificables. Ocho escaneos concurrentes de una entrada
+produjeron una admisión y siete rechazos por reutilización. El flujo canónico de
+TDF aprobó un reembolso parcial de USD 20 y otro total de USD 20, con asignación por
+ticket, asiento balanceado y nota interna de crédito. Los tickets devueltos no
+pudieron ingresar y la entrada conservada sí admitió una vez. La devolución
+restante de USD 20 fue limpieza externa de fondos de prueba después del check-in,
+no una asignación canónica adicional de TDF. Los USD 60 de esas compras quedaron
+devueltos en sandbox.
 
-Se localizó y leyó `RUC.pdf` en el Drive conectado del organizador. El certificado
-fue emitido el **21 de mayo de 2024**: TDF RECORDS S.A.S., RUC 1793215092001,
-régimen general, obligado a llevar contabilidad. Incluye las actividades
-R900001, R900003 y R900004. La fecha del archivo en Drive no actualiza la fecha
-del certificado. No se copian al repositorio domicilio, datos del representante
-ni código de verificación.
+Cinco callbacks auténticos (dos capturas y tres devoluciones) tuvieron validación
+oficial de firma y reenvíos idempotentes. Dos confirmaciones fueron aceptadas por
+el SMTP aislado. Esto no acredita entrega a una bandeja externa, facturación
+electrónica autorizada por SRI, publicación móvil nativa ni una compra live.
+Los receptores/túneles temporales se cerraron y el webhook temporal se eliminó.
+Las credenciales permanecen fuera del repositorio.
 
-Esto confirma documentalmente el emisor indicado por Diego y actividades
-culturales registradas a esa fecha. **No determina por sí solo el impuesto del
-paquete taller + espectáculo + cerveza**, ni acredita una consulta actual al
-registro, inscripción RUAC o autorización educativa. No se encontró evidencia
-adicional de estos puntos en las búsquedas acotadas de Drive y correo conectado.
+## Correcciones posteriores y alcance de las pruebas
 
-La [guía oficial del SRI](https://www.sri.gob.ec/web/intersri/servicios-artisticos-y-culturales)
-vincula la tarifa cultural cero al servicio efectivamente prestado y a su
-actividad registrada; la sección de espectáculos añade condiciones sobre
-promotor/espacio cultural y aforo. No convertir el reparto interno USD15/USD5
-en bases tributarias sin justificarlo. El tratamiento específico permanece
-sin confirmar; tampoco se configura una exención por defecto.
+La integración reutiliza órdenes, proveedores, ledger, inventario y perfiles.
+Incluye asignación de reembolsos por ticket, consultas autenticadas de recuperación,
+filtro de credenciales transferidas, estados de checkout y analítica sin QR ni
+identificadores privados de órdenes. La evidencia firmada de un reembolso anterior
+a su captura sobrevive a ocho intentos agotados y bloquea un check-in posterior.
+Las órdenes canónicas rechazan cambios masivos legacy que podrían perder esa
+asignación; las entradas conservadas tras una devolución parcial siguen siendo
+transferibles según la política comprada.
 
-## Cálculo del total: discrepancia reproducida
+La ejecución PostgreSQL de `1341645f9bd3d4d4e6846896827c4f42920ec2ad` pasó
+**304 pruebas financieras/de proveedor en una base sintética nueva**. Incluye:
 
-Se ejecutó la función real `TDF.Commerce.EventTickets.calculateTicketPrice`
-con `stack exec -- runghc`, usando el toolchain canónico. El 15 % empleado aquí
-es **un escenario de prueba**, no una determinación fiscal del evento.
+- Obtener OAuth antes de consumir el permiso de una sola solicitud de reembolso;
+  un fallo previo permite reintentar, pero una respuesta POST incierta no permite
+  enviar otra devolución.
+- Seleccionar entradas completas aun cuando el reparto estable difiere por un
+  centavo, incluyendo devoluciones de 4171 y 8343 centavos sobre 12515.
+- Conservar el identificador aceptado por PayPal ante importe/moneda inesperados;
+  una consulta incorrecta mantiene la reserva, un reintento inmediato recibe 429,
+  y una consulta posterior exacta completa una sola nota de crédito sin otro POST.
 
-| Cantidad | Precio de tier USD20 + impuesto adicional 15 % | Intento de base USD17,39 + 15 % | Total aprobado |
-|---|---:|---:|---:|
-| 1 | 23,00 | 20,00 | 20,00 |
-| 2 | 46,00 | 40,00 | 40,00 |
-| 3 | 69,00 | 60,00 | 60,00 |
-| 4 | 92,00 | 79,99 | 80,00 |
+Estas nuevas pruebas del handler usan el ejecutor HTTP real con conexiones en
+memoria. No son nuevas transacciones del sandbox oficial ni prueban TLS externo.
+El código del proveedor cambió después de la compra oficial anterior: las fuentes
+y alcances se mantienen separados. Los checks y revisión de la integración final
+siguen siendo obligatorios antes de fusionar.
 
-Cambiar el tier a USD17,39 no resuelve el precio final para todas las cantidades
-y además altera el precio mostrado en selección. La continuación implementa un modo explícito `tax_included` de política y
-snapshot de orden, con total autoritativo y etiqueta web de impuesto incluido.
-La aprobación fiscal, las pruebas de integración completas y el despliegue
-siguen siendo requisitos separados.
-No se aplicó ninguno de esos dos atajos en producción.
+## Producción y pasos pendientes
 
-## Trabajo necesario para activar
+La inspección de solo lectura del 6 de octubre a las 05:35 UTC encontró el backend
+`645f56fcc44f81609fbfd0e03d683b40376ce77a` y 159 migraciones. PayPal live autentica y
+su webhook HTTPS canónico contiene los eventos de captura, refund y reversal;
+eso confirma configuración, no una compra live ni activación del proveedor.
 
-1. Desplegar el backend y las migraciones revisadas por la vía canónica Hetzner,
-   con comprobación del esquema, versión y recuperación.
-2. Completar la clasificación fiscal del producto y, si corresponde impuesto,
-   resolver el total incluido con pruebas para una a cuatro entradas.
-3. Ejecutar una compra de proveedor y reembolso en un entorno oficial utilizable,
-   incluyendo callback/webhook, emisión, QR, check-in y entrega de confirmación.
-   El acceso sandbox ya está verificado; falta completar las transacciones
-   del proveedor y corregir cualquier fallo observado.
-4. Activar la ruta PayPal y la política del evento solamente con la evidencia
-   anterior, luego publicar y comprobar el checkout canónico. La autorización
-   del organizador ya está registrada; no constituye una prueba de estos pasos.
+El manifiesto candidato de 184 migraciones fue aplicado dos veces sobre una copia
+real aislada de PostgreSQL 17: 652 tablas y 159 entradas históricas preservadas.
+La comprobación del esquema pasó y el contenedor aislado se retiró. No se escribió
+la base de producción ni se desplegó ese backend durante el ensayo.
 
-Fuentes técnicas consultadas:
-[autenticación PayPal](https://developer.paypal.com/api/rest/authentication/) y
-[consulta de webhooks](https://developer.paypal.com/api/webhooks/v1).
-Los recibos operativos completos y los scripts de inspección sin secretos se
-conservan fuera del repositorio público. No se enviaron emails, cobros ni payouts.
+Para activar restan la fusión protegida, el despliegue compatible con respaldo y
+recuperación verificados, la configuración del proveedor y de la política aprobada
+del evento, y la comprobación del checkout público. La habilitación compartida de
+PayPal debe preservar las demás rutas desactivadas y evitar reabrir la política
+antigua del evento 121; no debe alterar sus órdenes ni su recuperación de pagos.
+Debe verificarse también la entrega externa de las comunicaciones transaccionales.
+
+Los archivos de pruebas anteriores se conservan como evidencia histórica:
+[primera compra](official-sandbox-purchase-2026-10-05.json),
+[repetición con IVA 0](official-sandbox-iva0-2026-10-05.json) y
+[asignación de reembolsos](ticket-refund-allocation-local-2026-10-06.json).
+Las decisiones del proveedor siguen su documentación de
+[autenticación](https://developer.paypal.com/api/rest/authentication/),
+[reembolsos](https://developer.paypal.com/api/payments/v2) y
+[eventos](https://developer.paypal.com/api/rest/webhooks/event-names/).

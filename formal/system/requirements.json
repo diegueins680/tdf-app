@@ -4298,7 +4298,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4335,19 +4335,21 @@
         "two concurrent buyers exceed event/tier capacity",
         "Client submits or changes tax mode, price, fees or totals",
         "An old writer silently creates an additive order against an inclusive policy",
-        "Rollback deletes purchased pricing mode or historical policy evidence"
+        "Rollback deletes purchased pricing mode or historical policy evidence",
+        "Admit a stale paid ticket while its correctly bound provider refund/reversal remains open or assigned",
+        "Mark a capture paid from missing or mismatched order readback evidence"
       ],
       "effects": [
         "Atomic ticket/audit or transfer/code update; rollback on failure; public buyer projections omit transferred credentials."
       ],
       "authorization": "Stored organizer for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Full staff delegation remains unspecified.",
       "privacy": "Opaque full-UUID credentials replace PII/fixed-HMAC QR. Transfer email is contact data, not delivery or verified identity.",
-      "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required.",
+      "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required. External-change processing locks the event and order before recording the admission-fencing reconciliation exception.",
       "idempotency": "Second scan/accept rejects; random replacement credential invalidates prior code. Does not provide payment-provider exactly-once behavior.",
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4367,7 +4369,26 @@
         "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
-        "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql"
+        "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Ticketing/Refund.hs",
+        "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
+        "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql",
+        "tdf-hq/src/TDF/Server/TicketRefunds.hs",
+        "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+        "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
+        "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql",
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
+        "tdf-hq-ui/src/i18n/locales/de.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/fr.ts",
+        "tdf-hq-ui/src/i18n/locales/pt.ts"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -4378,12 +4399,21 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/integration/ticket_inclusive_tax.sql"
+        "tdf-hq/test/integration/ticket_inclusive_tax.sql",
+        "tdf-hq/test/integration/ticket_admission_fixture.sql",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
+        "scripts/test-provider-retry-runtime.sh",
+        "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -6852,6 +6882,85 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Intake and audited resolution implemented; current merged validation, production backend deployment and actual operational fulfilment remain required."
+      }
+    },
+    {
+      "id": "EVT-FUNNEL-001",
+      "title": "Observe the public ticket funnel without exporting private ticket data",
+      "domain": "EVT",
+      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority. Every backend-created hosted payment session counts as initiation, including prepared, failed and confirmed-no-charge outcomes; initiation deduplicates per order/provider. Direct event and checkout landing UTMs replace stale campaign attribution before observation, without persisting private order paths or lookup parameters; disabled analytics stores no attribution.",
+      "authority": "User-approved event ticketing scope sections 9, 17, 28 and 39; existing privacy analytics boundary",
+      "source": "docs/events/ticket-funnel-observations.md",
+      "contract": "docs/events/ticket-funnel-observations.md",
+      "actors": [
+        "Public web visitor",
+        "Ticket buyer",
+        "Authorized check-in staff"
+      ],
+      "preconditions": [
+        "Existing configured analytics client; browser observations remain optional and respect existing SDK opt-out."
+      ],
+      "inputs": [
+        "Public event and tier IDs",
+        "Server checkout and check-in responses",
+        "Existing bounded campaign attribution"
+      ],
+      "state": {
+        "boundary": "Browser components and existing analytics client",
+        "deduplication": "At most 200 observations in session storage; private per-order scope remains local."
+      },
+      "allowedTransitions": [
+        "Visible card -> impression",
+        "Valid available selection -> selection observation",
+        "Validated submission -> checkout-start observation",
+        "Provider session response -> initiation observation",
+        "Server-paid response -> payment-completion observation",
+        "Issued fulfillment with an issued ticket -> issued/opened observations",
+        "Server-checked-in response with ticket and timestamp -> check-in observation"
+      ],
+      "forbiddenTransitions": [
+        "Pending/failed provider return -> payment-completion observation",
+        "Unissued/revoked ticket -> ticket-opened observation",
+        "Private order, ticket, QR, credential, buyer data or monetary amount -> analytics payload",
+        "Analytics failure -> failed purchase"
+      ],
+      "effects": [
+        "Best-effort browser funnel observations through the existing PostHog client"
+      ],
+      "authorization": "Observations never grant payment or admission authority; existing backend guards remain authoritative.",
+      "privacy": "Explicit payload allowlist, campaign syntax bounds and existing serializer; no claim to detect arbitrary personal names in valid campaign codes.",
+      "concurrency": "Session cache merges mounted component observations; no cross-tab or distributed exactly-once guarantee.",
+      "idempotency": "Bounded local deduplication only; cache eviction and a new session can repeat historical observations.",
+      "failure": "Missing analytics omits observations; SDK or storage exceptions cannot interrupt checkout.",
+      "recovery": "No retry of financial operations is authorized by telemetry; canonical ledgers remain the source of totals.",
+      "observability": "Synthetic component and payload tests; provider ingestion requires separate evidence.",
+      "property": "No completion observation before server paid state, no opened observation before issued ticket state, no private fields in explicit analytics payload.",
+      "implementation": [
+        "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+        "tdf-hq-ui/src/analytics/useTicketFunnel.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "React component tests exercise actual route boundaries; helper tests cover privacy, disabled client, storage errors and local deduplication.",
+      "evidence": "Scoped Jest suite, TypeScript and ESLint; production vendor ingestion is not established by these tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped browser-state and serializer examples; neither global event delivery nor financial attribution correctness is claimed.",
+      "ambiguity": [
+        "Durable server-side funnel attribution and verified vendor ingestion are not implemented by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Browser observation boundaries are implemented and tested; deployed ingestion, consent configuration and canonical revenue-attribution joins require separate verification."
       }
     }
   ]

@@ -85,6 +85,7 @@ executable tdf-hq-exe
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
+    TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
@@ -192,6 +193,8 @@ executable tdf-hq-exe
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
+    TDF.Server.ProviderTransport
+    TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
@@ -392,6 +395,7 @@ test-suite tdf-hq-test
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
+    TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
@@ -492,6 +496,8 @@ test-suite tdf-hq-test
     TDF.Commerce.RefundRecoverySpec
     TDF.Server.PaymentAuditSpec
     TDF.Server.ServiceStorefront
+    TDF.Server.ProviderTransport
+    TDF.Server.TicketRefunds
     TDF.ServerAuth
     TDF.ServerAuthSpec
     TDF.ServerAdmin

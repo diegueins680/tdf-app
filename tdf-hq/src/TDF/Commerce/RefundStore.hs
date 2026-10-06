@@ -19,6 +19,7 @@ module TDF.Commerce.RefundStore
   , listCheckoutRefunds
   , validateRefundAmount
   , validateRefundReason
+  , ticketRefundComponents
   ) where
 
 import           Control.Monad (when)
@@ -704,7 +705,7 @@ providerRefundIsCompatible :: RefundReference -> Text -> SqlPersistT IO Bool
 providerRefundIsCompatible refundRef providerRefundId = do
   rows <- (rawSql
     "SELECT provider_refund_id = ? FROM commerce_refund\
-    \ WHERE id = ?::uuid AND status = 'processing'"
+    \ WHERE id = ?::uuid AND status IN ('processing','succeeded')"
     [ PersistText providerRefundId
     , PersistText (refundReferenceId refundRef)
     ] :: SqlPersistT IO [Single (Maybe Bool)])
@@ -728,17 +729,24 @@ postRefundLedger record providerRefundId occurredAt correlationId = do
     ] :: SqlPersistT IO [Single Text])
   case created of
     [Single newLedgerId] -> do
-      rawExecute
-        "INSERT INTO commerce_ledger_entry (\
-        \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
-        \) SELECT ?::uuid, 'revenue.service_storefront', domain_type, domain_order_id,\
-        \ ?, ?, 'Verified provider refund' FROM commerce_checkout_session\
-        \ WHERE id = ?::uuid"
-        [ PersistText newLedgerId
-        , PersistText (rrCurrency record)
-        , PersistInt64 (rrAmountMinor record)
-        , PersistText (checkoutReferenceId (rrCheckout record))
-        ]
+      domains <- rawSql
+        "SELECT domain_type FROM commerce_checkout_session WHERE id=?::uuid"
+        [PersistText (checkoutReferenceId (rrCheckout record))]
+        :: SqlPersistT IO [Single Text]
+      if domains == [Single "event_ticket_order"]
+        then postTicketRefundComponents record newLedgerId
+        else do
+          rawExecute
+            "INSERT INTO commerce_ledger_entry (\
+            \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
+            \) SELECT ?::uuid, 'revenue.service_storefront', domain_type, domain_order_id,\
+            \ ?, ?, 'Verified provider refund' FROM commerce_checkout_session\
+            \ WHERE id = ?::uuid"
+            [ PersistText newLedgerId
+            , PersistText (rrCurrency record)
+            , PersistInt64 (rrAmountMinor record)
+            , PersistText (checkoutReferenceId (rrCheckout record))
+            ]
       rawExecute
         "INSERT INTO commerce_ledger_entry (\
         \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
@@ -755,6 +763,101 @@ postRefundLedger record providerRefundId occurredAt correlationId = do
         "UPDATE commerce_ledger_transaction SET status = 'posted' WHERE id = ?::uuid"
         [PersistText newLedgerId]
     _ -> pure ()
+
+-- Cumulative allocation makes partial refunds independent of retry count and
+-- conserves every cent at full refund. Allocate tax first, then fees from the
+-- remaining amount; the organizer receives the remainder. Hierarchical integer
+-- division keeps every component monotone (independent rounding can make a
+-- one-cent refund debit two cents). Integer intermediates avoid Int64 overflow.
+ticketRefundComponents
+  :: Int64 -> Int64 -> Int64 -> Int64 -> Int64
+  -> Either Text (Int64, Int64, Int64)
+ticketRefundComponents total fee tax previous amount
+  | total <= 0 || fee < 0 || tax < 0 || previous < 0 || amount <= 0 =
+      Left "Ticket refund balances must be nonnegative with a positive amount"
+  | toInteger fee + toInteger tax > toInteger total =
+      Left "Ticket refund components exceed the captured total"
+  | toInteger previous + toInteger amount > toInteger total =
+      Left "Ticket refund exceeds the captured remainder"
+  | otherwise =
+      let (beforeFee, beforeTax, beforeOrganizer) = allocated (toInteger previous)
+          (afterFee, afterTax, afterOrganizer) = allocated (toInteger previous + toInteger amount)
+      in Right (fromInteger (afterFee - beforeFee), fromInteger (afterTax - beforeTax),
+                fromInteger (afterOrganizer - beforeOrganizer))
+  where
+    allocated value =
+      let refundedTax = toInteger tax * value `div` toInteger total
+          remaining = value - refundedTax
+          nonTaxTotal = toInteger total - toInteger tax
+          refundedFee = if nonTaxTotal == 0 then 0
+            else toInteger fee * remaining `div` nonTaxTotal
+      in (refundedFee, refundedTax, remaining - refundedFee)
+
+-- Called after canonical completion inside the SAME caller-owned transaction.
+-- Any evidence mismatch raises, rolling back the refund, intent, receipt and
+-- journal together. Never post a ticket refund to service-storefront revenue.
+postTicketRefundComponents :: RefundRecord -> Text -> SqlPersistT IO ()
+postTicketRefundComponents record ledgerId = do
+  rows <- rawSql
+    "SELECT checkout.paid_minor,checkout.refunded_minor,runtime.platform_fee_minor,\
+    \ runtime.tax_minor,runtime.organizer_payable_minor\
+    \ FROM commerce_checkout_session checkout\
+    \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id=checkout.id\
+    \ WHERE checkout.id=?::uuid AND checkout.domain_type='event_ticket_order'"
+    [checkoutParameter]
+    :: SqlPersistT IO [(Single Int64,Single Int64,Single Int64,Single Int64,Single Int64)]
+  case rows of
+    [(Single total,Single refunded,Single fee,Single tax,Single organizer)] -> do
+      when (toInteger fee + toInteger tax + toInteger organizer /= toInteger total || organizer < 0) $
+        fail "Ticket refund snapshot does not conserve the captured balance"
+      when (refunded < rrAmountMinor record || refunded > total) $
+        fail "Ticket refund aggregate does not match its current verified amount"
+      let previous = refunded - rrAmountMinor record
+      (refundFee,refundTax,refundOrganizer) <-
+        either (fail . T.unpack) pure (ticketRefundComponents total fee tax previous (rrAmountMinor record))
+      capture <- rawSql
+        "SELECT entry.account_code,SUM(entry.amount_minor)::bigint\
+        \ FROM commerce_ledger_transaction txn JOIN commerce_ledger_entry entry ON entry.transaction_id=txn.id\
+        \ WHERE txn.source_type='payment_attempt' AND txn.source_id=?\
+        \ AND txn.transaction_type='payment_capture' AND txn.status='posted'\
+        \ AND entry.currency=? GROUP BY entry.account_code ORDER BY entry.account_code"
+        [PersistText (paymentAttemptReferenceId (rrPaymentAttempt record)),PersistText (rrCurrency record)]
+        :: SqlPersistT IO [(Single Text,Single Int64)]
+      let expectedCapture = sortOn fst $ (cashAccount,total) :
+            [(account,negate value) | (account,value) <- components fee tax organizer, value > 0]
+      when (map (\(Single account,Single amount) -> (account,amount)) capture /= expectedCapture) $
+        fail "Ticket refund does not match its posted capture components"
+      previousComponents <- if previous == 0 then pure (0,0,0)
+        else either (fail . T.unpack) pure (ticketRefundComponents total fee tax 0 previous)
+      prior <- rawSql
+        "SELECT entry.account_code,SUM(entry.amount_minor)::bigint\
+        \ FROM commerce_refund refund JOIN commerce_ledger_transaction txn\
+        \ ON txn.source_type='refund' AND txn.source_id=refund.id::text\
+        \ JOIN commerce_ledger_entry entry ON entry.transaction_id=txn.id\
+        \ WHERE refund.checkout_id=?::uuid AND refund.id<>?::uuid\
+        \ AND refund.status='succeeded' AND txn.transaction_type='payment_refund' AND txn.status='posted'\
+        \ AND entry.currency=? GROUP BY entry.account_code HAVING SUM(entry.amount_minor)<>0 ORDER BY entry.account_code"
+        [checkoutParameter,PersistText (refundReferenceId (rrReference record)),PersistText (rrCurrency record)]
+        :: SqlPersistT IO [(Single Text,Single Int64)]
+      let (priorFee,priorTax,priorOrganizer) = previousComponents
+          expectedPrior = sortOn fst $ [(cashAccount,negate previous) | previous > 0] <>
+            [(account,value) | (account,value) <- components priorFee priorTax priorOrganizer, value > 0]
+      when (map (\(Single account,Single amount) -> (account,amount)) prior /= expectedPrior) $
+        fail "Ticket refund history requires financial reconciliation"
+      mapM_ postComponent (filter ((> 0) . snd) (components refundFee refundTax refundOrganizer))
+    _ -> fail "Ticket refund requires exactly one immutable ticket checkout snapshot"
+  where
+    checkoutParameter = PersistText (checkoutReferenceId (rrCheckout record))
+    cashAccount = "cash." <> rrProvider record
+    components fee tax organizer =
+      [("revenue.event_ticket_order",fee),("liability.sales_tax",tax),
+       ("liability.event_organizer_payable",organizer)]
+    postComponent :: (Text,Int64) -> SqlPersistT IO ()
+    postComponent (account,amount) = rawExecute
+      "INSERT INTO commerce_ledger_entry(transaction_id,account_code,domain_type,domain_id,currency,amount_minor,memo)\
+      \ SELECT ?::uuid,?,domain_type,domain_order_id,currency,?,'Verified ticket refund component'\
+      \ FROM commerce_checkout_session WHERE id=?::uuid"
+      [PersistText ledgerId,PersistText account,PersistInt64 amount,checkoutParameter]
 
 ensureCreditNote :: RefundRecord -> Text -> UTCTime -> SqlPersistT IO ()
 ensureCreditNote record providerRefundId occurredAt = do
