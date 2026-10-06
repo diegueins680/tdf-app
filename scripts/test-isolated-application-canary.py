@@ -32,7 +32,7 @@ def make():
 def container():
     return {'Id':APP,'Image':IMAGE_ID,'Config':{'Labels':{canary.LABEL:NONCE},'Image':IMAGE,
             'Cmd':canary.COMMAND.copy(),'Entrypoint':None,'User':'1000:1000','WorkingDir':'/app'},
-        'HostConfig':{'NetworkMode':'container:'+DB,'ReadonlyRootfs':True,'Memory':canary.MEMORY,
+        'HostConfig':{'RestartPolicy': {'Name':'no','MaximumRetryCount':0}, 'AutoRemove': False, 'NetworkMode':'container:'+DB,'ReadonlyRootfs':True,'Memory':canary.MEMORY,
             'MemorySwap':canary.MEMORY,'NanoCpus':500000000,'PidsLimit':128,'CapDrop':['ALL'],
             'IpcMode':'private','SecurityOpt':['no-new-privileges:true'],
             'Tmpfs':{'/tmp':'rw,nosuid,nodev,size=16777216'}},
@@ -43,6 +43,13 @@ def container():
 
 
 class CanaryTests(unittest.TestCase):
+    def test_disposable_never_restarts_or_auto_removes(self):
+        for policy in ({"Name":"always","MaximumRetryCount":0},{"Name":"unless-stopped","MaximumRetryCount":0},{"Name":"on-failure","MaximumRetryCount":3},{"Name":"no","MaximumRetryCount":1},None):
+            data=container();data["HostConfig"]["RestartPolicy"]=policy
+            with self.subTest(policy=policy),self.assertRaises(ValueError):make().admit(data)
+        data=container();data["HostConfig"]["AutoRemove"]=True
+        with self.assertRaises(ValueError):make().admit(data)
+
     def test_synthetic_startup_diagnostics_reject_real_source_before_inspection(self):
         spec=importlib.util.spec_from_file_location('synthetic_diagnostics',ROOT/'scripts/test-physical-application-docker.py')
         fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)

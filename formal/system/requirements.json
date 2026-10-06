@@ -2575,7 +2575,8 @@
         "Restore through host networking, production mounts, unknown image or changed ownership",
         "Emit passing receipt before cleanup or after source drift",
         "Do not accept missing/changed/unknown applied history, incomplete candidate ledger, rewritten history or unstable second-application controls.",
-        "Crash releases process lock -> admit another isolate while the prior labelled container remains."
+        "Crash releases process lock -> admit another isolate while the prior labelled container remains.",
+        "Admit a disposable with automatic restart or automatic removal; its inspected restart policy must be no with zero retries and AutoRemove false."
       ],
       "effects": [
         "Create private host archives and a temporary resource-bounded isolate; remove only that admitted isolate",
@@ -5702,7 +5703,8 @@
         "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
         "Release reservation while an application create request or container may remain",
         "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership",
-        "Use compiled regional defaults that disagree with the restored deployment registry, or copy arbitrary configuration/credentials from the restored database into the canary environment."
+        "Use compiled regional defaults that disagree with the restored deployment registry, or copy arbitrary configuration/credentials from the restored database into the canary environment.",
+        "Admit a disposable with automatic restart or automatic removal; its inspected restart policy must be no with zero retries and AutoRemove false."
       ],
       "effects": [
         "Temporary bounded application and empty private asset/upload directories",
@@ -6742,7 +6744,8 @@
         "Clear reservation after uncertain cleanup",
         "Remove the database or release its reservation while a registered dependent application has uncertain cleanup.",
         "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources.",
-        "Treat a sampled capacity estimate as a resource reservation, complete host-worker exclusion or deployment authorization."
+        "Treat a sampled capacity estimate as a resource reservation, complete host-worker exclusion or deployment authorization.",
+        "Admit a disposable with automatic restart or automatic removal; its inspected restart policy must be no with zero retries and AutoRemove false."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",

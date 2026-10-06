@@ -162,7 +162,7 @@ class Canary:
     def command(self):
         require(self.image_id is not None)
         args=['create','--pull=never','--name',self.name,'--label',LABEL+'='+self.nonce,
-              '--network=container:'+self.database.target,'--read-only','--user','1000:1000',
+              '--network=container:'+self.database.target,'--read-only', '--restart=no','--user','1000:1000',
               '--workdir','/app','--memory='+str(MEMORY),'--memory-swap='+str(MEMORY),
               '--cpus=0.5','--pids-limit=128','--cap-drop=ALL','--security-opt=no-new-privileges:true',
               '--tmpfs','/tmp:rw,nosuid,nodev,size=16777216']
@@ -175,6 +175,7 @@ class Canary:
         require(re.fullmatch(r'[a-f0-9]{64}',target) and target not in (self.database.source,self.database.target))
         require(self.target is None or target==self.target)
         cfg=data['Config'];host=data['HostConfig']
+        require(host.get('RestartPolicy') == {'Name':'no','MaximumRetryCount':0} and host.get('AutoRemove') is False)
         require(cfg['Labels'].get(LABEL)==self.nonce and cfg['Image']==self.image and data['Image']==self.image_id)
         require(cfg['Cmd']==self.runtime_command and not cfg.get('Entrypoint') and cfg['User']=='1000:1000' and cfg['WorkingDir']=='/app')
         require(host['NetworkMode']=='container:'+self.database.target and not data['NetworkSettings']['Networks'])

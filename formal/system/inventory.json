@@ -86,6 +86,7 @@
       "ops/hetzner/original-database-recovery.py",
       "ops/hetzner/original-deployment-admission.py",
       "ops/hetzner/original-edge-recovery.py",
+      "ops/hetzner/original-recovery-completion.py",
       "ops/hetzner/original-timer-recovery.py",
       "ops/hetzner/physical-postgres-recovery.py",
       "ops/hetzner/production-recovery-sources.py",
@@ -451,6 +452,7 @@
       "scripts/test-original-deployment-admission.py",
       "scripts/test-original-edge-recovery.py",
       "scripts/test-original-edge-tls.py",
+      "scripts/test-original-recovery-completion.py",
       "scripts/test-original-timer-recovery.py",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
@@ -2383,7 +2385,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "8adcb952ed74dc0d8f5ef69b6ce7d22e6a1b9f3b0facf1973d3ef3740a044165",
+      "sha256": "a38f50147e164ec7ee34a8c04cfc14950f87dca113fb09587d4d4e7ca27639b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2767,7 +2769,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
+      "sha256": "42a6a3644b0dfa30c83c7c98c5311e2bad8e831fa3a2b9225e8707a8bfbeb179",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2807,6 +2809,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-811bc9a3a90a7252",
+      "path": "ops/hetzner/original-recovery-completion.py",
+      "sha256": "c130c481e943507ac0894373ab6f31befc2beebf343f70c5480bddbe1a8c1f96",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e15b062f5c101301",
       "path": "ops/hetzner/original-timer-recovery.py",
       "sha256": "a816d29085d590739d189c27e88753e022d0ef2c6fce6aaa7d0401061ec4a297",
@@ -2815,7 +2823,7 @@
     {
       "id": "SURFACE-f291d88fdd7054a3",
       "path": "ops/hetzner/physical-postgres-recovery.py",
-      "sha256": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
+      "sha256": "0057df8dde9239ce85e9f1c72402ddcf56260c5c491924ce85a8d0a6e5af4fff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2863,7 +2871,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "0bf986b57acb4215336c1f3da90e6069c59a4e350a78842570468bcf9e2cd7fa",
+      "sha256": "c08c7a075c444b882d56b5ebf90fc2903ad5cad8b03dc052783cfc8ef4c6c138",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4057,7 +4065,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "4536cd182061c014d1fb997bbaa3ff70367653b86ba37d08825a969820df875a",
+      "sha256": "e45e3b70c196b50134c8ea4a4f1cdd17708cdc877e5d3d6ed8a30ebbd6195c15",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4807,7 +4815,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+      "sha256": "741b2b3f915cb9d8ca6800c6410e2ecc414f283fb9b3aabdd8743ae315035b8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4849,7 +4857,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "76c4fccedb8b34234f27e327f740ac674da8c0db6192146767e7af5484073d60",
+      "sha256": "8faf83595b05a5aed75c7add43b04d58591b7d450ffd91b0b98294c5f6105a24",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4961,6 +4969,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d06655b32b4b84d5",
+      "path": "scripts/test-original-recovery-completion.py",
+      "sha256": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7d3d85c89dea311a",
       "path": "scripts/test-original-timer-recovery.py",
       "sha256": "2273e2069fedbb15e7ca84cfb0136750700f29c0727dc7f67a5c84ced0bed5a2",
@@ -5005,7 +5019,7 @@
     {
       "id": "SURFACE-698c1d3e01b14388",
       "path": "scripts/test-physical-postgres-recovery.py",
-      "sha256": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
+      "sha256": "15d607ae20a7ca294ff3c2c285ef48af66d9f3f91ef1e4379e9ada4c121af7e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5023,7 +5037,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "bdbc7c61625fbae534a029573b1b79b1026aabb9780a9a17dc04c5cd371eae7a",
+      "sha256": "c8a822645a8455ef418d410686d832b3d9578a2b8714a429ab4071a97b70ed81",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5275,7 +5289,7 @@
     {
       "id": "SURFACE-bde8e6717fb9ee2c",
       "path": "scripts/test-writer-fence-fixture-ownership.py",
-      "sha256": "ef53420ceb2145bbc757640c29bac2a8fa91a12261613ff15429d01fca8adb38",
+      "sha256": "da855490f9f2f71efcbf6dd906fcd367c384faa2a551b07cdbf822e85205908a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22572,7 +22586,7 @@
     },
     {
       "path": "formal/system/isolated-canary.md",
-      "sha256": "677eeb42cedf9590bfbf8762ba8e5d54324522d81122b232e9a014fabeae334e",
+      "sha256": "99c4f8297a2cd53321c879d2eee9dd835e92791d2ea465820426139edd6d3f4d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22649,7 +22663,7 @@
     },
     {
       "path": "formal/system/original-service-recovery.md",
-      "sha256": "b61925e673c0910a4ff86789eef489aba3ecb5387004f3c154c86892095525d2",
+      "sha256": "4f42b22697318ed1f9542f1b8883c32e5abe72b2098dda62c2d8138d6c0cad60",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22670,7 +22684,7 @@
     },
     {
       "path": "formal/system/physical-recovery.md",
-      "sha256": "826ea1877ed0ab974f5a07a020f23b085cf803d1ecee2b9873189dfc9a9b6a87",
+      "sha256": "b681438fdf81614145aab2a25407e746578f681baf9cbf7d0990715c5e639b31",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22719,14 +22733,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b0392c03989f0b091a9bd3205af1d92646d35aecc3d29c9487f691a43899a786",
+      "sha256": "43ff47d7e7b4b618b564ae5f6f682fdf6a5ab77fb5e2cd7b01f80a296c1e1c72",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "de5e2c28388897c45bb07290f3dcf66830a7aefd63af16eb3ab00d3e924d9063",
+      "sha256": "f82b69d1e192616ad9e6524f9c53da95c97acb0b13b4fce8b6b232e723b60d5c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22796,7 +22810,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "c0b4f744077846415c10d950ab37f72d55ebf955f697cc43b4e0cc326869d93d",
+      "sha256": "098c15949e56fce3dbd0f95ea19128b298ebb8240f4c36f4f2187f59e48f93aa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

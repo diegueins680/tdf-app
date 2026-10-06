@@ -210,3 +210,9 @@ The helper reports those limits explicitly and never authorizes a deployment.
 Seven deterministic tests cover boundaries, wrong/live authority, topology
 rejection, positive descriptor sampling and changes during the sample. They do
 not establish actual production capacity after shutdown.
+
+Disposable creation explicitly sets `--restart=no`; every later admission requires
+`RestartPolicy={Name:no,MaximumRetryCount:0}` and `AutoRemove=false`. Unknown,
+missing or changed policy rejects use and cleanup rather than repairing policy.
+These checks prevent automatic disposable restart/removal from being silently
+admitted; they do not supply the missing durable post-crash creation descriptor.

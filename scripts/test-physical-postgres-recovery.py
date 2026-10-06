@@ -17,6 +17,13 @@ CONTROL = 'pg_control version number: 1700\nDatabase system identifier: 12345\nD
 
 
 class PhysicalRecoveryTests(unittest.TestCase):
+    def test_disposable_never_restarts_or_auto_removes(self):
+        for policy in ({"Name":"always","MaximumRetryCount":0},{"Name":"unless-stopped","MaximumRetryCount":0},{"Name":"on-failure","MaximumRetryCount":3},{"Name":"no","MaximumRetryCount":1},None):
+            data=self.inspection();data["HostConfig"]["RestartPolicy"]=policy
+            with self.subTest(policy=policy),self.assertRaises(ValueError):self.clone.admit(data)
+        data=self.inspection();data["HostConfig"]["AutoRemove"]=True
+        with self.assertRaises(ValueError):self.clone.admit(data)
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(); self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
@@ -51,7 +58,7 @@ class PhysicalRecoveryTests(unittest.TestCase):
             'Config': {'Labels': {physical.restore.LABEL: self.clone.nonce}, 'Image': self.clone.image,
                        'User': '999:999', 'Entrypoint': ['/bin/sleep'], 'Cmd': ['600']},
             'NetworkSettings': {'Networks': {'none': {}}},
-            'HostConfig': {'NetworkMode': 'none', 'ReadonlyRootfs': True,
+            'HostConfig': {'RestartPolicy': {'Name':'no','MaximumRetryCount':0}, 'AutoRemove': False, 'NetworkMode': 'none', 'ReadonlyRootfs': True,
                 'Memory': physical.restore.MEMORY_LIMIT, 'MemorySwap': physical.restore.MEMORY_LIMIT,
                 'NanoCpus': 500000000, 'PidsLimit': 64, 'CapDrop': ['ALL'], 'IpcMode': 'private',
                 'SecurityOpt': ['no-new-privileges:true'], 'Tmpfs': {'/tmp': 'rw,nosuid,nodev,size=16777216'}},
