@@ -99,7 +99,13 @@ class ConformanceControls(unittest.TestCase):
             'POST /ddex/import-plans/{}/commit', 'POST /ddex/exports',
             'GET /ddex/exports/{}/download', 'POST /marketplace/cart/{}/stripe/payment-intent',
             'POST /radio/transmissions', 'POST /social-events/events/{}/live-broadcasts',
+            'POST /contracts/{}/send',
         })
+        contract_delivery = next(row for row in policy['unavailableOperations']
+                                 if row['id'] == 'POST /contracts/{}/send')
+        self.assertEqual(contract_delivery['requirement'], 'DATA-CONTRACT-001')
+        self.assertEqual(contract_delivery['unavailableStatus'], 503)
+        self.assertIn('tdf-hq/src/TDF/Contracts/Server.hs', contract_delivery['sources'])
         requirements = json.loads((conformance.ROOT/'formal/system/requirements.json').read_text())['requirements']
         conformance.validate_response_status(policy, requirements)
         for index, operation in enumerate(policy['unavailableOperations']):

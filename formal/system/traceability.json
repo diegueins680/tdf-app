@@ -7611,7 +7611,7 @@
     "scripts/test-recovery-transfer.py": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
     "scripts/test-release-journal.py": "d26a52fed682444dda8e83fb9978e8d534f8c11155be92d83b3ce7e5d3bf670e",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
+    "scripts/test-specification-conformance.py": "6569ca87e063f45e67296198ed13258784f62b811acb26bc0141667bd396befc",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-stopped-application-docker.py": "4890b5ece9e4f68a210e6d53450e1f5198afa967817ddb5a76e745e6eb6dfc26",
     "scripts/test-stopped-application-storage.py": "a3dd71b182518913328ffb58d87684b21a67779cf682fc37edd7b766d8af3b03",
@@ -17701,7 +17701,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
+      "sha256": "6569ca87e063f45e67296198ed13258784f62b811acb26bc0141667bd396befc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
