@@ -23076,7 +23076,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "3408e34d451ff4a43915f4860eeea5695f6af1ae29423f138a9e21fb1abdaa1c",
+      "sha256": "abc4bcde69d0b5969d5b8429086243215c2320541c0f41c3ac865d4e6ab06470",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23160,7 +23160,7 @@
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "55e0d3b1d2dde283be126da9858dd2f94140bc28267369342187e308e3978c75",
+      "sha256": "2a8503de59f9dd0522a51a103bed984e5d72b790227646aae7e5c002f39c30a7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

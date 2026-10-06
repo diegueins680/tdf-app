@@ -187,9 +187,10 @@ checks process liveness and unchanged Docker identity, and joins endpoint IDs,
 MACs, interface indices, bridge membership and peer namespace identity. Interface
 indices are namespace-local: reciprocal numbers alone are insufficient. Fixed
 `RTM_GETNSID` requests with `NETNSA_FD` look up the held opposite namespace in each
-direction; each veth's `link_netnsid` must match. Missing mappings reject. No
-namespace mapping, interface, route, firewall rule or Docker object is created
-by the collector.
+direction; each veth's `link_netnsid` must match. Missing mappings reject. The
+collector never issues `RTM_NEWNSID` or interface, route, firewall or Docker
+mutation requests. Linux `GETLINK` may materialize namespace-ID bookkeeping
+while reporting interfaces; the separate `GETNSID` lookup does not allocate IDs.
 
 Only conventional local Docker bridges, accounted veth ports, the declared
 external interface and loopback are accepted. Host/shared namespaces, additional

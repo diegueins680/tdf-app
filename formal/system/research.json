@@ -880,6 +880,15 @@
       "applicability": "Host packet-path admission for recovery restriction",
       "decision": "adopted as exclusion",
       "rationale": "Reject dup/fwd/queue/TEE/NFQUEUE, unknown nft syntax, legacy rules, TC/XDP attachments and unsupported routes; separately qualify BPF, privileged processes, mounts, devices and persistent policy. No automatic removal of existing host configuration."
+    },
+    {
+      "id": "RES-OPS-NETWORK-003",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/core/rtnetlink.c",
+      "title": "Linux6.8 GETLINK peer namespace reporting",
+      "recommendation": "Distinguish requested configuration writes from namespace-ID bookkeeping that the kernel may create while reporting interface peers.",
+      "applicability": "Scope of read-only network observation claims",
+      "decision": "adopted as documented limitation",
+      "rationale": "rtnl_fill_link_netnsid calls peernet2id_alloc during GETLINK. The collector never sends NEWNSID or network mutation requests, but must not claim all observation leaves kernel bookkeeping unchanged."
     }
   ]
 }
