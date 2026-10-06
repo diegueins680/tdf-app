@@ -253,6 +253,27 @@ class PhysicalRecoveryTests(unittest.TestCase):
         app.cleanup = Mock(side_effect=cleanup)
         return app
 
+    def test_coordinated_reservation_uses_held_lock_and_closes_after_cleanup(self):
+        events=[]
+        def reserve(clone,fd):
+            self.assertIs(clone,self.clone)
+            self.assertEqual(os.fstat(fd).st_ino,(self.root/'restore-rehearsal.lock').stat().st_ino)
+            events.append('reserve')
+        self.clone.creation_records=SimpleNamespace(reserve=reserve,
+            release=lambda clone:events.append('release'),close=lambda:events.append('close'))
+        with patch.object(physical.restore,'reserve_creation') as legacy,patch.object(self.clone,'cleanup',side_effect=lambda:events.append('cleanup')):
+            with self.reservation():events.append('body')
+        legacy.assert_not_called()
+        self.assertEqual(events,['reserve','body','cleanup','release','close'])
+
+    def test_coordinated_reservation_closes_without_release_when_cleanup_fails(self):
+        records=SimpleNamespace(reserve=Mock(),release=Mock(),close=Mock())
+        self.clone.creation_records=records
+        with patch.object(self.clone,'cleanup',side_effect=ValueError('uncertain cleanup')):
+            with self.assertRaisesRegex(ValueError,'uncertain cleanup'):
+                with self.reservation():pass
+        records.release.assert_not_called();records.close.assert_called_once()
+
     def test_application_dependency_is_registered_before_creation_and_removed_first(self):
         order=[]; app=self.application(lambda: order.append('application'))
         def database_cleanup():

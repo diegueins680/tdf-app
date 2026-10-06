@@ -55,6 +55,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-recovery-completi
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-disposable-absence.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-disposable-creation-spec.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-durable-disposable-records.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-coordinated-disposable-creation.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-tools.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-envelope.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-transfer.py"

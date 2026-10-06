@@ -321,7 +321,8 @@ class PhysicalClone(restore.IsolatedRestore):
         """Serialize with logical restores and retain uncertain daemon work."""
         require(self.reservation_pid is None and not self.creation_attempted
                 and self.active_application is None)
-        with files.directory(str(HOST_ROOT), private=True), restore.rehearsal_lock(HOST_ROOT):
+        coordinated = self.creation_records is not None and hasattr(self.creation_records, 'reserve')
+        with files.directory(str(HOST_ROOT), private=True), restore.rehearsal_lock(HOST_ROOT) as descriptor:
             require(not os.path.lexists(HOST_ROOT/restore.PENDING_NAME))
             for label in (restore.LABEL, 'net.tdf.application-canary'):
                 require(restore.execute(restore.DOCKER+['ps', '--all', '--quiet',
@@ -330,19 +331,28 @@ class PhysicalClone(restore.IsolatedRestore):
                           if line.startswith('MemAvailable:'))
             disk = os.statvfs(HOST_ROOT)
             require(memory >= 1024**3 and disk.f_bavail*disk.f_frsize >= 2*1024**3)
-            restore.reserve_creation(HOST_ROOT, self.nonce, self.image)
+            if coordinated:
+                self.creation_records.reserve(self, descriptor)
+            else:
+                restore.reserve_creation(HOST_ROOT, self.nonce, self.image)
             self.reservation_pid = os.getpid()
             try:
                 yield self
             finally:
-                require(self.reservation_pid == os.getpid())
-                self.reservation_pid = None
-                # Do not destroy a dependent application's DB or release its
-                # reservation after an uncertain application cleanup.
-                require(self.active_application is None)
-                self.cleanup()
-                require(self.target is None and not self.creation_attempted)
-                restore.release_creation(HOST_ROOT, self.nonce, self.image)
+                try:
+                    require(self.reservation_pid == os.getpid())
+                    self.reservation_pid = None
+                    # Do not destroy a dependent application's DB or release its
+                    # reservation after an uncertain application cleanup.
+                    require(self.active_application is None)
+                    self.cleanup()
+                    require(self.target is None and not self.creation_attempted)
+                    if coordinated:
+                        self.creation_records.release(self)
+                    else:
+                        restore.release_creation(HOST_ROOT, self.nonce, self.image)
+                finally:
+                    if coordinated:self.creation_records.close()
 
     def write_command(self, program, arguments):
         require(self.target is not None and self.target != self.source)

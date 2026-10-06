@@ -70,6 +70,7 @@
       "ops/hetzner/compose.production.yaml",
       "ops/hetzner/compose.restore.yaml",
       "ops/hetzner/coordinated-capture.py",
+      "ops/hetzner/coordinated-disposable-creation.py",
       "ops/hetzner/coordinated-encryption.py",
       "ops/hetzner/coordinated-recovery-bundle.py",
       "ops/hetzner/coordinated-retrieval.py",
@@ -398,6 +399,7 @@
       "scripts/test-checkout-event-refund-runtime-migration.sh",
       "scripts/test-contextual-reputation-worker-migration.sh",
       "scripts/test-coordinated-capture.py",
+      "scripts/test-coordinated-disposable-creation.py",
       "scripts/test-coordinated-encryption.py",
       "scripts/test-coordinated-recovery-bundle.py",
       "scripts/test-coordinated-retrieval.py",
@@ -2728,6 +2730,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fcffdc94af975690",
+      "path": "ops/hetzner/coordinated-disposable-creation.py",
+      "sha256": "d09aa0c2528b8079766e1faa56a9687a9620efd3ee0822d083457f996892069c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1958b910a4590d23",
       "path": "ops/hetzner/coordinated-encryption.py",
       "sha256": "dc589ccd89a30f8b8d8b6f509f5c2ea92d474fbd547684dc72f9a74db3aa188d",
@@ -2856,7 +2864,7 @@
     {
       "id": "SURFACE-f291d88fdd7054a3",
       "path": "ops/hetzner/physical-postgres-recovery.py",
-      "sha256": "cd0049155b2883fec716cbc49d5795ec9db7a06a9e9cc833a0b8fecb3b6aa778",
+      "sha256": "d173e7bfb715a70c79de01b05230dd5e86d9280093a6a3c7c8205f99230dbd69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4098,7 +4106,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "b9015726c4bac5c67e1128458ff9040905cb93795abfc5a70e9c51366f2e2d3e",
+      "sha256": "58cabf7d6f13eb4b82050fa21d402d9b01725a6eac133a29b74f8c18127778d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4660,6 +4668,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8132b655c5549c86",
+      "path": "scripts/test-coordinated-disposable-creation.py",
+      "sha256": "42fab595f45f4bd936a3814ee54c669d1a1120cdfaa9164c82eb4287c0a7fb9e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-df74c8715e71b50d",
       "path": "scripts/test-coordinated-encryption.py",
       "sha256": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
@@ -5076,7 +5090,7 @@
     {
       "id": "SURFACE-698c1d3e01b14388",
       "path": "scripts/test-physical-postgres-recovery.py",
-      "sha256": "b68fa3e91d63524ebe21fab0a60f219e80165056c80624e309a1677a077f28b2",
+      "sha256": "6faa758f68da887d63a96ca72e1fb094838c4abc867ef7b52bd8745ff28bf703",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22782,7 +22796,7 @@
     },
     {
       "path": "formal/system/original-service-recovery.md",
-      "sha256": "5309ad65f14dd00c9013dc85560a2da72e05d81ab0a2f71197bff0e045985da7",
+      "sha256": "f09864e8a3c80df03e1290f3648d35b79fa1beae9b3b85f9759cdecbdef7d594",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22852,7 +22866,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "77e30fe7e1c5740290787014dcb0491e52ed228633293451ac515b8f2aefd709",
+      "sha256": "dfb54540770d172874e2367dbc4eb3edfc0f1ec71f5ce7e5a7a4d3ac2f20356e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

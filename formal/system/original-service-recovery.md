@@ -224,10 +224,23 @@ adopt a pre-existing descriptor directory. Optional hooks in both actual creator
 publish before marking/submitting creation; failed publication submits no Docker
 request. Tests separately retain uncertainty when creation loses its response.
 
-These components do not implement the complete cleanup protocol. A caller guard
-must still be wired to the real journal and versioned common reservation. Plan
-image binding, exact admitted physical CID cross-binding, complete inventory,
-recorded fresh boot, canary-before-database removal, uncertain removal handling,
-and release of only the matching marker remain open. Legacy marker adoption is
-not authorized. The existing empty-set abort adapter remains the only complete
-cleanup-stage adapter; no production eligibility follows from descriptor tests.
+`coordinated-disposable-creation.py` binds the real release journal and common
+restore lock to an exclusively published version-2 marker. The recovery image is
+the original PostgreSQL image digest; the candidate image and source revision are
+the planned backend. Publication requires a pending `restore-isolate` stage before
+production writes. The canary's actual dependent database is inspected against its
+physical descriptor before the canary descriptor is published. PhysicalClone's
+reservation context wires reservation, cleanup, marker release and handle closure.
+Uncertain publication closes the writer and prevents marker release. Normal
+release requires complete successful Docker inventories proving nonce-owned names
+and labels absent; it deletes only the matching marker, retaining descriptors.
+All cooperating creators must use the permanent lock; privileged uncoordinated
+creation or rename remains outside sampled absence guarantees.
+
+Real filesystem/journal/lock controls and synthetic Docker observations verify
+these boundaries. Complete real-Docker creation/canary/cleanup composition and
+fresh-boot abort cleanup remain unfinished. The latter must authenticate the
+versioned marker and descriptors, reject unrelated inventory, remove canary before
+database, and retain uncertainty on lost replies. Legacy marker adoption is not
+authorized. The empty-set adapter remains the only complete abort cleanup-stage
+adapter; these component checks confer no production eligibility.

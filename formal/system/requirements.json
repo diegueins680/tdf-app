@@ -6077,7 +6077,8 @@
         "ops/hetzner/original-recovery-completion.py",
         "ops/hetzner/original-disposable-absence.py",
         "ops/hetzner/disposable-creation-spec.py",
-        "ops/hetzner/durable-disposable-records.py"
+        "ops/hetzner/durable-disposable-records.py",
+        "ops/hetzner/coordinated-disposable-creation.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6103,7 +6104,8 @@
         "scripts/test-original-recovery-completion.py",
         "scripts/test-original-disposable-absence.py",
         "scripts/test-disposable-creation-spec.py",
-        "scripts/test-durable-disposable-records.py"
+        "scripts/test-durable-disposable-records.py",
+        "scripts/test-coordinated-disposable-creation.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6129,7 +6131,7 @@
       "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
       "ambiguity": [
         "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open.",
-        "Typed durable disposable records and pre-create hooks are component boundaries only: real versioned reservation/plan-image binding, fresh-boot identity-bound cleanup and full coordinator remain unfinished."
+        "Versioned reservations bind real journals, original admission, plan images and actual dependent physical CID; normal release requires complete absence observations. Integrated real Docker creation/cleanup, fresh-boot identity-bound abort cleanup and the full coordinator remain unfinished."
       ],
       "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release. Empty-disposable controls preserve pending markers/symlinks and extra containers, reject changed inventories and lost-read replay, and check two exact complete inventory reads without deletion.",
       "conformance": {
