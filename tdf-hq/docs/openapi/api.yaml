@@ -2117,7 +2117,7 @@ paths:
   /health:
     get:
       summary: Health Check
-      description: Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns 503. This does not establish provider, schema, worker or full-system conformance.
+      description: Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
       operationId: getHealth
       security: []
       responses:
