@@ -282,22 +282,22 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
           .find((candidate) => candidate.textContent === 'Transferencia bancaria');
         expect(found).toBeTruthy();
       });
-      return found as HTMLButtonElement;
+      return found!;
     })();
     await act(async () => { fireEvent.click(button); });
     await waitForExpectation(() => expect(container.textContent).toContain('TDF-92'));
     expect(selectBankTransferMock).toHaveBeenCalledWith(41, 92, 'secure-lookup-token');
     expect(container.textContent).toContain('Banco Internacional ahorros 440781141');
 
-    const input = container.querySelector('input[maxlength="120"]') as HTMLInputElement;
+    const input = container.querySelector<HTMLInputElement>('input[maxlength="120"]')!;
     await act(async () => { fireEvent.change(input, { target: { value: 'COMP-55' } }); });
     const submit = Array.from(container.querySelectorAll('button'))
-      .find((candidate) => candidate.textContent === 'Ya transferí') as HTMLButtonElement;
+      .find((candidate) => candidate.textContent === 'Ya transferí')!;
     await act(async () => { fireEvent.click(submit); });
     await waitForExpectation(() => expect(container.textContent).toContain('Estamos verificando el depósito'));
     expect(submitBankTransferEvidenceMock).toHaveBeenCalledWith(41, 92, 'COMP-55', 'secure-lookup-token');
     expect(container.textContent).not.toContain('El servidor verificó el pago');
-    const providers = funnelCaptureMock.mock.calls.map((call) => (call as unknown[])[1]);
+    const providers = funnelCaptureMock.mock.calls.map((call) => call[1]);
     expect(providers).toEqual(expect.arrayContaining([expect.objectContaining({ provider: 'bank_transfer' })]));
     providers.forEach(expectNoPrivateTicketData);
   });

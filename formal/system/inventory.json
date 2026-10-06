@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+  "mobileRevision": "95c967dbc76e4dec42c1347de9f909e14769f6b1",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -5270,7 +5270,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "7be5ba580e9c609406619e0f6d17f5a79725cd5c81d41de8460990a2c169cc97",
+      "sha256": "a42d3cf85e04ea2fee70371e3b8c38bd87686deec1d0cefc67c024e6b3c55518",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13508,7 +13508,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
+      "sha256": "887824fbd467e3aefc6bf40dc208a4f12b1736e8a5a528c2e4b96475056f6ccd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15248,7 +15248,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+      "sha256": "3d5e9e22af3434fe660a24f5e16a94b92ff169bf267b632837b441263815e97b",
       "semanticConformance": "not-established-by-discovery"
     },
     {

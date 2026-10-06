@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+  "mobileRevision": "95c967dbc76e4dec42c1347de9f909e14769f6b1",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -7064,7 +7064,7 @@
     ".github/workflows/ci.yml": "5b9888d91eb875416d6f34cb93e4c17dcb7c373c69f5c42652cd6f44385cbd75",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0c563791448f419b9db4334246667c0481cf104ea11e1494c925fc906c47da16",
+    "docs/catalog-persistence/catalog-list-decisions.json": "0b64aca55c1190de7116cad04b782fa28c870dde08aef0252a4fac5ebac05d67",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
@@ -7321,7 +7321,7 @@
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
     "tdf-hq-ui/public/mobile-distribution.json": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "7be5ba580e9c609406619e0f6d17f5a79725cd5c81d41de8460990a2c169cc97",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a42d3cf85e04ea2fee70371e3b8c38bd87686deec1d0cefc67c024e6b3c55518",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
     "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
@@ -7549,7 +7549,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "887824fbd467e3aefc6bf40dc208a4f12b1736e8a5a528c2e4b96475056f6ccd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
@@ -7608,7 +7608,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+    "tdf-mobile/src/api/generated/types.ts": "3d5e9e22af3434fe660a24f5e16a94b92ff169bf267b632837b441263815e97b",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -16850,7 +16850,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "7be5ba580e9c609406619e0f6d17f5a79725cd5c81d41de8460990a2c169cc97",
+      "sha256": "a42d3cf85e04ea2fee70371e3b8c38bd87686deec1d0cefc67c024e6b3c55518",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28039,7 +28039,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
+      "sha256": "887824fbd467e3aefc6bf40dc208a4f12b1736e8a5a528c2e4b96475056f6ccd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30380,7 +30380,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+      "sha256": "3d5e9e22af3434fe660a24f5e16a94b92ff169bf267b632837b441263815e97b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
