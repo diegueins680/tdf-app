@@ -149,6 +149,22 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   throw lastError;
 };
 
+// Compare primitive identities, not digit substrings in timestamps. Traverse
+// arrays and objects so an identifier cannot hide in a nested analytics field.
+const expectNoPrivateTicketData = (value: unknown): void => {
+  expect(value).not.toBe(92);
+  expect(value).not.toBe('92');
+  expect(value).not.toBe(501);
+  expect(value).not.toBe('501');
+  if (typeof value === 'string') {
+    expect(value).not.toMatch(/private-capability|orden|stale|TICKET-VERIFIED|secure-lookup|Comprador/);
+  } else if (Array.isArray(value)) {
+    value.forEach(expectNoPrivateTicketData);
+  } else if (value && typeof value === 'object') {
+    Object.entries(value).forEach(expectNoPrivateTicketData);
+  }
+};
+
 describe('PublicEventTicketsPage verified payment boundary', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -186,6 +202,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     queryClient.clear();
     container.remove();
     delete window.paypal;
+    jest.restoreAllMocks();
   });
 
   const renderTracking = async (route: string) => {
@@ -379,6 +396,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
   });
 
   it.each([false, true])('captures current landing attribution and replaces stale campaign (previous=%s)', async (previous) => {
+    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('2026-10-06T05:36:12.592Z');
     if (previous) window.localStorage.setItem('tdf:growth-attribution:v1', JSON.stringify({
       source: 'stale', campaign: 'old', landingPath: '/old', capturedAt: '2026-01-01T00:00:00Z',
     }));
@@ -389,8 +407,8 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     })));
     const persisted = window.localStorage.getItem('tdf:growth-attribution:v1');
     expect(JSON.parse(persisted ?? '{}')).toEqual(expect.objectContaining({ landingPath: '/eventos/41', campaign: 'patch' }));
-    expect(persisted).not.toMatch(/private-capability|orden|92|stale/);
-    expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/private-capability|orden|92|stale/);
+    expectNoPrivateTicketData(JSON.parse(persisted ?? '{}'));
+    expectNoPrivateTicketData(funnelCaptureMock.mock.calls);
   });
 
   it('updates a revisited landing campaign even when its payment observation is deduplicated', async () => {
@@ -453,7 +471,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).toEqual([
       'ticketing_payment_completed', 'ticketing_ticket_issued', 'ticketing_ticket_opened',
     ]);
-    expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/TICKET-VERIFIED|secure-lookup|Comprador|501|92/);
+    expectNoPrivateTicketData(funnelCaptureMock.mock.calls);
     await renderTracking('/eventos/41/orden/92');
     expect(funnelCaptureMock).toHaveBeenCalledTimes(3);
   });
