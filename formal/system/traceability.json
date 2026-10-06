@@ -7640,8 +7640,19 @@
         "scripts/test-network-recovery-admission.py",
         "scripts/test-network-namespace-linux.py"
       ],
-      "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission.",
+      "formalModels": [
+        "formal/event-operations/LegacyInterruptedStop.cfg",
+        "formal/event-operations/LegacyInterruptedStop.tla",
+        "formal/event-operations/LegacyInterruptedStopDirtyDatabase.cfg",
+        "formal/event-operations/LegacyInterruptedStopEarlyRelease.cfg",
+        "formal/event-operations/LegacyInterruptedStopFalseCompletion.cfg",
+        "formal/event-operations/LegacyInterruptedStopLostReply.cfg",
+        "formal/event-operations/LegacyInterruptedStopNoIntent.cfg",
+        "formal/event-operations/LegacyInterruptedStopUnrestrictedRecovery.cfg",
+        "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
+        "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg"
+      ],
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7728,6 +7739,16 @@
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+    "formal/event-operations/LegacyInterruptedStop.cfg": "2d0c2728bc994d3173c1e289e32f3ed9574a08de6e7a5592cbc1bf65277b1d8b",
+    "formal/event-operations/LegacyInterruptedStop.tla": "ad9ee105862edcffa6b775f90dba1b43d0f03599dfaf66e25506f877b75de513",
+    "formal/event-operations/LegacyInterruptedStopDirtyDatabase.cfg": "7deb060f218a317b276f45e957140d63c1e0f41158edefa073d91c3ac3b741fc",
+    "formal/event-operations/LegacyInterruptedStopEarlyRelease.cfg": "5c330fbf08d84191b5e4d1cc5738b4892eba15b74833cd949ab7d269ec0dee5e",
+    "formal/event-operations/LegacyInterruptedStopFalseCompletion.cfg": "eeb00cc556b25d6ae4086ecd782606df475ce108187af7e9ad48d9bf78cfcf6d",
+    "formal/event-operations/LegacyInterruptedStopLostReply.cfg": "ed7b54d478d535202d6ef8a48f2b3cb634b5419e1f383054ed84e21ccc872561",
+    "formal/event-operations/LegacyInterruptedStopNoIntent.cfg": "8ce6d9d81b66caf688ba35ec180281ff2d2197ae55fe311b5718a9f155d82dd9",
+    "formal/event-operations/LegacyInterruptedStopUnrestrictedRecovery.cfg": "c3ada31deb4b0b35795b4519e8e779cd68f71ae611d00564b19032afd8ceda0d",
+    "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg": "1adf93c3d6199174a1f492544c875c0918cccf588cec52614e4fa579aac8ebd8",
+    "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg": "cc4dbc3c3a986ed8a1e3087ccb78ac7b4fbf2cb941c81cbc6d971008ade5c10e",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
@@ -8011,7 +8032,7 @@
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-contract-storage.py": "ceae1810751a8311c9771a89b647054a75063c93ea413273a86f6ee6e6a8af07",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "e824bbedca41b6bb2b46afeb0cd1be37aaaddc2d45d364fc9bd570ba9a3eff57",
+    "scripts/verify-event-operations-formal.sh": "134f2f235c706af95a7195b153596df14dcd024bcc8498234071bc6f4a8e170b",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -13626,6 +13647,66 @@
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
       }
+    ],
+    "formal/event-operations/LegacyInterruptedStop.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStop.tla": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopDirtyDatabase.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopEarlyRelease.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopFalseCompletion.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopLostReply.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopNoIntent.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopUnrestrictedRecovery.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -19021,7 +19102,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "e824bbedca41b6bb2b46afeb0cd1be37aaaddc2d45d364fc9bd570ba9a3eff57",
+      "sha256": "134f2f235c706af95a7195b153596df14dcd024bcc8498234071bc6f4a8e170b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36173,8 +36254,7 @@
     "MEDIA-RIDER-001",
     "DATA-CONTRACT-001",
     "NOTIF-WORKER-001",
-    "NOTIF-TRANSPORT-001",
-    "DEPLOY-QUARANTINE-001"
+    "NOTIF-TRANSPORT-001"
   ],
   "stateMachines": [
     {
@@ -37296,7 +37376,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a488387ab599068da774ac780043f56599eba1f606c63c301ed8db11be22ed25",
+      "sourceSha256": "69cad19b3a3250ce73562a23534fad12d5e07d43db01aaff9d4c54c99a5b560e",
       "definition": {
         "states": [
           "absent",

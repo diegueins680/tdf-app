@@ -218,3 +218,48 @@ BPF semantics, admit privileged host processes/devices/mounts, close the explici
 excluded Docker DNS relay, or authorize production restriction. The result always
 sets `hostBypassAdmissionVerified` to false; the coordinator must combine separately
 qualified boundaries and boot/policy evidence before treating the host as admitted.
+
+## Legacy interrupted-stop target contract
+
+The legacy image's observed SIGINT exit255 is an interrupted stop, never evidence
+of HTTP drain, completed file writes or known external outcomes. The qualified
+ordinary stop/capture path continues to reject it. An exceptional path is not yet
+implemented or authorized by these models. It must bind the exact old image,
+container, configuration, permitted signal and qualification references durably
+before maintenance. A generic unclean-stop switch or arbitrary accepted exit-code
+list is forbidden. Missing identity, intent or live restriction must deny the
+signal; a lost command response leaves unresolved intent even if the process is
+observably dead.
+
+A future exceptional capture must require the acknowledged bound stop, exited255,
+PID0, no OOM/restart, a dead retained pidfd, unchanged configuration and retained
+root/namespace checks. It must preserve all existing file/metadata/mount checks and
+report potentially partial application files explicitly. PostgreSQL still needs
+its ordinary clean shutdown and control-state checks. Original/candidate recovery
+must re-establish and recheck restriction, including after reboot and before starts
+on an already-running daemon. No recovery completion may remove restriction or
+invent a known provider outcome. Removal requires separately evidenced reconciliation.
+Operational acceptance of these degraded conditions remains pending.
+
+`LegacyInterruptedStop.tla` is a **target safety model**, not a refinement of an
+implemented exceptional path. It bounds one attempt, one API identity, one boolean
+restriction boundary, one database-cleanliness observation and one ambiguous
+external outcome. The only phase values are initial, intent, submitted, stopped,
+uncertain, captured, recovered and released. Reboots may repeat but erase only
+sampled restriction state in this abstraction. There is no fairness assumption or
+liveness claim. Exact source identity, durable writes, effective/persistent packet
+restriction, trustworthy acknowledgements, PG control checks and reconciliation
+are abstract environment predicates. Existing `AbortServiceRecovery` separately
+models fresh-boot recovery epochs; this model does not compose or prove those
+adapters, kernel/network behavior, partial-file repair, SMTP, provider state or
+operational approval. `Reconcile` is a trusted abstract action, not provider
+evidence. There is only one submission and no retry action; this does not
+independently prove that an implementation rejects retries.
+
+The intended invariants require exact identity and durable intent before stop,
+restriction at stop and recovery, an acknowledged stop and clean database before
+capture, no fabricated graceful/external completion, and reconciliation before
+release. Eight isolated controlled mutations remove one of these guards; each
+must violate its named invariant. Passing bounded analysis establishes only this
+transition contract under its assumptions. Integration, actual legacy capture and
+restricted recovery remain open implementation obligations.

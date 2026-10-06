@@ -5552,7 +5552,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "e824bbedca41b6bb2b46afeb0cd1be37aaaddc2d45d364fc9bd570ba9a3eff57",
+      "sha256": "134f2f235c706af95a7195b153596df14dcd024bcc8498234071bc6f4a8e170b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20856,6 +20856,76 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/LegacyInterruptedStop.cfg",
+      "sha256": "2d0c2728bc994d3173c1e289e32f3ed9574a08de6e7a5592cbc1bf65277b1d8b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStop.tla",
+      "sha256": "ad9ee105862edcffa6b775f90dba1b43d0f03599dfaf66e25506f877b75de513",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopDirtyDatabase.cfg",
+      "sha256": "7deb060f218a317b276f45e957140d63c1e0f41158edefa073d91c3ac3b741fc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopEarlyRelease.cfg",
+      "sha256": "5c330fbf08d84191b5e4d1cc5738b4892eba15b74833cd949ab7d269ec0dee5e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopFalseCompletion.cfg",
+      "sha256": "eeb00cc556b25d6ae4086ecd782606df475ce108187af7e9ad48d9bf78cfcf6d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopLostReply.cfg",
+      "sha256": "ed7b54d478d535202d6ef8a48f2b3cb634b5419e1f383054ed84e21ccc872561",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopNoIntent.cfg",
+      "sha256": "8ce6d9d81b66caf688ba35ec180281ff2d2197ae55fe311b5718a9f155d82dd9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopUnrestrictedRecovery.cfg",
+      "sha256": "c3ada31deb4b0b35795b4519e8e779cd68f71ae611d00564b19032afd8ceda0d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
+      "sha256": "1adf93c3d6199174a1f492544c875c0918cccf588cec52614e4fa579aac8ebd8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg",
+      "sha256": "cc4dbc3c3a986ed8a1e3087ccb78ac7b4fbf2cb941c81cbc6d971008ade5c10e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/LiveIntakeAmbient.cfg",
       "sha256": "dac4bd9c0b73b17a37e3b6301058718d10a9bc42b344a57402fc939932dd2d22",
       "authority": "inferred",
@@ -23076,7 +23146,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "abc4bcde69d0b5969d5b8429086243215c2320541c0f41c3ac865d4e6ab06470",
+      "sha256": "581269098a4093b8f7ce3ee0f114952633ba132ff21f9785b93e5deec4287d20",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23153,7 +23223,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a488387ab599068da774ac780043f56599eba1f606c63c301ed8db11be22ed25",
+      "sha256": "69cad19b3a3250ce73562a23534fad12d5e07d43db01aaff9d4c54c99a5b560e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31990,6 +32060,177 @@
         "  IgnoreAuthorization = FALSE",
         "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStop.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK ExactLegacyBinding IntentBeforeStop RestrictedStop AcknowledgedCapture CleanDatabaseCapture NoInventedCompletion RestrictedRecovery ReconciledRelease"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopDirtyDatabase.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = FALSE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS CleanDatabaseCapture"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopEarlyRelease.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS ReconciledRelease"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopFalseCompletion.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = FALSE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS NoInventedCompletion"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopLostReply.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = FALSE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS AcknowledgedCapture"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopNoIntent.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = FALSE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS IntentBeforeStop"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopUnrestrictedRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = FALSE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS RestrictedRecovery"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = TRUE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = FALSE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS RestrictedStop"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireBinding = FALSE",
+        "  RequireIntent = TRUE",
+        "  RequireStopRestriction = TRUE",
+        "  RequireRecoveryRestriction = TRUE",
+        "  RequireAcknowledgement = TRUE",
+        "  RequireCleanDatabase = TRUE",
+        "  PreserveUncertainty = TRUE",
+        "  RequireReconciliation = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS ExactLegacyBinding"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
