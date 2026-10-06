@@ -36,6 +36,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-production-recovery-source
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-production-writer-fence.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-writer-fence-fixture-ownership.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-physical-postgres-recovery.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-offline-recovery-capacity.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-release-journal.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-tools.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-envelope.py"

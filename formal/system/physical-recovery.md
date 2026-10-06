@@ -169,3 +169,43 @@ existing destinations and rejected topology before replay. In this fixture the
 bundle is local plaintext: it does not establish encrypted off-host custody,
 production writer fencing, real secret usability or a deployment. Those remain
 independent coordinator obligations; no new formal refinement claim is made.
+
+
+## Offline capacity admission
+
+`offline-recovery-capacity.py` is a read-only building block for the pending
+coordinator. It requires the same live physical reservation and release nonce,
+a journal with completed maintenance/writer/database stops and no pending intent
+or possible new writes, the exact admitted source database, stopped canonical
+Docker writers, and the stopped registered backup timer/inactive service. It
+checks backup mount topology before opening the private backup-root descriptor,
+then samples filesystem capacity and Linux MemAvailable. Source observation and
+journal authority must remain unchanged across that sample.
+
+The caller supplies the trusted outer archive byte count (at most2GiB) and total
+entry count of all six component manifests (6 through600,000). Before capture,
+it must use conservative admitted upper bounds; it must repeat admission using
+verified actual counts before any clone starts. These arguments are not inferred
+from an untrusted proposed receipt. The sampled memory minimum derives from the
+actual384MiB PostgreSQL and512MiB application caps plus512MiB host headroom:
+1408MiB. This is a separate offline policy; the existing2GiB online application
+rehearsal guard remains unchanged.
+
+Required disk is eight outer-bundle byte counts, plus one filesystem allocation
+block per replayed entry, plus2GiB growth headroom. Seven forms can coexist:
+captured component archives, outer plaintext, encrypted output, retrieved
+ciphertext, decrypted archive, replayed inner archives and replayed trees. The
+eighth allowance covers envelope/metadata overhead; file allocation rounding and
+growth have separate allowances. Renaming replayed DB/content trees adds no copy.
+Required free inodes are the component entry count plus65,536. Additional
+coordinator copies or retained attempts require a newly reviewed budget.
+
+These are TDF admission policies, not vendor-guaranteed sizing or reservations.
+MemAvailable is a kernel estimate; memory caps limit the two containers without
+allocating their full budgets. Unrelated activity can still exhaust memory,
+disk or inodes. Host worker exclusion, deadlines, key custody, production
+shutdown/restart recovery and operational sizing remain caller obligations.
+The helper reports those limits explicitly and never authorizes a deployment.
+Seven deterministic tests cover boundaries, wrong/live authority, topology
+rejection, positive descriptor sampling and changes during the sample. They do
+not establish actual production capacity after shutdown.

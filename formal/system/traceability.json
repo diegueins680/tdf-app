@@ -6648,7 +6648,8 @@
         "Verify live system identifier before reporting startup",
         "Remove only admitted owned container before clearing reservation",
         "Under the registered application dependency, verify fixed restored asset/upload copies before application creation without modifying their ownership",
-        "Under a live reservation, admit backup topology before complete bundle replay; bind nonce/cluster, verify inner manifests and preserved content ownership, then move only replayed trees into fresh disposable targets."
+        "Under a live reservation, admit backup topology before complete bundle replay; bind nonce/cluster, verify inner manifests and preserved content ownership, then move only replayed trees into fresh disposable targets.",
+        "Sample offline capacity only under live matching reservation/journal and stopped canonical writers, preserving online capacity admission."
       ],
       "forbiddenTransitions": [
         "Mutate a production bind alias",
@@ -6657,7 +6658,8 @@
         "Use copied production auto-conf or provider/network access",
         "Clear reservation after uncertain cleanup",
         "Remove the database or release its reservation while a registered dependent application has uncertain cleanup.",
-        "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources."
+        "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources.",
+        "Treat a sampled capacity estimate as a resource reservation, complete host-worker exclusion or deployment authorization."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",
@@ -6676,7 +6678,8 @@
         "ops/hetzner/recovery-files.py",
         "ops/hetzner/rehearse-postgres-restore.py",
         "ops/hetzner/isolated-application-canary.py",
-        "ops/hetzner/recovered-application-content.py"
+        "ops/hetzner/recovered-application-content.py",
+        "ops/hetzner/offline-recovery-capacity.py"
       ],
       "tests": [
         "scripts/test-physical-postgres-recovery.py",
@@ -6685,7 +6688,8 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-physical-application-docker.py",
         ".github/workflows/build.yml",
-        "scripts/test-recovered-application-content.py"
+        "scripts/test-recovered-application-content.py",
+        "scripts/test-offline-recovery-capacity.py"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",
@@ -6853,6 +6857,7 @@
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
+    "ops/hetzner/offline-recovery-capacity.py": "9c7e7cc094611351c6c0bb58bf25a8e31b3720892526d0f90c6823df3a9963c6",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
     "ops/hetzner/production-recovery-sources.py": "bf5109dd999cc2db4600ff2b92dfc283c05fd04cbc666684683d223a6b7a8476",
     "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
@@ -6946,7 +6951,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "e0fe433c0dbc1203020150f737fb9622fe0b1dc2d62220f88fa1b0f082e85318",
+    "scripts/quality-repo.sh": "264ccc4bbccf3f949d59a698365f2bb312115ed40952866cd680f5bc533ad6b3",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6968,6 +6973,7 @@
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
+    "scripts/test-offline-recovery-capacity.py": "aad3e881a55a0cc0685db354a8ad48d2a3f4324a906d24e05cc8a0a3b1ee1d5c",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-application-docker.py": "b301dc65a18bed233decde7f43586e3fc0a548554e19fbd88911291047a08de0",
@@ -11154,6 +11160,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/offline-recovery-capacity.py": [
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-physical-postgres-recovery.py": [
       {
         "requirement": "DEPLOY-PHYSICAL-001",
@@ -11167,6 +11179,12 @@
       }
     ],
     "scripts/test-recovered-application-content.py": [
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-offline-recovery-capacity.py": [
       {
         "requirement": "DEPLOY-PHYSICAL-001",
         "relationship": "tests"
@@ -11732,6 +11750,18 @@
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-5d2a33bd01a22c0f",
+      "path": "ops/hetzner/offline-recovery-capacity.py",
+      "sha256": "9c7e7cc094611351c6c0bb58bf25a8e31b3720892526d0f90c6823df3a9963c6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f291d88fdd7054a3",
@@ -13852,7 +13882,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e0fe433c0dbc1203020150f737fb9622fe0b1dc2d62220f88fa1b0f082e85318",
+      "sha256": "264ccc4bbccf3f949d59a698365f2bb312115ed40952866cd680f5bc533ad6b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15062,6 +15092,18 @@
       "sha256": "e228287ed0d416ec6fe5b4039e62f02aefd3c1a22065cfd9fe8fb511c4daaf7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-3e377b2301b0e7ce",
+      "path": "scripts/test-offline-recovery-capacity.py",
+      "sha256": "aad3e881a55a0cc0685db354a8ad48d2a3f4324a906d24e05cc8a0a3b1ee1d5c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9649a5eac5beddfa",
@@ -33306,7 +33348,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5f780ceb0405be459e8efceef92d5d6ef96420520d7c76cf9b6d3a51af8bb5fe",
+      "sourceSha256": "7018379bb4c5d555152ba796112e5aa0234ec8c7458b60eef1385fbe8ce1d2c1",
       "definition": {
         "states": [
           "absent",

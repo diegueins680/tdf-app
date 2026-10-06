@@ -6647,7 +6647,8 @@
         "Verify live system identifier before reporting startup",
         "Remove only admitted owned container before clearing reservation",
         "Under the registered application dependency, verify fixed restored asset/upload copies before application creation without modifying their ownership",
-        "Under a live reservation, admit backup topology before complete bundle replay; bind nonce/cluster, verify inner manifests and preserved content ownership, then move only replayed trees into fresh disposable targets."
+        "Under a live reservation, admit backup topology before complete bundle replay; bind nonce/cluster, verify inner manifests and preserved content ownership, then move only replayed trees into fresh disposable targets.",
+        "Sample offline capacity only under live matching reservation/journal and stopped canonical writers, preserving online capacity admission."
       ],
       "forbiddenTransitions": [
         "Mutate a production bind alias",
@@ -6656,7 +6657,8 @@
         "Use copied production auto-conf or provider/network access",
         "Clear reservation after uncertain cleanup",
         "Remove the database or release its reservation while a registered dependent application has uncertain cleanup.",
-        "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources."
+        "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources.",
+        "Treat a sampled capacity estimate as a resource reservation, complete host-worker exclusion or deployment authorization."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",
@@ -6675,7 +6677,8 @@
         "ops/hetzner/recovery-files.py",
         "ops/hetzner/rehearse-postgres-restore.py",
         "ops/hetzner/isolated-application-canary.py",
-        "ops/hetzner/recovered-application-content.py"
+        "ops/hetzner/recovered-application-content.py",
+        "ops/hetzner/offline-recovery-capacity.py"
       ],
       "tests": [
         "scripts/test-physical-postgres-recovery.py",
@@ -6684,7 +6687,8 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-physical-application-docker.py",
         ".github/workflows/build.yml",
-        "scripts/test-recovered-application-content.py"
+        "scripts/test-recovered-application-content.py",
+        "scripts/test-offline-recovery-capacity.py"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",

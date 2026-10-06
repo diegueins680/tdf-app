@@ -646,6 +646,17 @@
       "decision": "adopted",
       "rationale": "ActualPG17 SQL_ASCII fixture failed a Unicode migration while a freshUTF8 fixture applied181migrations and passedreplay. Initialize only the synthetic source asUTF8 and verifyencoding againaftercoldrestore. Never runinitdb torepair a realrecoverycopy.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-OFFLINE-CAPACITY-001",
+      "source": "https://www.kernel.org/doc/html/latest/filesystems/proc.html",
+      "supportingSource": "https://docs.docker.com/engine/containers/resource_constraints/",
+      "title": "Estimated available memory and bounded container memory",
+      "recommendation": "MemAvailable estimates memory for new applications without swapping. A positive equal Docker memory and memory-swap limit disables container swap. Neither observation reserves host memory.",
+      "applicability": "Separate admission for coordinated offline PG17/application recovery",
+      "decision": "adopted with explicit TDF sizing policy",
+      "rationale": "Derive the two container caps from implementation and add512MiB local headroom policy. Preserve the online2GiB gate. Sample stopped sources twice, count all retained archive/replay forms and filesystem allocation/inodes, and disclose remaining host activity assumptions. The margin is not a vendor sizing guarantee.",
+      "verifiedAt": "2026-10-06"
     }
   ]
 }
