@@ -10169,6 +10169,8 @@ export interface components {
             currency: string;
             buyerFeeBps: number;
             organizerFeeBps: number;
+            /** @description Whether the advertised face value and buyer fee include tax. Omitted by older additive-tax APIs. */
+            taxIncluded?: boolean;
             taxBps: number;
             holdMinutes: number;
             /** @description Approved per-order limit. Older API versions omit this field and enforce the legacy limit of 100. This is not a cumulative per-buyer quota. */
@@ -10223,6 +10225,8 @@ export interface components {
             buyerPlatformFeeMinor: number;
             /** Format: int64 */
             organizerPlatformFeeMinor: number;
+            /** @description Immutable purchased tax mode. If true taxMinor is included in checkoutTotalMinor rather than added to face value and buyer fee. */
+            taxIncluded?: boolean;
             /** Format: int64 */
             taxMinor: number;
             /** Format: int64 */
