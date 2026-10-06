@@ -4571,7 +4571,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
+      "sha256": "305ac79674e3e7fe43685d8dbb844f5b6c7dbabbbd7c4f5c7cf32c193d1f417a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4661,7 +4661,7 @@
     {
       "id": "SURFACE-2984fa67245a1328",
       "path": "scripts/test-course-identity.sh",
-      "sha256": "a5015eb97b9548529eb7b7165379ed7c78f2c62a8d8186707b131927870cbbd9",
+      "sha256": "1913c964fce91156eba43cfe4dee2aa531e4b8885eec9ef9a47b50f8e64c059f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4871,13 +4871,13 @@
     {
       "id": "SURFACE-6c0e76dafbb5a45f",
       "path": "scripts/test-live-intake-identity.sh",
-      "sha256": "00362c34ed01b182a825ec767a0dfaaa8e1d65a5792592c9bd978364b702bd45",
+      "sha256": "d0f234b038d1f0fb83f65e8d16bc4b8d5f4fbbcfbc028aa09da31064c6e051a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bd3f8d48d0c79fce",
       "path": "scripts/test-marketplace-contact-identity.sh",
-      "sha256": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
+      "sha256": "e8366b9aea5eb474c77acfd0c1816d51fe93e35d19eb46af6f583ed139f24cef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5075,7 +5075,7 @@
     {
       "id": "SURFACE-78456e994088870b",
       "path": "scripts/test-provider-identity.sh",
-      "sha256": "aa8dd865b2851b7898f4b7d9e6cd76d5f32c03e07a58cda9ef0e690fb5fb8650",
+      "sha256": "20b88f842871ab63465a119efa54b0b492c82aa42e00c96c28ba26aafeeecf32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5267,7 +5267,7 @@
     {
       "id": "SURFACE-75ed4534ce225e0f",
       "path": "scripts/test-trial-identity.sh",
-      "sha256": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
+      "sha256": "29e6c3a4cdb56b9c6f13fadf86991d97e3b5e9e93392ac6951c742f3b32a2d2b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
