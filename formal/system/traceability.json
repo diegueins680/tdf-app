@@ -7820,7 +7820,7 @@
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/coordinated-retrieval.py": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
     "ops/hetzner/disposable-creation-spec.py": "a8d6645e7bdf829f32efe86689bc73b74aed25ddfbc743c43eadb9ff1ebad0c1",
-    "ops/hetzner/dormant-container-admission.py": "7023158bf93ebbcfaf7a6ef666963cb7ff4637831b4504b9b9c6d736b2818779",
+    "ops/hetzner/dormant-container-admission.py": "d3a40a55368e7ba633f1bc991faec92143cf99a8e4f0c85be424affa5f637b07",
     "ops/hetzner/durable-disposable-records.py": "1e588f9bbe838cde7269a2428332f0c80502c77532dbb6418c74949737c9d55b",
     "ops/hetzner/host-process-admission.py": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
     "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
@@ -7962,7 +7962,7 @@
     "scripts/test-course-identity.sh": "1913c964fce91156eba43cfe4dee2aa531e4b8885eec9ef9a47b50f8e64c059f",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-disposable-creation-spec.py": "bf172d6d33beb27ffc92af0fd1cd168b1c8c0edb5fb75e65691a55d6d901c008",
-    "scripts/test-dormant-container-admission.py": "57e001bc0d960d09a5adedbd7f56dfd25af36ff565037a879f7745a18599b7b5",
+    "scripts/test-dormant-container-admission.py": "b0d5cfab19bee0c7f88f650289eb817ecab092f989ea9d5e362b6fae9e7ad359",
     "scripts/test-dormant-container-reboot-linux.py": "39ab8874b8ff4b3773853955e6005deb1c7056d8753eeb888203460a27965585",
     "scripts/test-durable-disposable-records.py": "5e055f74d14f238eb376249d368745236adb3e174ed763f01897973aba4c0c0a",
     "scripts/test-hetzner-backup.py": "ca7c23199f118b05edf3f753a6fb49a40e84beddc883ba9d0eb3a8131eb9cd43",
@@ -14346,7 +14346,7 @@
     {
       "id": "SURFACE-7a734da2701e0301",
       "path": "ops/hetzner/dormant-container-admission.py",
-      "sha256": "7023158bf93ebbcfaf7a6ef666963cb7ff4637831b4504b9b9c6d736b2818779",
+      "sha256": "d3a40a55368e7ba633f1bc991faec92143cf99a8e4f0c85be424affa5f637b07",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17822,7 +17822,7 @@
     {
       "id": "SURFACE-a869af36ac58760b",
       "path": "scripts/test-dormant-container-admission.py",
-      "sha256": "57e001bc0d960d09a5adedbd7f56dfd25af36ff565037a879f7745a18599b7b5",
+      "sha256": "b0d5cfab19bee0c7f88f650289eb817ecab092f989ea9d5e362b6fae9e7ad359",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

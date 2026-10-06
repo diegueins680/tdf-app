@@ -55,11 +55,25 @@ def read_metadata(root,cid):
         finally:os.close(fd)
 
 
+def configuration_fingerprint(value):
+    """Bind complete inspect configuration; runtime state remains separate."""
+    identifier(value['Id'])
+    require(isinstance(value['Image'],str) and re.fullmatch('sha256:[a-f0-9]{64}',value['Image'])
+            and isinstance(value['Config'],dict) and isinstance(value['HostConfig'],dict)
+            and isinstance(value['Mounts'],list))
+    mounts=value['Mounts'];destinations=[row['Destination'] for row in mounts]
+    require(all(isinstance(name,str) and name.startswith('/') for name in destinations)
+            and len(destinations)==len(set(destinations)))
+    stable={key:value[key] for key in ('Id','Image','Config','HostConfig')}
+    stable['Mounts']=sorted(mounts,key=lambda row:row['Destination'])
+    return hashlib.sha256((json.dumps(stable,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()
+
+
 def container_row(value,metadata=None):
     cid=identifier(value['Id']);state=value['State'];host=value['HostConfig']
     require(all(type(state[key]) is bool for key in ('Running','Paused','Restarting','Dead'))
             and type(state['Pid']) is int and state['Pid']>=0)
-    row={'id':cid,'running':state['Running'],'pid':state['Pid'],'paused':state['Paused'],
+    row={'id':cid,'configurationSha256':configuration_fingerprint(value),'running':state['Running'],'pid':state['Pid'],'paused':state['Paused'],
          'restarting':state['Restarting'],'dead':state['Dead'],'status':state['Status'],
          'restartPolicy':host['RestartPolicy'],'networkMode':host['NetworkMode'],
          'networkIds':sorted(identifier(n['NetworkID']) for n in value['NetworkSettings']['Networks'].values()),
@@ -197,6 +211,7 @@ def admit(snapshot,policy):
     ids=[]
     for row in snapshot['containers']:
         ids.append(identifier(row['id']))
+        require(isinstance(row.get('configurationSha256'),str) and re.fullmatch('[a-f0-9]{64}',row['configurationSha256']))
         if row['running']:
             require(row['pid']>0 and row['status']=='running' and row['metadata'] is None
                     and not any(row[k] for k in ('paused','restarting','dead')))

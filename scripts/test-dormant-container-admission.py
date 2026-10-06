@@ -18,7 +18,7 @@ fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)
 class AdmissionTests(unittest.TestCase):
     def setUp(self):
         cid='a'*64
-        self.row={'id':cid,'running':False,'pid':0,'paused':False,'restarting':False,
+        self.row={'id':cid,'configurationSha256':'9'*64,'running':False,'pid':0,'paused':False,'restarting':False,
                   'dead':False,'status':'exited','restartPolicy':{'Name':'unless-stopped','MaximumRetryCount':0},
                   'networkMode':'legacy','networkIds':['b'*64],
                   'metadata':{'id':cid,'sha256':'c'*64,'manuallyStopped':True,'startedBefore':True}}
@@ -27,6 +27,36 @@ class AdmissionTests(unittest.TestCase):
         self.policy={'schemaVersion':1,'qualification':{'sourceRevision':'e'*40,
                      'daemonRestartEvidenceSha256':'f'*64,'rebootEvidenceSha256':'1'*64},
                      'snapshot':copy.deepcopy(self.snapshot)}
+
+    def test_configuration_fingerprint_preserves_all_authority_but_not_runtime_state(self):
+        value={'Id':'a'*64,'Image':'sha256:'+'b'*64,
+               'Config':{'Image':'synthetic/image','Env':['PRIVATE=never-in-receipt'],'Labels':{'role':'original'}},
+               'HostConfig':{'RestartPolicy':{'Name':'unless-stopped'},'Privileged':False},
+               'Mounts':[{'Destination':'/second','Source':'/owned/two','RW':True},
+                         {'Destination':'/first','Source':'/owned/one','RW':False}],
+               'State':{'Pid':1,'StartedAt':'first'}}
+        digest=d.configuration_fingerprint(value)
+        changed=copy.deepcopy(value);changed['Mounts'].reverse();changed['State']={'Pid':2,'StartedAt':'second'}
+        self.assertEqual(d.configuration_fingerprint(changed),digest)
+        mutations=(lambda v:v.update(Id='c'*64),lambda v:v.update(Image='sha256:'+'c'*64),
+                   lambda v:v['Config']['Env'].append('PRIVATE=changed'),
+                   lambda v:v['Config']['Labels'].update(role='other'),
+                   lambda v:v['HostConfig'].update(Privileged=True),
+                   lambda v:v['Mounts'][0].update(Source='/other'),
+                   lambda v:v['Mounts'][0].update(RW=False))
+        for mutate in mutations:
+            changed=copy.deepcopy(value);mutate(changed)
+            self.assertNotEqual(d.configuration_fingerprint(changed),digest)
+        self.assertNotIn('never-in-receipt',digest)
+        changed=copy.deepcopy(value);changed['Mounts'].append(copy.deepcopy(changed['Mounts'][0]))
+        with self.assertRaises(ValueError):d.configuration_fingerprint(changed)
+
+    def test_missing_or_changed_configuration_binding_rejects(self):
+        changed=copy.deepcopy(self.snapshot);changed['containers'][0]['configurationSha256']='f'*64
+        with self.assertRaises(ValueError):d.admit(changed,self.policy)
+        for value in (None,True,'not-a-hash'):
+            changed=copy.deepcopy(self.snapshot);changed['containers'][0]['configurationSha256']=value
+            with self.assertRaises(ValueError):d.admit(changed,{**self.policy,'snapshot':changed})
 
     def test_manual_stop_does_not_claim_network_or_release_admission(self):
         result=d.admit(self.snapshot,self.policy)

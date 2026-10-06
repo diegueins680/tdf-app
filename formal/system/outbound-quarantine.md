@@ -108,6 +108,14 @@ permission to start a dormant container. The caller must verify independent
 daemon-restart/reboot receipts and re-establish admission at each relevant stage.
 Privileged noncooperating writers remain outside the sampled guarantee.
 
+Each observed container also carries a SHA256 of full `Id`, image ID, `Config`,
+`HostConfig` and destination-sorted `Mounts`. Runtime PID/start state is kept
+separate; a changed environment, label, privilege, mount source/access or image
+changes this fingerprint. Only destination order is normalized, and duplicate
+destinations reject. No configuration secrets are emitted. This supplies stable
+configuration provenance for future stage-aware admission; it does not relax the
+current full-snapshot comparison or authorize skipping runtime/manual-stop checks.
+
 The dedicated `scripts/test-dormant-container-reboot-linux.py` fixture runs a second
 daemon using caller-staged, hash-bound Docker29.1.3/runtime binaries. Its explicit
 private configuration, data/exec roots, socket and managed containerd separate it
