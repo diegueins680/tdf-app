@@ -705,7 +705,7 @@ providerRefundIsCompatible :: RefundReference -> Text -> SqlPersistT IO Bool
 providerRefundIsCompatible refundRef providerRefundId = do
   rows <- (rawSql
     "SELECT provider_refund_id = ? FROM commerce_refund\
-    \ WHERE id = ?::uuid AND status = 'processing'"
+    \ WHERE id = ?::uuid AND status IN ('processing','succeeded')"
     [ PersistText providerRefundId
     , PersistText (refundReferenceId refundRef)
     ] :: SqlPersistT IO [Single (Maybe Bool)])

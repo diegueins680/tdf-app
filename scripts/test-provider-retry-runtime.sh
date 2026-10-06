@@ -88,7 +88,8 @@ for migration in \
   2026-09-16_payment_intent_refund_sync \
   2026-10-04_checkout_amount_correspondence \
   2026-10-05_ticket_admission_audit \
-  2026-10-06_ticket_refund_allocation; do
+  2026-10-06_ticket_refund_allocation \
+  2026-10-06_ticket_refund_request_binding; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done
@@ -96,6 +97,11 @@ done
 # New allocation schema replays without dropping operator history; empty rollback
 # is permitted only before any ticket refund has used it.
 for migration in 2026-10-06_ticket_refund_allocation 2026-10-06_ticket_refund_allocation_rollback 2026-10-06_ticket_refund_allocation; do
+  psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+    -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
+done
+
+for migration in 2026-10-06_ticket_refund_request_binding 2026-10-06_ticket_refund_request_binding_rollback 2026-10-06_ticket_refund_request_binding; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done
@@ -136,5 +142,11 @@ psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
 if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql" >/dev/null 2>&1; then
   echo "Ticket refund rollback unexpectedly removed used allocations" >&2
+  exit 1
+fi
+
+if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
+    -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql" >/dev/null 2>&1; then
+  echo "Ticket refund rollback unexpectedly removed used request bindings" >&2
   exit 1
 fi

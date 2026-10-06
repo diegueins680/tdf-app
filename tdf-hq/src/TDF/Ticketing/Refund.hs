@@ -4,7 +4,8 @@
 -- Call each operation in ONE transaction, before any provider HTTP request.
 -- SQL failures intentionally escape: no partial financial/ticket commit is safe.
 module TDF.Ticketing.Refund
-  ( requestTicketRefund, completeTicketRefund, cancelTicketRefund, ticketRefundAmounts ) where
+  ( requestTicketRefund, completeTicketRefund, cancelTicketRefund, ticketRefundAmounts
+  , requestTicketRefundForOrder, loadTicketRefundReference, withOrder, cancelTicketRefundAs ) where
 
 import Control.Monad (forM_, unless, when)
 import Data.Int (Int64)
@@ -15,6 +16,7 @@ import Data.Time (UTCTime)
 import Database.Persist
 import Database.Persist.Sql
 import qualified TDF.Models.SocialEventsModels as M
+import TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.Commerce.RefundStore as R
 import qualified TDF.Commerce.CheckoutStore as C
 
@@ -180,14 +182,26 @@ completeTicketRefund verified = do
         "UPDATE event_ticket_refund_allocation SET state='completed',updated_at=?\
         \ WHERE refund_id=?::uuid AND state='reserved'"
         [PersistUTCTime now,PersistText (R.refundReferenceId ref)]
+      rawExecute
+        "UPDATE ticket_refund_request request SET status='approved',processed_at=?,updated_at=?\
+        \ FROM event_ticket_refund_request_binding binding WHERE binding.request_id=request.id\
+        \ AND binding.refund_id=?::uuid"
+        [PersistUTCTime now,PersistUTCTime now,PersistText (R.refundReferenceId ref)]
       pure True
 
 cancelTicketRefund :: Text -> R.RefundReference -> UTCTime -> SqlPersistT IO ()
-cancelTicketRefund actor ref now = do
+cancelTicketRefund = cancelTicketRefundWithAuthority False
+
+cancelTicketRefundAs :: AuthedUser -> R.RefundReference -> UTCTime -> SqlPersistT IO ()
+cancelTicketRefundAs user = cancelTicketRefundWithAuthority (hasStrictAdminAccess user)
+  (T.pack (show (fromSqlKey (auPartyId user))))
+
+cancelTicketRefundWithAuthority :: Bool -> Text -> R.RefundReference -> UTCTime -> SqlPersistT IO ()
+cancelTicketRefundWithAuthority strictAdmin actor ref now = do
   key <- orderForRefund ref
   withOrder key $ \event _ tickets -> do
     record <- loadRecord ref
-    unless (not (T.null actor) && (M.socialEventOrganizerPartyId event == Just actor ||
+    unless (not (T.null actor) && (strictAdmin || M.socialEventOrganizerPartyId event == Just actor ||
         actor == T.pack (show (R.rrRequestedBy record)))) $ fail "Refund cancellation is not authorized"
     rows <- allocationRows ref
     unless (not (null rows)) $ fail "Refund allocation is absent"
@@ -210,3 +224,79 @@ cancelTicketRefund actor ref now = do
         "UPDATE event_ticket_refund_allocation SET state='cancelled',updated_at=?\
         \ WHERE refund_id=?::uuid AND state='reserved'"
         [PersistUTCTime now,PersistText (R.refundReferenceId ref)]
+
+-- Reuses the legacy organizer request identity; canonical refund UUID is a
+-- separate immutable binding, never stored in the Stripe-specific column.
+loadTicketRefundReference :: M.TicketRefundRequestId -> SqlPersistT IO (Maybe R.RefundReference)
+loadTicketRefundReference key = do
+  rows <- rawSql "SELECT refund_id::text FROM event_ticket_refund_request_binding WHERE request_id=?"
+    [toPersistValue key]
+  case rows of
+    [] -> pure Nothing
+    [Single ref] -> pure (Just (R.RefundReference ref))
+    _ -> fail "Ticket refund request binding is ambiguous"
+
+requestTicketRefundForOrder :: Text -> M.SocialEventId -> M.EventTicketOrderId
+  -> Maybe Int -> Maybe Text -> UTCTime -> SqlPersistT IO (Entity M.TicketRefundRequest)
+requestTicketRefundForOrder actor eventKey orderKey requestedAmount reason now = withOrder orderKey $
+  \event order tickets -> do
+    unless (M.eventTicketOrderEventId order == eventKey && not (T.null actor) &&
+      (M.socialEventOrganizerPartyId event == Just actor || M.eventTicketOrderBuyerPartyId order == Just actor)) $
+      fail "Refund requester is not authorized for this order"
+    actorId <- case reads (T.unpack actor) of
+      [(value,"")] | value > 0 -> pure value
+      _ -> fail "Refund requester must be an authenticated party"
+    existing <- selectFirst [M.TicketRefundRequestOrderId ==. orderKey,
+      M.TicketRefundRequestStatus <-. ["pending","processing"]] [Asc M.TicketRefundRequestId]
+    case existing of
+      Just entity@(Entity priorKey prior) -> do
+        priorBinding <- loadTicketRefundReference priorKey
+        unless (maybe False (const True) priorBinding) $ fail "Legacy refund requires separate reconciliation"
+        unless (M.ticketRefundRequestRequestedByPartyId prior == Just actor &&
+          M.ticketRefundRequestReason prior == reason &&
+          maybe True (== M.ticketRefundRequestAmountCents prior) requestedAmount) $
+          fail "A different refund request is already active for this order"
+        pure entity
+      Nothing -> do
+        bindings <- rawSql
+          "SELECT runtime.checkout_id::text,attempt.id::text,attempt.environment,attempt.merchant_account_ref,\
+          \ runtime.checkout_total_minor,runtime.currency FROM event_ticket_checkout_runtime runtime\
+          \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
+          \ WHERE runtime.order_id=? AND runtime.event_id=? AND attempt.provider='paypal'\
+          \ AND attempt.status='succeeded' AND attempt.currency=runtime.currency\
+          \ AND attempt.amount_minor=runtime.checkout_total_minor"
+          [toPersistValue orderKey,toPersistValue eventKey]
+        (checkout,attempt,environment,merchant,total,currency) <- case bindings of
+          [(Single checkout,Single attempt,Single environment,Single merchant,Single total,Single currency)] ->
+            pure (checkout,attempt,environment,merchant,total,currency)
+          _ -> fail "Refund requires one verified PayPal ticket payment"
+        parsedEnvironment <- case (environment :: Text) of
+          "sandbox" -> pure C.CheckoutSandbox
+          "production" -> pure C.CheckoutProduction
+          _ -> fail "Unknown immutable payment environment"
+        portions <- either (fail . T.unpack) pure $
+          ticketRefundAmounts total (map (fromSqlKey . entityKey) tickets)
+        let available = [ (key,amount) | (key,amount) <- portions,
+              Entity ticketKey ticket <- tickets,fromSqlKey ticketKey == key,
+              M.eventTicketStatus ticket == "issued",M.eventTicketCheckedInAt ticket == Nothing,
+              M.eventTicketCurrentHolderPartyId ticket == M.eventTicketOriginalHolderPartyId ticket ]
+            target = maybe (sum (map snd available)) fromIntegral requestedAmount
+            selection = takeWhile (\(_,cumulative) -> cumulative <= target) $
+              zip available (drop 1 (scanl (\acc (_,amount) -> acc+amount) 0 available))
+            selected = map fst selection
+        unless (target > 0 && sum (map snd selected) == target &&
+            target <= fromIntegral (maxBound :: Int)) $
+          fail "Refund must select a whole number of available tickets"
+        let request = M.TicketRefundRequest orderKey (Just actor) reason (fromIntegral target)
+              "pending" Nothing Nothing Nothing Nothing Nothing now now
+        requestKey <- insert request
+        result <- requestTicketRefund actor eventKey orderKey R.RefundCreation
+          { R.rcCheckout=C.CheckoutReference checkout,R.rcPaymentAttempt=C.PaymentAttemptReference attempt
+          , R.rcProvider=C.ProviderPayPal,R.rcEnvironment=parsedEnvironment,R.rcMerchantRef=merchant
+          , R.rcAmountMinor=target,R.rcCurrency=currency,R.rcReasonCode="customer_request"
+          , R.rcIdempotencyKey="event-ticket-refund-request-" <> T.pack (show (fromSqlKey requestKey))
+          , R.rcRequestedBy=actorId,R.rcCreatedAt=now } (map (toSqlKey . fst) selected)
+        record <- either (fail . T.unpack) pure result
+        rawExecute "INSERT INTO event_ticket_refund_request_binding(request_id,refund_id,created_at) VALUES (?,?::uuid,?)"
+          [toPersistValue requestKey,PersistText (R.refundReferenceId (R.rrReference record)),PersistUTCTime now]
+        pure (Entity requestKey request)

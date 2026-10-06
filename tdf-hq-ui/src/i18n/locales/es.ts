@@ -161,6 +161,8 @@ const es = {
     usesRemaining_other: 'Quedan {{count}} usos',
   },
   refunds: {
+    actionError: 'No se pudo confirmar la operación. Actualiza el estado antes de intentarlo de nuevo.',
+    checkStatus: 'Consultar estado del pago',
     loading: 'Cargando solicitudes de reembolso',
     loadError: 'No se pudieron cargar las solicitudes de reembolso.',
     pendingSummary_one: '{{count}} solicitud de reembolso pendiente de aprobación',
@@ -182,7 +184,7 @@ const es = {
     rejectionPlaceholder: 'Explica por qué se rechaza esta solicitud de reembolso…',
     cancel: 'Cancelar',
     rejectRefund: 'Rechazar reembolso',
-    statuses: {
+    statuses: { processing: 'Procesando con el proveedor',
       pending: 'Pendiente',
       approved: 'Aprobado',
       rejected: 'Rechazado',

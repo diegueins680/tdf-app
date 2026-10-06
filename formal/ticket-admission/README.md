@@ -47,10 +47,31 @@ concurrent requests/scans/completions and inventory-drift rollback. The provider
 fixture uses a synthetic payment and reduced schema; it does not replace official
 sandbox or full production-schema/API qualification.
 
-This module is an internal primitive: the existing organizer refund endpoint,
-original-method provider execution, per-ticket selection UI and known-refund webhook
-reconciliation still require integration before activation. Arbitrary external
-refunds retain the existing whole-order review fence. Provider requests must use
+The existing organizer request/approve/reject endpoints now use an immutable
+legacy-request to canonical-refund binding for PayPal ticket orders. Amount-only
+requests select whole, unused, untransferred tickets in ascending ticket-ID order;
+omitting the amount selects the remaining eligible tickets. The organizer can
+record a guest's support request under their own authenticated identity. A
+different organizer/strict financial admin must approve it; no guest party is
+invented. Processing requests cannot be cancelled and the UI offers only a status
+query. Explicit ticket selection and guest self-service are not provided by this
+amount-only endpoint.
+
+The provider execution claim commits before HTTP. Processing retries cannot POST
+again. The existing bounded, quota-controlled refund query verifies the original
+capture and completes ledger, legacy request, tickets and inventory in one
+transaction. The shared provider transport avoids a second payment integration.
+The canonical UUID is also sent as the PayPal refund `custom_id`; only a UUID is
+retained in the minimized signed event. A correctly bound signed callback can
+complete the specific allocation even before the HTTP response commits its refund
+ID. If neither an exact known provider ID nor the opaque canonical correlation
+matches, the existing whole-order review fence remains. This missing-correlation
+case needs operational reconciliation; it never infers ticket selection from an
+amount. [PayPal's refund API](https://developer.paypal.com/api/payments/v2/captures-refund)
+defines `custom_id` for reconciliation and `PayPal-Request-Id` for idempotency.
+
+This integration still requires official sandbox HTTP qualification and the
+protected deployment gates before production activation. Provider requests use
 the original canonical refund UUID as the stable
 [PayPal idempotency key](https://developer.paypal.com/api/rest/reference/idempotency/)
 and preserve uncertain results; automatic re-POST with a new identity is forbidden.

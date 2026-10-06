@@ -930,6 +930,11 @@
       "id": "2026-10-06_ticket_refund_allocation",
       "path": "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
       "introducedBy": "507cb9eb95b4b2efe1cae746e345621e5bc730ca"
+    },
+    {
+      "id": "2026-10-06_ticket_refund_request_binding",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
+      "introducedBy": "d0501293cbeef7118da86e5dcff8f5550ed49c28"
     }
   ]
 }

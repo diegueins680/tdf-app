@@ -4374,7 +4374,14 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
-        "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql"
+        "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql",
+        "tdf-hq/src/TDF/Server/TicketRefunds.hs",
+        "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+        "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
+        "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql",
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
+        "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",

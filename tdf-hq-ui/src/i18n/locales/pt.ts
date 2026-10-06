@@ -35,6 +35,8 @@ const pt = {
     usesRemaining_one: '{{count}} uso restante', usesRemaining_other: '{{count}} usos restantes',
   },
   refunds: {
+    actionError: 'Não foi possível confirmar a operação. Atualize o estado antes de tentar novamente.',
+    checkStatus: 'Consultar estado do pagamento',
     loading: 'Carregando solicitações de reembolso', loadError: 'Não foi possível carregar as solicitações de reembolso.',
     pendingSummary_one: '{{count}} solicitação de reembolso aguardando aprovação',
     pendingSummary_other: '{{count}} solicitações de reembolso aguardando aprovação', itemLabel: 'reembolsos',
@@ -43,7 +45,7 @@ const pt = {
     confirmApproval: 'Aprovar reembolso de {{amount}}?', rejectDialogTitle: 'Rejeitar solicitação de reembolso',
     rejectionReason: 'Motivo da rejeição', rejectionPlaceholder: 'Explique por que esta solicitação de reembolso está sendo rejeitada…',
     cancel: 'Cancelar', rejectRefund: 'Rejeitar reembolso',
-    statuses: { pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado', processed: 'Processado' },
+    statuses: { processing: 'Em processamento no provedor', pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado', processed: 'Processado' },
   },
   artistFans: {
     loading: 'Carregando fãs…', loadError: 'Não foi possível carregar os fãs.',

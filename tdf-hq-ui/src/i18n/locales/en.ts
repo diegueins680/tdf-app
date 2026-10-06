@@ -160,6 +160,8 @@ const en = {
     usesRemaining_other: '{{count}} uses remaining',
   },
   refunds: {
+    actionError: 'The operation could not be confirmed. Refresh the status before trying again.',
+    checkStatus: 'Check payment status',
     loading: 'Loading refund requests',
     loadError: 'Refund requests could not be loaded.',
     pendingSummary_one: '{{count}} refund request pending approval',
@@ -181,7 +183,7 @@ const en = {
     rejectionPlaceholder: 'Explain why this refund request is being rejected…',
     cancel: 'Cancel',
     rejectRefund: 'Reject refund',
-    statuses: {
+    statuses: { processing: 'Processing with provider',
       pending: 'Pending',
       approved: 'Approved',
       rejected: 'Rejected',

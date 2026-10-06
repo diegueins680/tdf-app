@@ -1552,6 +1552,8 @@
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline_rollback.sql",
       "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
       "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql",
+      "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
+      "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1727,12 +1729,14 @@
       "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+      "tdf-hq/src/TDF/Server/ProviderTransport.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
       "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
       "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
       "tdf-hq/src/TDF/Server/SocialSync.hs",
+      "tdf-hq/src/TDF/Server/TicketRefunds.hs",
       "tdf-hq/src/TDF/ServerAdmin.hs",
       "tdf-hq/src/TDF/ServerAuth.hs",
       "tdf-hq/src/TDF/ServerExtra.hs",
@@ -2835,7 +2839,7 @@
     {
       "id": "SURFACE-e4c6bf3c31cac943",
       "path": "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
-      "sha256": "a5abf1a16499fea32d8cf837491501c399104bb1baa66119521c0a970db14444",
+      "sha256": "7c9b1152c9630310536e63ec34c5ff0092fb67fef17902c3cfa83ed1021d422a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3735,7 +3739,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a14762bdc0c420c0cfc791e6201c3d931b04b6863957fcdc47b528c798cf3877",
+      "sha256": "726c038f07ab99d2a2b4411ff6077721d8dc510da3f9b2fa32123ae5df1cd728",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4617,7 +4621,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "7502bf8541129eaf6a6e916e000ab055ddcbd119b61ba57be841bbaf40ac1b13",
+      "sha256": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6123,19 +6127,19 @@
     {
       "id": "SURFACE-fded008243a7eca3",
       "path": "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
-      "sha256": "de4b40e40bb1064e275adef4f7c33be55be6c47603f5d26a0ca805b787bb2337",
+      "sha256": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-00ed01bf2c7169b0",
       "path": "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
-      "sha256": "3a68ed45e10eca6b1c5efa7faca073de6417b767ebd1a74b2194a5ce0d9d15f4",
+      "sha256": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31c6a7a7f7bdbbcb",
       "path": "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
-      "sha256": "c978cfee366b49ab66d55de252b8b4b6596b766e1f22354a94c238754cdaa35b",
+      "sha256": "3f8d613ebb75e4b256b3afcebb7f6c981abf0e82004704775134f1b654c52a0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6945,7 +6949,7 @@
     {
       "id": "SURFACE-c15c4de32f8d549b",
       "path": "tdf-hq-ui/src/i18n/locales/de.ts",
-      "sha256": "5d66e5156aebd81bf265c3a056db867bd43bd43e90ad1b1b91c6fea690e65869",
+      "sha256": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6963,19 +6967,19 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "969c9406f05d0f7fa189cca0e7cf4f720be0d305b97b2293b98dee30f146d355",
+      "sha256": "8dcee617bf335b4a8a8f71579c4c7978e26e09b8ef32c63c6d3d584863f218e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "2095866bbdbfb6727ae75c944b9f229bf520beafefafde6978998eba0b920d70",
+      "sha256": "7ed602851a744cf45c89f0bdd3c42c11164b365fd7dd0dd16bb1eb2f7da5deb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-90a473fead52aa3c",
       "path": "tdf-hq-ui/src/i18n/locales/fr.ts",
-      "sha256": "6b37556073dd9cea311563561571cd1207a51c5d84bbf0735b4d48fce2f4ae04",
+      "sha256": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6993,7 +6997,7 @@
     {
       "id": "SURFACE-eb51f33c8df76f33",
       "path": "tdf-hq-ui/src/i18n/locales/pt.ts",
-      "sha256": "3985a2dd8923d7707bdea1192e20269a177990893b2a2281e39b5dbbb6c280d6",
+      "sha256": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11443,6 +11447,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a6e138d03cb44e7a",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_request_binding.sql",
+      "sha256": "5d70e228298a52845d787ce81e6e8253c63ace984d7bbf56325979ebc25d8ae1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-afe123606335d014",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_request_binding_rollback.sql",
+      "sha256": "1a894d76675d34502166ec71db1961b4079ed4d2b9f8172be387632be943e517",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -11949,7 +11965,7 @@
     {
       "id": "SURFACE-e499402b9aad0cfc",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-      "sha256": "9a35b4280d60155852f2686889b53ddf7aa40a9b1e12e962a0e5bbe8c8d3e50d",
+      "sha256": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11979,13 +11995,13 @@
     {
       "id": "SURFACE-dc866f2ee69c9dff",
       "path": "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-      "sha256": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
+      "sha256": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "6bb478f115348bd71fb5ddd7ba7dc544348c833aaab87c59cc37db52d24e2697",
+      "sha256": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12493,6 +12509,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8bea15f709688422",
+      "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+      "sha256": "95d56eec2e997cead3472fddda6d9b62a2a426ab9d0774718a32e3847eeaa8e0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f67b06f0b5eec0fc",
       "path": "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "sha256": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -12507,7 +12529,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "ef7927515025270857fedf10fad9bb51ced6ef54de282c47b5febe2792c37104",
+      "sha256": "64d524375dea1511cd3d50f79326c47eb092606c091dd6209a5af777f67f2111",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12519,13 +12541,19 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "f0601a84a89789d4756982ab3f3cb0477a285cbf182f705f1c1ec9d037fba595",
+      "sha256": "a5677c2b6f31044cf139f10ecb77965cae3f2f78b2092ef7217c998168137dbd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cb2c54ef31474aee",
       "path": "tdf-hq/src/TDF/Server/SocialSync.hs",
       "sha256": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2531a758cf6e10bc",
+      "path": "tdf-hq/src/TDF/Server/TicketRefunds.hs",
+      "sha256": "dc589c059b3e254ae0dad96c9a5a845c39228a701282f1f82357a0f2e4a100ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12729,7 +12757,7 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "667fcb0ff956ebf60ca37b4fc73454278ff100afc68260a0d439b19a891b6c73",
+      "sha256": "e62b1c3790d30c4dfd2d256fb428abdc70d6094f8166ea9fbd249697f79ac041",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12825,7 +12853,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "3ad639efc62c357f8b94cd4c11a1cb5bfd4174f51712cadc5c7c31a86d7aa500",
+      "sha256": "28ae96422e38231d39fc3a0c6357db559795ade857080867f8c7d62fb35c574e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12921,7 +12949,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "eb38c2a7b1fb65fbb3462d87e58c09441a5146cc7efe0f2d5ccd21df65b2f310",
+      "sha256": "c736a4aef845118c3af0a9f3fa2e4a537fad2a7d55bf507c7e13cf221fbae5ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21571,7 +21599,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "991d5de36b2df0a9fad1496838e9e58a5429ee2b128857ea64a3160defc1b465",
+      "sha256": "21ff0b76ccf500d3a9c27e2aab514f6ddadf703deec9d77ea580f4940b1c17c6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21634,7 +21662,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "d2ab48a46110a997b88ff2c82d8d0e96392bf9667e2fb0f7c26459b100026c42",
+      "sha256": "0b8360bfa640d8aaef707f8c66218c4ac6ced324716d90fa5f0937f3255dd138",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

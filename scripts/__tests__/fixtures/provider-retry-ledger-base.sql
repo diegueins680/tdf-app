@@ -71,3 +71,11 @@ CREATE TABLE ticket_transfer (id BIGSERIAL PRIMARY KEY,ticket_id BIGINT NOT NULL
 ALTER TABLE event_ticket_checkout_runtime ADD COLUMN order_id BIGINT UNIQUE REFERENCES event_ticket_order(id),
  ADD COLUMN event_id BIGINT, ADD COLUMN currency TEXT, ADD COLUMN checkout_total_minor BIGINT,
  ADD COLUMN payment_status TEXT DEFAULT 'paid';
+
+CREATE TABLE ticket_refund_request (
+ id BIGSERIAL PRIMARY KEY, order_id BIGINT NOT NULL REFERENCES event_ticket_order(id),
+ requested_by_party_id TEXT, reason TEXT, amount_cents BIGINT NOT NULL,
+ status TEXT NOT NULL DEFAULT 'pending', approved_by_party_id TEXT, approved_at TIMESTAMPTZ,
+ rejection_reason TEXT, stripe_refund_id TEXT, processed_at TIMESTAMPTZ,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

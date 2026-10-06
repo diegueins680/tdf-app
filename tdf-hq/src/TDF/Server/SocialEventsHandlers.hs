@@ -125,7 +125,7 @@ module TDF.Server.SocialEventsHandlers (
 ) where
 
 import Control.Applicative ((<|>))
-import Control.Exception (SomeAsyncException, SomeException, fromException, throwIO, try)
+import Control.Exception (IOException, SomeAsyncException, SomeException, fromException, throwIO, try)
 import Control.Monad (filterM, forM, forM_, join, unless, void, when)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -201,6 +201,8 @@ import Database.PostgreSQL.Simple (SqlError (..))
 import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
+import qualified TDF.Ticketing.Refund as TicketRefund
+import qualified TDF.Server.TicketRefunds as TicketRefunds
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.EventResearch as EventResearch
 import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
@@ -5269,42 +5271,53 @@ socialEventsServer user =
             throwError err400{errBody = "Only paid orders can be refunded"}
         unless (manager || ownsOrder) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
-        mExisting <-
-            liftIO $
-                runSqlPool
-                    (selectFirst [TicketRefundRequestOrderId ==. orderKey] [])
-                    envPool
-        when (isJust mExisting) $
-            throwError err409{errBody = "Refund request already exists for this order"}
-        let amountCents = fromMaybe (eventTicketOrderAmountCents order) refundRequestAmountCents
-        when (amountCents > eventTicketOrderAmountCents order) $
-            throwError err400{errBody = "Refund amount cannot exceed order amount"}
-        when (amountCents <= 0) $ throwError err400{errBody = "Refund amount must be > 0"}
-        refundKey <-
-            liftIO $
-                runSqlPool
-                    ( insert
-                        TicketRefundRequest
-                            { ticketRefundRequestOrderId = orderKey
-                            , ticketRefundRequestRequestedByPartyId = Just currentPartyId
-                            , ticketRefundRequestReason = refundRequestReason
-                            , ticketRefundRequestAmountCents = amountCents
-                            , ticketRefundRequestStatus = "pending"
-                            , ticketRefundRequestApprovedByPartyId = Nothing
-                            , ticketRefundRequestApprovedAt = Nothing
-                            , ticketRefundRequestRejectionReason = Nothing
-                            , ticketRefundRequestStripeRefundId = Nothing
-                            , ticketRefundRequestProcessedAt = Nothing
-                            , ticketRefundRequestCreatedAt = now
-                            , ticketRefundRequestUpdatedAt = now
-                            }
-                    )
-                    envPool
-        mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
-        maybe
-            (throwError err500{errBody = "Could not create refund request"})
-            (pure . refundEntityToDTO (eventTicketOrderCurrency order))
-            mRefund
+        canonical <- liftIO $ runSqlPool
+            (rawSql "SELECT order_id FROM event_ticket_checkout_runtime WHERE order_id=?" [toPersistValue orderKey]
+                :: SqlPersistT IO [Single Int64]) envPool
+        if not (null canonical) then do
+            result <- liftIO $ try (runSqlPool
+                (TicketRefund.requestTicketRefundForOrder currentPartyId eventKey orderKey
+                    refundRequestAmountCents refundRequestReason now) envPool)
+                :: AppM (Either IOException (Entity TicketRefundRequest))
+            either (const (throwError err409 {errBody="Refund selection or state is not eligible"}))
+                (pure . refundEntityToDTO (eventTicketOrderCurrency order)) result
+        else do
+            mExisting <-
+                liftIO $
+                    runSqlPool
+                        (selectFirst [TicketRefundRequestOrderId ==. orderKey] [])
+                        envPool
+            when (isJust mExisting) $
+                throwError err409{errBody = "Refund request already exists for this order"}
+            let amountCents = fromMaybe (eventTicketOrderAmountCents order) refundRequestAmountCents
+            when (amountCents > eventTicketOrderAmountCents order) $
+                throwError err400{errBody = "Refund amount cannot exceed order amount"}
+            when (amountCents <= 0) $ throwError err400{errBody = "Refund amount must be > 0"}
+            refundKey <-
+                liftIO $
+                    runSqlPool
+                        ( insert
+                            TicketRefundRequest
+                                { ticketRefundRequestOrderId = orderKey
+                                , ticketRefundRequestRequestedByPartyId = Just currentPartyId
+                                , ticketRefundRequestReason = refundRequestReason
+                                , ticketRefundRequestAmountCents = amountCents
+                                , ticketRefundRequestStatus = "pending"
+                                , ticketRefundRequestApprovedByPartyId = Nothing
+                                , ticketRefundRequestApprovedAt = Nothing
+                                , ticketRefundRequestRejectionReason = Nothing
+                                , ticketRefundRequestStripeRefundId = Nothing
+                                , ticketRefundRequestProcessedAt = Nothing
+                                , ticketRefundRequestCreatedAt = now
+                                , ticketRefundRequestUpdatedAt = now
+                                }
+                        )
+                        envPool
+            mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
+            maybe
+                (throwError err500{errBody = "Could not create refund request"})
+                (pure . refundEntityToDTO (eventTicketOrderCurrency order))
+                mRefund
 
     listRefunds :: T.Text -> AppM [RefundDTO]
     listRefunds eventIdStr = do
@@ -5317,7 +5330,7 @@ socialEventsServer user =
                 then liftIO $ runSqlPool (isImportedEventHidden eventKey) envPool
                 else pure False
         let manager = isEventManager currentPartyId eventVal
-            canViewAllRefunds = manager || hiddenImportedAdmin
+            canViewAllRefunds = manager || hiddenImportedAdmin || hasStrictAdminAccess user
         candidateOrders <-
             if canViewAllRefunds
                 then
@@ -5385,50 +5398,55 @@ socialEventsServer user =
         order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
         when (eventTicketOrderEventId order /= eventKey) $
             throwError err400{errBody = "Refund does not belong to this event"}
-        when (ticketRefundRequestStatus refund /= "pending") $
-            throwError err400{errBody = "Refund request is not pending"}
-        case (eventTicketOrderStripePaymentIntentId order, stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-            (Just piId, Just secretKey, Just webhookSecret) -> do
-                let stripeCfg =
-                        Stripe.StripeConfig
-                            { Stripe.stripeSecretKey = secretKey
-                            , Stripe.stripeWebhookSecret = webhookSecret
-                            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-                            }
-                result <- liftIO $ Stripe.createRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
-                case result of
-                    Left err -> throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err))}
-                    Right refundResponse -> do
-                        refundId <-
-                            eitherStripeServerError $
-                                parseStripeRefundResponse refundResponse
-                        liftIO $
-                            runSqlPool
-                                ( do
-                                    update
-                                        refundKey
-                                        [ TicketRefundRequestStatus =. "approved"
-                                        , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
-                                        , TicketRefundRequestApprovedAt =. Just now
-                                        , TicketRefundRequestStripeRefundId =. Just refundId
-                                        , TicketRefundRequestProcessedAt =. Just now
-                                        , TicketRefundRequestUpdatedAt =. now
-                                        ]
-                                    update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
-                                    updateWhere
-                                        [EventTicketOrderRefId ==. orderKey]
-                                        [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
-                                    update
-                                        (eventTicketOrderTierId order)
-                                        [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
-                                )
-                                envPool
-                        mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
-                        maybe
-                            (throwError err500{errBody = "Could not approve refund"})
-                            (pure . refundEntityToDTO (eventTicketOrderCurrency order))
-                            mUpdated
-            _ -> throwError err500{errBody = "Cannot process refund: Stripe not configured or order has no payment intent"}
+        canonical <- liftIO $ runSqlPool (TicketRefund.loadTicketRefundReference refundKey) envPool
+        case canonical of
+            Just _ -> refundEntityToDTO (eventTicketOrderCurrency order) <$>
+                TicketRefunds.approvePaypalTicketRefund user eventKey refundKey
+            Nothing -> do
+                when (ticketRefundRequestStatus refund /= "pending") $
+                    throwError err400{errBody = "Refund request is not pending"}
+                case (eventTicketOrderStripePaymentIntentId order, stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+                    (Just piId, Just secretKey, Just webhookSecret) -> do
+                        let stripeCfg =
+                                Stripe.StripeConfig
+                                    { Stripe.stripeSecretKey = secretKey
+                                    , Stripe.stripeWebhookSecret = webhookSecret
+                                    , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                                    }
+                        result <- liftIO $ Stripe.createRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
+                        case result of
+                            Left err -> throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err))}
+                            Right refundResponse -> do
+                                refundId <-
+                                    eitherStripeServerError $
+                                        parseStripeRefundResponse refundResponse
+                                liftIO $
+                                    runSqlPool
+                                        ( do
+                                            update
+                                                refundKey
+                                                [ TicketRefundRequestStatus =. "approved"
+                                                , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                                                , TicketRefundRequestApprovedAt =. Just now
+                                                , TicketRefundRequestStripeRefundId =. Just refundId
+                                                , TicketRefundRequestProcessedAt =. Just now
+                                                , TicketRefundRequestUpdatedAt =. now
+                                                ]
+                                            update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
+                                            updateWhere
+                                                [EventTicketOrderRefId ==. orderKey]
+                                                [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
+                                            update
+                                                (eventTicketOrderTierId order)
+                                                [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                                        )
+                                        envPool
+                                mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
+                                maybe
+                                    (throwError err500{errBody = "Could not approve refund"})
+                                    (pure . refundEntityToDTO (eventTicketOrderCurrency order))
+                                    mUpdated
+                    _ -> throwError err500{errBody = "Cannot process refund: Stripe not configured or order has no payment intent"}
 
     rejectRefund :: T.Text -> T.Text -> RejectionReasonDTO -> AppM RefundDTO
     rejectRefund eventIdStr refundIdStr RejectionReasonDTO{..} = do
@@ -5449,12 +5467,15 @@ socialEventsServer user =
             throwError err400{errBody = "Rejection reason is required"}
         liftIO $
             runSqlPool
-                ( update
-                    refundKey
-                    [ TicketRefundRequestStatus =. "rejected"
-                    , TicketRefundRequestRejectionReason =. Just rrReason
-                    , TicketRefundRequestUpdatedAt =. now
-                    ]
+                ( do
+                    binding <- TicketRefund.loadTicketRefundReference refundKey
+                    forM_ binding $ \ref -> TicketRefund.cancelTicketRefundAs user ref now
+                    update
+                     refundKey
+                     [ TicketRefundRequestStatus =. "rejected"
+                     , TicketRefundRequestRejectionReason =. Just rrReason
+                     , TicketRefundRequestUpdatedAt =. now
+                     ]
                 )
                 envPool
         mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
@@ -6658,8 +6679,7 @@ socialEventsServer user =
         eventKey <- parseKeyOr400 "event" rawEventId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        hiddenImportedEvent <- liftIO $ runSqlPool (isImportedEventHidden eventKey) envPool
-        if hiddenImportedEvent && hasStrictAdminAccess user
+        if hasStrictAdminAccess user
             then pure (eventKey, eventVal)
             else do
                 requireEventVisibleToUser eventKey
