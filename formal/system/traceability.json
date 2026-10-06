@@ -6975,11 +6975,111 @@
         "classification": "PARTIAL",
         "reason": "Intake and audited resolution implemented; current merged validation, production backend deployment and actual operational fulfilment remain required."
       }
+    },
+    {
+      "id": "OPS-SHUTDOWN-001",
+      "title": "Supervise startup and distinguish drained shutdown from failure",
+      "domain": "OPS",
+      "statement": "The backend shall handle TERM/INT before configuration startup, reject startup publication after accepted stop, join initialization and drain HTTP before clean exit, and report deadline or fatal errors as failure.",
+      "authority": "User deployment, worker failure and concurrency requirements; source-derived PID1 shutdown defect",
+      "source": "formal/system/application-shutdown.md",
+      "contract": "formal/system/application-shutdown.md",
+      "critical": true,
+      "actors": [
+        "Backend process",
+        "Authorized runtime operator"
+      ],
+      "preconditions": [
+        "Unix signal support",
+        "Main propagates supervisor errors",
+        "Warp3.4.9 internal graceful timeout disabled",
+        "No concurrent signal-handler replacement"
+      ],
+      "inputs": [
+        "SIGTERM",
+        "SIGINT",
+        "Startup result",
+        "Listener registration",
+        "HTTP completion",
+        "30-second stop budget"
+      ],
+      "state": {
+        "states": [
+          "preparing",
+          "serving-initializing",
+          "stopping",
+          "clean",
+          "failed"
+        ],
+        "initial": "preparing",
+        "terminal": [
+          "clean",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Preparation success -> supervised serving/initializing",
+        "Stop -> cancellation dispatch -> admission closure -> initialization join and HTTP drain -> clean",
+        "Fatal error or deadline -> failed"
+      ],
+      "forbiddenTransitions": [
+        "Clean after expired drain",
+        "Publication after accepted stop",
+        "Unclosed late listener",
+        "Clean without initialization join",
+        "Retry asynchronous cancellation as database error"
+      ],
+      "effects": [
+        "Close listener",
+        "Cancel initialization",
+        "Stop admission",
+        "Process exits with success or propagated error"
+      ],
+      "authorization": "Runtime operator/process signals; this does not authorize application data operations.",
+      "privacy": "Tests use synthetic HTTP and temporary processes; no provider or customer payload is required.",
+      "concurrency": "Stop latch coalesces signals; shared state linearizes registration/publication and accepted stop. Cancel initialization before taking its possible admission lock.",
+      "idempotency": "Repeated signals enqueue one stop request; listener registration occurs once.",
+      "failure": "Deadline and fatal errors propagate to Main, never clean. Cancellation sender prevents blocked throwTo from hiding the supervisor deadline.",
+      "recovery": "Runtime restart uses normal startup checks. Existing production image and first capture/release admission remain separate unresolved obligations.",
+      "observability": "Exit classification, source-qualified test/mutation results, built-image clean-stop evidence.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Shutdown.hs",
+        "tdf-hq/src/TDF/App/DatabaseRetry.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/Cron.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ShutdownSpec.hs",
+        "scripts/verify-shutdown.py",
+        "scripts/quality-backend.sh",
+        "scripts/test-production-writer-fence-linux.py",
+        ".github/workflows/build.yml"
+      ],
+      "formalModels": [
+        "formal/event-operations/ApplicationShutdown.cfg",
+        "formal/event-operations/ApplicationShutdown.tla",
+        "formal/event-operations/ApplicationShutdownFalseDrain.cfg",
+        "formal/event-operations/ApplicationShutdownLateListener.cfg",
+        "formal/event-operations/ApplicationShutdownLatePublication.cfg",
+        "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Working Haskell request/cancellation/signal controls passed; final source and PID1 image validation pending.",
+      "ambiguity": [
+        "Detached worker and external-provider drainage is excluded; initial production stop remains unresolved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Supervisor and source controls implemented; final exact-candidate and image gates pending."
+      },
+      "property": "Clean completion implies joined initialization and drained HTTP; accepted stop forbids later publication and leaves no open late listener.",
+      "evidence": "Bounded state model plus actual Haskell/HTTP/signal/source-mutation tests; no whole-program refinement or production shutdown claim.",
+      "verification": "Actual Haskell supervisor and retry controls, held Warp request, five detected source mutations, four Unix-signal children, bounded state model and four model mutations; built-image gate requires clean Docker stop."
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/build.yml": "0f77ef4758f6715636420397ad3f544a885ecbb06f13364f8ce4ff4dfb185a5b",
+    ".github/workflows/build.yml": "fd1a0bb8f9d2b5b737091fa6afbdef90a613c4220f4b232f8259d456ebef4f60",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "098b6616672b5aaf9addd8c8615c1ba397e0c320e049ce25a986adf5d79c3886",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
@@ -7022,6 +7122,12 @@
     "formal/event-operations/AccountDeletionResolution.tla": "8796ed24b3e872a7eca305f2e962f1c226965a489847f55038c9c849b9054fa1",
     "formal/event-operations/AccountDeletionResolutionNoOwnerLock.cfg": "330e3713093f7c592335b71c217ad048f7ddb6a00df471f5f8690fb6d4825982",
     "formal/event-operations/ApplicationCanary.tla": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
+    "formal/event-operations/ApplicationShutdown.cfg": "5b1ec76ef28cc07056df164cd458e6ce54e3553e0b19d77459fda74dd9eec04b",
+    "formal/event-operations/ApplicationShutdown.tla": "9010096e6c02f927893da8f023b5ed863a8c6e9c7b211c4f76bedf41e410f92a",
+    "formal/event-operations/ApplicationShutdownFalseDrain.cfg": "b8adc1ad1bdf3ce752554f51952ff6e4f4cd5b16f690d440d7099bc910238ab0",
+    "formal/event-operations/ApplicationShutdownLateListener.cfg": "7a795fc3fba4b2351c890eae304c2e479577220bf561485f4503c58ee12a9167",
+    "formal/event-operations/ApplicationShutdownLatePublication.cfg": "1e838ce2855d5d12bd3f3b1bf3b72dc1cd567060175e53a48d1ff64aac19805e",
+    "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg": "307bb9f866ccded6856e115f5bce592dcfdc855b143fb159c01e7fb27eb63fd0",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
@@ -7205,7 +7311,7 @@
     "scripts/production-migrations.json": "fcb314237b1f09503c1be2a6d65b18da3c1863f6af9259543acc35d4f4cb41ce",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
+    "scripts/quality-backend.sh": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "5a1abaa0050dbfb8a0348e0b622bf0d8e85bb69104e5b9636f10b473f96acbd7",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -7249,7 +7355,7 @@
     "scripts/test-physical-postgres-recovery.py": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-production-recovery-sources.py": "4021b8fdbb5dc8cebe73c594201149f1207edd89faadb0631e2fd7220898f2dc",
-    "scripts/test-production-writer-fence-linux.py": "745a7affc17539df31e87d319dfa216a9218a7643577cc6798e9a48d23e672b3",
+    "scripts/test-production-writer-fence-linux.py": "507ad1b9347f26b0e51b15190f68afd465607e7bcc9e083bb6196453bcac013e",
     "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
@@ -7279,13 +7385,14 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "069605fbb91a645d0a849f929ee6c63148556c8a9343ee4128ee96d6312d93ac",
+    "scripts/verify-event-operations-formal.sh": "98a7acba22874c5f446b27c84cb6497ef4da8d05ead57a87cdaf843ac6de8da1",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
+    "scripts/verify-shutdown.py": "90a2da5514f21e1d28db21a9c59bf3a2e17bf8d3595474ad6058932092ab2824",
     "scripts/verify-system-evidence.mjs": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
@@ -7404,9 +7511,11 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
+    "tdf-hq/src/TDF/App/Boot.hs": "d660f2519d262134428463214d1308d57fb5c596b3618764ec975cef11c4827e",
+    "tdf-hq/src/TDF/App/DatabaseRetry.hs": "e3cc0da023f0bec09a51fc8fa8270c52e90d10bed9c47dc776264cc1e86892ce",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+    "tdf-hq/src/TDF/App/Shutdown.hs": "f6d7f81fae8df5022630f27480efeeebd51e7e235a196f87a0ff9e47e6fee1dc",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
@@ -7422,6 +7531,7 @@
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
+    "tdf-hq/src/TDF/Cron.hs": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
@@ -7466,8 +7576,8 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "1e4cbcb3a01141bed9f05fa2a2d59fe47950a7dc62fce648b60bf99f29afb03f",
-    "tdf-hq/test/Spec.hs": "63a29dc37d37587ca35cfa16f9caf5a20406da75073b4c3fc61dbc3e522f1697",
+    "tdf-hq/tdf-hq.cabal": "6635f1761fb32733e606c2adf1c43ae9005fa166c7f5eeef951541b848e908e0",
+    "tdf-hq/test/Spec.hs": "3aa04800ff15170feaa6e02ef199fdd49748e61c2a73ac2e013151ea3d3acb2b",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -7489,6 +7599,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
+    "tdf-hq/test/TDF/ShutdownSpec.hs": "6994abf744401b992eb891d4faed6b9c860045fd9f5e9ac62ca3d32fba54f6b7",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
@@ -8477,6 +8588,10 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-SHUTDOWN-001",
         "relationship": "tests"
       }
     ],
@@ -10504,6 +10619,10 @@
       {
         "requirement": "PRIV-ERROR-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Email.hs": [
@@ -10850,6 +10969,10 @@
       {
         "requirement": "DEPLOY-PHYSICAL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/ApplicationCanary.tla": [
@@ -11109,6 +11232,10 @@
     "scripts/test-production-writer-fence-linux.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-SHUTDOWN-001",
         "relationship": "tests"
       }
     ],
@@ -12069,6 +12196,72 @@
         "requirement": "PRIV-INTAKE-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/src/TDF/App/Shutdown.hs": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/App/DatabaseRetry.hs": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Cron.hs": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/ShutdownSpec.hs": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-shutdown.py": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/ApplicationShutdown.cfg": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ApplicationShutdown.tla": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ApplicationShutdownFalseDrain.cfg": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ApplicationShutdownLateListener.cfg": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ApplicationShutdownLatePublication.cfg": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -12087,7 +12280,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0f77ef4758f6715636420397ad3f544a885ecbb06f13364f8ce4ff4dfb185a5b",
+      "sha256": "fd1a0bb8f9d2b5b737091fa6afbdef90a613c4220f4b232f8259d456ebef4f60",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12096,6 +12289,10 @@
         },
         {
           "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "tests"
         }
       ]
@@ -14876,7 +15073,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
+      "sha256": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14893,6 +15090,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "tests"
         }
       ]
@@ -16407,11 +16608,15 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "745a7affc17539df31e87d319dfa216a9218a7643577cc6798e9a48d23e672b3",
+      "sha256": "507ad1b9347f26b0e51b15190f68afd465607e7bcc9e083bb6196453bcac013e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "tests"
         }
       ]
@@ -16951,7 +17156,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "069605fbb91a645d0a849f929ee6c63148556c8a9343ee4128ee96d6312d93ac",
+      "sha256": "98a7acba22874c5f446b27c84cb6497ef4da8d05ead57a87cdaf843ac6de8da1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17087,6 +17292,18 @@
       "requirements": [
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c39f5f2cb9b0109f",
+      "path": "scripts/verify-shutdown.py",
+      "sha256": "90a2da5514f21e1d28db21a9c59bf3a2e17bf8d3595474ad6058932092ab2824",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "tests"
         }
       ]
@@ -25857,7 +26074,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
+      "sha256": "d660f2519d262134428463214d1308d57fb5c596b3618764ec975cef11c4827e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25866,6 +26083,22 @@
         },
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-SHUTDOWN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6545db07097aec97",
+      "path": "tdf-hq/src/TDF/App/DatabaseRetry.hs",
+      "sha256": "e3cc0da023f0bec09a51fc8fa8270c52e90d10bed9c47dc776264cc1e86892ce",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "implementation"
         }
       ]
@@ -25890,6 +26123,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ce454e8b64bdee25",
+      "path": "tdf-hq/src/TDF/App/Shutdown.hs",
+      "sha256": "f6d7f81fae8df5022630f27480efeeebd51e7e235a196f87a0ff9e47e6fee1dc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "implementation"
         }
       ]
@@ -26364,9 +26609,14 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "9d239ae606cba7da86ec49ebbeff0074a949e424a40b624ade6ced3628b5e59a",
+      "sha256": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-SHUTDOWN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-980d517db26f5cab",
@@ -27633,7 +27883,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1e4cbcb3a01141bed9f05fa2a2d59fe47950a7dc62fce648b60bf99f29afb03f",
+      "sha256": "6635f1761fb32733e606c2adf1c43ae9005fa166c7f5eeef951541b848e908e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27699,7 +27949,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "63a29dc37d37587ca35cfa16f9caf5a20406da75073b4c3fc61dbc3e522f1697",
+      "sha256": "3aa04800ff15170feaa6e02ef199fdd49748e61c2a73ac2e013151ea3d3acb2b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28225,6 +28475,18 @@
       "sha256": "ded535c29c8e2e1d0eb68009d557c082cd590bdf0b191217624a05af5697cd29",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-79dd1d28011aa447",
+      "path": "tdf-hq/test/TDF/ShutdownSpec.hs",
+      "sha256": "6994abf744401b992eb891d4faed6b9c860045fd9f5e9ac62ca3d32fba54f6b7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-SHUTDOWN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0874fb5da2116211",
@@ -33100,7 +33362,6 @@
     "SURFACE-de7641689e63ad01",
     "SURFACE-2bac4bb831675dd6",
     "SURFACE-b5ed9df91b31bc61",
-    "SURFACE-7774c01ac1644990",
     "SURFACE-980d517db26f5cab",
     "SURFACE-b9f1acd9b5c4a2a3",
     "SURFACE-99343fbe22db2301",
@@ -34754,7 +35015,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7574c806d8bf35797a7435c92d5afc6d3e08855d1cf5e545c7d3a1db1106970f",
+      "sourceSha256": "6debdae498e34d67de440de97c8f65bed456615f486454939a2e06e644829e69",
       "definition": {
         "states": [
           "absent",
@@ -56660,7 +56921,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 88,
+    "PARTIAL": 89,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

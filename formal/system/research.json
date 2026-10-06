@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -709,6 +709,15 @@
       "decision": "adopt pre-start existing-cluster guard",
       "rationale": "Require exact PG17 marker and existing no-follow control/directory structure before start. Verify actual system ID and unchanged ledger afterward. Do not claim checksum or binary-format verification; actual pinned PG17 component fixture separately exercises exit137 recovery.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-SHUTDOWN-001",
+      "source": "https://man7.org/linux/man-pages/man7/pid_namespaces.7.html",
+      "title": "Linux PID namespace init signal semantics; pinned Warp3.4.9 source",
+      "recommendation": "Install explicit process handlers for container PID1; distinguish a completed graceful drain from timeout.",
+      "applicability": "Observed exit137 from Docker stop of the synthetic actual API; Warp3.4.9 Run.hs discards its internal timeout result.",
+      "decision": "adopted",
+      "rationale": "Early TERM/INT supervisor owns cancellation and30-second deadline. Exact installed Warp package source was inspected via Stack unpack; HTTP, signal, negative-control and image gates remain distinct evidence boundaries."
     }
   ]
 }

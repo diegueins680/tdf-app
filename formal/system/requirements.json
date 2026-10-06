@@ -3316,7 +3316,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -6974,6 +6974,106 @@
         "classification": "PARTIAL",
         "reason": "Intake and audited resolution implemented; current merged validation, production backend deployment and actual operational fulfilment remain required."
       }
+    },
+    {
+      "id": "OPS-SHUTDOWN-001",
+      "title": "Supervise startup and distinguish drained shutdown from failure",
+      "domain": "OPS",
+      "statement": "The backend shall handle TERM/INT before configuration startup, reject startup publication after accepted stop, join initialization and drain HTTP before clean exit, and report deadline or fatal errors as failure.",
+      "authority": "User deployment, worker failure and concurrency requirements; source-derived PID1 shutdown defect",
+      "source": "formal/system/application-shutdown.md",
+      "contract": "formal/system/application-shutdown.md",
+      "critical": true,
+      "actors": [
+        "Backend process",
+        "Authorized runtime operator"
+      ],
+      "preconditions": [
+        "Unix signal support",
+        "Main propagates supervisor errors",
+        "Warp3.4.9 internal graceful timeout disabled",
+        "No concurrent signal-handler replacement"
+      ],
+      "inputs": [
+        "SIGTERM",
+        "SIGINT",
+        "Startup result",
+        "Listener registration",
+        "HTTP completion",
+        "30-second stop budget"
+      ],
+      "state": {
+        "states": [
+          "preparing",
+          "serving-initializing",
+          "stopping",
+          "clean",
+          "failed"
+        ],
+        "initial": "preparing",
+        "terminal": [
+          "clean",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Preparation success -> supervised serving/initializing",
+        "Stop -> cancellation dispatch -> admission closure -> initialization join and HTTP drain -> clean",
+        "Fatal error or deadline -> failed"
+      ],
+      "forbiddenTransitions": [
+        "Clean after expired drain",
+        "Publication after accepted stop",
+        "Unclosed late listener",
+        "Clean without initialization join",
+        "Retry asynchronous cancellation as database error"
+      ],
+      "effects": [
+        "Close listener",
+        "Cancel initialization",
+        "Stop admission",
+        "Process exits with success or propagated error"
+      ],
+      "authorization": "Runtime operator/process signals; this does not authorize application data operations.",
+      "privacy": "Tests use synthetic HTTP and temporary processes; no provider or customer payload is required.",
+      "concurrency": "Stop latch coalesces signals; shared state linearizes registration/publication and accepted stop. Cancel initialization before taking its possible admission lock.",
+      "idempotency": "Repeated signals enqueue one stop request; listener registration occurs once.",
+      "failure": "Deadline and fatal errors propagate to Main, never clean. Cancellation sender prevents blocked throwTo from hiding the supervisor deadline.",
+      "recovery": "Runtime restart uses normal startup checks. Existing production image and first capture/release admission remain separate unresolved obligations.",
+      "observability": "Exit classification, source-qualified test/mutation results, built-image clean-stop evidence.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Shutdown.hs",
+        "tdf-hq/src/TDF/App/DatabaseRetry.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/Cron.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ShutdownSpec.hs",
+        "scripts/verify-shutdown.py",
+        "scripts/quality-backend.sh",
+        "scripts/test-production-writer-fence-linux.py",
+        ".github/workflows/build.yml"
+      ],
+      "formalModels": [
+        "formal/event-operations/ApplicationShutdown.cfg",
+        "formal/event-operations/ApplicationShutdown.tla",
+        "formal/event-operations/ApplicationShutdownFalseDrain.cfg",
+        "formal/event-operations/ApplicationShutdownLateListener.cfg",
+        "formal/event-operations/ApplicationShutdownLatePublication.cfg",
+        "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Working Haskell request/cancellation/signal controls passed; final source and PID1 image validation pending.",
+      "ambiguity": [
+        "Detached worker and external-provider drainage is excluded; initial production stop remains unresolved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Supervisor and source controls implemented; final exact-candidate and image gates pending."
+      },
+      "property": "Clean completion implies joined initialization and drained HTTP; accepted stop forbids later publication and leaves no open late listener.",
+      "evidence": "Bounded state model plus actual Haskell/HTTP/signal/source-mutation tests; no whole-program refinement or production shutdown claim.",
+      "verification": "Actual Haskell supervisor and retry controls, held Warp request, five detected source mutations, four Unix-signal children, bounded state model and four model mutations; built-image gate requires clean Docker stop."
     }
   ]
 }

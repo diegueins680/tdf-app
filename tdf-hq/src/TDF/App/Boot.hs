@@ -7,8 +7,7 @@ module TDF.App.Boot
   , validateSeedDatabaseStartup
   ) where
 
-import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
-import Control.Exception (SomeException, throwIO, try)
+import Control.Exception (throwIO)
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
@@ -93,11 +92,13 @@ import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.App.StartupResponse (startupApp)
+import TDF.App.DatabaseRetry (retryDatabaseConnection)
+import TDF.App.Shutdown (runWithUnixShutdown, registerServerStop, admitStartupEffect)
 import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException)
 import TDF.Trials.Models (migrateTrials)
 
 runBootServer :: IO ()
-runBootServer = do
+runBootServer = runWithUnixShutdown (30 * 1000 * 1000) $ \shutdown -> do
   cfg <- loadConfig
   startupEnv <- getEnvironment
   case validateDatabaseStartupSafety (resetDb cfg) (seedDatabase cfg) startupEnv of
@@ -110,6 +111,8 @@ runBootServer = do
   let
     errorLogger = hPutStrLn stderr . T.unpack
     warpSettings =
+      Warp.setInstallShutdownHandler (registerServerStop shutdown) $
+        Warp.setGracefulShutdownTimeout Nothing $
       Warp.setPort (appPort cfg) $
         Warp.setHost "0.0.0.0" $
           Warp.setOnException (\_ -> reportUnhandledException errorLogger) Warp.defaultSettings
@@ -144,36 +147,31 @@ runBootServer = do
           runSqlPool seedAll pool
         putStrLn ("Starting server on port " <> show (appPort cfg))
         let env = Env{envPool = pool, envConfig = cfg}
-        writeIORef appRef (wrapApp (mkApp env))
-        startCoursePaymentReminderJob env
-        startRecordsIngestionJob (envPool env)
-        startInteractionNotifications (envPool env)
-        startEventDiscoveryJob env
-        startEventLogisticsRecheckJob env
-        startArtistEnrichmentJob env
-        startInstagramSyncJob env
-        startSocialAutoReplyJob env
-        startCampaignAutomationJob env
-        startOperationsWorker env
-        startProviderEventWorker env
-        startProviderQueryWorker env
-        startMerchReservationWorker env
-        startTicketConfirmationWorker env
-        startReputationWorker env
+        admitStartupEffect shutdown (writeIORef appRef (wrapApp (mkApp env)))
+        admitStartupEffect shutdown (startCoursePaymentReminderJob env)
+        admitStartupEffect shutdown (startRecordsIngestionJob (envPool env))
+        admitStartupEffect shutdown (startInteractionNotifications (envPool env))
+        admitStartupEffect shutdown (startEventDiscoveryJob env)
+        admitStartupEffect shutdown (startEventLogisticsRecheckJob env)
+        admitStartupEffect shutdown (startArtistEnrichmentJob env)
+        admitStartupEffect shutdown (startInstagramSyncJob env)
+        admitStartupEffect shutdown (startSocialAutoReplyJob env)
+        admitStartupEffect shutdown (startCampaignAutomationJob env)
+        admitStartupEffect shutdown (startOperationsWorker env)
+        admitStartupEffect shutdown (startProviderEventWorker env)
+        admitStartupEffect shutdown (startProviderQueryWorker env)
+        admitStartupEffect shutdown (startMerchReservationWorker env)
+        admitStartupEffect shutdown (startTicketConfirmationWorker env)
+        admitStartupEffect shutdown (startReputationWorker env)
 
-  serverResult <- newEmptyMVar
-  _ <-
-    forkFinally
-      (Warp.runSettings warpSettings $ \req send -> do
+  -- Supervision preserves fatal startup failures while making initialization
+  -- cancellable before HTTP drain. Detached workers remain process-owned.
+  pure
+    ( Warp.runSettings warpSettings $ \req send -> do
         app <- readIORef appRef
-        app req send)
-      (putMVar serverResult)
-
-  -- Keep initialization on the main thread so a failed migration or startup
-  -- registry check always terminates the process with a non-zero exit status.
-  -- Warp runs concurrently only to expose the bounded `starting` health state.
-  setupApp
-  takeMVar serverResult >>= either throwIO pure
+        app req send
+    , setupApp
+    )
 
 validateSeedDatabaseStartup :: Bool -> [(String, String)] -> Either String ()
 validateSeedDatabaseStartup shouldSeed env
@@ -501,19 +499,7 @@ restoreLegacyPartyRoles roles = do
       Right () -> pure ()
 
 makePoolWithRetry :: Int -> BS.ByteString -> IO ConnectionPool
-makePoolWithRetry retries connStr = do
-  result <- try (makePool connStr) :: IO (Either SomeException ConnectionPool)
-  case result of
-    Right pool -> pure pool
-    Left err ->
-      if retries <= 0
-        then do
-          putStrLn "Failed to connect to database after retries. Crashing."
-          throwIO err
-        else do
-          putStrLn $ "DB connection failed, retrying... attempts left: " <> show retries
-          threadDelay (5 * 1000 * 1000)
-          makePoolWithRetry (retries - 1) connStr
+makePoolWithRetry retries connStr = retryDatabaseConnection retries (makePool connStr)
 
 columnExists :: Text -> SqlPersistT IO Bool
 columnExists column = do

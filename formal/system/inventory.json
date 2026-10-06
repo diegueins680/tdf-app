@@ -514,6 +514,7 @@
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-readiness.py",
       "scripts/verify-request-failures.py",
+      "scripts/verify-shutdown.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
@@ -1678,8 +1679,10 @@
       "tdf-hq/src/TDF/API/Types.hs",
       "tdf-hq/src/TDF/API/WhatsApp.hs",
       "tdf-hq/src/TDF/App/Boot.hs",
+      "tdf-hq/src/TDF/App/DatabaseRetry.hs",
       "tdf-hq/src/TDF/App/FailureBoundary.hs",
       "tdf-hq/src/TDF/App/Readiness.hs",
+      "tdf-hq/src/TDF/App/Shutdown.hs",
       "tdf-hq/src/TDF/App/StartupResponse.hs",
       "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "tdf-hq/src/TDF/Artists/Promotion.hs",
@@ -1914,6 +1917,7 @@
       "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
       "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs",
       "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
+      "tdf-hq/test/TDF/ShutdownSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
@@ -2374,7 +2378,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0f77ef4758f6715636420397ad3f544a885ecbb06f13364f8ce4ff4dfb185a5b",
+      "sha256": "fd1a0bb8f9d2b5b737091fa6afbdef90a613c4220f4b232f8259d456ebef4f60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4018,7 +4022,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
+      "sha256": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4984,7 +4988,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "745a7affc17539df31e87d319dfa216a9218a7643577cc6798e9a48d23e672b3",
+      "sha256": "507ad1b9347f26b0e51b15190f68afd465607e7bcc9e083bb6196453bcac013e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5284,7 +5288,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "069605fbb91a645d0a849f929ee6c63148556c8a9343ee4128ee96d6312d93ac",
+      "sha256": "98a7acba22874c5f446b27c84cb6497ef4da8d05ead57a87cdaf843ac6de8da1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5327,6 +5331,12 @@
       "id": "SURFACE-fa1f8b855944ecc5",
       "path": "scripts/verify-request-failures.py",
       "sha256": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c39f5f2cb9b0109f",
+      "path": "scripts/verify-shutdown.py",
+      "sha256": "90a2da5514f21e1d28db21a9c59bf3a2e17bf8d3595474ad6058932092ab2824",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12274,7 +12284,13 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
+      "sha256": "d660f2519d262134428463214d1308d57fb5c596b3618764ec975cef11c4827e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6545db07097aec97",
+      "path": "tdf-hq/src/TDF/App/DatabaseRetry.hs",
+      "sha256": "e3cc0da023f0bec09a51fc8fa8270c52e90d10bed9c47dc776264cc1e86892ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12287,6 +12303,12 @@
       "id": "SURFACE-9b25f2b06da83696",
       "path": "tdf-hq/src/TDF/App/Readiness.hs",
       "sha256": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ce454e8b64bdee25",
+      "path": "tdf-hq/src/TDF/App/Shutdown.hs",
+      "sha256": "f6d7f81fae8df5022630f27480efeeebd51e7e235a196f87a0ff9e47e6fee1dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12580,7 +12602,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "9d239ae606cba7da86ec49ebbeff0074a949e424a40b624ade6ced3628b5e59a",
+      "sha256": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13366,7 +13388,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1e4cbcb3a01141bed9f05fa2a2d59fe47950a7dc62fce648b60bf99f29afb03f",
+      "sha256": "6635f1761fb32733e606c2adf1c43ae9005fa166c7f5eeef951541b848e908e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13408,7 +13430,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "63a29dc37d37587ca35cfa16f9caf5a20406da75073b4c3fc61dbc3e522f1697",
+      "sha256": "3aa04800ff15170feaa6e02ef199fdd49748e61c2a73ac2e013151ea3d3acb2b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13691,6 +13713,12 @@
       "id": "SURFACE-eef0c0019f0d35ca",
       "path": "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "sha256": "ded535c29c8e2e1d0eb68009d557c082cd590bdf0b191217624a05af5697cd29",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-79dd1d28011aa447",
+      "path": "tdf-hq/test/TDF/ShutdownSpec.hs",
+      "sha256": "6994abf744401b992eb891d4faed6b9c860045fd9f5e9ac62ca3d32fba54f6b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19673,6 +19701,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ApplicationShutdown.cfg",
+      "sha256": "5b1ec76ef28cc07056df164cd458e6ce54e3553e0b19d77459fda74dd9eec04b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationShutdown.tla",
+      "sha256": "9010096e6c02f927893da8f023b5ed863a8c6e9c7b211c4f76bedf41e410f92a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ApplicationShutdownFalseDrain.cfg",
+      "sha256": "b8adc1ad1bdf3ce752554f51952ff6e4f4cd5b16f690d440d7099bc910238ab0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationShutdownLateListener.cfg",
+      "sha256": "7a795fc3fba4b2351c890eae304c2e479577220bf561485f4503c58ee12a9167",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationShutdownLatePublication.cfg",
+      "sha256": "1e838ce2855d5d12bd3f3b1bf3b72dc1cd567060175e53a48d1ff64aac19805e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg",
+      "sha256": "307bb9f866ccded6856e115f5bce592dcfdc855b143fb159c01e7fb27eb63fd0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ArtistActivation.cfg",
       "sha256": "ba58e8206d929c869b2ad2b869126c220abf63fe3c29993b8ad3698eb038741c",
       "authority": "inferred",
@@ -22285,9 +22355,16 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "e7f8627841abbf28cfacb812fc384c5d40b21b358f9f1d24ad56f8706df30de9",
+      "sha256": "d2c14155645f68356dbfb4c252c25bfd1ebc4e8177a8671dfbb894c0c6704d2d",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/application-shutdown.md",
+      "sha256": "0b1d58f0d299a78cb6ff75a808f79de07b5723de51a338963156321d8fd2ddc9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -22607,14 +22684,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7574c806d8bf35797a7435c92d5afc6d3e08855d1cf5e545c7d3a1db1106970f",
+      "sha256": "6debdae498e34d67de440de97c8f65bed456615f486454939a2e06e644829e69",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "a00f87d8511108a8951ec7209245e4ccf940d68d145bc9ce240b3d904105b71c",
+      "sha256": "633cb4f4b8a22fa32bc974775794f233d1d5d2d9ad9b968ef15873d9340484a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30203,6 +30280,81 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "INVARIANTS TypeOK NoProductionConnectivity DatabaseOutlivesApp ReservationCoversApp VerifiedReceipt OneCanary"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationShutdown.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  CloseLateListener = TRUE",
+        "  GuardPublication = TRUE",
+        "  RequireDrain = TRUE",
+        "  RequireStartupJoin = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK LateListenerClosed NoLatePublication CleanRequiresDrain CleanRequiresStartupJoin"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationShutdownFalseDrain.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  CloseLateListener = TRUE",
+        "  GuardPublication = TRUE",
+        "  RequireDrain = FALSE",
+        "  RequireStartupJoin = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK LateListenerClosed NoLatePublication CleanRequiresDrain CleanRequiresStartupJoin"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationShutdownLateListener.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  CloseLateListener = FALSE",
+        "  GuardPublication = TRUE",
+        "  RequireDrain = TRUE",
+        "  RequireStartupJoin = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK LateListenerClosed NoLatePublication CleanRequiresDrain CleanRequiresStartupJoin"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationShutdownLatePublication.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  CloseLateListener = TRUE",
+        "  GuardPublication = FALSE",
+        "  RequireDrain = TRUE",
+        "  RequireStartupJoin = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK LateListenerClosed NoLatePublication CleanRequiresDrain CleanRequiresStartupJoin"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationShutdownUnjoinedStartup.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  CloseLateListener = TRUE",
+        "  GuardPublication = TRUE",
+        "  RequireDrain = TRUE",
+        "  RequireStartupJoin = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK LateListenerClosed NoLatePublication CleanRequiresDrain CleanRequiresStartupJoin"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

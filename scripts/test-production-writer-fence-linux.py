@@ -347,6 +347,9 @@ def main():
                 require(actual_application and state['Running'] is False and state['ExitCode']==137
                         and state['OOMKilled'] is False and journal.status()['pendingStage']=='stop-writers')
                 unclean_api_rejected=True
+            if os.environ.get("TDF_TEST_REQUIRE_CLEAN_APPLICATION_STOP") == "1":
+                require(actual_application and not unclean_api_rejected
+                        and inspect(expected["api"]["containerId"])["State"]["ExitCode"] == 0)
             if not unclean_api_rejected:
                 fence.stop_database()
                 require(fence.observe()['sources']['dockerWritersStopped'])
