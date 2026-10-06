@@ -297,3 +297,11 @@ redirects. Missing/inactive/noncanonical callbacks, invalid tokens and transport
 or response failures produce a nonzero exit. Configured credentials are redacted
 from reflected metadata; raw provider errors are not printed. A passing diagnostic
 is metadata evidence only, not delivery, provider approval or release readiness.
+
+### Disposable restart contract
+
+Disposable creation explicitly sets `--restart=no`; every later admission requires
+`RestartPolicy={Name:no,MaximumRetryCount:0}` and `AutoRemove=false`. Unknown,
+missing or changed policy rejects use and cleanup rather than repairing policy.
+These checks prevent automatic disposable restart/removal from being silently
+admitted; they do not supply the missing durable post-crash creation descriptor.

@@ -21,7 +21,7 @@ IMAGE, IMAGE_ID = 'pgvector/pgvector@sha256:' + 'd' * 64, 'sha256:' + 'e' * 64
 
 def container():
     return {'Id': TARGET, 'Image': IMAGE_ID, 'Config': {'Image': IMAGE, 'Cmd': restore.POSTGRES_COMMAND, 'Labels': {restore.LABEL: NONCE}},
-            'HostConfig': {'NetworkMode': 'none', 'PortBindings': {}, 'ReadonlyRootfs': True,
+            'HostConfig': {'RestartPolicy': {'Name':'no','MaximumRetryCount':0}, 'AutoRemove': False, 'NetworkMode': 'none', 'PortBindings': {}, 'ReadonlyRootfs': True,
                 'Memory': restore.MEMORY_LIMIT, 'MemorySwap': restore.MEMORY_LIMIT, 'NanoCpus': 500000000,
                 'PidsLimit': 64, 'IpcMode': 'private', 'SecurityOpt': ['no-new-privileges:true'],
                 'Tmpfs': {key: '' for key in (restore.DATA, '/var/run/postgresql', '/tmp')}}, 'Mounts': []}
@@ -53,6 +53,13 @@ class CollectorCompatibilityTests(unittest.TestCase):
 
 
 class RestoreBoundaryTests(unittest.TestCase):
+    def test_disposable_never_restarts_or_auto_removes(self):
+        for policy in ({"Name":"always","MaximumRetryCount":0},{"Name":"unless-stopped","MaximumRetryCount":0},{"Name":"on-failure","MaximumRetryCount":3},{"Name":"no","MaximumRetryCount":1},None):
+            data=container();data["HostConfig"]["RestartPolicy"]=policy
+            with self.subTest(policy=policy),self.assertRaises(ValueError):self.make().admit(data)
+        data=container();data["HostConfig"]["AutoRemove"]=True
+        with self.assertRaises(ValueError):self.make().admit(data)
+
     def make(self):
         return restore.IsolatedRestore(SOURCE, IMAGE, IMAGE_ID, NONCE)
 

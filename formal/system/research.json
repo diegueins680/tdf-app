@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -727,6 +727,15 @@
       "applicability": "Original edge probe reaches a fixed namespace-local loopback address but must authenticate api.tdfrecords.net.",
       "decision": "adopted",
       "rationale": "Keep the reference service hostname for SNI, certificate verification and HTTP Host while pinning transport separately; use default CA validation and reject TLS failures without downgrade. No public-network reachability claim follows."
+    },
+    {
+      "id": "RES-DISPOSABLE-RESTART-001",
+      "source": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+      "title": "Docker container restart policy",
+      "recommendation": "Use the no policy when container restart must require explicit action.",
+      "applicability": "Owned logical restores, physical clones and isolated application canaries",
+      "decision": "adopted",
+      "rationale": "Create with explicit --restart=no, admit the full no/zero-retry policy and AutoRemove=false. Preserve uncertain resource identity for deliberate cleanup; a reboot must not silently resurrect a disposable. This does not establish post-crash cleanup authority."
     }
   ]
 }

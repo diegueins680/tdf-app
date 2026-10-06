@@ -100,3 +100,9 @@ from its newly initialized synthetic database fixture. A nonzero source identity
 rejects before inspection or log retrieval. Shared production recovery helpers
 continue to suppress raw application/daemon logs. These diagnostics are not
 permission to print logs from a restored production database.
+
+Disposable creation explicitly sets `--restart=no`; every later admission requires
+`RestartPolicy={Name:no,MaximumRetryCount:0}` and `AutoRemove=false`. Unknown,
+missing or changed policy rejects use and cleanup rather than repairing policy.
+These checks prevent automatic disposable restart/removal from being silently
+admitted; they do not supply the missing durable post-crash creation descriptor.

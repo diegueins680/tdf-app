@@ -243,7 +243,7 @@ class PhysicalClone(restore.IsolatedRestore):
     def create_command(self):
         require(self.prepared_manifest is not None)
         return restore.DOCKER + ['create', '--pull=never', '--name', 'tdf-audit-restore-'+self.nonce,
-            '--label', restore.LABEL+'='+self.nonce, '--network=none', '--read-only',
+            '--label', restore.LABEL+'='+self.nonce, '--network=none', '--read-only', '--restart=no',
             '--user', USER, '--entrypoint', '/bin/sleep', '--cap-drop=ALL',
             '--security-opt=no-new-privileges:true', '--memory='+str(restore.MEMORY_LIMIT),
             '--memory-swap='+str(restore.MEMORY_LIMIT), '--cpus=0.5', '--pids-limit=64',
@@ -257,6 +257,7 @@ class PhysicalClone(restore.IsolatedRestore):
         require(re.fullmatch('[a-f0-9]{64}', target) is not None and target != self.source)
         require(self.target is None or self.target == target)
         cfg, host = container['Config'], container['HostConfig']
+        require(host.get('RestartPolicy') == {'Name':'no','MaximumRetryCount':0} and host.get('AutoRemove') is False)
         require(cfg['Labels'].get(restore.LABEL) == self.nonce and cfg['Image'] == self.image
                 and container['Image'] == self.image_id and cfg['User'] == USER
                 and cfg['Entrypoint'] == ['/bin/sleep'] and cfg['Cmd'] == COMMAND)
