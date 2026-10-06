@@ -5,6 +5,20 @@ conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
 
+## Executable gates
+
+These checks make drift fail CI; run them before changing a mapped surface.
+
+| Gate | Enforces |
+|---|---|
+| `scripts/specification-inventory.py --check`, `scripts/specification-conformance.py --check` | Source discovery, requirement register, traceability and fingerprints are current |
+| `scripts/check-new-specification-surfaces.py --base SHA` | Every changed material file maps to a requirement |
+| `node scripts/inspect-compiled-api.mjs` (CI, after build) | Served Servant routes equal `compiled-api-surface.json` |
+| `scripts/check-public-routes.py` | Every unauthenticated compiled route has a reviewed boundary (AUTH-PUBLIC-001) |
+| `scripts/check-state-machines.py --database-url URL` (CI, migrated PG17) | Declared lifecycle states and SQL transitions equal the migrated schema (SYS-STATE-001) |
+| `node scripts/check-generated-api.mjs` | Generated web/Mobile clients equal the OpenAPI contract |
+| `npm run verify:formal`, `scripts/verify-system-evidence.mjs` | Bounded TLA+/PlusCal/Alloy models and their negative controls |
+
 ## Canonical package
 
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
