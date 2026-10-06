@@ -100,6 +100,7 @@ class BackupTests(unittest.TestCase):
             parent = ('import importlib.util,pathlib\n'
                 + 's=importlib.util.spec_from_file_location("backup",%r); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)\n' % str(ROOT/'ops/hetzner/backup-postgres.py')
                 + 'm.observe=lambda: %r\n' % SOURCE
+                + 'from types import SimpleNamespace\nm.os.statvfs=lambda _: SimpleNamespace(f_bavail=10,f_frsize=m.MAX_ARCHIVE)\n'
                 + 'm.database_command=lambda *args: %r\n' % [sys.executable, '-c', child]
                 + 'm.backup(pathlib.Path(%r))\n' % str(root))
             process = subprocess.Popen([sys.executable, '-c', parent], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -157,6 +158,17 @@ class BackupTests(unittest.TestCase):
                 backup.backup(Path(temporary))
             archive.assert_not_called()
 
+    def test_insufficient_capacity_rejects_before_archive_or_pending_intent(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with patch.object(backup, 'observe', return_value=SOURCE), \
+                 patch.object(backup.os, 'statvfs', return_value=SimpleNamespace(f_bavail=1, f_frsize=backup.MAX_ARCHIVE)), \
+                 patch.object(backup, 'archive') as archive, self.assertRaises(ValueError):
+                backup.backup(root)
+            archive.assert_not_called()
+            self.assertFalse((root/backup.PENDING).exists())
+            self.assertEqual(list(root.glob('logical-*')), [])
+
     def test_archive_failure_empty_output_and_overwrite_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary)/'archive'
@@ -177,6 +189,7 @@ class BackupTests(unittest.TestCase):
                 destination.write_bytes(b'synthetic'); destination.chmod(0o600)
                 (code/'inspect-runtime.py').write_text('# replaced during the dump\n')
             with patch.object(isolated, 'observe', return_value=SOURCE), \
+                 patch.object(isolated.os, 'statvfs', return_value=SimpleNamespace(f_bavail=10, f_frsize=isolated.MAX_ARCHIVE)), \
                  patch.object(isolated, 'archive', side_effect=archive), \
                  patch.object(isolated.subprocess, 'run', return_value=SimpleNamespace(returncode=0)), \
                  self.assertRaises(ValueError):
