@@ -19,6 +19,8 @@ spec = importlib.util.spec_from_file_location('synthetic_physical', ROOT/'script
 fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
 p, r, require = fixture.p, fixture.r, fixture.require
 canary = p.load('combined_application', 'isolated-application-canary.py')
+recovered = p.load('combined_recovered_content', 'recovered-application-content.py')
+bundle = recovered.bundle
 
 
 def sql(target, query, database='tdf_hq'):
@@ -98,16 +100,43 @@ def main():
         manifest = p.files.capture(str(seed.data), str(archive))
     require(seed.target is None and not os.path.lexists(p.HOST_ROOT/r.PENDING_NAME))
 
+    # One complete file bundle must supply the actual database and application
+    # content. Synthetic edge/unit/config sentinels represent the other roots;
+    # this fixture does not establish encryption or off-host custody.
+    roots = {'database': str(seed.data)}
+    for name in bundle.ROLES:
+        if name == 'database': continue
+        source = seed.directory/('bundle-source-'+name); source.mkdir(mode=0o700)
+        roots[name] = str(source)
+    assets = Path(roots['production'])/'assets'; assets.mkdir(mode=0o700)
+    uploads = Path(roots['legacy-uploads'])
+    sentinels = {}
+    for name, source in (('assets', assets), ('uploads', uploads)):
+        os.chown(source, 1000, 1000)
+        sentinel = source/'synthetic-recovery-sentinel'
+        sentinel.write_bytes(bytes(range(256))*7); sentinel.chmod(0o600); os.chown(sentinel, 1000, 1000)
+        sentinels[name] = hashlib.sha256(sentinel.read_bytes()).hexdigest()
+    (Path(roots['production'])/'synthetic-secret').write_bytes(b'SYNTHETIC SECRET ONLY')
+    for name in ('edge-data','edge-config','host-units'):
+        (Path(roots[name])/'synthetic-config').write_bytes(name.encode())
+
     def restored():
         nonce, directory = fixture.new_directory()
-        clone = p.PhysicalClone('0'*64, image, image_id, nonce, directory, system_id)
-        p.files.restore(str(archive), manifest, str(clone.data))
-        clone.prepare(manifest)
-        return clone
+        return p.PhysicalClone('0'*64, image, image_id, nonce, directory, system_id)
 
     cleanup_injected = False
     def migrate_and_run(clone, cleanup_failure=False):
         nonlocal cleanup_injected
+        binding = {'sourceRevision': revision, 'mobileRevision': '0'*40,
+                   'runtimeSha256': hashlib.sha256(b'synthetic disconnected fixture').hexdigest(),
+                   'migrationManifestSha256': hashlib.sha256((ROOT/'scripts/production-migrations.json').read_bytes()).hexdigest(),
+                   'releaseNonce': clone.nonce, 'databaseSystemIdentifier': system_id}
+        plain = clone.directory/'synthetic-complete-bundle.tar'
+        receipt = bundle.capture(roots, str(clone.directory/'captured-components'), str(plain), binding)
+        preparation = recovered.prepare(clone, plain, receipt, binding, legacy_uploads=True)
+        require(preparation['fileReplay']['status'] == 'component-files-restored')
+        require((clone.directory/'recovered-bundle/production/synthetic-secret').read_bytes() == b'SYNTHETIC SECRET ONLY')
+        content = preparation['contentManifests']
         clone.start()
         require(sql(clone, "SHOW server_encoding;") == 'UTF8')
         sql(clone, batch)
@@ -116,17 +145,6 @@ def main():
         sql(clone, batch)
         require(sql(clone, ledger_query) == first_ledger)
         require(sql(clone, 'SELECT count(*) FROM tdf_schema_migration;') == str(expected_count))
-        content = {}
-        sentinels = {}
-        for name in ('assets', 'uploads'):
-            source = clone.directory/('synthetic-'+name); source.mkdir(mode=0o700)
-            os.chown(source, 1000, 1000)
-            sentinel = source/'synthetic-recovery-sentinel'
-            sentinel.write_bytes(bytes(range(256))*7); sentinel.chmod(0o600); os.chown(sentinel, 1000, 1000)
-            archive_path = clone.directory/(name+'.tar')
-            content[name] = p.files.capture(str(source), str(archive_path))
-            p.files.restore(str(archive_path), content[name], str(clone.directory/('canary-'+name)))
-            sentinels[name] = hashlib.sha256(sentinel.read_bytes()).hexdigest()
         for name in ('assets', 'uploads'):
             invalid = copy.deepcopy(content)
             next(row for row in invalid[name]['entries'] if row['kind'] == 'file')['sha256'] = '0'*64
@@ -196,6 +214,8 @@ def main():
     print(json.dumps({'status': 'passed', 'scope': 'synthetic physical PG17 and isolated application',
         'application': evidence, 'migrations': expected_count, 'migrationBatchSha256': batch_hash,
         'migrationBatchMatchesImage': True, 'migrationReplayStable': True,
+        'databaseAssetsAndUploadsFromOneVerifiedBundle': True,
+        'encryptionAndOffHostCustodyVerified': False,
         'restoredAssetAndPrivateUploadSentinelsMatch': True,
         'restoredContentMismatchRejectedBeforeApplicationCreation': True,
         'applicationRemovedBeforeDatabase': True, 'failedApplicationCleanupRetainedBothAndReservation': True,

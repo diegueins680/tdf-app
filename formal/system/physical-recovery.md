@@ -139,3 +139,33 @@ migrations plus replay underUTF8. This fixture correction does not rewrite an
 applied migration or alter recovered production encoding. SQL diagnostics are
 bounded and emitted only by the new-synthetic-source test helper after target
 inspection; the shared production recovery helper continues to suppress them.
+
+## Complete recovered bundle to disposable application
+
+`recovered-application-content.py` connects the six-component bundle replay to
+`PhysicalClone`. The caller must already hold its live shared reservation and
+supply the trusted capture receipt, release binding and verified plaintext from
+its retrieved ciphertext. The helper checks backup mount topology before any
+replay write, matches nonce and cluster identity, replays all six components and
+rechecks the trusted outer tree before using its inner manifests.
+
+Database, assets and private uploads are then selected only from that replay.
+The production component supplies assets and persistent uploads; a legacy source
+uses the separately captured legacy-upload component. This selection is the
+caller's admitted source mode. Directory subtrees retain captured metadata and
+content hashes. UID/GID1000 ownership and traversal/write bits must already match;
+no content owner or mode is repaired to make recovery pass. Verified directories
+move to previously absent disposable targets before the existing physical
+preparation records its clone-only configuration changes. The returned manifests
+are private. The remaining configuration, edge and unit trees stay retained.
+
+The combined Linux image gate now captures a complete synthetic bundle and uses
+this helper to feed its real PG17/application run, including migration replay,
+readiness failure/recovery, media sentinels and cleanup-failure retention. It also
+runs the filesystem controls as root so both legacy and persistent UID1000 cases
+execute; ordinary non-root runs explicitly skip those two cases. Controls reject
+wrong nonce, lost reservation, corrupted bundle, changed subtree content, aliases,
+existing destinations and rejected topology before replay. In this fixture the
+bundle is local plaintext: it does not establish encrypted off-host custody,
+production writer fencing, real secret usability or a deployment. Those remain
+independent coordinator obligations; no new formal refinement claim is made.

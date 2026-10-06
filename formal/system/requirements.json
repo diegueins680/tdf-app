@@ -6646,7 +6646,8 @@
         "Admit container and clean cluster control before direct PostgreSQL startup",
         "Verify live system identifier before reporting startup",
         "Remove only admitted owned container before clearing reservation",
-        "Under the registered application dependency, verify fixed restored asset/upload copies before application creation without modifying their ownership"
+        "Under the registered application dependency, verify fixed restored asset/upload copies before application creation without modifying their ownership",
+        "Under a live reservation, admit backup topology before complete bundle replay; bind nonce/cluster, verify inner manifests and preserved content ownership, then move only replayed trees into fresh disposable targets."
       ],
       "forbiddenTransitions": [
         "Mutate a production bind alias",
@@ -6654,7 +6655,8 @@
         "Start crashed or wrong-cluster files",
         "Use copied production auto-conf or provider/network access",
         "Clear reservation after uncertain cleanup",
-        "Remove the database or release its reservation while a registered dependent application has uncertain cleanup."
+        "Remove the database or release its reservation while a registered dependent application has uncertain cleanup.",
+        "Replay into a backup mount alias or combine database and application content from unrelated, unverified sources."
       ],
       "effects": [
         "Clone-only configuration replacement and PostgreSQL writes",
@@ -6672,7 +6674,8 @@
         "ops/hetzner/physical-postgres-recovery.py",
         "ops/hetzner/recovery-files.py",
         "ops/hetzner/rehearse-postgres-restore.py",
-        "ops/hetzner/isolated-application-canary.py"
+        "ops/hetzner/isolated-application-canary.py",
+        "ops/hetzner/recovered-application-content.py"
       ],
       "tests": [
         "scripts/test-physical-postgres-recovery.py",
@@ -6680,7 +6683,8 @@
         "scripts/quality-repo.sh",
         "scripts/test-isolated-application-canary.py",
         "scripts/test-physical-application-docker.py",
-        ".github/workflows/build.yml"
+        ".github/workflows/build.yml",
+        "scripts/test-recovered-application-content.py"
       ],
       "formalModels": [
         "formal/event-operations/RestoreIsolation.tla",
@@ -6691,7 +6695,7 @@
       "ambiguity": [
         "Integrated writer-fenced capture, complete storage/configuration coverage, off-host custody, application recovery and guarded deployment remain outstanding."
       ],
-      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only.",
+      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only. Complete synthetic bundle-to-PG/application composition and filesystem substitution controls; encrypted retrieval remains a separate caller obligation.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Physical copy startup boundary implemented; complete coordinated production recovery and deployment are not established."
