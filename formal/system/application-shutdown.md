@@ -90,7 +90,8 @@ Linux-host fixture with its explicit machine-id acknowledgement. It pins the
 legacy production image digest `38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0`.
 It first accepts a synthetic administrative room insert, then holds a second real
 HTTP insert at a PostgreSQL advisory-lock trigger and requests SIGINT on that
-exact fixture container. The test requires a lost HTTP response, exit255, retained
+exact fixture container. The test requires an outstanding request immediately before signalling and a
+disconnected/reset response (never a timeout), exit255, retained
 committed data and rejection by the unchanged production capture validator. It
 records whether the interrupted insert committed; it does not infer rollback
 from the client's disconnected socket. No product/customer data or provider

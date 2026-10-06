@@ -7372,7 +7372,7 @@
     "scripts/test-interrupted-release-recovery-linux.py": "2f596d8b107520765b5ad791827f680451abfda465dddbb0eec25d733c16fc8a",
     "scripts/test-interrupted-release-recovery.py": "e477198a3adcefb951fd985e681fee2d3df071b06627dc056a941c45a54bbe8f",
     "scripts/test-isolated-application-canary.py": "8faf83595b05a5aed75c7add43b04d58591b7d450ffd91b0b98294c5f6105a24",
-    "scripts/test-legacy-shutdown-linux.py": "50ca62c49d0cf591a4a3f89c1e4ae82d5a11bf7c0b98a33dc7e67ca25c091cb2",
+    "scripts/test-legacy-shutdown-linux.py": "a622aebb54c1cd0c7230fa47878979c2a06c0e0071d15bbca018084d581cbfe0",
     "scripts/test-live-intake-identity.sh": "d0f234b038d1f0fb83f65e8d16bc4b8d5f4fbbcfbc028aa09da31064c6e051a5",
     "scripts/test-marketplace-contact-identity.sh": "e8366b9aea5eb474c77acfd0c1816d51fe93e35d19eb46af6f583ed139f24cef",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -16553,7 +16553,7 @@
     {
       "id": "SURFACE-077f91a5acaf4688",
       "path": "scripts/test-legacy-shutdown-linux.py",
-      "sha256": "50ca62c49d0cf591a4a3f89c1e4ae82d5a11bf7c0b98a33dc7e67ca25c091cb2",
+      "sha256": "a622aebb54c1cd0c7230fa47878979c2a06c0e0071d15bbca018084d581cbfe0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

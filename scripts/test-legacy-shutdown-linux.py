@@ -80,12 +80,14 @@ def signal(command):
             before={key:row[key] for key in ('Id','Image','Config','HostConfig','Mounts')}
             fd,barrier,request,sql=active_request(row)
             try:
+                assert request.poll() is None, "HTTP request finished before the stop request"
                 start=time.monotonic()
                 reply=execute(command[:-1]+['--signal=SIGINT',command[-1]])
                 stdout,stderr=request.communicate(timeout=10)
                 assert request.returncode==0,stderr
                 result=json.loads(stdout)
                 assert result['transportFailure'] is True and result['code'] is None,result
+                assert result.get('error') in ('RemoteDisconnected','ConnectionResetError'),result
                 barrier.communicate('ROLLBACK;\n',timeout=5)
                 deadline=time.monotonic()+5
                 while time.monotonic()<deadline:
