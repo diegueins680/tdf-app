@@ -49,6 +49,20 @@ class SourceTests(unittest.TestCase):
         self.assertIs(stopped['hostWorkersFenced'],False);self.assertIs(stopped['databaseCleanShutdownVerified'],False)
         self.assertNotIn('SYNTHETIC_SECRET',str(result));self.assertNotIn('not-a-real-secret',str(result))
 
+    def test_abort_allows_unclean_mixed_runtime_without_weakening_capture(self):
+        for service in range(3):
+            c,v,e=fixture();c[service]['State'].update(Running=False,Pid=0,Status='exited',ExitCode=137)
+            with self.assertRaises(ValueError):s.admit(c,v,e,stopped_services=frozenset((('api','db','edge')[service],)))
+            result=s.admit_abort(c,v,e)
+            self.assertFalse(result['captureAuthorized']);self.assertFalse(result['databaseCleanShutdownVerified'])
+            for change in ({'OOMKilled':True},{'Dead':True},{'Restarting':True},{'ExitCode':-1},{'ExitCode':True}):
+                altered=copy.deepcopy(c);altered[service]['State'].update(change)
+                with self.assertRaises(ValueError):s.admit_abort(altered,v,e)
+        c,v,e=fixture(True)
+        for row in c:row['State']['ExitCode']=137
+        self.assertTrue(s.admit_abort(c,v,e)['dockerWritersStopped'])
+        with self.assertRaises(ValueError):s.admit(c,v,e,stopped=True)
+
     def test_mount_order_is_irrelevant_but_every_mount_field_remains_bound(self):
         baseline = s.admit(*fixture())['runtimeConfigurationSha256']
         for edge_order in itertools.permutations(range(3)):

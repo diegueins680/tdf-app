@@ -3316,7 +3316,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5977,7 +5977,8 @@
         "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
         "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md.",
         "Interrupted pre-write abort requires independently durable original admission and authenticated same-host fresh boot; see formal/system/interrupted-release-recovery.md.",
-        "Actual original-deployment admission must be privately and durably prepared before any shutdown intent; live assets/uploads bind-directory identities must match host sources. See formal/system/original-deployment-admission.md."
+        "Actual original-deployment admission must be privately and durably prepared before any shutdown intent; live assets/uploads bind-directory identities must match host sources. See formal/system/original-deployment-admission.md.",
+        "Original service recovery requires a recorded fresh-boot epoch and the common restore reservation; see formal/system/original-service-recovery.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -6006,8 +6007,9 @@
         "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation.",
         "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
         "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation.",
-        "Recognized frozen pre-write journal -> irreversible abort latch -> durable write-possible reboot intent -> observe changed boot on same trusted host. Original service recovery remains separately unimplemented.",
-        "Single journal plan -> actual original deployment sample -> exclusive private admission -> matching closing sample -> durable preparation receipt; mutation and late mismatch never authorize shutdown."
+        "Recognized frozen pre-write journal -> irreversible abort latch -> durable write-possible reboot intent -> observe changed boot on same trusted host. Original database recovery has a separate adapter; API/edge/cleanup/timer integration remains unfinished.",
+        "Single journal plan -> actual original deployment sample -> exclusive private admission -> matching closing sample -> durable preparation receipt; mutation and late mismatch never authorize shutdown.",
+        "Recorded fresh recovery epoch -> fixed stage intent -> admitted exact original database start only if stopped -> same system identifier and migration ledger -> bound stage observation; uncertain stages require another recorded reboot before retry."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6022,7 +6024,8 @@
         "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
         "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel.",
         "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command.",
-        "Prepare original admission after any shutdown intent, overwrite uncertain evidence, admit replaced live bind directories, or publish raw original container configuration."
+        "Prepare original admission after any shutdown intent, overwrite uncertain evidence, admit replaced live bind directories, or publish raw original container configuration.",
+        "Retry an uncertain recovery effect in the same boot, initialize an absent original cluster, weaken normal capture exit policy, or infer API/edge recovery from database readiness."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6033,7 +6036,7 @@
       "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
       "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
       "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
-      "recovery": "Abort latch and fresh-boot boundary implemented; original runtime readmission/restarts, malformed-publication recovery and terminal rotation remain open. Preserve current data and all possible writes.",
+      "recovery": "Abort latch, repeated fresh-boot service journal and original database admission/start are implemented. Original API/edge recovery, disposable cleanup, timer restoration, integrated controller and malformed-publication recovery remain open; preserve all possible writes.",
       "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
       "implementation": [
         "ops/hetzner/release-journal.py",
@@ -6048,7 +6051,9 @@
         "ops/hetzner/coordinated-encryption.py",
         "ops/hetzner/coordinated-retrieval.py",
         "ops/hetzner/interrupted-release-recovery.py",
-        "ops/hetzner/original-deployment-admission.py"
+        "ops/hetzner/original-deployment-admission.py",
+        "ops/hetzner/abort-service-journal.py",
+        "ops/hetzner/original-database-recovery.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6064,7 +6069,9 @@
         "scripts/test-coordinated-retrieval.py",
         "scripts/test-interrupted-release-recovery.py",
         "scripts/test-interrupted-release-recovery-linux.py",
-        "scripts/test-original-deployment-admission.py"
+        "scripts/test-original-deployment-admission.py",
+        "scripts/test-abort-service-journal.py",
+        "scripts/test-original-database-recovery.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6077,7 +6084,14 @@
         "formal/event-operations/AbortRecoveryIgnoreLatch.cfg",
         "formal/event-operations/AbortRecoveryNoIntent.cfg",
         "formal/event-operations/AbortRecoverySameBoot.cfg",
-        "formal/event-operations/AbortRecoveryPostWrite.cfg"
+        "formal/event-operations/AbortRecoveryPostWrite.cfg",
+        "formal/event-operations/AbortServiceRecovery.cfg",
+        "formal/event-operations/AbortServiceRecovery.tla",
+        "formal/event-operations/AbortServiceRecoveryEmptyCluster.cfg",
+        "formal/event-operations/AbortServiceRecoveryNoIntent.cfg",
+        "formal/event-operations/AbortServiceRecoveryReplay.cfg",
+        "formal/event-operations/AbortServiceRecoverySameBoot.cfg",
+        "formal/event-operations/AbortServiceRecoveryUnbound.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",

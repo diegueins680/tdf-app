@@ -103,6 +103,12 @@ run_negative_tlc ApplicationCanaryCleanup.cfg applicationcanarycleanup 'Invarian
 run_negative_tlc ApplicationCanaryFalseGreen.cfg applicationcanaryfalsegreen 'Invariant VerifiedReceipt is violated' ApplicationCanary.tla
 run_tlc ReleaseJournal.tla ReleaseJournal.cfg releasejournal
 run_tlc AbortRecovery.tla AbortRecovery.cfg abortrecovery
+run_tlc AbortServiceRecovery.tla AbortServiceRecovery.cfg abortservicerecovery
+run_negative_tlc AbortServiceRecoverySameBoot.cfg abortservicesameboot 'Invariant FreshEpoch is violated' AbortServiceRecovery.tla
+run_negative_tlc AbortServiceRecoveryNoIntent.cfg abortservicenointent 'Invariant IntentBeforeEffect is violated' AbortServiceRecovery.tla
+run_negative_tlc AbortServiceRecoveryReplay.cfg abortservicereplay 'Invariant NoSameBootReplay is violated' AbortServiceRecovery.tla
+run_negative_tlc AbortServiceRecoveryEmptyCluster.cfg abortserviceemptycluster 'Invariant NoImplicitInitialization is violated' AbortServiceRecovery.tla
+run_negative_tlc AbortServiceRecoveryUnbound.cfg abortserviceunbound 'Invariant BoundObservation is violated' AbortServiceRecovery.tla
 run_negative_tlc AbortRecoveryIgnoreLatch.cfg abortignorelatch 'Invariant NoReleaseResume is violated' AbortRecovery.tla
 run_negative_tlc AbortRecoveryNoIntent.cfg abortnointent 'Invariant IntentBeforeReboot is violated' AbortRecovery.tla
 run_negative_tlc AbortRecoverySameBoot.cfg abortsameboot 'Invariant FreshBootAdmission is violated' AbortRecovery.tla

@@ -62,6 +62,7 @@
       "functions/eventos/[eventId]/orden/[orderId].js"
     ],
     "ops": [
+      "ops/hetzner/abort-service-journal.py",
       "ops/hetzner/backup-postgres.py",
       "ops/hetzner/backup-postgres.sh",
       "ops/hetzner/catalog-readonly-role.sql",
@@ -81,6 +82,7 @@
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/offline-recovery-capacity.py",
+      "ops/hetzner/original-database-recovery.py",
       "ops/hetzner/original-deployment-admission.py",
       "ops/hetzner/physical-postgres-recovery.py",
       "ops/hetzner/production-recovery-sources.py",
@@ -374,6 +376,7 @@
       "scripts/sync-artist-shows-to-social-events.py",
       "scripts/sync-concerts-with-apis.py",
       "scripts/sync-country-reference.mjs",
+      "scripts/test-abort-service-journal.py",
       "scripts/test-access-request-notification-migration.sh",
       "scripts/test-account-deletion-api.mjs",
       "scripts/test-artist-claim-target-http.sh",
@@ -440,6 +443,7 @@
       "scripts/test-notification-alert-context.mjs",
       "scripts/test-notification-navigation-migration.sh",
       "scripts/test-offline-recovery-capacity.py",
+      "scripts/test-original-database-recovery.py",
       "scripts/test-original-deployment-admission.py",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
@@ -2648,6 +2652,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-418e70b6eb57284f",
+      "path": "ops/hetzner/abort-service-journal.py",
+      "sha256": "b82de5a2397d3e91c71da818081d994ad391f2d68eb773edacc9a92c8f16a446",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-832bd4423fbaa666",
       "path": "ops/hetzner/backup-postgres.py",
       "sha256": "f54d3bc769fcad8ddb047c6fb30b4bcf69193c81fc1e50c23f1102c253518117",
@@ -2740,7 +2750,7 @@
     {
       "id": "SURFACE-b44e78965a5c5434",
       "path": "ops/hetzner/interrupted-release-recovery.py",
-      "sha256": "7807d7bec3099b19348fae0020e30f8117528672dde737b41a6afa2281c59a91",
+      "sha256": "c6733faceba27b947aa57cb3c556d035d9713e49b12c71178c1263d90d5a0b1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2762,6 +2772,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7d9c15c185be404c",
+      "path": "ops/hetzner/original-database-recovery.py",
+      "sha256": "94b61ec2db602f4a3a16c9c9b573a8261944c715cbb90e51ff1df24b32183a64",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-98c278d5be0e29e8",
       "path": "ops/hetzner/original-deployment-admission.py",
       "sha256": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
@@ -2776,7 +2792,7 @@
     {
       "id": "SURFACE-1b5222b0a6f2443b",
       "path": "ops/hetzner/production-recovery-sources.py",
-      "sha256": "bf5109dd999cc2db4600ff2b92dfc283c05fd04cbc666684683d223a6b7a8476",
+      "sha256": "4c47e31e6798f54c89cf8ee2a7bcc92a40de04ceee0dede463a1c37762ac2d2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2818,7 +2834,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
+      "sha256": "0bf986b57acb4215336c1f3da90e6069c59a4e350a78842570468bcf9e2cd7fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4012,7 +4028,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "bb41292405516d3d32217efdf048ab73198c7bf99efd4873b64386ec1d09b43d",
+      "sha256": "cd397d186c2439cbcb724e01be6fe73892d5d1b1e0d322c983396bf042e53e3a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4484,6 +4500,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-54bf335b471fd919",
+      "path": "scripts/test-abort-service-journal.py",
+      "sha256": "8ab084d9b2a89cc167a0ca98e0a8f9903bd0e4d84be018a7561b94408a7ec63a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1a827fd5cf37bfe9",
       "path": "scripts/test-access-request-notification-migration.sh",
       "sha256": "b9cee3c94f635db1fb3322504b8b61bb498c66166358907e5b61ec05d4890d18",
@@ -4880,6 +4902,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f585919ea0647d1e",
+      "path": "scripts/test-original-database-recovery.py",
+      "sha256": "923fe04cb0ce3df1713120e84e46c856a05f5c413856b501876fe8322752af2d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c721b1cec5c19b2c",
       "path": "scripts/test-original-deployment-admission.py",
       "sha256": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
@@ -4936,13 +4964,13 @@
     {
       "id": "SURFACE-d55fcf511cec4c82",
       "path": "scripts/test-production-recovery-sources.py",
-      "sha256": "0dfd7ba212282d49ccaa24d700bdb29be70383f9d2441d35310b0da583d5cd9f",
+      "sha256": "4021b8fdbb5dc8cebe73c594201149f1207edd89faadb0631e2fd7220898f2dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "f536b4bb4b30acbc0eebed1c796e4b6bec9237ff57266efc71943c58fdf3a6e6",
+      "sha256": "d36b40955525af9637ca80db0e6438e2f40de4c8d80b48873a0175bdb378afc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5242,7 +5270,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "5b0629a4409c7e8c891d076ac7574e75f91d352b2e3d02277dc674b11234b596",
+      "sha256": "069605fbb91a645d0a849f929ee6c63148556c8a9343ee4128ee96d6312d93ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19393,6 +19421,55 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/AbortServiceRecovery.cfg",
+      "sha256": "bb95a8234150ea17dcc7f80727c6579f9f1982c301a8c6224709be5b74e6235f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortServiceRecovery.tla",
+      "sha256": "c85e9d97c5902eaa5f410bec4c5b95e87be6cbbcd94972c9f0ede5450dffdab2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AbortServiceRecoveryEmptyCluster.cfg",
+      "sha256": "f60517cdf28a54fe8dea968ff3b6b2564c5d4c0c206c6fd69bfce0751bcea531",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortServiceRecoveryNoIntent.cfg",
+      "sha256": "62762e3071bc23d41311ac4003b148cb026af3e13aa15e9ee39798739c3423ef",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortServiceRecoveryReplay.cfg",
+      "sha256": "8ccc6c19ccd837d821d8b09d830e44fa7a61717b5dccf696dce606da4a25085f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortServiceRecoverySameBoot.cfg",
+      "sha256": "fc07d6180aac39bd08eac262da15b883fed6389ea57cfb12cf14a25bc198450f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AbortServiceRecoveryUnbound.cfg",
+      "sha256": "dc19fc1e9bfc5d354a86d4fc2a5907a6724d368dbb7d6e67366d749c69bb2061",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/AccessCodeValidation.cfg",
       "sha256": "4a29f764763dbfba0ee6e790329799965083118660bfce5f1f16df597a3f2dca",
       "authority": "inferred",
@@ -22445,6 +22522,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/original-service-recovery.md",
+      "sha256": "8ca1ee967f45c89477c7bf2100df1e6cb33e2d3e565eecb10f8a0df180f9c38f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -22509,14 +22593,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "98bd942d57ca87f531429522102c2e0db9ecee526f6177b76f3625a87a1d4ed0",
+      "sha256": "41c9d44a28d449c0361e526c6026c943c79a1f8bf670e64a4a37c5824270d5e2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "a300165e04fc235e988757a74e247717038dccac7d453e29310d4f6f126475af",
+      "sha256": "a00f87d8511108a8951ec7209245e4ccf940d68d145bc9ce240b3d904105b71c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29701,6 +29785,102 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "INVARIANTS TypeOK IntentBeforeReboot FreshBootAdmission PreWriteAbortOnly"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortServiceRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireFreshBoot = TRUE",
+        "  PersistIntent = TRUE",
+        "  RejectReplay = TRUE",
+        "  RequireCluster = TRUE",
+        "  BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK FreshEpoch IntentBeforeEffect NoSameBootReplay NoImplicitInitialization BoundObservation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortServiceRecoveryEmptyCluster.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireFreshBoot = TRUE",
+        "  PersistIntent = TRUE",
+        "  RejectReplay = TRUE",
+        "  RequireCluster = FALSE",
+        "  BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK FreshEpoch IntentBeforeEffect NoSameBootReplay NoImplicitInitialization BoundObservation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortServiceRecoveryNoIntent.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireFreshBoot = TRUE",
+        "  PersistIntent = FALSE",
+        "  RejectReplay = TRUE",
+        "  RequireCluster = TRUE",
+        "  BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK FreshEpoch IntentBeforeEffect NoSameBootReplay NoImplicitInitialization BoundObservation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortServiceRecoveryReplay.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireFreshBoot = TRUE",
+        "  PersistIntent = TRUE",
+        "  RejectReplay = FALSE",
+        "  RequireCluster = TRUE",
+        "  BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK FreshEpoch IntentBeforeEffect NoSameBootReplay NoImplicitInitialization BoundObservation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortServiceRecoverySameBoot.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireFreshBoot = FALSE",
+        "  PersistIntent = TRUE",
+        "  RejectReplay = TRUE",
+        "  RequireCluster = TRUE",
+        "  BindReceipt = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK FreshEpoch IntentBeforeEffect NoSameBootReplay NoImplicitInitialization BoundObservation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AbortServiceRecoveryUnbound.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  RequireFreshBoot = TRUE",
+        "  PersistIntent = TRUE",
+        "  RejectReplay = TRUE",
+        "  RequireCluster = TRUE",
+        "  BindReceipt = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK FreshEpoch IntentBeforeEffect NoSameBootReplay NoImplicitInitialization BoundObservation"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

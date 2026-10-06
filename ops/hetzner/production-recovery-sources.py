@@ -74,7 +74,7 @@ def volume(mount,name,writable,volumes):
     path(value['Mountpoint']);return value['Mountpoint']
 
 
-def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
+def _admit(containers,volumes,expected,*,stopped=False,stopped_services=None,abort_recovery=False):
     """Pure admission. Expected IDs/images come from the separately trusted plan.
 
     Only api/db/edge may run at initial admission. A stopped canonical canary and
@@ -83,7 +83,7 @@ def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
     """
     require(isinstance(containers,list) and isinstance(volumes,dict)
             and set(volumes)==set(VOLUMES.values()) and isinstance(expected,dict)
-            and set(expected)=={'api','db','edge'} and type(stopped) is bool)
+            and set(expected)=={'api','db','edge'} and type(stopped) is bool and type(abort_recovery) is bool)
     require(stopped_services is None or (stopped is False and isinstance(stopped_services, frozenset)
             and stopped_services <= {'api','db','edge'}))
     halted = frozenset(expected) if stopped else (stopped_services or frozenset())
@@ -111,12 +111,13 @@ def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
                 and re.fullmatch(r'[a-zA-Z0-9./_-]+@sha256:[a-f0-9]{64}',binding['image'])
                 and re.fullmatch(r'sha256:[a-f0-9]{64}',binding['imageId'])
                 and item['Config']['Image']==binding['image'] and item['Image']==binding['imageId'])
-        service_stopped = service in halted
+        service_stopped = not state['Running'] if abort_recovery else service in halted
+        if abort_recovery and service_stopped:halted=halted | {service}
         require(state['Running'] is (not service_stopped) and all(state[k] is False for k in ('Paused','Restarting','Dead','OOMKilled')))
         require(type(state['Pid']) is int and (state['Pid']==0 if service_stopped else state['Pid']>0))
         if service_stopped:
             require(state['Status']=='exited' and type(state['ExitCode']) is int
-                    and state['ExitCode'] in ((0,) if service=='db' else (0,143)))
+                    and state['ExitCode'] in ((0,137,143) if abort_recovery else ((0,) if service=='db' else (0,143))))
         host=item['HostConfig']
         added_capabilities(host,service)
         require(host['RestartPolicy']['Name']=='unless-stopped' and host['AutoRemove'] is False
@@ -156,6 +157,23 @@ def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
             'runtimeConfigurationSha256':hashlib.sha256(canonical(stable)).hexdigest(),
             'dockerWritersStopped':halted == frozenset(expected),'hostWorkersFenced':False,'databaseCleanShutdownVerified':False,
             'scope':'Canonical configured roots and sampled Docker writers only; no mutation or snapshot proof'}
+
+
+def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
+    """Canonical capture admission; unclean exit remains forbidden."""
+    return _admit(containers,volumes,expected,stopped=stopped,stopped_services=stopped_services)
+
+
+def admit_abort(containers,volumes,expected):
+    """Original in-place recovery only, after separately verified fresh boot.
+
+    Mixed running/exited services and forced exit137 are allowed. This is neither
+    writer exclusion nor clean-shutdown evidence. No OOM/dead/restarting service,
+    changed target/configuration or extra running container is admitted.
+    """
+    result=_admit(containers,volumes,expected,abort_recovery=True)
+    return {**result,'scope':'Sampled original runtime for in-place abort recovery only',
+            'captureAuthorized':False,'databaseCleanShutdownVerified':False}
 
 
 def observe(expected,*,stopped=False,stopped_services=None):

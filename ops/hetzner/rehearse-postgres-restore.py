@@ -201,7 +201,7 @@ def rehearsal_lock(directory):
         require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and
                 info.st_uid == os.geteuid() and info.st_mode & 0o077 == 0)
         fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield
+        yield descriptor
     finally:
         os.close(descriptor)
 

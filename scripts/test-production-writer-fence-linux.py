@@ -15,6 +15,7 @@ import subprocess
 import stat
 import sys
 import time
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -65,6 +66,82 @@ def preserve_owned_directory(directory, destination, owned):
             and current.st_uid == os.geteuid() and stat.S_IMODE(current.st_mode) == 0o700
             and not os.path.lexists(destination))
     directory.rename(destination)
+
+
+def exercise_database_recovery(archive, saved, db):
+    """Real PostgreSQL/Docker/files; synthetic boot epoch, explicitly no reboot."""
+    recovery=load('linux_original_db_recovery','original-database-recovery.py')
+    service=load('linux_original_db_journal','abort-service-journal.py')
+    # Fixture-only crash setup after the already-qualified shutdown/capture.
+    run(DOCKER+['start',db])
+    for _ in range(60):
+        probe=subprocess.run(DOCKER+['exec',db,'pg_isready','-U','postgres','-d','tdf_hq'],capture_output=True,timeout=10)
+        if probe.returncode==0:break
+        time.sleep(0.25)
+    require(probe.returncode==0)
+    run(DOCKER+['exec',db,'psql','-X','-qAt','-U','postgres','-d','tdf_hq','-c',
+        "CREATE TABLE abort_committed_data(value text NOT NULL); INSERT INTO abort_committed_data VALUES ('preserved-after-kill');"])
+    run(DOCKER+['kill','--signal=KILL',db])
+    require(inspect(db)['State']['ExitCode']==137 and not inspect(db)['State']['Running'])
+    root=Path(saved['originalDeployment']['roots']['database']['path'])
+    version=root/'PG_VERSION';held=root/'PG_VERSION.synthetic-held'
+    require(not held.exists());version.rename(held)
+    rejected=[]
+    try:
+        for kind in ('missing','empty','symlink','wrong-major'):
+            if kind=='empty':version.touch();os.chown(version,999,999)
+            if kind=='symlink':version.symlink_to(held)
+            if kind=='wrong-major':version.write_bytes(b'16\n');os.chown(version,999,999)
+            try:recovery.cluster_present(root)
+            except (ValueError,OSError):rejected.append(kind)
+            else:require(False)
+            if os.path.lexists(version):version.unlink()
+    finally:
+        if os.path.lexists(version):version.unlink()
+        held.rename(version)
+    require(len(rejected)==4)
+    require(recovery.cluster_present(root)['existingClusterRequired'])
+    with service.a.open_abort(archive/'journal') as abort:
+        abort.latch(saved,service.a.sha(service.a.canonical(saved)))
+        abort.request_reboot(lambda:None)  # Deliberate synthetic boot protocol only.
+        host=service.a.boot_identity();synthetic={**host,'bootId':'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}
+        require(synthetic['bootId']!=host['bootId'])
+        with patch.object(service.a,'boot_identity',return_value=synthetic),recovery.recovery_reservation() as reservation:
+            journal=service.ServiceJournal(abort);journal.begin_epoch()
+            # This fixture owns no restore/canary containers. No cleanup adapter claim.
+            journal.perform('remove-disposables','c'*64,lambda c:{**c,'evidenceHash':'d'*64})
+            adapter=recovery.OriginalDatabase(journal,archive,reservation)
+            version.rename(held)
+            try:
+                refused=False
+                try:adapter.recover()
+                except (ValueError,OSError):refused=True
+                require(refused and not inspect(db)['State']['Running'])
+            finally:held.rename(version)
+            # Repairing a fixture file never erases an uncertain stage. A second
+            # recorded synthetic boot epoch is required before any new attempt.
+            replay_refused=False
+            try:adapter.recover()
+            except ValueError:replay_refused=True
+            require(replay_refused and not inspect(db)['State']['Running'])
+            journal.request_next_reboot(lambda:None)
+            synthetic['bootId']='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+            journal.begin_epoch()
+            journal.perform('remove-disposables','c'*64,lambda c:{**c,'evidenceHash':'d'*64})
+            status=adapter.recover()
+            require(status['completedStages']==['remove-disposables','recover-db'])
+            denied=False
+            try:adapter.recover()
+            except ValueError:denied=True
+            require(denied)
+    require(run(DOCKER+['exec',db,'psql','-X','-qAt','-U','postgres','-d','tdf_hq','-c',
+                'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
+    require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
+    return {'actualPostgresExit137Recovered':True,'committedDataPreserved':True,
+            'missingClusterControls':rejected,'sameEpochDuplicateDenied':True,'missingClusterDeniedBeforeActualStart':True,
+            'secondRecordedSyntheticEpochRequired':True,
+            'bootEpoch':'synthetic; no actual reboot in this component fixture',
+            'actualServiceAdapter':'original database only; API/edge remain inert and stopped'}
 
 
 def main():
@@ -219,6 +296,12 @@ def main():
                     'API and edge are inert shell processes, not backend/Caddy behavior.',
                     'No complete host-worker exclusion, clean-control or database recovery proof.',
                     'No production key custody, migration, rollout or restart recovery.']}
+        if os.environ.get('TDF_TEST_ORIGINAL_DB_RECOVERY')=='1':
+            evidence['originalDatabaseRecovery']=exercise_database_recovery(archive,saved,db)
+            evidence['fenceFlagsScope']='Historical completed fence phase before subsequent fixture-only DB recovery'
+            evidence['limitations']=['Disposable PG17 component fixture; no production effect.',
+                'API/edge are inert; boot epochs are synthetic for the DB adapter.',
+                'No complete host-worker, clean-shutdown, key-custody, migration or rollout proof.']
     finally:
         if evidence is None and before:
             def paths(left, right, prefix):

@@ -167,7 +167,14 @@ class Abort:
         fd = os.open('abort',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=self.parent)
         try:
             info=os.fstat(fd);require(info.st_uid==os.geteuid() and stat.S_IMODE(info.st_mode)==0o700)
-            names=set(os.listdir(fd));require(names in ({'latch.json'},{'latch.json','reboot-intent.json'}))
+            names=set(os.listdir(fd))
+            if 'recovery' in names:
+                recovery=os.open('recovery',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=fd)
+                try:
+                    info=os.fstat(recovery);require(info.st_uid==os.geteuid() and stat.S_IMODE(info.st_mode)==0o700)
+                finally:os.close(recovery)
+                names.remove('recovery')
+            require(names in ({'latch.json'},{'latch.json','reboot-intent.json'}))
             raw,_=read_file(fd,'latch.json',maximum=MAX_ADMISSION)
             latch=json.loads(raw)
             require(canonical(latch)==raw and set(latch)=={'schemaVersion','admission','admissionHash','original','originalHash'}

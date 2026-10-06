@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -698,6 +698,16 @@
       "applicability": "Abort recovery permits original deployment availability and preserves its current storage",
       "decision": "adopted with explicit trusted-host and availability assumptions",
       "rationale": "Record possible writes before reboot, require changed boot on independently authenticated same host, inspect actual service state and preserve current database. Do not claim uninterrupted maintenance or clean shutdown from reboot.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-ABORT-CLUSTER-001",
+      "source": "https://raw.githubusercontent.com/docker-library/postgres/master/17/bookworm/docker-entrypoint.sh",
+      "title": "PostgreSQL image existing-cluster detection",
+      "recommendation": "The entrypoint uses nonempty PG_VERSION to detect an existing cluster; missing data can enter initialization.",
+      "applicability": "Original database start during interrupted-release recovery",
+      "decision": "adopt pre-start existing-cluster guard",
+      "rationale": "Require exact PG17 marker and existing no-follow control/directory structure before start. Verify actual system ID and unchanged ledger afterward. Do not claim checksum or binary-format verification; actual pinned PG17 component fixture separately exercises exit137 recovery.",
       "verifiedAt": "2026-10-06"
     }
   ]
