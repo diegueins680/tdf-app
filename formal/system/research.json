@@ -657,6 +657,16 @@
       "decision": "adopted with explicit TDF sizing policy",
       "rationale": "Derive the two container caps from implementation and add512MiB local headroom policy. Preserve the online2GiB gate. Sample stopped sources twice, count all retained archive/replay forms and filesystem allocation/inodes, and disclose remaining host activity assumptions. The margin is not a vendor sizing guarantee.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-HOST-SCHEDULERS-001",
+      "source": "https://github.com/systemd/systemd/blob/main/man/systemctl.xml",
+      "title": "System and user service-manager scope",
+      "recommendation": "System and user managers are separate scopes; system-manager enumeration does not inventory user timers.",
+      "applicability": "Production root user manager and system scheduler admission",
+      "decision": "adopted",
+      "rationale": "Independent review found the initial system-only query omitted the running root user manager. Explicitly inspect its fixed local bus and reject unknown managers, timers or changed unit definitions; repeat configuration observations. Matching samples still do not establish arbitrary process or continuous writer exclusion.",
+      "verifiedAt": "2026-10-06"
     }
   ]
 }

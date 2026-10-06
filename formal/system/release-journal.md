@@ -137,3 +137,7 @@ fingerprinting now sorts this already destination-unique collection by destinati
 while preserving every field. Permutation controls require stable identity, changed
 mount fields still change identity, and duplicate destinations still reject. No
 configuration field is dropped to make the shutdown observation pass.
+
+The separate [host scheduler admission](host-schedulers.md) checks reviewed cron,
+system timers and root-user timers/configuration without lifecycle effects. It
+does not replace process admission or the production writer fence.

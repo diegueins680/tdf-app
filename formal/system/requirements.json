@@ -5960,7 +5960,8 @@
         "All cooperating operations use its permanent lock",
         "Filesystem honors fsync",
         "Coordinator independently validates effect-specific evidence",
-        "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery."
+        "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery.",
+        "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5993,7 +5994,8 @@
         "Skip, duplicate or reorder stages",
         "Treat receipt hash as validation of external effect",
         "Restore old database over possible new writes",
-        "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit."
+        "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit.",
+        "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6010,7 +6012,9 @@
         "ops/hetzner/release-journal.py",
         "scripts/verify-event-operations-formal.sh",
         "ops/hetzner/production-writer-fence.py",
-        "ops/hetzner/production-recovery-sources.py"
+        "ops/hetzner/production-recovery-sources.py",
+        "ops/hetzner/host-scheduler-admission.py",
+        "ops/hetzner/host-scheduler-policy.json"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6018,7 +6022,8 @@
         "scripts/test-production-writer-fence.py",
         "scripts/test-production-writer-fence-linux.py",
         "scripts/test-production-recovery-sources.py",
-        "scripts/test-writer-fence-fixture-ownership.py"
+        "scripts/test-writer-fence-fixture-ownership.py",
+        "scripts/test-host-scheduler-admission.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",

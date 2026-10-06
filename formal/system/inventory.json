@@ -67,6 +67,8 @@
       "ops/hetzner/compose.production.yaml",
       "ops/hetzner/compose.restore.yaml",
       "ops/hetzner/coordinated-recovery-bundle.py",
+      "ops/hetzner/host-scheduler-admission.py",
+      "ops/hetzner/host-scheduler-policy.json",
       "ops/hetzner/inspect-runtime.py",
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
@@ -405,6 +407,7 @@
       "scripts/test-hetzner-backup.py",
       "scripts/test-hetzner-inspection.py",
       "scripts/test-hetzner-restore.py",
+      "scripts/test-host-scheduler-admission.py",
       "scripts/test-identity-reconciliation.sh",
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-isolated-application-canary.py",
@@ -2648,6 +2651,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0ea9ab05fb4c1b0b",
+      "path": "ops/hetzner/host-scheduler-admission.py",
+      "sha256": "5c98446d3fc788bad2c81a231a80b8d33c72d212ab04f966cdf046fe747850ab",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-db0b2a57465bbf27",
+      "path": "ops/hetzner/host-scheduler-policy.json",
+      "sha256": "134dd49cfd8c7017a80cbfa9466db4d911f6e8e285fad1f884b1981ee53cb4ca",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
       "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
@@ -3916,7 +3931,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "264ccc4bbccf3f949d59a698365f2bb312115ed40952866cd680f5bc533ad6b3",
+      "sha256": "33a0742a28acf91b03c0d41b1ef0e440526383bae11cc2d9b78927dacd302963",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4637,6 +4652,12 @@
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
       "sha256": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c4f8f2030bdddee4",
+      "path": "scripts/test-host-scheduler-admission.py",
+      "sha256": "4385af0ac2c32f450fc00458379d683b094c7a17d937e02335b2bcc0c298effc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21913,6 +21934,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/host-schedulers.md",
+      "sha256": "118d46d38d857564927fc5e010e8410e667431d080cec5c69c887eab5be6e93c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/identity-lifecycle.md",
       "sha256": "59dbd5b2c455d62cee46ddf2a6e0d7f60b1fe6ce6b8bfabcad83ca6cc5ef1a31",
       "authority": "inferred",
@@ -22054,7 +22082,7 @@
     },
     {
       "path": "formal/system/release-journal.md",
-      "sha256": "c37fcd2a8e225b6d18098724774ec4ab1e272a956881eb290cb6147f21742491",
+      "sha256": "0ac4d2b6d01140b142c8409b2d78ee01bbe9dafd73420327a803863321941622",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22068,14 +22096,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7018379bb4c5d555152ba796112e5aa0234ec8c7458b60eef1385fbe8ce1d2c1",
+      "sha256": "03ac517338f38268befe18cdedde45273e7878f3859e452f8d809f961531acd7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "12406f84eb194b12119c906d55f502e7ca3031715cfd8cc8983a42614b55384d",
+      "sha256": "01830088371bbd513ee6beac9b93d649e55f827ee1c6bcf4e81dc5da6448b1fe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
