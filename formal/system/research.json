@@ -667,6 +667,16 @@
       "decision": "adopted",
       "rationale": "Independent review found the initial system-only query omitted the running root user manager. Explicitly inspect its fixed local bus and reject unknown managers, timers or changed unit definitions; repeat configuration observations. Matching samples still do not establish arbitrary process or continuous writer exclusion.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-HOST-PROCESSES-001",
+      "source": "https://www.kernel.org/doc/html/latest/filesystems/proc.html",
+      "title": "Proc descriptors and task identity",
+      "recommendation": "An open proc task descriptor does not prevent PID reuse, but its operations do not resolve a new task that later has the same numeric PID.",
+      "applicability": "Sampled host process identity before coordinated capture",
+      "decision": "adopted with bounded observation scope",
+      "rationale": "Use an open task directory plus start-time/parent/cgroup and executable identity checks; reject missing executable of a still-present task. Repeat samples and explicitly exclude process-memory attestation and continuous writer guarantees.",
+      "verifiedAt": "2026-10-06"
     }
   ]
 }

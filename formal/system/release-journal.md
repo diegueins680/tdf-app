@@ -141,3 +141,7 @@ configuration field is dropped to make the shutdown observation pass.
 The separate [host scheduler admission](host-schedulers.md) checks reviewed cron,
 system timers and root-user timers/configuration without lifecycle effects. It
 does not replace process admission or the production writer fence.
+
+[Sampled host process admission](host-processes.md) complements scheduler policy
+with executable/invocation classes and observer ancestry. It does not establish
+continuous writer exclusion or replace effect-specific lifecycle checks.

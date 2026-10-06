@@ -5962,7 +5962,8 @@
         "Filesystem honors fsync",
         "Coordinator independently validates effect-specific evidence",
         "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery.",
-        "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md."
+        "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md.",
+        "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5996,7 +5997,8 @@
         "Treat receipt hash as validation of external effect",
         "Restore old database over possible new writes",
         "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit.",
-        "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers."
+        "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers.",
+        "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6015,7 +6017,9 @@
         "ops/hetzner/production-writer-fence.py",
         "ops/hetzner/production-recovery-sources.py",
         "ops/hetzner/host-scheduler-admission.py",
-        "ops/hetzner/host-scheduler-policy.json"
+        "ops/hetzner/host-scheduler-policy.json",
+        "ops/hetzner/host-process-admission.py",
+        "ops/hetzner/host-process-policy.json"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6024,7 +6028,8 @@
         "scripts/test-production-writer-fence-linux.py",
         "scripts/test-production-recovery-sources.py",
         "scripts/test-writer-fence-fixture-ownership.py",
-        "scripts/test-host-scheduler-admission.py"
+        "scripts/test-host-scheduler-admission.py",
+        "scripts/test-host-process-admission.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6860,6 +6865,8 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
+    "ops/hetzner/host-process-admission.py": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
+    "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
     "ops/hetzner/host-scheduler-admission.py": "5c98446d3fc788bad2c81a231a80b8d33c72d212ab04f966cdf046fe747850ab",
     "ops/hetzner/host-scheduler-policy.json": "134dd49cfd8c7017a80cbfa9466db4d911f6e8e285fad1f884b1981ee53cb4ca",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
@@ -6958,7 +6965,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "33a0742a28acf91b03c0d41b1ef0e440526383bae11cc2d9b78927dacd302963",
+    "scripts/quality-repo.sh": "cb7eb004b1fff7a8ec849507d34336c381a279ada50a8d622e755fefc7871d0e",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6976,6 +6983,7 @@
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+    "scripts/test-host-process-admission.py": "877ff9d02d2f09320ae9b400b0afb8895a4664d1023833b72eb19678266dc375",
     "scripts/test-host-scheduler-admission.py": "4385af0ac2c32f450fc00458379d683b094c7a17d937e02335b2bcc0c298effc",
     "scripts/test-isolated-application-canary.py": "76c4fccedb8b34234f27e327f740ac674da8c0db6192146767e7af5484073d60",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
@@ -10684,6 +10692,18 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/host-process-admission.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/host-process-policy.json": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-release-journal.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -10709,6 +10729,12 @@
       }
     ],
     "scripts/test-host-scheduler-admission.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-host-process-admission.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
@@ -11726,6 +11752,30 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-882527b9b6c29f2b",
+      "path": "ops/hetzner/host-process-admission.py",
+      "sha256": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-cce714be95c7134c",
+      "path": "ops/hetzner/host-process-policy.json",
+      "sha256": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
         }
       ]
@@ -13932,7 +13982,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "33a0742a28acf91b03c0d41b1ef0e440526383bae11cc2d9b78927dacd302963",
+      "sha256": "cb7eb004b1fff7a8ec849507d34336c381a279ada50a8d622e755fefc7871d0e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15010,6 +15060,18 @@
         },
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-be464883c58f3256",
+      "path": "scripts/test-host-process-admission.py",
+      "sha256": "877ff9d02d2f09320ae9b400b0afb8895a4664d1023833b72eb19678266dc375",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "tests"
         }
       ]
@@ -33410,7 +33472,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "03ac517338f38268befe18cdedde45273e7878f3859e452f8d809f961531acd7",
+      "sourceSha256": "d60f20b106a0ae2d70beecb13472536cd402b9ae357092c2295b1a17fc3deb7b",
       "definition": {
         "states": [
           "absent",
