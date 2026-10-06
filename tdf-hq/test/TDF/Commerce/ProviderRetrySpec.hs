@@ -3500,6 +3500,8 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
       `shouldReturn` [Single (2 :: Int64)]
     runSqlPool (rawSql "SELECT status FROM event_ticket_order WHERE id=?" [PersistInt64 (fromSqlKey orderKey)]) pool
       `shouldReturn` [Single ("paid" :: Text)]
+    runSqlPool (TicketRefund.capturedTicketRevenue eventKey "USD") pool
+      `shouldReturn` [(orderKey,12515,4172)]
     accepted <- runSqlPool (Admission.admitTicket "1" eventKey (Admission.AdmissionById second) now) pool
     either (const False) (const True) accepted `shouldBe` True
     runSqlPool (rawSql "SELECT count(*) FROM commerce_receipt WHERE refund_id=?::uuid AND kind='credit_note'"
@@ -3560,6 +3562,8 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
     runSqlPool (rawExecute "UPDATE event_ticket_tier SET quantity_sold=3 WHERE event_id=?"
       [PersistInt64 (fromSqlKey eventKey)]) pool
     runSqlPool (TicketRefund.completeTicketRefund completion) pool `shouldReturn` True
+    runSqlPool (TicketRefund.capturedTicketRevenue eventKey "USD") pool
+      `shouldReturn` [(orderKey,12515,12515)]
     runSqlPool (rawSql "SELECT status FROM event_ticket_order WHERE id=?" [PersistInt64 (fromSqlKey orderKey)]) pool
       `shouldReturn` [Single ("refunded" :: Text)]
 

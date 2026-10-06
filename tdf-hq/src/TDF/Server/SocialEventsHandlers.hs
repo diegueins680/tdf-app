@@ -6039,11 +6039,17 @@ socialEventsServer user =
                 (throwError . financeInvariantServerError)
                 pure
                 (traverse storedFinanceEntrySummaryFields allFinanceRows)
+        captured <- liftIO $ runSqlPool (TicketRefund.capturedTicketRevenue eventKey eventCurrencyVal) envPool
+        let capturedIds = Set.fromList [key | (key,_,_) <- captured]
+            canonicalGross = sum [toInteger paid | (_,paid,_) <- captured]
+            canonicalRefunded = sum [toInteger refunded | (_,_,refunded) <- captured]
+        when (canonicalGross > toInteger (maxBound :: Int) || canonicalRefunded > toInteger (maxBound :: Int)) $
+            throwError err500 {errBody="Event ticket revenue exceeds the supported reporting range"}
         normalizedTicketOrders <-
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedTicketOrderSummaryFields ticketOrders)
+                (traverse storedTicketOrderSummaryFields (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
 
         let plannedIncomeCents =
                 sum
@@ -6081,13 +6087,13 @@ socialEventsServer user =
                     , entryDirection entry == "expense"
                     ]
             ticketPaidRevenueCents =
-                sum
+                fromInteger canonicalGross + sum
                     [ amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "paid"
                     ]
             ticketRefundedRevenueCents =
-                sum
+                fromInteger canonicalRefunded + sum
                     [ amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "refunded"

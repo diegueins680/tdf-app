@@ -12541,7 +12541,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "9a36e7db559e8bbd86dfed4b9e1f41373d7ace1ad82a180332eab2b2e86187de",
+      "sha256": "caf9e59168048098efd371dc68448da8b0d1c1dabdd91c11d0cebb4053ecfb41",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12757,7 +12757,7 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "e62b1c3790d30c4dfd2d256fb428abdc70d6094f8166ea9fbd249697f79ac041",
+      "sha256": "02a23cd346152bd94a518f68d5a7a89a2410e3513e8c0871144da143d51e534e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12949,7 +12949,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c736a4aef845118c3af0a9f3fa2e4a537fad2a7d55bf507c7e13cf221fbae5ad",
+      "sha256": "4b446d7952e143714a4ed294c65a52614eb78edf0093e2be4a5de89f3bfb03ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {

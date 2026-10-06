@@ -6350,7 +6350,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "95d56eec2e997cead3472fddda6d9b62a2a426ab9d0774718a32e3847eeaa8e0",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "64d524375dea1511cd3d50f79326c47eb092606c091dd6209a5af777f67f2111",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "9a36e7db559e8bbd86dfed4b9e1f41373d7ace1ad82a180332eab2b2e86187de",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "caf9e59168048098efd371dc68448da8b0d1c1dabdd91c11d0cebb4053ecfb41",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "dc589c059b3e254ae0dad96c9a5a845c39228a701282f1f82357a0f2e4a100ca",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
@@ -6363,7 +6363,7 @@
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "98d78a12d3ca2ecd33851155470ff77b71b6434616594b109c2fe4ed8fae20ca",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
-    "tdf-hq/src/TDF/Ticketing/Refund.hs": "e62b1c3790d30c4dfd2d256fb428abdc70d6094f8166ea9fbd249697f79ac041",
+    "tdf-hq/src/TDF/Ticketing/Refund.hs": "02a23cd346152bd94a518f68d5a7a89a2410e3513e8c0871144da143d51e534e",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "1a97ef0a0fea72f14df03fec59336faf3eac4eccb89a665e32cb1605722dfbe4",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
@@ -6374,7 +6374,7 @@
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c736a4aef845118c3af0a9f3fa2e4a537fad2a7d55bf507c7e13cf221fbae5ad",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4b446d7952e143714a4ed294c65a52614eb78edf0093e2be4a5de89f3bfb03ff",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -23958,7 +23958,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "9a36e7db559e8bbd86dfed4b9e1f41373d7ace1ad82a180332eab2b2e86187de",
+      "sha256": "caf9e59168048098efd371dc68448da8b0d1c1dabdd91c11d0cebb4053ecfb41",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24315,7 +24315,7 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "e62b1c3790d30c4dfd2d256fb428abdc70d6094f8166ea9fbd249697f79ac041",
+      "sha256": "02a23cd346152bd94a518f68d5a7a89a2410e3513e8c0871144da143d51e534e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24634,7 +24634,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c736a4aef845118c3af0a9f3fa2e4a537fad2a7d55bf507c7e13cf221fbae5ad",
+      "sha256": "4b446d7952e143714a4ed294c65a52614eb78edf0093e2be4a5de89f3bfb03ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -5,9 +5,9 @@
 -- SQL failures intentionally escape: no partial financial/ticket commit is safe.
 module TDF.Ticketing.Refund
   ( requestTicketRefund, completeTicketRefund, cancelTicketRefund, ticketRefundAmounts
-  , requestTicketRefundForOrder, loadTicketRefundReference, withOrder, cancelTicketRefundAs ) where
+  , requestTicketRefundForOrder, loadTicketRefundReference, withOrder, cancelTicketRefundAs, capturedTicketRevenue ) where
 
-import Control.Monad (forM_, unless, when)
+import Control.Monad (forM, forM_, unless, when)
 import Data.Int (Int64)
 import Data.List (nub, sort)
 import Data.Text (Text)
@@ -300,3 +300,19 @@ requestTicketRefundForOrder actor eventKey orderKey requestedAmount reason now =
         rawExecute "INSERT INTO event_ticket_refund_request_binding(request_id,refund_id,created_at) VALUES (?,?::uuid,?)"
           [toPersistValue requestKey,PersistText (R.refundReferenceId (R.rrReference record)),PersistUTCTime now]
         pure (Entity requestKey request)
+
+-- Captured gross and completed refunds are independent of legacy order status.
+-- A fully refunded order still had gross revenue; partial refunds must reduce net.
+capturedTicketRevenue :: M.SocialEventId -> Text
+  -> SqlPersistT IO [(M.EventTicketOrderId,Int64,Int64)]
+capturedTicketRevenue eventKey currency = do
+  rows <- rawSql
+    "SELECT runtime.order_id,checkout.paid_minor,checkout.refunded_minor,checkout.currency\
+    \ FROM event_ticket_checkout_runtime runtime\
+    \ JOIN commerce_checkout_session checkout ON checkout.id=runtime.checkout_id\
+    \ WHERE runtime.event_id=? AND checkout.paid_minor>0"
+    [toPersistValue eventKey]
+  forM rows $ \(Single order,Single paid,Single refunded,Single storedCurrency) -> do
+    unless (storedCurrency == currency && paid > 0 && refunded >= 0 && refunded <= paid) $
+      fail "Ticket revenue currency or monetary evidence is inconsistent"
+    pure (order,paid,refunded)
