@@ -7,6 +7,9 @@ import type { PublicUpcomingEventDTO } from '../api/socialEvents';
 const listPublicUpcomingEventsMock = jest.fn<
   (opts?: { city?: string; startAfter?: string; limit?: number; signal?: AbortSignal }) => Promise<PublicUpcomingEventDTO[]>
 >();
+const funnelCapture = jest.fn();
+const analytics = { ready: true, capture: funnelCapture };
+jest.unstable_mockModule('../analytics/useAnalytics', () => ({ useAnalytics: () => analytics }));
 
 jest.unstable_mockModule('../api/socialEvents', () => ({
   SocialEventsAPI: {
@@ -29,7 +32,38 @@ const renderPage = () => {
 
 describe('UpcomingEventsPublicPage', () => {
   beforeEach(() => {
+    sessionStorage.clear();
+    funnelCapture.mockClear();
     listPublicUpcomingEventsMock.mockReset().mockResolvedValue([]);
+  });
+
+  it('counts a public impression only after half the card is visible and disconnects on unmount', async () => {
+    const originalObserver = globalThis.IntersectionObserver;
+    let notify: IntersectionObserverCallback | undefined;
+    const observe = jest.fn();
+    const disconnect = jest.fn();
+    const observer = { observe, disconnect, unobserve: jest.fn(), takeRecords: () => [],
+      root: null, rootMargin: '0px', thresholds: [0.5] } as IntersectionObserver;
+    globalThis.IntersectionObserver = jest.fn((callback: IntersectionObserverCallback) => {
+      notify = callback;
+      return observer;
+    }) as unknown as typeof IntersectionObserver;
+    try {
+      listPublicUpcomingEventsMock.mockResolvedValue([{ publicUpcomingEventId: '41',
+        publicUpcomingEventTitle: 'Evento', publicUpcomingEventStart: '2030-08-20T22:00:00Z',
+        publicUpcomingEventWorkflowStateCode: 'published' }]);
+      const view = renderPage();
+      await waitFor(() => expect(observe).toHaveBeenCalled());
+      expect(funnelCapture).not.toHaveBeenCalled();
+      notify?.([{ isIntersecting: true, intersectionRatio: 0.1 } as IntersectionObserverEntry], observer);
+      expect(funnelCapture).not.toHaveBeenCalled();
+      notify?.([{ isIntersecting: true, intersectionRatio: 0.5 } as IntersectionObserverEntry], observer);
+      notify?.([{ isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry], observer);
+      expect(funnelCapture).toHaveBeenCalledTimes(1);
+      expect(funnelCapture).toHaveBeenCalledWith('ticketing_event_impression', expect.objectContaining({ event_id: 41 }));
+      view.unmount();
+      expect(disconnect).toHaveBeenCalled();
+    } finally { globalThis.IntersectionObserver = originalObserver; }
   });
 
   it('includes the trimmed city in the query sent to the API', async () => {

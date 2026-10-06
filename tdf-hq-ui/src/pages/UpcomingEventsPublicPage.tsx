@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
@@ -19,6 +19,7 @@ import { DateTime } from 'luxon';
 import { API_BASE_URL } from '../api/client';
 import { SocialEventsAPI, type PublicUpcomingEventDTO } from '../api/socialEvents';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useTicketFunnel } from '../analytics/useTicketFunnel';
 
 const EVENT_IMAGE_FALLBACK = '/event-fallback.svg';
 
@@ -101,11 +102,25 @@ export default function UpcomingEventsPublicPage() {
 }
 
 function EventCard({ event }: { event: PublicUpcomingEventDTO }) {
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const trackFunnel = useTicketFunnel();
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5)) return;
+      trackFunnel('event_impression', { eventId: Number(event.publicUpcomingEventId) });
+      observer.disconnect();
+    }, { threshold: 0.5 });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [event.publicUpcomingEventId, trackFunnel]);
   const fallbackImageUrl = new URL(EVENT_IMAGE_FALLBACK, window.location.origin).toString();
   const imageUrl = resolveEventImageUrl(event.publicUpcomingEventImageUrl) ?? fallbackImageUrl;
 
   return (
     <Card
+      ref={cardRef}
       component={RouterLink}
       to={eventPath(event)}
       sx={{

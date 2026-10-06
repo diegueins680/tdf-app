@@ -6003,6 +6003,85 @@
         "classification": "PARTIAL",
         "reason": "Existing implementation unchanged; current revised HTTP test must execute."
       }
+    },
+    {
+      "id": "EVT-FUNNEL-001",
+      "title": "Observe the public ticket funnel without exporting private ticket data",
+      "domain": "EVT",
+      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority.",
+      "authority": "User-approved event ticketing scope sections 9, 17, 28 and 39; existing privacy analytics boundary",
+      "source": "docs/events/ticket-funnel-observations.md",
+      "contract": "docs/events/ticket-funnel-observations.md",
+      "actors": [
+        "Public web visitor",
+        "Ticket buyer",
+        "Authorized check-in staff"
+      ],
+      "preconditions": [
+        "Existing configured analytics client; browser observations remain optional and respect existing SDK opt-out."
+      ],
+      "inputs": [
+        "Public event and tier IDs",
+        "Server checkout and check-in responses",
+        "Existing bounded campaign attribution"
+      ],
+      "state": {
+        "boundary": "Browser components and existing analytics client",
+        "deduplication": "At most 200 observations in session storage; private per-order scope remains local."
+      },
+      "allowedTransitions": [
+        "Visible card -> impression",
+        "Valid available selection -> selection observation",
+        "Validated submission -> checkout-start observation",
+        "Provider session response -> initiation observation",
+        "Server-paid response -> payment-completion observation",
+        "Issued fulfillment with an issued ticket -> issued/opened observations",
+        "Server-checked-in response with ticket and timestamp -> check-in observation"
+      ],
+      "forbiddenTransitions": [
+        "Pending/failed provider return -> payment-completion observation",
+        "Unissued/revoked ticket -> ticket-opened observation",
+        "Private order, ticket, QR, credential, buyer data or monetary amount -> analytics payload",
+        "Analytics failure -> failed purchase"
+      ],
+      "effects": [
+        "Best-effort browser funnel observations through the existing PostHog client"
+      ],
+      "authorization": "Observations never grant payment or admission authority; existing backend guards remain authoritative.",
+      "privacy": "Explicit payload allowlist, campaign syntax bounds and existing serializer; no claim to detect arbitrary personal names in valid campaign codes.",
+      "concurrency": "Session cache merges mounted component observations; no cross-tab or distributed exactly-once guarantee.",
+      "idempotency": "Bounded local deduplication only; cache eviction and a new session can repeat historical observations.",
+      "failure": "Missing analytics omits observations; SDK or storage exceptions cannot interrupt checkout.",
+      "recovery": "No retry of financial operations is authorized by telemetry; canonical ledgers remain the source of totals.",
+      "observability": "Synthetic component and payload tests; provider ingestion requires separate evidence.",
+      "property": "No completion observation before server paid state, no opened observation before issued ticket state, no private fields in explicit analytics payload.",
+      "implementation": [
+        "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+        "tdf-hq-ui/src/analytics/useTicketFunnel.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "React component tests exercise actual route boundaries; helper tests cover privacy, disabled client, storage errors and local deduplication.",
+      "evidence": "Scoped Jest suite, TypeScript and ESLint; production vendor ingestion is not established by these tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped browser-state and serializer examples; neither global event delivery nor financial attribution correctness is claimed.",
+      "ambiguity": [
+        "Durable server-side funnel attribution and verified vendor ingestion are not implemented by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Browser observation boundaries are implemented and tested; deployed ingestion, consent configuration and canonical revenue-attribution joins require separate verification."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -6210,9 +6289,12 @@
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "ea271fe7c3ba81a6224180b72e9b7302a6761b27542f6c036e28fbc2170412ea",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "573d0792c6d9d41e1778932ffd9bacbfab3674ddd7da2a67d02adcc8fb6d775d",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
+    "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
+    "tdf-hq-ui/src/analytics/ticketFunnel.ts": "be1ffd6d7413b75f822961e667ef7ae114fe04d372fdf798dce32d9e18681069",
+    "tdf-hq-ui/src/analytics/useTicketFunnel.ts": "2ea49b44b8d440b32f439086a305c955fe375322daef6053da302326cab7ae3b",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
@@ -6242,7 +6324,8 @@
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "24efabd60b10e1d8ef93b335002bcdb0d61dec08cffc67080d87bdec1e990084",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
@@ -6251,7 +6334,10 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "550b796de62b4ff802fc3f3efbd10846c3426f4e72c5a4808e202af4eec94ccf",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "1d794e02af80248b33bb86952183577f74bb09df9c9181e5e3416c9240710b98",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "6c5c53bc6c803c39ef58eaf681978717f9159469c5c359c1f1f0f28df2285dc9",
+    "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "995cc268689f1777ee9aa31e12bdcd40d19a185c326ada2d42ed493ede277d34",
+    "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/session/SessionContext.tsx": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
@@ -8943,6 +9029,10 @@
       {
         "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Routes/EventTickets.hs": [
@@ -9116,6 +9206,10 @@
       },
       {
         "requirement": "EVT-PRESENTATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-FUNNEL-001",
         "relationship": "tests"
       }
     ],
@@ -9933,6 +10027,10 @@
       {
         "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/ticket-page-preview.test.mjs": [
@@ -10004,6 +10102,48 @@
     "scripts/interactions/test-http.sh": [
       {
         "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/analytics/ticketFunnel.ts": [
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/analytics/useTicketFunnel.ts": [
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": [
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": [
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": [
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": [
+      {
+        "requirement": "EVT-FUNNEL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": [
+      {
+        "requirement": "EVT-FUNNEL-001",
         "relationship": "tests"
       }
     ]
@@ -14367,7 +14507,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "ea271fe7c3ba81a6224180b72e9b7302a6761b27542f6c036e28fbc2170412ea",
+      "sha256": "573d0792c6d9d41e1778932ffd9bacbfab3674ddd7da2a67d02adcc8fb6d775d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14376,6 +14516,10 @@
         },
         {
           "requirement": "EVT-PRESENTATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-FUNNEL-001",
           "relationship": "tests"
         }
       ]
@@ -14468,11 +14612,47 @@
       ]
     },
     {
+      "id": "SURFACE-b9545eae3a44bbb0",
+      "path": "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
+      "sha256": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-198d3c85cd960b15",
+      "path": "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+      "sha256": "be1ffd6d7413b75f822961e667ef7ae114fe04d372fdf798dce32d9e18681069",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fa95e5c41415dc39",
       "path": "tdf-hq-ui/src/analytics/useAnalytics.ts",
       "sha256": "a68ce270551d3b9bee33b00fdab14d11d3c3139518a87b8f7c3da7479b8b7a1b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-ff165854fbd7a563",
+      "path": "tdf-hq-ui/src/analytics/useTicketFunnel.ts",
+      "sha256": "2ea49b44b8d440b32f439086a305c955fe375322daef6053da302326cab7ae3b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4167f2e43255ad85",
@@ -17235,16 +17415,25 @@
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
       "sha256": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
+      "sha256": "24efabd60b10e1d8ef93b335002bcdb0d61dec08cffc67080d87bdec1e990084",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-FUNNEL-001",
           "relationship": "implementation"
         }
       ]
@@ -18000,7 +18189,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "550b796de62b4ff802fc3f3efbd10846c3426f4e72c5a4808e202af4eec94ccf",
+      "sha256": "1d794e02af80248b33bb86952183577f74bb09df9c9181e5e3416c9240710b98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18009,6 +18198,10 @@
         },
         {
           "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-FUNNEL-001",
           "relationship": "implementation"
         }
       ]
@@ -18233,9 +18426,14 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "35abcb40f8ce9c9543245e55ca2593c6c485e9a92b4991e1630839f77692c24b",
+      "sha256": "6c5c53bc6c803c39ef58eaf681978717f9159469c5c359c1f1f0f28df2285dc9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-01c042934329ed43",
@@ -18345,16 +18543,26 @@
     {
       "id": "SURFACE-d4bbd15313dd4547",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-      "sha256": "229e1e107300d0f0523cce059f04f9e72fefe173b1449b81b959f41e88b07faf",
+      "sha256": "995cc268689f1777ee9aa31e12bdcd40d19a185c326ada2d42ed493ede277d34",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d8426c3557e41bc4",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-      "sha256": "0162a6cbd0bd61512f78f27fb66d887c1c7d288462bc5ef585772b8c6acf10a4",
+      "sha256": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-FUNNEL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5ecc9358ac20703b",
@@ -29201,7 +29409,6 @@
     "SURFACE-8bf82e65fbe7190d",
     "SURFACE-ac24f384b7949bc7",
     "SURFACE-b1d115adebe79a56",
-    "SURFACE-814a4782598cab3d",
     "SURFACE-932153a167d40c81",
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
@@ -29325,7 +29532,6 @@
     "SURFACE-8b0fd4775d1e81e0",
     "SURFACE-9adc2b202007eacf",
     "SURFACE-81d3da97ed29847f",
-    "SURFACE-42617e2d26348bd0",
     "SURFACE-01c042934329ed43",
     "SURFACE-c11ff804331edfb6",
     "SURFACE-ab3dd253ad980d5f",
@@ -29341,8 +29547,6 @@
     "SURFACE-bedc5ce954edaf67",
     "SURFACE-782201a2ba4f0447",
     "SURFACE-5b84303a4309482a",
-    "SURFACE-d4bbd15313dd4547",
-    "SURFACE-d8426c3557e41bc4",
     "SURFACE-5ecc9358ac20703b",
     "SURFACE-ff6d0fcdcf1bb9fc",
     "SURFACE-c55988752b32c9a9",
@@ -53201,7 +53405,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 79,
+    "PARTIAL": 80,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

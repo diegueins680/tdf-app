@@ -500,7 +500,10 @@
       "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
       "tdf-hq-ui/src/analytics/partySelectorTelemetry.ts",
       "tdf-hq-ui/src/analytics/posthog.ts",
+      "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
+      "tdf-hq-ui/src/analytics/ticketFunnel.ts",
       "tdf-hq-ui/src/analytics/useAnalytics.ts",
+      "tdf-hq-ui/src/analytics/useTicketFunnel.ts",
       "tdf-hq-ui/src/analytics/webVitals.ts",
       "tdf-hq-ui/src/api/accessRequests.ts",
       "tdf-hq-ui/src/api/admin.ts",
@@ -5077,7 +5080,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "ea271fe7c3ba81a6224180b72e9b7302a6761b27542f6c036e28fbc2170412ea",
+      "sha256": "573d0792c6d9d41e1778932ffd9bacbfab3674ddd7da2a67d02adcc8fb6d775d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5147,9 +5150,27 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b9545eae3a44bbb0",
+      "path": "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
+      "sha256": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-198d3c85cd960b15",
+      "path": "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+      "sha256": "be1ffd6d7413b75f822961e667ef7ae114fe04d372fdf798dce32d9e18681069",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fa95e5c41415dc39",
       "path": "tdf-hq-ui/src/analytics/useAnalytics.ts",
       "sha256": "a68ce270551d3b9bee33b00fdab14d11d3c3139518a87b8f7c3da7479b8b7a1b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ff165854fbd7a563",
+      "path": "tdf-hq-ui/src/analytics/useTicketFunnel.ts",
+      "sha256": "2ea49b44b8d440b32f439086a305c955fe375322daef6053da302326cab7ae3b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7399,7 +7420,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
+      "sha256": "24efabd60b10e1d8ef93b335002bcdb0d61dec08cffc67080d87bdec1e990084",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8005,7 +8026,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "550b796de62b4ff802fc3f3efbd10846c3426f4e72c5a4808e202af4eec94ccf",
+      "sha256": "1d794e02af80248b33bb86952183577f74bb09df9c9181e5e3416c9240710b98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8197,7 +8218,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "35abcb40f8ce9c9543245e55ca2593c6c485e9a92b4991e1630839f77692c24b",
+      "sha256": "6c5c53bc6c803c39ef58eaf681978717f9159469c5c359c1f1f0f28df2285dc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8293,13 +8314,13 @@
     {
       "id": "SURFACE-d4bbd15313dd4547",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-      "sha256": "229e1e107300d0f0523cce059f04f9e72fefe173b1449b81b959f41e88b07faf",
+      "sha256": "995cc268689f1777ee9aa31e12bdcd40d19a185c326ada2d42ed493ede277d34",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d8426c3557e41bc4",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-      "sha256": "0162a6cbd0bd61512f78f27fb66d887c1c7d288462bc5ef585772b8c6acf10a4",
+      "sha256": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17279,6 +17300,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/events/ticket-funnel-observations.md",
+      "sha256": "907a76b837c25542151e5ba0dc4538c5717bb4215cc2804ea64f0c4833baa248",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/events/ticket-inclusive-tax.md",
       "sha256": "5ef7228783b9522e9c3a42093329dea018ccc736e73ff4fa84373b5806a2ba54",
       "authority": "inferred",
@@ -21599,7 +21627,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "09ee7791939a27e37f66dd3b426776bc940693d01f45cbdbf7ea47609aad985a",
+      "sha256": "97323e824c836e919f3cefece2ca087d55f402ce1b0c7797cfa4e7c9b6273012",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

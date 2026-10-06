@@ -3314,7 +3314,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -6001,6 +6001,85 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+      }
+    },
+    {
+      "id": "EVT-FUNNEL-001",
+      "title": "Observe the public ticket funnel without exporting private ticket data",
+      "domain": "EVT",
+      "statement": "The existing web analytics client observes the ticket funnel using public identifiers and bounded metadata; payment completion and ticket display observations require the corresponding server checkout states. Browser telemetry never becomes financial or admission authority.",
+      "authority": "User-approved event ticketing scope sections 9, 17, 28 and 39; existing privacy analytics boundary",
+      "source": "docs/events/ticket-funnel-observations.md",
+      "contract": "docs/events/ticket-funnel-observations.md",
+      "actors": [
+        "Public web visitor",
+        "Ticket buyer",
+        "Authorized check-in staff"
+      ],
+      "preconditions": [
+        "Existing configured analytics client; browser observations remain optional and respect existing SDK opt-out."
+      ],
+      "inputs": [
+        "Public event and tier IDs",
+        "Server checkout and check-in responses",
+        "Existing bounded campaign attribution"
+      ],
+      "state": {
+        "boundary": "Browser components and existing analytics client",
+        "deduplication": "At most 200 observations in session storage; private per-order scope remains local."
+      },
+      "allowedTransitions": [
+        "Visible card -> impression",
+        "Valid available selection -> selection observation",
+        "Validated submission -> checkout-start observation",
+        "Provider session response -> initiation observation",
+        "Server-paid response -> payment-completion observation",
+        "Issued fulfillment with an issued ticket -> issued/opened observations",
+        "Server-checked-in response with ticket and timestamp -> check-in observation"
+      ],
+      "forbiddenTransitions": [
+        "Pending/failed provider return -> payment-completion observation",
+        "Unissued/revoked ticket -> ticket-opened observation",
+        "Private order, ticket, QR, credential, buyer data or monetary amount -> analytics payload",
+        "Analytics failure -> failed purchase"
+      ],
+      "effects": [
+        "Best-effort browser funnel observations through the existing PostHog client"
+      ],
+      "authorization": "Observations never grant payment or admission authority; existing backend guards remain authoritative.",
+      "privacy": "Explicit payload allowlist, campaign syntax bounds and existing serializer; no claim to detect arbitrary personal names in valid campaign codes.",
+      "concurrency": "Session cache merges mounted component observations; no cross-tab or distributed exactly-once guarantee.",
+      "idempotency": "Bounded local deduplication only; cache eviction and a new session can repeat historical observations.",
+      "failure": "Missing analytics omits observations; SDK or storage exceptions cannot interrupt checkout.",
+      "recovery": "No retry of financial operations is authorized by telemetry; canonical ledgers remain the source of totals.",
+      "observability": "Synthetic component and payload tests; provider ingestion requires separate evidence.",
+      "property": "No completion observation before server paid state, no opened observation before issued ticket state, no private fields in explicit analytics payload.",
+      "implementation": [
+        "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+        "tdf-hq-ui/src/analytics/useTicketFunnel.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "React component tests exercise actual route boundaries; helper tests cover privacy, disabled client, storage errors and local deduplication.",
+      "evidence": "Scoped Jest suite, TypeScript and ESLint; production vendor ingestion is not established by these tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped browser-state and serializer examples; neither global event delivery nor financial attribution correctness is claimed.",
+      "ambiguity": [
+        "Durable server-side funnel attribution and verified vendor ingestion are not implemented by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Browser observation boundaries are implemented and tested; deployed ingestion, consent configuration and canonical revenue-attribution joins require separate verification."
       }
     }
   ]
