@@ -142,6 +142,7 @@ def cleanup_preserving_tls(resource_cleanup,tls):
 
 
 def exercise_database_recovery(archive, saved, db, actual_application=False, actual_edge=False):
+    terminal_verified=False
     """Real PostgreSQL/Docker/files; synthetic boot epoch, explicitly no reboot."""
     recovery=load('linux_original_db_recovery','original-database-recovery.py')
     service=load('linux_original_db_journal','abort-service-journal.py')
@@ -238,17 +239,33 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
                         require(timer_status['completedStages']==['remove-disposables','recover-db','recover-api','recover-edge','restore-timer'])
                         require(timer.d.observe(saved['originalDeployment'])['units']['timerStopped'] is False)
                         require(not timer_status['originalDeploymentRecoverySequenceComplete'])
+                        if os.environ.get('TDF_TEST_ORIGINAL_RECOVERY_COMPLETION')=='1':
+                            completion=load('linux_original_completion','original-recovery-completion.py')
+                            final_reservation=completion.a.d.Reservation(reservation.directory,reservation.descriptor)
+                            final_status=completion.OriginalRecoveryCompletion(journal,archive,final_reservation).recover()
+                            require(final_status['originalDeploymentRecoverySequenceComplete']
+                                    and final_status['releaseContinuationAllowed'] is False)
+                            terminal_verified=final_status['originalDeploymentRecoverySequenceComplete']
     require(run(DOCKER+['exec',db,'psql','-X','-qAt','-U','postgres','-d','tdf_hq','-c',
                 'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
     require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
     return {'actualPostgresExit137Recovered':True,'committedDataPreserved':True,
+            'terminalRecoverySequenceComplete':terminal_verified,
             'missingClusterControls':rejected,'sameEpochDuplicateDenied':True,'missingClusterDeniedBeforeActualStart':True,
             'secondRecordedSyntheticEpochRequired':True,
             'bootEpoch':'synthetic; no actual reboot in this component fixture',
             'actualServiceAdapter':'original database, backend and TLS edge' if actual_edge else 'original database and real backend' if actual_application else 'original database only; API/edge remain inert and stopped'}
 
 
+def validate_recovery_modes():
+    stages=('DB','APPLICATION','EDGE','TIMER','COMPLETION')
+    flags=[os.environ.get('TDF_TEST_ORIGINAL_'+name+'_RECOVERY')=='1' for name in stages[:-1]]
+    flags.append(os.environ.get('TDF_TEST_ORIGINAL_RECOVERY_COMPLETION')=='1')
+    require(all(not flags[i] or flags[i-1] for i in range(1,len(flags))))
+
+
 def main():
+    validate_recovery_modes()  # Reject skipped requested stages before any fixture effect.
     require(sys.platform == 'linux' and os.geteuid() == 0)
     machine = Path('/etc/machine-id').read_text().strip()
     require(re.fullmatch('[a-f0-9]{32}', machine)

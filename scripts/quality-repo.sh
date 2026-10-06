@@ -51,6 +51,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-application-recov
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-edge-recovery.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-edge-tls.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-timer-recovery.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-recovery-completion.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-tools.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-envelope.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-transfer.py"

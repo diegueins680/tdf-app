@@ -12,6 +12,14 @@ f = importlib.util.module_from_spec(spec); spec.loader.exec_module(f)
 
 
 class OwnershipTests(unittest.TestCase):
+    def test_requested_recovery_stage_cannot_silently_skip_prerequisites(self):
+        names=['TDF_TEST_ORIGINAL_'+name+'_RECOVERY' for name in ('DB','APPLICATION','EDGE','TIMER')]
+        names.append('TDF_TEST_ORIGINAL_RECOVERY_COMPLETION')
+        for count in range(len(names)+1):
+            with patch.dict(f.os.environ,dict.fromkeys(names[:count],'1'),clear=True):f.validate_recovery_modes()
+        for index in range(1,len(names)):
+            with patch.dict(f.os.environ,{names[index]:'1'},clear=True),self.assertRaises(ValueError):f.validate_recovery_modes()
+
     def test_owned_tls_trust_removed_even_when_resource_cleanup_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             trust=Path(directory)/'synthetic.crt';trust.write_bytes(b'synthetic-only')

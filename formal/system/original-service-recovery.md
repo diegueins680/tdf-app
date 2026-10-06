@@ -106,8 +106,25 @@ backup nor prevents the timer from dispatching future work. An immediately due
 persistent timer may dispatch a job and make this narrow observation fail; that
 failure must remain visible rather than be relabelled complete. A short job can
 complete between samples and is permitted; these observations do not establish
-dispatch exclusion or certify that job's backup output. The terminal abort
-receipt and integrated controller remain separate obligations.
+dispatch exclusion or certify that job's backup output.
+
+## Terminal observation
+
+`original-recovery-completion.py` records `complete-abort` only after all five
+preceding stages. It performs no start, stop, deletion or timer mutation. Before
+and after eight fresh namespace-bound API/edge probes, it requires the same
+original runtime, database identifier/history and restored timer configuration.
+An active/failed backup at either sample, remaining restore marker or labeled
+restore/canary container (including stopped containers) blocks completion. Health,
+revision, public database access and anonymous booking denial must pass on both
+transports; failure leaves durable pending intent and cannot retry in the same
+epoch. Terminal journal observation retains the context-bound evidence hash.
+
+Completion seals only this recovery sequence: normal release remains permanently
+latched. Public network reachability, backup success, continuous writer exclusion
+and whole-system conformance are not certified. The disposable cleanup adapter
+and integrated controller remain separate obligations; the component fixture
+explicitly substitutes its empty-disposable prerequisite, not real cleanup.
 
 ## Executable evidence and limits
 
@@ -139,6 +156,8 @@ fails and preserves the changed file. Portable real TLS socket controls addition
 show that a client-hostname-verification mutation defeats the hostname rejection.
 `TDF_TEST_ORIGINAL_TIMER_RECOVERY=1` adds the actual registered systemd timer
 restoration after edge recovery, without declaring the abort sequence complete.
+`TDF_TEST_ORIGINAL_RECOVERY_COMPLETION=1` additionally exercises the terminal
+adapter's fresh checks and seals the journal sequence in this component fixture.
 Boot epochs remain synthetic. The separate
 `test-interrupted-release-recovery-linux.py` checks an actual owned-host reboot;
 combining these results is not an end-to-end coordinator proof.
