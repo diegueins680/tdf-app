@@ -221,9 +221,13 @@ def topology(snapshot,policy):
     """Policy IDs come from the canonical deployment plan, not this observation."""
     require(snapshot['schemaVersion']==1 and set(policy)=={'runningContainerIds','admittedNetworkIds','uplink'})
     running=snapshot['runningContainers'];expected=policy['runningContainerIds']
-    require(isinstance(expected,list) and expected and len(expected)==len(set(expected))
+    require(isinstance(expected,list) and len(expected)<=128 and len(expected)==len(set(expected))
             and {c['id'] for c in running}==set(expected) and len(running)==len(expected))
-    require(all(re.fullmatch('[a-f0-9]{64}',value) for value in expected+policy['admittedNetworkIds']))
+    require(isinstance(policy['admittedNetworkIds'],list)
+            and 1<=len(policy['admittedNetworkIds'])<=4
+            and policy['admittedNetworkIds']==sorted(set(policy['admittedNetworkIds'])))
+    require(all(isinstance(value,str) and re.fullmatch('[a-f0-9]{64}',value)
+                for value in expected+policy['admittedNetworkIds']))
     networks={n['Id']:n for n in snapshot['dockerNetworks']}
     require(len(networks)==len(snapshot['dockerNetworks']) and set(policy['admittedNetworkIds'])<=set(networks))
     bridges={}
@@ -238,6 +242,7 @@ def topology(snapshot,policy):
         require(set(network['Containers'])<=set(expected))
         if network['Containers']:require(nid in policy['admittedNetworkIds'])
         bridges[bridge]=nid
+    require(all(bridges.get('br-'+nid[:12])==nid for nid in policy['admittedNetworkIds']))
     host=snapshot['host'];host_links={l['ifindex']:l for l in host['links']}
     require(len(host_links)==len(host['links']))
     uplinks=[l for l in host['links'] if l['ifname']==policy['uplink']]

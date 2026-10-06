@@ -2866,7 +2866,7 @@
     {
       "id": "SURFACE-855588bc04576ff3",
       "path": "ops/hetzner/network-recovery-admission.py",
-      "sha256": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
+      "sha256": "f7be5eca3f175250a5831d5fca45960242c8c4fa2b66658c12b069d588af421c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5092,7 +5092,7 @@
     {
       "id": "SURFACE-2cceac75133c9abe",
       "path": "scripts/test-network-recovery-admission.py",
-      "sha256": "eb6a9a4bf81001006df9f339c9186d8aeb73a73c615ab1efd5a9c99188e421da",
+      "sha256": "027d523c0f87e116e6384308d6e824c51cff1f881b1988edd7a740a5a2469298",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23160,7 +23160,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "04ae521d3e65d208e8f6bff62780afbfc565711666fab16e5636c76ae09561e9",
+      "sha256": "f5703f2ee0f8c19ae8f1cc2c8422d607e8e9c3eb9fe6aadcb1dcd48fde497b7d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

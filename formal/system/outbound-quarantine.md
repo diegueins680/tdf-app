@@ -182,6 +182,9 @@ traffic are intended to remain usable, subject to the complete host admission.
 `ops/hetzner/network-recovery-admission.py` performs read-only observation of the
 canonical Docker socket, all networks and each running container. The caller
 supplies independently established full container/network IDs and the uplink.
+An explicitly empty running set supports the fully stopped stage, but still
+requires the declared bridges and rejects every remaining endpoint or veth port.
+An empty sample never satisfies a policy that expects running originals.
 The collector retains process and namespace descriptors through each sample,
 checks process liveness and unchanged Docker identity, and joins endpoint IDs,
 MACs, interface indices, bridge membership and peer namespace identity. Interface

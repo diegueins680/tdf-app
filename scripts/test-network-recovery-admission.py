@@ -51,6 +51,30 @@ class AdmissionTests(unittest.TestCase):
         result=n.topology(self.snapshot,self.policy)
         self.assertEqual(result['boundVethPairs'],1);self.assertFalse(result['hostBypassAdmissionVerified'])
 
+    def test_stopped_stage_requires_explicit_empty_running_set_and_no_remaining_ports(self):
+        stopped=copy.deepcopy(self.snapshot)
+        stopped['runningContainers']=[];stopped['dockerNetworks'][0]['Containers']={}
+        stopped['host']['links'].pop()
+        stopped['host']['tcFilters'].pop('veth-test');stopped['host']['qdiscs'].pop()
+        policy={**self.policy,'runningContainerIds':[]}
+        result=n.topology(stopped,policy)
+        self.assertEqual(result['boundVethPairs'],0)
+        self.assertEqual(result['observedRunningContainers'],0)
+        self.assertFalse(result['hostBypassAdmissionVerified'])
+        host_only=copy.deepcopy(stopped)
+        host_only['dockerNetworks'].append({'Id':'f'*64,'Name':'host','Driver':'host','Scope':'local','Containers':{}})
+        with self.assertRaises(ValueError):n.topology(host_only,{**policy,'admittedNetworkIds':['f'*64]})
+        with self.assertRaises(ValueError):n.topology(stopped,self.policy)
+        with self.assertRaises(ValueError):n.topology(self.snapshot,policy)
+        retained=copy.deepcopy(stopped);retained['host']=self.snapshot['host']
+        with self.assertRaises(ValueError):n.topology(retained,policy)
+        retained=copy.deepcopy(stopped);retained['dockerNetworks']=self.snapshot['dockerNetworks']
+        with self.assertRaises(ValueError):n.topology(retained,policy)
+
+    def test_bridge_policy_has_closed_cardinality_and_no_duplicates(self):
+        for ids in ([],[NID,NID],['f'*64,NID],['f'*64]*5):
+            with self.assertRaises(ValueError):n.topology(self.snapshot,{**self.policy,'admittedNetworkIds':ids})
+
     def test_host_macvlan_or_custom_bridge_cannot_bypass_prefix(self):
         for mode in ('host','none','bridge','container:other'):
             self.rejects(lambda s:s['runningContainers'][0].update(networkMode=mode))

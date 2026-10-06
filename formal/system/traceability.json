@@ -7830,7 +7830,7 @@
     "ops/hetzner/interrupted-release-recovery.py": "f14d118294b220e4e1f23e0f14b2bb5265b90d440ebb717530049d52d7e80499",
     "ops/hetzner/isolated-application-canary.py": "1782d0cc1b5060eb83a7e48840bb3d009a5038cc1a7eed2654173399c424dd99",
     "ops/hetzner/legacy-stop-policy.py": "5345338d62360df1248e557ddc2b808a4a029a811d165d90948e151d796c0fdb",
-    "ops/hetzner/network-recovery-admission.py": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
+    "ops/hetzner/network-recovery-admission.py": "f7be5eca3f175250a5831d5fca45960242c8c4fa2b66658c12b069d588af421c",
     "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
     "ops/hetzner/original-application-recovery.py": "37f59153386b015d565d8da2a7faeeb26db27ecf2a76c4307d1ad4a405be21b5",
     "ops/hetzner/original-database-recovery.py": "94b61ec2db602f4a3a16c9c9b573a8261944c715cbb90e51ff1df24b32183a64",
@@ -7979,7 +7979,7 @@
     "scripts/test-marketplace-contact-identity.sh": "e8366b9aea5eb474c77acfd0c1816d51fe93e35d19eb46af6f583ed139f24cef",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-network-namespace-linux.py": "39f6c7de81715000327b3b00e5385a089a65481692b050a4bb89c9d29938486e",
-    "scripts/test-network-recovery-admission.py": "eb6a9a4bf81001006df9f339c9186d8aeb73a73c615ab1efd5a9c99188e421da",
+    "scripts/test-network-recovery-admission.py": "027d523c0f87e116e6384308d6e824c51cff1f881b1988edd7a740a5a2469298",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-offline-recovery-capacity.py": "8699587b8f72b58f5f12473028605dce43eb9683b12a29af530dd1db06fcf5e8",
     "scripts/test-original-application-recovery.py": "5ddd368a6a106eacf168f61af69cc78310f8e0ea31723ffc0415bd336197da72",
@@ -14493,7 +14493,7 @@
     {
       "id": "SURFACE-855588bc04576ff3",
       "path": "ops/hetzner/network-recovery-admission.py",
-      "sha256": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
+      "sha256": "f7be5eca3f175250a5831d5fca45960242c8c4fa2b66658c12b069d588af421c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18232,7 +18232,7 @@
     {
       "id": "SURFACE-2cceac75133c9abe",
       "path": "scripts/test-network-recovery-admission.py",
-      "sha256": "eb6a9a4bf81001006df9f339c9186d8aeb73a73c615ab1efd5a9c99188e421da",
+      "sha256": "027d523c0f87e116e6384308d6e824c51cff1f881b1988edd7a740a5a2469298",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
