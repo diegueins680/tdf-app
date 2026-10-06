@@ -138,6 +138,10 @@ def main():
         # output, not a synthetic list or a saved copy of our own request.
         installed = True
         q.load_absent([bridge])
+        # Force Neighbor Discovery instead of depending on a warm cache whose
+        # randomized expiry previously hid an IPv6 reply-denial defect.
+        run(['ip','-6','neigh','flush','dev',bridge])
+        run(prefix+['ip','-6','neigh','flush','dev','eth0'])
         for index in range(2):
             request(routed_clients[index],'send',expected=False)
             request(client(prefix),'connect',expected=False,address=routed_addresses[index],port=routed_ports[index])
@@ -153,6 +157,19 @@ def main():
         # A permissive replacement is a negative control: the same blocked
         # fresh provider probe must become reachable, and admission must reject.
         require(all(process.poll() is None for process in children))
+        rules=json.loads(run(['nft','--json','list','table','inet',q.TABLE]))['nftables']
+        nd_rules=[row['rule'] for row in rules if 'rule' in row and any(
+            expression.get('match',{}).get('left',{}).get('payload',{}).get('protocol')=='icmpv6'
+            for expression in row['rule']['expr'])]
+        require(len(nd_rules)==2)
+        for rule in nd_rules:
+            run(['nft','delete','rule','inet',q.TABLE,'host_input','handle',str(rule['handle'])])
+        run(['ip','-6','neigh','flush','dev',bridge])
+        run(prefix+['ip','-6','neigh','flush','dev','eth0'])
+        request(incoming[1],'send',expected=False)
+        try:q.observe([bridge])
+        except ValueError:assertions += 1
+        else:raise AssertionError('Removed Neighbor Discovery passed admission')
         run(['nft','flush','chain','inet',q.TABLE,'host_input'])
         try:q.observe([bridge])
         except ValueError: assertions += 1

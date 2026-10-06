@@ -7571,7 +7571,7 @@
       "domain": "DEPLOY",
       "authority": "inferred",
       "source": "Legacy outbound worker and original-image restart audit; independent recovery review; formal/system/outbound-quarantine.md",
-      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic; Docker start revalidates the live policy.",
+      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic and validated local IPv6 Neighbor Discovery; Docker start revalidates the live policy.",
       "contract": "formal/system/outbound-quarantine.md",
       "actors": [
         "Release operator",
@@ -7631,7 +7631,7 @@
         "scripts/test-outbound-quarantine-reboot-linux.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7803,7 +7803,7 @@
     "ops/hetzner/original-edge-recovery.py": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
     "ops/hetzner/original-recovery-completion.py": "c130c481e943507ac0894373ab6f31befc2beebf343f70c5480bddbe1a8c1f96",
     "ops/hetzner/original-timer-recovery.py": "a816d29085d590739d189c27e88753e022d0ef2c6fce6aaa7d0401061ec4a297",
-    "ops/hetzner/outbound-quarantine.py": "fc7c04cecf292baa65d2c391042b07f6ecca3ec1f98d398c64140ebb145187b3",
+    "ops/hetzner/outbound-quarantine.py": "f41ae5987280c55da0af2f93ca67feaeb0d6b0243309e68b494abd69a0d9e12c",
     "ops/hetzner/physical-postgres-recovery.py": "d173e7bfb715a70c79de01b05230dd5e86d9280093a6a3c7c8205f99230dbd69",
     "ops/hetzner/production-recovery-sources.py": "4c47e31e6798f54c89cf8ee2a7bcc92a40de04ceee0dede463a1c37762ac2d2a",
     "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
@@ -7947,9 +7947,9 @@
     "scripts/test-original-edge-tls.py": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
     "scripts/test-original-recovery-completion.py": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
     "scripts/test-original-timer-recovery.py": "2273e2069fedbb15e7ca84cfb0136750700f29c0727dc7f67a5c84ced0bed5a2",
-    "scripts/test-outbound-quarantine-linux.py": "f24b612e458da6b606ede9676d09ddf0825fb3ffc629438874c06ed6e1fbb833",
+    "scripts/test-outbound-quarantine-linux.py": "3ce15e427028b23af9cfc9958a78dbca295669a057d6e336f7358e1c53973756",
     "scripts/test-outbound-quarantine-reboot-linux.py": "27850773d774f920707ac44bc45e30527754a33aa44cb901abcfaa6a363dbb43",
-    "scripts/test-outbound-quarantine.py": "327001bcab2c4b9ef753baac7e4438eb9dcc296a5e4a04761d28892de93264ed",
+    "scripts/test-outbound-quarantine.py": "7103a1db5ae42a3d6e9e5aa777755f81e7d2b5b4ba999663f7ab52af256a5b00",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-application-docker.py": "b301dc65a18bed233decde7f43586e3fc0a548554e19fbd88911291047a08de0",
@@ -14388,7 +14388,7 @@
     {
       "id": "SURFACE-8239e7d394927be7",
       "path": "ops/hetzner/outbound-quarantine.py",
-      "sha256": "fc7c04cecf292baa65d2c391042b07f6ecca3ec1f98d398c64140ebb145187b3",
+      "sha256": "f41ae5987280c55da0af2f93ca67feaeb0d6b0243309e68b494abd69a0d9e12c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18081,7 +18081,7 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "f24b612e458da6b606ede9676d09ddf0825fb3ffc629438874c06ed6e1fbb833",
+      "sha256": "3ce15e427028b23af9cfc9958a78dbca295669a057d6e336f7358e1c53973756",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18105,7 +18105,7 @@
     {
       "id": "SURFACE-fa766e097f5bdf89",
       "path": "scripts/test-outbound-quarantine.py",
-      "sha256": "327001bcab2c4b9ef753baac7e4438eb9dcc296a5e4a04761d28892de93264ed",
+      "sha256": "7103a1db5ae42a3d6e9e5aa777755f81e7d2b5b4ba999663f7ab52af256a5b00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37096,7 +37096,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1d16a3850b0515db9d0a5695248ddfc0fe0afc54fc9ed3d9473ce03d9da18858",
+      "sourceSha256": "a1fbf63adee03993cdbb3aedb126a95a94c02f28fa76790f9127755717020737",
       "definition": {
         "states": [
           "absent",

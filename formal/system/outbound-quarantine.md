@@ -8,19 +8,22 @@ Restriction cannot undo bytes already accepted or justify clearing delivery hold
 The library generates one owned nftables `inet` table. Input and forward chains
 at priority -210 cover IPv4 and IPv6 Docker bridge traffic. Forwarding within each
 explicitly admitted identical bridge pair is permitted. Reply-direction traffic
-supports responses to incoming requests. All other traffic originating from
+supports responses to incoming requests. Host input also permits IPv6 Neighbor
+Solicitation/Advertisement control packets, only with hop-limit255 and code0;
+without these, valid replies fail when the neighbor cache expires. All other traffic originating from
 `docker0` or `br-*` is dropped, including already-established outbound connections,
 invalid and untracked packets. There is no blanket established/related allowance,
 cross-bridge wildcard permit, flush of another table, or automatic removal path.
 
-Exact kernel JSON is compared with generated policy, ignoring only kernel handles
+Exact numeric kernel JSON is compared with generated policy, ignoring only kernel handles
 and nft version metadata. Every expression, rule order, family, hook and priority
 must agree. Boot can load a missing table atomically; it never overwrites a changed
 table. Root-private files bind the program hash, admitted bridges and exact unit
 contents. Docker both requires/follows the guard and runs `verify-start` before
 every daemon start, including when the oneshot guard is already active. That
 second boundary rejects missing or changed live policy instead of repairing it.
-Stopping the guard does not flush rules.
+Stopping the guard does not flush rules. Startup is ordered after nftables and
+UFW loaders; this ordering alone does not qualify their hooks or reload behavior.
 
 The intended recovery state sequence is unqualified → installed → restricted →
 recovered-restricted. A reboot must re-establish restriction before Docker restores
@@ -35,7 +38,8 @@ Portable mutation controls test missing denial, established-outbound permission,
 IPv4-only scope, cross-bridge permission, reordered/extra rules and policy drift.
 The Linux packet fixture uses actual Docker bridges and synthetic host/routed
 receivers. It covers fresh and pre-existing IPv4/IPv6 connections, local peers,
-incoming responses and a deliberately removed denial. The three-phase reboot
+incoming responses after explicitly clearing IPv6 neighbor caches, a removed
+Neighbor Discovery allowance and a deliberately removed denial. The three-phase reboot
 fixture uses a real changed kernel boot identity, automatic container restart,
 an already-listening systemd-notify receiver and failed Docker-start controls.
 Fixture cleanup removes only nonce-labelled containers/networks and their

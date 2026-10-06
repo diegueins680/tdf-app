@@ -2890,7 +2890,7 @@
     {
       "id": "SURFACE-8239e7d394927be7",
       "path": "ops/hetzner/outbound-quarantine.py",
-      "sha256": "fc7c04cecf292baa65d2c391042b07f6ecca3ec1f98d398c64140ebb145187b3",
+      "sha256": "f41ae5987280c55da0af2f93ca67feaeb0d6b0243309e68b494abd69a0d9e12c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5098,7 +5098,7 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "f24b612e458da6b606ede9676d09ddf0825fb3ffc629438874c06ed6e1fbb833",
+      "sha256": "3ce15e427028b23af9cfc9958a78dbca295669a057d6e336f7358e1c53973756",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5110,7 +5110,7 @@
     {
       "id": "SURFACE-fa766e097f5bdf89",
       "path": "scripts/test-outbound-quarantine.py",
-      "sha256": "327001bcab2c4b9ef753baac7e4438eb9dcc296a5e4a04761d28892de93264ed",
+      "sha256": "7103a1db5ae42a3d6e9e5aa777755f81e7d2b5b4ba999663f7ab52af256a5b00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23006,7 +23006,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "4b2519f2601645641715fd837799d3e8152d144116c111581262802191a10656",
+      "sha256": "5c0e865d7eb4d4d6c664b0baa209ae6a9fe7d80cc62a29ad9abc429bf69fb3a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23083,14 +23083,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1d16a3850b0515db9d0a5695248ddfc0fe0afc54fc9ed3d9473ce03d9da18858",
+      "sha256": "a1fbf63adee03993cdbb3aedb126a95a94c02f28fa76790f9127755717020737",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "0f183873ba196d3750040ac584f985771a1d4b7b878cc72d74a2dc2dcfe8c80d",
+      "sha256": "868816437e3dd79a02462e85e736b00d0e8a1d9232afa3f6073ee002876c7e6e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

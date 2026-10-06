@@ -23,7 +23,7 @@ DROPIN_PATH = Path('/etc/systemd/system/docker.service.d/40-tdf-outbound-quarant
 SERVICE = '''[Unit]
 Description=TDF recovery outbound transport quarantine
 Before=docker.service
-After=nftables.service
+After=nftables.service ufw.service
 
 [Service]
 Type=oneshot
@@ -54,7 +54,7 @@ def match(key, value):
 
 
 def direction(value):
-    return {'match': {'op': '==', 'left': {'ct': {'key': 'direction'}}, 'right': value}}
+    return {'match': {'op': '==', 'left': {'ct': {'key': 'direction'}}, 'right': {'original': 0, 'reply': 1}[value]}}
 
 
 def objects(bridges):
@@ -78,6 +78,16 @@ def objects(bridges):
             for bridge in bridges:
                 rule([match('iifname', bridge), match('oifname', bridge), {'accept': None}])
         for interface in ('docker0', 'br-*'):
+            if name == 'host_input':
+                # IPv6 neighbors must remain discoverable after cached entries
+                # expire. RFC4861 requires hop-limit255 and code0 for NS/NA.
+                # This is local link control, not a provider transport allowance.
+                rule([match('iifname', interface),
+                      {'match': {'op': '==', 'left': {'payload': {'protocol': 'ip6', 'field': 'hoplimit'}}, 'right': 255}},
+                      {'match': {'op': '==', 'left': {'payload': {'protocol': 'icmpv6', 'field': 'code'}}, 'right': 0}},
+                      {'match': {'op': '==', 'left': {'payload': {'protocol': 'icmpv6', 'field': 'type'}},
+                                 'right': {'set': [135, 136]}}},
+                      {'accept': None}])
             # Explicit reply direction permits replies to incoming HTTP/TLS and
             # operator probes. Original-direction packets of an already-open
             # provider connection still hit the drop rule below.
@@ -122,7 +132,7 @@ def run(command, payload=None):
 
 
 def observe(bridges):
-    return admit(json.loads(run(['nft', '--json', 'list', 'table', 'inet', TABLE])), bridges)
+    return admit(json.loads(run(['nft', '--numeric', '--json', 'list', 'table', 'inet', TABLE])), bridges)
 
 
 def load_absent(bridges):
@@ -201,7 +211,8 @@ def observe_persistent():
             and guard['SubState'] == 'exited' and guard['RemainAfterExit'] == 'yes'
             and guard['FragmentPath'] == str(UNIT_PATH) and not guard['DropInPaths']
             and guard['NeedDaemonReload'] == 'no' and guard['Transient'] == 'no' and not guard['Job']
-            and 'docker.service' in guard['Before'].split() and 'nftables.service' in guard['After'].split())
+            and 'docker.service' in guard['Before'].split()
+            and {'nftables.service','ufw.service'} <= set(guard['After'].split()))
     docker = properties('docker.service', common + ('Requires','After','ExecStartPre'))
     require(docker['Id'] == 'docker.service' and docker['LoadState'] == 'loaded'
             and docker['NeedDaemonReload'] == 'no' and docker['Transient'] == 'no' and not docker['Job']

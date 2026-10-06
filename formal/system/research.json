@@ -799,6 +799,15 @@
       "applicability": "Persistent quarantine before Docker restoration",
       "decision": "adopted",
       "rationale": "Docker requires and follows the guard, and independently verifies live policy on every start. The synthetic receiver uses notify readiness to cover the startup leakage window."
+    },
+    {
+      "id": "RES-OPS-ND-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc4861#section-7.1.1",
+      "title": "RFC4861 Neighbor Discovery validation",
+      "recommendation": "Neighbor Solicitation and Advertisement validation requires hop limit255 and code0.",
+      "applicability": "IPv6 host/container neighbor resolution during outbound restriction",
+      "decision": "adopted",
+      "rationale": "Actual packet tracing exposed rejected Neighbor Advertisements and intermittent incoming reply loss. Permit only the required local input control packets and explicitly flush fixture caches; removal is a failing negative control."
     }
   ]
 }

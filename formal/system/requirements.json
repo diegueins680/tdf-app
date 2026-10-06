@@ -7570,7 +7570,7 @@
       "domain": "DEPLOY",
       "authority": "inferred",
       "source": "Legacy outbound worker and original-image restart audit; independent recovery review; formal/system/outbound-quarantine.md",
-      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic; Docker start revalidates the live policy.",
+      "property": "Under admitted Docker bridge routing assumptions, container-origin traffic outside the same admitted bridge is denied except reply-direction traffic and validated local IPv6 Neighbor Discovery; Docker start revalidates the live policy.",
       "contract": "formal/system/outbound-quarantine.md",
       "actors": [
         "Release operator",
@@ -7630,7 +7630,7 @@
         "scripts/test-outbound-quarantine-reboot-linux.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",

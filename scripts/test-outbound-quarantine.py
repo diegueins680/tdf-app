@@ -40,6 +40,18 @@ class PolicyTests(unittest.TestCase):
         value['nftables'][0]['table']['family'] = 'ip'
         with self.assertRaises(ValueError): q.admit(value, BRIDGES)
 
+    def test_missing_or_broadened_neighbor_discovery_rejected(self):
+        for mutation in ('removed','hoplimit','code','type'):
+            value = self.fixture()
+            row = next(r for r in value['nftables'] if 'rule' in r and any(
+                e.get('match',{}).get('left',{}).get('payload',{}).get('protocol')=='icmpv6'
+                for e in r['rule']['expr']))
+            if mutation=='removed':value['nftables'].remove(row)
+            else:
+                expr=next(e for e in row['rule']['expr'] if e.get('match',{}).get('left',{}).get('payload',{}).get('field')==mutation)
+                expr['match']['right']=254 if mutation=='hoplimit' else 1 if mutation=='code' else {'set':['echo-request']}
+            with self.assertRaises(ValueError):q.admit(value,BRIDGES)
+
     def test_cross_bridge_permit_rejected(self):
         value = self.fixture()
         row = next(r['rule'] for r in value['nftables'] if r.get('rule', {}).get('expr', [{}])[0] == q.match('iifname', BRIDGES[0]))
