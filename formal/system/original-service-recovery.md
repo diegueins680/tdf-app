@@ -88,7 +88,26 @@ three original services are rechecked before recording the observation.
 
 This establishes the namespace-local TLS/routing path only. External DNS, host port
 forwarding, firewall and public-network reachability require separate safe probes.
-It does not complete timer restoration or the overall abort sequence.
+It does not complete timer restoration or the overall abort sequence by itself.
+
+## Original timer boundary
+
+`original-timer-recovery.py` accepts only the originally enabled/active timer
+recorded by original admission, after the database, API and edge stages. Unchanged
+unit files, no active or failed backup at sampled admission and all original services/database
+identity are prerequisites. It issues one `systemctl start` only when the admitted
+timer is inactive; an already active timer receives no start. An uncertain command
+reply, changed unit, active/failed job at the closing sample or invalid observation leaves
+pending intent and cannot replay in the same epoch. It does not enable units,
+reload definitions, reset errors, terminate backup work or retry failed effects.
+
+Successful observation restores scheduling only. It neither proves a completed
+backup nor prevents the timer from dispatching future work. An immediately due
+persistent timer may dispatch a job and make this narrow observation fail; that
+failure must remain visible rather than be relabelled complete. A short job can
+complete between samples and is permitted; these observations do not establish
+dispatch exclusion or certify that job's backup output. The terminal abort
+receipt and integrated controller remain separate obligations.
 
 ## Executable evidence and limits
 
@@ -118,6 +137,8 @@ wrong-host certificates must reject before the trusted edge is qualified. The ex
 trust file is removed even if other resource cleanup fails; an identity mismatch
 fails and preserves the changed file. Portable real TLS socket controls additionally
 show that a client-hostname-verification mutation defeats the hostname rejection.
+`TDF_TEST_ORIGINAL_TIMER_RECOVERY=1` adds the actual registered systemd timer
+restoration after edge recovery, without declaring the abort sequence complete.
 Boot epochs remain synthetic. The separate
 `test-interrupted-release-recovery-linux.py` checks an actual owned-host reboot;
 combining these results is not an end-to-end coordinator proof.
@@ -140,7 +161,7 @@ drain in newly built images, and its image gate requires exit0. It cannot
 retroactively repair the old image's first stop. This is an open release-design limitation; no forced stop is qualified as a
 clean capture by these results.
 
-Identity-bound disposable cleanup, timer restoration, full coordinator,
+Identity-bound disposable cleanup, full coordinator,
 operational key custody and terminal
 recovery receipt remain unfinished. Do not use this library alone to stop or reboot
 production. The aggregate requirement remains PARTIAL.

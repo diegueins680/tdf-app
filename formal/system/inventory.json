@@ -86,6 +86,7 @@
       "ops/hetzner/original-database-recovery.py",
       "ops/hetzner/original-deployment-admission.py",
       "ops/hetzner/original-edge-recovery.py",
+      "ops/hetzner/original-timer-recovery.py",
       "ops/hetzner/physical-postgres-recovery.py",
       "ops/hetzner/production-recovery-sources.py",
       "ops/hetzner/production-writer-fence.py",
@@ -450,6 +451,7 @@
       "scripts/test-original-deployment-admission.py",
       "scripts/test-original-edge-recovery.py",
       "scripts/test-original-edge-tls.py",
+      "scripts/test-original-timer-recovery.py",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
@@ -2381,7 +2383,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "7309c5afc40c61b0fcd45b21dad7c015574665d31cfc002dfe694ad9f3dfd89b",
+      "sha256": "8adcb952ed74dc0d8f5ef69b6ce7d22e6a1b9f3b0facf1973d3ef3740a044165",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2802,6 +2804,12 @@
       "id": "SURFACE-b48528514b0d3831",
       "path": "ops/hetzner/original-edge-recovery.py",
       "sha256": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e15b062f5c101301",
+      "path": "ops/hetzner/original-timer-recovery.py",
+      "sha256": "a816d29085d590739d189c27e88753e022d0ef2c6fce6aaa7d0401061ec4a297",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4049,7 +4057,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e1a3b7a0b0d565036bb0c6c59ba0973fb901fe1d7c762b00199fedef7426fa51",
+      "sha256": "4536cd182061c014d1fb997bbaa3ff70367653b86ba37d08825a969820df875a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4787,7 +4795,7 @@
     {
       "id": "SURFACE-b8d7df5c0ea7535d",
       "path": "scripts/test-hetzner-backup.py",
-      "sha256": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
+      "sha256": "ca7c23199f118b05edf3f753a6fb49a40e84beddc883ba9d0eb3a8131eb9cd43",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4953,6 +4961,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7d3d85c89dea311a",
+      "path": "scripts/test-original-timer-recovery.py",
+      "sha256": "2273e2069fedbb15e7ca84cfb0136750700f29c0727dc7f67a5c84ced0bed5a2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9649a5eac5beddfa",
       "path": "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "sha256": "1ebaa8ac0f615de08870302dbfbad60a62a98b88eb5c999be03fcf7c7018eef0",
@@ -5009,7 +5023,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "f57122be1984b6d317641683fc14592330edadd68df67b73be8302ed6ee5acc0",
+      "sha256": "bdbc7c61625fbae534a029573b1b79b1026aabb9780a9a17dc04c5cd371eae7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5117,7 +5131,7 @@
     {
       "id": "SURFACE-aa3bbdb52a0727dd",
       "path": "scripts/test-release-journal.py",
-      "sha256": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
+      "sha256": "d26a52fed682444dda8e83fb9978e8d534f8c11155be92d83b3ce7e5d3bf670e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22635,7 +22649,7 @@
     },
     {
       "path": "formal/system/original-service-recovery.md",
-      "sha256": "c113e7f28b12de5f4fec420df96ea44f57c30627bfe94943b7328126f10af2cd",
+      "sha256": "b61925e673c0910a4ff86789eef489aba3ecb5387004f3c154c86892095525d2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22705,7 +22719,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c398a909a095b02348f22b7bd2c130858fd6d13d3018444f9a4f9852a258e788",
+      "sha256": "b0392c03989f0b091a9bd3205af1d92646d35aecc3d29c9487f691a43899a786",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -231,6 +231,13 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
                     edge_status=edge.OriginalEdge(journal,archive,edge_reservation).recover()
                     require(edge_status['completedStages']==['remove-disposables','recover-db','recover-api','recover-edge'])
                     require(edge.a.probe(saved['originalDeployment'],'/version','edge')['valid'])
+                    if os.environ.get('TDF_TEST_ORIGINAL_TIMER_RECOVERY')=='1':
+                        timer=load('linux_original_timer','original-timer-recovery.py')
+                        timer_reservation=timer.d.Reservation(reservation.directory,reservation.descriptor)
+                        timer_status=timer.OriginalTimer(journal,archive,timer_reservation).recover()
+                        require(timer_status['completedStages']==['remove-disposables','recover-db','recover-api','recover-edge','restore-timer'])
+                        require(timer.d.observe(saved['originalDeployment'])['units']['timerStopped'] is False)
+                        require(not timer_status['originalDeploymentRecoverySequenceComplete'])
     require(run(DOCKER+['exec',db,'psql','-X','-qAt','-U','postgres','-d','tdf_hq','-c',
                 'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
     require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
@@ -271,6 +278,7 @@ def main():
     if actual_application:require(os.environ.get('TDF_TEST_ORIGINAL_DB_RECOVERY')=='1')
     actual_edge=os.environ.get('TDF_TEST_ORIGINAL_EDGE_RECOVERY')=='1'
     if actual_edge:require(actual_application)
+    if os.environ.get('TDF_TEST_ORIGINAL_TIMER_RECOVERY')=='1':require(actual_edge)
     edge_image='caddy@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b'
     if actual_edge:require(edge_image in json.loads(run(DOCKER+['image','inspect',edge_image]))[0]['RepoDigests'])
     app_environment={}
@@ -511,6 +519,7 @@ def main():
         cleanup_preserving_tls(cleanup_owned_resources,tls)
     require(evidence is not None and not run(DOCKER+['ps', '--all', '--quiet']))
     evidence['ownedContainersRemoved'] = True
+    if os.environ.get('TDF_TEST_ORIGINAL_TIMER_RECOVERY')=='1':evidence['originalTimerSchedulingRestored']=True
     if actual_edge:evidence['edgeTLSControls']={'untrustedCertificateRejected':True,'wrongHostnameRejected':True,'trustedOriginalEdgeVerified':True,'temporaryTrustRemoved':True}
     print(json.dumps(evidence, sort_keys=True))
 
