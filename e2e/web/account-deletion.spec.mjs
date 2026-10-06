@@ -43,7 +43,9 @@ for (const width of [390, 412, 834, 1280]) {
     const checkbox = page.getByRole('checkbox');
     await expect(checkbox).toBeVisible();
     await expect(page.getByRole('complementary', { name: 'TDF Mobile' })).toHaveCount(0);
-    await checkbox.focus(); await page.keyboard.press('Space'); await page.keyboard.press('Tab');
+    await checkbox.focus(); await page.keyboard.press('Space');
+    await expect(submit).toBeEnabled();
+    await page.keyboard.press('Tab');
     await expect(submit).toBeFocused();
     expect(await submit.evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
     expect((await submit.boundingBox()).height).toBeGreaterThanOrEqual(44);
@@ -64,6 +66,38 @@ for (const width of [390, 412, 834, 1280]) {
     await expect(page.getByRole('status')).toContainText('Deletion request received');
     expect(state.submissions).toHaveLength(1);
   });
+}
+
+for (const colorScheme of ['light', 'dark']) {
+  for (const reducedMotion of ['reduce', 'no-preference']) {
+    test(`Deletion confirmation remains legible ${colorScheme} ${reducedMotion} @critical`, async ({ page, baseURL }) => {
+      await page.emulateMedia({ colorScheme, reducedMotion });
+      await page.setViewportSize({ width: 834, height: 900 });
+      const state = await fixture(page, baseURL);
+      await page.goto('/cuenta/eliminar');
+      const submit = page.getByRole('button', { name: 'Solicitar eliminación de esta cuenta', exact: true });
+      await expect(submit).toBeDisabled();
+      await page.addScriptTag({ content: axe.source });
+      const checkbox = page.getByRole('checkbox');
+      // Audit both keyboard activation and returning to the unconfirmed state.
+      // Keep the actual transition; no animation suppression or settling delay.
+      for (const confirmed of [true, false, true]) {
+        await checkbox.focus();
+        await page.keyboard.press('Space');
+        if (confirmed) {
+          await expect(submit).toBeEnabled();
+          await page.keyboard.press('Tab');
+          await expect(submit).toBeFocused();
+        } else {
+          await expect(submit).toBeDisabled();
+        }
+        expect(await page.evaluate(async () => (await axe.run(document, {
+          runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] },
+        })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) })))).toEqual([]);
+      }
+      expect(state.submissions).toHaveLength(0);
+    });
+  }
 }
 
 test('Account deletion requires authentication @critical', async ({ page, baseURL }) => {
