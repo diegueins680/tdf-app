@@ -65,6 +65,18 @@ explicit allowlist even if recovering to an older image; re-enabling arbitrary
 credentialed origins is not an acceptable recovery strategy. No migration or
 provider activation is required for this change.
 
+
+## Account-deletion route aliases
+
+The authenticated deletion intake requires a non-simple proof header and a
+trusted browser Origin even in a permissive development CORS environment.
+Servant accepts `/feedback/account-deletion/` as the same endpoint; the guard
+normalizes empty path segments before matching. Tests use Servant's actual route
+matcher and verify both canonical and trailing-slash URLs. A controlled mutation
+restores the old exact-path comparison and must fail the two trailing-slash
+proof/origin checks. This establishes the middleware/routing boundary only;
+identity, persistence, manual fulfilment and deployed behavior have separate tests
+and requirements in `PRIV-INTAKE-001` and `PRIV-DELETE-001`.
 Public checkout uses `X-Order-Lookup-Token` as a guest order capability. Explicitly
 trusted origins must be able to send this existing header on GET/POST requests.
 The CORS preflight must advertise that header without admitting an untrusted
