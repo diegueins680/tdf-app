@@ -1,0 +1,68 @@
+{
+  "capturedAt": "2026-10-06T00:51:11.648089+00:00",
+  "scope": "Local isolated Colima VM, fresh synthetic PG17 data only",
+  "fixtureBaseRevision": "f5027cf010408ee9297286fa9d62a72e39b67ec9",
+  "modifiedSourceWorktreeDirty": true,
+  "modifiedSourceSha256": {
+    "ops/hetzner/isolated-application-canary.py": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
+    "scripts/test-physical-application-docker.py": "8480e4bb7b2ef4cc377d73b3c50080d8dfc4dc6afda11396ea23bab3b9dbfc9e"
+  },
+  "postRunStagedSourcesMatch": true,
+  "result": {
+    "status": "passed",
+    "scope": "synthetic physical PG17 and isolated application",
+    "application": {
+      "image": "diegueins680/tdf-hq@sha256:4e7b2545b9e7e6bb0c6747e20a5ed70e0553bb3e74276bc5a0cf5df41fe006fe",
+      "imageId": "sha256:4e7b2545b9e7e6bb0c6747e20a5ed70e0553bb3e74276bc5a0cf5df41fe006fe",
+      "sourceRevision": "f5027cf010408ee9297286fa9d62a72e39b67ec9",
+      "binarySha256": "48406e1a9908d7eb29a90bf38caf970bc39c57afffa0f4d2727ccdf031f8dceb",
+      "content": {
+        "mode": "restored-copy-verified",
+        "copies": {
+          "assets": {
+            "manifestSha256": "6608f6cbba69da4fc457882d7b25e07d443cff57ea84ffa6bc2a4195a5631d03",
+            "bytes": 1792,
+            "entries": 2
+          },
+          "uploads": {
+            "manifestSha256": "08cd77648f6e082b565c65b0f40eaa0c7c49c05a35fd4288cd52406056bbfcf8",
+            "bytes": 1792,
+            "entries": 2
+          }
+        }
+      },
+      "regionalConfiguration": {
+        "SUPPORTED_LOCALES": "de,en,es,fr,pt",
+        "DEFAULT_LOCALE": "es",
+        "SUPPORTED_CURRENCIES": "AUD,BRL,CAD,EUR,GBP,JPY,USD",
+        "DEFAULT_CURRENCY": "USD"
+      },
+      "databasePauseProbe": 503,
+      "databaseRecovery": "passed",
+      "network": "disposable-database-only",
+      "productionCredentialsProvided": false,
+      "providerConnectivity": false,
+      "scope": "Startup, version and readiness failure/recovery only; not full API conformance."
+    },
+    "migrations": 181,
+    "migrationBatchSha256": "c2d6405abf51bec720e435a5ee4571e8260011168922745672e0f69f0a91f787",
+    "migrationBatchMatchesImage": true,
+    "migrationReplayStable": true,
+    "restoredAssetAndPrivateUploadSentinelsMatch": true,
+    "restoredContentMismatchRejectedBeforeApplicationCreation": true,
+    "applicationRemovedBeforeDatabase": true,
+    "failedApplicationCleanupRetainedBothAndReservation": true,
+    "ownedContainersRemoved": true,
+    "productionDataAccessed": false
+  },
+  "negativeControl": {
+    "originalCanaryRefusedStartup": true,
+    "reason": "Persisted Spanish locale default disagrees with compiled English default",
+    "sameImage": true
+  },
+  "limitations": [
+    "Working helper patch with exact f502 image and181-entry SQL, not current182-entry candidate image evidence",
+    "No production data, credentials, writer shutdown or rollout",
+    "No native device or full API conformance verification"
+  ]
+}

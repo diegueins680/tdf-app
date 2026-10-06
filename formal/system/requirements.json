@@ -5664,7 +5664,8 @@
         "Clean source revision and completed canonical candidate migration rehearsal",
         "Preloaded immutable TDF image digest",
         "Existing durable restore reservation",
-        "Private new archive directory and host resource capacity"
+        "Private new archive directory and host resource capacity",
+        "The isolated restored database provides exactly one enabled default locale and currency; a read-only projection supplies only validated public regional references to the cleared application environment."
       ],
       "inputs": [
         "Candidate image digest",
@@ -5700,7 +5701,8 @@
         "Accept malformed HTTP as an unavailable database",
         "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
         "Release reservation while an application create request or container may remain",
-        "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership"
+        "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership",
+        "Use compiled regional defaults that disagree with the restored deployment registry, or copy arbitrary configuration/credentials from the restored database into the canary environment."
       ],
       "effects": [
         "Temporary bounded application and empty private asset/upload directories",

@@ -35,6 +35,18 @@ def sql(target, query, database='tdf_hq'):
     return result.stdout.strip()
 
 
+def synthetic_application_diagnostics(application):
+    """Only this fixture's new synthetic database may expose startup diagnostics."""
+    require(application.database.source == '0'*64)
+    state = application.inspect()['State']
+    result = subprocess.run(r.DOCKER+['logs', '--tail', '40', application.target],
+                            env=canary.HOST_ENV, text=True, capture_output=True, timeout=10)
+    require(result.returncode == 0 and len(result.stdout)+len(result.stderr) <= 65536)
+    return {'scope': 'new synthetic fixture only', 'exitCode': state['ExitCode'],
+            'oomKilled': state['OOMKilled'], 'running': state['Running'],
+            'startupLog': (result.stdout+result.stderr)[-16384:]}
+
+
 def main():
     require(sys.platform == 'linux' and os.geteuid() == 0)
     image = os.environ.get('TDF_PHYSICAL_TEST_IMAGE', '')
@@ -126,7 +138,15 @@ def main():
                 else: raise ValueError('Restored content mismatch was accepted')
         application = canary.Canary(r, clone, clone.directory, app_image, revision, restored_content=content)
         with clone.with_application(application):
-            evidence = application.run()
+            try:
+                evidence = application.run()
+            except Exception:
+                try:
+                    print(json.dumps({'syntheticApplicationFailure': synthetic_application_diagnostics(application)}),
+                          file=sys.stderr)
+                except Exception:
+                    print('Synthetic application diagnostics unavailable', file=sys.stderr)
+                raise
             require(evidence['content']['mode'] == 'restored-copy-verified')
             for name, destination in (('assets', '/data/assets'), ('uploads', '/app/uploads')):
                 actual = application.execute(['exec', application.target, 'sha256sum',

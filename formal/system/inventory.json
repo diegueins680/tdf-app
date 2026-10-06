@@ -2648,7 +2648,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "cc7eb51b395416ce621aec2241e5b52dab0bf02c176c5294e7d96423364915e1",
+      "sha256": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4628,7 +4628,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "e52fd33b8a59bd4e24a01ca039354305ed40994be4b1fdb8ff915b4465c1a69f",
+      "sha256": "76c4fccedb8b34234f27e327f740ac674da8c0db6192146767e7af5484073d60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4730,7 +4730,7 @@
     {
       "id": "SURFACE-92c4bb8e89807943",
       "path": "scripts/test-physical-application-docker.py",
-      "sha256": "f0bb4c294c6dcfd0ea9a1664507b89ff1cc670a6915442a4b4b6f6e02a2da4c8",
+      "sha256": "8480e4bb7b2ef4cc377d73b3c50080d8dfc4dc6afda11396ea23bab3b9dbfc9e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21879,7 +21879,7 @@
     },
     {
       "path": "formal/system/isolated-canary.md",
-      "sha256": "342ad729694437329ad1e2bc3823f2b956200948c286d676f6b00b55dc6638e0",
+      "sha256": "677eeb42cedf9590bfbf8762ba8e5d54324522d81122b232e9a014fabeae334e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22012,7 +22012,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b41dff381261636737f1303d2b6c85081e263cf51520fce429215cc476316741",
+      "sha256": "680b5488c5ca6a717d7aa1823f7bdc732d89f46bae1f517f38f494bf0e289f8a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

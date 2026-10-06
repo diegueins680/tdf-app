@@ -5665,7 +5665,8 @@
         "Clean source revision and completed canonical candidate migration rehearsal",
         "Preloaded immutable TDF image digest",
         "Existing durable restore reservation",
-        "Private new archive directory and host resource capacity"
+        "Private new archive directory and host resource capacity",
+        "The isolated restored database provides exactly one enabled default locale and currency; a read-only projection supplies only validated public regional references to the cleared application environment."
       ],
       "inputs": [
         "Candidate image digest",
@@ -5701,7 +5702,8 @@
         "Accept malformed HTTP as an unavailable database",
         "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
         "Release reservation while an application create request or container may remain",
-        "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership"
+        "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership",
+        "Use compiled regional defaults that disagree with the restored deployment registry, or copy arbitrary configuration/credentials from the restored database into the canary environment."
       ],
       "effects": [
         "Temporary bounded application and empty private asset/upload directories",
@@ -6837,7 +6839,7 @@
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
-    "ops/hetzner/isolated-application-canary.py": "cc7eb51b395416ce621aec2241e5b52dab0bf02c176c5294e7d96423364915e1",
+    "ops/hetzner/isolated-application-canary.py": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
     "ops/hetzner/production-recovery-sources.py": "7cb2e9091ffbefa03793e6988ed9c42ab57f6ccecef2d4662d7e8d8baee6ddc8",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -6947,13 +6949,13 @@
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
-    "scripts/test-isolated-application-canary.py": "e52fd33b8a59bd4e24a01ca039354305ed40994be4b1fdb8ff915b4465c1a69f",
+    "scripts/test-isolated-application-canary.py": "76c4fccedb8b34234f27e327f740ac674da8c0db6192146767e7af5484073d60",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
-    "scripts/test-physical-application-docker.py": "f0bb4c294c6dcfd0ea9a1664507b89ff1cc670a6915442a4b4b6f6e02a2da4c8",
+    "scripts/test-physical-application-docker.py": "8480e4bb7b2ef4cc377d73b3c50080d8dfc4dc6afda11396ea23bab3b9dbfc9e",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
@@ -11648,7 +11650,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "cc7eb51b395416ce621aec2241e5b52dab0bf02c176c5294e7d96423364915e1",
+      "sha256": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14858,7 +14860,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "e52fd33b8a59bd4e24a01ca039354305ed40994be4b1fdb8ff915b4465c1a69f",
+      "sha256": "76c4fccedb8b34234f27e327f740ac674da8c0db6192146767e7af5484073d60",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15015,7 +15017,7 @@
     {
       "id": "SURFACE-92c4bb8e89807943",
       "path": "scripts/test-physical-application-docker.py",
-      "sha256": "f0bb4c294c6dcfd0ea9a1664507b89ff1cc670a6915442a4b4b6f6e02a2da4c8",
+      "sha256": "8480e4bb7b2ef4cc377d73b3c50080d8dfc4dc6afda11396ea23bab3b9dbfc9e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33161,7 +33163,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b41dff381261636737f1303d2b6c85081e263cf51520fce429215cc476316741",
+      "sourceSha256": "680b5488c5ca6a717d7aa1823f7bdc732d89f46bae1f517f38f494bf0e289f8a",
       "definition": {
         "states": [
           "absent",

@@ -83,3 +83,20 @@ or financial side effects. Host checks are sampled, not a privileged-operator
 fence. Writable bind directories lack an aggregate quota. Complete coordinated
 backup, writer drain, lease, image provenance, rollback/forward recovery and final
 production smoke tests remain separate release obligations.
+
+The canary reads the enabled locale/currency codes and their single defaults from
+the admitted disposable database using a fixed read-only query. These four
+validated public reference settings extend the cleared environment; no other
+configuration or credential can enter through this projection. Missing/duplicate
+defaults, duplicate codes, unexpected fields and malformed values reject startup.
+This preserves the restored deployment registry: the synthetic cold fixture
+reproduced failure when its persisted Spanish default met the compiled English
+default. The repair changes canary configuration, not database authority or the
+backend's startup validation. Timezone and wider product behavior are not covered
+by this regional startup projection.
+
+Only `test-physical-application-docker.py` may emit bounded startup diagnostics
+from its newly initialized synthetic database fixture. A nonzero source identity
+rejects before inspection or log retrieval. Shared production recovery helpers
+continue to suppress raw application/daemon logs. These diagnostics are not
+permission to print logs from a restored production database.
