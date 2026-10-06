@@ -12,9 +12,14 @@ verified before declaring this workflow operational.
 
 The shipped `/data-deletion` page directs Instagram/WhatsApp deletion requests to
 `info@tdfrecords.net` and promises confirmation and completion within30 days.
-`/mobile-app/data-deletion` directs requests to `privacidad@tdfrecords.com`, with
-`soporte@tdfrecords.com` as support, and states a30-day target subject to identity
-and applicable retention. Use the earliest actual receipt timestamp for every
+The initial audit found `/mobile-app/data-deletion` referenced
+`privacidad@tdfrecords.com` and `soporte@tdfrecords.com`. The owner subsequently
+confirmed `info@tdfrecords.net` as the managed channel; the mobile legal pages
+now use that inbox. This integration adds authenticated web intake at
+`/cuenta/eliminar`, with a30-day target subject to identity and applicable
+retention; it is not operational until its strict backend is deployed.
+Follow the [intake/queue procedure](../../docs/mobile-program/account-deletion-operations.md)
+and retain the private case-to-feedback mapping when opening the same ledger. Use the earliest actual receipt timestamp for every
 case. Waiting for identity, retrying or changing operators never restarts it.
 
 Repository/runbook searches, operational briefs and scoped searches of the
@@ -28,7 +33,9 @@ No real request has been entered or customer data changed by the audit.
 ## Activate operations
 
 The system owner assigns a primary privacy operator and a backup with authorized
-access to all three published intake aliases. Confirm actual delivery and access
+access to the owner-confirmed `info@tdfrecords.net` inbox and authenticated
+feedback queue. Investigate any historical aliases for outstanding requests;
+their former publication does not prove current delivery. Confirm actual delivery and access
 through existing mail administration; do not infer delivery from a website mailto
 link, DNS record or an empty search. Do not send a verification message without
 explicit messaging authorization. Reconcile existing inbox requests before

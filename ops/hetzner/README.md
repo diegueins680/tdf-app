@@ -128,13 +128,12 @@ rejects unknown or changed applied history, applies the batch twice on the admit
 isolate, and requires complete ledger correspondence, preserved historical entries
 and stable second-application results. Any provider/revenue/social, merchandise-reputation, interaction or optional event-operation control changes
 are reported explicitly; their presence is not authorization to activate them in
-production. No application or worker is started against the restored data. SQL and
+production. By default no application or worker is started against the restored data. SQL and
 migration diagnostics stay inside the root-private archive directory.
 
 **This does not establish release readiness.** The online database snapshot is not
 coordinated with assets or cluster-global role/schema changes; the rehearsal lock
-only excludes other rehearsals. No provider action, application canary, production
-restore or deployment occurs. Counts do not establish bytewise logical equality.
+only excludes other rehearsals. No provider action, production restore or deployment occurs. The default invocation does not run an application canary. Counts do not establish bytewise logical equality.
 Keep provider flags disabled and production writes intact. A release still needs
 writer drainage, a coordinated database/assets/private-uploads backup, tested secret/off-host
 recovery, migration rehearsal and compatible application recovery.
@@ -155,6 +154,36 @@ and cannot satisfy these obligations or authorize running a candidate before
 writer fencing and recovery qualification.
 
 ## Routine release status
+
+The [physical PostgreSQL copy boundary](../../formal/system/physical-recovery.md)
+starts a verified cold PG17 copy on isolated disk-backed storage, with exact
+cluster identity and clean-control checks and no initdb fallback. It shares the
+logical rehearsal reservation. Its synthetic Docker checks do not establish
+production capture, off-host custody, coordinated restore or deployment readiness.
+
+The [private file recovery primitive](../../formal/system/recovery-files.md) checks
+file content and metadata in new isolated targets. It is a library for the pending
+coordinated bundle, not a production backup or deployment command. The
+[encryption primitive](../../formal/system/recovery-envelope.md) uses pinned age
+with immutable Linux execution and trusted content hashes; it does not yet
+provide production key custody, transfer or coordinated restoration.
+
+The [scheduled logical archive contract](../../formal/system/logical-backup.md)
+defines the daily timer's narrower guarantee. Install the shell entrypoint and
+both Python companions together after review; never treat an online dump or
+archive listing as coordinated database/assets recovery. Existing installed
+versions require fresh hash and scheduled-run verification after delivery.
+
+Storage observation now rejects shadowing child mounts and noncanonical PGDATA.
+A fixed boolean read-only query under the existing local postgres role additionally
+checks the server's effective data_directory; the inventory reader receives no
+new grants. Command/configuration overrides cannot satisfy this check by merely
+retaining an unused canonical volume mount. Privileged concurrent reconfiguration
+remains outside the sequential observation boundary.
+
+The [release intent journal](../../formal/system/release-journal.md) persists ordered
+intent and rejects uncertain retries in one fixed global control directory. It
+does not yet coordinate or verify production effects.
 
 The guarded routine Hetzner release executor remains an open implementation and
 verification obligation. Direct invocation of `scripts/production-release.mjs`
@@ -238,6 +267,24 @@ The shared access helper also requires the database container to mount the named
 `tdf_production_postgres_data` volume at `/var/lib/postgresql/data`, with no child
 mount shadowing that store. A replacement volume, bind mount or missing mount is
 rejected before metadata, credentials or inventory are returned.
+
+The shared `production_access.py` helper pins the local Docker Unix socket and
+runs Docker with a minimal environment. Inventory psql runs with a cleared
+container environment, explicit `/var/run/postgresql` socket and port5432, and
+read-only transaction defaults. Each SQL connection asserts the database, reader
+role, local transport and server port before coverage or catalog queries. Ambient
+Docker contexts and libpq service/address overrides cannot choose another target.
+These observations remain sequential, not an atomic production snapshot.
+
+### Optional isolated application verification
+
+After a reviewed candidate image is available locally by immutable digest, add
+`--canary-image diegueins680/tdf-hq@sha256:…` to the clean-source rehearsal with
+`--with-candidate-migrations`. See [DEPLOY-CANARY-001](../../formal/system/isolated-canary.md)
+for exact isolation, outage/recovery semantics, cleanup and evidence limitations.
+This uses the disposable restored database and new empty mounts, never the
+shared-database compose canary. An actual isolated run is required; source tests
+alone do not establish Docker compatibility or production eligibility.
 
 ### Social diagnostic output and side effects
 

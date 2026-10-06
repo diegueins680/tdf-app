@@ -2122,7 +2122,9 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never execute the retired Fly production lane.",
+        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
+        "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -4675,566 +4677,6 @@
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
     },
     {
-      "id": "MOB-ONBOARD-001",
-      "title": "Session-bound durable onboarding reconciliation",
-      "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
-      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
-      "domain": "MOB",
-      "actors": [
-        "Mobile user",
-        "Asynchronous request",
-        "Release maintainer"
-      ],
-      "preconditions": [
-        "Exact pinned Mobile source and declared backend contract are available."
-      ],
-      "inputs": [
-        "Rendered credential and Party",
-        "First-value intent",
-        "Connectivity and foreground signals",
-        "Server completion response"
-      ],
-      "state": {
-        "fields": [
-          "account-scoped durable intent",
-          "current request generation",
-          "server completion",
-          "in-flight reconciliation"
-        ]
-      },
-      "allowedTransitions": [
-        "pending -> retained on offline/nonterminal response",
-        "confirmed current-account completion -> clear owned intent",
-        "foreground/reconnect -> coalesced server reconciliation"
-      ],
-      "forbiddenTransitions": [
-        "person follow -> fabricated artist conversion",
-        "old A response -> complete B or a new A occurrence",
-        "failed persistence -> reported successful durability"
-      ],
-      "effects": [
-        "Preserve existing analytics conversion ownership and independent exit queue."
-      ],
-      "authorization": "Server authorization and rendered credential/Party remain authoritative; client intent grants no access.",
-      "privacy": "Durable markers are account/guest-scoped; remounted occurrence query clients prevent retired data from populating the next account.",
-      "concurrency": "Coalesce requests and reject stale generations across A->B->A; retry only after the correct account renders.",
-      "idempotency": "Repeated reconciliation cannot fabricate repeated first-value completion.",
-      "failure": "Retain pending intent and propagate storage/auth failures.",
-      "recovery": "Reconnect/foreground retries retained work under the current rendered account.",
-      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
-      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md; reviewed Mobile71 and133; existing FanHubOnboarding/NativeArtistFollow boundaries",
-      "property": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
-      "contract": "formal/system/mobile-consolidation.md",
-      "implementation": [
-        "tdf-mobile/src/api/client.ts",
-        "tdf-mobile/src/api/onboarding.ts",
-        "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
-        "tdf-mobile/src/hooks/usePartyOwnership.ts",
-        "tdf-mobile/src/lib/firstValueCompletion.ts",
-        "tdf-mobile/src/lib/onboardingIntent.ts",
-        "tdf-mobile/src/localization/onboardingCopy.ts",
-        "tdf-mobile/src/providers/FirstRunProvider.tsx"
-      ],
-      "tests": [
-        "tdf-mobile/__tests__/AuthScreen.test.tsx",
-        "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
-        "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
-        "tdf-mobile/__tests__/apiClient.test.ts",
-        "tdf-mobile/__tests__/onboardingApi.test.ts",
-        "tdf-mobile/__tests__/onboardingIntent.test.ts",
-        "tdf-mobile/__tests__/usePartyOwnership.test.tsx"
-      ],
-      "formalModels": [
-        "formal/event-operations/FanHubOnboarding.tla",
-        "formal/event-operations/NativeArtistFollow.tla",
-        "formal/event-operations/SessionCacheIsolation.tla"
-      ],
-      "verification": "Actual provider/API/storage regression tests and existing bounded models/negative controls. Model-to-native implementation correspondence remains partial.",
-      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
-      "status": "specified and implemented",
-      "critical": true,
-      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
-      "ambiguity": [
-        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
-      }
-    },
-    {
-      "id": "MOB-SOCIAL-001",
-      "title": "Truthful account-scoped saved and social views",
-      "statement": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
-      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
-      "domain": "MOB",
-      "actors": [
-        "Mobile user",
-        "Asynchronous request",
-        "Release maintainer"
-      ],
-      "preconditions": [
-        "Exact pinned Mobile source and declared backend contract are available."
-      ],
-      "inputs": [
-        "Account and server saved-state snapshot",
-        "Queued desired state",
-        "Private draft",
-        "Public feed/reaction results",
-        "Locale and retry interaction"
-      ],
-      "state": {
-        "fields": [
-          "server/cached/pending snapshot source",
-          "owned desired-state queue",
-          "scoped draft",
-          "public read result"
-        ]
-      },
-      "allowedTransitions": [
-        "offline desired state -> explicitly pending owned queue",
-        "successful server response -> confirmed snapshot",
-        "public read failure -> retryable failure"
-      ],
-      "forbiddenTransitions": [
-        "authentication failure -> cached successful authorization",
-        "anonymous total -> invented actor identity",
-        "failed public read -> fabricated local public feed",
-        "implicit unscoped legacy import -> current account ownership"
-      ],
-      "effects": [
-        "Keep canonical interaction controls, accessibility/retry labels and partial-detail disclosure."
-      ],
-      "authorization": "Only server-accepted mutations are confirmed; queued intent and presentation do not grant access.",
-      "privacy": "Scope drafts/saved state to the account; preserve unread legacy data until explicit ownership-confirmed import.",
-      "concurrency": "Concurrent queued desired state and server refresh remain distinguishable and account scoped.",
-      "idempotency": "Desired reaction/saved state is explicit; read retries do not create actor identity or public mutation.",
-      "failure": "Propagate auth/storage failures and expose retryable read failures.",
-      "recovery": "Retry current-account reads and reconcile durable desired state without describing pending work as confirmed.",
-      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
-      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md source46/47/48/51/54/61 retention decisions; reviewed Mobile71",
-      "property": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
-      "contract": "formal/system/mobile-consolidation.md",
-      "implementation": [
-        "tdf-mobile/app/(tabs)/events.tsx",
-        "tdf-mobile/app/(tabs)/social.tsx",
-        "tdf-mobile/app/userProfile.tsx",
-        "tdf-mobile/src/api/directory.ts",
-        "tdf-mobile/src/api/events.ts",
-        "tdf-mobile/src/components/EventCard.tsx",
-        "tdf-mobile/src/components/EventMomentCard.tsx",
-        "tdf-mobile/src/lib/eventMoments.ts",
-        "tdf-mobile/src/lib/eventMomentsRepository.ts",
-        "tdf-mobile/src/lib/savedEvents.ts",
-        "tdf-mobile/src/localization/eventExperienceCopy.ts"
-      ],
-      "tests": [
-        "tdf-mobile/__tests__/EventCardTickets.test.tsx",
-        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
-        "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
-        "tdf-mobile/__tests__/SocialScreen.test.tsx",
-        "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
-        "tdf-mobile/__tests__/directoryApi.test.ts",
-        "tdf-mobile/__tests__/eventMoments.test.ts",
-        "tdf-mobile/__tests__/savedEvents.test.ts",
-        "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
-        "tdf-mobile/src/lib/eventSharing.test.ts"
-      ],
-      "formalModels": [
-        "formal/event-operations/NativeArtistFollow.tla"
-      ],
-      "verification": "Actual screen, API mapper and storage tests; NativeArtistFollow only bounds namespace/session follow behavior, not the complete saved-event or draft implementation.",
-      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
-      "status": "specified and implemented",
-      "critical": true,
-      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
-      "ambiguity": [
-        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
-      }
-    },
-    {
-      "id": "MOB-BUILD-001",
-      "title": "Validated Mobile build identity and truthful checks",
-      "statement": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
-      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
-      "domain": "MOB",
-      "actors": [
-        "Mobile user",
-        "Asynchronous request",
-        "Release maintainer"
-      ],
-      "preconditions": [
-        "Exact pinned Mobile source and declared backend contract are available."
-      ],
-      "inputs": [
-        "Exact source revision and lockfile",
-        "Release/test profile",
-        "Public analytics configuration",
-        "Protected signing inputs and synthetic service response"
-      ],
-      "state": {
-        "fields": [
-          "unverified source",
-          "validated configuration",
-          "build result",
-          "synthetic result"
-        ]
-      },
-      "allowedTransitions": [
-        "validated source/profile -> artifact build",
-        "actual successful check -> recorded pass"
-      ],
-      "forbiddenTransitions": [
-        "critical synthetic authorization failure -> success",
-        "missing or stale validation -> released artifact",
-        "privileged secret -> public configuration"
-      ],
-      "effects": [
-        "Preserve the reviewed signed-build public analytics configuration and release-branch validation triggers."
-      ],
-      "authorization": "CI can build/test; independent review, store admission and deployment remain separate authorities.",
-      "privacy": "Public analytics identifiers are configuration; signing/API/application secrets remain protected and excluded from logs/artifacts.",
-      "concurrency": "Bind receipts to exact source; rerun checks after material source changes.",
-      "idempotency": "Same source/profile must select the same validation; no false cached pass.",
-      "failure": "Propagate nonzero failures and missing required configuration.",
-      "recovery": "Repair inputs, repeat current-head checks and retain failed evidence.",
-      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
-      "source": "Mobile132 Datadog critical-error decision; Mobile135 signed-build analytics configuration; tdf-mobile/docs/tester-program.md and current workflow/signing checks",
-      "property": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
-      "contract": "formal/system/mobile-consolidation.md",
-      "implementation": [
-        "tdf-mobile/.github/workflows/android-release-build.yml",
-        "tdf-mobile/.github/workflows/ios-release-build.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
-        "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/scripts/android-release.py",
-        "tdf-mobile/scripts/ios-signing.py",
-        "tdf-mobile/scripts/release-check.mjs"
-      ],
-      "tests": [
-        "tdf-mobile/scripts/tests/test_android_release.py",
-        "tdf-mobile/scripts/tests/test_ios_signing.py"
-      ],
-      "formalModels": [],
-      "verification": "Existing signing guard unit tests, release checks and hosted Validate/Datadog. Native build completion, device behavior, store admission and production analytics delivery are separate evidence.",
-      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
-      "status": "specified and implemented",
-      "critical": true,
-      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
-      "ambiguity": [
-        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
-      }
-    },
-    {
-      "id": "OPS-CLIENT-001",
-      "title": "Canonical operational clients and retired credential helpers",
-      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
-      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
-      "domain": "OPS",
-      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
-      "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
-      "contract": "formal/system/web-cutover-correspondence.md",
-      "actors": [
-        "Authorized operator",
-        "Scheduled diagnostic"
-      ],
-      "preconditions": [
-        "Current protected credentials for explicitly authorized operations; synthetic tests intercept external transports."
-      ],
-      "inputs": [
-        "Explicit API override or canonical default",
-        "Credential health result",
-        "Reviewed artist entity types and source keys"
-      ],
-      "state": {
-        "fields": [
-          "target API",
-          "diagnostic result",
-          "import source key"
-        ]
-      },
-      "allowedTransitions": [
-        "Current API -> authorized existing operation",
-        "Unhealthy messaging token -> failure without scheduled refresh",
-        "Explicit stable source key -> idempotent artist import"
-      ],
-      "forbiddenTransitions": [
-        "Retired helper -> print stored token or mutate Fly",
-        "HTTP health success -> claim successful payment",
-        "Missing reviewed entity types -> artist import"
-      ],
-      "effects": [
-        "Preserve existing backend authorization and source-key semantics; no provider migration is performed by a diagnostic."
-      ],
-      "implementation": [
-        ".github/workflows/check-messaging-token.yml",
-        "scripts/diagnose-instagram.mjs",
-        "scripts/diagnose-social.mjs",
-        "scripts/get-admin-token.sh",
-        "scripts/get-instagram-token.mjs",
-        "scripts/refresh-messaging-token.mjs",
-        "scripts/test-stripe-integration.sh",
-        "scripts/upsert-course.mjs",
-        "tdf-hq/scripts/create_artists_from_list.sh",
-        "tdf-hq/src/TDF/Config.hs"
-      ],
-      "tests": [
-        "scripts/__tests__/instagram-token-workflows.test.mjs",
-        "scripts/__tests__/retired-messaging-refresher.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs",
-        "scripts/__tests__/artist-import-idempotency.test.mjs",
-        "scripts/__tests__/diagnose-social.test.mjs",
-        "tdf-hq/test/Spec.hs",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
-      ],
-      "formalModels": [],
-      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
-      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
-      "status": "specified and implemented",
-      "critical": true,
-      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
-      "ambiguity": [
-        "No whole-program refinement or external provider/device acceptance is asserted."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
-      },
-      "authorization": "Only explicitly authorized API writes or operator repair; scheduled messaging workflow has contents:read and invokes --check.",
-      "privacy": "Retired helpers do not read or print token state. Operational authentication output is sensitive and is not audit evidence.",
-      "concurrency": "Existing backend idempotency applies to artist imports; client URL choice does not provide a transaction or concurrency guarantee.",
-      "idempotency": "Artist importer retains stable per-source keys and stops on HTTP error; no general upsert exactly-once assertion.",
-      "failure": "Fail unhealthy checks and retired commands; report external behavior not exercised.",
-      "recovery": "Repair protected current configuration and repeat diagnostics; provider repair is separately authorized.",
-      "observability": "Exit status and redacted health facts; never retain live token output."
-    },
-    {
-      "id": "PRIV-ANALYTICS-001",
-      "title": "Private navigation and credentials are excluded at analytics serialization",
-      "domain": "PRIV",
-      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
-      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
-      "source": "docs/analytics.md; #485 reviewed privacy corrections",
-      "contract": "formal/system/web-cutover-correspondence.md",
-      "actors": [
-        "Web visitor",
-        "Authenticated web actor",
-        "PostHog SDK"
-      ],
-      "preconditions": [
-        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured.",
-        "Analytics enabled only by explicit configured rollout; existing authorization unchanged."
-      ],
-      "inputs": [
-        "Explicit event/identify/page properties",
-        "SDK-generated event.properties, $set and $set_once",
-        "Current/referrer URLs",
-        "Project configuration"
-      ],
-      "state": {
-        "client": [
-          "uninitialized",
-          "disabled",
-          "ready"
-        ],
-        "payload": [
-          "raw",
-          "sanitized",
-          "discarded"
-        ]
-      },
-      "allowedTransitions": [
-        "uninitialized + missing key/window -> disabled no-op",
-        "uninitialized + configured browser -> ready with before_send sanitization",
-        "raw named payload -> sanitized SDK event",
-        "SDK failure -> fixed operation-class warning"
-      ],
-      "forbiddenTransitions": [
-        "Transmit a named sensitive field in nested event or person-property envelopes",
-        "Transmit credentials, fragments, private resource identifiers or unapproved query values from recognized URL properties",
-        "Log arbitrary SDK exception payloads",
-        "Treat an unconfigured client as provider receipt evidence",
-        "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
-        "Unknown URL query key -> unredacted value"
-      ],
-      "effects": [
-        "Sanitized optional telemetry; core user action remains separate",
-        "Public project token retained only when equal to configured token"
-      ],
-      "authorization": "Telemetry cannot grant access; distinct identity and consent/enablement decisions remain separate application obligations.",
-      "privacy": "Named sensitive fields and recognized URL surfaces are removed/redacted recursively; this is not a classifier for arbitrary personal information inside otherwise allowed free text.",
-      "concurrency": "Singleton configuration is memoized per module instance; no cross-tab ordering or provider exactly-once guarantee.",
-      "idempotency": "Provider acceptance and deduplication are not guaranteed by client capture calls.",
-      "failure": "Explicit capture/identify/reset/page calls catch SDK errors and emit fixed diagnostics. Automatic SDK callback failure and initialization lifecycle require separate validation.",
-      "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
-      "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
-      "implementation": [
-        "tdf-hq-ui/src/analytics/posthog.ts"
-      ],
-      "tests": [
-        "tdf-hq-ui/src/__tests__/analytics.test.ts"
-      ],
-      "formalModels": [],
-      "status": "specified and implemented",
-      "critical": true,
-      "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
-      "ambiguity": [
-        "No complete free-text PII detection or whole-provider retention proof."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
-      },
-      "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
-      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
-      "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
-    },
-    {
-      "id": "MEDIA-INVENTORY-001",
-      "title": "Authenticated uploads and complete inventory pagination",
-      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
-      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
-      "domain": "MEDIA",
-      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
-      "source": "Root #468 production cookie-upload and pagination regression; #492 loading/error/filter review correction",
-      "contract": "formal/system/web-cutover-correspondence.md",
-      "actors": [
-        "Authenticated inventory operator",
-        "QR capability holder"
-      ],
-      "preconditions": [
-        "Configured canonical API and server authorization; listing remains subject to backend access controls."
-      ],
-      "inputs": [
-        "File",
-        "Current cookie/bearer",
-        "Encoded QR capability",
-        "Paged inventory response"
-      ],
-      "state": {
-        "fields": [
-          "upload progress/result",
-          "page number",
-          "accumulated rows"
-        ]
-      },
-      "allowedTransitions": [
-        "Authenticated upload -> server-authorized stored media",
-        "Nonterminal page -> fetch next page"
-      ],
-      "forbiddenTransitions": [
-        "Cookie-only session -> silently omit credentials",
-        "First page -> claim complete inventory when total is larger",
-        "Failed inventory load -> empty inventory or zero-result count assertion"
-      ],
-      "effects": [
-        "Upload one selected file; reading pages creates no asset records."
-      ],
-      "implementation": [
-        "tdf-hq-ui/src/api/inventory.ts",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
-      ],
-      "tests": [
-        "tdf-hq-ui/src/api/inventory.upload.test.ts",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx"
-      ],
-      "formalModels": [],
-      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
-      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
-      "status": "specified and implemented",
-      "critical": true,
-      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
-      "ambiguity": [
-        "No whole-program refinement or external provider/device acceptance is asserted."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
-      },
-      "authorization": "Server session and QR capability checks remain authoritative; withCredentials does not grant a role.",
-      "privacy": "Do not copy HttpOnly credentials into readable tokens or audit logs.",
-      "concurrency": "Pages are sequential reads and not an atomic inventory snapshot; concurrent inventory changes remain possible.",
-      "idempotency": "Listing retries are reads. Upload retries can create multiple blobs and are not claimed exactly once.",
-      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning. Error state takes precedence over empty-result messaging; partial failed page collections are not presented as complete inventory.",
-      "recovery": "Retry under a valid session; production smoke must use the unmodified deployed UI and compare uploaded bytes.",
-      "observability": "XHR cookie/bearer/QR tests and multi-page regression; deployed Google login/upload acceptance remains separately recorded."
-    },
-    {
-      "id": "MOB-PUBLIC-001",
-      "title": "Accurate Mobile public disclosures and support",
-      "statement": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
-      "property": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
-      "domain": "MOB",
-      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
-      "source": "Reviewed root #486 disclosures and docs/analytics.md; current Mobile distribution authority",
-      "contract": "formal/system/web-cutover-correspondence.md",
-      "actors": [
-        "Mobile visitor",
-        "Release maintainer"
-      ],
-      "preconditions": [
-        "Current distribution manifest and reviewed provider configuration remain authoritative."
-      ],
-      "inputs": [
-        "Published support/privacy text",
-        "Canonical origin/contact",
-        "Configured analytics provider"
-      ],
-      "state": {
-        "fields": [
-          "published information",
-          "configured rollout",
-          "actual distribution availability"
-        ]
-      },
-      "allowedTransitions": [
-        "Reviewed current information -> published static page"
-      ],
-      "forbiddenTransitions": [
-        "Code merge -> claim store admission",
-        "Preview telemetry -> claim production receipt"
-      ],
-      "effects": [
-        "Expose current public guidance without collecting new information or activating a provider."
-      ],
-      "implementation": [
-        "tdf-hq-ui/public/mobile-app/index.html",
-        "tdf-hq-ui/public/mobile-app/privacy.html",
-        "tdf-hq-ui/public/mobile-app/support.html",
-        "tdf-hq-ui/public/mobile-app/terms.html"
-      ],
-      "tests": [],
-      "formalModels": [],
-      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
-      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
-      "status": "specified and implemented",
-      "critical": false,
-      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
-      "ambiguity": [
-        "No whole-program refinement or external provider/device acceptance is asserted.",
-        "Informational public-page mapping is noncritical; privacy data handling and deletion enforcement remain independently critical requirements."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
-      },
-      "authorization": "Store admission, privacy fulfillment and analytics configuration retain their separate authorities.",
-      "privacy": "State actual PostHog EU usage/disclosure; existing deletion workflow is separately mapped by PRIV-DELETE-001.",
-      "concurrency": "Static deploy identity must match reviewed source; concurrent configuration changes require fresh verification.",
-      "idempotency": "Repeated reads have no application mutation.",
-      "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
-      "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
-    },
-    {
       "authority": "reconciled",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
@@ -5663,6 +5105,173 @@
       "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
     },
     {
+      "id": "PRIV-ERROR-001",
+      "title": "Private failure details and cancellation stay outside response diagnostics",
+      "domain": "PRIV",
+      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
+      "authority": "AUTHORITY-041; explicit privacy, failure and concurrency requirements of the consolidated audit",
+      "source": "formal/system/request-failure-boundary.md",
+      "contract": "formal/system/request-failure-boundary.md",
+      "actors": [
+        "HTTP caller",
+        "Authenticated actor",
+        "Provider fetch worker",
+        "Restricted diagnostics reader"
+      ],
+      "preconditions": [
+        "Unexpected failure at one of the named boundaries; no inference about all system logs."
+      ],
+      "inputs": [
+        "Request/callback state",
+        "Synchronous exception or cancellation",
+        "Diagnostic sink outcome"
+      ],
+      "state": {
+        "response": [
+          "not_started",
+          "started"
+        ],
+        "error": [
+          "synchronous",
+          "asynchronous"
+        ],
+        "diagnostic": [
+          "fixed_identifier",
+          "sink_failed"
+        ]
+      },
+      "allowedTransitions": [
+        "not_started + synchronous error -> fixed diagnostic + one fixed500",
+        "started + failure -> propagate to Warp without another response callback",
+        "asynchronous exception -> propagate cancellation",
+        "best-effort activity sync failure -> fixed warning",
+        "provider fetch sync failure -> fixed internal code"
+      ],
+      "forbiddenTransitions": [
+        "Render exception/request details into diagnostic output",
+        "Retry response callback after it began",
+        "Turn cancellation into business failure or normal response",
+        "Grant wildcard origin in request-independent error fallback"
+      ],
+      "effects": [
+        "One controlled response before streaming or propagation afterward",
+        "Fixed non-PII diagnostic identifiers"
+      ],
+      "authorization": "Error handling does not grant access or retry a protected operation. Existing endpoint authorization and mandatory consent transactions remain authoritative.",
+      "privacy": "Do not render SQL parameters, actor identifiers, bearer credentials, private URLs or arbitrary exception payloads at these diagnostic boundaries.",
+      "concurrency": "Atomic response-start marker prevents repeated callbacks; safe-exceptions preserves classified cancellation. No socket/streaming liveness proof.",
+      "idempotency": "No automatic mutation retry or second response on failure.",
+      "failure": "Fixed500 before response start; propagate after start or cancellation. Synchronous logging failure does not replace the response.",
+      "recovery": "Caller follows the operation-specific retry contract; operators investigate fixed identifiers without emitting private payloads.",
+      "observability": "Fixed HTTP/activity/provider failure classes; actual tests and source fingerprints retained.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/FailureBoundary.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+        "scripts/verify-request-failures.py",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and finite runtime controls; final combined validation pending",
+      "ambiguity": [
+        "Blocking diagnostic sinks, socket-streaming behavior and unrelated logging/provider boundaries are not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped runtime repair and source mutations do not establish whole-server or deployed conformance."
+      },
+      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
+      "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
+      "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
+    },
+    {
+      "id": "PRIV-ANALYTICS-001",
+      "title": "Private navigation and credentials are excluded at analytics serialization",
+      "domain": "PRIV",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
+      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
+      "source": "docs/analytics.md; #485 reviewed privacy corrections",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Web visitor",
+        "Authenticated web actor",
+        "PostHog SDK"
+      ],
+      "preconditions": [
+        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured.",
+        "Analytics enabled only by explicit configured rollout; existing authorization unchanged."
+      ],
+      "inputs": [
+        "Explicit event/identify/page properties",
+        "SDK-generated event.properties, $set and $set_once",
+        "Current/referrer URLs",
+        "Project configuration"
+      ],
+      "state": {
+        "client": [
+          "uninitialized",
+          "disabled",
+          "ready"
+        ],
+        "payload": [
+          "raw",
+          "sanitized",
+          "discarded"
+        ]
+      },
+      "allowedTransitions": [
+        "uninitialized + missing key/window -> disabled no-op",
+        "uninitialized + configured browser -> ready with before_send sanitization",
+        "raw named payload -> sanitized SDK event",
+        "SDK failure -> fixed operation-class warning"
+      ],
+      "forbiddenTransitions": [
+        "Transmit a named sensitive field in nested event or person-property envelopes",
+        "Transmit credentials, fragments, private resource identifiers or unapproved query values from recognized URL properties",
+        "Log arbitrary SDK exception payloads",
+        "Treat an unconfigured client as provider receipt evidence",
+        "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
+        "Unknown URL query key -> unredacted value"
+      ],
+      "effects": [
+        "Sanitized optional telemetry; core user action remains separate",
+        "Public project token retained only when equal to configured token"
+      ],
+      "authorization": "Telemetry cannot grant access; distinct identity and consent/enablement decisions remain separate application obligations.",
+      "privacy": "Named sensitive fields and recognized URL surfaces are removed/redacted recursively; this is not a classifier for arbitrary personal information inside otherwise allowed free text.",
+      "concurrency": "Singleton configuration is memoized per module instance; no cross-tab ordering or provider exactly-once guarantee.",
+      "idempotency": "Provider acceptance and deduplication are not guaranteed by client capture calls.",
+      "failure": "Explicit capture/identify/reset/page calls catch SDK errors and emit fixed diagnostics. Automatic SDK callback failure and initialization lifecycle require separate validation.",
+      "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
+      "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/analytics/posthog.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
+      "ambiguity": [
+        "No complete free-text PII detection or whole-provider retention proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+      },
+      "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
+    },
+    {
       "id": "EVT-PRESENTATION-001",
       "title": "Transactional ticket pages do not advertise misleading public offers",
       "domain": "EVT",
@@ -5752,90 +5361,1129 @@
       }
     },
     {
-      "id": "PRIV-ERROR-001",
-      "title": "Private failure details and cancellation stay outside response diagnostics",
-      "domain": "PRIV",
-      "statement": "Unexpected request, activity and Radio-fetch failures must not render exception payloads; cancellation must propagate and an HTTP response must not be started twice. CORS grants remain with the configured request-aware middleware.",
-      "authority": "AUTHORITY-041; explicit privacy, failure and concurrency requirements of the consolidated audit",
-      "source": "formal/system/request-failure-boundary.md",
-      "contract": "formal/system/request-failure-boundary.md",
+      "id": "PAY-INVOICE-001",
+      "title": "Immutable invoice receipt issuance and replay",
+      "statement": "Issue at most one receipt per invoice with exact invoice currency and minor-unit totals, a unique annual number, current canonical invoicing authorization and atomic local effects.",
+      "domain": "PAY",
+      "authority": "approved audit safety invariant",
+      "source": "Observed count-based collision and currency-relabeling HTTP counterexamples; current createReceipt replay intent; user monetary/concurrency requirements; formal/system/invoice-receipts.md",
+      "contract": "formal/system/invoice-receipts.md",
+      "critical": true,
       "actors": [
-        "HTTP caller",
-        "Authenticated actor",
-        "Provider fetch worker",
-        "Restricted diagnostics reader"
+        "Currently authenticated invoicing-module staff",
+        "Legacy writer during drained migration boundary"
       ],
       "preconditions": [
-        "Unexpected failure at one of the named boundaries; no inference about all system logs."
+        "Canonical session and active invoicing role/permission chain",
+        "Existing invoice and valid stored line/header snapshot",
+        "Registered additive migration applied before new writer"
       ],
       "inputs": [
-        "Request/callback state",
-        "Synchronous exception or cancellation",
-        "Diagnostic sink outcome"
+        "Invoice ID",
+        "Optional normalized buyer name, email, notes and same-currency override"
       ],
       "state": {
-        "response": [
-          "not_started",
-          "started"
+        "states": [
+          "absent",
+          "issued"
         ],
-        "error": [
-          "synchronous",
-          "asynchronous"
+        "initial": "absent",
+        "terminal": [
+          "issued"
         ],
-        "diagnostic": [
-          "fixed_identifier",
-          "sink_failed"
+        "transitions": [
+          {
+            "from": "absent",
+            "to": "issued",
+            "guard": "current invoicing authority and exact invoice snapshot",
+            "effect": "atomic receipt, lines and counter allocation"
+          },
+          {
+            "from": "issued",
+            "to": "issued",
+            "guard": "current invoicing authority and compatible explicit replay parameters",
+            "effect": "return existing snapshot without new effects"
+          }
         ]
       },
       "allowedTransitions": [
-        "not_started + synchronous error -> fixed diagnostic + one fixed500",
-        "started + failure -> propagate to Warp without another response callback",
-        "asynchronous exception -> propagate cancellation",
-        "best-effort activity sync failure -> fixed warning",
-        "provider fetch sync failure -> fixed internal code"
+        "absent -> issued after locked current admission and snapshot validation",
+        "issued -> issued with the same ID on compatible replay"
       ],
       "forbiddenTransitions": [
-        "Render exception/request details into diagnostic output",
-        "Retry response callback after it began",
-        "Turn cancellation into business failure or normal response",
-        "Grant wildcard origin in request-independent error fallback"
+        "second receipt for same invoice",
+        "currency relabeling or inconsistent/overflowed totals",
+        "changed explicit replay parameters",
+        "revoked authority commit/replay",
+        "partial invoice/receipt/line/counter commit",
+        "Return pre-persistence values that differ from the canonical stored receipt on replay."
       ],
       "effects": [
-        "One controlled response before streaming or propagation afterward",
-        "Fixed non-PII diagnostic identifiers"
+        "Immutable receipt and line snapshot",
+        "Unique annual display number",
+        "Optional combined invoice creation in same transaction"
       ],
-      "authorization": "Error handling does not grant access or retry a protected operation. Existing endpoint authorization and mandatory consent transactions remain authoritative.",
-      "privacy": "Do not render SQL parameters, actor identifiers, bearer credentials, private URLs or arbitrary exception payloads at these diagnostic boundaries.",
-      "concurrency": "Atomic response-start marker prevents repeated callbacks; safe-exceptions preserves classified cancellation. No socket/streaming liveness proof.",
-      "idempotency": "No automatic mutation retry or second response on failure.",
-      "failure": "Fixed500 before response start; propagate after start or cancellation. Synchronous logging failure does not replace the response.",
-      "recovery": "Caller follows the operation-specific retry contract; operators investigate fixed identifiers without emitting private payloads.",
-      "observability": "Fixed HTTP/activity/provider failure classes; actual tests and source fingerprints retained.",
+      "authorization": "Current token, canonical UUID role assignments and active invoicing permission chain held through commit; UI visibility is not admission.",
+      "privacy": "Private buyer name/email/notes require invoicing capability; errors and diagnostics exclude arbitrary customer/SQL payloads.",
+      "concurrency": "PostgreSQL READ COMMITTED; shared admission locks then exclusive invoice lock and annual counter upsert. Existing invoice lines held shared. Deadlock/serialization conflicts reject409.",
+      "idempotency": "Invoice ID across currently authorized invoicing staff; omitted/null overrides retain snapshot, changed explicit buyer/email/nonblank notes409, mismatched currency422. Invoice creation has no request-key idempotency.",
+      "failure": "No local effect on rejection, crash before commit or line insertion failure; fixed HTTP errors after rollback; async cancellation propagates.",
+      "recovery": "Replay invoice ID after ambiguous acknowledgement with current authorization. Migration mismatch stops for reviewed reconciliation; recovery writers must retain counter semantics.",
+      "observability": "Exact source/binary hashes and synthetic HTTP/PG/model receipts; production migration ledger and safe smoke evidence remain required.",
       "implementation": [
-        "tdf-hq/src/TDF/App/FailureBoundary.hs",
-        "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/src/TDF/ServerAuth.hs",
-        "tdf-hq/src/TDF/ServerRadio.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Invoice/Receipt.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/lib/production-release.mjs",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/api/invoices.ts"
       ],
       "tests": [
-        "tdf-hq/test/TDF/FailureBoundarySpec.hs",
-        "scripts/verify-request-failures.py",
-        "scripts/quality-backend.sh"
+        "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/invoice_receipt_conformance.py",
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/verify-invoice-receipts.py",
+        "scripts/quality-backend.sh",
+        "scripts/verify-invoice-receipt-api.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/InvoiceReceipt.tla"
+      ],
       "status": "specified and implemented",
-      "critical": true,
-      "confidence": "Scoped implementation and finite runtime controls; final combined validation pending",
+      "confidence": "high source-derived local contract; executable candidate and production evidence required",
       "ambiguity": [
-        "Blocking diagnostic sinks, socket-streaming behavior and unrelated logging/provider boundaries are not covered."
+        "Fiscal provider/session invoice atomicity outside this receipt boundary",
+        "Complete financial retention policy and deployed correspondence remain unverified"
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Scoped runtime repair and source mutations do not establish whole-server or deployed conformance."
+        "reason": "Working pure properties and bounded positive/negative models pass; combined candidate HTTP, migration, complete gates and production verification pending."
       },
-      "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
-      "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
-      "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
+      "property": "UniqueInvoice and UniqueNumber and BoundReplay and AuthorizedCommit; exact Integer snapshot equality before issuance",
+      "verification": "Actual HTTP/PG races, source-mutated arithmetic properties, bounded TLA+ positive and named negative invariants; fresh candidate evidence required",
+      "evidence": "Exact-candidate backend, HTTP, formal and migration receipts; no production pass inferred"
+    },
+    {
+      "id": "DEPLOY-BACKUP-001",
+      "title": "Scheduled private logical archive completion",
+      "statement": "The daily logical backup must admit the canonical local database, serialize runs, preserve private complete archives and globals, and report success only after verified source and durable completion evidence.",
+      "domain": "DEPLOY",
+      "authority": "User recovery, worker and privacy requirements; verified installed timer",
+      "source": "ops/hetzner/tdf-postgres-backup.timer; verified installed script hash; formal/system/logical-backup.md",
+      "contract": "formal/system/logical-backup.md",
+      "critical": true,
+      "actors": [
+        "Scheduled root-owned systemd service",
+        "Authorized release operator"
+      ],
+      "preconditions": [
+        "Private owned backup directory",
+        "Canonical immutable database container and effective data directory",
+        "Exclusive backup lock"
+      ],
+      "inputs": [
+        "Fixed local database and reviewed program; no caller-selected SQL or target"
+      ],
+      "state": {
+        "states": [
+          "idle",
+          "locked",
+          "source-admitted",
+          "database-archived",
+          "globals-archived",
+          "archive-listed",
+          "source-rechecked",
+          "receipt-durable",
+          "failed"
+        ],
+        "initial": "idle",
+        "terminal": [
+          "receipt-durable",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> locked -> source-admitted -> database-archived -> globals-archived -> archive-listed -> source-rechecked -> receipt-durable",
+        "Any incomplete step -> failed"
+      ],
+      "forbiddenTransitions": [
+        "Completion after failed dump, globals, archive listing or changed source",
+        "Untrusted Docker/libpq routing",
+        "Overwrite or deletion of prior archives",
+        "Claim of restore or off-host recoverability from archive creation",
+        "Retry after parent death with an unresolved dump request",
+        "Attribute completion to source bytes changed during execution"
+      ],
+      "effects": [
+        "Private mode0600 logical archive and globals in mode0700 unique directory",
+        "Exclusive durable completion receipt with source/tool hashes, sizes and timestamps"
+      ],
+      "authorization": "Existing local root scheduler; fixed read-only postgres storage assertion and dump commands, no new inventory-role grants.",
+      "privacy": "Database and globals may contain private records/password hashes; no content or raw errors leave protected local files.",
+      "concurrency": "Permanent nonblocking lock plus durable pending reservation serialize scheduler admission across parent death; failed/uncertain work blocks retry until operator resolution. Source observations are sequential, not a privileged-operator/release-writer fence.",
+      "idempotency": "Successful retries create a fresh UUID run without overwrite. Failed or uncertain requests retain the pending marker and block new work until resolved.",
+      "failure": "Exit nonzero, retain partial archives and stage-only failure receipt when possible; missing completion or any failure marker rejects admission.",
+      "recovery": "Establish no old dump request remains in flight, preserve failed evidence, then clear the matching pending reservation before independent retry. Actual restore/off-host/coordinated recovery remain separate.",
+      "observability": "Recorded source/tool hashes, archive hashes/sizes/times and explicit false restored/offHost/coordinatedAssets fields; timer exit and installed hashes must be observed at delivery.",
+      "implementation": [
+        "ops/hetzner/backup-postgres.sh",
+        "ops/hetzner/backup-postgres.py",
+        "ops/hetzner/inspect-runtime.py",
+        "ops/hetzner/tdf-postgres-backup.service",
+        "ops/hetzner/tdf-postgres-backup.timer"
+      ],
+      "tests": [
+        "scripts/test-hetzner-backup.py",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/LogicalBackup.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Source-derived contract and controlled failure tests; production installation unverified.",
+      "ambiguity": [
+        "Off-host retention destination and coordinated release recovery remain unresolved."
+      ],
+      "verification": "Bounded two-run TLA+ safety with three negative controls; actual parent-kill/process-failure/source-replacement tests. No filesystem, transport or database refinement proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "New scheduler implementation and controls await exact-head review, installed-run validation and independent recovery evidence."
+      },
+      "property": "Every successful archive receipt follows source admission, both nonempty dumps, readable archive metadata, unchanged source and durable private evidence; failures cannot imply restoration.",
+      "evidence": "Exact revision test logs, installed hashes, scheduled execution and independent restore receipts with their separate scopes."
+    },
+    {
+      "id": "DEPLOY-READINESS-001",
+      "title": "Fresh database readiness without private failure detail",
+      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. Pool or query failure and expiry of the two-second cooperative deadline return503 with fixed non-private fields; every readiness response forbids caching.",
+      "domain": "DEPLOY",
+      "authority": "User deployment verification and failed-worker success requirements; existing documented health intent",
+      "source": "tdf-hq/docs/openapi/api.yaml; formal/system/readiness.md",
+      "contract": "formal/system/readiness.md",
+      "critical": true,
+      "actors": [
+        "Anonymous health monitor",
+        "Deployment operator",
+        "Application process"
+      ],
+      "preconditions": [
+        "Startup gate has completed before live database probing."
+      ],
+      "inputs": [
+        "GET /health",
+        "Application-owned database connection pool"
+      ],
+      "state": {
+        "states": [
+          "starting",
+          "probing",
+          "ready",
+          "unavailable"
+        ],
+        "initial": "starting",
+        "terminal": []
+      },
+      "allowedTransitions": [
+        "starting -> probing after boot succeeds",
+        "probing -> ready only after fresh successful query",
+        "probing -> unavailable on synchronous error, false result or deadline",
+        "A subsequent request independently probes current state"
+      ],
+      "forbiddenTransitions": [
+        "Return database ok without a successful query",
+        "Cache a previous readiness response",
+        "Render SQL/connection/exception detail in public failure output",
+        "Convert asynchronous process cancellation to a healthy response"
+      ],
+      "effects": [
+        "HTTP200 status=ok/db=ok or HTTP503 status=degraded/db=unavailable; startup503 status=starting/db=starting",
+        "Cache-Control no-store; failures Retry-After5"
+      ],
+      "authorization": "Public non-mutating fixed SELECT1; no caller SQL or chosen database target.",
+      "privacy": "Fixed JSON fields exclude database errors, credentials and hostnames; no probe exception rendering.",
+      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
+      "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
+      "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
+      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Readiness.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/App/StartupResponse.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ReadinessSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-readiness.py",
+        "scripts/quality-backend.sh",
+        "scripts/lib/readiness_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
+      "ambiguity": [],
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
+      },
+      "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+    },
+    {
+      "id": "DEPLOY-CANARY-001",
+      "title": "Candidate application isolation and truthful readiness evidence",
+      "domain": "DEPLOY",
+      "statement": "An optional application canary must run the immutable candidate only in the admitted disposable restored database network namespace, without separately supplied production environment/role secrets or production mounts. Completion requires source/version identity, healthy startup, unavailable-database rejection, recovery and confirmed application/database cleanup.",
+      "authority": "User safe deployed verification, failure semantics and isolated recovery requirements",
+      "source": "formal/system/isolated-canary.md; ops/hetzner/README.md",
+      "contract": "formal/system/isolated-canary.md",
+      "critical": true,
+      "actors": [
+        "Authorized audit or release operator",
+        "Nonce-owned candidate application",
+        "Nonce-owned restored database"
+      ],
+      "preconditions": [
+        "Clean source revision and completed canonical candidate migration rehearsal",
+        "Preloaded immutable TDF image digest",
+        "Existing durable restore reservation",
+        "Private new archive directory and host resource capacity"
+      ],
+      "inputs": [
+        "Candidate image digest",
+        "Exact source revision",
+        "Existing admitted disposable restore target"
+      ],
+      "state": {
+        "states": [
+          "restored",
+          "application-requested",
+          "application-running",
+          "observed",
+          "application-removed",
+          "database-removed",
+          "complete",
+          "failed"
+        ],
+        "initial": "restored",
+        "terminal": [
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit fixed disconnected database -> request application under retained reservation",
+        "Observe startup/version -> pause only owned database -> reject200 -> unpause -> observe recovery",
+        "Remove admitted application before database -> release matching reservation -> publish receipt"
+      ],
+      "forbiddenTransitions": [
+        "Production database or mounts as application targets",
+        "Provider connectivity or inherited production/image credentials",
+        "Accept malformed HTTP as an unavailable database",
+        "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
+        "Release reservation while an application create request or container may remain"
+      ],
+      "effects": [
+        "Temporary bounded application and empty private asset/upload directories",
+        "Readiness/version GETs inside pinned matching network namespace",
+        "Temporary pause/unpause of owned restored database only",
+        "Redacted source/image/binary and cleanup receipt"
+      ],
+      "authorization": "Operator invoked rehearsal only; no provider or feature activation; full target admission precedes destructive cleanup and pause.",
+      "privacy": "Cloned database remains host-private. No production environment/role secrets or content mounts supplied separately; the clone can itself contain credential/token records accessible to its isolated app. Probe accepts fixed metadata paths and bounded allowlisted JSON, never arbitrary API records or raw diagnostics.",
+      "concurrency": "Existing permanent restore lock and durable reservation cover application and database. Delayed Docker completion cannot permit a second run. Privileged concurrent host reconfiguration is outside the sampled inspection boundary.",
+      "idempotency": "Every run is a new nonce; unresolved earlier requests block retry. Cleanup admits exact owned identities, never broad label deletion.",
+      "failure": "Any identity/isolation/protocol/recovery failure prevents completion. Recognized transport timeout or fixed503 under paused disposable database is expected; malformed200 or malformed status lines are failures.",
+      "recovery": "Remove only fully admitted application before database; preserve pending reservation and private archive evidence on cleanup uncertainty. Operator resolution must establish no delayed request remains.",
+      "observability": "Receipt binds clean source/helper hashes, immutable image/imageID, binary hash, source commit, pause outcome (503 or recognized transport failure), recovery and application removal. No automatic deployment admission.",
+      "implementation": [
+        "ops/hetzner/isolated-application-canary.py",
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "scripts/rehearse-hetzner-restore.mjs"
+      ],
+      "tests": [
+        "scripts/test-isolated-application-canary.py",
+        "scripts/test-hetzner-restore.py",
+        "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ApplicationCanary.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Deterministic controls and bounded model; real Docker execution unverified.",
+      "ambiguity": [
+        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established."
+      ],
+      "verification": "Two-run bounded TLA+ safety and three named-invariant negative controls; hostile admission/cleanup tests and real synthetic HTTP protocol tests. No Docker/filesystem/HTTP refinement proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source and controlled tests exist; exact real isolated image execution and deployed correspondence remain outstanding."
+      },
+      "property": "An app with production connectivity cannot be admitted; application lifetime remains inside its database/reservation lifetime; completion requires verified observations.",
+      "evidence": "Exact revision command receipts and separate actual isolated-run output; simulated contracts are not Docker integration evidence."
+    },
+    {
+      "id": "DEPLOY-FILES-001",
+      "title": "Private bounded file recovery preserves admitted content and metadata",
+      "domain": "DEPLOY",
+      "statement": "Recovery file capture and replay shall reject escaping, linked, unsupported or changed content and return success only for the exact admitted file-tree contents and metadata in a new private target.",
+      "authority": "User storage, ownership, privacy and coordinated recovery requirements",
+      "source": "formal/system/recovery-files.md; ops/hetzner/README.md",
+      "contract": "formal/system/recovery-files.md",
+      "critical": true,
+      "actors": [
+        "Authorized recovery operator",
+        "Future coordinated release executor"
+      ],
+      "preconditions": [
+        "Caller establishes writer fence and admits all storage roots/nested mounts",
+        "Private owned archive and destination parents",
+        "Trusted manifest bound to separately verified bundle evidence"
+      ],
+      "inputs": [
+        "Absolute source directory",
+        "New archive path",
+        "Trusted private manifest",
+        "New restore path"
+      ],
+      "state": {
+        "states": [
+          "unverified",
+          "capturing",
+          "captured",
+          "replaying",
+          "verified",
+          "failed"
+        ],
+        "initial": "unverified",
+        "terminal": [
+          "verified",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit paths -> capture contents/metadata -> recheck -> return private manifest",
+        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified"
+      ],
+      "forbiddenTransitions": [
+        "Follow symlink components or restore outside new target",
+        "Overwrite existing archives or target contents",
+        "Accept links, special files, unsupported metadata or missing/extra/duplicate members",
+        "Return success after changed source, incorrect bytes or metadata",
+        "Infer database coordination or off-host recovery from file replay"
+      ],
+      "effects": [
+        "Private exclusive archive",
+        "Private manifest including relative paths",
+        "New file tree with verified bytes, ownership, permissions and modification times"
+      ],
+      "authorization": "Operator-local library; no implicit production execution, remote transfer or deployment. Caller must establish release-level target and writer admission.",
+      "privacy": "Archive, manifest paths and diagnostics remain private. Public evidence contains only aggregate counts/hashes. No credential or customer content logging.",
+      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement.",
+      "idempotency": "Exclusive creation rejects retries using an existing archive or restore destination; independent attempts require new paths.",
+      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics.",
+      "recovery": "Inspect failed output under ownership boundary; independently retry into new paths. Never overwrite production or infer successful restore from archive existence.",
+      "observability": "Return private exact manifest and aggregate file-tree-restored result with coordinatedDatabase=false and offHost=false. Caller supplies durable authenticated bundle receipt.",
+      "implementation": [
+        "ops/hetzner/recovery-files.py"
+      ],
+      "tests": [
+        "scripts/test-recovery-files.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Actual synthetic filesystem/archive controls; production bundle integration remains outstanding.",
+      "ambiguity": [
+        "Full writer fence, nested mount inventory, encrypted off-host bundle and secret/database recovery remain separate implementation obligations."
+      ],
+      "verification": "Adversarial real filesystem/archive tests on macOS and Linux; no formal filesystem or concurrency proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "File primitive exists; coordinated production bundle, off-host restoration and deployment integration remain unimplemented."
+      },
+      "property": "Successful replay requires complete exact manifest correspondence in a fresh contained target; missing or invalid evidence cannot report success.",
+      "evidence": "Revision/source-qualified synthetic test receipts; no production file capture or restoration claimed."
+    },
+    {
+      "id": "DEPLOY-ENVELOPE-001",
+      "title": "Private recovery encryption binds execution and trusted content",
+      "domain": "DEPLOY",
+      "statement": "Recovery encryption shall execute immutable reviewed age bytes and report decryption success only after authenticated completion and correspondence to separately trusted plaintext and transferred ciphertext hashes.",
+      "authority": "User storage, ownership, privacy and coordinated recovery requirements",
+      "source": "formal/system/recovery-envelope.md; ops/hetzner/recovery-tools.json",
+      "contract": "formal/system/recovery-envelope.md",
+      "critical": true,
+      "actors": [
+        "Authorized recovery operator",
+        "Future release bundle coordinator"
+      ],
+      "preconditions": [
+        "Supported Linux sealed memfd runtime",
+        "Pinned private age binary",
+        "Private native X25519 identity held independently of production for actual off-host recovery",
+        "Independently trusted capture and transfer content hashes"
+      ],
+      "inputs": [
+        "Private captured bundle or transferred ciphertext",
+        "Native recipient or private identity path",
+        "New private output path",
+        "Trusted hashes and sizes"
+      ],
+      "state": {
+        "states": [
+          "unverified",
+          "tool-sealed",
+          "encrypting",
+          "encrypted",
+          "decrypting",
+          "content-verified",
+          "failed"
+        ],
+        "initial": "unverified",
+        "terminal": [
+          "encrypted",
+          "content-verified",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
+        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified"
+      ],
+      "forbiddenTransitions": [
+        "Execute a subsequently replaced pathname instead of verified bytes",
+        "Execute unpinned or plugin tools",
+        "Expose identity or plaintext through logs, arguments or environment",
+        "Overwrite an output or accept partial decryption",
+        "Treat public-key encryption as sender authentication",
+        "Infer transfer or restored system from encryption/decryption"
+      ],
+      "effects": [
+        "Exclusive private ciphertext or plaintext output",
+        "Aggregate hash/size evidence with transfer and restoration claims explicitly false"
+      ],
+      "authorization": "Operator-local invocation; no key generation, remote destination, production access or deployment implicitly authorized by this library.",
+      "privacy": "Identity passed by held private descriptor; fixed child environment, suppressed tool diagnostics, private failed output and manifests. No production secret required by tests.",
+      "concurrency": "Verified executable bytes held in write/grow/shrink/seal-sealed Linux memfd through execution; source descriptors and hashes rechecked. Python/policy integrity and trusted capture record remain caller assumptions.",
+      "idempotency": "Every output must be new; retries reject existing paths and preserve partial evidence.",
+      "failure": "Unsupported platform, bad tool/identity/receipt, native failure, deadline, truncation, corruption or changed content raises without successful receipt; private partial output may remain.",
+      "recovery": "Use separately protected identity and trusted capture hashes to retry into a new path; no automatic transfer, cleanup, database rollback or restore.",
+      "observability": "Source-qualified tool hashes, plaintext/ciphertext sizes/digests and explicit encrypted-not-transferred or decrypted-content-verified scope; never customer/identity bytes.",
+      "implementation": [
+        "ops/hetzner/recovery-envelope.py",
+        "ops/hetzner/recovery-tools.json",
+        "scripts/install-recovery-tools.py",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-recovery-envelope.py",
+        "scripts/test-recovery-tools.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Real age integration and scheduling controls; no cryptographic or whole-system proof.",
+      "ambiguity": [
+        "Production key custody, coordinated capture, trusted bundle evidence and off-host transfer/retrieval remain unimplemented."
+      ],
+      "verification": "Linux real-tool negative/scheduling controls and deterministic installer tests; unsupported platforms cannot stand in for Linux runtime evidence.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Encryption primitive and controlled checks exist; integrated production key/backup/transfer/restoration workflow remains outstanding."
+      },
+      "property": "No output is reported recovered without authenticated decryption and exact trusted content correspondence using immutable verified executable bytes.",
+      "evidence": "Exact source receipts with temporary synthetic identities/data only; no production archive or key claim."
+    },
+    {
+      "id": "DEPLOY-JOURNAL-001",
+      "title": "Release intents survive process death and exclude uncertain retries",
+      "domain": "DEPLOY",
+      "statement": "Every coordinated release effect shall have durable ordered intent bound to one global release reservation, exact plan and targets before execution; an unresolved intent shall block automatic retry, phase advancement and a new release nonce.",
+      "authority": "User concurrency, recovery and deployment safety requirements",
+      "source": "formal/system/release-journal.md",
+      "contract": "formal/system/release-journal.md",
+      "critical": true,
+      "actors": [
+        "Authorized release operator",
+        "Future guarded coordinator"
+      ],
+      "preconditions": [
+        "One fixed private global control directory durably provisioned by coordinator",
+        "All cooperating operations use its permanent lock",
+        "Filesystem honors fsync",
+        "Coordinator independently validates effect-specific evidence"
+      ],
+      "inputs": [
+        "Canonical source/runtime/image/manifest/recipient plan",
+        "Release nonce",
+        "Ordered stage and exact-target hash",
+        "Context-bound protected observation hash"
+      ],
+      "state": {
+        "states": [
+          "uninitialized",
+          "ready",
+          "pending",
+          "sequence-complete",
+          "rejected"
+        ],
+        "initial": "uninitialized",
+        "terminal": [
+          "sequence-complete",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Initialize once -> ready",
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+      ],
+      "forbiddenTransitions": [
+        "Effect before durable intent",
+        "Replay an unresolved intent or initialize another nonce",
+        "Skip, duplicate or reorder stages",
+        "Treat receipt hash as validation of external effect",
+        "Restore old database over possible new writes"
+      ],
+      "effects": [
+        "Private immutable records and permanent lock",
+        "Caller effect only after durable admission"
+      ],
+      "authorization": "Caller must authorize target and effect; the journal is not deployment authority or an external-effect verifier.",
+      "privacy": "Only digests, fixed phase names, sequence and nonce recorded; no raw secret, target document or exception output.",
+      "concurrency": "Nonblocking flock while live; one fixed global journal prevents new nonce bypass after parent death even if external child survives. Noncooperating privileged writers and alternate control directories are excluded.",
+      "idempotency": "No effect replay API; even terminal journal cannot be reinitialized. Future rotation/recovery requires separate admission.",
+      "failure": "Unresolved intent, invalid observation or publication leftover blocks progress. IO failure poisons current handle; fresh open syncs directory before reading a valid recorded prefix.",
+      "recovery": "Explicit operator recovery and terminal rotation remain unimplemented; retain records and preserve all possible writes from database restart intent onward.",
+      "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
+      "implementation": [
+        "ops/hetzner/release-journal.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "tests": [
+        "scripts/test-release-journal.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ReleaseJournal.tla",
+        "formal/event-operations/ReleaseJournal.cfg",
+        "formal/event-operations/ReleaseJournalNoIntent.cfg",
+        "formal/event-operations/ReleaseJournalNewNonce.cfg",
+        "formal/event-operations/ReleaseJournalWrongObservation.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
+      "ambiguity": [
+        "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
+      ],
+      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
+      },
+      "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
+      "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
+    },
+    {
+      "id": "MOB-ONBOARD-001",
+      "title": "Session-bound durable onboarding reconciliation",
+      "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Rendered credential and Party",
+        "First-value intent",
+        "Connectivity and foreground signals",
+        "Server completion response"
+      ],
+      "state": {
+        "fields": [
+          "account-scoped durable intent",
+          "current request generation",
+          "server completion",
+          "in-flight reconciliation"
+        ]
+      },
+      "allowedTransitions": [
+        "pending -> retained on offline/nonterminal response",
+        "confirmed current-account completion -> clear owned intent",
+        "foreground/reconnect -> coalesced server reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "person follow -> fabricated artist conversion",
+        "old A response -> complete B or a new A occurrence",
+        "failed persistence -> reported successful durability"
+      ],
+      "effects": [
+        "Preserve existing analytics conversion ownership and independent exit queue."
+      ],
+      "authorization": "Server authorization and rendered credential/Party remain authoritative; client intent grants no access.",
+      "privacy": "Durable markers are account/guest-scoped; remounted occurrence query clients prevent retired data from populating the next account.",
+      "concurrency": "Coalesce requests and reject stale generations across A->B->A; retry only after the correct account renders.",
+      "idempotency": "Repeated reconciliation cannot fabricate repeated first-value completion.",
+      "failure": "Retain pending intent and propagate storage/auth failures.",
+      "recovery": "Reconnect/foreground retries retained work under the current rendered account.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md; reviewed Mobile71 and133; existing FanHubOnboarding/NativeArtistFollow boundaries",
+      "property": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/api/onboarding.ts",
+        "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
+        "tdf-mobile/src/hooks/usePartyOwnership.ts",
+        "tdf-mobile/src/lib/firstValueCompletion.ts",
+        "tdf-mobile/src/lib/onboardingIntent.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-mobile/src/providers/FirstRunProvider.tsx"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
+        "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts",
+        "tdf-mobile/__tests__/onboardingApi.test.ts",
+        "tdf-mobile/__tests__/onboardingIntent.test.ts",
+        "tdf-mobile/__tests__/usePartyOwnership.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/FanHubOnboarding.tla",
+        "formal/event-operations/NativeArtistFollow.tla",
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "verification": "Actual provider/API/storage regression tests and existing bounded models/negative controls. Model-to-native implementation correspondence remains partial.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-SOCIAL-001",
+      "title": "Truthful account-scoped saved and social views",
+      "statement": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Account and server saved-state snapshot",
+        "Queued desired state",
+        "Private draft",
+        "Public feed/reaction results",
+        "Locale and retry interaction"
+      ],
+      "state": {
+        "fields": [
+          "server/cached/pending snapshot source",
+          "owned desired-state queue",
+          "scoped draft",
+          "public read result"
+        ]
+      },
+      "allowedTransitions": [
+        "offline desired state -> explicitly pending owned queue",
+        "successful server response -> confirmed snapshot",
+        "public read failure -> retryable failure"
+      ],
+      "forbiddenTransitions": [
+        "authentication failure -> cached successful authorization",
+        "anonymous total -> invented actor identity",
+        "failed public read -> fabricated local public feed",
+        "implicit unscoped legacy import -> current account ownership"
+      ],
+      "effects": [
+        "Keep canonical interaction controls, accessibility/retry labels and partial-detail disclosure."
+      ],
+      "authorization": "Only server-accepted mutations are confirmed; queued intent and presentation do not grant access.",
+      "privacy": "Scope drafts/saved state to the account; preserve unread legacy data until explicit ownership-confirmed import.",
+      "concurrency": "Concurrent queued desired state and server refresh remain distinguishable and account scoped.",
+      "idempotency": "Desired reaction/saved state is explicit; read retries do not create actor identity or public mutation.",
+      "failure": "Propagate auth/storage failures and expose retryable read failures.",
+      "recovery": "Retry current-account reads and reconcile durable desired state without describing pending work as confirmed.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md source46/47/48/51/54/61 retention decisions; reviewed Mobile71",
+      "property": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/app/(tabs)/events.tsx",
+        "tdf-mobile/app/(tabs)/social.tsx",
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/directory.ts",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/components/EventCard.tsx",
+        "tdf-mobile/src/components/EventMomentCard.tsx",
+        "tdf-mobile/src/lib/eventMoments.ts",
+        "tdf-mobile/src/lib/eventMomentsRepository.ts",
+        "tdf-mobile/src/lib/savedEvents.ts",
+        "tdf-mobile/src/localization/eventExperienceCopy.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/EventCardTickets.test.tsx",
+        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+        "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
+        "tdf-mobile/__tests__/SocialScreen.test.tsx",
+        "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
+        "tdf-mobile/__tests__/directoryApi.test.ts",
+        "tdf-mobile/__tests__/eventMoments.test.ts",
+        "tdf-mobile/__tests__/savedEvents.test.ts",
+        "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
+        "tdf-mobile/src/lib/eventSharing.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/NativeArtistFollow.tla"
+      ],
+      "verification": "Actual screen, API mapper and storage tests; NativeArtistFollow only bounds namespace/session follow behavior, not the complete saved-event or draft implementation.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-BUILD-001",
+      "title": "Validated Mobile build identity and truthful checks",
+      "statement": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Exact source revision and lockfile",
+        "Release/test profile",
+        "Public analytics configuration",
+        "Protected signing inputs and synthetic service response"
+      ],
+      "state": {
+        "fields": [
+          "unverified source",
+          "validated configuration",
+          "build result",
+          "synthetic result"
+        ]
+      },
+      "allowedTransitions": [
+        "validated source/profile -> artifact build",
+        "actual successful check -> recorded pass"
+      ],
+      "forbiddenTransitions": [
+        "critical synthetic authorization failure -> success",
+        "missing or stale validation -> released artifact",
+        "privileged secret -> public configuration"
+      ],
+      "effects": [
+        "Preserve the reviewed signed-build public analytics configuration and release-branch validation triggers."
+      ],
+      "authorization": "CI can build/test; independent review, store admission and deployment remain separate authorities.",
+      "privacy": "Public analytics identifiers are configuration; signing/API/application secrets remain protected and excluded from logs/artifacts.",
+      "concurrency": "Bind receipts to exact source; rerun checks after material source changes.",
+      "idempotency": "Same source/profile must select the same validation; no false cached pass.",
+      "failure": "Propagate nonzero failures and missing required configuration.",
+      "recovery": "Repair inputs, repeat current-head checks and retain failed evidence.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "Mobile132 Datadog critical-error decision; Mobile135 signed-build analytics configuration; tdf-mobile/docs/tester-program.md and current workflow/signing checks",
+      "property": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/.github/workflows/android-release-build.yml",
+        "tdf-mobile/.github/workflows/ios-release-build.yml",
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        "tdf-mobile/.github/workflows/mobile-validate.yml",
+        "tdf-mobile/scripts/android-release.py",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/release-check.mjs"
+      ],
+      "tests": [
+        "tdf-mobile/scripts/tests/test_android_release.py",
+        "tdf-mobile/scripts/tests/test_ios_signing.py"
+      ],
+      "formalModels": [],
+      "verification": "Existing signing guard unit tests, release checks and hosted Validate/Datadog. Native build completion, device behavior, store admission and production analytics delivery are separate evidence.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "OPS-CLIENT-001",
+      "title": "Canonical operational clients and retired credential helpers",
+      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
+      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
+      "domain": "OPS",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Authorized operator",
+        "Scheduled diagnostic"
+      ],
+      "preconditions": [
+        "Current protected credentials for explicitly authorized operations; synthetic tests intercept external transports."
+      ],
+      "inputs": [
+        "Explicit API override or canonical default",
+        "Credential health result",
+        "Reviewed artist entity types and source keys"
+      ],
+      "state": {
+        "fields": [
+          "target API",
+          "diagnostic result",
+          "import source key"
+        ]
+      },
+      "allowedTransitions": [
+        "Current API -> authorized existing operation",
+        "Unhealthy messaging token -> failure without scheduled refresh",
+        "Explicit stable source key -> idempotent artist import"
+      ],
+      "forbiddenTransitions": [
+        "Retired helper -> print stored token or mutate Fly",
+        "HTTP health success -> claim successful payment",
+        "Missing reviewed entity types -> artist import"
+      ],
+      "effects": [
+        "Preserve existing backend authorization and source-key semantics; no provider migration is performed by a diagnostic."
+      ],
+      "implementation": [
+        ".github/workflows/check-messaging-token.yml",
+        "scripts/diagnose-instagram.mjs",
+        "scripts/diagnose-social.mjs",
+        "scripts/get-admin-token.sh",
+        "scripts/get-instagram-token.mjs",
+        "scripts/refresh-messaging-token.mjs",
+        "scripts/test-stripe-integration.sh",
+        "scripts/upsert-course.mjs",
+        "tdf-hq/scripts/create_artists_from_list.sh",
+        "tdf-hq/src/TDF/Config.hs"
+      ],
+      "tests": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/retired-messaging-refresher.test.mjs",
+        "scripts/__tests__/payment-readiness-helper.test.mjs",
+        "scripts/__tests__/artist-import-idempotency.test.mjs",
+        "scripts/__tests__/diagnose-social.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Only explicitly authorized API writes or operator repair; scheduled messaging workflow has contents:read and invokes --check.",
+      "privacy": "Retired helpers do not read or print token state. Operational authentication output is sensitive and is not audit evidence.",
+      "concurrency": "Existing backend idempotency applies to artist imports; client URL choice does not provide a transaction or concurrency guarantee.",
+      "idempotency": "Artist importer retains stable per-source keys and stops on HTTP error; no general upsert exactly-once assertion.",
+      "failure": "Fail unhealthy checks and retired commands; report external behavior not exercised.",
+      "recovery": "Repair protected current configuration and repeat diagnostics; provider repair is separately authorized.",
+      "observability": "Exit status and redacted health facts; never retain live token output."
+    },
+    {
+      "id": "MEDIA-INVENTORY-001",
+      "title": "Authenticated uploads and complete inventory pagination",
+      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
+      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
+      "domain": "MEDIA",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "Root #468 production cookie-upload and pagination regression; #492 loading/error/filter review correction",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Authenticated inventory operator",
+        "QR capability holder"
+      ],
+      "preconditions": [
+        "Configured canonical API and server authorization; listing remains subject to backend access controls."
+      ],
+      "inputs": [
+        "File",
+        "Current cookie/bearer",
+        "Encoded QR capability",
+        "Paged inventory response"
+      ],
+      "state": {
+        "fields": [
+          "upload progress/result",
+          "page number",
+          "accumulated rows"
+        ]
+      },
+      "allowedTransitions": [
+        "Authenticated upload -> server-authorized stored media",
+        "Nonterminal page -> fetch next page"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit credentials",
+        "First page -> claim complete inventory when total is larger",
+        "Failed inventory load -> empty inventory or zero-result count assertion"
+      ],
+      "effects": [
+        "Upload one selected file; reading pages creates no asset records."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/inventory.upload.test.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Server session and QR capability checks remain authoritative; withCredentials does not grant a role.",
+      "privacy": "Do not copy HttpOnly credentials into readable tokens or audit logs.",
+      "concurrency": "Pages are sequential reads and not an atomic inventory snapshot; concurrent inventory changes remain possible.",
+      "idempotency": "Listing retries are reads. Upload retries can create multiple blobs and are not claimed exactly once.",
+      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning. Error state takes precedence over empty-result messaging; partial failed page collections are not presented as complete inventory.",
+      "recovery": "Retry under a valid session; production smoke must use the unmodified deployed UI and compare uploaded bytes.",
+      "observability": "XHR cookie/bearer/QR tests and multi-page regression; deployed Google login/upload acceptance remains separately recorded."
+    },
+    {
+      "id": "MOB-PUBLIC-001",
+      "title": "Accurate Mobile public disclosures and support",
+      "statement": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
+      "property": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
+      "domain": "MOB",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "Reviewed root #486 disclosures and docs/analytics.md; current Mobile distribution authority",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Mobile visitor",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Current distribution manifest and reviewed provider configuration remain authoritative."
+      ],
+      "inputs": [
+        "Published support/privacy text",
+        "Canonical origin/contact",
+        "Configured analytics provider"
+      ],
+      "state": {
+        "fields": [
+          "published information",
+          "configured rollout",
+          "actual distribution availability"
+        ]
+      },
+      "allowedTransitions": [
+        "Reviewed current information -> published static page"
+      ],
+      "forbiddenTransitions": [
+        "Code merge -> claim store admission",
+        "Preview telemetry -> claim production receipt"
+      ],
+      "effects": [
+        "Expose current public guidance without collecting new information or activating a provider."
+      ],
+      "implementation": [
+        "tdf-hq-ui/public/mobile-app/index.html",
+        "tdf-hq-ui/public/mobile-app/privacy.html",
+        "tdf-hq-ui/public/mobile-app/support.html",
+        "tdf-hq-ui/public/mobile-app/terms.html",
+        "tdf-hq-ui/public/mobile-distribution.json"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted.",
+        "Informational public-page mapping is noncritical; privacy data handling and deletion enforcement remain independently critical requirements."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Store admission, privacy fulfillment and analytics configuration retain their separate authorities.",
+      "privacy": "State actual PostHog EU usage/disclosure; existing deletion workflow is separately mapped by PRIV-DELETE-001.",
+      "concurrency": "Static deploy identity must match reviewed source; concurrent configuration changes require fresh verification.",
+      "idempotency": "Repeated reads have no application mutation.",
+      "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
+      "recovery": "Correct source under review and reverify deployed content and links.",
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
     },
     {
       "id": "OPS-INTEGRATION-001",
@@ -5916,6 +6564,103 @@
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
     },
     {
+      "id": "DEPLOY-PHYSICAL-001",
+      "title": "Physical recovery starts only an admitted cold cluster copy",
+      "domain": "DEPLOY",
+      "statement": "A physical database rehearsal shall verify complete copied content, isolated storage/configuration and exact clean PG17 cluster identity before direct PostgreSQL startup; it shall never initialize a replacement database or admit production storage as its writable copy.",
+      "authority": "User deployment, recovery and persistence requirements",
+      "source": "formal/system/physical-recovery.md",
+      "contract": "formal/system/physical-recovery.md",
+      "critical": true,
+      "actors": [
+        "Authorized release operator",
+        "Guarded recovery coordinator"
+      ],
+      "preconditions": [
+        "Complete trusted cold-cluster manifest and expected system identifier",
+        "Private restored copy under canonical backup root",
+        "No backup-path bind aliases or concurrent privileged mutation",
+        "Reviewed preloaded PG17 image with UID/GID999",
+        "Shared restore reservation and capacity admission"
+      ],
+      "inputs": [
+        "Cold-cluster copy",
+        "Trusted manifest",
+        "Expected cluster identifier",
+        "Image digest",
+        "Release/rehearsal nonce"
+      ],
+      "state": {
+        "states": [
+          "unprepared",
+          "copy-verified",
+          "reserved",
+          "container-admitted",
+          "cold-control-verified",
+          "database-started",
+          "removed",
+          "uncertain"
+        ],
+        "initial": "unprepared",
+        "terminal": [
+          "removed",
+          "uncertain"
+        ]
+      },
+      "allowedTransitions": [
+        "Verify topology and full copy before isolated configuration replacement",
+        "Reserve durably before Docker create",
+        "Admit container and clean cluster control before direct PostgreSQL startup",
+        "Verify live system identifier before reporting startup",
+        "Remove only admitted owned container before clearing reservation"
+      ],
+      "forbiddenTransitions": [
+        "Mutate a production bind alias",
+        "Initialize missing or incompatible data",
+        "Start crashed or wrong-cluster files",
+        "Use copied production auto-conf or provider/network access",
+        "Clear reservation after uncertain cleanup"
+      ],
+      "effects": [
+        "Clone-only configuration replacement and PostgreSQL writes",
+        "Bounded disposable container",
+        "Private retained artifacts and hashes"
+      ],
+      "authorization": "Explicit operator recovery scope; startup library does not authorize production maintenance or deployment.",
+      "privacy": "Cluster contents and role credentials remain inside private host storage and isolated container; only allowlisted metadata/hashes leave the helper.",
+      "concurrency": "Common permanent restore lock plus durable nonce/image reservation excludes logical/physical overlap and uncertain daemon work; privileged noncooperating mount replacement is excluded.",
+      "idempotency": "No repeated start after an attempt; unresolved create/cleanup retains the common reservation and needs independent operator recovery.",
+      "failure": "Reject mismatch before database startup; retain private artifacts and uncertainty, never report initialization or cleanup failure as recovery success.",
+      "recovery": "Own-target cleanup requires complete identity/isolation admission; no in-place production restore or automatic old-data rollback.",
+      "observability": "Original/copy/configuration hashes, exact cluster identity, startup result and separate removal evidence; synthetic tests are not production recovery.",
+      "implementation": [
+        "ops/hetzner/physical-postgres-recovery.py",
+        "ops/hetzner/recovery-files.py",
+        "ops/hetzner/rehearse-postgres-restore.py"
+      ],
+      "tests": [
+        "scripts/test-physical-postgres-recovery.py",
+        "scripts/test-physical-postgres-docker.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/RestoreIsolation.tla",
+        "formal/event-operations/RestoreIsolation.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Actual filesystem controls and synthetic PG17 Docker startup/crash tests; production coordinated capture not established.",
+      "ambiguity": [
+        "Integrated writer-fenced capture, complete storage/configuration coverage, off-host custody, application recovery and guarded deployment remain outstanding."
+      ],
+      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Physical copy startup boundary implemented; complete coordinated production recovery and deployment are not established."
+      },
+      "property": "No recovered-cluster startup before exact clean identity, content and storage-isolation admission.",
+      "evidence": "Exact source test receipts; cold-file and mount properties are not formally proven."
+    },
+    {
       "id": "SOC-ABUSE-001",
       "title": "Rejected interaction writes consume the exact per-account minute budget",
       "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
@@ -5972,6 +6717,141 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+      }
+    },
+    {
+      "id": "PRIV-INTAKE-001",
+      "title": "Authenticated account-deletion intake with auditable manual resolution",
+      "domain": "PRIV",
+      "statement": "After explicit qualified backend/web rollout, account owners can request deletion without composing an email; before rollout the verified contact path remains available without API submission. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
+      "authority": "Product owner mobile release/privacy task; reviewed PR486; manual processing by owner-confirmed info@tdfrecords.net",
+      "source": "docs/mobile-program/account-deletion-operations.md; root PR486; docs/mobile-program/account-deletion-rollout.md",
+      "contract": "docs/mobile-program/account-deletion-operations.md",
+      "actors": [
+        "Authenticated account holder",
+        "Current authorized administrator",
+        "Privacy operator"
+      ],
+      "preconditions": [
+        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational.",
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED and VITE_ACCOUNT_DELETION_QUEUE_ENABLED independently require the literal string true. Pause intake without hiding the enabled operator queue; qualify backend support before either activation.",
+        "Operator reads and resolution require both an Admin/Manager/StudioManager role and the canonical internships module, including direct API calls."
+      ],
+      "inputs": [
+        "Account ID bound to authenticated identity",
+        "Non-simple origin proof header and browser Origin when present",
+        "Reserved normalized request marker",
+        "Administrator outcome and required resolution note"
+      ],
+      "state": {
+        "intake": "Existing feedback request and authenticated creator",
+        "resolution": [
+          "pending",
+          "completed",
+          "rejected"
+        ],
+        "fulfilment": "Separate private evidence ledger PRIV-DELETE-001"
+      },
+      "allowedTransitions": [
+        "Authenticated current owner -> received request with server owner/ID receipt",
+        "Pending -> completed/rejected with locked row and actor/time/note audit"
+      ],
+      "forbiddenTransitions": [
+        "Anonymous, revoked or mismatched owner submits deletion request",
+        "Simple cross-origin form or hostile Origin submits deletion request",
+        "Generic feedback bypasses reserved-marker checks",
+        "Completed/rejected request is resolved again",
+        "Successful intake or queue resolution is represented as automatic erasure",
+        "A source-only web deployment exposes deletion form/queue against an unqualified backend",
+        "Captured operator/module grants authorize a private read or resolution after revocation has won current transactional admission."
+      ],
+      "effects": [
+        "Existing feedback row and notification on accepted intake",
+        "Append-only resolution audit in the same transaction as the terminal state"
+      ],
+      "authorization": "Cookie identity is reloaded before submission; server withCurrentAuthSession lock spans insertion. Required non-simple header and trusted Origin guard precede general CORS. Operator queue/legacy reads and resolution revalidate both current Admin/Manager/StudioManager authority and internships module under session/role/module locks retained through the same transaction; captured request grants cannot authorize a stale operation.",
+      "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list. Deletion notification audience is exclusively the confirmed info@tdfrecords.net privacy inbox, independent of ordinary feedback recipients.",
+      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409. Owner advisory lock spans pending receipt lookup/insertion; different owners have separate keys. Resolution acquires the same owner advisory lock before its feedback row lock; intake ordered after it waits for commit and receives a fresh pending receipt. Intake lock order is session, owner, feedback. Operator operations lock session, role assignments/roles and module permission chain before owner/feedback. Revocation that commits before admission denies the effect; revocation blocked by retained grants waits for the admitted transaction. createdBy is immutable after insertion.",
+      "idempotency": "Owner-scoped transaction advisory lock serializes pending receipt lookup and insertion across sessions. Ambiguous retries reuse the oldest pending receipt and original timestamp/content without duplicate notification. After terminal resolution a new request is allowed; no permanent client-key deduplication is claimed. Only candidates passing accountDeletionOwnerMatches can be reused; batches of100 skip missing/duplicated/mismatched legacy claims without hiding later valid receipts. Existing legacy duplicates require operator reconciliation. SQL marker prefilters accept LF and CR prefixes (including CRLF), and resolution normalizes line endings consistently without rewriting recorded content.",
+      "failure": "Reject absent/mismatched receipt; lost authentication returns to sign-in with the deletion destination, while network errors permit retry. Preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
+      "recovery": "Reload authenticated receipt and private evidence; never infer erasure from a queue flag. Preserve earliest receipt/deadline in the existing operator ledger.",
+      "observability": "Scoped unit/browser tests and unmodified FormData/HTTP tests with disposable PostgreSQL cover identity, CSRF, spoofing, pagination, audit and concurrent200/409. No real deletion or extra notification is used for QA.",
+      "property": "OwnerMatches; ReservedMarkerCannotBypass; OneTerminalResolution; IntakeIsNotErasure",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "tdf-hq-ui/src/api/accountDeletion.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/internalFeedback.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/config/accountDeletionRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts",
+        "playwright.config.mjs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "e2e/web/account-deletion.spec.mjs",
+        "e2e/web/studio-internship-audit.spec.mjs",
+        "scripts/test-account-deletion-api.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.sh",
+        "tdf-hq-ui/src/api/accountDeletion.test.ts",
+        "tdf-hq-ui/src/api/feedback.test.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CorsSpec.hs",
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
+        "e2e/web/account-deletion-rollout.spec.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/AccountDeletionIntake.tla",
+        "formal/event-operations/AccountDeletionIntake.cfg",
+        "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
+        "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
+        "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg",
+        "formal/event-operations/AccountDeletionIntakeInvalidLegacy.cfg",
+        "formal/event-operations/AccountDeletionOperator.tla",
+        "formal/event-operations/AccountDeletionOperator.cfg",
+        "formal/event-operations/AccountDeletionOperatorRoleOnly.cfg",
+        "formal/event-operations/AccountDeletionOperatorModuleOnly.cfg",
+        "formal/event-operations/AccountDeletionResolution.tla",
+        "formal/event-operations/AccountDeletionResolution.cfg",
+        "formal/event-operations/AccountDeletionResolutionNoOwnerLock.cfg",
+        "formal/event-operations/AccountDeletionAuthority.tla",
+        "formal/event-operations/AccountDeletionAuthority.cfg",
+        "formal/event-operations/AccountDeletionAuthorityStale.cfg",
+        "formal/event-operations/AccountDeletionAuthorityNoSessionLock.cfg",
+        "formal/event-operations/AccountDeletionAuthorityNoGrantLock.cfg"
+      ],
+      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking plus an abstract invalid legacy receipt and four named negative controls; no refinement, crashes or delivery proof. AccountDeletionResolution separately bounds one existing receipt, one intake and one resolution, with an omitted-resolution-lock counterexample; actual HTTP uses an observed PostgreSQL row/advisory barrier and the previous binary as a failing control. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; the separate AccountDeletionAuthority model adds one-request current-authority/retained-lock safety and three negative controls. Six HTTP/PostgreSQL token-lock barriers exercise role/module revocation before queue/legacy reads and terminal resolution, with no audit on denial. Actual HTTP/PostgreSQL regressions cover CRLF and bare-CR legacy visibility, eight-way receipt reuse, successful immutable resolution, and preserved description/timestamp.",
+      "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped source and regression evidence; combined candidate and deployed acceptance remain separate gates.",
+      "ambiguity": [
+        "Physical iPhone OAuth and Apple Beta Review are independent release gates.",
+        "Operational assignment, monitoring, per-service erasure and delivered completion notice require actual operator evidence.",
+        "The bounded intake model excludes terminal resolution, legacy duplicate cleanup, crash recovery and SMTP delivery."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Intake and audited resolution implemented; current merged validation, production backend deployment and actual operational fulfilment remain required."
       }
     }
   ]

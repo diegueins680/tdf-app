@@ -1,30 +1,9 @@
 import { get, post } from './client';
 
-export interface InvoiceLineDTO {
-  lineId: number;
-  description: string;
-  quantity: number;
-  unitCents: number;
-  taxBps?: number | null;
-  totalCents: number;
-  serviceOrderId?: number | null;
-  packagePurchaseId?: number | null;
-}
+import type { components } from './generated/types';
 
-export interface InvoiceDTO {
-  invId: number;
-  number?: string | null;
-  statusI: string;
-  subtotalC: number;
-  taxC: number;
-  totalC: number;
-  currency: string;
-  customerId?: number | null;
-  sriDocumentId?: string | null;
-  notes?: string | null;
-  receiptId?: number | null;
-  lineItems: InvoiceLineDTO[];
-}
+export type InvoiceLineDTO = components['schemas']['InvoiceLineDTO'];
+export type InvoiceDTO = components['schemas']['InvoiceDTO'];
 
 export interface GenerateSessionInvoiceLineInput {
   description: string;

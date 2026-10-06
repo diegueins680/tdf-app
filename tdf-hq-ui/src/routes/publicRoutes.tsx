@@ -5,6 +5,7 @@ import PublicBranding from '../components/PublicBranding';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
+const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
@@ -113,6 +114,7 @@ export function renderPublicRoutes() {
       <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
       <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />
       <Route path="/app" element={<PublicBranding><MobileAppPage /></PublicBranding>} />
+      <Route path="/cuenta/eliminar" element={<PublicBranding><AccountDeletionPage /></PublicBranding>} />
       <Route path="/feedback" element={<PublicBranding><FeedbackPage /></PublicBranding>} />
       <Route path="/privacidad" element={<PublicBranding><PublicReputationRightsPage /></PublicBranding>} />
       <Route path="/apelaciones" element={<PublicBranding><PublicReputationRightsPage view="appeal" /></PublicBranding>} />

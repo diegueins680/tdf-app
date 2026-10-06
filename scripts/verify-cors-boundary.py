@@ -28,6 +28,10 @@ def verify():
         'implicit-preview-credentials': (
             'allowPagesDevWildcard = not isProduction',
             'allowPagesDevWildcard = True', 'does not implicitly trust production origin'),
+        'deletion-trailing-slash-bypass': (
+            'filter (/= "") (pathInfo req) == ["feedback", "account-deletion"]',
+            'pathInfo req == ["feedback", "account-deletion"]',
+            'requires deletion proof at actual Servant route'),
     }
     results = []
     for name, mutation in mutations.items():
@@ -64,8 +68,8 @@ def verify():
         if (ROOT/name).read_bytes() != data:
             raise RuntimeError(f'Source changed during execution: {name}')
     return {'sourceFingerprints': {p: hashlib.sha256(b).hexdigest() for p, b in sources.items()},
-            'classification': 'finite runtime conformance with two detected implementation mutations',
-            'scope': 'CORS startup and middleware decisions; no authentication, CSRF, browser or deployment proof',
+            'classification': 'finite runtime conformance with three detected implementation mutations',
+            'scope': 'CORS startup and middleware decisions, including deletion proof and Servant route aliases; no authenticated intake, browser or deployment proof',
             'results': results}
 
 

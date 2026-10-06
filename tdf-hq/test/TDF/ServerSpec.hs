@@ -13,6 +13,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
+import Data.Pool (destroyAllResources)
 import qualified Network.HTTP.Client as NotificationHTTP
 import Network.HTTP.Types.Status (statusCode)
 import Network.Wai.Handler.Warp (testWithApplication)
@@ -737,6 +738,28 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "live database readiness" $ do
+        it "returns503 rather than success when the handler cannot acquire its database" $ do
+            let env = Env (error "PRIVATE_DATABASE_CONNECTION_DETAILS") (marketplaceTestConfig False)
+            testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                request <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> "/health")
+                response <- NotificationHTTP.httpLbs request manager
+                statusCode (NotificationHTTP.responseStatus response) `shouldBe` 503
+                lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
+                (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
+                    `shouldBe` Right (object ["status" .= ("degraded" :: Text), "db" .= ("unavailable" :: Text)])
+        it "performs a real database round trip before returning200" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                let env = Env pool (marketplaceTestConfig False)
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    request <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> "/health")
+                    response <- NotificationHTTP.httpLbs request manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 200
+                    lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
+                    (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
+                        `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
