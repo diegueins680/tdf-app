@@ -70,8 +70,13 @@ case needs operational reconciliation; it never infers ticket selection from an
 amount. [PayPal's refund API](https://developer.paypal.com/api/payments/v2/captures-refund)
 defines `custom_id` for reconciliation and `PayPal-Request-Id` for idempotency.
 
-This integration still requires official sandbox HTTP qualification and the
-protected deployment gates before production activation. Provider requests use
+Official sandbox HTTP qualification at source `a058dc0bb80dd04e3341fdbcd0df066b6732701c`
+passed two mobile-web purchases, organizer partial/full refunds, authenticated
+provider GET confirmation, signed callback replays, QR decoding and retained-ticket
+concurrent check-in. The [scoped receipt](../../docs/events/patch-culture-vol-1/ticket-refund-api-sandbox-2026-10-06.json)
+distinguishes native qualification from later display/finance corrections and
+external test-fund cleanup. Local SMTP acceptance does not prove external delivery.
+Protected integration and deployment gates remain before production activation. Provider requests use
 the original canonical refund UUID as the stable
 [PayPal idempotency key](https://developer.paypal.com/api/rest/reference/idempotency/)
 and preserve uncertain results; automatic re-POST with a new identity is forbidden.

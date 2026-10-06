@@ -1654,14 +1654,30 @@
       "reviewed": true
     },
     {
-      "id": "5b59c341636f1dda3fb4",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "id": "90b1e8dec4d34cc8da53",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this technical protocol without corresponding server, migration and test changes can invalidate financial or ticket-state integrity.",
+      "justification": "Refund status-to-Chip colors are presentation mechanics consuming the server refund status. Processing is warning and unknown status remains neutral. This map cannot authorize requests, approve refunds, modify persisted lifecycle states or execute provider operations.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-06",
+      "reviewBatch": "ticket-refund-api-2026-10-06",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
+        "line": 3
+      },
+      "previousDecision": {
+        "id": "5b59c341636f1dda3fb4",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "ca20aefd0277f69a872f",
@@ -15159,20 +15175,20 @@
       "reviewed": true
     },
     {
-      "id": "4f65a3b0dee3f3097f00",
+      "id": "c1644da6a914a88a2f1d",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
-      "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 181-entry manifest preserves canonical main 180 as an exact prefix and appends inclusive ticket tax accounting. Existing migration SQL, checksums and introduction commits are unchanged. Original main and inclusive-tax reviews are retained as historical evidence; production apply and provider verification remain separate gates.",
+      "risk": "Changing this technical protocol without corresponding server, migration and test changes can invalidate financial or ticket-state integrity.",
+      "justification": "Ordered 183-entry manifest preserves all 181 prior migration entries exactly and appends only per-ticket refund allocations and immutable legacy-request binding. Both additive SQL migrations retain their introduction commits, checksum validation, replay and used-history rollback guards. This technical deployment registry does not enable live charging.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "current-main-conformance-reconciliation-20261005",
-      "reviewMethod": "source-review-2026-10-05",
+      "reviewBatch": "ticket-refund-api-2026-10-06",
+      "reviewMethod": "source-review-2026-10-06",
       "previousDecision": {
         "id": "b9883cac0fba310236a0",
         "classification": "genuine-technical-constant",
@@ -22865,7 +22881,15 @@
             }
           }
         }
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+          "sourceDecisionId": "4f65a3b0dee3f3097f00",
+          "sourceDecisionSha256": "7e272253c0e093ce82849b96d8153389ea45593d72aa3a525957d5b5e97e0552",
+          "reason": "Full prior decision remains in this immutable Git revision; nested earlier provenance is preserved here."
+        }
+      ]
     },
     {
       "id": "0bd23196640f34d2ea12",
@@ -23053,6 +23077,38 @@
         "line": 12
       },
       "reviewBatch": "ticket-confirmation-2026-10-05"
+    },
+    {
+      "id": "0acedcade971c9b35eca",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this technical protocol without corresponding server, migration and test changes can invalidate financial or ticket-state integrity.",
+      "justification": "The two-ticket finite model initializes two refund-state slots to none. This is a deliberately bounded test fixture for reservation, execution and negative controls, not a selectable refund catalog or production source of financial authority.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-06",
+      "reviewBatch": "ticket-refund-api-2026-10-06",
+      "evidence": {
+        "file": "scripts/__tests__/ticket-admission-model.test.mjs",
+        "line": 46
+      }
+    },
+    {
+      "id": "820f41c8d8c0aa985538",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing this technical protocol without corresponding server, migration and test changes can invalidate financial or ticket-state integrity.",
+      "justification": "Reserved, completed and cancelled form the closed per-ticket allocation protocol persisted in this immutable financial audit. Database triggers, unique active allocations and transactional server operations govern transitions. User-editable catalog values would invalidate replay and inventory invariants.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-10-06",
+      "reviewBatch": "ticket-refund-api-2026-10-06",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
+        "line": 7
+      }
     }
   ]
 }

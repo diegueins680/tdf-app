@@ -594,8 +594,8 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "4f65a3b0dee3f3097f00",
-      "reason": "Ordered 181-entry manifest preserves canonical main 180 as an exact prefix and appends inclusive ticket tax accounting. Existing migration SQL, checksums and introduction commits are unchanged. Original main and inclusive-tax reviews are retained as historical evidence; production apply and provider verification remain separate gates.",
+      "replacementId": "c1644da6a914a88a2f1d",
+      "reason": "The 183-entry manifest preserves all 181 prior entries and their SQL unchanged, appending only refund allocations and immutable request bindings. Historical decisions remain preserved; separate production deployment gates remain required.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
         "mainRevision": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
@@ -14258,7 +14258,16 @@
             }
           }
         }
-      }
+      },
+      "subsequentResolutions": [
+        {
+          "previousReplacementId": "4f65a3b0dee3f3097f00",
+          "previousReason": "Ordered 181-entry manifest preserves canonical main 180 as an exact prefix and appends inclusive ticket tax accounting. Existing migration SQL, checksums and introduction commits are unchanged. Original main and inclusive-tax reviews are retained as historical evidence; production apply and provider verification remain separate gates.",
+          "sourceCommit": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+          "replacementId": "c1644da6a914a88a2f1d",
+          "valueCount": 183
+        }
+      ]
     }
   ]
 }

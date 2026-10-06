@@ -263,12 +263,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "4f65a3b0dee3f3097f00",
+      "currentId": "c1644da6a914a88a2f1d",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 181,
-      "change": "Ordered 181-entry manifest preserves canonical main 180 as an exact prefix and appends inclusive ticket tax accounting. Existing migration SQL, checksums and introduction commits are unchanged. Original main and inclusive-tax reviews are retained as historical evidence; production apply and provider verification remain separate gates.",
+      "valueCount": 183,
+      "change": "Ordered 183-entry manifest retains every earlier 181 entry unchanged and appends per-ticket refund allocation and immutable legacy-request binding. Migration replay and used-history rollback guards passed; production activation remains separately gated.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "b9883cac0fba310236a0",
@@ -6013,7 +6013,15 @@
           },
           "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
         }
-      }
+      },
+      "subsequentResolutions": [
+        {
+          "sourceRevision": "8aa554edf845be7d32a9acfe4301b6b7d903932f",
+          "previousCurrentId": "4f65a3b0dee3f3097f00",
+          "previousValueCount": 181,
+          "previousChange": "Ordered 181-entry manifest preserves canonical main 180 as an exact prefix and appends inclusive ticket tax accounting. Existing migration SQL, checksums and introduction commits are unchanged. Original main and inclusive-tax reviews are retained as historical evidence; production apply and provider verification remain separate gates."
+        }
+      ]
     }
   ]
 }
