@@ -2407,7 +2407,7 @@
     {
       "id": "SURFACE-9258b3c42ab418b4",
       "path": "e2e/web/account-deletion.spec.mjs",
-      "sha256": "b53299de10421c77b2364ad9df6d82f689b30056826e0aceddda1624e2aa64c3",
+      "sha256": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7165,7 +7165,7 @@
     {
       "id": "SURFACE-c46fe8f1aff9a4d8",
       "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
-      "sha256": "4abc6d97de8ceb0867f1c88909b5cec550ec5a42d0b3539a5873abc6ea87d2ab",
+      "sha256": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
