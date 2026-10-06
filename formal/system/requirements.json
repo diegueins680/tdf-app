@@ -12,7 +12,7 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted. The mapped PostgreSQL identity runners exercise applicable writer protections and reject destructive rollback after retained bindings or request receipts exist; they do not execute a production recovery.",
       "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -49,7 +49,15 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/test-provider-identity.sh",
+        "scripts/test-live-intake-identity.sh",
+        "scripts/test-course-identity.sh",
+        "scripts/test-trial-identity.sh",
+        "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/TrialIdentitySpec.hs"
       ],
       "formalModels": [
         "formal/event-operations/ProviderRollback.tla"
@@ -3317,7 +3325,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",

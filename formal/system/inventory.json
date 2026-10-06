@@ -22579,7 +22579,7 @@
     },
     {
       "path": "formal/system/identity-recovery.md",
-      "sha256": "08ddf5bbeb66849b8383db3df14429d0ea43d8e3d193b25c6d81f0991cddfeea",
+      "sha256": "8b9da08e664f2500dbbb4e48dae1c29f740a3ce007efa54748f65ab1f6bd0b90",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22747,7 +22747,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3dd03674f779b88bcff958574e84423e4e71548b5186b1443eb2d6c9eea7550a",
+      "sha256": "75936d9a7e7140811daf09a136abc1048702ef318928f0d21db1d8d8e06711a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
