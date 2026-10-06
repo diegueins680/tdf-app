@@ -33,6 +33,8 @@ const de = {
     fixedOff: '{{value}} Rabatt', usesRemaining_one: '{{count}} Verwendung verbleibend', usesRemaining_other: '{{count}} Verwendungen verbleibend',
   },
   refunds: {
+    actionError: 'Der Vorgang konnte nicht bestätigt werden. Aktualisiere den Status, bevor du es erneut versuchst.',
+    checkStatus: 'Zahlungsstatus prüfen',
     loading: 'Erstattungsanträge werden geladen', loadError: 'Erstattungsanträge konnten nicht geladen werden.',
     pendingSummary_one: '{{count}} Erstattungsantrag wartet auf Genehmigung',
     pendingSummary_other: '{{count}} Erstattungsanträge warten auf Genehmigung', itemLabel: 'Erstattungen',
@@ -41,7 +43,7 @@ const de = {
     confirmApproval: 'Erstattung über {{amount}} genehmigen?', rejectDialogTitle: 'Erstattungsantrag ablehnen',
     rejectionReason: 'Ablehnungsgrund', rejectionPlaceholder: 'Erklären Sie, warum dieser Erstattungsantrag abgelehnt wird…',
     cancel: 'Abbrechen', rejectRefund: 'Erstattung ablehnen',
-    statuses: { pending: 'Ausstehend', approved: 'Genehmigt', rejected: 'Abgelehnt', processed: 'Verarbeitet' },
+    statuses: { processing: 'In Bearbeitung beim Zahlungsanbieter', pending: 'Ausstehend', approved: 'Genehmigt', rejected: 'Abgelehnt', processed: 'Verarbeitet' },
   },
   artistFans: {
     loading: 'Fans werden geladen…', loadError: 'Fans konnten nicht geladen werden.',

@@ -28,6 +28,7 @@ module TDF.Commerce.ProviderEventStore
   , placeToPayNotificationEventId
   ) where
 
+import qualified Data.UUID as UUID
 import           Control.Applicative ((<|>))
 import           Control.Monad (unless, when)
 import           Control.Monad.IO.Class (liftIO)
@@ -375,7 +376,13 @@ paypalEvidence = A.withObject "PayPal evidence" $ \envelope -> do
                 pure (KM.singleton "links" (A.toJSON retained))
               _ -> pure KM.empty
             else pure KM.empty
-          pure (Object (identifier <> status <> amount <> payee <> supplementary <> captureLinks))
+          -- Only our opaque canonical refund UUID is retained; arbitrary custom
+          -- values can contain personal information and are not needed for binding.
+          let refundCorrelation = case (eventType, KM.lookup "custom_id" fields) of
+                ("PAYMENT.CAPTURE.REFUNDED", Just (String value))
+                  | Just parsed <- UUID.fromText value -> KM.singleton "custom_id" (String (UUID.toText parsed))
+                _ -> KM.empty
+          pure (Object (identifier <> status <> amount <> payee <> supplementary <> captureLinks <> refundCorrelation))
         else pure (Object identifier)
     _ -> pure (Object KM.empty) -- Unsupported event resources are never interpreted.
   pure $ A.object

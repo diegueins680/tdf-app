@@ -63,13 +63,14 @@ parseRefundQuery binding value = do
         unless (currency == rqbCurrency binding) (fail "currency")
         maybe (fail "amount") pure (parseMinor decimal))
       links <- obj .: "links" :: Parser [Value]
+      unless (length links <= 32) (fail "too many links")
       parsedLinks <- mapM (A.withObject "link" $ \link ->
         (,,) <$> link .: "rel" <*> link .: "method" <*> link .: "href") links
       let upstream = [ (method, href) | (rel, method, href) <- parsedLinks, rel == ("up" :: Text) ]
           self = [ (method, href) | (rel, method, href) <- parsedLinks, rel == ("self" :: Text) ]
       unless (refundId == rqbRefundId binding && amount == rqbAmountMinor binding
-        && upstream == [("GET" :: Text, captureUrl binding)]
-        && self == [("GET" :: Text, refundUrl binding)]) (fail "binding")
+        && exactEvidenceLink binding ("captures/" <> rqbCaptureId binding) upstream
+        && exactEvidenceLink binding ("refunds/" <> rqbRefundId binding) self) (fail "binding")
       -- Some represented responses include the refund payer (the merchant).
       -- Its absence is allowed by the official schema; any provided ID must match.
       payer <- obj .:? "payer" :: Parser (Maybe Value)
@@ -95,8 +96,17 @@ baseUrl binding = case rqbEnvironment binding of
 refundUrl :: RefundQueryBinding -> Text
 refundUrl binding = baseUrl binding <> "/v2/payments/refunds/" <> rqbRefundId binding
 
-captureUrl :: RefundQueryBinding -> Text
-captureUrl binding = baseUrl binding <> "/v2/payments/captures/" <> rqbCaptureId binding
+-- Official represented refunds use api.paypal.com/api.sandbox.paypal.com
+-- even when queried through api-m. Compare exact environment-bound references;
+-- never fetch these links or broaden the outbound request allowlist.
+exactEvidenceLink :: RefundQueryBinding -> Text -> [(Text,Text)] -> Bool
+exactEvidenceLink binding path links = case links of
+  [("GET",href)] -> href `elem`
+    [baseUrl binding <> "/v2/payments/" <> path, alias <> "/v2/payments/" <> path]
+  _ -> False
+  where alias = case rqbEnvironment binding of
+          CheckoutSandbox -> "https://api.sandbox.paypal.com"
+          CheckoutProduction -> "https://api.paypal.com"
 
 -- PayPal money is a decimal string. Bound work and reject rounding, signs,
 -- exponents, whitespace and fractions of a cent; Integer prevents overflow.

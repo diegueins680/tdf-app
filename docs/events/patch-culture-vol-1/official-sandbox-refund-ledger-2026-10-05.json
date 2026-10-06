@@ -1,0 +1,33 @@
+{
+  "checkoutStatus": "refunded",
+  "refundedMinor": 4000,
+  "refundStatus": "succeeded",
+  "creditNoteCount": 1,
+  "journalBalance": 0,
+  "refundEntries": [
+    {
+      "account": "liability.event_organizer_payable",
+      "amountMinor": 4000
+    },
+    {
+      "account": "cash.paypal",
+      "amountMinor": -4000
+    }
+  ],
+  "legacyOrderStatus": "paid",
+  "runtimePaymentStatus": "refunded",
+  "recordedAt": "2026-10-06T00:20:49.763295+00:00",
+  "environment": "official sandbox refund evidence applied to isolated canonical TDF refund store",
+  "providerRefundReadback": "COMPLETED; amount, currency, merchant and capture binding verified by PayPalRefund adapter",
+  "completionReplayMutated": false,
+  "sourceSha256": {
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": "6bb478f115348bd71fb5ddd7ba7dc544348c833aaab87c59cc37db52d24e2697",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac"
+  },
+  "scope": "Direct canonical store integration; synthetic requester and distinct approver in isolated database. Not an end-to-end organizer refund endpoint.",
+  "limitations": [
+    "Legacy ticket-order status remains paid; per-ticket allocation, admission reservation before provider call and organizer refund endpoint still require integration.",
+    "Credit note is an internal record; no SRI electronic submission is claimed.",
+    "No production data, funds, deployment or sales activation changed."
+  ]
+}

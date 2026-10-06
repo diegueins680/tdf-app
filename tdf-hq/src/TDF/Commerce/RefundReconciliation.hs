@@ -7,6 +7,7 @@ module TDF.Commerce.RefundReconciliation
   ( RefundRecoveryError(..)
   , RefundRecoveryView(..)
   , readRefundRecovery
+  , queryReady
   , reconcileKnownRefund
   ) where
 
@@ -24,6 +25,7 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import TDF.Commerce.ProviderAdapter.PayPalRefund
 import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Ticketing.Refund as TicketRefund
 
 data RefundRecoveryError
   = RefundRecoveryNotFound | RefundRecoveryUnavailable | RefundRecoveryConflict
@@ -122,7 +124,7 @@ reconcileKnownRefund pool ref actor configured query
                     audit record actor correlation "held"
                     pure (Right (RefundRecoveryView record True "held" (Just now)))
                 | otherwise -> do
-                    completed <- Refund.recordVerifiedRefund Refund.VerifiedRefund
+                    completed <- completeDomainRefund Refund.VerifiedRefund
                       { Refund.vrRefund = ref, Refund.vrProviderRefund = rqbRefundId binding
                       , Refund.vrAmountMinor = rqbAmountMinor binding
                       , Refund.vrCurrency = rqbCurrency binding, Refund.vrOccurredAt = now
@@ -152,7 +154,7 @@ loadTarget ref = do
         \ JOIN commerce_payment_attempt attempt ON attempt.id=binding.payment_attempt_id\
         \ JOIN commerce_checkout_session checkout ON checkout.id=attempt.checkout_id\
         \ WHERE checkout.id=?::uuid AND attempt.id=?::uuid\
-        \ AND checkout.domain_type='mixing_mastering' AND attempt.status='succeeded'\
+        \ AND checkout.domain_type IN ('mixing_mastering','event_ticket_order') AND attempt.status='succeeded'\
         \ AND binding.resource_type='capture' AND binding.provider='paypal'\
         \ AND binding.provider=attempt.provider AND binding.environment=attempt.environment\
         \ AND binding.merchant_account_ref=attempt.merchant_account_ref\
@@ -210,9 +212,28 @@ queryReady binding = do
 
 lockRefund :: Refund.RefundReference -> SqlPersistT IO ()
 lockRefund ref = do
+  orders <- rawSql
+    "SELECT runtime.order_id FROM event_ticket_checkout_runtime runtime\
+    \ JOIN commerce_refund refund ON refund.checkout_id=runtime.checkout_id WHERE refund.id=?::uuid AND runtime.order_id IS NOT NULL"
+    [PersistText (Refund.refundReferenceId ref)]
+  case orders of
+    [] -> pure ()
+    [Single key] -> TicketRefund.withOrder key (\_ _ _ -> pure ())
+    _ -> fail "Refund ticket binding is ambiguous"
   _ <- rawSql "SELECT id::text FROM commerce_refund WHERE id=?::uuid FOR UPDATE"
     [PersistText (Refund.refundReferenceId ref)] :: SqlPersistT IO [Single Text]
   pure ()
+
+completeDomainRefund :: Refund.VerifiedRefund -> SqlPersistT IO (Either Text Bool)
+completeDomainRefund verified = do
+  domains <- rawSql
+    "SELECT checkout.domain_type FROM commerce_checkout_session checkout\
+    \ JOIN commerce_refund refund ON refund.checkout_id=checkout.id WHERE refund.id=?::uuid"
+    [PersistText (Refund.refundReferenceId (Refund.vrRefund verified))] :: SqlPersistT IO [Single Text]
+  case domains of
+    [Single "event_ticket_order"] -> Right <$> TicketRefund.completeTicketRefund verified
+    [Single "mixing_mastering"] -> Refund.recordVerifiedRefund verified
+    _ -> pure (Left "Unsupported refund domain")
 
 audit :: Refund.RefundRecord -> Int64 -> Text -> Text -> SqlPersistT IO ()
 audit record actor correlation outcome = rawExecute

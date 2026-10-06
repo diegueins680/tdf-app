@@ -39,6 +39,7 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
 import { canonicalEventUrl, safePublicImageUrl } from '../utils/eventSharing';
 import { useAnalytics } from '../analytics/useAnalytics';
+import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
 
 type DetailKind = Exclude<DirectoryEntityType, never>;
@@ -65,6 +66,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const location = useLocation();
   const { session } = useSession();
   const analytics = useAnalytics();
+  const trackFunnel = useTicketFunnel();
   const trackedEventView = useRef<string | null>(null);
   const identifier = params['slug'] ?? params['eventId'] ?? params['venueId'] ?? '';
   const detail = useQuery({
@@ -127,6 +129,10 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       source,
     });
   }, [analytics, detail.isError, detail.isLoading, identifier, kind, location.search]);
+
+  useEffect(() => {
+    if (kind === 'event' && detail.data && !detail.isError) trackFunnel('event_view', { eventId: Number(identifier) });
+  }, [detail.data, detail.isError, identifier, kind, trackFunnel]);
 
   useMetaTags({
     title,

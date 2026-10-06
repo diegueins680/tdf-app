@@ -37,6 +37,7 @@ import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { env } from '../utils/env';
+import { useTicketFunnel } from '../analytics/useTicketFunnel';
 
 const makeIdempotencyKey = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -79,6 +80,7 @@ export default function PublicEventTicketsPage() {
   const validOrderId = routeOrderId == null
     || (Number.isSafeInteger(routeOrderId) && routeOrderId > 0);
   const location = useLocation();
+  const trackFunnel = useTicketFunnel();
   const navigate = useNavigate();
   const { locale, timezone } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
@@ -124,6 +126,25 @@ export default function PublicEventTicketsPage() {
     const firstTier = storefront.data?.tiers[0];
     if (firstTier) setTierId(String(firstTier.tierId));
   }, [storefront.data?.tiers, tierId]);
+
+  useEffect(() => {
+    const selected = storefront.data?.tiers.find((tier) => String(tier.tierId) === tierId);
+    const count = Number(quantity);
+    if (routeOrderId != null || checkout || !storefront.data?.checkoutAvailable || !selected || !Number.isSafeInteger(count)
+        || count < 1 || count > selected.remaining || count > (storefront.data.policy?.maxTicketsPerOrder ?? 100)) return;
+    trackFunnel('ticket_selected', { eventId, tierId: selected.tierId, quantity: count });
+  }, [checkout, eventId, quantity, routeOrderId, storefront.data, tierId, trackFunnel]);
+
+  useEffect(() => {
+    if (checkout?.paymentStatus !== 'paid') return;
+    const observation = { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+      privateScope: `order:${checkout.orderId}` };
+    trackFunnel('payment_completed', observation);
+    if (checkout.fulfillmentStatus === 'issued' && checkout.tickets.some((ticket) => ticket.status === 'issued')) {
+      trackFunnel('ticket_issued', observation);
+      trackFunnel('ticket_opened', observation);
+    }
+  }, [checkout, trackFunnel]);
 
   const checkoutLookupToken = useMemo(() => {
     if (!checkout) return null;
@@ -216,6 +237,8 @@ export default function PublicEventTicketsPage() {
     if (idempotency.current?.fingerprint !== fingerprint) {
       idempotency.current = { fingerprint, key: makeIdempotencyKey() };
     }
+    trackFunnel('checkout_started', { eventId, tierId: selectedTierId, quantity: selectedQuantity,
+      hasPromotion: Boolean(promoCode.trim()), privateScope: idempotency.current.key });
     setSubmitting(true);
     setMessage(null);
     try {
@@ -247,6 +270,8 @@ export default function PublicEventTicketsPage() {
         checkout.orderId,
         checkoutLookupToken,
       );
+      trackFunnel('payment_initiated', { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+        provider: 'datafast', privateScope: `order:${checkout.orderId}` });
       setDatafastCheckout(provider);
       setDatafastOpen(true);
       setDatafastWidgetKey((current) => current + 1);
@@ -269,6 +294,8 @@ export default function PublicEventTicketsPage() {
         checkout.orderId,
         checkoutLookupToken,
       );
+      trackFunnel('payment_initiated', { eventId: checkout.eventId, quantity: checkout.quote.quantity,
+        provider: 'paypal', privateScope: `order:${checkout.orderId}` });
       setPaypalOrderId(provider.pcPaypalOrderId);
       setPaypalOpen(true);
     } catch {
@@ -507,6 +534,12 @@ export default function PublicEventTicketsPage() {
                           english={english}
                           initialBuyerPhone={buyerPhone}
                           onSafetyLockChange={setHostedPaymentLocked}
+                          onSessionChange={(session) => {
+                            if (session.state === 'prepared' || session.state === 'failed' || session.state === 'confirmed_no_charge') return;
+                            trackFunnel('payment_initiated', { eventId: checkout.eventId,
+                              quantity: checkout.quote.quantity, provider: session.provider,
+                              privateScope: `order:${checkout.orderId}` });
+                          }}
                           onPaymentConfirmed={async () => {
                             setCheckout(await EventTickets.getCheckout(
                               checkout.eventId,

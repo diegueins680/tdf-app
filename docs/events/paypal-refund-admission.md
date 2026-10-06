@@ -85,3 +85,41 @@ four fee/tax combinations; 16 checkout component tests; UI typecheck and targete
 lint. The 15% tax scenario is synthetic and does not approve the event's fiscal
 classification. Native device checkout, production rollout and production payments
 remain outside this evidence.
+
+## Ticket refund financial components
+
+The canonical refund store now reverses ticket organizer payable, platform fees
+and collected tax against the original posted capture, instead of treating the
+whole amount as service-storefront revenue. A partial refund allocates cumulative
+tax first, then fees from the remaining amount; the organizer receives the
+remainder. Integer intermediates avoid overflow, zero entries are omitted, and
+full repayment reverses every original component exactly. This is accounting
+allocation from the immutable checkout, not a new tax classification.
+
+Original capture components and prior posted refunds must agree with the checkout
+snapshot. A mismatch raises inside the caller-owned transaction and rolls back
+the intent, refund, receipt and journal together. Four fee/tax combinations are
+exercised through real PostgreSQL partial refunds, concurrent completion replays
+and a changed-snapshot denial. Arithmetic properties include Int64 boundaries
+and exhaustive partitions for totals through twelve minor units.
+
+This financial primitive alone does not enable ticket refunds or live sales.
+The authorized request/approval route still needs per-ticket allocation, admission
+reservation, provider execution/recovery and order projection integration. The
+existing external-refund admission fence remains in force. The existing internal
+credit-note record is not proof of an SRI electronic credit-note submission.
+
+Design references: [PayPal refunds](https://developer.paypal.com/api/payments/v2)
+and [idempotency](https://developer.paypal.com/api/rest/reference/idempotency/).
+Provider outcomes must retain the original execution identity; a timeout does not
+authorize a new refund request.
+
+The [subsequent isolated financial check](patch-culture-vol-1/official-sandbox-refund-ledger-2026-10-05.json)
+applied authenticated official USD40 refund evidence to the canonical store:
+checkout/runtime became refunded, one internal credit note was recorded, the
+refund journal balanced to zero and replay made no second mutation. It also
+exposed the provider's official `api.sandbox.paypal.com` response links. The
+adapter accepts only exact api/api-m references for the bound environment;
+outbound queries stay pinned and response links are never followed.
+The legacy ticket-order projection and organizer refund endpoint remain outside
+this direct-store check. Production sales stay disabled.
