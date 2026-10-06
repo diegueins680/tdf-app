@@ -45,6 +45,30 @@ there is no stop/start repair cycle. PostgreSQL may modify its existing files du
 crash recovery and resumed application writes. No physical byte equality, continuous
 maintenance or whole-deployment recovery is claimed.
 
+## Original API recovery
+
+`ops/hetzner/original-application-recovery.py` continues only after the database
+stage. It re-admits the same original runtime, restore reservation and database
+identity/history, records the API-stage intent, then starts only a stopped exact
+original API container. Already-running originals receive no start. Lost responses
+and failed observations remain uncertain and cannot replay in the same epoch.
+
+The fixed probes execute host Python in a held network-namespace descriptor for
+the admitted API task, with matching container cgroup, pidfd liveness and closing
+PID/start-time/configuration checks. HTTP goes only to loopback port8080, without
+proxy use or redirect following. The probe interface permits `/health`, `/version`,
+`/rooms/public` and anonymous `/bookings` only, with bounded response reads. Room
+names/IDs and booking response bodies are never emitted. Version identity must
+match the saved SOURCE_COMMIT/GIT_SHA and compatible metadata aliases. The public
+room DTO must be valid and anonymous bookings must return401.
+
+This design accounts for the deployed645f backend: its `/health` implementation
+returns constant success; `roomsPublicServer` actually queries the database.
+Therefore health alone never qualifies recovery. The public database-backed read
+and independent system-ID/migration checks are mandatory. This remains a scoped
+availability/security smoke boundary, not complete endpoint conformance or proof
+of all application authorization. Edge routing/TLS are a separate unfinished stage.
+
 ## Executable evidence and limits
 
 Portable tests use actual journal files and locks with synthetic Docker, SQL and
@@ -52,11 +76,22 @@ boot observations. They cover stage ordering, same-boot replay denial, recorded
 subsequent epochs, observation binding, publication failure, unchanged SQL identity,
 no duplicate start for a running database and shared restore exclusion.
 
+Portable API controls also reject wrong revision, changed ledger, missing public
+database readiness, an anonymously successful booking response, conflicting version
+metadata, redirect/malformed/oversized bodies and response-data leakage.
+
 The owned Linux writer-fence fixture enables the additional database component
 check only with `TDF_TEST_ORIGINAL_DB_RECOVERY=1`. It force-kills a real PG17 cluster,
 checks missing/empty/symlink/wrong-major markers, requires denial before actual start,
 then recovers the same cluster and committed sentinel after a second recorded
-**synthetic** boot epoch. Its API and edge workloads are inert. The separate
+**synthetic** boot epoch. Its default API and edge workloads are inert. Explicit
+`TDF_TEST_ORIGINAL_APPLICATION_RECOVERY=1` instead provisions a new synthetic schema,
+persistent uploads and real immutable backend image on internal-only Docker
+networks, with selected optional workers disabled and synthetic credentials.
+Other existing workers can run against that synthetic database; this fixture does
+not claim universal worker suspension. It tests the real API
+recovery adapter and namespace probes; edge remains inert and boot epochs remain
+synthetic. The separate
 `test-interrupted-release-recovery-linux.py` checks an actual owned-host reboot;
 combining these results is not an end-to-end coordinator proof.
 
@@ -70,7 +105,17 @@ must fail named invariants: same-boot epoch, absent durable intent, replay, miss
 cluster initialization and unbound observation. The model does not refine Python,
 fsync, Docker, kernel boot behavior, PostgreSQL recovery/checksums or HTTP readiness.
 
-The original API/edge start and readiness adapters, identity-bound disposable
+The real immutable backend component experiment also observed Docker's60-second
+SIGTERM stop ending in exit137. Capture correctly rejected this state; the fixture
+then exercised original database/API abort recovery instead of labelling it clean.
+Boot currently does not install an explicit Warp shutdown handler. A candidate
+shutdown repair must supervise startup, prevent readiness/worker publication after
+stop, preserve startup failure, and distinguish successful HTTP drainage from an
+expired shutdown deadline. It cannot retroactively repair the old image's first
+stop. This is an open release-design limitation; no forced stop is qualified as a
+clean capture by these results.
+
+The original edge start and routing adapter, identity-bound disposable
 cleanup, timer restoration, full coordinator, operational key custody and terminal
 recovery receipt remain unfinished. Do not use this library alone to stop or reboot
 production. The aggregate requirement remains PARTIAL.

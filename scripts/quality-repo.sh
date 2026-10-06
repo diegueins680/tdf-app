@@ -47,6 +47,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-interrupted-release-recove
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-deployment-admission.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-abort-service-journal.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-database-recovery.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-application-recovery.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-tools.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-envelope.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-transfer.py"

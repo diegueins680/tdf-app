@@ -6,6 +6,7 @@ canonical production directory, networks, volumes or TDF units. Never invoke on
 production. API and edge use inert shell workloads; PostgreSQL is real PG17.
 """
 import hashlib
+from contextlib import nullcontext
 import importlib.util
 import json
 import os
@@ -68,7 +69,7 @@ def preserve_owned_directory(directory, destination, owned):
     directory.rename(destination)
 
 
-def exercise_database_recovery(archive, saved, db):
+def exercise_database_recovery(archive, saved, db, actual_application=False):
     """Real PostgreSQL/Docker/files; synthetic boot epoch, explicitly no reboot."""
     recovery=load('linux_original_db_recovery','original-database-recovery.py')
     service=load('linux_original_db_journal','abort-service-journal.py')
@@ -143,6 +144,15 @@ def exercise_database_recovery(archive, saved, db):
             try:adapter.recover()
             except ValueError:denied=True
             require(denied)
+            if actual_application:
+                application=load('linux_original_application','original-application-recovery.py')
+                # Same real lock descriptor; each independently loaded library
+                # owns its own typed wrapper, never a separate lock acquisition.
+                app_reservation=application.d.Reservation(reservation.directory,reservation.descriptor)
+                app_adapter=application.OriginalApplication(journal,archive,app_reservation)
+                app_status=app_adapter.recover()
+                require(app_status['completedStages']==['remove-disposables','recover-db','recover-api'])
+                require(application.probe(saved['originalDeployment'],'/rooms/public')['valid'])
     require(run(DOCKER+['exec',db,'psql','-X','-qAt','-U','postgres','-d','tdf_hq','-c',
                 'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
     require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
@@ -150,7 +160,7 @@ def exercise_database_recovery(archive, saved, db):
             'missingClusterControls':rejected,'sameEpochDuplicateDenied':True,'missingClusterDeniedBeforeActualStart':True,
             'secondRecordedSyntheticEpochRequired':True,
             'bootEpoch':'synthetic; no actual reboot in this component fixture',
-            'actualServiceAdapter':'original database only; API/edge remain inert and stopped'}
+            'actualServiceAdapter':'original database and real backend' if actual_application else 'original database only; API/edge remain inert and stopped'}
 
 
 def main():
@@ -179,6 +189,9 @@ def main():
     for name in w.UNITS:
         require(not os.path.lexists(w.DIRECTORY/name))
     require(Path('/opt/tdf').is_dir())
+    actual_application=os.environ.get('TDF_TEST_ORIGINAL_APPLICATION_RECOVERY')=='1'
+    if actual_application:require(os.environ.get('TDF_TEST_ORIGINAL_DB_RECOVERY')=='1')
+    app_environment={}
     nonce = os.urandom(16).hex()
     archive = Path('/opt/tdf')/('synthetic-fence-'+nonce)
     archive.mkdir(mode=0o700)
@@ -194,6 +207,9 @@ def main():
         created = DIRECTORY.lstat()
         owned_production = (created.st_dev, created.st_ino)
         (DIRECTORY/'assets').mkdir(mode=0o700)
+        if actual_application:
+            os.chown(DIRECTORY/'assets',1000,1000)
+            (DIRECTORY/'uploads').mkdir(mode=0o700);os.chown(DIRECTORY/'uploads',1000,1000)
         exclusive_file(DIRECTORY/'postgres_password', 'synthetic-fixture-only\n')
         exclusive_file(DIRECTORY/'Caddyfile', '# Inert fixture; not an actual edge configuration\n')
         exclusive_file(DIRECTORY/'compose.yaml', '# Synthetic Docker inventory only\n')
@@ -212,11 +228,20 @@ def main():
                 '--label', 'com.docker.compose.project.config_files='+str(DIRECTORY/'compose.yaml'),
                 '--restart=unless-stopped', '--network', networks[1 if service == 'edge' else 0],
                 '--memory=268435456', '--memory-swap=268435456', '--cpus=0.5', '--pids-limit=64']
+            if actual_application and service=='api':
+                command[command.index('--memory=268435456')]='--memory=536870912'
+                command[command.index('--memory-swap=268435456')]='--memory-swap=536870912'
+                command[command.index('--pids-limit=64')]='--pids-limit=128'
             if service == 'db':
                 command += ['--mount', 'type=volume,source='+volumes[0]+',target=/var/lib/postgresql/data',
                     '--mount', 'type=bind,source='+str(DIRECTORY/'postgres_password')+',target=/run/secrets/postgres_password,readonly',
                     '--env', 'POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password', '--env', 'POSTGRES_DB=tdf_hq',
                     '--env', 'POSTGRES_INITDB_ARGS=--encoding=UTF8', reference]
+            elif actual_application and service=='api':
+                command += ['--user=1000:1000','--mount','type=bind,source='+str(DIRECTORY/'assets')+',target=/data/assets',
+                            '--mount','type=bind,source='+str(DIRECTORY/'uploads')+',target=/app/uploads']
+                for key,value in app_environment.items():command += ['--env',key+'='+value]
+                command += [reference]
             else:
                 command += ['--user=0:0', '--entrypoint=/bin/sh', '--stop-signal=SIGTERM']
                 if service == 'api':
@@ -235,6 +260,19 @@ def main():
             created_containers[service] = target
             if service == 'api': run(DOCKER+['network', 'connect', networks[1], target])
             run(DOCKER+['start', target])
+            if actual_application and service=='db':
+                run(DOCKER+['exec',target,'sh','-c',
+                    'for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do pg_isready -h 127.0.0.1 -U postgres -d tdf_hq && exit 0; sleep 1; done; exit 1'])
+                def fixture_sql(text):
+                    out=subprocess.run(DOCKER+['exec','-i',target,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres','-d','tdf_hq'],input=text,text=True,capture_output=True,timeout=180)
+                    if out.returncode:print('Owned synthetic SQL failure: '+out.stderr[-4096:],file=sys.stderr)
+                    require(out.returncode==0);return out.stdout.strip()
+                for name in ('production-schema-20260814.sql','catalog-production-source-fixture.sql'):
+                    fixture_sql((ROOT/'scripts/__tests__/fixtures'/name).read_text())
+                fixture_sql((ROOT/'synthetic-fixture-migrations.sql').read_text())
+                canary=load('linux_fixture_canary','isolated-application-canary.py')
+                app_environment={**canary.ENVIRONMENT,'DB_HOST':inspect(target)['Name'].removeprefix('/'),'DB_PASS':'synthetic-fixture-only','OPERATIONS_WORKER_ENABLED':'false',
+                    **canary.regional_environment(json.loads(fixture_sql(canary.REGIONAL_SQL)))}
         db = created_containers['db']
         for _ in range(60):
             probe = subprocess.run(DOCKER+['exec', db, 'pg_isready', '-U', 'postgres', '-d', 'tdf_hq'],
@@ -249,8 +287,21 @@ def main():
         system_id = run(DOCKER+['exec', db, 'psql', '-X', '-qAt', '-U', 'postgres', '-d', 'tdf_hq',
                                   '-c', 'SELECT system_identifier FROM pg_control_system();'])
         run(DOCKER+['exec', db, 'psql', '-X', '-qAt', '-U', 'postgres', '-d', 'tdf_hq', '-c',
-            'CREATE TABLE public.tdf_schema_migration (migration_id text PRIMARY KEY, checksum text NOT NULL, source_commit text NOT NULL)'])
+            'CREATE TABLE IF NOT EXISTS public.tdf_schema_migration (migration_id text PRIMARY KEY, checksum text NOT NULL, source_commit text NOT NULL)'])
         for service in ('api', 'edge'):
+            if actual_application and service=='api':
+                application=load('linux_application_probe','original-application-recovery.py')
+                row=inspect(created_containers['api'])
+                probe_saved={'expected':{'api':{'containerId':row['Id']}},'containers':{'api':{key:(sorted(row[key],key=lambda m:m['Destination']) if key=='Mounts' else row[key]) for key in ('Id','Image','Config','HostConfig','Mounts')}}}
+                for _ in range(90):
+                    try:ready=application.probe(probe_saved,'/health')['valid']
+                    except ValueError:ready=False
+                    if ready:break
+                    time.sleep(0.5)
+                if not ready:print(run(DOCKER+['logs','--tail','35',row['Id']]),file=sys.stderr)
+                require(ready)
+                run(DOCKER+['exec',row['Id'],'sh','-c','mkdir -p /app/uploads; printf synthetic-upload > /app/uploads/sentinel; chmod 600 /app/uploads/sentinel'])
+                continue
             run(DOCKER+['exec', created_containers[service], 'sh', '-c',
                 'for n in 1 2 3 4 5; do test -f /tmp/ready && exit 0; sleep 1; done; exit 1'])
         for name, content in ((w.SERVICE, SERVICE), (w.TIMER, TIMER)):
@@ -267,9 +318,9 @@ def main():
         plan = {key: ('sha256:'+'1'*64 if key.endswith('Image') else '1'*(40 if key.endswith('Revision') else 64))
                 for key in j.PLAN_KEYS}
         plan['runtimeHash'] = admitted['runtimeConfigurationSha256']
-        source = s.RetainedRoot(**dict(target=expected['api']['containerId'],
+        source = None if actual_application else s.RetainedRoot(**dict(target=expected['api']['containerId'],
             image=expected['api']['image'], image_id=expected['api']['imageId']))
-        with j.open_journal(str(archive/'journal')) as journal, source.pinned():
+        with j.open_journal(str(archive/'journal')) as journal, (source.pinned() if source else nullcontext()):
             journal.initialize(plan, nonce)
             # Docker's source string stays unchanged when its host path is
             # replaced. The live mount still references the original directory.
@@ -285,31 +336,43 @@ def main():
             original_admission = a.prepare(journal, archive, expected, hashes)
             saved = a.read_prepared(archive, nonce, journal.records()[0]['planHash'])
             require(saved['originalDeployment']['database']['systemIdentifier'] == system_id
-                    and saved['originalDeployment']['database']['migrations'] == []
+                    and (actual_application or saved['originalDeployment']['database']['migrations'] == [])
                     and set(saved['originalDeployment']['containers']) == {'api', 'db', 'edge'})
             fence = w.WriterFence(journal, expected, admitted['runtimeConfigurationSha256'], hashes, source)
-            fence.maintenance(); fence.stop_writers(); fence.stop_database()
-            require(fence.observe()['sources']['dockerWritersStopped'])
-            require(journal.status()['completedStages'] == list(j.STAGES[:3]))
-            captured = source.capture_uploads(str(archive/'uploads.tar'))
+            fence.maintenance()
+            unclean_api_rejected=False
+            try:fence.stop_writers()
+            except ValueError:
+                state=inspect(expected['api']['containerId'])['State']
+                require(actual_application and state['Running'] is False and state['ExitCode']==137
+                        and state['OOMKilled'] is False and journal.status()['pendingStage']=='stop-writers')
+                unclean_api_rejected=True
+            if not unclean_api_rejected:
+                fence.stop_database()
+                require(fence.observe()['sources']['dockerWritersStopped'])
+                require(journal.status()['completedStages'] == list(j.STAGES[:3]))
+            else:
+                require(journal.status()['completedStages']==['maintenance'] and inspect(db)['State']['Running'])
+            captured = source.capture_uploads(str(archive/'uploads.tar')) if source else {
+                'presence':'present','manifest':s.files.capture(str(DIRECTORY/'uploads'),str(archive/'uploads.tar'))}
             require(captured['presence'] == 'present')
             s.files.restore(str(archive/'uploads.tar'), captured['manifest'], str(archive/'restored-uploads'))
             require((archive/'restored-uploads/sentinel').read_bytes() == b'synthetic-upload')
-            evidence = {'schemaVersion': 1, 'status': 'synthetic-real-daemon-fence-passed',
+            evidence = {'schemaVersion': 1, 'status': 'synthetic-original-db-api-recovery-passed' if actual_application else 'synthetic-real-daemon-fence-passed',
                 'completedStages': journal.status()['completedStages'],
-                'dockerWritersStopped': True, 'registeredTimerStopped': True,
+                'dockerWritersStopped':not unclean_api_rejected,'uncleanApiExitRejected':unclean_api_rejected, 'registeredTimerStopped': True,
                 'originalDeploymentAdmissionVerified': original_admission['preparedBeforeShutdown'],
                 'liveBindDirectoryReplacementRejected': rejected_replacement,
-                'legacyUploadReplay': True, 'databaseSystemIdentifier': system_id,
+                'legacyUploadReplay': not actual_application,'persistentUploadReplay':actual_application, 'databaseSystemIdentifier': system_id,
                 'limitations': ['Disposable empty Linux host; no production effect.',
                     'API and edge are inert shell processes, not backend/Caddy behavior.',
                     'No complete host-worker exclusion, clean-control or database recovery proof.',
                     'No production key custody, migration, rollout or restart recovery.']}
         if os.environ.get('TDF_TEST_ORIGINAL_DB_RECOVERY')=='1':
-            evidence['originalDatabaseRecovery']=exercise_database_recovery(archive,saved,db)
-            evidence['fenceFlagsScope']='Historical completed fence phase before subsequent fixture-only DB recovery'
+            evidence['originalDatabaseRecovery']=exercise_database_recovery(archive,saved,db,actual_application)
+            evidence['fenceFlagsScope']='Historical successful or rejected fence observation before fixture-only recovery'
             evidence['limitations']=['Disposable PG17 component fixture; no production effect.',
-                'API/edge are inert; boot epochs are synthetic for the DB adapter.',
+                'Edge is inert; boot epochs are synthetic; API is real only when explicitly enabled.',
                 'No complete host-worker, clean-shutdown, key-custody, migration or rollout proof.']
     finally:
         if evidence is None and before:
