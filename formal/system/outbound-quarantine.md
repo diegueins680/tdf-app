@@ -65,6 +65,18 @@ This does not qualify production's UFW configuration. Production admission must
 bind the package implementation, selected iptables backend, configuration,
 non-executable custom hooks and loaded unit/drop-ins to reviewed evidence.
 
+`ops/hetzner/ufw-recovery-admission.py` observes that identity read-only. It binds
+the installed UFW Python/shell implementation, resolved command binaries,
+iptables-nft version strings, all UFW configuration files and the loaded service
+fragment/drop-ins. It rejects executable custom hooks, unsafe file metadata,
+pending daemon reload and drift from caller-supplied reviewed policy. A second
+observation must agree. Portable controls cover changed hooks, modes, rules,
+backend alternatives, package files, unit definitions and evidence references.
+The caller must verify the source/packet/reboot receipt provenance: hexadecimal
+hashes alone are not verified receipts or approval. No trusted policy is generated
+from observation. OS libraries/Python bytecode cache remain trusted, and a matching
+UFW identity still reports complete host-bypass admission as false.
+
 Run portable checks with `python3 scripts/test-outbound-quarantine.py`. Linux
 fixtures require root on an explicitly acknowledged empty owned VM, an existing
 immutable pgvector image and `TDF_SYNTHETIC_QUARANTINE_HOST` equal to its machine

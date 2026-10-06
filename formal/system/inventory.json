@@ -105,6 +105,7 @@
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
       "ops/hetzner/stopped-application-storage.py",
+      "ops/hetzner/ufw-recovery-admission.py",
       "ops/privacy/request-workflow.json"
     ],
     "package-lock.json": [
@@ -516,6 +517,7 @@
       "scripts/test-ticket-confirmation-smtp.py",
       "scripts/test-ticket-confirmation.sh",
       "scripts/test-trial-identity.sh",
+      "scripts/test-ufw-recovery-admission.py",
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
@@ -2960,6 +2962,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-847fe2a0c78f4f8f",
+      "path": "ops/hetzner/ufw-recovery-admission.py",
+      "sha256": "8033dc3b119591df44afde2327a4bac737efcda2af9fc2981211926f0482b6c2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9c4c4880c3a2f1b4",
       "path": "ops/privacy/request-workflow.json",
       "sha256": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -4138,7 +4146,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "ad96bb3c54d9e05f4943e72f27eb620a4d66fb5cc0163d582d2d348a029db9f9",
+      "sha256": "21b27246cbf4bd97288e95055e9f40a92f967434fe19971f0c401b648ab1ee90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5387,6 +5395,12 @@
       "id": "SURFACE-75ed4534ce225e0f",
       "path": "scripts/test-trial-identity.sh",
       "sha256": "29e6c3a4cdb56b9c6f13fadf86991d97e3b5e9e93392ac6951c742f3b32a2d2b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8e680d9cce7fe4ce",
+      "path": "scripts/test-ufw-recovery-admission.py",
+      "sha256": "9fe4a3ac9b7755fed06165ed8f4984545c9f3b0efd30a0c97108a37ca4b5cd73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23006,7 +23020,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "9e7a89bda6dc3a9130007623c9beeff32a9cc3e95e26a2f917b685b98ad92918",
+      "sha256": "74c4f1cd2bc2022726b49bda0dced0df2cbdfc52d81a879c546da496ff845847",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23083,7 +23097,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a1fbf63adee03993cdbb3aedb126a95a94c02f28fa76790f9127755717020737",
+      "sha256": "c754df5d7f11ba895c70efef26d3dd0db3b4313f7fbfe94922ff8cff272114ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

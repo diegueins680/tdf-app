@@ -7622,15 +7622,17 @@
       "recovery": "Keep restriction through original-image or candidate recovery. Removal requires a separate qualified transition. Integrated first-stop and coordinator admission remain open.",
       "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
       "implementation": [
-        "ops/hetzner/outbound-quarantine.py"
+        "ops/hetzner/outbound-quarantine.py",
+        "ops/hetzner/ufw-recovery-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
         "scripts/test-outbound-quarantine-linux.py",
-        "scripts/test-outbound-quarantine-reboot-linux.py"
+        "scripts/test-outbound-quarantine-reboot-linux.py",
+        "scripts/test-ufw-recovery-admission.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",

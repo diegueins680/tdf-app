@@ -7623,15 +7623,17 @@
       "recovery": "Keep restriction through original-image or candidate recovery. Removal requires a separate qualified transition. Integrated first-stop and coordinator admission remain open.",
       "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
       "implementation": [
-        "ops/hetzner/outbound-quarantine.py"
+        "ops/hetzner/outbound-quarantine.py",
+        "ops/hetzner/ufw-recovery-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
         "scripts/test-outbound-quarantine-linux.py",
-        "scripts/test-outbound-quarantine-reboot-linux.py"
+        "scripts/test-outbound-quarantine-reboot-linux.py",
+        "scripts/test-ufw-recovery-admission.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7817,6 +7819,7 @@
     "ops/hetzner/stopped-application-storage.py": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
+    "ops/hetzner/ufw-recovery-admission.py": "8033dc3b119591df44afde2327a4bac737efcda2af9fc2981211926f0482b6c2",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "9f39b97dcc5f96ac6db9a43eda43d7c91f5ed77de65b4f679a94201772fac544",
     "package.json": "09eec3742b073d43514688b8e9fb4562acab0144ea0dab0975625d7ddd6878b6",
@@ -7899,7 +7902,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "ad96bb3c54d9e05f4943e72f27eb620a4d66fb5cc0163d582d2d348a029db9f9",
+    "scripts/quality-repo.sh": "21b27246cbf4bd97288e95055e9f40a92f967434fe19971f0c401b648ab1ee90",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7983,6 +7986,7 @@
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-trial-identity.sh": "29e6c3a4cdb56b9c6f13fadf86991d97e3b5e9e93392ac6951c742f3b32a2d2b",
+    "scripts/test-ufw-recovery-admission.py": "9fe4a3ac9b7755fed06165ed8f4984545c9f3b0efd30a0c97108a37ca4b5cd73",
     "scripts/test-writer-fence-fixture-ownership.py": "2b3baa150c9cef39cace797d60142ecd0bb505d21b34ab811d77c404c028ba16",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
@@ -13529,6 +13533,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/ufw-recovery-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-outbound-quarantine.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
@@ -13542,6 +13552,12 @@
       }
     ],
     "scripts/test-outbound-quarantine-reboot-linux.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ufw-recovery-admission.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
@@ -14545,6 +14561,18 @@
         },
         {
           "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-847fe2a0c78f4f8f",
+      "path": "ops/hetzner/ufw-recovery-admission.py",
+      "sha256": "8033dc3b119591df44afde2327a4bac737efcda2af9fc2981211926f0482b6c2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "implementation"
         }
       ]
@@ -16549,7 +16577,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "ad96bb3c54d9e05f4943e72f27eb620a4d66fb5cc0163d582d2d348a029db9f9",
+      "sha256": "21b27246cbf4bd97288e95055e9f40a92f967434fe19971f0c401b648ab1ee90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18661,6 +18689,18 @@
       "requirements": [
         {
           "requirement": "SYS-RELEASE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8e680d9cce7fe4ce",
+      "path": "scripts/test-ufw-recovery-admission.py",
+      "sha256": "9fe4a3ac9b7755fed06165ed8f4984545c9f3b0efd30a0c97108a37ca4b5cd73",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "tests"
         }
       ]
@@ -37096,7 +37136,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a1fbf63adee03993cdbb3aedb126a95a94c02f28fa76790f9127755717020737",
+      "sourceSha256": "c754df5d7f11ba895c70efef26d3dd0db3b4313f7fbfe94922ff8cff272114ed",
       "definition": {
         "states": [
           "absent",
