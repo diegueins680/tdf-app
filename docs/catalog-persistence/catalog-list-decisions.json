@@ -32432,6 +32432,36 @@
       "risk": "A privacy request must fail closed when no compatible active published category exists.",
       "justification": "These codes are lookup preferences for the account-deletion request workflow, not a replacement catalog. The form fetches canonical published items and sends only their persisted UUIDs; users cannot create arbitrary categories through this list.",
       "reviewed": true
+    },
+    {
+      "id": "86c4e253d5021bca7977",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these constructors independently of the supervisor can invalidate shutdown ordering, exception handling and listener drainage.",
+      "justification": "ShutdownFailure is a closed Haskell exception type for shutdown deadlines, startup admission, unexpected server return and duplicate listener registration. These constructors control process supervision and must remain compiler-checked; they are not administrator-configurable product values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/App/Shutdown.hs",
+        "line": 22
+      },
+      "reviewBatch": "shutdown-protocol-2026-10-06"
+    },
+    {
+      "id": "cf99bdb77383ac57cca1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these constructors independently of the supervisor can invalidate shutdown ordering, exception handling and listener drainage.",
+      "justification": "Event is private to TDF.App.Shutdown and carries preparation, startup, server completion and stop-request messages through the process supervisor channel. Its constructors are an internal concurrency protocol, not the similarly named concert or ticketing business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/App/Shutdown.hs",
+        "line": 28
+      },
+      "reviewBatch": "shutdown-protocol-2026-10-06"
     }
   ]
 }
