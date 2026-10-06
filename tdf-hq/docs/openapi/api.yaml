@@ -5862,6 +5862,34 @@ paths:
           description: Feedback accepted
         '400':
           description: Invalid multipart data, catalog reference, consent, or attachment
+  /feedback/account-deletion:
+    post:
+      tags: [Feedback]
+      summary: Initiate manual account deletion with authenticated acceptance
+      description: >-
+        Requires a live authenticated session belonging to accountId. Rejects expired,
+        anonymous or mismatched sessions before insertion or notification. Returns
+        the authoritative owner and request ID; does not erase the account.
+        Requires the non-simple X-Requested-With header and validates any Origin
+        against configured TDF origins, independently of permissive CORS settings.
+      operationId: requestAccountDeletion
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: X-Requested-With, in: header, required: true, schema: { type: string, enum: [TDF-Account-Deletion] } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/FeedbackMultipart' }
+      responses:
+        '200':
+          description: Authenticated request accepted for manual fulfilment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountDeletionReceipt' }
+        '400': { description: 'Invalid request, catalog reference, marker or attachment' }
+        '401': { description: Active authentication required }
+        '403': { description: Authenticated account mismatch or invalid request origin proof }
   /feedback/internal:
     get:
       tags: [Internal feedback]
@@ -5913,9 +5941,37 @@ paths:
       tags: [Internal feedback]
       summary: Read legacy public feedback without exposing storage paths
       operationId: listLegacyFeedbackForAdmin
+      parameters:
+        - { name: accountDeletionOnly, in: query, description: Filter privacy requests before pagination; returns up to 20 records including normalized ones., schema: { type: boolean } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
       responses:
         '200': { description: Legacy feedback, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LegacyFeedback' } } } } }
         '403': { description: Administrator access required }
+  /feedback/internal/account-deletion/{feedbackId}:
+    post:
+      tags: [Internal feedback]
+      summary: Record manual deletion fulfilment with an authenticated administrator audit
+      description: Records completion or rejection once; does not erase account data. Concurrent repeated resolution returns 409.
+      operationId: resolveAccountDeletion
+      parameters:
+        - { name: feedbackId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adrOutcome, adrNote]
+              properties:
+                adrOutcome: { type: string, enum: [completed, rejected] }
+                adrNote: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '200': { description: Audit recorded, content: { application/json: { schema: { $ref: '#/components/schemas/AccountDeletionAction' } } } }
+        '400': { description: Invalid outcome or missing note or unidentified completion }
+        '401': { description: Active session required }
+        '403': { description: Administrator required }
+        '404': { description: Deletion request not found }
+        '409': { description: Request already resolved }
   /feedback/internal/{reportId}:
     parameters:
       - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
@@ -11208,7 +11264,9 @@ components:
         currency: { type: string, minLength: 3, maxLength: 3 }
         buyerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
         organizerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
-        taxIncluded: { type: boolean, description: Whether the advertised face value and buyer fee include tax. Omitted by older additive-tax APIs. }
+        taxIncluded:
+          type: boolean
+          description: Whether the advertised face value and buyer fee include tax. Omitted by older additive-tax APIs.
         taxBps: { type: integer, minimum: 0, maximum: 10000 }
         holdMinutes: { type: integer, minimum: 1 }
         maxTicketsPerOrder:
@@ -11268,7 +11326,9 @@ components:
         netFaceValueMinor: { type: integer, format: int64, minimum: 0 }
         buyerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
         organizerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
-        taxIncluded: { type: boolean, description: Immutable purchased tax mode. If true taxMinor is included in checkoutTotalMinor rather than added to face value and buyer fee. }
+        taxIncluded:
+          type: boolean
+          description: Immutable purchased tax mode. If true taxMinor is included in checkoutTotalMinor rather than added to face value and buyer fee.
         taxMinor: { type: integer, format: int64, minimum: 0 }
         checkoutTotalMinor: { type: integer, format: int64, minimum: 1 }
         organizerPayableMinor: { type: integer, format: int64, minimum: 0 }
@@ -16482,10 +16542,19 @@ components:
         ifrHistory: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackHistory' } }
         ifrRetests: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackRetest' } }
         ifrPotentialDuplicates: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackSummary' } }
+    AccountDeletionAction:
+      type: object
+      required: [adaOutcome, adaNote, adaActor, adaCreatedAt]
+      properties:
+        adaOutcome: { type: string, enum: [completed, rejected] }
+        adaNote: { type: string }
+        adaActor: { type: integer, format: int64, nullable: true }
+        adaCreatedAt: { type: string, format: date-time }
     LegacyFeedback:
       type: object
       required: [lfdId, lfdTitle, lfdDescription, lfdConsent, lfdHasAttachment, lfdCreatedAt]
       properties:
+        lfdDeletionHistory: { type: array, items: { $ref: '#/components/schemas/AccountDeletionAction' } }
         lfdId: { type: string, format: uuid }
         lfdTitle: { type: string }
         lfdDescription: { type: string }
@@ -16694,6 +16763,12 @@ components:
         ifsApprovedAt: { type: string, format: date-time, nullable: true }
         ifsCreatedAt: { type: string, format: date-time }
         ifsUpdatedAt: { type: string, format: date-time }
+    AccountDeletionReceipt:
+      type: object
+      required: [adrRequestId, adrCreatedBy]
+      properties:
+        adrRequestId: { type: string, minLength: 1 }
+        adrCreatedBy: { type: integer, format: int64, minimum: 1 }
     FeedbackMultipart:
       type: object
       additionalProperties: false

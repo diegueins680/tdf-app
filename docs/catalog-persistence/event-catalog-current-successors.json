@@ -53,86 +53,19 @@
     },
     {
       "historicalReplacementId": "ffb84e8fd3972fd0730d",
-      "currentId": "0bd23196640f34d2ea12",
+      "currentId": "66c48cc059727856b6f1",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "kind": "array",
       "name": "mobileFeatureRegistry",
-      "valueCount": 160,
+      "valueCount": 161,
       "previousResolution": {
         "historicalReplacementId": "ffb84e8fd3972fd0730d",
-        "currentId": "714645381e4ae8080a3a",
+        "currentId": "44c80a6dd2f154d0d59a",
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "kind": "array",
         "name": "mobileFeatureRegistry",
         "valueCount": 159,
         "previousResolution": {
-          "historicalReplacementId": "ffb84e8fd3972fd0730d",
-          "currentId": "e9fb532f768747ee20c0",
-          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-          "kind": "array",
-          "name": "mobileFeatureRegistry",
-          "valueCount": 158,
-          "previousResolution": {
-            "historicalReplacementId": "ffb84e8fd3972fd0730d",
-            "currentId": "5147eb2751a01d8b4c73",
-            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-            "kind": "array",
-            "name": "mobileFeatureRegistry",
-            "valueCount": 157,
-            "previousResolution": {
-              "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-              "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-              "currentId": "21babc54d68f0c44d55e",
-              "valueCount": 156
-            },
-            "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained.",
-            "originalDecision": {
-              "id": "5147eb2751a01d8b4c73",
-              "classification": "security-system-registry",
-              "disposition": "migrate-and-remove-authority-from-code",
-              "specializedModel": "navigation_item, navigation_item_permission",
-              "priority": "P0-security",
-              "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-              "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-              "reviewed": true,
-              "reviewMethod": "deterministic-policy-v3",
-              "reviewBatch": "universal-interactions-2026-09-28",
-              "evidence": {
-                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-                "line": 55
-              }
-            },
-            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
-            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e"
-          },
-          "change": "Reviewed shipped-lineage patch adds admin.video-sources with strict Admin module/role discovery and concealed Mobile presentation; all previous 157 entries remain unchanged.",
-          "consolidatedMainResolution": {
-            "historicalReplacementId": "ffb84e8fd3972fd0730d",
-            "currentId": "0eafdd9f0a8bbebf9a23",
-            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-            "kind": "array",
-            "name": "mobileFeatureRegistry",
-            "valueCount": 158,
-            "previousResolution": {
-              "historicalReplacementId": "ffb84e8fd3972fd0730d",
-              "currentId": "5147eb2751a01d8b4c73",
-              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-              "kind": "array",
-              "name": "mobileFeatureRegistry",
-              "valueCount": 157,
-              "previousResolution": {
-                "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-                "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-                "currentId": "21babc54d68f0c44d55e",
-                "valueCount": 156
-              },
-              "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-            },
-            "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
-          }
-        },
-        "change": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
-        "consolidatedMainResolution": {
           "historicalReplacementId": "ffb84e8fd3972fd0730d",
           "currentId": "0eafdd9f0a8bbebf9a23",
           "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
@@ -156,15 +89,92 @@
           },
           "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
         },
-        "concurrentReviewHistory": [
-          {
+        "change": "The tester program adds public.mobile to the 158 definitions of the merged payment main. All prior route definitions and authorization dispositions remain intact."
+      },
+      "change": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
+      "concurrentReviewHistory": [
+        {
+          "historicalReplacementId": "ffb84e8fd3972fd0730d",
+          "currentId": "0bd23196640f34d2ea12",
+          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+          "kind": "array",
+          "name": "mobileFeatureRegistry",
+          "valueCount": 160,
+          "previousResolution": {
             "historicalReplacementId": "ffb84e8fd3972fd0730d",
-            "currentId": "44c80a6dd2f154d0d59a",
+            "currentId": "714645381e4ae8080a3a",
             "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
             "kind": "array",
             "name": "mobileFeatureRegistry",
             "valueCount": 159,
             "previousResolution": {
+              "historicalReplacementId": "ffb84e8fd3972fd0730d",
+              "currentId": "e9fb532f768747ee20c0",
+              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+              "kind": "array",
+              "name": "mobileFeatureRegistry",
+              "valueCount": 158,
+              "previousResolution": {
+                "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                "currentId": "5147eb2751a01d8b4c73",
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry",
+                "valueCount": 157,
+                "previousResolution": {
+                  "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                  "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                  "currentId": "21babc54d68f0c44d55e",
+                  "valueCount": 156
+                },
+                "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained.",
+                "originalDecision": {
+                  "id": "5147eb2751a01d8b4c73",
+                  "classification": "security-system-registry",
+                  "disposition": "migrate-and-remove-authority-from-code",
+                  "specializedModel": "navigation_item, navigation_item_permission",
+                  "priority": "P0-security",
+                  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+                  "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+                  "reviewed": true,
+                  "reviewMethod": "deterministic-policy-v3",
+                  "reviewBatch": "universal-interactions-2026-09-28",
+                  "evidence": {
+                    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                    "line": 55
+                  }
+                },
+                "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e"
+              },
+              "change": "Reviewed shipped-lineage patch adds admin.video-sources with strict Admin module/role discovery and concealed Mobile presentation; all previous 157 entries remain unchanged.",
+              "consolidatedMainResolution": {
+                "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                "currentId": "0eafdd9f0a8bbebf9a23",
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry",
+                "valueCount": 158,
+                "previousResolution": {
+                  "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                  "currentId": "5147eb2751a01d8b4c73",
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry",
+                  "valueCount": 157,
+                  "previousResolution": {
+                    "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                    "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                    "currentId": "21babc54d68f0c44d55e",
+                    "valueCount": 156
+                  },
+                  "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                },
+                "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+              }
+            },
+            "change": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
+            "consolidatedMainResolution": {
               "historicalReplacementId": "ffb84e8fd3972fd0730d",
               "currentId": "0eafdd9f0a8bbebf9a23",
               "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
@@ -188,44 +198,44 @@
               },
               "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
             },
-            "change": "The tester program adds public.mobile to the 158 definitions of the merged payment main. All prior route definitions and authorization dispositions remain intact."
-          }
-        ]
-      },
-      "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
-      "consolidatedMainResolution": {
-        "historicalReplacementId": "ffb84e8fd3972fd0730d",
-        "currentId": "0eafdd9f0a8bbebf9a23",
-        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-        "kind": "array",
-        "name": "mobileFeatureRegistry",
-        "valueCount": 158,
-        "previousResolution": {
-          "historicalReplacementId": "ffb84e8fd3972fd0730d",
-          "currentId": "5147eb2751a01d8b4c73",
-          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-          "kind": "array",
-          "name": "mobileFeatureRegistry",
-          "valueCount": 157,
-          "previousResolution": {
-            "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-            "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-            "currentId": "21babc54d68f0c44d55e",
-            "valueCount": 156
+            "concurrentReviewHistory": [
+              {
+                "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                "currentId": "44c80a6dd2f154d0d59a",
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry",
+                "valueCount": 159,
+                "previousResolution": {
+                  "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                  "currentId": "0eafdd9f0a8bbebf9a23",
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry",
+                  "valueCount": 158,
+                  "previousResolution": {
+                    "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                    "currentId": "5147eb2751a01d8b4c73",
+                    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                    "kind": "array",
+                    "name": "mobileFeatureRegistry",
+                    "valueCount": 157,
+                    "previousResolution": {
+                      "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                      "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                      "currentId": "21babc54d68f0c44d55e",
+                      "valueCount": 156
+                    },
+                    "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                  },
+                  "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                },
+                "change": "The tester program adds public.mobile to the 158 definitions of the merged payment main. All prior route definitions and authorization dispositions remain intact."
+              }
+            ]
           },
-          "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
-        },
-        "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
-      },
-      "concurrentReviewHistory": [
-        {
-          "historicalReplacementId": "ffb84e8fd3972fd0730d",
-          "currentId": "44c80a6dd2f154d0d59a",
-          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-          "kind": "array",
-          "name": "mobileFeatureRegistry",
-          "valueCount": 159,
-          "previousResolution": {
+          "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
+          "consolidatedMainResolution": {
             "historicalReplacementId": "ffb84e8fd3972fd0730d",
             "currentId": "0eafdd9f0a8bbebf9a23",
             "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
@@ -249,7 +259,41 @@
             },
             "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
           },
-          "change": "The tester program adds public.mobile to the 158 definitions of the merged payment main. All prior route definitions and authorization dispositions remain intact."
+          "concurrentReviewHistory": [
+            {
+              "historicalReplacementId": "ffb84e8fd3972fd0730d",
+              "currentId": "44c80a6dd2f154d0d59a",
+              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+              "kind": "array",
+              "name": "mobileFeatureRegistry",
+              "valueCount": 159,
+              "previousResolution": {
+                "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                "currentId": "0eafdd9f0a8bbebf9a23",
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "kind": "array",
+                "name": "mobileFeatureRegistry",
+                "valueCount": 158,
+                "previousResolution": {
+                  "historicalReplacementId": "ffb84e8fd3972fd0730d",
+                  "currentId": "5147eb2751a01d8b4c73",
+                  "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                  "kind": "array",
+                  "name": "mobileFeatureRegistry",
+                  "valueCount": 157,
+                  "previousResolution": {
+                    "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                    "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                    "currentId": "21babc54d68f0c44d55e",
+                    "valueCount": 156
+                  },
+                  "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+                },
+                "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+              },
+              "change": "The tester program adds public.mobile to the 158 definitions of the merged payment main. All prior route definitions and authorization dispositions remain intact."
+            }
+          ]
         }
       ]
     },
@@ -300,7 +344,7 @@
               "kind": "json-array",
               "name": "migrations",
               "valueCount": 177,
-              "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+              "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
               "previousResolution": {
                 "historicalReplacementId": "7578a30aa3cc5aa23870",
                 "currentId": "2be7a048fab31c7e895c",
@@ -308,7 +352,7 @@
                 "kind": "json-array",
                 "name": "migrations",
                 "valueCount": 175,
-                "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                 "previousResolution": {
                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                   "currentId": "0f3d73c6a3dc4bf18f22",

@@ -208,6 +208,12 @@ jobs:
       - name: Run isolated persona web journeys
         run: npm run test:e2e:web
 
+      - name: Verify default-off deletion rollout
+        env:
+          PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED: 'false'
+          PLAYWRIGHT_ARTIFACT_DIR: artifacts/persona-playwright/deletion-rollout-off
+        run: npx playwright test e2e/web/account-deletion-rollout.spec.mjs
+
       - name: Upload sanitized browser evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -315,6 +321,17 @@ jobs:
 
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
+
+      - name: Verify authenticated account deletion and auditable resolution
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_AUDIT_E2E_BACKEND_EXE: ${{ env.BACKEND_BINARY_OUT }}
+          TDF_AUDIT_E2E_DATABASE: tdf_account_deletion_test
+        run: |
+          export TDF_AUDIT_E2E_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          sh scripts/test-studio-internship-audit-api-e2e.sh
 
       - name: Inspect the compiled Servant API against documented operations
         run: |

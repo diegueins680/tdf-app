@@ -20,6 +20,27 @@ event is independent of the disabled PostHog automatic feature.
 The dashboard is private and has no public share token. All five saved queries
 execute successfully with HTTP200 and uncached results.
 
+## Production web receipt — 18:24 UTC
+
+The earlier disclosure changes reached reviewed main through PR468 alongside
+PR485's privacy protection. All five legal/support pages on both canonical and
+legacy domains returned HTTP200 and matched `c0a154cd4cbfcd3a5dc5167634be30b7691803cc`.
+Cloudflare production variables were saved and read back; retry deployment
+`c255006c-7aa2-45e6-a852-aaf96a3695dd` served the same current main. `/app` and the
+deployment preview serve matching assets; entry `index-BOFwi28I.js` has SHA256
+`9879bd7f1ba91e307fff83419306692b0ce0da7cb55d94903a5ff22c26add679`
+and embeds the intended EU public ingestion configuration.
+
+Normal Chrome navigation `/tdf` → invitation → `/app` → iOS → feedback opened
+→ TestFlight produced provider-confirmed production events:
+`mobile_promo_viewed`, `mobile_testing_interest_clicked`,
+`mobile_platform_selected`, `mobile_feedback_opened`, and
+`mobile_testing_join_clicked`, with campaign `mobile_activation_20261005`.
+The aggregate query found no email, name, password, feedback text, attachment,
+message or unexpected token in these QA events. PostHog's `token` property is
+its public project ingestion key. No feedback was submitted in this verification.
+Clicks do not prove enrollment or installation, and no native receipt is claimed.
+
 ## Configuration and verification
 
 | Surface | Public configuration | Release boundary |
@@ -57,9 +78,17 @@ Both signed artifacts completed successfully from `6ebe6c5`:
 
 Downloaded files match their signing receipts and contain the expected public
 project key and EU host. This is artifact verification, not store availability.
-Root pins `432b321`, the reviewed mobile main that additionally preserves the
-two ticket-contract fields already published in web main; those type-only fields
-are the only difference from the runtime source of the signed artifacts.
+The web pin preserves generated ticket/deletion contracts and the shared discovery
+registry. Mobile PR142 passed independent review and its required Mobile Validate
+check, then merged as `c98a397e3895cf44008bab472773ade3985d6b2e` on 5 October
+at 21:15 UTC. Its source passed 95 suites / 611 tests and release checks; the
+preceding discovery head also passed Expo Doctor 17/17. After root PR478 merged
+as `5c2e0bb28f062481ceaa625833c356096a43083f`, this integration pins that reviewed
+mobile main. Regeneration matches its files exactly, including the two optional
+`taxIncluded` compatibility fields already present in the approved mobile contract.
+This changes neither ticket arithmetic nor payment activation. Both root main's
+strict administrator discovery test and the authenticated deletion test remain.
+These qualifications are separate from the signed-artifact source above.
 
 ## Store disclosure audit and account deletion
 
@@ -73,9 +102,12 @@ A build finishing successfully does not resolve this release boundary.
 The owner confirmed that `info@tdfrecords.net` will handle account-deletion
 requests. All five public mobile legal/support pages now use that real inbox
 and the canonical `www.tdfrecords.net` URLs. Legacy Pages URLs remain served.
-The existing native About screen links to the deletion page; it now provides
-Spanish and English instructions and asks only for the account email and
-requested deletion scope, not unnecessary identity or credential data.
+The existing native About screen links to the deletion page. This PR changes
+that page to lead to `/cuenta/eliminar`: an authenticated, bilingual request for the entire
+account without composing an email. The owner processes the request manually;
+submission is not completed erasure. See the [operator procedure and identity
+checks](account-deletion-operations.md). No actual deletion is claimed by QA. The strict backend endpoint and queue
+must be deployed before this new flow is considered operational. The web form and administrator queue have independent switches (`VITE_ACCOUNT_DELETION_FORM_ENABLED` and `VITE_ACCOUNT_DELETION_QUEUE_ENABLED`), each requiring exactly `true`; the disabled page retains the confirmed email contact. Enable only after qualifying the deployed backend, as described in the [rollout procedure](account-deletion-rollout.md).
 Authenticated App Store Connect readback confirms User ID, Device ID and Product
 Interaction are already declared for analytics linked to the user's identity.
 The native party selector also emits latency/error classifications: Performance
@@ -94,15 +126,15 @@ with Apple flow. Physical iPhone login proof and resolution of 4.8 remain public
 App Store release gates; Beta App Review is a separate process. No App Review
 resubmission or message to Apple was sent.
 
-Play's corrected account-creation, analytics/feedback data and canonical deletion
-answers, plus the canonical privacy URL, are saved for review. The changes do not
-mean Google has approved them. Submit them after the updated disclosure deploys.
+Before the 20:06UTC submission, Play's corrected account-creation, analytics/feedback data and canonical deletion
+answers, plus the canonical privacy URL, were saved for review. Saved declarations alone did not
+mean Google had approved them. The later submission and 21:13UTC availability receipts below supersede this intermediate state; do not repeat the upload.
 EAS remote counters were read back as iOS32 / Android24 to avoid reusing numbers.
 iOS32 was uploaded through EAS submission `85446118-dba6-457d-93bd-018c39d1d674`
 and is VALID/internal, awaiting Beta App Review, with ES/EN test notes saved.
 An Android24 edit validated, but Google rejected withholding
-review via `changesNotSentForReview=true`; the failed edit was deleted. Retry the
-normal existing closed-testing submission only after the disclosure is deployed.
+review via `changesNotSentForReview=true`; the failed edit was deleted. The
+normal existing closed-testing submission proceeded after the disclosure deployed, as recorded below. The failed edit was not reused.
 
 ## Dashboard semantics
 
@@ -129,3 +161,13 @@ from previously released iOS31 / Android23.
 See the current delivery evidence for deployment receipts and exact signed
 artifact sources. Configuration alone is not a successful deployment, store
 submission, installation or real native analytics receipt.
+
+## Android review submission — 20:06 UTC
+
+Google's [official account-deletion FAQ](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en) permits an in-app link to a branded web resource with a customer-service email. The currently deployed page and owner-confirmed inbox satisfy that request path independently of Apple's no-email initiation requirement. All ten canonical/legacy legal pages were rechecked against main `c0a154cd4`.
+
+Play received the corrected Data safety and privacy URL declarations plus signed Android24 in the existing closed alpha track. The API validated and committed edit `04449850881532326500` and returned the expected artifact hash. Console shows the three changes in review, initially running quick checks. API `completed` does not establish availability: build23 remains the last verified tester release until Console confirms24 is available. No countries, tester lists or public/open tracks changed. iOS32 still waits for the authenticated deletion flow to be deployed and Beta App Review.
+
+## Android available to selected testers — 21:13 UTC
+
+Authenticated Play Console now shows `1.0.1 (24) - TDF tester analytics` as **Available to selected testers**, released October5 at3:57PM in Console. The channel remains closed alpha in178 countries/regions with the same three admission lists (68/1/11 entries, not unique or opted-in counts). The publishing overview has no pending changes and reports publication. The manifest now identifies24 using that observation; its existing October12 validity deadline is preserved. This establishes closed-track availability, not public production, installation or native event reception. Signed source/hash remain the24 receipt above. A fresh21:10UTC ASC read confirms31 BETA_APPROVED,32 READY_FOR_BETA_SUBMISSION and AppStore REJECTED/MANUAL.
