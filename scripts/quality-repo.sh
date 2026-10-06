@@ -51,6 +51,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-database-recovery
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-application-recovery.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-outbound-quarantine.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-ufw-recovery-admission.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-dormant-container-admission.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-edge-recovery.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-edge-tls.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-timer-recovery.py"

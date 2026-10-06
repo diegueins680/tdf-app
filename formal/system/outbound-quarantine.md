@@ -89,6 +89,40 @@ a disabled UFW configuration, not evidence of active host filtering. The current
 production configuration must be re-observed before release; it is not changed by
 this component or by synthetic VM qualification.
 
+`ops/hetzner/dormant-container-admission.py` separately observes all containers
+through allowlisted read-only Docker HTTP requests. It supports the qualified
+29.1.3 daemon version and binds its executable hash, data root, full container IDs,
+network identities, restart policies and persisted configuration hashes. An exited
+`unless-stopped` container requires literal persisted `HasBeenManuallyStopped=true`
+and `HasBeenStartedBefore=true`; `always`, `on-failure`, unknown policies,
+transitional states and nonzero dormant PIDs reject. Configuration bytes and
+environment values never enter the returned receipt. A caller-supplied reviewed
+snapshot must match two observations. For socket activation, PID1 peer credentials
+are resolved to the canonical Docker service's inherited listening socket. The
+observer checks process start time and polls a held pidfd before/after sampling;
+executable reads use `/proc/<pid>/exe`, not the pidfd as a pathname.
+
+This snapshot is exact and stage-specific: running PIDs and private configuration
+hashes can change across recovery or reboot. It is not a reusable boot policy or
+permission to start a dormant container. The caller must verify independent
+daemon-restart/reboot receipts and re-establish admission at each relevant stage.
+Privileged noncooperating writers remain outside the sampled guarantee.
+
+The dedicated `scripts/test-dormant-container-reboot-linux.py` fixture runs a second
+daemon using caller-staged, hash-bound Docker29.1.3/runtime binaries. Its explicit
+private configuration, data/exec roots, socket and managed containerd separate it
+from the primary daemon. Abandoned paths reject before any daemon start. Synthetic
+containers use network `none`; clearing one persisted manual-stop flag while the
+fixture daemon is stopped must make that container restart, while the unmodified
+container stays stopped. After both are deliberately stopped again, a real changed
+host boot must preserve their dormant state. Metadata replacement, symlink and
+writable-file controls exercise actual Linux files. The VFS fixture qualifies this
+restart-metadata behavior, not production's storage driver or complete recovery.
+Its `prepare`, actual owned-host reboot, `verify`, and `cleanup` phases require
+`TDF_DORMANT_FIXTURE_MACHINE` equal to the owned VM's machine identity. Never run
+this destructive synthetic fixture on production. Private evidence is retained;
+the observer itself performs no Docker mutation.
+
 Run portable checks with `python3 scripts/test-outbound-quarantine.py`. Linux
 fixtures require root on an explicitly acknowledged empty owned VM, an existing
 immutable pgvector image and `TDF_SYNTHETIC_QUARANTINE_HOST` equal to its machine

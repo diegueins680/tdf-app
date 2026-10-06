@@ -3325,7 +3325,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7623,16 +7623,19 @@
       "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
       "implementation": [
         "ops/hetzner/outbound-quarantine.py",
-        "ops/hetzner/ufw-recovery-admission.py"
+        "ops/hetzner/ufw-recovery-admission.py",
+        "ops/hetzner/dormant-container-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
         "scripts/test-outbound-quarantine-linux.py",
         "scripts/test-outbound-quarantine-reboot-linux.py",
-        "scripts/test-ufw-recovery-admission.py"
+        "scripts/test-ufw-recovery-admission.py",
+        "scripts/test-dormant-container-admission.py",
+        "scripts/test-dormant-container-reboot-linux.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",

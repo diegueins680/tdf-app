@@ -75,6 +75,7 @@
       "ops/hetzner/coordinated-recovery-bundle.py",
       "ops/hetzner/coordinated-retrieval.py",
       "ops/hetzner/disposable-creation-spec.py",
+      "ops/hetzner/dormant-container-admission.py",
       "ops/hetzner/durable-disposable-records.py",
       "ops/hetzner/host-process-admission.py",
       "ops/hetzner/host-process-policy.json",
@@ -416,6 +417,8 @@
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
+      "scripts/test-dormant-container-admission.py",
+      "scripts/test-dormant-container-reboot-linux.py",
       "scripts/test-durable-disposable-records.py",
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-operations-api-migration.sh",
@@ -2782,6 +2785,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7a734da2701e0301",
+      "path": "ops/hetzner/dormant-container-admission.py",
+      "sha256": "7023158bf93ebbcfaf7a6ef666963cb7ff4637831b4504b9b9c6d736b2818779",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c6eb5b27f34b0143",
       "path": "ops/hetzner/durable-disposable-records.py",
       "sha256": "1e588f9bbe838cde7269a2428332f0c80502c77532dbb6418c74949737c9d55b",
@@ -4146,7 +4155,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "21b27246cbf4bd97288e95055e9f40a92f967434fe19971f0c401b648ab1ee90",
+      "sha256": "61ef239f3f025cffcced86728ebc30e8ac28c9bf9483743658cf0018e849f38b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4789,6 +4798,18 @@
       "id": "SURFACE-ce3ab4115ddf1e35",
       "path": "scripts/test-domo-quote-checkout-runtime-migration.sh",
       "sha256": "0410732d3ddf4c526b0b85b95f72905c5e5929445d601c3feeb41ccbd3ebbdc8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a869af36ac58760b",
+      "path": "scripts/test-dormant-container-admission.py",
+      "sha256": "57e001bc0d960d09a5adedbd7f56dfd25af36ff565037a879f7745a18599b7b5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-aa9c2a3538913a82",
+      "path": "scripts/test-dormant-container-reboot-linux.py",
+      "sha256": "39ab8874b8ff4b3773853955e6005deb1c7056d8753eeb888203460a27965585",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23020,7 +23041,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "95bd17eb5084524aa97b17efc0f668ee65fde755d6d3d15ff324b09c5cf6dc8c",
+      "sha256": "10f896209960851dee4ac2373b052cc8058443bb5e7f9a8bd39c1b878dbe7bf6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23097,14 +23118,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c754df5d7f11ba895c70efef26d3dd0db3b4313f7fbfe94922ff8cff272114ed",
+      "sha256": "eb34c15b1b99db8e432bae3b2bd27f8c62961c50b9eba7a935e4a59c10bb6826",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "59a21ae13f32bbe98fa73407c05d8c1ccd938fa5d815a6d9e8174a70818f3fcc",
+      "sha256": "debea911dcb7d1c7a0420f0c19c419ad23a605b90184dba52985a0abe9158696",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

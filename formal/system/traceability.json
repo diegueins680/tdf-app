@@ -7624,16 +7624,19 @@
       "observability": "Source-bound portable, real-packet and real-reboot receipts distinguish scoped evidence from production qualification.",
       "implementation": [
         "ops/hetzner/outbound-quarantine.py",
-        "ops/hetzner/ufw-recovery-admission.py"
+        "ops/hetzner/ufw-recovery-admission.py",
+        "ops/hetzner/dormant-container-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
         "scripts/test-outbound-quarantine-linux.py",
         "scripts/test-outbound-quarantine-reboot-linux.py",
-        "scripts/test-ufw-recovery-admission.py"
+        "scripts/test-ufw-recovery-admission.py",
+        "scripts/test-dormant-container-admission.py",
+        "scripts/test-dormant-container-reboot-linux.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7788,6 +7791,7 @@
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/coordinated-retrieval.py": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
     "ops/hetzner/disposable-creation-spec.py": "a8d6645e7bdf829f32efe86689bc73b74aed25ddfbc743c43eadb9ff1ebad0c1",
+    "ops/hetzner/dormant-container-admission.py": "7023158bf93ebbcfaf7a6ef666963cb7ff4637831b4504b9b9c6d736b2818779",
     "ops/hetzner/durable-disposable-records.py": "1e588f9bbe838cde7269a2428332f0c80502c77532dbb6418c74949737c9d55b",
     "ops/hetzner/host-process-admission.py": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
     "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
@@ -7902,7 +7906,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "21b27246cbf4bd97288e95055e9f40a92f967434fe19971f0c401b648ab1ee90",
+    "scripts/quality-repo.sh": "61ef239f3f025cffcced86728ebc30e8ac28c9bf9483743658cf0018e849f38b",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7926,6 +7930,8 @@
     "scripts/test-course-identity.sh": "1913c964fce91156eba43cfe4dee2aa531e4b8885eec9ef9a47b50f8e64c059f",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-disposable-creation-spec.py": "bf172d6d33beb27ffc92af0fd1cd168b1c8c0edb5fb75e65691a55d6d901c008",
+    "scripts/test-dormant-container-admission.py": "57e001bc0d960d09a5adedbd7f56dfd25af36ff565037a879f7745a18599b7b5",
+    "scripts/test-dormant-container-reboot-linux.py": "39ab8874b8ff4b3773853955e6005deb1c7056d8753eeb888203460a27965585",
     "scripts/test-durable-disposable-records.py": "5e055f74d14f238eb376249d368745236adb3e174ed763f01897973aba4c0c0a",
     "scripts/test-hetzner-backup.py": "ca7c23199f118b05edf3f753a6fb49a40e84beddc883ba9d0eb3a8131eb9cd43",
     "scripts/test-hetzner-inspection.py": "7b76a4358dc3d3b12aba0637fe31342a85c23a347480fccc7c0ad1160fa58a7c",
@@ -13539,6 +13545,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/dormant-container-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-outbound-quarantine.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
@@ -13558,6 +13570,18 @@
       }
     ],
     "scripts/test-ufw-recovery-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-dormant-container-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-dormant-container-reboot-linux.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
@@ -14166,6 +14190,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7a734da2701e0301",
+      "path": "ops/hetzner/dormant-container-admission.py",
+      "sha256": "7023158bf93ebbcfaf7a6ef666963cb7ff4637831b4504b9b9c6d736b2818779",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "implementation"
         }
       ]
@@ -16577,7 +16613,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "21b27246cbf4bd97288e95055e9f40a92f967434fe19971f0c401b648ab1ee90",
+      "sha256": "61ef239f3f025cffcced86728ebc30e8ac28c9bf9483743658cf0018e849f38b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17597,6 +17633,30 @@
       "sha256": "0410732d3ddf4c526b0b85b95f72905c5e5929445d601c3feeb41ccbd3ebbdc8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-a869af36ac58760b",
+      "path": "scripts/test-dormant-container-admission.py",
+      "sha256": "57e001bc0d960d09a5adedbd7f56dfd25af36ff565037a879f7745a18599b7b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-aa9c2a3538913a82",
+      "path": "scripts/test-dormant-container-reboot-linux.py",
+      "sha256": "39ab8874b8ff4b3773853955e6005deb1c7056d8753eeb888203460a27965585",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee633440bef5bc29",
@@ -37136,7 +37196,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c754df5d7f11ba895c70efef26d3dd0db3b4313f7fbfe94922ff8cff272114ed",
+      "sourceSha256": "eb34c15b1b99db8e432bae3b2bd27f8c62961c50b9eba7a935e4a59c10bb6826",
       "definition": {
         "states": [
           "absent",

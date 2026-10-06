@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -814,9 +814,18 @@
       "source": "https://manpages.ubuntu.com/manpages/noble/man8/ufw-framework.8.html",
       "title": "Ubuntu UFW framework and lifecycle hooks",
       "recommendation": "UFW lifecycle behavior depends on MANAGE_BUILTINS, executable custom hooks and its rules/configuration files.",
-      "applicability": "Coexistence of recovery restriction with the active production firewall",
+      "applicability": "Coexistence of recovery restriction with the configured production firewall loader",
       "decision": "adopted as qualification obligation",
-      "rationale": "Keep the active firewall. Exercise matching-package reload/restart/reboot with continuously attempted synthetic connections; bind reviewed implementation/configuration/backend instead of assuming final table equality proves uninterrupted denial."
+      "rationale": "Observe whether filtering is actually enabled; an active systemd unit alone is insufficient. Exercise matching-package reload/restart/reboot with continuously attempted synthetic connections and bind reviewed configuration/backend identity. Do not change production filtering merely to match a fixture."
+    },
+    {
+      "id": "RES-OPS-DORMANT-001",
+      "source": "https://raw.githubusercontent.com/moby/moby/docker-v29.1.3/daemon/internal/restartmanager/restartmanager.go",
+      "title": "Moby29.1.3 restart policy and persisted manual stop",
+      "recommendation": "unless-stopped automatic restart depends on the persisted manually-stopped flag; always and on-failure have different rules.",
+      "applicability": "Dormant legacy containers must not unexpectedly restart during recovery reboot.",
+      "decision": "adopted as version-bound admission",
+      "rationale": "Read persisted metadata without rewriting it; bind exact daemon identity and all containers. Qualify actual restart and reboot on a separate owned daemon, including a deliberately cleared flag. No blanket restart-policy mutation is required."
     }
   ]
 }
