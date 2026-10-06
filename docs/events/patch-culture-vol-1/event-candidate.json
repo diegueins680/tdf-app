@@ -177,6 +177,49 @@
     "source": "Organizer confirmation on 2026-10-05; same RUC and beneficiary already in TDF.Email course billing template",
     "taxTreatmentConfirmed": false,
     "taxRate": null,
-    "publicSriRegistrationVerified": false
+    "publicSriRegistrationVerified": false,
+    "certificateEvidence": {
+      "document": "RUC.pdf in connected organizer Drive",
+      "issuedOn": "2024-05-21",
+      "reviewedOn": "2026-10-05",
+      "rucMatchesOrganizerConfirmation": true,
+      "legalName": "TDF RECORDS S.A.S.",
+      "regimeAtIssue": "GENERAL",
+      "accountingRequiredAtIssue": true,
+      "registeredCulturalActivitiesAtIssue": [
+        "R900001",
+        "R900003",
+        "R900004"
+      ],
+      "limitation": "Historical certificate, not a current SRI registry lookup or a tax ruling on the combined workshop, showcase and beer product. Address, representative identifiers and verification code omitted."
+    }
+  },
+  "activationAuthorization": {
+    "source": "Direct user message: Continúa y activa cobros",
+    "recordedOn": "2026-10-05",
+    "authorized": true,
+    "scope": "Activate the existing approved USD20 final /20-place event terms after functioning payment, issuance and release verification. No additional commercial approval is required for these same terms.",
+    "activated": false
+  },
+  "paymentInvestigation": {
+    "checkedOn": "2026-10-05",
+    "paypalLiveCredentialsLocated": true,
+    "paypalLiveOAuthVerified": true,
+    "paypalConfiguredWebhookVerified": true,
+    "paypalCanonicalWebhookUrlVerified": true,
+    "paypalVerifiedSubscribedEvents": [
+      "PAYMENT.CAPTURE.COMPLETED",
+      "PAYMENT.CAPTURE.REFUNDED",
+      "PAYMENT.CAPTURE.REVERSED"
+    ],
+    "providerAccountRowsEnabled": false,
+    "stripeLiveAccountChargesEnabled": false,
+    "stripeLiveAccountPayoutsEnabled": false,
+    "officialSandboxPurchaseVerified": false,
+    "officialLivePurchaseVerified": false,
+    "secretsExported": false,
+    "chargesCreated": 0,
+    "smtpTlsAndAuthenticationVerified": true,
+    "externalEmailDeliveryVerified": false
   }
 }

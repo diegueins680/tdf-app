@@ -122,3 +122,12 @@ public-detail rule. Both deny ordinary and moderator resolution, registration,
 commands and deep links without deleting prior engagement. Renewal restores the
 same target/comment identities and counts. Real HTTP tests compare the classified
 detail endpoint with anonymous/authenticated discussion access and write denial.
+
+Authenticated interaction write attempts consume a durable account-scoped budget
+before domain authorization executes, including commands denied by that authorization.
+The existing SQL limiter admits at most 90 budget increments per database calendar
+minute and rejects increment 91 with HTTP 429. Budget commitment is separate from
+a denied domain mutation; rejection cannot roll back the consumed attempt.
+The HTTP regression probes at most two windows (181 requests in less than 60 seconds)
+and verifies the persisted rejection counter is exactly 91. Crossing a minute
+boundary must neither produce a false test failure nor relax the actual threshold.

@@ -639,6 +639,8 @@ test('social repair diagnostics use current callbacks without printing supplied 
     ], {
       encoding: 'utf8', timeout: 10000,
       env: {
+        FACEBOOK_GRAPH_BASE: 'https://graph.facebook.com/v25.0',
+        INSTAGRAM_MESSAGING_ACCOUNT_ID: 'audit-account',
         FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
         INSTAGRAM_MESSAGING_TOKEN: 'do-not-log-ig-token',
         INSTAGRAM_VERIFY_TOKEN: 'do-not-log-verify-token',
@@ -646,11 +648,11 @@ test('social repair diagnostics use current callbacks without printing supplied 
       },
     });
     assert.equal(result.error, undefined);
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /callback_url=https:\/\/api\.tdfrecords\.net\/instagram\/webhook/);
-    assert.match(result.stdout, /callback_url=https:\/\/api\.tdfrecords\.net\/facebook\/webhook/);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stdout, /Instagram callback: https:\/\/api\.tdfrecords\.net\/instagram\/webhook/);
+    assert.match(result.stdout, /Facebook callback: https:\/\/api\.tdfrecords\.net\/facebook\/webhook/);
     assert.doesNotMatch(result.stdout, /do-not-log-|tdf-hq\.fly\.dev|flyctl/);
-    assert.match(result.stdout, /current Hetzner secret store/);
+    assert.match(result.stdout, /ops\/hetzner\/README.md/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -662,7 +664,7 @@ test('social diagnostics reject stale or inactive callbacks and accept current a
     const mock = join(directory, 'fetch.mjs');
     await writeFile(mock, `globalThis.fetch = async url => ({ json: async () =>
       url.includes('/subscriptions?') ? { data: JSON.parse(process.env.TEST_SUBSCRIPTIONS) }
-      : { data: { is_valid: true, scopes: [] } }
+      : url.includes('/debug_token?') ? { data: { is_valid: true, scopes: [] } } : { username: 'fixture' }
     });`);
     for (const [base, active, repair] of [
       ['https://tdf-hq.fly.dev', true, true],
@@ -674,7 +676,9 @@ test('social diagnostics reject stale or inactive callbacks and accept current a
       ], {
         encoding: 'utf8', timeout: 10000,
         env: {
-          FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
+          FACEBOOK_GRAPH_BASE: 'https://graph.facebook.com/v25.0',
+        INSTAGRAM_MESSAGING_ACCOUNT_ID: 'audit-account',
+        FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'do-not-log-app-secret',
           INSTAGRAM_MESSAGING_TOKEN: 'do-not-log-ig-token',
           FACEBOOK_MESSAGING_TOKEN: 'do-not-log-fb-token', FACEBOOK_MESSAGING_PAGE_ID: 'audit-page',
           TEST_SUBSCRIPTIONS: JSON.stringify([
@@ -684,74 +688,14 @@ test('social diagnostics reject stale or inactive callbacks and accept current a
         },
       });
       assert.equal(result.error, undefined);
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.stdout.includes('To fix Instagram subscription'), repair);
-      assert.equal(result.stdout.includes('To fix Facebook subscription'), repair);
-      assert.equal(result.stdout.includes('Re-subscribe Instagram webhook'), repair);
-      assert.equal(result.stdout.includes('Re-subscribe Facebook webhook'), repair);
+      assert.equal(result.status, repair ? 1 : 0, result.stderr);
+      assert.equal(result.stdout.includes('❌ Instagram canonical webhook active'), repair);
+      assert.equal(result.stdout.includes('❌ Facebook canonical webhook active'), repair);
+      assert.doesNotMatch(result.stdout, /curl -X POST|Re-subscribe/);
       assert.equal(result.stdout.includes('All checks passed'), !repair);
       assert.doesNotMatch(result.stdout, /do-not-log-/);
     }
   } finally {
     await rm(directory, { recursive: true, force: true });
-  }
-});
-
-test('Facebook repair command expands a backend-supported token without a literal placeholder', async () => {
-  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
-  const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=page'));
-  // Evaluate the printed command with a local curl stub: no network/provider writes.
-  const command = line.trim().slice("console.log('".length, -3);
-  for (const [env, expected] of [
-    [{ FACEBOOK_MESSAGING_TOKEN: 'test-primary', FACEBOOK_PAGE_ACCESS_TOKEN: 'test-alias', INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-primary'],
-    [{ FACEBOOK_PAGE_ACCESS_TOKEN: 'test-alias', INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-alias'],
-    [{ INSTAGRAM_VERIFY_TOKEN: 'test-fallback' }, 'test-fallback'],
-  ]) {
-    const result = spawnSync('/bin/bash', ['-c', 'curl() { printf "%s\\n" "$@"; }; ' + command], {
-      encoding: 'utf8', timeout: 10000, env: { ...env, FACEBOOK_APP_ID: 'audit-app', FACEBOOK_APP_SECRET: 'test-app' },
-    });
-    assert.equal(result.error, undefined);
-    assert.equal(result.status, 0, result.stderr);
-    assert.ok(result.stdout.split('\n').includes('verify_token=' + expected));
-    assert.doesNotMatch(result.stdout, /YOUR_FACEBOOK/);
-  }
-});
-
-test('Instagram repair commands honor backend credential aliases without printing values', async () => {
-  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
-  const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=instagram'));
-  const command = line.trim().slice("console.log('".length, -3);
-  for (const env of [
-    { FACEBOOK_APP_ID: 'test-app', FACEBOOK_APP_SECRET: 'test-secret', INSTAGRAM_VERIFY_TOKEN: 'test-verify' },
-    { META_APP_ID: 'test-app', META_APP_SECRET: 'test-secret', IG_VERIFY_TOKEN: 'test-verify' },
-  ]) {
-    const result = spawnSync('/bin/bash', ['-c', 'curl() { printf "%s\\n" "$@"; }; ' + command], {
-      encoding: 'utf8', timeout: 10000, env,
-    });
-    assert.equal(result.error, undefined);
-    assert.equal(result.status, 0, result.stderr);
-    const args = result.stdout.split('\n');
-    assert.ok(args.includes('https://graph.facebook.com/v18.0/test-app/subscriptions'));
-    assert.ok(args.includes('verify_token=test-verify'));
-    assert.ok(args.includes('access_token=test-app|test-secret'));
-    assert.doesNotMatch(command, /test-app|test-secret|test-verify/);
-  }
-});
-
-test('printed webhook repairs reject missing or empty verify credentials before curl', async () => {
-  const source = await readFile(new URL('../diagnose-social.mjs', import.meta.url), 'utf8');
-  for (const object of ['instagram', 'page']) {
-    const line = source.split('\n').find(line => line.includes('console.log(') && line.includes('object=' + object));
-    const command = line.trim().slice("console.log('".length, -3);
-    for (const empty of [{}, { INSTAGRAM_VERIFY_TOKEN: '', IG_VERIFY_TOKEN: '', FACEBOOK_MESSAGING_TOKEN: '', FACEBOOK_PAGE_ACCESS_TOKEN: '' }]) {
-      const result = spawnSync('/bin/bash', ['-c', 'curl() { echo UNEXPECTED_PROVIDER_CALL; }; ' + command], {
-        encoding: 'utf8', timeout: 10000,
-        env: { ...empty, FACEBOOK_APP_ID: 'test-app', FACEBOOK_APP_SECRET: 'UNLOGGED_SECRET' },
-      });
-      assert.notEqual(result.status, 0);
-      assert.equal(result.stdout, '');
-      assert.match(result.stderr, /Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN/);
-      assert.doesNotMatch(result.stderr, /UNLOGGED_SECRET/);
-    }
   }
 });

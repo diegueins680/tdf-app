@@ -61,6 +61,7 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpCurrency        :: Text
   , atpBuyerFeeBps     :: Int
   , atpOrganizerFeeBps :: Int
+  , atpTaxIncluded     :: Bool
   , atpTaxBps          :: Int
   , atpHoldMinutes     :: Int
   , atpTermsVersion    :: Text
@@ -87,6 +88,7 @@ data TicketRuntimeView = TicketRuntimeView
   , trvNetMinor           :: Int64
   , trvBuyerFeeMinor      :: Int64
   , trvOrganizerFeeMinor  :: Int64
+  , trvTaxIncluded        :: Bool
   , trvTaxMinor           :: Int64
   , trvCheckoutTotalMinor :: Int64
   , trvOrganizerPayable   :: Int64
@@ -202,7 +204,7 @@ loadApprovedTicketPolicy now eventKey = do
   rows <- (rawSql
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
-    \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order\
+    \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order, tax_included\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -212,13 +214,13 @@ loadApprovedTicketPolicy now eventKey = do
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int, Single Int
        , Single Int, Single Int, Single Text, Single Text, Single Text
-       , Single Bool, Single Int
+       , Single Bool, Single Int, Single Bool
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
      , Single atpBuyerFeeBps, Single atpOrganizerFeeBps, Single atpTaxBps
      , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
-     , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder
+     , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder, Single atpTaxIncluded
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -283,6 +285,7 @@ getPublicEventTicketStorefront rawEventId = do
           , Routes.currency = atpCurrency
           , Routes.buyerFeeBps = atpBuyerFeeBps
           , Routes.organizerFeeBps = atpOrganizerFeeBps
+          , Routes.taxIncluded = atpTaxIncluded
           , Routes.taxBps = atpTaxBps
           , Routes.holdMinutes = atpHoldMinutes
           , Routes.termsVersion = atpTermsVersion
@@ -427,7 +430,8 @@ createPublicEventTicketCheckout rawEventId mIdempotency
       throwError (badRequest "Fixed promotion currency does not match the approved event policy")
   let discountMinor = maybe 0 vpDiscountMinor validPromo
   price <- either (throwError . badRequest) pure $
-    TicketDomain.calculateTicketPrice
+    TicketDomain.calculateTicketPriceWithTaxMode
+      (atpTaxIncluded policy)
       (fromIntegral (SM.eventTicketTierPriceCents tier))
       requestedQuantity
       discountMinor
@@ -665,6 +669,7 @@ createTicketCheckoutTransaction
             , "discount_minor" .= TicketDomain.tpbDiscountMinor price
             , "buyer_fee_minor" .= TicketDomain.tpbBuyerFeeMinor price
             , "organizer_fee_minor" .= TicketDomain.tpbOrganizerFeeMinor price
+            , "tax_included" .= atpTaxIncluded policy
             , "tax_minor" .= TicketDomain.tpbTaxMinor price
             , "checkout_total_minor" .= TicketDomain.tpbCheckoutTotalMinor price
             , "organizer_payable_minor" .= TicketDomain.tpbOrganizerPayableMinor price
@@ -697,9 +702,9 @@ createTicketCheckoutTransaction
         \ discount_minor, net_face_value_minor, buyer_fee_bps, buyer_fee_minor,\
         \ organizer_fee_bps, organizer_fee_minor, tax_bps, tax_minor,\
         \ checkout_total_minor, organizer_payable_minor, platform_fee_minor,\
-        \ promo_code_id, terms_version, terms_accepted_at, hold_expires_at\
+        \ promo_code_id, terms_version, terms_accepted_at, hold_expires_at, tax_included\
         \) VALUES (?, ?, ?, ?::uuid, ?::uuid, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,\
-        \ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        \ ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         [ toPersistValue orderKey, toPersistValue eventKey, toPersistValue tierKey
         , PersistText (Checkout.checkoutReferenceId checkout), PersistText (atpId policy)
         , PersistText (atpVersion policy), PersistText lookupHash
@@ -718,7 +723,7 @@ createTicketCheckoutTransaction
         , PersistInt64 (TicketDomain.tpbOrganizerPayableMinor price)
         , PersistInt64 (TicketDomain.tpbPlatformFeeMinor price)
         , maybe PersistNull toPersistValue promoKey, PersistText (atpTermsVersion policy)
-        , PersistUTCTime now, PersistUTCTime holdExpiresAt
+        , PersistUTCTime now, PersistUTCTime holdExpiresAt, PersistBool (atpTaxIncluded policy)
         ]
       rawExecute
         "INSERT INTO event_ticket_fulfillment_event(\
@@ -739,7 +744,7 @@ loadTicketRuntimeView orderKey = do
     \ runtime.unit_price_minor, runtime.gross_face_value_minor,\
     \ runtime.discount_minor, runtime.net_face_value_minor, runtime.buyer_fee_minor,\
     \ runtime.organizer_fee_minor, runtime.tax_minor, runtime.checkout_total_minor,\
-    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version\
+    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version, runtime.tax_included\
     \ FROM event_ticket_checkout_runtime runtime\
     \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
     \ WHERE runtime.order_id = ? AND checkout.domain_type = 'event_ticket_order'\
@@ -751,7 +756,7 @@ loadTicketRuntimeView orderKey = do
       [( Single Int64, Single Int64, Single Text, Single Text, Single Text
        , Single UTCTime, Single (Maybe UTCTime), Single Text, Single Text, Single Int, Single Int64
        , Single Int64, Single Int64, Single Int64, Single Int64, Single Int64
-       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text
+       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text, Single Bool
        )])
   pure $ case rows of
     [( Single trvOrderId, Single trvEventId, Single trvCheckoutId
@@ -761,7 +766,7 @@ loadTicketRuntimeView orderKey = do
      , Single trvDiscountMinor, Single trvNetMinor, Single trvBuyerFeeMinor
      , Single trvOrganizerFeeMinor, Single trvTaxMinor
      , Single trvCheckoutTotalMinor, Single trvOrganizerPayable
-     , Single trvPlatformFeeMinor, Single trvTermsVersion
+     , Single trvPlatformFeeMinor, Single trvTermsVersion, Single trvTaxIncluded
      )] -> Just TicketRuntimeView{..}
     _ -> Nothing
 
@@ -795,6 +800,7 @@ loadTicketCheckoutDTO orderKey lookupToken = do
         , Routes.netFaceValueMinor = trvNetMinor runtime
         , Routes.buyerPlatformFeeMinor = trvBuyerFeeMinor runtime
         , Routes.organizerPlatformFeeMinor = trvOrganizerFeeMinor runtime
+        , Routes.taxIncluded = trvTaxIncluded runtime
         , Routes.taxMinor = trvTaxMinor runtime
         , Routes.checkoutTotalMinor = trvCheckoutTotalMinor runtime
         , Routes.organizerPayableMinor = trvOrganizerPayable runtime

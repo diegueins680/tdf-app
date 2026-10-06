@@ -238,3 +238,15 @@ The shared access helper also requires the database container to mount the named
 `tdf_production_postgres_data` volume at `/var/lib/postgresql/data`, with no child
 mount shadowing that store. A replacement volume, bind mount or missing mount is
 rejected before metadata, credentials or inventory are returned.
+
+### Social diagnostic output and side effects
+
+`scripts/diagnose-social.mjs` reads webhook/token/account metadata only. It does
+not send a test message, register webhooks or restart services. Supply the reviewed
+versioned `FACEBOOK_GRAPH_BASE` (or `FACEBOOK_MESSAGING_API_BASE`) from the backend
+configuration; only `https://graph.facebook.com/vN.N` is accepted. There is no
+separate hardcoded version fallback. Fetches have a15-second deadline and reject
+redirects. Missing/inactive/noncanonical callbacks, invalid tokens and transport
+or response failures produce a nonzero exit. Configured credentials are redacted
+from reflected metadata; raw provider errors are not printed. A passing diagnostic
+is metadata evidence only, not delivery, provider approval or release readiness.
