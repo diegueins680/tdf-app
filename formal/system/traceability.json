@@ -7947,7 +7947,7 @@
     "scripts/test-original-edge-tls.py": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
     "scripts/test-original-recovery-completion.py": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
     "scripts/test-original-timer-recovery.py": "2273e2069fedbb15e7ca84cfb0136750700f29c0727dc7f67a5c84ced0bed5a2",
-    "scripts/test-outbound-quarantine-linux.py": "0d619cf8d42faacd2202da7b82a53774cbbc363f8e964972a9be337d166391bc",
+    "scripts/test-outbound-quarantine-linux.py": "f24b612e458da6b606ede9676d09ddf0825fb3ffc629438874c06ed6e1fbb833",
     "scripts/test-outbound-quarantine-reboot-linux.py": "27850773d774f920707ac44bc45e30527754a33aa44cb901abcfaa6a363dbb43",
     "scripts/test-outbound-quarantine.py": "327001bcab2c4b9ef753baac7e4438eb9dcc296a5e4a04761d28892de93264ed",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
@@ -18081,7 +18081,7 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "0d619cf8d42faacd2202da7b82a53774cbbc363f8e964972a9be337d166391bc",
+      "sha256": "f24b612e458da6b606ede9676d09ddf0825fb3ffc629438874c06ed6e1fbb833",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

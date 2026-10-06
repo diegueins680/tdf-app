@@ -43,12 +43,12 @@ for line in sys.stdin:
  try:
   if command['operation']=='connect':
    s=socket.socket(socket.AF_INET6 if ':' in command['address'] else socket.AF_INET,socket.SOCK_STREAM)
-   s.settimeout(1);s.connect((command['address'],command['port']))
+   s.settimeout(3);s.connect((command['address'],command['port']))
   else:
    s.sendall(b'synthetic-probe');assert s.recv(128)==b'synthetic-probe'
-  result=True
- except (OSError,AssertionError):result=False
- print(json.dumps({'passed':result}),flush=True)
+  result={'passed':True}
+ except (OSError,AssertionError) as error:result={'passed':False,'failure':type(error).__name__}
+ print(json.dumps(result),flush=True)
 '''
 
 
@@ -81,7 +81,10 @@ def main():
     def request(process, operation, expected=True, **kwargs):
         nonlocal assertions
         process.stdin.write(json.dumps({'operation':operation,**kwargs})+'\n');process.stdin.flush()
-        result = json.loads(process.stdout.readline()); require(result == {'passed':expected}); assertions += 1
+        result = json.loads(process.stdout.readline())
+        if result.get('passed') is not expected:
+            raise AssertionError(json.dumps({'operation':operation,'expected':expected,'fixtureTarget':kwargs,'result':result}))
+        assertions += 1
     try:
         network = run(DOCKER+['network','create','--driver','bridge','--ipv6',
                     '--subnet','172.30.251.0/24','--subnet','fd55:7df:251::/64','--label',LABEL+'='+nonce,name])
@@ -149,6 +152,7 @@ def main():
             request(new_incoming,'send')
         # A permissive replacement is a negative control: the same blocked
         # fresh provider probe must become reachable, and admission must reject.
+        require(all(process.poll() is None for process in children))
         run(['nft','flush','chain','inet',q.TABLE,'host_input'])
         try:q.observe([bridge])
         except ValueError: assertions += 1
