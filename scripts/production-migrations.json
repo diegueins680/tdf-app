@@ -945,6 +945,11 @@
       "id": "2026-10-06_ticket_manual_bank_transfer",
       "path": "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql",
       "introducedBy": "39a142a23ff4b9f0998bec7f44e243eb9d90142b"
+    },
+    {
+      "id": "2026-10-06_ticket_tax_invoices",
+      "path": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+      "introducedBy": "2b99808aef990b453a1607303243601b78467178"
     }
   ]
 }

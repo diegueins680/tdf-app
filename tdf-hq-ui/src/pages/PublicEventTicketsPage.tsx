@@ -98,6 +98,9 @@ export default function PublicEventTicketsPage() {
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [promoCode, setPromoCode] = useState('');
+  const [billingIdType, setBillingIdType] = useState<'consumidor_final' | 'cedula' | 'ruc' | 'pasaporte'>('consumidor_final');
+  const [billingIdNumber, setBillingIdNumber] = useState('');
+  const [billingName, setBillingName] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [checkout, setCheckout] = useState<PublicEventTicketCheckout | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -233,6 +236,14 @@ export default function PublicEventTicketsPage() {
       ...(buyerPhone.trim() ? { buyerPhone: buyerPhone.trim() } : {}),
       ...(promoCode.trim() ? { promoCode: promoCode.trim() } : {}),
       termsAccepted,
+      ...(storefront.data.policy?.taxInvoiceIssued
+        ? {
+          billingIdType,
+          ...(billingIdType !== 'consumidor_final'
+            ? { billingIdNumber: billingIdNumber.trim(), billingName: billingName.trim() }
+            : {}),
+        }
+        : {}),
     };
     const fingerprint = JSON.stringify(payload);
     if (idempotency.current?.fingerprint !== fingerprint) {
@@ -495,6 +506,31 @@ export default function PublicEventTicketsPage() {
                   <TextField required type="email" label="Email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
                   <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />
                   <TextField label={english ? 'Promo code (optional)' : 'Código promocional (opcional)'} value={promoCode} onChange={(event) => setPromoCode(event.target.value)} inputProps={{ maxLength: 50 }} />
+                  {storefront.data.policy?.taxInvoiceIssued && (
+                    <Stack spacing={1.5} component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
+                      <Typography component="legend" variant="subtitle2" fontWeight={800}>
+                        {english ? 'Electronic invoice details' : 'Datos para tu factura electrónica'}
+                      </Typography>
+                      <TextField select label={english ? 'Invoice to' : 'Facturar a'} value={billingIdType}
+                        onChange={(event) => setBillingIdType(event.target.value as typeof billingIdType)}
+                        helperText={english
+                          ? 'Final consumer is allowed up to USD 50. Above that, enter an ID.'
+                          : 'Consumidor final se permite hasta USD 50. Sobre ese valor, ingresa una identificación.'}>
+                        <MenuItem value="consumidor_final">{english ? 'Final consumer' : 'Consumidor final'}</MenuItem>
+                        <MenuItem value="cedula">{english ? 'Ecuadorian ID (cédula)' : 'Cédula'}</MenuItem>
+                        <MenuItem value="ruc">RUC</MenuItem>
+                        <MenuItem value="pasaporte">{english ? 'Passport' : 'Pasaporte'}</MenuItem>
+                      </TextField>
+                      {billingIdType !== 'consumidor_final' && (
+                        <>
+                          <TextField required label={english ? 'ID number' : 'Número de identificación'} value={billingIdNumber}
+                            onChange={(event) => setBillingIdNumber(event.target.value)} inputProps={{ maxLength: 20, inputMode: billingIdType === 'pasaporte' ? 'text' : 'numeric' }} />
+                          <TextField required label={english ? 'Name or business name' : 'Nombre o razón social'} value={billingName}
+                            onChange={(event) => setBillingName(event.target.value)} inputProps={{ maxLength: 300 }} />
+                        </>
+                      )}
+                    </Stack>
+                  )}
                   {storefront.data.policy ? (
                     <Alert severity="info">
                       <Stack spacing={0.75}>

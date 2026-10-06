@@ -55,6 +55,7 @@ module TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO (..),
     TicketManualPaymentDTO (..),
     TicketManualPaymentReviewDTO (..),
+    TicketTaxDocumentDTO (..),
     TicketTransferCreateDTO (..),
     TicketTransferDTO (..),
     WaitlistJoinDTO (..),
@@ -1444,6 +1445,25 @@ data TicketManualPaymentDTO = TicketManualPaymentDTO
 
 instance ToJSON TicketManualPaymentDTO
 instance FromJSON TicketManualPaymentDTO
+
+-- | Staff view of the SRI electronic invoice for a paid ticket order.
+data TicketTaxDocumentDTO = TicketTaxDocumentDTO
+    { ttdId :: Text
+    , ttdOrderId :: Text
+    , ttdNumber :: Text
+    , ttdStatus :: Text
+    , ttdAmountMinor :: Int
+    , ttdAccessKey :: Maybe Text
+    , ttdAuthorizationNumber :: Maybe Text
+    , ttdAuthorizedAt :: Maybe UTCTime
+    , ttdLastError :: Maybe Text
+    , ttdEnvironment :: Text
+    , ttdCreatedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON TicketTaxDocumentDTO
+instance FromJSON TicketTaxDocumentDTO
 
 data TicketManualPaymentReviewDTO = TicketManualPaymentReviewDTO
     { tmprAction :: Text

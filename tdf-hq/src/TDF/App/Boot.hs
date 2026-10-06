@@ -61,6 +61,7 @@ import TDF.Commerce.ProviderEventWorker (startProviderEventWorker)
 import TDF.Commerce.ProviderReconciliation (startProviderQueryWorker)
 import TDF.Commerce.MerchReservationWorker (startMerchReservationWorker)
 import TDF.Ticketing.Confirmation (startTicketConfirmationWorker)
+import TDF.Invoice.Datil (startTaxInvoiceWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
 import qualified TDF.CMS.Models as CMS
@@ -159,6 +160,7 @@ runBootServer = do
         startProviderQueryWorker env
         startMerchReservationWorker env
         startTicketConfirmationWorker env
+        startTaxInvoiceWorker env
         startReputationWorker env
 
   serverResult <- newEmptyMVar

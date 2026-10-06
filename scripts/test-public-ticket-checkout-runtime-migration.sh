@@ -362,4 +362,14 @@ if apply_file tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer_rollback.sql; th
   exit 1
 fi
 
-echo "Public ticket checkout migration passed rerun, clean rollback, inactive policy preservation, immutable price/fee binding, verified-payment gating, explicit issuance, exact hold expiry, promotion release, manual bank transfer hold bounds, and evidence-aware rollback checks."
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql
+apply_file tdf-hq/test/integration/ticket_tax_invoices.sql
+if apply_file tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql; then
+  echo "Invoice rollback discarded invoicing evidence or buyer identification" >&2
+  exit 1
+fi
+
+echo "Public ticket checkout migration passed rerun, clean rollback, inactive policy preservation, immutable price/fee binding, verified-payment gating, explicit issuance, exact hold expiry, promotion release, manual bank transfer hold bounds, exactly-once invoice enqueueing, and evidence-aware rollback checks."

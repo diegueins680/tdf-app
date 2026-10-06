@@ -148,6 +148,7 @@ import Data.Char (
     isAsciiLower,
     isAsciiUpper,
     isControl,
+    isHexDigit,
  )
 import Data.Int (Int64)
 import Data.List (nub, sortOn)
@@ -203,6 +204,7 @@ import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Server.TicketManualPayments as ManualPayments
+import qualified TDF.Server.TicketTaxDocuments as TaxDocuments
 import qualified TDF.Server.TicketRefunds as TicketRefunds
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.EventResearch as EventResearch
@@ -258,6 +260,7 @@ import TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO (..),
     TicketManualPaymentDTO (..),
     TicketManualPaymentReviewDTO (..),
+    TicketTaxDocumentDTO (..),
     RsvpCreateDTO (..),
     RsvpDTO (..),
     RsvpSummaryDTO (..),
@@ -4106,6 +4109,9 @@ socialEventsServer user =
             -- Manual bank transfer review
             :<|> listManualPayments
             :<|> reviewManualPayment
+            -- SRI electronic invoices
+            :<|> listTaxDocuments
+            :<|> retryTaxDocument
             -- Transfers
             :<|> createTransfer
             :<|> listTransfers
@@ -5548,6 +5554,26 @@ socialEventsServer user =
         case filter ((== T.pack (show (fromSqlKey orderKey))) . tmpOrderId) rows of
             dto : _ -> pure dto
             [] -> throwError err404{errBody = "Ticket order not found"}
+
+    -- SRI electronic invoices
+    listTaxDocuments :: T.Text -> AppM [TicketTaxDocumentDTO]
+    listTaxDocuments eventIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        liftIO $ runSqlPool (TaxDocuments.listTicketTaxDocuments eventKey) envPool
+
+    retryTaxDocument :: T.Text -> T.Text -> AppM [TicketTaxDocumentDTO]
+    retryTaxDocument eventIdStr documentIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        unless (hasStrictAdminAccess user) $
+            throwError err403{errBody = "Only administrators may resend an invoice"}
+        when (T.length documentIdStr /= 36 || T.any (\c -> not (c == '-' || isHexDigit c)) documentIdStr) $
+            throwError err400{errBody = "Invalid invoice document id"}
+        retried <- liftIO $ runSqlPool (TaxDocuments.retryFailedTicketTaxDocument eventKey documentIdStr) envPool
+        unless retried $
+            throwError err409{errBody = "Only invoices the provider refused before creating them can be resent"}
+        liftIO $ runSqlPool (TaxDocuments.listTicketTaxDocuments eventKey) envPool
 
     -- Transfers
     createTransfer :: T.Text -> T.Text -> TicketTransferCreateDTO -> AppM TicketTransferDTO

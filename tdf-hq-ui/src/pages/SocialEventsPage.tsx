@@ -64,6 +64,7 @@ import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from
 import { hasStrictAdminAccess } from '../utils/accessControl';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
+import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -1761,6 +1762,10 @@ export default function SocialEventsPage() {
 
                           {eventId && (
                             <EventManualPaymentsPanel eventId={eventId} formatMoney={formatMoney} formatDate={formatDate} />
+                          )}
+
+                          {eventId && (
+                            <EventTaxDocumentsPanel eventId={eventId} formatMoney={formatMoney} formatDate={formatDate} />
                           )}
 
                           <Divider />

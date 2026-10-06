@@ -385,6 +385,33 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/buyer@example|Comprador|secure-lookup/);
   });
 
+  it.each([[true], [false]])('sends invoice identification only when the policy issues invoices (%s)', async (invoiced) => {
+    getStorefrontMock.mockResolvedValue({
+      ...storefrontFixture,
+      policy: { ...storefrontFixture.policy, maxTicketsPerOrder: 4, taxInvoiceIssued: invoiced },
+    });
+    await renderTracking('/eventos/41/entradas?tierId=8&quantity=1');
+    await waitForExpectation(() => expect(container.textContent).toContain('Hasta 4 entradas por orden.'));
+    expect(container.textContent?.includes('Datos para tu factura electrónica')).toBe(invoiced);
+    await act(async () => {
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[maxlength="160"]')!,
+        { target: { value: 'Comprador de prueba' } });
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[type="email"]')!,
+        { target: { value: 'buyer@example.invalid' } });
+      fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    });
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
+    const payload = createCheckoutMock.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+    if (invoiced) {
+      expect(payload).toMatchObject({ billingIdType: 'consumidor_final' });
+    } else {
+      expect(payload).not.toHaveProperty('billingIdType');
+    }
+    expect(payload).not.toHaveProperty('billingIdNumber');
+  });
+
   it('keeps the legacy policy fallback bounded by remaining inventory', async () => {
     await renderTracking('/eventos/41/entradas?tierId=8');
     await waitForExpectation(() => expect(container.textContent).toContain('Hasta 100 entradas por orden.'));

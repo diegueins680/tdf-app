@@ -429,6 +429,20 @@ export interface TicketManualPaymentDTO {
   tmpHoldExpiresAt: string;
 }
 
+export interface TicketTaxDocumentDTO {
+  ttdId: string;
+  ttdOrderId: string;
+  ttdNumber: string;
+  ttdStatus: 'pending' | 'submitted' | 'authorized' | 'rejected' | 'uncertain' | 'failed';
+  ttdAmountMinor: number;
+  ttdAccessKey?: string | null;
+  ttdAuthorizationNumber?: string | null;
+  ttdAuthorizedAt?: string | null;
+  ttdLastError?: string | null;
+  ttdEnvironment: string;
+  ttdCreatedAt: string;
+}
+
 export interface TicketManualPaymentReviewDTO {
   tmprAction: 'approve' | 'reject';
   tmprNotes: string;
@@ -758,6 +772,11 @@ export const SocialEventsAPI = {
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/manual-payments`) as TicketManualPaymentDTO[],
   reviewManualPayment: async (eventId: string, orderId: string, data: TicketManualPaymentReviewDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/review`, data) as TicketManualPaymentDTO,
+  // SRI electronic invoices
+  listTaxDocuments: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tax-documents`) as TicketTaxDocumentDTO[],
+  retryTaxDocument: async (eventId: string, documentId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tax-documents/${encodeURIComponent(documentId)}/retry`, {}) as TicketTaxDocumentDTO[],
   // Transfers
   createTransfer: async (eventId: string, ticketId: string, data: TicketTransferCreateDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/transfer`, data) as TicketTransferDTO,
