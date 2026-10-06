@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "b207c18d2732a23f303c31591eaaaa0dd3b244f1",
+  "mobileRevision": "d801d39815c443690c99c4e58f2fb325b4f15ec6",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -5309,7 +5309,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "dca853477976fde4a7dc70f1c0415e317fa7afba8531463f854af104d421464c",
+      "sha256": "5cbdc0c477e949097b12399d02a0927f3c3e85d51386812caa5efa0193e8c057",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5729,7 +5729,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "ae247fb56bfae838f7f93a4b4c0d6daed9e457306b2995f07df12253569c658d",
+      "sha256": "49898779bea5d2ce19e518e6d5c80e75925f5013414123b0913111fed1572eac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8339,7 +8339,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "3716fa4cadc32802443e1ef60319e74d71c4db765e7ba15aa9cb3cec0b05ee5e",
+      "sha256": "5a689514081aae0e98de08db9d4377696fa832b05d1b2b37a02accbddfe2bcd0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9587,7 +9587,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e8cecd27936634e6aa5ada943a28198c3d42cf2ed1fedb7ae70c9f566c6d26bf",
+      "sha256": "bf22de4a74216f59a95b4ccc3f7d217c05d94d6527634cf064fcbe2a361dd5e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12821,7 +12821,7 @@
     {
       "id": "SURFACE-a6d0775d20903e98",
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
-      "sha256": "b2f35f77e01a74713940aa367b8e903554d20c576fed1d192fdce10f70fa12c1",
+      "sha256": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12881,7 +12881,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "a459f81206e18d02ce1921793b6cc2222d65cc9171f950031330fe30bcce44c3",
+      "sha256": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15353,7 +15353,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "ae247fb56bfae838f7f93a4b4c0d6daed9e457306b2995f07df12253569c658d",
+      "sha256": "49898779bea5d2ce19e518e6d5c80e75925f5013414123b0913111fed1572eac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22733,7 +22733,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e8cecd27936634e6aa5ada943a28198c3d42cf2ed1fedb7ae70c9f566c6d26bf",
+      "sha256": "bf22de4a74216f59a95b4ccc3f7d217c05d94d6527634cf064fcbe2a361dd5e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
