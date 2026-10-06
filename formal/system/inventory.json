@@ -4778,7 +4778,7 @@
     {
       "id": "SURFACE-b8d7df5c0ea7535d",
       "path": "scripts/test-hetzner-backup.py",
-      "sha256": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
+      "sha256": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {

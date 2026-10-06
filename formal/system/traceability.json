@@ -7333,7 +7333,7 @@
     "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
     "scripts/test-coordinated-retrieval.py": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
-    "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
+    "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-host-process-admission.py": "877ff9d02d2f09320ae9b400b0afb8895a4664d1023833b72eb19678266dc375",
@@ -16221,7 +16221,7 @@
     {
       "id": "SURFACE-b8d7df5c0ea7535d",
       "path": "scripts/test-hetzner-backup.py",
-      "sha256": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
+      "sha256": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
