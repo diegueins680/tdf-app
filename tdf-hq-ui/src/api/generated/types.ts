@@ -10279,6 +10279,8 @@ export interface components {
             timezone?: string | null;
             venueName?: string | null;
             venueAddress?: string | null;
+            /** @description Public event artwork (flyer) shown on the ticket checkout. */
+            imageUrl?: string | null;
             tiers: components["schemas"]["PublicEventTicketTier"][];
             policy: components["schemas"]["PublicEventTicketPolicy"] | null;
             checkoutAvailable: boolean;

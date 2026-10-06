@@ -72,6 +72,7 @@ data PublicEventTicketStorefrontDTO = PublicEventTicketStorefrontDTO
   , timezone          :: Maybe Text
   , venueName         :: Maybe Text
   , venueAddress      :: Maybe Text
+  , imageUrl          :: Maybe Text
   , tiers             :: [PublicEventTicketTierDTO]
   , policy            :: Maybe PublicEventTicketPolicyDTO
   , checkoutAvailable :: Bool

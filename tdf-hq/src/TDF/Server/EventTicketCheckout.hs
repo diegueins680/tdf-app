@@ -338,6 +338,8 @@ getPublicEventTicketStorefront rawEventId = do
     , Routes.timezone = SM.socialEventTimezone eventRow
     , Routes.venueName = venueName
     , Routes.venueAddress = venueAddress
+    , Routes.imageUrl = either (const Nothing) SocialEvents.emImageUrl
+        (SocialEvents.decodeStoredEventMetadata (SM.socialEventMetadata eventRow))
     , Routes.tiers = publicTiers
     , Routes.policy = publicPolicy
     , Routes.checkoutAvailable = available

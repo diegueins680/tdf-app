@@ -11338,6 +11338,10 @@ components:
         timezone: { type: string, nullable: true }
         venueName: { type: string, nullable: true }
         venueAddress: { type: string, nullable: true }
+        imageUrl:
+          type: string
+          nullable: true
+          description: Public event artwork (flyer) shown on the ticket checkout.
         tiers:
           type: array
           items: { $ref: '#/components/schemas/PublicEventTicketTier' }

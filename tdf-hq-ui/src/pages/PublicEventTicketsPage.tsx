@@ -464,7 +464,16 @@ export default function PublicEventTicketsPage() {
           <Button component={RouterLink} to={`/eventos/${eventId}`} sx={{ alignSelf: 'flex-start' }}>
             {english ? 'Back to event' : 'Volver al evento'}
           </Button>
-          <Card variant="outlined" sx={{ borderRadius: 4 }}>
+          <Card variant="outlined" sx={{ borderRadius: 4, overflow: 'hidden' }}>
+            {storefront.data.imageUrl && (
+              <Box
+                component="img"
+                src={storefront.data.imageUrl}
+                alt={english ? `${storefront.data.title} artwork` : `Arte de ${storefront.data.title}`}
+                loading="eager"
+                sx={{ display: 'block', width: '100%', maxHeight: { xs: 520, md: 640 }, objectFit: 'contain', bgcolor: 'grey.900' }}
+              />
+            )}
             <CardContent sx={{ p: { xs: 3, md: 5 } }}>
               <Stack spacing={2}>
                 <Chip icon={<ConfirmationNumberIcon />} label={english ? 'Official TDF checkout' : 'Checkout oficial TDF'} color="primary" sx={{ alignSelf: 'flex-start' }} />

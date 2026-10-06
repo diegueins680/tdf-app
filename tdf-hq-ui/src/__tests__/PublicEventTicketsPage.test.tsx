@@ -241,6 +241,13 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
   });
 
+  it('shows the event artwork above the checkout', async () => {
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture, imageUrl: 'https://api.example.invalid/flyer.png' });
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('img[alt="Arte de Festival TDF"]')).toBeTruthy());
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('https://api.example.invalid/flyer.png');
+  });
+
   it('uses the event canonical and does not advertise a disabled checkout as a priced offer', async () => {
     getStorefrontMock.mockResolvedValue({ ...storefrontFixture, checkoutAvailable: false });
     await renderTracking('/eventos/41/entradas?utm_source=artist');
