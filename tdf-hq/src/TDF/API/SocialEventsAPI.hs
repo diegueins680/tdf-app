@@ -91,6 +91,8 @@ import TDF.DTO.SocialEventsDTO (
     RefundDTO,
     RefundRequestDTO,
     RejectionReasonDTO,
+    TicketManualPaymentDTO,
+    TicketManualPaymentReviewDTO,
     RsvpCreateDTO,
     RsvpDTO,
     RsvpSummaryDTO,
@@ -512,6 +514,16 @@ type TicketsRoutes =
             :> "reject"
             :> ReqBody '[JSON] RejectionReasonDTO
             :> Post '[JSON] RefundDTO
+        -- Manual bank transfer review
+        :<|> "events" :> Capture "eventId" Text :> "manual-payments" :> Get '[JSON] [TicketManualPaymentDTO]
+        :<|> "events"
+            :> Capture "eventId" Text
+            :> "ticket-orders"
+            :> Capture "orderId" Text
+            :> "manual-payment"
+            :> "review"
+            :> ReqBody '[JSON] TicketManualPaymentReviewDTO
+            :> Post '[JSON] TicketManualPaymentDTO
         -- Transfers
         :<|> "events"
             :> Capture "eventId" Text

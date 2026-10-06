@@ -21,10 +21,10 @@ import           Data.ByteArray (constEq)
 import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAlphaNum)
+import           Data.Char (isAlphaNum, isControl)
 import           Data.Either (isRight)
 import           Data.Int (Int64)
-import           Data.Maybe (fromMaybe, isJust)
+import           Data.Maybe (fromMaybe, isJust, isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -45,6 +45,7 @@ import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
+import qualified TDF.Models as Models
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
 import qualified TDF.Ticketing.Inventory as Inventory
@@ -69,6 +70,8 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpRefundPolicy    :: Text
   , atpTransferAllowed :: Bool
   , atpMaxTicketsPerOrder :: Int
+  , atpManualTransferHoldMinutes :: Maybe Int
+  , atpManualTransferCutoffAt :: Maybe UTCTime
   } deriving (Eq, Show)
 
 data TicketRuntimeView = TicketRuntimeView
@@ -120,6 +123,8 @@ publicEventTicketsServer =
   :<|> confirmPublicEventTicketDatafastStatus
   :<|> createPublicEventTicketPaypalOrder
   :<|> capturePublicEventTicketPaypalOrder
+  :<|> selectPublicEventTicketBankTransfer
+  :<|> submitPublicEventTicketBankTransferEvidence
 
 runDB :: SqlPersistT IO a -> AppM a
 runDB action = do
@@ -204,7 +209,8 @@ loadApprovedTicketPolicy now eventKey = do
   rows <- (rawSql
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
-    \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order, tax_included\
+    \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order, tax_included,\
+    \ manual_transfer_hold_minutes, manual_transfer_cutoff_at\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -214,13 +220,14 @@ loadApprovedTicketPolicy now eventKey = do
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int, Single Int
        , Single Int, Single Int, Single Text, Single Text, Single Text
-       , Single Bool, Single Int, Single Bool
+       , Single Bool, Single Int, Single Bool, Single (Maybe Int), Single (Maybe UTCTime)
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
      , Single atpBuyerFeeBps, Single atpOrganizerFeeBps, Single atpTaxBps
      , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
      , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder, Single atpTaxIncluded
+     , Single atpManualTransferHoldMinutes, Single atpManualTransferCutoffAt
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -277,6 +284,16 @@ getPublicEventTicketStorefront rawEventId = do
     Just venueKey -> do
       venue <- runDB (get venueKey)
       pure (SM.venueName <$> venue, venue >>= SM.venueAddress)
+  -- Advertise the manual rail only while its approved selection window is open
+  -- and the same runtime route a checkout would offer is ready.
+  bankTransferReady <- case (policy, availableTiers) of
+    (Just ApprovedTicketPolicy{ atpManualTransferCutoffAt = Just cutoff }, Entity _ firstTier : _)
+      | domainEnabled && now < cutoff ->
+          elem "bank_transfer" <$> PaymentAvailability.availableImplementedPaymentMethods
+            checkoutEnvironment PaymentAvailability.FlowEventTicket
+            (fromIntegral (SM.eventTicketTierPriceCents firstTier))
+            (T.toUpper (SM.eventTicketTierCurrency firstTier)) True
+    _ -> pure False
   let hasInventory = any ((> 0) . Routes.remaining) publicTiers
       available = domainEnabled && isJust policy && hasInventory
       publicPolicy = (\ApprovedTicketPolicy{..} ->
@@ -293,6 +310,8 @@ getPublicEventTicketStorefront rawEventId = do
           , Routes.refundPolicy = atpRefundPolicy
           , Routes.transferAllowed = atpTransferAllowed
           , Routes.maxTicketsPerOrder = atpMaxTicketsPerOrder
+          , Routes.bankTransferAvailableUntil =
+              if bankTransferReady then atpManualTransferCutoffAt else Nothing
           }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
@@ -739,7 +758,8 @@ loadTicketRuntimeView
 loadTicketRuntimeView orderKey = do
   rows <- (rawSql
     "SELECT runtime.order_id, runtime.event_id, runtime.checkout_id::text,\
-    \ checkout.status, runtime.fulfillment_status, runtime.hold_expires_at, runtime.issued_at,\
+    \ checkout.status, runtime.fulfillment_status,\
+    \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at), runtime.issued_at,\
     \ runtime.policy_version, runtime.currency, runtime.quantity,\
     \ runtime.unit_price_minor, runtime.gross_face_value_minor,\
     \ runtime.discount_minor, runtime.net_face_value_minor, runtime.buyer_fee_minor,\
@@ -778,6 +798,7 @@ loadTicketCheckoutDTO orderKey lookupToken = do
   runtime <- runDB (loadTicketRuntimeView orderKey)
     >>= maybe (throwError notFound) pure
   paymentMethods <- loadPublicTicketPaymentMethods runtime
+  bankTransfer <- loadBankTransferView runtime
   ticketEntities <- if isJust (trvIssuedAt runtime)
     then runDB $ selectList [SM.EventTicketOrderRefId ==. orderKey] [Asc SM.EventTicketId]
     else pure []
@@ -809,6 +830,7 @@ loadTicketCheckoutDTO orderKey lookupToken = do
         }
     , Routes.paymentMethods = paymentMethods
     , Routes.tickets = publicTickets
+    , Routes.bankTransfer = bankTransfer
     }
   where
     toPublicTicket (Entity ticketKey ticket) = Routes.PublicEventTicketDTO
@@ -834,12 +856,14 @@ loadPublicTicketPaymentMethods runtime = do
             Checkout.domainEnabledForEnvironment environment "event_tickets"
           if not domainEnabled
             then pure []
-            else PaymentAvailability.availableImplementedPaymentMethods
-              environment
-              PaymentAvailability.FlowEventTicket
-              (trvCheckoutTotalMinor runtime)
-              (trvCurrency runtime)
-              False
+            else do
+              terms <- runDB (loadManualTransferTerms (toSqlKey (trvOrderId runtime)))
+              PaymentAvailability.availableImplementedPaymentMethods
+                environment
+                PaymentAvailability.FlowEventTicket
+                (trvCheckoutTotalMinor runtime)
+                (trvCurrency runtime)
+                (manualTransferSelectable now terms)
 
 requireLookupToken :: SM.EventTicketOrderId -> Maybe Text -> AppM ()
 requireLookupToken orderKey mLookupToken = do
@@ -890,7 +914,8 @@ loadTicketPaymentContext orderKey = do
   rows <- runDB (rawSql
     "SELECT runtime.event_id, runtime.checkout_id::text, runtime.create_idempotency_key,\
     \ checkout.status, checkout.environment, runtime.checkout_total_minor,\
-    \ runtime.currency, runtime.hold_expires_at, ticket_order.buyer_name,\
+    \ runtime.currency, GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at),\
+    \ ticket_order.buyer_name,\
     \ ticket_order.buyer_email, ticket_order.metadata\
     \ FROM event_ticket_checkout_runtime runtime\
     \ JOIN event_ticket_order ticket_order ON ticket_order.id = runtime.order_id\
@@ -1412,3 +1437,264 @@ finalizeVerifiedTicketOrder context = do
       (SocialEvents.finalizePaidTicketOrder now (tpcOrderKey context))
       envPool
   pure ()
+
+-- | Manual bank transfer terms bound to the order's immutable policy. Absent
+-- when the policy did not opt in.
+data ManualTransferTerms = ManualTransferTerms
+  { mttHoldMinutes         :: Int
+  , mttCutoffAt            :: UTCTime
+  , mttManualHoldExpiresAt :: Maybe UTCTime
+  , mttSubmitterPartyId    :: Maybe Int64
+  } deriving (Eq, Show)
+
+loadManualTransferTerms
+  :: SM.EventTicketOrderId
+  -> SqlPersistT IO (Maybe ManualTransferTerms)
+loadManualTransferTerms orderKey = do
+  rows <- rawSql
+    "SELECT policy.manual_transfer_hold_minutes, policy.manual_transfer_cutoff_at,\
+    \ runtime.manual_hold_expires_at, runtime.manual_submitter_party_id\
+    \ FROM event_ticket_checkout_runtime runtime\
+    \ JOIN event_ticket_checkout_policy policy ON policy.id = runtime.policy_id\
+    \ WHERE runtime.order_id = ?\
+    \ AND policy.manual_transfer_hold_minutes IS NOT NULL\
+    \ AND policy.manual_transfer_cutoff_at IS NOT NULL"
+    [toPersistValue orderKey]
+    :: SqlPersistT IO [(Single Int, Single UTCTime, Single (Maybe UTCTime), Single (Maybe Int64))]
+  pure $ case rows of
+    [(Single mttHoldMinutes, Single mttCutoffAt, Single mttManualHoldExpiresAt, Single mttSubmitterPartyId)] ->
+      Just ManualTransferTerms{..}
+    _ -> Nothing
+
+-- New selections close at the cutoff; an order that already chose the manual
+-- rail keeps seeing it so its evidence can still be submitted.
+manualTransferSelectable :: UTCTime -> Maybe ManualTransferTerms -> Bool
+manualTransferSelectable now = maybe False $ \terms ->
+  now < mttCutoffAt terms || isJust (mttManualHoldExpiresAt terms)
+
+manualSettlementMerchantRef :: Text
+manualSettlementMerchantRef = "tdf-manual-settlement"
+
+loadBankTransferInstructions :: IO Text
+loadBankTransferInstructions = do
+  configured <- lookupEnv "COMMERCE_BANK_TRANSFER_INSTRUCTIONS"
+  pure . T.take 2000 . T.strip . T.replace "\\n" "\n" $ maybe "" T.pack configured
+
+ticketPaymentReference :: Int64 -> Text
+ticketPaymentReference orderId = "TDF-" <> T.pack (show orderId)
+
+loadBankTransferView :: TicketRuntimeView -> AppM (Maybe Routes.PublicEventTicketBankTransferDTO)
+loadBankTransferView runtime = do
+  rows <- runDB (rawSql
+    "SELECT evidence.status, evidence.customer_reference, evidence.review_notes\
+    \ FROM commerce_manual_payment_evidence evidence\
+    \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+    \ WHERE evidence.checkout_id = ?::uuid AND attempt.checkout_id = evidence.checkout_id\
+    \ AND attempt.provider = 'bank_transfer' AND attempt.operation = 'manual_verify'"
+    [PersistText (trvCheckoutId runtime)]
+    :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single (Maybe Text))])
+  case rows of
+    [(Single evidenceStatus, Single customerReference, Single notes)] -> do
+      instructions <- liftIO loadBankTransferInstructions
+      pure $ Just Routes.PublicEventTicketBankTransferDTO
+        { Routes.instructions = instructions
+        , Routes.paymentReference = ticketPaymentReference (trvOrderId runtime)
+        , Routes.amountMinor = trvCheckoutTotalMinor runtime
+        , Routes.currency = trvCurrency runtime
+        , Routes.evidenceStatus = evidenceStatus
+        , Routes.customerReference = customerReference
+        -- Only a rejection reason is buyer-facing; approval notes stay internal.
+        , Routes.reviewNotes = if evidenceStatus == "rejected" then notes else Nothing
+        }
+    _ -> pure Nothing
+
+-- | Guest buyers have no account. As with public bookings, record a new
+-- unverified contact party instead of matching an existing account by email;
+-- the manual-evidence invariants require a submitter distinct from the reviewer.
+ensureManualSubmitterParty
+  :: UTCTime
+  -> TicketPaymentContext
+  -> SqlPersistT IO (Either Text Int64)
+ensureManualSubmitterParty now context = do
+  rows <- rawSql
+    "SELECT manual_submitter_party_id FROM event_ticket_checkout_runtime\
+    \ WHERE order_id = ? FOR UPDATE"
+    [toPersistValue (tpcOrderKey context)]
+    :: SqlPersistT IO [Single (Maybe Int64)]
+  case rows of
+    [Single (Just partyId)] -> pure (Right partyId)
+    [Single Nothing] -> do
+      partyKey <- insert Models.Party
+        { Models.partyLegalName = Nothing
+        , Models.partyDisplayName = tpcBuyerName context
+        , Models.partyIsOrg = False
+        , Models.partyTaxId = Nothing
+        , Models.partyPrimaryEmail = Just (tpcBuyerEmail context)
+        , Models.partyPrimaryPhone = Nothing
+        , Models.partyWhatsapp = Nothing
+        , Models.partyInstagram = Nothing
+        , Models.partyEmergencyContact = Nothing
+        , Models.partyNotes = Just "Unverified guest ticket buyer; supplied contact details do not establish account identity."
+        , Models.partyStripeCustomerId = Nothing
+        , Models.partyCountryCode = Nothing
+        , Models.partyCountryId = Nothing
+        , Models.partyCreatedAt = now
+        }
+      let partyId = fromSqlKey partyKey
+      rawExecute
+        "UPDATE event_ticket_checkout_runtime SET manual_submitter_party_id = ?\
+        \ WHERE order_id = ? AND manual_submitter_party_id IS NULL"
+        [PersistInt64 partyId, toPersistValue (tpcOrderKey context)]
+      pure (Right partyId)
+    _ -> pure (Left "Ticket checkout runtime is missing")
+
+-- | Grow the seat hold within the approved policy. The database trigger is the
+-- authority on bounds; this only avoids requesting a no-op or shorter hold.
+extendManualTransferHold
+  :: TicketPaymentContext
+  -> UTCTime
+  -> SqlPersistT IO ()
+extendManualTransferHold context target =
+  when (target > tpcHoldExpiresAt context) $
+    rawExecute
+      "UPDATE event_ticket_checkout_runtime SET manual_hold_expires_at = ?\
+      \ WHERE order_id = ? AND fulfillment_status = 'seat_held'"
+      [PersistUTCTime target, toPersistValue (tpcOrderKey context)]
+
+selectPublicEventTicketBankTransfer
+  :: Int64
+  -> Int64
+  -> Maybe Text
+  -> AppM Routes.PublicEventTicketCheckoutResponse
+selectPublicEventTicketBankTransfer rawEventId rawOrderId mLookupToken = do
+  context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  when (tpcCheckoutStatus context == "paid") $
+    throwError (conflict "This ticket order is already paid")
+  when (tpcCheckoutStatus context == "processing") $
+    throwError (conflict "Another payment rail is currently processing; verify it before switching methods")
+  ensureNoOtherActiveTicketAttempt context Checkout.ProviderBankTransfer
+  now <- liftIO getCurrentTime
+  terms <- runDB (loadManualTransferTerms (tpcOrderKey context))
+  ManualTransferTerms{..} <- case terms of
+    Just found | manualTransferSelectable now terms -> pure found
+    Just _ -> throwError (conflict "The bank transfer window for this event has closed")
+    Nothing -> throwError (conflict "Bank transfer is not available for this event")
+  available <- PaymentAvailability.availableImplementedPaymentMethods
+    (tpcEnvironment context) PaymentAvailability.FlowEventTicket
+    (tpcAmountMinor context) (tpcCurrency context) True
+  unless ("bank_transfer" `elem` available) $
+    throwError err503 { errBody = "Bank transfer is not configured in this environment" }
+  requireTicketProvider context (tpcEnvironment context) Checkout.ProviderBankTransfer
+  attempt <- beginTicketPaymentAttempt context Checkout.ProviderBankTransfer
+    Checkout.OperationManualVerify manualSettlementMerchantRef "manual-select"
+  let holdUntil = min mttCutoffAt
+        (addUTCTime (fromIntegral mttHoldMinutes * 60) now)
+  outcome <- runDB $ do
+    Checkout.recordManualPaymentSelection (tpcCheckout context) attempt
+      Checkout.ProviderBankTransfer
+      (ticketPaymentCorrelationId context Checkout.ProviderBankTransfer "manual-select")
+      now
+    submitter <- ensureManualSubmitterParty now context
+    when (isRight submitter && isNothing mttManualHoldExpiresAt) $
+      extendManualTransferHold context holdUntil
+    pure submitter
+  either (throwError . conflict) (const (pure ())) outcome
+  runDB $ update (tpcOrderKey context)
+    [SM.EventTicketOrderPaymentMethod =. Just "bank_transfer"]
+  loadTicketCheckoutDTO (tpcOrderKey context) Nothing
+
+validateBankTransferReference :: Text -> Either ServerError Text
+validateBankTransferReference raw
+  | T.length clean < 3 || T.length clean > 120 =
+      Left (badRequest "Bank transfer reference must contain 3 to 120 characters")
+  | T.any isControl clean =
+      Left (badRequest "Bank transfer reference contains unsupported characters")
+  | otherwise = Right clean
+  where
+    clean = T.strip raw
+
+submitPublicEventTicketBankTransferEvidence
+  :: Int64
+  -> Int64
+  -> Maybe Text
+  -> Routes.PublicEventTicketBankTransferEvidenceRequest
+  -> AppM Routes.PublicEventTicketCheckoutResponse
+submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
+    Routes.PublicEventTicketBankTransferEvidenceRequest{ Routes.customerReference = suppliedReference } = do
+  context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  customerReference <- either throwError pure $
+    validateBankTransferReference suppliedReference
+  now <- liftIO getCurrentTime
+  terms <- runDB (loadManualTransferTerms (tpcOrderKey context))
+    >>= maybe (throwError (conflict "Bank transfer is not available for this event")) pure
+  outcome <- runDB $ do
+    rows <- rawSql
+      "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
+      \ evidence.submitted_by, attempt.id::text, runtime.manual_submitter_party_id\
+      \ FROM commerce_manual_payment_evidence evidence\
+      \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+      \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
+      \ WHERE evidence.checkout_id = ?::uuid\
+      \ AND attempt.checkout_id = evidence.checkout_id\
+      \ AND attempt.provider = 'bank_transfer'\
+      \ AND attempt.operation = 'manual_verify'\
+      \ FOR UPDATE OF evidence, attempt"
+      [PersistText (Checkout.checkoutReferenceId (tpcCheckout context))]
+      :: SqlPersistT IO
+        [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
+         , Single Text, Single (Maybe Int64)
+         )]
+    case rows of
+      [( Single evidenceId, Single status, Single existingReference
+       , Single existingSubmitter, Single attemptId, Single mSubmitter
+       )] -> case mSubmitter of
+        Nothing -> pure (Left "Select bank transfer before submitting evidence")
+        Just submitterId
+          | status `elem` ["submitted", "under_review"]
+              && existingReference == Just customerReference
+              && existingSubmitter == Just submitterId -> pure (Right ())
+          | status == "approved" -> pure (Right ())
+          | status `elem` ["submitted", "under_review"] ->
+              pure (Left "Different transfer evidence is already under review")
+          | status `elem` ["awaiting_evidence", "rejected"] -> do
+              when (status == "rejected") $
+                Checkout.recordManualPaymentSelection (tpcCheckout context)
+                  (Checkout.PaymentAttemptReference attemptId)
+                  Checkout.ProviderBankTransfer
+                  (ticketPaymentCorrelationId context Checkout.ProviderBankTransfer "manual-resubmit")
+                  now
+              rawExecute
+                "UPDATE commerce_manual_payment_evidence\
+                \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+                \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
+                \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
+                \ WHERE id = ?::uuid"
+                [ PersistText customerReference
+                , PersistInt64 (tpcAmountMinor context)
+                , PersistText (tpcCurrency context)
+                , PersistUTCTime now
+                , PersistInt64 submitterId
+                , PersistText evidenceId
+                ]
+              rawExecute
+                "INSERT INTO commerce_checkout_audit_event(\
+                \ checkout_id, event_type, actor_type, actor_id, correlation_id, metadata\
+                \) VALUES (?::uuid, 'manual_payment_evidence_submitted', 'customer', ?, ?,\
+                \ jsonb_build_object('attempt_id', ?))"
+                [ PersistText (Checkout.checkoutReferenceId (tpcCheckout context))
+                , PersistText (T.pack (show submitterId))
+                , PersistText (ticketPaymentCorrelationId context
+                    Checkout.ProviderBankTransfer "manual-evidence")
+                , PersistText attemptId
+                ]
+              -- Keep the seat while staff verifies a transfer reported in time.
+              extendManualTransferHold context $ minimum
+                [ addUTCTime (fromIntegral (mttHoldMinutes terms) * 60) now
+                , addUTCTime (fromIntegral (mttHoldMinutes terms) * 60) (mttCutoffAt terms)
+                ]
+              pure (Right ())
+          | otherwise -> pure (Left "Transfer evidence cannot be submitted in its current state")
+      [] -> pure (Left "Select bank transfer before submitting evidence")
+      _ -> pure (Left "Manual payment evidence is ambiguous")
+  either (throwError . conflict) pure outcome
+  loadTicketCheckoutDTO (tpcOrderKey context) Nothing

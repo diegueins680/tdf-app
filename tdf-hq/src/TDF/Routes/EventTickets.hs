@@ -13,6 +13,8 @@ module TDF.Routes.EventTickets
   , PublicEventTicketDTO(..)
   , PublicEventTicketCheckoutResponse(..)
   , PublicEventTicketPaypalCaptureRequest(..)
+  , PublicEventTicketBankTransferDTO(..)
+  , PublicEventTicketBankTransferEvidenceRequest(..)
   , PublicEventTicketsAPI
   ) where
 
@@ -55,6 +57,7 @@ data PublicEventTicketPolicyDTO = PublicEventTicketPolicyDTO
   , refundPolicy      :: Text
   , transferAllowed   :: Bool
   , maxTicketsPerOrder :: Int
+  , bankTransferAvailableUntil :: Maybe UTCTime
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketPolicyDTO
@@ -135,9 +138,32 @@ data PublicEventTicketCheckoutResponse = PublicEventTicketCheckoutResponse
   , quote             :: PublicEventTicketQuoteDTO
   , paymentMethods    :: [Text]
   , tickets           :: [PublicEventTicketDTO]
+  , bankTransfer      :: Maybe PublicEventTicketBankTransferDTO
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketCheckoutResponse
+
+-- | Present only after the buyer selected bank transfer. The reference is the
+-- public order number; account details come from server configuration.
+data PublicEventTicketBankTransferDTO = PublicEventTicketBankTransferDTO
+  { instructions      :: Text
+  , paymentReference  :: Text
+  , amountMinor       :: Int64
+  , currency          :: Text
+  , evidenceStatus    :: Text
+  , customerReference :: Maybe Text
+  , reviewNotes       :: Maybe Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PublicEventTicketBankTransferDTO
+
+data PublicEventTicketBankTransferEvidenceRequest = PublicEventTicketBankTransferEvidenceRequest
+  { customerReference :: Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PublicEventTicketBankTransferEvidenceRequest
+instance FromJSON PublicEventTicketBankTransferEvidenceRequest where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
 data PublicEventTicketPaypalCaptureRequest = PublicEventTicketPaypalCaptureRequest
   { paypalOrderId :: Text
@@ -175,4 +201,13 @@ type PublicEventTicketsAPI =
          :> Capture "orderId" Int64 :> "paypal" :> "capture"
          :> Header "X-Order-Lookup-Token" Text
          :> ReqBody '[JSON] PublicEventTicketPaypalCaptureRequest
+         :> Post '[JSON] PublicEventTicketCheckoutResponse
+  :<|> "public" :> "events" :> Capture "eventId" Int64 :> "ticket-orders"
+         :> Capture "orderId" Int64 :> "bank-transfer"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] PublicEventTicketCheckoutResponse
+  :<|> "public" :> "events" :> Capture "eventId" Int64 :> "ticket-orders"
+         :> Capture "orderId" Int64 :> "bank-transfer" :> "evidence"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] PublicEventTicketBankTransferEvidenceRequest
          :> Post '[JSON] PublicEventTicketCheckoutResponse
