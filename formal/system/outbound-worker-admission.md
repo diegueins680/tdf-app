@@ -46,3 +46,8 @@ lock makes the external provider effect transactional.
 The later `NOTIF-TRANSPORT-001` repair qualifies cancellation and no automatic
 replay inside the three social adapters. This does not close the queue, SMTP or
 legacy-image recovery gaps described above.
+
+The read-only collector explicitly lists missing worker flags as unknown rather
+than disabled. Release preparation preserves observed values and emits required
+outbound configuration with both flags false. Execution remains forbidden; the
+future coordinator must establish the required configuration under its lock.

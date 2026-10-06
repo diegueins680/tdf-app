@@ -7447,16 +7447,20 @@
       "idempotency": "No provider idempotency claim. Existing enabled sends can have ambiguous external outcomes.",
       "failure": "Malformed flags fail startup; blank uses default false and existing boolean aliases remain accepted. Asynchronous cancellation escapes the changed outer Cron handlers; provider-internal broad catches remain a separate gap.",
       "recovery": "Keep both gates disabled during first upgrade. Legacy original-image recovery requires separately verified outbound restriction/reconciliation.",
-      "observability": "Content-free admission logs and exact source/test evidence.",
+      "observability": "Content-free admission logs and exact source/test evidence. The read-only collector records missing worker flags explicitly; preparation retains observed values and requires both false without authorizing execution.",
       "implementation": [
         "tdf-hq/src/TDF/Config.hs",
         "tdf-hq/src/TDF/Cron.hs",
-        "tdf-hq/config/default.env.example"
+        "tdf-hq/config/default.env.example",
+        "ops/hetzner/inspect-runtime.py",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs"
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "formalModels": [],
       "verification": "Configuration and actual worker entrypoint regressions; no provider or concurrency proof.",

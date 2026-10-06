@@ -7448,16 +7448,20 @@
       "idempotency": "No provider idempotency claim. Existing enabled sends can have ambiguous external outcomes.",
       "failure": "Malformed flags fail startup; blank uses default false and existing boolean aliases remain accepted. Asynchronous cancellation escapes the changed outer Cron handlers; provider-internal broad catches remain a separate gap.",
       "recovery": "Keep both gates disabled during first upgrade. Legacy original-image recovery requires separately verified outbound restriction/reconciliation.",
-      "observability": "Content-free admission logs and exact source/test evidence.",
+      "observability": "Content-free admission logs and exact source/test evidence. The read-only collector records missing worker flags explicitly; preparation retains observed values and requires both false without authorizing execution.",
       "implementation": [
         "tdf-hq/src/TDF/Config.hs",
         "tdf-hq/src/TDF/Cron.hs",
-        "tdf-hq/config/default.env.example"
+        "tdf-hq/config/default.env.example",
+        "ops/hetzner/inspect-runtime.py",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs"
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "formalModels": [],
       "verification": "Configuration and actual worker entrypoint regressions; no provider or concurrency proof.",
@@ -7565,7 +7569,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "99429029f8454e2b5a94c9722de870957b4a3f4925cdce8f322fb984b781c1cf",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "098b6616672b5aaf9addd8c8615c1ba397e0c320e049ce25a986adf5d79c3886",
+    ".github/workflows/ci.yml": "5d1081e389cd9fb335a2215db4b6abfc1a72368f79eb52b9a6e468cc6dd58675",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "202dc5228c31baa715a04fe06698fd465a8ffd4f06d8d60fe7cd4c49d34b824c",
@@ -7705,7 +7709,7 @@
     "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
     "ops/hetzner/host-scheduler-admission.py": "5c98446d3fc788bad2c81a231a80b8d33c72d212ab04f966cdf046fe747850ab",
     "ops/hetzner/host-scheduler-policy.json": "134dd49cfd8c7017a80cbfa9466db4d911f6e8e285fad1f884b1981ee53cb4ca",
-    "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+    "ops/hetzner/inspect-runtime.py": "cddb703eb9a431f5db4328bf90c87252ef555a9c3c71c8bb30f1c376f8cb36e9",
     "ops/hetzner/interrupted-release-recovery.py": "c6733faceba27b947aa57cb3c556d035d9713e49b12c71178c1263d90d5a0b1a",
     "ops/hetzner/isolated-application-canary.py": "1782d0cc1b5060eb83a7e48840bb3d009a5038cc1a7eed2654173399c424dd99",
     "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
@@ -7753,7 +7757,7 @@
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
-    "scripts/__tests__/hetzner-preparation.test.mjs": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
+    "scripts/__tests__/hetzner-preparation.test.mjs": "1303afc6cdf27eb726e14c866e60ab8e97f5b7be49a4c980aad73a6e3a88a805",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
@@ -7793,7 +7797,7 @@
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
-    "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+    "scripts/lib/hetzner-preparation.mjs": "d889e6154bf56e985f1e8821fda6cfcc6d03f570fbb339248182b2bdaf484f46",
     "scripts/lib/invoice_receipt_conformance.py": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
@@ -7812,7 +7816,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "8770f51fd49d485ab31f2811a5056412ae99abac26aa4c51ec4f1d0582743406",
+    "scripts/quality-repo.sh": "7d9b973b9dac3b7f506062c7677538b3d5960b0528e37667de96c7a41cfc7ce1",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7838,7 +7842,7 @@
     "scripts/test-disposable-creation-spec.py": "bf172d6d33beb27ffc92af0fd1cd168b1c8c0edb5fb75e65691a55d6d901c008",
     "scripts/test-durable-disposable-records.py": "5e055f74d14f238eb376249d368745236adb3e174ed763f01897973aba4c0c0a",
     "scripts/test-hetzner-backup.py": "ca7c23199f118b05edf3f753a6fb49a40e84beddc883ba9d0eb3a8131eb9cd43",
-    "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+    "scripts/test-hetzner-inspection.py": "7b76a4358dc3d3b12aba0637fe31342a85c23a347480fccc7c0ad1160fa58a7c",
     "scripts/test-hetzner-restore.py": "741b2b3f915cb9d8ca6800c6410e2ecc414f283fb9b3aabdd8743ae315035b8d",
     "scripts/test-host-process-admission.py": "877ff9d02d2f09320ae9b400b0afb8895a4664d1023833b72eb19678266dc375",
     "scripts/test-host-scheduler-admission.py": "4385af0ac2c32f450fc00458379d683b094c7a17d937e02335b2bcc0c298effc",
@@ -7881,7 +7885,7 @@
     "scripts/test-recovery-transfer.py": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
     "scripts/test-release-journal.py": "d26a52fed682444dda8e83fb9978e8d534f8c11155be92d83b3ce7e5d3bf670e",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
+    "scripts/test-specification-conformance.py": "3f9249e5aac45bbe99213c4184d0fb0dc88693bc2631a15d8b8ad2197a76e17d",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-stopped-application-docker.py": "4890b5ece9e4f68a210e6d53450e1f5198afa967817ddb5a76e745e6eb6dfc26",
     "scripts/test-stopped-application-storage.py": "a3dd71b182518913328ffb58d87684b21a67779cf682fc37edd7b766d8af3b03",
@@ -9673,6 +9677,10 @@
       {
         "requirement": "DEPLOY-BACKUP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/inspect-hetzner-production.mjs": [
@@ -9720,6 +9728,10 @@
       },
       {
         "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
         "relationship": "tests"
       }
     ],
@@ -9785,6 +9797,10 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/prepare-hetzner-release.mjs": [
@@ -9800,6 +9816,10 @@
       },
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "NOTIF-WORKER-001",
         "relationship": "tests"
       }
     ],
@@ -13480,7 +13500,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "098b6616672b5aaf9addd8c8615c1ba397e0c320e049ce25a986adf5d79c3886",
+      "sha256": "5d1081e389cd9fb335a2215db4b6abfc1a72368f79eb52b9a6e468cc6dd58675",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14087,7 +14107,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+      "sha256": "cddb703eb9a431f5db4328bf90c87252ef555a9c3c71c8bb30f1c376f8cb36e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14104,6 +14124,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -14849,7 +14873,7 @@
     {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
-      "sha256": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
+      "sha256": "1303afc6cdf27eb726e14c866e60ab8e97f5b7be49a4c980aad73a6e3a88a805",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14858,6 +14882,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "tests"
         }
       ]
@@ -15909,7 +15937,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+      "sha256": "d889e6154bf56e985f1e8821fda6cfcc6d03f570fbb339248182b2bdaf484f46",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15918,6 +15946,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "implementation"
         }
       ]
@@ -16395,7 +16427,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "8770f51fd49d485ab31f2811a5056412ae99abac26aa4c51ec4f1d0582743406",
+      "sha256": "7d9b973b9dac3b7f506062c7677538b3d5960b0528e37667de96c7a41cfc7ce1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17569,7 +17601,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+      "sha256": "7b76a4358dc3d3b12aba0637fe31342a85c23a347480fccc7c0ad1160fa58a7c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17586,6 +17618,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "NOTIF-WORKER-001",
           "relationship": "tests"
         }
       ]
@@ -18303,7 +18339,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
+      "sha256": "3f9249e5aac45bbe99213c4184d0fb0dc88693bc2631a15d8b8ad2197a76e17d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36901,7 +36937,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "35f40a8b0a3d81e7423d33b93d9f7d8d802d85e29355b7de00a7ca92377ebe85",
+      "sourceSha256": "49b698abfbec529a0de717e8e38726b3eeab3c7098cb47f67fc5917d65f9b1ec",
       "definition": {
         "states": [
           "absent",

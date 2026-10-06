@@ -58,7 +58,11 @@ exact manifest. Unknown/duplicate entries and unapproved checksum differences
 reject preparation. Pending entries retain manifest order, including holes in the
 observed ledger. Historical compatible checksums remain explicit in the manifest.
 The plan records current flags, the required coordinated CORS configuration repair,
-and outstanding release gates. It always reports `executionAllowed: false`.
+and outstanding release gates. It requires `SOCIAL_AUTO_REPLY_ENABLED=false`
+and `COURSE_PAYMENT_REMINDER_ENABLED=false` while durable dispatch/reconciliation
+repairs remain unqualified. Missing observed flags remain unknown; this required
+candidate configuration does not protect recovery into the legacy image.
+It always reports `executionAllowed: false`.
 It does not invoke SSH, Docker, a database, or a deployment service. Receipts are
 local evidence, not signed attestations or approval; an executor must re-observe
 runtime state under its release lock.
