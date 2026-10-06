@@ -5958,7 +5958,8 @@
         "One fixed private global control directory durably provisioned by coordinator",
         "All cooperating operations use its permanent lock",
         "Filesystem honors fsync",
-        "Coordinator independently validates effect-specific evidence"
+        "Coordinator independently validates effect-specific evidence",
+        "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5982,14 +5983,16 @@
       },
       "allowedTransitions": [
         "Initialize once -> ready",
-        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
+        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
         "Replay an unresolved intent or initialize another nonce",
         "Skip, duplicate or reorder stages",
         "Treat receipt hash as validation of external effect",
-        "Restore old database over possible new writes"
+        "Restore old database over possible new writes",
+        "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6004,11 +6007,13 @@
       "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
       "implementation": [
         "ops/hetzner/release-journal.py",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "ops/hetzner/production-writer-fence.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-production-writer-fence.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6839,7 +6844,8 @@
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "cc7eb51b395416ce621aec2241e5b52dab0bf02c176c5294e7d96423364915e1",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
-    "ops/hetzner/production-recovery-sources.py": "7cb2e9091ffbefa03793e6988ed9c42ab57f6ccecef2d4662d7e8d8baee6ddc8",
+    "ops/hetzner/production-recovery-sources.py": "aeb6f5abaf0accf294d811b95763a888bf9b015e4bbd74f0c0cfda186724a3a9",
+    "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
@@ -6929,7 +6935,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "3646bb3b27a4b20e6571dcb472759d444483f57d8be2a976cbcac5721bf383a3",
+    "scripts/quality-repo.sh": "c11b2a38387f0acc250b2c0dd1f11179115f12b4b5414aead9b79fec226049f1",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6958,6 +6964,7 @@
     "scripts/test-physical-postgres-recovery.py": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-production-recovery-sources.py": "3bc8982f0f7a4ee711c5a85239af4f2791955f1b4de078f95baba840d7c4647d",
+    "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
     "scripts/test-recovery-bundle-ssh.py": "8daac0614090fa91ca0573b9e19fa297831cac58a60112d399d9e63cfccee07e",
@@ -10623,7 +10630,19 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/production-writer-fence.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-release-journal.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-production-writer-fence.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
@@ -11683,11 +11702,23 @@
     {
       "id": "SURFACE-1b5222b0a6f2443b",
       "path": "ops/hetzner/production-recovery-sources.py",
-      "sha256": "7cb2e9091ffbefa03793e6988ed9c42ab57f6ccecef2d4662d7e8d8baee6ddc8",
+      "sha256": "aeb6f5abaf0accf294d811b95763a888bf9b015e4bbd74f0c0cfda186724a3a9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-af69c694d5d15a09",
+      "path": "ops/hetzner/production-writer-fence.py",
+      "sha256": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
         }
       ]
@@ -13759,7 +13790,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3646bb3b27a4b20e6571dcb472759d444483f57d8be2a976cbcac5721bf383a3",
+      "sha256": "c11b2a38387f0acc250b2c0dd1f11179115f12b4b5414aead9b79fec226049f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15072,6 +15103,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-07cbab2707e7245c",
+      "path": "scripts/test-production-writer-fence.py",
+      "sha256": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "tests"
         }
       ]
@@ -33161,7 +33204,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b41dff381261636737f1303d2b6c85081e263cf51520fce429215cc476316741",
+      "sourceSha256": "87f7d6076dd7ca13d1c6594b9a5ef2a4e0598343ff9b8a4ddb5b997d57584daa",
       "definition": {
         "states": [
           "absent",

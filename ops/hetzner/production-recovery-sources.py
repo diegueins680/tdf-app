@@ -74,7 +74,7 @@ def volume(mount,name,writable,volumes):
     path(value['Mountpoint']);return value['Mountpoint']
 
 
-def admit(containers,volumes,expected,*,stopped=False):
+def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
     """Pure admission. Expected IDs/images come from the separately trusted plan.
 
     Only api/db/edge may run at initial admission. A stopped canonical canary and
@@ -84,6 +84,9 @@ def admit(containers,volumes,expected,*,stopped=False):
     require(isinstance(containers,list) and isinstance(volumes,dict)
             and set(volumes)==set(VOLUMES.values()) and isinstance(expected,dict)
             and set(expected)=={'api','db','edge'} and type(stopped) is bool)
+    require(stopped_services is None or (stopped is False and isinstance(stopped_services, frozenset)
+            and stopped_services <= {'api','db','edge'}))
+    halted = frozenset(expected) if stopped else (stopped_services or frozenset())
     by_service={};seen=set()
     for item in containers:
         cid=item['Id'];require(isinstance(cid,str) and re.fullmatch('[a-f0-9]{64}',cid) and cid not in seen);seen.add(cid)
@@ -108,9 +111,10 @@ def admit(containers,volumes,expected,*,stopped=False):
                 and re.fullmatch(r'[a-zA-Z0-9./_-]+@sha256:[a-f0-9]{64}',binding['image'])
                 and re.fullmatch(r'sha256:[a-f0-9]{64}',binding['imageId'])
                 and item['Config']['Image']==binding['image'] and item['Image']==binding['imageId'])
-        require(state['Running'] is (not stopped) and all(state[k] is False for k in ('Paused','Restarting','Dead','OOMKilled')))
-        require(type(state['Pid']) is int and (state['Pid']==0 if stopped else state['Pid']>0))
-        if stopped:
+        service_stopped = service in halted
+        require(state['Running'] is (not service_stopped) and all(state[k] is False for k in ('Paused','Restarting','Dead','OOMKilled')))
+        require(type(state['Pid']) is int and (state['Pid']==0 if service_stopped else state['Pid']>0))
+        if service_stopped:
             require(state['Status']=='exited' and type(state['ExitCode']) is int
                     and state['ExitCode'] in ((0,) if service=='db' else (0,143)))
         host=item['HostConfig']
@@ -147,11 +151,11 @@ def admit(containers,volumes,expected,*,stopped=False):
             for service,item in by_service.items()}
     return {'roots':roots,'legacyUploads':('/app/uploads' not in api),
             'runtimeConfigurationSha256':hashlib.sha256(canonical(stable)).hexdigest(),
-            'dockerWritersStopped':stopped,'hostWorkersFenced':False,'databaseCleanShutdownVerified':False,
+            'dockerWritersStopped':halted == frozenset(expected),'hostWorkersFenced':False,'databaseCleanShutdownVerified':False,
             'scope':'Canonical configured roots and sampled Docker writers only; no mutation or snapshot proof'}
 
 
-def observe(expected,*,stopped=False):
+def observe(expected,*,stopped=False,stopped_services=None):
     """Fixed local Docker socket; raw inspection data never leaves this function."""
     capture=inspector.capture;docker=inspector.DOCKER
     ids=capture(docker+['ps','--all','--quiet','--no-trunc']).split()
@@ -160,7 +164,7 @@ def observe(expected,*,stopped=False):
     rows=json.loads(capture(docker+['volume','inspect',*VOLUMES.values()]))
     require(len(rows)==len(VOLUMES))
     volumes={item['Name']:item for item in rows};require(len(volumes)==len(rows))
-    result=admit(containers,volumes,expected,stopped=stopped)
+    result=admit(containers,volumes,expected,stopped=stopped,stopped_services=stopped_services)
     # Reject inventory changes across the sequential inspection interval.
     require(sorted(capture(docker+['ps','--all','--quiet','--no-trunc']).split())==sorted(ids))
     return result

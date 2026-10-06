@@ -5957,7 +5957,8 @@
         "One fixed private global control directory durably provisioned by coordinator",
         "All cooperating operations use its permanent lock",
         "Filesystem honors fsync",
-        "Coordinator independently validates effect-specific evidence"
+        "Coordinator independently validates effect-specific evidence",
+        "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5981,14 +5982,16 @@
       },
       "allowedTransitions": [
         "Initialize once -> ready",
-        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete"
+        "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
+        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
         "Replay an unresolved intent or initialize another nonce",
         "Skip, duplicate or reorder stages",
         "Treat receipt hash as validation of external effect",
-        "Restore old database over possible new writes"
+        "Restore old database over possible new writes",
+        "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6003,11 +6006,13 @@
       "observability": "Sequence, pending stage, plan/targets/observation hashes and conservative newWritesPossible; sequenceComplete does not certify external effects.",
       "implementation": [
         "ops/hetzner/release-journal.py",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "ops/hetzner/production-writer-fence.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-production-writer-fence.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
