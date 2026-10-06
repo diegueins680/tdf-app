@@ -174,3 +174,26 @@ never restore an older database over accepted production data.
 
 This sequence is an implementation plan with explicit prerequisites, not a working
 operator deployment command. Current command authority remains `ops/hetzner/README.md`.
+
+## Canonical source admission
+
+`production-recovery-sources.py` samples the fixed local Docker socket, requires
+the trusted plan's exact API, database and edge container/image identities, and
+admits only canonical bind mounts and the three local named volumes. Added
+capabilities normalize Docker's optional `CAP_` prefix; only edge
+`NET_BIND_SERVICE` is permitted. Unknown running/restarting containers, ambiguous
+canonical services, unsafe restart policies, remote volumes, unexpected mounts
+and overlapping configured roots reject admission. Raw environment values never
+leave the observer; a private configuration digest binds the sample.
+
+The initial sample requires the three canonical services running. A later
+`stopped=True` sample requires their same identities stopped with admitted exit
+statuses. Neither sample stops anything or proves a continuous writer fence.
+The coordinator must hold release/rehearsal ownership, separately admit host
+workers and filesystem mounts/inodes, stop writers, resample, and verify actual
+PostgreSQL clean shutdown. A stopped sample alone never claims those properties.
+Concurrent privileged host changes remain outside this sampled boundary.
+
+`test-production-recovery-sources.py` checks identities, lifecycle states,
+capability spelling variants, unexpected writers, storage aliases and the sole
+canonical persistent-upload bind. The repository quality gate runs these controls.

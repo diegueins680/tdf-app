@@ -71,6 +71,7 @@
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/physical-postgres-recovery.py",
+      "ops/hetzner/production-recovery-sources.py",
       "ops/hetzner/recovery-envelope.py",
       "ops/hetzner/recovery-files.py",
       "ops/hetzner/recovery-tools.json",
@@ -424,6 +425,7 @@
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
+      "scripts/test-production-recovery-sources.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -2659,6 +2661,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1b5222b0a6f2443b",
+      "path": "ops/hetzner/production-recovery-sources.py",
+      "sha256": "7cb2e9091ffbefa03793e6988ed9c42ab57f6ccecef2d4662d7e8d8baee6ddc8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-64aaa5c506476af5",
       "path": "ops/hetzner/recovery-envelope.py",
       "sha256": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -3879,7 +3887,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "168244718be8431bdbb717d5c6297c9dfdae78a58403c72d43c604c9cdf88e20",
+      "sha256": "3646bb3b27a4b20e6571dcb472759d444483f57d8be2a976cbcac5721bf383a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4738,6 +4746,12 @@
       "id": "SURFACE-17287b59b5e37160",
       "path": "scripts/test-privacy-request-ledger.py",
       "sha256": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d55fcf511cec4c82",
+      "path": "scripts/test-production-recovery-sources.py",
+      "sha256": "3bc8982f0f7a4ee711c5a85239af4f2791955f1b4de078f95baba840d7c4647d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21942,7 +21956,7 @@
     },
     {
       "path": "formal/system/recovery-files.md",
-      "sha256": "c413b074b4622a9cb9637be29f83f5835b8d74458a4ce84a941c47f39f9b5e5c",
+      "sha256": "bb92ed0d83ee0a3061bef93058b6cfd1dd897f781eed7ba1efcf3a8861e23ff2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21963,7 +21977,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d62caba323ff391a9cb381ef0b87531ff79bee05894c7979e9a7eec985034933",
+      "sha256": "939cbd6072a6e3cc323ed62ea673997b3aff5583835c0a30b815b392a697a1c2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

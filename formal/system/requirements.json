@@ -3315,7 +3315,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5751,7 +5751,8 @@
       "preconditions": [
         "Caller establishes writer fence and admits all storage roots/nested mounts",
         "Private owned archive and destination parents",
-        "Trusted manifest bound to separately verified bundle evidence"
+        "Trusted manifest bound to separately verified bundle evidence",
+        "Canonical source admission checks immutable api/db/edge identity, local named volumes, exact bind topology and sampled Docker writer state; host worker fencing, mount/inode admission and clean PG shutdown remain separate obligations."
       ],
       "inputs": [
         "Absolute source directory",
@@ -5805,7 +5806,8 @@
       "implementation": [
         "ops/hetzner/recovery-files.py",
         "ops/hetzner/stopped-application-storage.py",
-        "ops/hetzner/coordinated-recovery-bundle.py"
+        "ops/hetzner/coordinated-recovery-bundle.py",
+        "ops/hetzner/production-recovery-sources.py"
       ],
       "tests": [
         "scripts/test-recovery-files.py",
@@ -5813,7 +5815,8 @@
         "scripts/test-stopped-application-storage.py",
         "scripts/test-stopped-application-docker.py",
         "scripts/test-coordinated-recovery-bundle.py",
-        "scripts/test-recovery-bundle-ssh.py"
+        "scripts/test-recovery-bundle-ssh.py",
+        "scripts/test-production-recovery-sources.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
