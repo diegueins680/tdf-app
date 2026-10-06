@@ -10,6 +10,10 @@ The reviewed ticket confirmation contract remains formal/ticket-admission/confir
 
 `EVT-PRESENTATION-001` is the canonical combined event/transaction metadata requirement. It incorporates the earlier `EVT-PUBLIC-001` scope from ce4222633, preserving its implementation paths, regression tests and privacy obligations. The requirement register records that predecessor; source ancestry retains the complete original declaration. This identifier reconciliation adds no runtime guarantee.
 
+## Inventory failure presentation
+
+`MEDIA-INVENTORY-001` distinguishes a successfully empty result from a failed load. A search entered during the initial request does not convert a later failure into an empty filtered inventory or a zero-result count. The component regression controls that pending-request transition and verifies retry with the filter preserved. This is a UI state guarantee; it adds no transactional snapshot or upload-idempotency claim.
+
 ## Canonical public links and read-only social diagnostics
 
 `OPS-CLIENT-001` also covers Config's default public web origin `https://www.tdfrecords.net` and asset origin `https://api.tdfrecords.net/assets/serve`. Validated explicit deployment overrides remain authoritative. The configuration regression exercises absent overrides and retains the existing explicit-override test; the directory fixture checks rendered image URLs against the canonical API. These checks do not prove production configuration.
