@@ -44,6 +44,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-writer-fence-fixture-owner
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-physical-postgres-recovery.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-offline-recovery-capacity.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-release-journal.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-legacy-stop-policy.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-interrupted-release-recovery.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-original-deployment-admission.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-abort-service-journal.py"

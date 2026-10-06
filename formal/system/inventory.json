@@ -85,6 +85,7 @@
       "ops/hetzner/inspect-runtime.py",
       "ops/hetzner/interrupted-release-recovery.py",
       "ops/hetzner/isolated-application-canary.py",
+      "ops/hetzner/legacy-stop-policy.py",
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/network-recovery-admission.py",
       "ops/hetzner/offline-recovery-capacity.py",
@@ -452,6 +453,7 @@
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-isolated-application-canary.py",
       "scripts/test-legacy-shutdown-linux.py",
+      "scripts/test-legacy-stop-policy.py",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
       "scripts/test-marketplace-operations-migration.sh",
@@ -2840,13 +2842,19 @@
     {
       "id": "SURFACE-b44e78965a5c5434",
       "path": "ops/hetzner/interrupted-release-recovery.py",
-      "sha256": "c6733faceba27b947aa57cb3c556d035d9713e49b12c71178c1263d90d5a0b1a",
+      "sha256": "f14d118294b220e4e1f23e0f14b2bb5265b90d440ebb717530049d52d7e80499",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
       "sha256": "1782d0cc1b5060eb83a7e48840bb3d009a5038cc1a7eed2654173399c424dd99",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ef719422ed355ccc",
+      "path": "ops/hetzner/legacy-stop-policy.py",
+      "sha256": "5345338d62360df1248e557ddc2b808a4a029a811d165d90948e151d796c0fdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2936,7 +2944,7 @@
     {
       "id": "SURFACE-af69c694d5d15a09",
       "path": "ops/hetzner/production-writer-fence.py",
-      "sha256": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
+      "sha256": "5ae7c5fde442799c679b80ff6ba5c3cad9171c1667c4e24fb8c17a2f12551405",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2978,7 +2986,7 @@
     {
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
-      "sha256": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
+      "sha256": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4172,7 +4180,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d3828362f1fbfb9bfb0813702b533937819248140d4b3cb1459411046946d5f2",
+      "sha256": "730294ab06eaa24865f84394f9a7dbe652269ec5eecefc5513574f33807a5370",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5013,6 +5021,12 @@
       "id": "SURFACE-077f91a5acaf4688",
       "path": "scripts/test-legacy-shutdown-linux.py",
       "sha256": "a622aebb54c1cd0c7230fa47878979c2a06c0e0071d15bbca018084d581cbfe0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9b9d62f307ed858d",
+      "path": "scripts/test-legacy-stop-policy.py",
+      "sha256": "7f7fab62afe86191b1b03f82ab7be991ec722da099fa8c4498414efd18f7d46e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23146,7 +23160,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "581269098a4093b8f7ce3ee0f114952633ba132ff21f9785b93e5deec4287d20",
+      "sha256": "04ae521d3e65d208e8f6bff62780afbfc565711666fab16e5636c76ae09561e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23223,7 +23237,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "69cad19b3a3250ce73562a23534fad12d5e07d43db01aaff9d4c54c99a5b560e",
+      "sha256": "9943505c30024dfb6bfd941035a25d70ab9227c813bd954b04a386d9e70ae548",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -263,3 +263,39 @@ release. Eight isolated controlled mutations remove one of these guards; each
 must violate its named invariant. Passing bounded analysis establishes only this
 transition contract under its assumptions. Integration, actual legacy capture and
 restricted recovery remain open implementation obligations.
+
+### Durable binding implemented; exceptional effects still unavailable
+
+`ops/hetzner/legacy-stop-policy.py` implements the preparation boundary only.
+A version2 release plan has the ordinary plan fields plus `schemaVersion: 2` and
+`legacyStopPolicyHash`. The hashed policy fixes the old645f source/image identity,
+full API CID/image ID and runtime configuration, and records separate stop,
+capture, restricted-recovery and restriction-policy references. Matching hex
+strings are not authenticated qualification evidence. The returned observation
+explicitly leaves `qualificationReferencesVerified`, `stopAuthorized`,
+`httpDrainVerified` and `externalOutcomesKnown` false.
+
+Preparation reads the independently persisted original admission, checks the
+plan hash and original API identity/revision/configuration, then exclusively
+publishes a private immutable envelope binding the policy, release nonce, plan
+hash and complete original-admission hash before any maintenance intent. File and
+directory synchronization precede return; partial files remain after failure,
+and later calls cannot adopt an existing artifact. The file is separate from
+the strict journal record directory. Closing journal and original-admission
+checks detect sampled drift.
+
+Version1 plans retain their existing meaning. Ordinary writer-fence observation
+rejects version2 before host observation or stop commands, and ordinary abort
+latching rejects it before publishing an abort directory or exposing reboot.
+This prevents a newly bound policy from accidentally entering the unrestricted
+recovery path. The future qualified adapters must consume the same policy with
+live restriction and acknowledged-stop evidence. No exit-code admission has
+been relaxed, and no exceptional stop/recovery executor exists yet.
+
+The ten portable controls use real journals/private files with synthetic host
+and evidence inputs. They cover exact identity/configuration and plan binding,
+cross-release/original-admission substitution, closed version shapes, duplicate
+revision declarations, failed synchronization,
+late/repeated preparation, changed saved bytes, and denial before ordinary stop
+or reboot effects. These checks qualify durable binding, not the referenced
+legacy captures, provider outcomes, host restriction or rollout.

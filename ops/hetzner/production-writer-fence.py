@@ -130,6 +130,9 @@ class WriterFence:
     def observe(self):
         require(os.getpid() == self.owner)
         self.journal.guard()
+        # The ordinary path must never consume an exceptional legacy plan.
+        # A separately qualified restricted adapter is required for version2.
+        require('legacyStopPolicyHash' not in self.journal.records()[0]['event']['plan'])
         result = sources.observe(self.expected, stopped_services=self.stopped)
         require(result['runtimeConfigurationSha256'] == self.configuration_hash)
         units = observe_units(self.unit_hashes, timer_stopped=self.timer_stopped)

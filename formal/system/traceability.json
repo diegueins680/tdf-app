@@ -7627,7 +7627,8 @@
         "ops/hetzner/ufw-recovery-admission.py",
         "ops/hetzner/dormant-container-admission.py",
         "ops/hetzner/bpf-recovery-admission.py",
-        "ops/hetzner/network-recovery-admission.py"
+        "ops/hetzner/network-recovery-admission.py",
+        "ops/hetzner/legacy-stop-policy.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
@@ -7638,7 +7639,8 @@
         "scripts/test-dormant-container-reboot-linux.py",
         "scripts/test-bpf-recovery-admission.py",
         "scripts/test-network-recovery-admission.py",
-        "scripts/test-network-namespace-linux.py"
+        "scripts/test-network-namespace-linux.py",
+        "scripts/test-legacy-stop-policy.py"
       ],
       "formalModels": [
         "formal/event-operations/LegacyInterruptedStop.cfg",
@@ -7652,7 +7654,7 @@
         "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
         "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg"
       ],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7825,8 +7827,9 @@
     "ops/hetzner/host-scheduler-admission.py": "5c98446d3fc788bad2c81a231a80b8d33c72d212ab04f966cdf046fe747850ab",
     "ops/hetzner/host-scheduler-policy.json": "134dd49cfd8c7017a80cbfa9466db4d911f6e8e285fad1f884b1981ee53cb4ca",
     "ops/hetzner/inspect-runtime.py": "cddb703eb9a431f5db4328bf90c87252ef555a9c3c71c8bb30f1c376f8cb36e9",
-    "ops/hetzner/interrupted-release-recovery.py": "c6733faceba27b947aa57cb3c556d035d9713e49b12c71178c1263d90d5a0b1a",
+    "ops/hetzner/interrupted-release-recovery.py": "f14d118294b220e4e1f23e0f14b2bb5265b90d440ebb717530049d52d7e80499",
     "ops/hetzner/isolated-application-canary.py": "1782d0cc1b5060eb83a7e48840bb3d009a5038cc1a7eed2654173399c424dd99",
+    "ops/hetzner/legacy-stop-policy.py": "5345338d62360df1248e557ddc2b808a4a029a811d165d90948e151d796c0fdb",
     "ops/hetzner/network-recovery-admission.py": "1fcd78e03cde271541d6328b463659332e8dec339b739f8ad53b6925deba950a",
     "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
     "ops/hetzner/original-application-recovery.py": "37f59153386b015d565d8da2a7faeeb26db27ecf2a76c4307d1ad4a405be21b5",
@@ -7840,14 +7843,14 @@
     "ops/hetzner/outbound-quarantine.py": "f41ae5987280c55da0af2f93ca67feaeb0d6b0243309e68b494abd69a0d9e12c",
     "ops/hetzner/physical-postgres-recovery.py": "d173e7bfb715a70c79de01b05230dd5e86d9280093a6a3c7c8205f99230dbd69",
     "ops/hetzner/production-recovery-sources.py": "4c47e31e6798f54c89cf8ee2a7bcc92a40de04ceee0dede463a1c37762ac2d2a",
-    "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
+    "ops/hetzner/production-writer-fence.py": "5ae7c5fde442799c679b80ff6ba5c3cad9171c1667c4e24fb8c17a2f12551405",
     "ops/hetzner/recovered-application-content.py": "4c8893a368fd22de21629266f7b65975b30df20c420827a8c3492ecda122ae9f",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
     "ops/hetzner/rehearse-postgres-restore.py": "c08c7a075c444b882d56b5ebf90fc2903ad5cad8b03dc052783cfc8ef4c6c138",
-    "ops/hetzner/release-journal.py": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
+    "ops/hetzner/release-journal.py": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
     "ops/hetzner/stopped-application-storage.py": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
@@ -7934,7 +7937,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "d3828362f1fbfb9bfb0813702b533937819248140d4b3cb1459411046946d5f2",
+    "scripts/quality-repo.sh": "730294ab06eaa24865f84394f9a7dbe652269ec5eecefc5513574f33807a5370",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7971,6 +7974,7 @@
     "scripts/test-interrupted-release-recovery.py": "e477198a3adcefb951fd985e681fee2d3df071b06627dc056a941c45a54bbe8f",
     "scripts/test-isolated-application-canary.py": "77d0c7c8b91e354d34df9f08e3435196ea5289f2244f42b1711dd4ba71457964",
     "scripts/test-legacy-shutdown-linux.py": "a622aebb54c1cd0c7230fa47878979c2a06c0e0071d15bbca018084d581cbfe0",
+    "scripts/test-legacy-stop-policy.py": "7f7fab62afe86191b1b03f82ab7be991ec722da099fa8c4498414efd18f7d46e",
     "scripts/test-live-intake-identity.sh": "d0f234b038d1f0fb83f65e8d16bc4b8d5f4fbbcfbc028aa09da31064c6e051a5",
     "scripts/test-marketplace-contact-identity.sh": "e8366b9aea5eb474c77acfd0c1816d51fe93e35d19eb46af6f583ed139f24cef",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -13594,6 +13598,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/legacy-stop-policy.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-outbound-quarantine.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
@@ -13643,6 +13653,12 @@
       }
     ],
     "scripts/test-network-namespace-linux.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-legacy-stop-policy.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
@@ -14430,7 +14446,7 @@
     {
       "id": "SURFACE-b44e78965a5c5434",
       "path": "ops/hetzner/interrupted-release-recovery.py",
-      "sha256": "c6733faceba27b947aa57cb3c556d035d9713e49b12c71178c1263d90d5a0b1a",
+      "sha256": "f14d118294b220e4e1f23e0f14b2bb5265b90d440ebb717530049d52d7e80499",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14451,6 +14467,18 @@
         },
         {
           "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ef719422ed355ccc",
+      "path": "ops/hetzner/legacy-stop-policy.py",
+      "sha256": "5345338d62360df1248e557ddc2b808a4a029a811d165d90948e151d796c0fdb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "implementation"
         }
       ]
@@ -14625,7 +14653,7 @@
     {
       "id": "SURFACE-af69c694d5d15a09",
       "path": "ops/hetzner/production-writer-fence.py",
-      "sha256": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
+      "sha256": "5ae7c5fde442799c679b80ff6ba5c3cad9171c1667c4e24fb8c17a2f12551405",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14721,7 +14749,7 @@
     {
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
-      "sha256": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
+      "sha256": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16758,7 +16786,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d3828362f1fbfb9bfb0813702b533937819248140d4b3cb1459411046946d5f2",
+      "sha256": "730294ab06eaa24865f84394f9a7dbe652269ec5eecefc5513574f33807a5370",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18095,6 +18123,18 @@
       "requirements": [
         {
           "requirement": "OPS-SHUTDOWN-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9b9d62f307ed858d",
+      "path": "scripts/test-legacy-stop-policy.py",
+      "sha256": "7f7fab62afe86191b1b03f82ab7be991ec722da099fa8c4498414efd18f7d46e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "tests"
         }
       ]
@@ -37376,7 +37416,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "69cad19b3a3250ce73562a23534fad12d5e07d43db01aaff9d4c54c99a5b560e",
+      "sourceSha256": "9943505c30024dfb6bfd941035a25d70ab9227c813bd954b04a386d9e70ae548",
       "definition": {
         "states": [
           "absent",

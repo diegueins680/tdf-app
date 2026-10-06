@@ -7626,7 +7626,8 @@
         "ops/hetzner/ufw-recovery-admission.py",
         "ops/hetzner/dormant-container-admission.py",
         "ops/hetzner/bpf-recovery-admission.py",
-        "ops/hetzner/network-recovery-admission.py"
+        "ops/hetzner/network-recovery-admission.py",
+        "ops/hetzner/legacy-stop-policy.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
@@ -7637,7 +7638,8 @@
         "scripts/test-dormant-container-reboot-linux.py",
         "scripts/test-bpf-recovery-admission.py",
         "scripts/test-network-recovery-admission.py",
-        "scripts/test-network-namespace-linux.py"
+        "scripts/test-network-namespace-linux.py",
+        "scripts/test-legacy-stop-policy.py"
       ],
       "formalModels": [
         "formal/event-operations/LegacyInterruptedStop.cfg",
@@ -7651,7 +7653,7 @@
         "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
         "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg"
       ],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
