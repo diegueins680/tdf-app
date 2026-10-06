@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [contract-storage.md](contract-storage.md): private persistent contracts, legacy preservation and unavailable delivery.
+
 - [atomic-rider-publication.md](atomic-rider-publication.md): exclusive complete file publication, crash evidence, replay durability and explicit transaction boundaries.
 
 - [application-shutdown.md](application-shutdown.md): supervised startup, explicit shutdown failure, HTTP drain and worker exclusions.

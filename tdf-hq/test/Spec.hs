@@ -616,6 +616,7 @@ import TDF.Seed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.AtomicPublicationSpec as AtomicPublicationSpec
+import qualified TDF.ContractStorageSpec as ContractStorageSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
@@ -17764,6 +17765,7 @@ main = hspec $ do
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
     AtomicPublicationSpec.spec
+    ContractStorageSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     DriveReplaySpec.spec

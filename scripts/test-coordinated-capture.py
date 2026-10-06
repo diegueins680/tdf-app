@@ -69,6 +69,16 @@ class CaptureTests(unittest.TestCase):
         self.stack.enter_context(patch.object(c.processes,'observe'))
         self.stack.enter_context(patch.object(c.capacity,'observe',return_value={'scope':'synthetic admitted capacity'}))
         return obj,source,observed
+    def test_persistent_uploads_do_not_imply_legacy_contract_absence(self):
+        obj,source,_=self.fixture(legacy=False)
+        self.assertIsNone(obj.legacy_manifest(False))
+        store=source/'app/contracts/store';store.mkdir(parents=True)
+        (store/'contract.json').write_bytes(b'uncaptured synthetic contract')
+        with self.assertRaises(ValueError):obj.legacy_manifest(False)
+        self.assertEqual((store/'contract.json').read_bytes(),b'uncaptured synthetic contract')
+        obj.fence.legacy_root=None
+        with self.assertRaises(ValueError):obj.legacy_manifest(False)
+
     def test_mount_aliases_of_actual_sources_reject(self):
         roots={'database':'/var/lib/docker/volumes/example/_data','production':'/opt/tdf/production',
                'edge-data':'/var/lib/docker/volumes/edge/_data','edge-config':'/var/lib/docker/volumes/config/_data'}

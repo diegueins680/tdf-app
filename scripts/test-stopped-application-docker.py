@@ -99,6 +99,24 @@ def main():
                     except ValueError: pass
                     else: raise ValueError('Actual stopped source xattr was discarded')
                     os.removexattr(upload_fd,'user.tdf-synthetic-test')
+                    with s.files.relative_directory(source.root_fd,['app']) as app_fd:
+                        os.mkdir('contracts',0o700,dir_fd=app_fd)
+                    with s.files.relative_directory(source.root_fd,['app','contracts']) as contracts_fd:
+                        os.mkdir('store',0o700,dir_fd=contracts_fd)
+                    with s.files.relative_directory(source.root_fd,['app','contracts','store']) as contract_fd:
+                        sentinel=os.open('sentinel.json',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=contract_fd)
+                        try: require(os.write(sentinel,b'synthetic-retained-contract')==27)
+                        finally: os.close(sentinel)
+                    try: source.capture_uploads(str(directory/'uncaptured-contract.tar'))
+                    except ValueError: pass
+                    else: raise ValueError('Uncaptured legacy contract accepted')
+                    require(not (directory/'uncaptured-contract.tar').exists())
+                    # Only this nonce-owned synthetic fixture file is removed.
+                    with s.files.relative_directory(source.root_fd,['app','contracts','store']) as contract_fd:
+                        sentinel=os.open('sentinel.json',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=contract_fd)
+                        try: require(os.read(sentinel,100)==b'synthetic-retained-contract')
+                        finally: os.close(sentinel)
+                        os.unlink('sentinel.json',dir_fd=contract_fd)
                     captured=source.capture_uploads(str(directory/'uploads.tar'))
                     require(captured['presence']=='present')
                     result=s.files.restore(str(directory/'uploads.tar'),captured['manifest'],str(directory/'restored'))
@@ -121,7 +139,7 @@ def main():
             r.release_creation(p.HOST_ROOT,nonce,image)
     print(json.dumps({'status':'passed','scope':'synthetic stopped-container writable-layer uploads',
         'retainedNamespaceAfterStop':True,'fullContentAndMetadataRestored':True,
-        'unsupportedActualXattrRejected':True,'runningAndRestartedSourcesRejected':True,
+        'unsupportedActualXattrRejected':True,'uncapturedLegacyContractRejected':True,'runningAndRestartedSourcesRejected':True,
         'ownedContainerRemoved':True,'productionDataAccessed':False,'bytes':result['bytes'],
         'manifestSha256':hashlib.sha256(p.canonical(captured['manifest'])).hexdigest()}))
 

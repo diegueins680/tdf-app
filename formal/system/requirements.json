@@ -3325,7 +3325,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7180,6 +7180,98 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Mac helper checks pass on working bytes; final exact-candidate Linux/full-backend/integration/deployment evidence remains required."
+      }
+    },
+    {
+      "id": "DATA-CONTRACT-001",
+      "title": "Persistent private contract evidence and honest delivery status",
+      "statement": "Successful creation requires complete immutable private contract bytes in persistent uploads/contracts. Preserve and validate legacy reads, fail on conflicting copies, forbid uncaptured legacy evidence at cutover, and never claim delivery without a delivery implementation.",
+      "domain": "DATA",
+      "authority": "inferred",
+      "source": "User specification/conformance repair instruction; AUTHORITY-047; mounted ContractsAPI and event finance references.",
+      "property": "No incomplete acknowledged document, no overwritten retained ID, no uncaptured legacy discard and no false delivery acknowledgement.",
+      "contract": "formal/system/contract-storage.md",
+      "actors": [
+        "Authenticated Operations actor",
+        "Backend contract store",
+        "Recovery operator"
+      ],
+      "preconditions": [
+        "Existing authenticated backend Operations authorization; canonical non-nil UUID and validated payload.",
+        "Stable trusted directory ancestors; production persistent uploads mount and supported exclusive rename/fsync."
+      ],
+      "inputs": [
+        "Validated arbitrary contract JSON with kind; server owns id and created_at.",
+        "Canonical UUID for reads and valid email-only body for unavailable delivery."
+      ],
+      "state": {
+        "initial": "Absent or retained immutable document",
+        "terminal": [
+          "New complete private document",
+          "Validated current or legacy document",
+          "Unavailable delivery",
+          "Rejected conflict or storage failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> complete synchronized exclusive publication -> created acknowledgement",
+        "Current absent -> validate legacy bytes -> read without migration",
+        "Identical duplicate copies -> validate bytes -> read",
+        "Existing valid document + validated send request ->503 with no delivery",
+        "Stopped original root + empty or absent legacy store -> scoped capture admission"
+      ],
+      "forbiddenTransitions": [
+        "Overwrite or acknowledge a UUID collision",
+        "Silently choose between different copies or hide corrupt current data with legacy",
+        "Claim sent or queued without a provider effect",
+        "Treat an earlier live absence sample or persistent uploads mount as proof legacy contracts are absent",
+        "Discard uncaptured legacy contract data"
+      ],
+      "effects": [
+        "Private immutable JSON publication; generated PDFs depend on existing rendering toolchain.",
+        "No external delivery, automatic legacy migration or deletion."
+      ],
+      "authorization": "Existing backend hasOperationsAccess predicate applies before create, PDF and send. Static upload/document paths confer no read authority.",
+      "privacy": "Contract files private0600 under private0700 contracts directory. Neither document tree is a public static mount; legacy bytes remain protected by existing Operations boundary.",
+      "concurrency": "Exclusive rename selects one creator for a UUID. Trusted stable ancestors and no concurrent legacy writer are deployment assumptions. File and event-finance database reference are separate commits.",
+      "idempotency": "Create generates a new UUID per request and has no external replay key. A lost response can leave an unreferenced complete file; retry may create another document. Collision always fails.",
+      "failure": "Invalid request400, unauthenticated401, unauthorized403, absent404, corrupt/conflicting/storage failures500, valid send503. File synchronization failure is not success.",
+      "recovery": "Keep original files and references. Legacy fallback is read-only. Capture requires retained stopped-root absence inspection in both upload modes; populated legacy store requires a separately reviewed preservation/migration procedure. Persistent-upload sources without qualified root inspection fail closed.",
+      "observability": "Record exact source, commands, storage/HTTP/collision/negative-control results and scoped Linux capture evidence without customer contents.",
+      "implementation": [
+        "tdf-hq/src/TDF/Contracts/API.hs",
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/Contracts/Storage.hs",
+        "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "ops/hetzner/stopped-application-storage.py",
+        "ops/hetzner/coordinated-capture.py",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ContractStorageSpec.hs",
+        "tdf-hq/test/ContractStorageMain.hs",
+        "scripts/verify-contract-storage.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/test-stopped-application-storage.py",
+        "scripts/test-stopped-application-docker.py",
+        "scripts/test-coordinated-capture.py"
+      ],
+      "formalModels": [],
+      "verification": "Real filesystem concurrency and compiled source counterexamples, HTTP integration and retained Linux namespace tests. No whole-filesystem refinement proof.",
+      "evidence": "Exact source receipts required separately; working native tests do not establish Linux or deployed conformance.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation repaired; exact final backend, Linux, HTTP and deployment acceptance pending.",
+      "ambiguity": [
+        "No automated migration for nonempty legacy stores; source preservation must precede rollout.",
+        "Production recovery coordinator and retained-root inspection for persistent-upload source containers remain unfinished.",
+        "No contract delivery integration or cross-file/database transaction is claimed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and executable controls implemented; final exact candidate, Linux/HTTP gates and deployed acceptance remain required."
       }
     }
   ]

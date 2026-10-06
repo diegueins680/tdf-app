@@ -9,6 +9,156 @@ servers:
     description: Development server
 
 paths:
+  /contracts:
+    post:
+      operationId: createContract
+      tags:
+      - Contracts
+      security:
+      - bearerAuth: []
+      description: 'Requires backend Operations access. Stores a private immutable document
+        under persistent uploads/contracts. kind is normalized to a lowercase ASCII
+        slug of at most 64 characters, beginning and ending with a letter or digit.
+        id and created_at are server managed and rejected in input; encoded payload
+        is limited to 256 KiB and LaTeX verbatim terminators are rejected recursively.
+        Other JSON properties are document content, not a payment instruction. This
+        creation has no idempotency key: a lost response can leave an unreferenced complete
+        document and retry creates another UUID.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - kind
+              properties:
+                kind:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Complete persisted document
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - id
+                - kind
+                - payload
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - created
+                  id:
+                    type: string
+                    format: uuid
+                  kind:
+                    type: string
+                  payload:
+                    type: object
+                    additionalProperties: true
+                additionalProperties: false
+        '400':
+          description: Invalid UUID or body
+        '401':
+          description: Invalid or missing session
+        '403':
+          description: Operations access denied
+        '500':
+          description: Stored evidence conflict, invalid document, persistence or rendering
+            failure
+  /contracts/{id}/pdf:
+    get:
+      operationId: getContractPdf
+      tags:
+      - Contracts
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Canonical lowercase non-nil UUID
+        schema:
+          type: string
+          format: uuid
+      description: Requires backend Operations access. Reads the persistent document
+        or legacy contracts/store only when absent; differing duplicate copies or invalid
+        stored JSON fail closed. Neither storage tree is a public static mount. PDF
+        rendering requires the configured local rendering toolchain.
+      responses:
+        '200':
+          description: Generated PDF bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid UUID or body
+        '401':
+          description: Invalid or missing session
+        '403':
+          description: Operations access denied
+        '404':
+          description: Contract not found
+        '500':
+          description: Stored evidence conflict, invalid document, persistence or rendering
+            failure
+  /contracts/{id}/send:
+    post:
+      operationId: sendContract
+      tags:
+      - Contracts
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Canonical lowercase non-nil UUID
+        schema:
+          type: string
+          format: uuid
+      description: Delivery is unavailable. Authorization, canonical UUID, email-only
+        body and stored-document validation still apply. A valid existing document returns
+        503 and causes no delivery; no successful sent or queued acknowledgement is
+        supported.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+              additionalProperties: false
+      responses:
+        '400':
+          description: Invalid UUID or body
+        '401':
+          description: Invalid or missing session
+        '403':
+          description: Operations access denied
+        '404':
+          description: Contract not found
+        '500':
+          description: Stored evidence conflict, invalid document, persistence or rendering
+            failure
+        '503':
+          description: Contract delivery is unavailable; no message was sent
+          content:
+            text/plain:
+              schema:
+                type: string
   /invoices:
     get:
       operationId: listInvoices
@@ -1967,7 +2117,7 @@ paths:
   /health:
     get:
       summary: Health Check
-      description: Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
+      description: Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns 503. This does not establish provider, schema, worker or full-system conformance.
       operationId: getHealth
       security: []
       responses:

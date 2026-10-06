@@ -43,7 +43,7 @@ class StorageTests(unittest.TestCase):
 
     def test_legacy_tree_cannot_be_a_mount_or_have_shadowed_children(self):
         s.admit_legacy_mounts([{'Destination':'/data/assets'}])
-        for path in ('/', '/app', '/app/uploads', '/app/uploads/child', '/app/../app/uploads', '/app//uploads'):
+        for path in ('/', '/app', '/app/uploads', '/app/uploads/child', '/app/../app/uploads', '/app//uploads', '/app/contracts', '/app/contracts/store', '/app/contracts/store/child'):
             with self.subTest(path=path),self.assertRaises(ValueError):s.admit_legacy_mounts([{'Destination':path}])
 
     def test_actual_mount_table_rejects_runtime_same_filesystem_aliases(self):
@@ -68,6 +68,32 @@ class StorageTests(unittest.TestCase):
                     wrong=state(False);wrong['State'][key]=value
                     with patch.object(s,'inspection',return_value=wrong),self.assertRaises(ValueError):subject.capture_uploads(str(output))
                 self.assertFalse(output.exists())
+
+    def test_uncaptured_legacy_contracts_rejected_after_prior_absence(self):
+        subject=s.RetainedRoot(TARGET,IMAGE,IMAGE_ID)
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve(); source=root/'rootfs';source.mkdir()
+            with s.files.directory(str(source)) as fd,patch.object(s,'inspection',return_value=state(False)), \
+                    patch.object(s,'verify_namespace'):
+                subject.owner_pid=os.getpid();subject.root_fd=subject.namespace_fd=subject.pid_fd=fd
+                subject.capture_uploads(str(root/'absent.tar'))
+                store=source/'app/contracts/store';store.mkdir(parents=True)
+                subject.capture_uploads(str(root/'empty.tar'))
+                (store/'synthetic.json').write_text('private synthetic contract')
+                with self.assertRaises(ValueError): subject.capture_uploads(str(root/'forbidden.tar'))
+                self.assertFalse((root/'forbidden.tar').exists())
+                self.assertEqual((store/'synthetic.json').read_text(),'private synthetic contract')
+                (store/'synthetic.json').unlink();store.rmdir();store.symlink_to(root,target_is_directory=True)
+                with self.assertRaises(OSError): subject.capture_uploads(str(root/'alias-contracts.tar'))
+                self.assertFalse((root/'alias-contracts.tar').exists())
+
+    def test_negative_control_bypassed_contract_guard_is_detected(self):
+        case=StorageTests('test_uncaptured_legacy_contracts_rejected_after_prior_absence')
+        result=unittest.TestResult()
+        with patch.object(s,'require_empty_legacy_contracts',lambda fd:None): case.run(result)
+        self.assertEqual(len(result.errors),0)
+        self.assertEqual(len(result.failures),1)
+        self.assertIn('ValueError not raised',result.failures[0][1])
 
     def test_process_exit_during_root_admission_closes_all_handles_and_never_yields(self):
         subject=s.RetainedRoot(TARGET,IMAGE,IMAGE_ID)

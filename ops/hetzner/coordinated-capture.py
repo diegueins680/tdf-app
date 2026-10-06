@@ -22,6 +22,7 @@ bundle=load('capture_bundle','coordinated-recovery-bundle.py')
 capacity=load('capture_capacity','offline-recovery-capacity.py')
 schedulers=load('capture_schedulers','host-scheduler-admission.py')
 processes=load('capture_processes','host-process-admission.py')
+storage=load('capture_storage','stopped-application-storage.py')
 files=bundle.files
 UNIT_DIRECTORY=Path('/etc/systemd/system')
 
@@ -98,10 +99,11 @@ class Capture:
         return sampled
 
     def legacy_manifest(self,legacy):
-        if not legacy:return None
         retained=self.fence.legacy_root
         require(retained is not None and retained.target==self.fence.expected['api']['containerId'])
         retained.guard();retained.inspect(running=False)
+        storage.require_empty_legacy_contracts(retained.root_fd)
+        if not legacy:return None
         fd=os.dup(retained.root_fd)
         try:
             for name in ('app','uploads'):

@@ -497,6 +497,17 @@
       "conflict": "Main5c2e0bb28 now ships Mobile6297e3f1, seven additional mapped requirements and a consolidated migration order while follow-up233188726 adds receipt/readiness/recovery boundaries. Historical enrichment schema rollback instructions also compete with the current no-data-loss deployment authority.",
       "authority": "Approved main PR478, prior user instruction to retain newly shipped Mobile and the current canonical operations safety contract",
       "resolution": "Normal merge preserves every unique requirement and combines observation mappings/privacy. Main analytics scalar-label contract and event supersession remain authoritative. Mobile76d19fc merges the shipped pin with exact generated readiness/receipt compatibility; no unrelated Mobile branch is substituted. Preserve main migration order and historical entries/SQL, append receipt snapshot migration, and rerun actual rehearsal. Keep current enrichment deployment authority and omit duplicated destructive schema rollback instructions; no guarded executor or current-head success is inferred from historical evidence."
+    },
+    {
+      "id": "AUTHORITY-047",
+      "sources": [
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "formal/system/contract-storage.md"
+      ],
+      "conflict": "Contract creation acknowledges files in unmounted container storage while event finance retains their IDs. Sending returns sent without any delivery effect.",
+      "authority": "User instruction to repair unsafe implementation rather than redefine requirements to match bugs; existing private persistent upload and honest completion contracts.",
+      "resolution": "Publish new immutable documents under persistent private uploads, retain validated side-effect-free legacy fallback and reject conflicts. Require stopped retained-root legacy absence before capture or block for explicit preservation. Return503 after existing send validation; document three existing API operations and regenerate both clients. No provider activation or automatic deletion."
     }
   ]
 }

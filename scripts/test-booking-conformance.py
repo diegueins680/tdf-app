@@ -151,6 +151,34 @@ try:
         time.sleep(.25)
     else: raise RuntimeError('Fixture backend did not become ready')
 
+    # Private contract persistence and honest delivery status at the real boundary.
+    for token, expected in [(None, 401), ('fixture-artist', 403)]:
+        check('contract create authorization ' + str(token), request('/contracts', {'kind': 'generic'}, token=token, method='POST')[0] == expected)
+    status, body = request('/contracts', {'kind': 'generic', 'notes': 'PRIVATE_SYNTHETIC_CONTRACT'}, method='POST')
+    check('contract create succeeds after persistence', status == 200)
+    contract = json.loads(body); contract_id = contract['id']
+    document_path = OUTPUT / 'uploads/contracts' / (contract_id + '.json')
+    document = document_path.read_bytes()
+    check('contract authoritative private persisted bytes', json.loads(document)['id'] == contract_id and json.loads(document)['payload'] == contract['payload'] and document_path.stat().st_mode & 0o777 == 0o600)
+    check('new contract never written into legacy ephemeral tree', not (OUTPUT / 'contracts/store' / (contract_id + '.json')).exists())
+    for route in ['/uploads/contracts/' + contract_id + '.json', '/assets/serve/contracts/' + contract_id + '.json', '/contracts/store/' + contract_id + '.json']:
+        status, body = request(route, token=None)
+        check('private contract not anonymously served ' + route, status in [401, 404] and 'PRIVATE_SYNTHETIC_CONTRACT' not in body)
+    send_path = '/contracts/' + contract_id + '/send'
+    check('contract send rejects malformed recipient', request(send_path, {'email': 'invalid'}, method='POST')[0] == 400)
+    check('contract send rejects unknown body properties', request(send_path, {'email': 'test@example.invalid', 'extra': True}, method='POST')[0] == 400)
+    check('contract send has no false delivery acknowledgement', request(send_path, {'email': 'test@example.invalid'}, method='POST') == (503, 'Contract delivery is unavailable'))
+    check('contract send denies non-operations actor', request(send_path, {'email': 'test@example.invalid'}, token='fixture-artist', method='POST')[0] == 403)
+    check('missing contract remains404', request('/contracts/' + str(uuid.uuid4()) + '/send', {'email': 'test@example.invalid'}, method='POST')[0] == 404)
+    legacy = OUTPUT / 'contracts/store'; legacy.mkdir(parents=True)
+    legacy_path = legacy / (contract_id + '.json'); legacy_path.write_bytes(document)
+    document_path.write_bytes(b'{incomplete')
+    check('corrupt current contract never falls back to legacy', request(send_path, {'email': 'test@example.invalid'}, method='POST')[0] == 500)
+    document_path.write_bytes(document)
+    check('identical duplicate contract copies retain unavailable delivery', request(send_path, {'email': 'test@example.invalid'}, method='POST')[0] == 503)
+    document_path.unlink()  # Only this owned synthetic fixture document.
+    check('legacy-only contract remains readable without migration', request(send_path, {'email': 'test@example.invalid'}, method='POST')[0] == 503 and not document_path.exists() and legacy_path.read_bytes() == document)
+
     # OpenAPI requires bearer authentication for party radio presence. A removed
     # shadow public declaration must never turn listener state into anonymous data.
     sql("INSERT INTO party_radio_presence(party_id,stream_url,station_name,updated_at) VALUES (" + owner + ",'https://example.invalid/synthetic-stream','SYNTHETIC_RADIO_STATION',now())")

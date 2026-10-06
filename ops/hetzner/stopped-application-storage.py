@@ -55,8 +55,8 @@ def admit_legacy_mounts(mounts):
         require(isinstance(value, str) and value.startswith('/'))
         path = Path(value)
         require(str(path) == value and '..' not in path.parts)
-        target = Path('/app/uploads')
-        require(path != target and path not in target.parents and target not in path.parents)
+        for target in (Path('/app/uploads'), Path('/app/contracts')):
+            require(path != target and path not in target.parents and target not in path.parents)
 
 
 def admit_mountinfo(text):
@@ -81,6 +81,22 @@ def verify_namespace(namespace_fd, root_fd):
         env=ENVIRONMENT,pass_fds=(namespace_fd,root_fd),capture_output=True,text=True,timeout=10)
     require(result.returncode == 0)
     admit_mountinfo(result.stdout)
+
+
+def require_empty_legacy_contracts(root_fd):
+    """Absence-only admission; no files are copied, followed or removed here.
+
+    The caller owns the retained root and has fenced all writers. Any entry under
+    the legacy store requires a separately reviewed preservation/migration path.
+    """
+    fd = os.dup(root_fd)
+    try:
+        for name in ('app', 'contracts', 'store'):
+            try: child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            except FileNotFoundError: return
+            os.close(fd); fd = child
+        require(not os.listdir(fd))
+    finally: os.close(fd)
 
 
 class RetainedRoot:
@@ -154,6 +170,7 @@ class RetainedRoot:
     def capture_uploads(self, destination):
         """Full actual inode metadata, never Docker cp/export metadata guesses."""
         self.guard(); self.inspect(running=False); verify_namespace(self.namespace_fd,self.root_fd)
+        require_empty_legacy_contracts(self.root_fd)
         fd = os.dup(self.root_fd)
         present, manifest = True, None
         try:
@@ -166,6 +183,7 @@ class RetainedRoot:
                 manifest = files.capture_directory_fd(fd, destination)
         finally: os.close(fd)
         self.guard(); self.inspect(running=False); verify_namespace(self.namespace_fd,self.root_fd)
+        require_empty_legacy_contracts(self.root_fd)
         return {'sourceContainer': self.target, 'sourceImage': self.image,
                 'sourceImageId': self.image_id, 'sourceStartedAt': self.start_time,
                 'presence': 'present' if present else 'absent', 'manifest': manifest,

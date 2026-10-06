@@ -34,6 +34,7 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-request-failures.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-readiness.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-shutdown.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-atomic-publication.py"
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-contract-storage.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-invoice-receipts.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-checkout-money.py"
 
