@@ -65,6 +65,7 @@
       "ops/hetzner/abort-service-journal.py",
       "ops/hetzner/backup-postgres.py",
       "ops/hetzner/backup-postgres.sh",
+      "ops/hetzner/bpf-recovery-admission.py",
       "ops/hetzner/catalog-readonly-role.sql",
       "ops/hetzner/cloud-init.yaml",
       "ops/hetzner/compose.production.yaml",
@@ -398,6 +399,7 @@
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-booking-conformance.py",
+      "scripts/test-bpf-recovery-admission.py",
       "scripts/test-canonical-payment-lifecycle-migration.sh",
       "scripts/test-catalog-production-cutover.sh",
       "scripts/test-checkout-event-refund-runtime-migration.sh",
@@ -2725,6 +2727,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4817cc70a58d776a",
+      "path": "ops/hetzner/bpf-recovery-admission.py",
+      "sha256": "a4d5150b9ca39ab2a2e4276d5c75d1bba12490ed602c8a24de6a2b2546987fd6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cec43d1d88b9cc40",
       "path": "ops/hetzner/catalog-readonly-role.sql",
       "sha256": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
@@ -4155,7 +4163,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "61ef239f3f025cffcced86728ebc30e8ac28c9bf9483743658cf0018e849f38b",
+      "sha256": "c2175313b6410f6a28c3ddd98a9a6ab6e91cea0dda1a86202fcaf1707f1fb6db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4684,6 +4692,12 @@
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
       "sha256": "b3ba31f78fa10e86a14389b11768f8b91f950101db8a565a67e9515e12992361",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-55ff4eef57eba88f",
+      "path": "scripts/test-bpf-recovery-admission.py",
+      "sha256": "2a517e966c4881ee0cc52d3ea5bfd2ec7c572486ccee13c083ced8ee5d4d1f2d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23041,7 +23055,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "10f896209960851dee4ac2373b052cc8058443bb5e7f9a8bd39c1b878dbe7bf6",
+      "sha256": "06f2daafbb06ef7e718a8cac59d05f08c04035c380e4bea249a2ace54e2a0170",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23118,14 +23132,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "eb34c15b1b99db8e432bae3b2bd27f8c62961c50b9eba7a935e4a59c10bb6826",
+      "sha256": "321f90ef93303729b8e68e214eb4f2c33fb40aafb2df65d7f117d28887635df6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "debea911dcb7d1c7a0420f0c19c419ad23a605b90184dba52985a0abe9158696",
+      "sha256": "5d98d30be0ac833af0a5ee0f247501b72f926e82532f97f0f5cf6ce50d6daeba",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

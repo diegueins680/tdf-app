@@ -7624,7 +7624,8 @@
       "implementation": [
         "ops/hetzner/outbound-quarantine.py",
         "ops/hetzner/ufw-recovery-admission.py",
-        "ops/hetzner/dormant-container-admission.py"
+        "ops/hetzner/dormant-container-admission.py",
+        "ops/hetzner/bpf-recovery-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
@@ -7632,10 +7633,11 @@
         "scripts/test-outbound-quarantine-reboot-linux.py",
         "scripts/test-ufw-recovery-admission.py",
         "scripts/test-dormant-container-admission.py",
-        "scripts/test-dormant-container-reboot-linux.py"
+        "scripts/test-dormant-container-reboot-linux.py",
+        "scripts/test-bpf-recovery-admission.py"
       ],
       "formalModels": [],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",

@@ -826,6 +826,42 @@
       "applicability": "Dormant legacy containers must not unexpectedly restart during recovery reboot.",
       "decision": "adopted as version-bound admission",
       "rationale": "Read persisted metadata without rewriting it; bind exact daemon identity and all containers. Qualify actual restart and reboot on a separate owned daemon, including a deliberately cleared flag. No blanket restart-policy mutation is required."
+    },
+    {
+      "id": "RES-OPS-BPF-001",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/include/uapi/linux/bpf.h",
+      "title": "Linux6.8 BPF information and query interfaces",
+      "recommendation": "Distinguish read/query operations from loading, attachment, update and execution; bind held object descriptors and actual relationships.",
+      "applicability": "Read-only recovery host BPF inventory",
+      "decision": "adopted with narrow Linux x86_64 scope",
+      "rationale": "Use an explicit read-only syscall allowlist, bounded object/byte counts and repeated observations. Unsupported metadata fails admission; no automatic program removal."
+    },
+    {
+      "id": "RES-OPS-BPF-002",
+      "source": "https://raw.githubusercontent.com/systemd/systemd/v255/src/core/bpf-firewall.c",
+      "title": "systemd255 generated address-verdict instructions",
+      "recommendation": "Generated address checks copy a packet address to stack, look up an LPM trie and combine allow/deny verdict bits.",
+      "applicability": "Two observed production cgroup packet programs",
+      "decision": "adopted as exact structural template",
+      "rationale": "Names alone are insufficient. Match complete bytecode, map identity and fixed stack writes; permit only proven read/lookup calls. LPM contents change the verdict but cannot add redirection in this template."
+    },
+    {
+      "id": "RES-OPS-BPF-003",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/kernel/bpf/verifier.c",
+      "title": "Linux6.8 verifier call and map-lookup rewriting",
+      "recommendation": "Translated calls can contain signed kernel-relative offsets and specialized map operations rather than original helper IDs.",
+      "applicability": "Production BPF call evidence",
+      "decision": "adopted",
+      "rationale": "Resolve each actual encoded call against the running kernel and bind the result to index and immediate; reject stale resolution, unexpected targets and VM-offset substitution."
+    },
+    {
+      "id": "RES-OPS-BPF-004",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/drivers/hid/bpf/entrypoints/entrypoints.bpf.c",
+      "title": "Linux6.8 HID BPF tracing entrypoint",
+      "recommendation": "The HID entrypoint tail-calls through a1024-entry program array and returns zero when no target is present.",
+      "applicability": "Observed built-in tracing program during network-bypass admission",
+      "decision": "adopted as bounded exception",
+      "rationale": "Require exact template, actual HID BTF attachment and a complete empty-array scan; kernel identity and program name alone do not establish that property."
     }
   ]
 }

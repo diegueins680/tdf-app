@@ -123,6 +123,40 @@ Its `prepare`, actual owned-host reboot, `verify`, and `cleanup` phases require
 this destructive synthetic fixture on production. Private evidence is retained;
 the observer itself performs no Docker mutation.
 
+`ops/hetzner/bpf-recovery-admission.py` qualifies a deliberately narrow BPF subset
+on Linux x86_64. Its syscall allowlist only enumerates/reads existing programs,
+maps, links and BTF; it cannot load, execute, attach, pin or update them. Program
+and map descriptors are held while their relationships and contents are queried.
+Two complete observations must agree. Names and tags are diagnostic, not authority.
+
+- Cgroup packet/device programs may use only the accepted reads, register
+  operations, forward branches and exit encodings. Stores, helpers, tail calls,
+  kfunc calls, backward branches and unsupported opcodes reject this pure subset.
+- The separately recognized systemd IPv4 address-verdict template may copy four
+  packet bytes to its fixed stack buffer and look up one precisely shaped LPM
+  map. Both helper targets are resolved against the running kernel, bound to their
+  instruction indices and signed encoded call values, and required to be
+  `bpf_skb_load_bytes` and `trie_lookup_elem`. Its complete instruction template
+  fixes stack writes, arguments and final verdict logic. Map contents cannot
+  redirect packets in this template and are not collected.
+- The HID tracing exception requires the exact seven-instruction entrypoint,
+  a1024-slot program array with every slot read and empty, and the actual
+  `fmod_ret/__hid_bpf_tail_call` BTF attachment. BTF object identity must resolve
+  to the running kernel's `vmlinux` bytes. A populated slot, wrong attachment,
+  changed return or unsupported link rejects admission.
+
+Unclassified programs, links, maps, incomplete enumeration, changed code hashes
+and stale call-resolution records reject. Portable mutations exercise each
+boundary. This is source-informed structural checking of already kernel-verified
+programs, not a replacement BPF verifier, kernel proof, or continuous monitor.
+The running kernel/verifier, syscall and symbol interfaces are trusted; release
+ownership excludes concurrent noncooperating privileged changes. The caller must
+independently qualify the exact kernel release/BTF identity and evidence provenance.
+Dynamic object IDs are bound through observed relationships, not reused as stable
+identities across reboot. This component still reports complete host-bypass
+admission as false: TC/XDP, flowtables, bridge topology, host proxies and the
+integrated recovery coordinator have separate obligations.
+
 Run portable checks with `python3 scripts/test-outbound-quarantine.py`. Linux
 fixtures require root on an explicitly acknowledged empty owned VM, an existing
 immutable pgvector image and `TDF_SYNTHETIC_QUARANTINE_HOST` equal to its machine
