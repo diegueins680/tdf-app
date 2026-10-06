@@ -6962,6 +6962,90 @@
         "classification": "PARTIAL",
         "reason": "Browser observation boundaries are implemented and tested; deployed ingestion, consent configuration and canonical revenue-attribution joins require separate verification."
       }
+    },
+    {
+      "id": "EVT-TICKET-MANUAL-001",
+      "title": "Settle public ticket orders by staff-verified bank transfer",
+      "domain": "EVT",
+      "statement": "An approved ticket policy may opt into manual bank transfer with a bounded hold and a selection cutoff. The immutable checkout snapshot is preserved; a separately guarded extension keeps the seat while the buyer transfers and staff verifies. A reported transfer reference is evidence only. An event organizer or administrator who is neither the submitting party nor the buyer's email approves it, which records the canonical staff-verified payment and issues tickets through the provider-capture issuance path.",
+      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil",
+      "source": "docs/events/ticket-manual-bank-transfer.md",
+      "contract": "docs/events/ticket-manual-bank-transfer.md",
+      "actors": [
+        "Ticket buyer",
+        "Event organizer",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Approved active policy with manual transfer terms",
+        "Enabled tdf-manual-settlement bank_transfer provider account and configured instructions"
+      ],
+      "inputs": [
+        "Order lookup token",
+        "Buyer transfer reference",
+        "Staff review action and notes"
+      ],
+      "state": {
+        "boundary": "event_ticket_checkout_runtime.manual_hold_expires_at and canonical manual payment evidence",
+        "authority": "PostgreSQL triggers and canonical checkout store"
+      },
+      "allowedTransitions": [
+        "Held order before cutoff -> bank transfer selected with bounded hold extension",
+        "Selected -> evidence submitted -> under review -> approved -> paid -> issued",
+        "Under review -> rejected -> resubmitted while the hold is alive",
+        "Unpaid hold past its effective deadline -> expired with inventory released once"
+      ],
+      "forbiddenTransitions": [
+        "Customer evidence alone -> paid",
+        "Reviewer equal to submitter or owning the buyer email -> approval",
+        "Approval after effective hold expiry -> issued tickets",
+        "Shortening, unbounded or post-cutoff first extension of a hold",
+        "Changing approved manual transfer terms"
+      ],
+      "effects": [
+        "Bounded seat hold extension",
+        "Canonical manual evidence, binding, payment and audit rows",
+        "Idempotent ticket issuance"
+      ],
+      "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
+      "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
+      "concurrency": "Review locks checkout, attempt and evidence rows; the hold guard and expiry run in the database.",
+      "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
+      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
+      "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
+      "observability": "Checkout audit events for selection, evidence and review; funnel observes initiation with provider bank_transfer.",
+      "property": "An order is paid by bank transfer only with independently approved evidence bound to the exact checkout amount while its effective hold is alive.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql",
+        "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer_rollback.sql",
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
+        "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/api/eventTickets.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests.",
+      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Database invariants are exercised directly; the Haskell review transaction is exercised end to end only through deployed HTTP verification.",
+      "ambiguity": [
+        "No bank API confirms deposits; staff verification against the statement is the authority."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and tested at database and browser boundaries; production configuration and a real verified transfer are pending."
+      }
     }
   ]
 }
