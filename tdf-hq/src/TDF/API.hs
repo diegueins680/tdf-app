@@ -429,7 +429,7 @@ type ReceiptAPI =
   :<|> ReqBody '[JSON] CreateReceiptReq :> Post '[JSON] ReceiptDTO
   :<|> Capture "receiptId" Int64 :> Get '[JSON] ReceiptDTO
 
-type HealthAPI = Get '[JSON] HealthStatus
+type HealthAPI = Get '[JSON] (Headers '[Header "Cache-Control" Text] HealthStatus)
 type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]

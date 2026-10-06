@@ -9,6 +9,222 @@ servers:
     description: Development server
 
 paths:
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags:
+      - Invoicing
+      security:
+      - bearerAuth: []
+      description: Requires the canonical invoicing module capability. Studio-wide financial data; frontend
+        visibility does not grant access.
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvoiceDTO'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid session
+        '403':
+          description: Invoicing module denied
+        '404':
+          description: Referenced object not found
+        '409':
+          description: Stored evidence or replay conflict; reload before retrying
+        '422':
+          description: Invalid referenced data or invoice snapshot
+        '500':
+          description: Fixed internal server error
+    post:
+      operationId: createInvoice
+      tags:
+      - Invoicing
+      security:
+      - bearerAuth: []
+      description: 'Create a draft invoice. When ciGenerateReceipt is true, invoice, lines, receipt and
+        number allocation commit atomically. Session and canonical invoicing grants are revalidated and
+        locked through the transaction. This endpoint has no external idempotency key: retrying invoice
+        creation can create a second invoice.'
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceDTO'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid session
+        '403':
+          description: Invoicing module denied
+        '404':
+          description: Referenced object not found
+        '409':
+          description: Stored evidence or replay conflict; reload before retrying
+        '422':
+          description: Invalid referenced data or invoice snapshot
+        '500':
+          description: Fixed internal server error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceReq'
+  /invoices/{invoiceId}:
+    parameters:
+    - name: invoiceId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    get:
+      operationId: getInvoiceById
+      tags:
+      - Invoicing
+      security:
+      - bearerAuth: []
+      description: Requires the canonical invoicing module capability. Studio-wide financial data; frontend
+        visibility does not grant access.
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceDTO'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid session
+        '403':
+          description: Invoicing module denied
+        '404':
+          description: Referenced object not found
+        '409':
+          description: Stored evidence or replay conflict; reload before retrying
+        '422':
+          description: Invalid referenced data or invoice snapshot
+        '500':
+          description: Fixed internal server error
+  /receipts:
+    get:
+      operationId: listReceipts
+      tags:
+      - Invoicing
+      security:
+      - bearerAuth: []
+      description: Requires the canonical invoicing module capability. Studio-wide financial data; frontend
+        visibility does not grant access.
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReceiptDTO'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid session
+        '403':
+          description: Invoicing module denied
+        '404':
+          description: Referenced object not found
+        '409':
+          description: Stored evidence or replay conflict; reload before retrying
+        '422':
+          description: Invalid referenced data or invoice snapshot
+        '500':
+          description: Fixed internal server error
+    post:
+      operationId: createReceipt
+      tags:
+      - Invoicing
+      security:
+      - bearerAuth: []
+      description: One immutable receipt per invoice. Lock and revalidate the current session, canonical
+        invoicing grants and invoice through commit. Currency must equal invoice currency (422 otherwise).
+        Exact checked minor-unit totals must agree with invoice lines and header. A replay returns the existing
+        snapshot; omitted or null overrides preserve it, and different explicit buyer name, email or nonblank
+        notes return 409. Blank notes normalize to omission. Annual numbers are unique; gaps are permitted.
+        This is a receipt record, not payment capture or SRI authorization.
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptDTO'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid session
+        '403':
+          description: Invoicing module denied
+        '404':
+          description: Referenced object not found
+        '409':
+          description: Stored evidence or replay conflict; reload before retrying
+        '422':
+          description: Invalid referenced data or invoice snapshot
+        '500':
+          description: Fixed internal server error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReceiptReq'
+  /receipts/{receiptId}:
+    parameters:
+    - name: receiptId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    get:
+      operationId: getReceipt
+      tags:
+      - Invoicing
+      security:
+      - bearerAuth: []
+      description: Requires the canonical invoicing module capability. Studio-wide financial data; frontend
+        visibility does not grant access.
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptDTO'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid session
+        '403':
+          description: Invoicing module denied
+        '404':
+          description: Referenced object not found
+        '409':
+          description: Stored evidence or replay conflict; reload before retrying
+        '422':
+          description: Invalid referenced data or invoice snapshot
+        '500':
+          description: Fixed internal server error
   /operations/work-items:
     get:
       operationId: operationsWorkItems
@@ -1751,11 +1967,26 @@ paths:
   /health:
     get:
       summary: Health Check
-      description: Checks the health of the API server and its database connection.
+      description: Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
       operationId: getHealth
+      security: []
       responses:
         '200':
-          description: Successful response
+          description: Database round trip succeeded.
+          headers:
+            Cache-Control:
+              schema: {type: string, enum: [no-store]}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: Initializing, unavailable database, or expired readiness deadline.
+          headers:
+            Cache-Control:
+              schema: {type: string, enum: [no-store]}
+            Retry-After:
+              schema: {type: string, enum: ['5']}
           content:
             application/json:
               schema:
@@ -9476,6 +9707,258 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    InvoiceLineDTO:
+      type: object
+      required:
+      - lineId
+      - description
+      - quantity
+      - unitCents
+      - taxBps
+      - totalCents
+      - serviceOrderId
+      - packagePurchaseId
+      properties:
+        lineId:
+          type: integer
+          format: int64
+        description:
+          type: string
+        quantity:
+          type: integer
+          format: int64
+        unitCents:
+          type: integer
+          format: int64
+        taxBps:
+          type: integer
+          format: int64
+        totalCents:
+          type: integer
+          format: int64
+        serviceOrderId:
+          type: integer
+          format: int64
+          nullable: true
+        packagePurchaseId:
+          type: integer
+          format: int64
+          nullable: true
+    InvoiceDTO:
+      type: object
+      required:
+      - invId
+      - number
+      - statusI
+      - subtotalC
+      - taxC
+      - totalC
+      - currency
+      - customerId
+      - sriDocumentId
+      - notes
+      - receiptId
+      - lineItems
+      properties:
+        invId:
+          type: integer
+          format: int64
+        number:
+          type: string
+          nullable: true
+        statusI:
+          type: string
+        subtotalC:
+          type: integer
+          format: int64
+        taxC:
+          type: integer
+          format: int64
+        totalC:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        customerId:
+          type: integer
+          format: int64
+          nullable: true
+        sriDocumentId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        receiptId:
+          type: integer
+          format: int64
+          nullable: true
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLineDTO'
+    CreateInvoiceLineReq:
+      type: object
+      required:
+      - cilDescription
+      - cilQuantity
+      - cilUnitCents
+      properties:
+        cilDescription:
+          type: string
+        cilQuantity:
+          type: integer
+          minimum: 1
+        cilUnitCents:
+          type: integer
+          minimum: 0
+        cilTaxBps:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 10000
+        cilServiceOrderId:
+          type: integer
+          format: int64
+          nullable: true
+        cilPackagePurchaseId:
+          type: integer
+          format: int64
+          nullable: true
+      additionalProperties: false
+    CreateInvoiceReq:
+      type: object
+      required:
+      - ciCustomerId
+      - ciLineItems
+      properties:
+        ciCustomerId:
+          type: integer
+          format: int64
+          minimum: 1
+        ciCurrency:
+          type: string
+          nullable: true
+        ciNumber:
+          type: string
+          nullable: true
+        ciNotes:
+          type: string
+          nullable: true
+        ciGenerateReceipt:
+          type: boolean
+          nullable: true
+        ciLineItems:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/CreateInvoiceLineReq'
+      additionalProperties: false
+    ReceiptLineDTO:
+      type: object
+      required:
+      - receiptLineId
+      - rlDescription
+      - rlQuantity
+      - rlUnitCents
+      - rlTaxBps
+      - rlTotalCents
+      properties:
+        receiptLineId:
+          type: integer
+          format: int64
+        rlDescription:
+          type: string
+        rlQuantity:
+          type: integer
+          format: int64
+        rlUnitCents:
+          type: integer
+          format: int64
+        rlTaxBps:
+          type: integer
+          format: int64
+          nullable: true
+        rlTotalCents:
+          type: integer
+          format: int64
+    ReceiptDTO:
+      type: object
+      required:
+      - receiptId
+      - receiptNumber
+      - issuedAt
+      - issueDate
+      - buyerName
+      - buyerEmail
+      - currency
+      - subtotalCents
+      - taxCents
+      - totalCents
+      - notes
+      - invoiceId
+      - lineItems
+      properties:
+        receiptId:
+          type: integer
+          format: int64
+        receiptNumber:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        issueDate:
+          type: string
+          format: date
+        buyerName:
+          type: string
+        buyerEmail:
+          type: string
+          nullable: true
+        currency:
+          type: string
+        subtotalCents:
+          type: integer
+          format: int64
+        taxCents:
+          type: integer
+          format: int64
+        totalCents:
+          type: integer
+          format: int64
+        notes:
+          type: string
+          nullable: true
+        invoiceId:
+          type: integer
+          format: int64
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptLineDTO'
+    CreateReceiptReq:
+      type: object
+      required:
+      - crInvoiceId
+      properties:
+        crInvoiceId:
+          type: integer
+          format: int64
+          minimum: 1
+        crBuyerName:
+          type: string
+          nullable: true
+        crBuyerEmail:
+          type: string
+          nullable: true
+        crNotes:
+          type: string
+          nullable: true
+        crCurrency:
+          type: string
+          nullable: true
+      additionalProperties: false
     EventLiveBroadcastDTO:
       type: object
       required: [elbId, elbEventId, elbArtistId, elbArtistName, elbBroadcasterName, elbBroadcasterPartyId, elbTitle, elbDescription, elbStatus, elbPlaybackUrl, elbIngestUrl, elbWhipUrl, elbStreamKey, elbViewerCount, elbStartedAt, elbEndedAt, elbLastHeartbeatAt]
@@ -12928,14 +13411,18 @@ components:
 
     Health:
       type: object
+      required: [status, db]
       properties:
         status:
           type: string
-          enum: [ok, degraded]
+          enum: [ok, degraded, starting]
           description: Service status.
-        version:
+        db:
           type: string
-          description: Application version.
+          enum: [ok, unavailable, starting]
+        message:
+          type: string
+          description: Optional fixed startup explanation. Database errors never include exception details.
     LoginRequest:
       type: object
       required: [username, password]

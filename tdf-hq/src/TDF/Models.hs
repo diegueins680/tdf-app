@@ -774,6 +774,7 @@ Receipt
     notes            Text Maybe
     createdAt        UTCTime
     UniqueReceiptNumber number !force
+    UniqueReceiptInvoice invoiceId
     deriving Show Generic
 ReceiptLine
     receiptId        ReceiptId

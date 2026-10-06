@@ -81,6 +81,7 @@ import           TDF.Auth                   ( AuthedUser(..)
                                             , extractTokenFromHeaders
                                             , loadAuthedUser
                                             , withCurrentAuthSession
+                                            , withCurrentAuthorization
                                             )
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                  as M
@@ -291,8 +292,13 @@ internalFeedbackServer user =
 
     -- Match the UI administrator boundary using canonical module grants,
     -- including direct API calls after a module grant has been removed.
-    ensureAdmin = unless (isAdminUser && hasModuleAccess ModuleInternships user) $
-      throwError err403 { errBody = "Report administration access required" }
+    validateAdministrator current =
+      if any (`elem` auRoles current) [M.Admin, M.Manager, M.StudioManager]
+         && hasModuleAccess ModuleInternships current
+        then Right ()
+        else Left err403 { errBody = "Report administration access required" }
+
+    ensureAdmin = either throwError pure (validateAdministrator user)
 
     reportByIdH rawReportId =
       getReportH rawReportId
@@ -328,29 +334,31 @@ internalFeedbackServer user =
       -- privacy request. LF and CR prefixes include LF, CRLF and bare-CR legacy
       -- encodings without rewriting their recorded content. The stable tie-breaker
       -- makes equal timestamps safe.
-      rows <- withPool $ if deletionOnly == Just True
-        then rawSql
-          "SELECT ?? FROM feedback WHERE left(description, 25) IN (?, ?) ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?"
-          [PersistText "account_deletion_request\n", PersistText "account_deletion_request\r", PersistInt64 (fromIntegral requestedOffset)]
-        else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
-      fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
-        history <- if deletionOnly == Just True then withPool $ accountDeletionHistory feedbackKey else pure []
-        normalized <- withPool $ getBy (ME.UniqueInternalFeedbackReport feedbackKey)
-        pure $ case normalized of
-          Just _ | deletionOnly /= Just True -> Nothing
-          _ -> Just LegacyFeedbackDTO
-            { lfdId = toPathPiece feedbackKey
-            , lfdTitle = feedbackTitle feedback
-            , lfdDescription = feedbackDescription feedback
-            , lfdCategoryId = toPathPiece <$> feedbackCategoryId feedback
-            , lfdSeverityId = toPathPiece <$> feedbackSeverityId feedback
-            , lfdContactEmail = feedbackContactEmail feedback
-            , lfdConsent = feedbackConsent feedback
-            , lfdCreatedBy = fromSqlKey <$> feedbackCreatedBy feedback
-            , lfdHasAttachment = isJust (feedbackAttachment feedback)
-            , lfdCreatedAt = feedbackCreatedAt feedback
-            , lfdDeletionHistory = history
-            }
+      result <- withPool $ withCurrentAuthorization validateAdministrator user $ do
+        rows <- if deletionOnly == Just True
+          then rawSql
+            "SELECT ?? FROM feedback WHERE left(description, 25) IN (?, ?) ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?"
+            [PersistText "account_deletion_request\n", PersistText "account_deletion_request\r", PersistInt64 (fromIntegral requestedOffset)]
+          else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
+        fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
+          history <- if deletionOnly == Just True then accountDeletionHistory feedbackKey else pure []
+          normalized <- getBy (ME.UniqueInternalFeedbackReport feedbackKey)
+          pure $ case normalized of
+            Just _ | deletionOnly /= Just True -> Nothing
+            _ -> Just LegacyFeedbackDTO
+              { lfdId = toPathPiece feedbackKey
+              , lfdTitle = feedbackTitle feedback
+              , lfdDescription = feedbackDescription feedback
+              , lfdCategoryId = toPathPiece <$> feedbackCategoryId feedback
+              , lfdSeverityId = toPathPiece <$> feedbackSeverityId feedback
+              , lfdContactEmail = feedbackContactEmail feedback
+              , lfdConsent = feedbackConsent feedback
+              , lfdCreatedBy = fromSqlKey <$> feedbackCreatedBy feedback
+              , lfdHasAttachment = isJust (feedbackAttachment feedback)
+              , lfdCreatedAt = feedbackCreatedAt feedback
+              , lfdDeletionHistory = history
+              }
+      either throwError pure result
 
     -- Append-only fulfilment evidence in the existing audit table. A locked
     -- request can leave pending only once; this records work, never erases data.
@@ -360,7 +368,7 @@ internalFeedbackServer user =
       unless (adrOutcome == "completed" || adrOutcome == "rejected") $
         throwError err400 { errBody = "Outcome must be completed or rejected" }
       note <- validateInternalText "note" 2000 adrNote
-      result <- withPool $ withCurrentAuthSession user $ do
+      result <- withPool $ withCurrentAuthorization validateAdministrator user $ do
         -- createdBy is immutable after intake. Acquire the same owner mutex as
         -- intake BEFORE the row lock; the subsequent query re-reads the row.
         candidate <- get feedbackKey
@@ -384,7 +392,7 @@ internalFeedbackServer user =
                   }
                 pure (Right (AccountDeletionActionDTO adrOutcome note (Just (fromSqlKey (auPartyId user))) now))
           _ -> pure (Left err404)
-      maybe (throwError err401) (either throwError pure) result
+      either throwError (either throwError pure) result
 
     createReportH InternalFeedbackCreate{..} = do
       ensureInternalAccess

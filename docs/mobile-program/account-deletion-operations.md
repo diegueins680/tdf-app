@@ -30,7 +30,7 @@ manual with the already stated target of 30 days and a completion confirmation.
 
 ## Operator authorization
 
-The backend requires an Admin, Manager or StudioManager role **and** the canonical `internships` module grant for both legacy-feedback reads and deletion resolution, matching the UI boundary. A role alone, or an unrelated admin-module grant, cannot read the privacy queue or mark a request terminal. Each HTTP request reloads canonical role/module grants; this is not a claim that a concurrent in-flight permission change is serialized by the session lock.
+The backend requires an Admin, Manager or StudioManager role **and** the canonical `internships` module grant for both legacy-feedback reads and deletion resolution, matching the UI boundary. A role alone, or an unrelated admin-module grant, cannot read the privacy queue or mark a request terminal. Request authentication alone is insufficient. Within the same database transaction as the private read or terminal audit, `withCurrentAuthorization` locks and rechecks the current session, active role assignments/roles and module permission chain. It evaluates both the operator-role and internships-module predicate on those current grants. The lock order is session, role assignments/roles, module permission chain, then (for resolution) owner advisory mutex and feedback row. A role or module revocation committed before that admission denies the operation. A revocation that loses to the held grant locks waits until the admitted transaction completes. An Intern grant alone remains insufficient after loss of the operator role. Queue projection and its history reads share that admitted transaction.
 
 ## Operator procedure
 
@@ -151,3 +151,23 @@ forms before the normalized owner validator runs; reading or resolving a record
 does not rewrite its original content or timestamp. Actual HTTP checks convert
 synthetic existing records to each legacy encoding, verify visibility, race eight
 retries against the same receipt and record exactly one terminal outcome.
+
+## Concurrent operator authority model
+
+`AccountDeletionAuthority.tla` bounds one request and session/operator/module
+revocation, with three Boolean grants and request phases new/captured/admitted/done.
+The operator Boolean abstracts membership in Admin/Manager/StudioManager; module
+access without that membership is insufficient. Admission atomically abstracts
+successful current-row validation and all retained locks. Actual PostgreSQL
+acquires those locks in the order above; no effect occurs until all checks pass.
+The model ends at the effect, so a later legitimate revocation does not retroactively
+invalidate a committed operation. There is no fairness or liveness claim.
+Three controlled mutations admit captured stale grants, omit the session lock,
+or omit grant locks; each must violate `CurrentAuthorityAtEffect`.
+The model excludes crashes, SQL query planning, new grants, multiple requests,
+external deletion effects and response transport. It is bounded safety analysis,
+not a Python/Haskell/SQL refinement proof. Six real HTTP/PostgreSQL barriers cover
+operator-role and module revocation during a witnessed token-row wait for queue
+reads, legacy reads and resolution, including retained Intern access. Rejected
+resolution must leave no terminal audit. Previous binaries are failing controls
+only when actually run; source inspection is not runtime evidence.

@@ -36,7 +36,7 @@ try {
   try {
     outcome = await new Promise(resolve => {
       const child = spawn('bash', ['scripts/verify-event-operations-formal.sh'],
-        { cwd: root, stdio: ['ignore', fd, fd], timeout: 18 * 60_000 });
+        { cwd: root, stdio: ['ignore', fd, fd], timeout: 30 * 60_000 });
       child.on('error', error => resolve({ status: null, error: error.message }));
       child.on('close', (status, signal) => resolve({ status, signal }));
     });
