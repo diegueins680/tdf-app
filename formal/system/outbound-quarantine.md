@@ -52,6 +52,19 @@ retains the previously enabled value.
 Fixture cleanup removes only nonce-labelled containers/networks and their
 anonymous volumes; other volume identities must remain unchanged.
 
+The optional `TDF_QUARANTINE_TEST_UFW=1` lane uses UFW0.36.2-6 with the
+iptables-nft backend and deliberately permissive synthetic rules. Four continuous
+IPv4/IPv6 senders target host and routed receivers during reload and restart.
+One immutable provider-acceptance baseline covers both operations and the
+intervening local/ingress checks. Removing host and routed restrictions must make
+the same destinations reachable, excluding an accidental UFW denial as the reason
+for success. The real reboot fixture additionally checks monotonic activation
+ordering UFW → quarantine → Docker. CI runs both packet lanes on separate
+disposable runners; actual reboot qualification remains a separate release test.
+This does not qualify production's UFW configuration. Production admission must
+bind the package implementation, selected iptables backend, configuration,
+non-executable custom hooks and loaded unit/drop-ins to reviewed evidence.
+
 Run portable checks with `python3 scripts/test-outbound-quarantine.py`. Linux
 fixtures require root on an explicitly acknowledged empty owned VM, an existing
 immutable pgvector image and `TDF_SYNTHETIC_QUARANTINE_HOST` equal to its machine

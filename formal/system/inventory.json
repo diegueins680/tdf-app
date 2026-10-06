@@ -2446,7 +2446,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "5d1081e389cd9fb335a2215db4b6abfc1a72368f79eb52b9a6e468cc6dd58675",
+      "sha256": "2b255da36547955e4433f860916d5da54eeb59dcdbcca17aa6eb6a13b4063cf2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5098,13 +5098,13 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "3ce15e427028b23af9cfc9958a78dbca295669a057d6e336f7358e1c53973756",
+      "sha256": "5810c45b01ddf838e96544f54e363e558ec80c5768d415a993c6477f5af5c5eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f5285339f83a13bc",
       "path": "scripts/test-outbound-quarantine-reboot-linux.py",
-      "sha256": "338b5129bd6b87db6b19a516fbdc9e57b9473fcd9c12aeab85d3aa2a3069fc87",
+      "sha256": "3c3049fa57d84ced4c1ccb178787d3d8b63ca60a29c8961191c179faed7b4ed7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23006,7 +23006,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "b999dd4a067dd748d901117846f91f6e5e49bb38f026d8c975e46328cd06d1ca",
+      "sha256": "9e7a89bda6dc3a9130007623c9beeff32a9cc3e95e26a2f917b685b98ad92918",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23090,7 +23090,7 @@
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "868816437e3dd79a02462e85e736b00d0e8a1d9232afa3f6073ee002876c7e6e",
+      "sha256": "59a21ae13f32bbe98fa73407c05d8c1ccd938fa5d815a6d9e8174a70818f3fcc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

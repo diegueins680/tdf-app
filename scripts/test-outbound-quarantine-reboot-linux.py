@@ -200,11 +200,16 @@ def prepare(machine):
     write(q.DROPIN_PATH,q.DROPIN.encode())
     run(['systemctl','daemon-reload']);run(['systemctl','start',q.UNIT])
     evidence=q.observe_persistent()
+    ufw_checked=os.environ.get('TDF_QUARANTINE_TEST_UFW')=='1'
+    if ufw_checked:
+        require(run(['systemctl','is-active','ufw.service'])=='active')
+        require(run(['dpkg-query','-W','-f','${Version}','ufw'])=='0.36.2-6')
     enable_live_restore()
     time.sleep(1);baseline=len(lines('seen.jsonl'));time.sleep(3)
     require(len(lines('seen.jsonl'))==baseline)
     record={'machine':machine,'boot':boot(),'network':network,'container':container,'nonce':nonce,
-            'bridges':bridges,'baselineAccepted':baseline,'policy':evidence,'initialVolumes':initial_volumes}
+            'bridges':bridges,'baselineAccepted':baseline,'policy':evidence,'initialVolumes':initial_volumes,
+            'ufwChecked':ufw_checked}
     write(FIXTURE_DIR/'fixture.json',q.canonical(record))
     print(json.dumps({'prepared':True,'boot':record['boot'],'rebootRequired':True}))
 
@@ -226,6 +231,14 @@ def verify():
             if state=='active' and rows[0]['State']['Running']:break
         require(time.monotonic()<deadline);time.sleep(.25)
     current=q.observe_persistent();require(current==data['policy'])
+    if data['ufwChecked']:
+        ufw=q.properties('ufw.service',('ActiveState','ActiveEnterTimestampMonotonic'))
+        guard=q.properties(q.UNIT,('ExecMainStartTimestampMonotonic','ActiveEnterTimestampMonotonic'))
+        docker=q.properties('docker.service',('ExecMainStartTimestampMonotonic',))
+        require(ufw['ActiveState']=='active' and 0<int(ufw['ActiveEnterTimestampMonotonic'])
+                <=int(guard['ExecMainStartTimestampMonotonic'])
+                <=int(guard['ActiveEnterTimestampMonotonic'])
+                <=int(docker['ExecMainStartTimestampMonotonic']))
     row=json.loads(run(DOCKER+['inspect',data['container']]))[0]
     require(row['Id']==data['container'] and row['State']['Running']
             and row['Config']['Labels'].get(LABEL)==data['nonce'])
@@ -277,6 +290,7 @@ def verify():
     time.sleep(3);require(len(lines('seen.jsonl'))==data['baselineAccepted'])
     print(json.dumps({'realBootChanged':True,'automaticContainerStartupRestricted':True,
         'liveRestoreContainerContinuityVerified':True,'failedDaemonStartDoesNotFenceContainer':True,
+        'ufwBeforeQuarantineBeforeDockerVerified':data['ufwChecked'],
         'changedPolicyDeniedDockerStart':True,'missingConfigurationDeniedDockerStart':True,
         'acceptedAfterRestriction':0,'syntheticReceiverOnly':True}))
 

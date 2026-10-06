@@ -808,6 +808,15 @@
       "applicability": "IPv6 host/container neighbor resolution during outbound restriction",
       "decision": "adopted",
       "rationale": "Actual packet tracing exposed rejected Neighbor Advertisements and intermittent incoming reply loss. Permit only the required local input control packets and explicitly flush fixture caches; removal is a failing negative control."
+    },
+    {
+      "id": "RES-OPS-UFW-001",
+      "source": "https://manpages.ubuntu.com/manpages/noble/man8/ufw-framework.8.html",
+      "title": "Ubuntu UFW framework and lifecycle hooks",
+      "recommendation": "UFW lifecycle behavior depends on MANAGE_BUILTINS, executable custom hooks and its rules/configuration files.",
+      "applicability": "Coexistence of recovery restriction with the active production firewall",
+      "decision": "adopted as qualification obligation",
+      "rationale": "Keep the active firewall. Exercise matching-package reload/restart/reboot with continuously attempted synthetic connections; bind reviewed implementation/configuration/backend instead of assuming final table equality proves uninterrupted denial."
     }
   ]
 }
