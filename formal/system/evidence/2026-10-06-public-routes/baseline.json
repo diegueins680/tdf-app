@@ -1,0 +1,48 @@
+{
+ "observedAt": "2026-10-06T16:46:37.584393+00:00",
+ "main": "1f99d143900a67aa9b82f4138630684afbd7db2f",
+ "tree": "e7acd95b2bb64a059b64b281d760a2342dab483e",
+ "branch": "audit/spec-authority-20261006",
+ "mobileGitlink": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+ "mobileCheckout": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+ "production": {
+  "publicVersion": {
+   "buildTime": "2026-10-06T07:54:33Z",
+   "commit": "1f99d143900a67aa9b82f4138630684afbd7db2f",
+   "name": "tdf-hq",
+   "version": "0.1.0.0"
+  },
+  "publicHealth": {
+   "db": "ok",
+   "status": "ok"
+  }
+ },
+ "unknowns": [
+  "Production migration ledger, runtime flags and container identity were not observed: the read-only SSH inspection (scripts/inspect-hetzner-production.mjs) was denied by the session permission policy.",
+  "Frontend deployment revision was not observed."
+ ],
+ "gatesAtBaseline": {
+  "specification-inventory --check": "pass",
+  "specification-conformance --check": "pass"
+ },
+ "registerAtBaseline": {
+  "requirements": 89,
+  "conformance": {
+   "PARTIAL": 89
+  },
+  "unmappedSurfaces": 1829,
+  "surfaces": 2297,
+  "unmodeledCriticalRequirements": 48,
+  "stateMachines": 18
+ },
+ "compiledSurfaceAtBaseline": {
+  "operations": 845,
+  "rawMounts": 2,
+  "unauthenticated": {
+   "GET": 90,
+   "POST": 85,
+   "PUT": 3,
+   "DELETE": 1
+  }
+ }
+}

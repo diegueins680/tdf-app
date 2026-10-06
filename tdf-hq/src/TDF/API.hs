@@ -110,8 +110,6 @@ type InputListPublicAPI =
          :> QueryParam "sessionId" Text
          :> QueryParam "channel" Int
          :> Get '[JSON] [Entity InventoryItem]
-  :<|> "sessions" :> QueryParam "index" Int :> QueryParam "sessionId" Text :> Get '[JSON] [Entity InputListEntry]
-  :<|> "sessions" :> "pdf" :> QueryParam "index" Int :> QueryParam "sessionId" Text :> Get '[OctetStream] (Headers '[Header "Content-Disposition" Text] BL.ByteString)
 
 type InputListSeedAPI =
        "inventory" :> "seed" :> SeedAPI
@@ -121,10 +119,13 @@ type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
 type AdsPublicAPI =
        "ads" :> "inquiry" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
-  :<|> "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
 
+-- | Staff assistance draws on internal campaign, ad, studio-knowledge and
+-- schedule context, so it is served only to authenticated Social Inbox staff.
 type AdsAdminAPI =
-       "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
+       "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
+
+  :<|> "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
   :<|> "ads" :> "campaigns" :> Get '[JSON] [CampaignDTO]
   :<|> "ads" :> "campaigns" :> ReqBody '[JSON] CampaignUpsert :> Post '[JSON] CampaignDTO
   :<|> "ads" :> "campaigns" :> Capture "campaignId" Int64 :> Get '[JSON] CampaignDTO

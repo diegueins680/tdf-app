@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "authority": "Reviewed bindings from declared lifecycle machines to the database column that stores them. scripts/check-state-machines.py compares declared states (and SQL-encoded transitions where present) with the effective schema after the full production migration manifest. A deviation is a reviewed, exact difference; it is never an implicit pass.",
+  "machines": {
+    "docs/revenue-platform/formal-model.yaml#marketplace_sale_fulfillment": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "marketplace_sale_order_runtime",
+      "column": "fulfillment_status",
+      "decision": "ADR-0107"
+    },
+    "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "marketplace_rental_order_runtime",
+      "column": "rental_status",
+      "decision": "ADR-0108"
+    },
+    "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "service_booking_checkout_runtime",
+      "column": "fulfillment_status",
+      "decision": "ADR-0109"
+    },
+    "docs/revenue-platform/formal-model.yaml#event_ticket_fulfillment": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "event_ticket_checkout_runtime",
+      "column": "fulfillment_status",
+      "decision": "ADR-0113"
+    },
+    "docs/revenue-platform/formal-model.yaml#quote": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "domo_event_quote_runtime",
+      "column": "quote_status",
+      "transitionFunction": "domo_validate_quote_runtime_update",
+      "decision": "AUTHORITY-047"
+    },
+    "docs/revenue-platform/formal-model.yaml#distribution": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "distribution_release_version",
+      "column": "state",
+      "decision": "AUTHORITY-048",
+      "deviation": {
+        "classification": "SPECIFICATION AMBIGUITY",
+        "statesOnlyDeclared": [
+          "delivering",
+          "live_confirmation_pending",
+          "partially_refunded",
+          "refunded",
+          "rejected"
+        ],
+        "statesOnlyImplemented": [
+          "delivery_queued",
+          "package_generated",
+          "sent",
+          "validated"
+        ]
+      }
+    },
+    "docs/revenue-platform/formal-model.yaml#royalty_statement": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "royalty_statement",
+      "column": "state",
+      "decision": "AUTHORITY-048",
+      "deviation": {
+        "classification": "SPECIFICATION AMBIGUITY",
+        "statesOnlyDeclared": [
+          "rejected",
+          "variance_review"
+        ]
+      }
+    },
+    "docs/revenue-platform/formal-model.yaml#refund": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "commerce_refund",
+      "column": "status",
+      "decision": "ADR-0129"
+    },
+    "docs/revenue-platform/formal-model.yaml#provider_event": {
+      "source": "docs/revenue-platform/formal-model.yaml",
+      "table": "commerce_provider_event_inbox",
+      "column": "processing_status",
+      "decision": "ADR-0101"
+    },
+    "docs/music-directory/formal-model.yaml#profile": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "directory_profile",
+      "column": "profile_status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/music-directory/formal-model.yaml#classified": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "classified",
+      "column": "status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/music-directory/formal-model.yaml#application": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "classified_application",
+      "column": "status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/music-directory/formal-model.yaml#invitation": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "directory_invitation",
+      "column": "status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/music-directory/formal-model.yaml#claim": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "directory_claim",
+      "column": "status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/music-directory/formal-model.yaml#moderation_case": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "directory_moderation_case",
+      "column": "status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/music-directory/formal-model.yaml#review": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "directory_review",
+      "column": "status",
+      "decision": "ADR-0105-music-directory-classifieds"
+    },
+    "docs/operations-control-center/formal-model.yaml#operations.control-center": {
+      "source": "docs/operations-control-center/formal-model.yaml",
+      "table": "operations_work_item",
+      "column": "status",
+      "decision": "docs/operations-control-center/formal-model.yaml"
+    }
+  },
+  "unbound": {
+    "PAY-INVOICE-001": "Abstract receipt presence (absent/issued) in requirements.json; not stored as an enumerated column. Covered by invoice-receipts.md."
+  }
+}

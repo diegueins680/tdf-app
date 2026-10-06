@@ -947,6 +947,80 @@
       }
     },
     {
+      "id": "SYS-STATE-001",
+      "title": "Declared lifecycle machines correspond to the migrated schema",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision.",
+      "domain": "SYS",
+      "actors": [
+        "Reviewer",
+        "CI",
+        "Schema migration author",
+        "Model author"
+      ],
+      "preconditions": [
+        "The production migration manifest applies to an empty baseline fixture."
+      ],
+      "inputs": [
+        "Domain formal-model.yaml machines",
+        "formal/system/state-machine-bindings.json",
+        "Migrated PostgreSQL catalog"
+      ],
+      "state": {
+        "machine": [
+          "unbound",
+          "bound-conformant",
+          "bound-deviation"
+        ]
+      },
+      "allowedTransitions": [
+        "Model or schema change with matching counterpart -> bound-conformant",
+        "Reviewed difference with authority decision -> bound-deviation"
+      ],
+      "forbiddenTransitions": [
+        "Unreviewed difference -> admitted",
+        "Repaired difference with stale deviation -> admitted",
+        "Declared machine -> unbound without exclusion"
+      ],
+      "effects": [
+        "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
+        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048)."
+      ],
+      "authorization": "Not applicable; schema and declaration check only.",
+      "privacy": "Uses schema catalog only; no row data.",
+      "concurrency": "Checked against a quiescent migrated database.",
+      "idempotency": "Deterministic for an unchanged manifest and model.",
+      "failure": "Any unbound machine, catalog lookup failure or non-exact difference fails CI.",
+      "recovery": "Correct the model, add an additive migration, or record a reviewed deviation with an authority decision.",
+      "observability": "Gate output names the machine, comparison and observed difference.",
+      "authority": "reconciled",
+      "source": "formal/system/state-machine-correspondence.md; ADR-0114; effective schema from 184 manifest migrations on 2026-10-06",
+      "property": "Declared states (and SQL-encoded transitions) equal the migrated schema up to reviewed deviations",
+      "contract": "formal/system/state-machine-correspondence.md",
+      "implementation": [
+        "scripts/check-state-machines.py",
+        "formal/system/state-machine-bindings.json",
+        "docs/revenue-platform/formal-model.yaml"
+      ],
+      "tests": [
+        "scripts/test-state-machines.py",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
+      "evidence": "Gate output on the migrated CI database and twelve negative controls",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
+      "ambiguity": [
+        "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
+        "Fourteen machines enforce transitions only in application code."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
+      }
+    },
+    {
       "id": "AUTH-CORS-001",
       "title": "Explicit production credentialed browser origins",
       "statement": "Production must reject credentialed allow-all or wildcard CORS configuration and reject requests from origins outside its explicit trusted origins before the application handler executes. Explicitly trusted origins must support the existing X-Order-Lookup-Token header for public checkout GET/POST preflights; header permission does not replace server-side order authorization.",
@@ -2850,7 +2924,7 @@
       "statement": "Customer-facing knowledge retrieval may rank existing public courses using cached embeddings, but must render current public metadata, never raw indexed private content, and omit a course absent when its metadata is read.",
       "domain": "PRIV",
       "actors": [
-        "Anonymous assistant visitor",
+        "Authenticated Social Inbox staff using the assistant",
         "Instagram/Facebook/WhatsApp automated reply recipient"
       ],
       "preconditions": [
@@ -2883,7 +2957,7 @@
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
       ],
-      "authorization": "Anonymous and customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
+      "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
       "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
@@ -4857,6 +4931,91 @@
       "ambiguity": [
         "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
         "SQL/role conformance is empirical; not formally covered."
+      ]
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/public-route-admission.md",
+      "critical": true,
+      "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
+      "status": "specified and implemented",
+      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+      },
+      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "observability": "Gate output names each offending method and path.",
+      "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
+      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "id": "AUTH-PUBLIC-001",
+      "title": "Reviewed admission of every unauthenticated route",
+      "domain": "AUTH",
+      "statement": "Every compiled route served without AuthProtect must be registered with exactly one reviewed boundary. Routes exposing staff-only, internal or other-party data, or acting on an existing record identified only by a sequential or user-chosen identifier, must require authentication or a capability. Unregistered, stale or structurally inconsistent registrations fail admission.",
+      "actors": [
+        "Unauthenticated HTTP client",
+        "Authenticated staff",
+        "Payment/messaging provider",
+        "Reviewer"
+      ],
+      "preconditions": [
+        "compiled-api-surface.json matches the built executable (SYS-API-003)."
+      ],
+      "inputs": [
+        "Compiled Servant operation declarations",
+        "formal/system/public-routes.json"
+      ],
+      "state": {
+        "route": [
+          "unregistered",
+          "registered",
+          "debt",
+          "retired"
+        ]
+      },
+      "allowedTransitions": [
+        "New unauthenticated route -> registered with a reviewed boundary",
+        "Insufficient boundary -> registered debt",
+        "Debt -> authenticated, capability-bound or retired"
+      ],
+      "forbiddenTransitions": [
+        "Unregistered unauthenticated route -> served",
+        "Mutating route -> public-read boundary",
+        "Registered capability or signature input removed",
+        "Sequential identifier -> capability for an existing record"
+      ],
+      "effects": [
+        "Legacy course Stripe payment-intent/checkout-session routes retired.",
+        "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
+        "Public session input-list routes retired; scheduling-module routes remain.",
+        "Public inventory list rejects session-scoped availability filters."
+      ],
+      "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
+      "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
+      "concurrency": "Static declaration check; no runtime concurrency assumption.",
+      "idempotency": "Deterministic over the committed snapshot and register.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
+      "implementation": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "formal/system/public-routes.json",
+        "scripts/check-public-routes.py",
+        "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "scripts/test-public-routes.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Handler enforcement of each registered capability is not mechanically verified.",
+        "Raw mounts may serve paths beyond their prefix.",
+        "DEBT-AUTH-ACADEMY-001 and DEBT-PRIV-WHATSAPP-001 need an identity-proof product decision."
       ]
     },
     {
@@ -7162,10 +7321,11 @@
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "5b9888d91eb875416d6f34cb93e4c17dcb7c373c69f5c42652cd6f44385cbd75",
-    ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
+    ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
+    ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "c98f7b75ce1f04f177a677b17e2a9f9d1d292086a68844786e839f7750f0176f",
+    "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
@@ -7256,7 +7416,9 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "3e3067587529748c52e980b3ed074c8fdb7b7b2535547456aadd140c2f697534",
+    "formal/system/compiled-api-surface.json": "194ecec56d0e0e241bac710251e05822a261fcd55c2396fa7122396a4ad4273e",
+    "formal/system/public-routes.json": "910d363cf85799d2a54d1bbfcefbdb1a7bb3f9b69ee762aedc9ffac3a64317b5",
+    "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
@@ -7285,7 +7447,7 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
+    "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
     "scripts/__tests__/ci-pipeline.test.mjs": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
@@ -7323,7 +7485,9 @@
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
-    "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
+    "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+    "scripts/check-state-machines.py": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+    "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -7365,12 +7529,12 @@
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
-    "scripts/specification-conformance.py": "fa2afe2811f63cb9f90c92a43d04009bf97af3233f38a5155addacd21e5a99af",
+    "scripts/specification-conformance.py": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+    "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
@@ -7385,6 +7549,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
+    "scripts/test-public-routes.py": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -7393,6 +7558,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
+    "scripts/test-state-machines.py": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -7554,7 +7720,7 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql": "9d6dc0aa6c9f5aff03bdfc62c16a38681892c1923d9413f4eaf505af86894302",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql": "c74e42fe9a9b45d2456e0eef00e1a93811d27f816da525519a2920ba0c09b7d5",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
-    "tdf-hq/src/TDF/API.hs": "b52a050b44bc032682a8be161b320bb1cea5aba710a641d1ab5e6996c8bcf5b7",
+    "tdf-hq/src/TDF/API.hs": "0b1d53a3338bb947f5c5f822b67947c6995982e822018a8e5da03571823ae0da",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
     "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
@@ -7589,6 +7755,7 @@
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "31d28e0d44d18fe0b559f23d7c7f20f194bacb0f7c392231d8e3c2b4b9c728b8",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+    "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
     "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
     "tdf-hq/src/TDF/Invoice/AccessKey.hs": "dd2e63c42a8107b7c5eb12f9d9442da59988969254f58eb0515b790626de4b3f",
     "tdf-hq/src/TDF/Invoice/BuyerIdentity.hs": "6d4f8227ace8821694e85016823f3e66174a9fa36bd74ab7e572f9a2fd2ca2be",
@@ -7602,9 +7769,9 @@
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
-    "tdf-hq/src/TDF/Routes/Courses.hs": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
+    "tdf-hq/src/TDF/Routes/Courses.hs": "5bdb685e621d0ef7dd2e1b4237b7a811f2ef425ae69ef66efa826e7321b8bfd2",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "b2f35f77e01a74713940aa367b8e903554d20c576fed1d192fdce10f70fa12c1",
-    "tdf-hq/src/TDF/Server.hs": "21953cca48dd6c73e53f8264a6651acd75eadc20c700e75d043d48d21f7520a2",
+    "tdf-hq/src/TDF/Server.hs": "34d32a48006af10bd01a54341a9b26c38b558fd4c09dd160b33aec307b396605",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -7625,6 +7792,7 @@
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
+    "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
@@ -7638,7 +7806,7 @@
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "22c64130cc46d56416ead4e9ee85cd65870d01e4e82584ba514e67c96dbf5b9c",
     "tdf-hq/test/Spec.hs": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
-    "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
+    "tdf-hq/test/TDF/APITypesSpec.hs": "8eac6dbd0155e329d4af2e018ccd2699645c38cda5a0dd9e3f30ed048c30c0c8",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "c874ed26524da3896abc173d2ceff6624b86b3fec67414e85d8e9154092de334",
@@ -7659,7 +7827,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
-    "tdf-hq/test/TDF/ServerSpec.hs": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
+    "tdf-hq/test/TDF/ServerSpec.hs": "388aed9085138bb7e02c80a2f479a794ef84b2ca460148283c17b5529e0a9cf3",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -8033,6 +8201,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
       },
@@ -8056,6 +8228,10 @@
       },
       {
         "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       },
       {
@@ -8092,6 +8268,10 @@
       },
       {
         "requirement": "ID-SESSION-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
       },
       {
@@ -8197,6 +8377,10 @@
       {
         "requirement": "SYS-API-002",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/ci-pipeline.test.mjs": [
@@ -8258,6 +8442,30 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": [
       {
         "requirement": "SYS-TRACE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/check-state-machines.py": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/state-machine-bindings.json": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/revenue-platform/formal-model.yaml": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-state-machines.py": [
+      {
+        "requirement": "SYS-STATE-001",
         "relationship": "tests"
       }
     ],
@@ -9631,6 +9839,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "OPS-AUX-WRITE-001",
         "relationship": "tests"
       },
@@ -9800,6 +10012,10 @@
       },
       {
         "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
       }
     ],
@@ -10148,6 +10364,10 @@
     "tdf-hq/src/TDF/Routes/Courses.hs": [
       {
         "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
       }
     ],
@@ -10904,6 +11124,36 @@
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": [
       {
         "requirement": "AUTH-OPS-READ-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/system/public-routes.json": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/check-public-routes.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Handlers/InputList.hs": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/Stripe.hs": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-public-routes.py": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
       }
     ],
@@ -12369,7 +12619,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "5b9888d91eb875416d6f34cb93e4c17dcb7c373c69f5c42652cd6f44385cbd75",
+      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12400,7 +12650,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
+      "sha256": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13080,11 +13330,15 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
+      "sha256": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-API-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-STATE-001",
           "relationship": "tests"
         }
       ]
@@ -14001,9 +14255,33 @@
       ]
     },
     {
+      "id": "SURFACE-4c692dca29529ca7",
+      "path": "scripts/check-public-routes.py",
+      "sha256": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e755c6a1ab398de9",
+      "path": "scripts/check-state-machines.py",
+      "sha256": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
+      "sha256": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15508,7 +15786,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "fa2afe2811f63cb9f90c92a43d04009bf97af3233f38a5155addacd21e5a99af",
+      "sha256": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15650,7 +15928,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15715,6 +15993,10 @@
         },
         {
           "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "tests"
         },
         {
@@ -16269,6 +16551,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e6df847c7de6b4ac",
+      "path": "scripts/test-public-routes.py",
+      "sha256": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-73f84c14f54480df",
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
       "sha256": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -16426,6 +16720,18 @@
         },
         {
           "requirement": "SYS-INVENTORY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-59516e184a0cc916",
+      "path": "scripts/test-state-machines.py",
+      "sha256": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
           "relationship": "tests"
         }
       ]
@@ -25542,7 +25848,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "b52a050b44bc032682a8be161b320bb1cea5aba710a641d1ab5e6996c8bcf5b7",
+      "sha256": "0b1d53a3338bb947f5c5f822b67947c6995982e822018a8e5da03571823ae0da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25559,6 +25865,10 @@
         },
         {
           "requirement": "AUTH-RADIO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         },
         {
@@ -26723,9 +27033,14 @@
     {
       "id": "SURFACE-3d1a28f3fa60015b",
       "path": "tdf-hq/src/TDF/Handlers/InputList.hs",
-      "sha256": "03544e71376bafd54820e74e4efbc63075f7984c95ef93955428f30e9bd7cbc0",
+      "sha256": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bda51e050e7f3792",
@@ -27024,11 +27339,15 @@
     {
       "id": "SURFACE-52b73c408ae18bc0",
       "path": "tdf-hq/src/TDF/Routes/Courses.hs",
-      "sha256": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
+      "sha256": "5bdb685e621d0ef7dd2e1b4237b7a811f2ef425ae69ef66efa826e7321b8bfd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         }
       ]
@@ -27070,7 +27389,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "21953cca48dd6c73e53f8264a6651acd75eadc20c700e75d043d48d21f7520a2",
+      "sha256": "34d32a48006af10bd01a54341a9b26c38b558fd4c09dd160b33aec307b396605",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27107,6 +27426,10 @@
         },
         {
           "requirement": "MEDIA-DRIVE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "implementation"
         },
         {
@@ -27588,9 +27911,14 @@
     {
       "id": "SURFACE-1ac6ca33fd4e0411",
       "path": "tdf-hq/src/TDF/Services/Stripe.hs",
-      "sha256": "140847798e0aca5f7feb308afd0deb3e59c1ef2e4b33ce1049a8111e7da83d36",
+      "sha256": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4053a4f2498e072d",
@@ -27971,7 +28299,7 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
+      "sha256": "8eac6dbd0155e329d4af2e018ccd2699645c38cda5a0dd9e3f30ed048c30c0c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27980,6 +28308,10 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "tests"
         }
       ]
@@ -28428,7 +28760,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "28f7a2b0815d452cad9ca9a2fc10a69969734fe610196fd502453ac3f439310d",
+      "sha256": "388aed9085138bb7e02c80a2f479a794ef84b2ca460148283c17b5529e0a9cf3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28445,6 +28777,10 @@
         },
         {
           "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PUBLIC-001",
           "relationship": "tests"
         },
         {
@@ -33392,7 +33728,6 @@
     "SURFACE-aca7f2ab6043b0da",
     "SURFACE-4b41640bebd528e2",
     "SURFACE-6c2b99a15ac48184",
-    "SURFACE-3d1a28f3fa60015b",
     "SURFACE-bda51e050e7f3792",
     "SURFACE-5dc54f64fc1fc3e9",
     "SURFACE-cf5eaa02e907e90b",
@@ -33431,7 +33766,6 @@
     "SURFACE-f70cbdf0bd82961f",
     "SURFACE-b4b451c7f0a9bfab",
     "SURFACE-9aa25107f33c9fd3",
-    "SURFACE-1ac6ca33fd4e0411",
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
     "SURFACE-b16b93ab1b670275",
@@ -33858,6 +34192,7 @@
     "SYS-API-002",
     "SYS-INVENTORY-001",
     "SYS-TRACE-001",
+    "SYS-STATE-001",
     "AUTH-CORS-001",
     "AUTH-REGISTRY-001",
     "DEPLOY-BUILD-001",
@@ -33881,6 +34216,7 @@
     "OPS-WORKER-001",
     "OPS-METRICS-001",
     "AUTH-OPS-READ-001",
+    "AUTH-PUBLIC-001",
     "OPS-AUX-WRITE-001",
     "SYS-CI-001",
     "PRIV-ERROR-001",
@@ -33901,7 +34237,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#marketplace_sale_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "on_hold",
         "method_specific_transitions": {
@@ -33977,12 +34313,12 @@
           "pickup cannot transition through shipped and delivery cannot transition through ready_for_pickup"
         ]
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated marketplace_sale_order_runtime.fulfillment_status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "on_hold",
         "transitions": {
@@ -34053,12 +34389,12 @@
           "a nonzero deposit cannot close before refunded partially_refunded or forfeited evidence"
         ]
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated marketplace_rental_order_runtime.rental_status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "on_hold",
         "transitions": {
@@ -34127,12 +34463,12 @@
           "balance due completion no show overtime cancellation and dispute remain explicit fulfillment states"
         ]
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated service_booking_checkout_runtime.fulfillment_status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#event_ticket_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "seat_held",
         "transitions": {
@@ -34173,12 +34509,12 @@
           "QR material is created only for issued tickets and remains customer scoped"
         ]
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated event_ticket_checkout_runtime.fulfillment_status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#quote",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -34199,7 +34535,8 @@
           ],
           "accepted": [
             "deposit_due",
-            "cancelled"
+            "cancelled",
+            "expired"
           ],
           "deposit_due": [
             "deposit_paid",
@@ -34208,9 +34545,7 @@
           ],
           "deposit_paid": [
             "in_progress",
-            "cancelled",
-            "refunded",
-            "partially_refunded"
+            "cancelled"
           ],
           "in_progress": [
             "balance_due",
@@ -34222,19 +34557,15 @@
           ],
           "completed": [],
           "cancelled": [],
-          "expired": [],
-          "partially_refunded": [
-            "refunded"
-          ],
-          "refunded": []
+          "expired": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states and SQL transitions checked against migrated domo_event_quote_runtime.quote_status by scripts/check-state-machines.py"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#distribution",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -34322,12 +34653,12 @@
           "archived": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated distribution_release_version.state by scripts/check-state-machines.py; reviewed deviation: SPECIFICATION AMBIGUITY; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#royalty_statement",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "ingested",
         "transitions": {
@@ -34377,12 +34708,12 @@
           "rejected": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated royalty_statement.state by scripts/check-state-machines.py; reviewed deviation: SPECIFICATION AMBIGUITY; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#refund",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "requested",
         "transitions": {
@@ -34413,12 +34744,12 @@
           "succeeded requires an exact provider refund id amount currency and completion time"
         ]
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated commerce_refund.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/revenue-platform/formal-model.yaml#provider_event",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "df5b615f138254ced2e25e66988e6efee288f41c0ad521b3c406851100438223",
+      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -34446,7 +34777,7 @@
           "a claim increments attempt_count exactly once"
         ]
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated commerce_provider_event_inbox.processing_status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
@@ -34484,7 +34815,7 @@
           "merged": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated directory_profile.profile_status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
@@ -34533,7 +34864,7 @@
           ]
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated classified.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#application",
@@ -34574,7 +34905,7 @@
           "withdrawn": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated classified_application.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#invitation",
@@ -34608,7 +34939,7 @@
           "blocked": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated directory_invitation.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
@@ -34642,7 +34973,7 @@
           "withdrawn": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated directory_claim.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
@@ -34686,7 +35017,7 @@
           "closed": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated directory_moderation_case.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/music-directory/formal-model.yaml#review",
@@ -34711,7 +35042,7 @@
           "removed": []
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated directory_review.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "docs/operations-control-center/formal-model.yaml#operations.control-center",
@@ -35012,12 +35343,12 @@
           }
         }
       },
-      "correspondence": "requires per-transition implementation review"
+      "correspondence": "states checked against migrated operations_work_item.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4544c8d40f4001a2695fb3b0aaff69de4bd7803f37d1843b3ed7c1e7c2b328e9",
+      "sourceSha256": "c6ef762822fc14d7c64af18a80cffd90052c32b99f418e4442538959ba1de5bf",
       "definition": {
         "states": [
           "absent",
@@ -56949,7 +57280,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 91,
+    "PARTIAL": 93,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
