@@ -5813,7 +5813,8 @@
         "scripts/quality-repo.sh",
         "scripts/test-stopped-application-storage.py",
         "scripts/test-stopped-application-docker.py",
-        "scripts/test-coordinated-recovery-bundle.py"
+        "scripts/test-coordinated-recovery-bundle.py",
+        "scripts/test-recovery-bundle-ssh.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5909,7 +5910,8 @@
         "scripts/test-recovery-tools.py",
         "scripts/quality-repo.sh",
         "scripts/test-recovery-transfer.py",
-        "scripts/test-recovery-transfer-ssh.py"
+        "scripts/test-recovery-transfer-ssh.py",
+        "scripts/test-recovery-bundle-ssh.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -6881,6 +6883,7 @@
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
+    "scripts/test-recovery-bundle-ssh.py": "8daac0614090fa91ca0573b9e19fa297831cac58a60112d399d9e63cfccee07e",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "4b7cc781fe19acde987ba8c96bad93d62c80e0db7db718081d4975a7e9b10276",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
@@ -10430,6 +10433,16 @@
     "scripts/test-coordinated-recovery-bundle.py": [
       {
         "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-recovery-bundle-ssh.py": [
+      {
+        "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
         "relationship": "tests"
       }
     ],
@@ -14970,6 +14983,22 @@
       "sha256": "58c82bb399ac31f59ed80624f39fa07b0bc6e1541655b3ccedd74fdafb67b21c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-67977e55fc723ce9",
+      "path": "scripts/test-recovery-bundle-ssh.py",
+      "sha256": "8daac0614090fa91ca0573b9e19fa297831cac58a60112d399d9e63cfccee07e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-45fe5f83a883bb5f",
@@ -32900,7 +32929,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0093cb13615784017197b3fc443e598f022e48d2bec7f37e4efff0e8c6578462",
+      "sourceSha256": "d62caba323ff391a9cb381ef0b87531ff79bee05894c7979e9a7eec985034933",
       "definition": {
         "states": [
           "absent",

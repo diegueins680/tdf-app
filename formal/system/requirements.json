@@ -5812,7 +5812,8 @@
         "scripts/quality-repo.sh",
         "scripts/test-stopped-application-storage.py",
         "scripts/test-stopped-application-docker.py",
-        "scripts/test-coordinated-recovery-bundle.py"
+        "scripts/test-coordinated-recovery-bundle.py",
+        "scripts/test-recovery-bundle-ssh.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5908,7 +5909,8 @@
         "scripts/test-recovery-tools.py",
         "scripts/quality-repo.sh",
         "scripts/test-recovery-transfer.py",
-        "scripts/test-recovery-transfer-ssh.py"
+        "scripts/test-recovery-transfer-ssh.py",
+        "scripts/test-recovery-bundle-ssh.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",

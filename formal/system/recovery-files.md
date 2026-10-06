@@ -121,6 +121,40 @@ secrets, encryption or off-host recovery. Those checks must consume the same bun
 through the coordinator before release. This is executable file correspondence,
 not a filesystem refinement proof or an operational release command.
 
+## Synthetic encryption and off-host integration
+
+The opt-in `scripts/test-recovery-bundle-ssh.py` joins the bundle, pinned age and
+transfer primitives. It generates a temporary **synthetic** identity on the
+operator host, uses the existing strictly verified SSH connection and executes
+only in a transient DynamicUser sandbox with private network/tmp, read-only
+system/home,256MiB memory and220-second lifetime. The six component trees and
+secret sentinel are synthetic. It does not access Docker or production data.
+
+The operator retains ciphertext in a caller-supplied private directory, fsyncs and
+reopens it, then returns that same copy. The remote decrypts those retrieved bytes
+and verifies all restored file metadata and the synthetic secret. Negative controls
+reject changed ciphertext against its original trusted hash and a mismatched
+release binding. The ciphertext control is not an independent age-authentication
+test after rebinding its trusted hash; those crypto controls live in the envelope
+suite. Local identity cleanup is ordinary temporary-file deletion, not secure
+erasure, and is not a production key-custody design.
+
+Run only with already installed, checksum-pinned local and Linux age tool bundles:
+
+```sh
+python3 scripts/test-recovery-bundle-ssh.py \
+  --identity-file /absolute/operator/ssh-key \
+  --tools-directory /absolute/private/local-age-tools \
+  --linux-tools-directory /absolute/private/linux-age-tools \
+  --output-directory /absolute/private/existing-new-evidence
+```
+
+The helper has no network or production credential fallback. Receipts contain
+source hashes, revision, aggregate protocol facts and explicit production exclusions.
+CI remains deterministic and does not require this external SSH connection.
+An empirical synthetic pass is not production database recovery, coherent source
+capture, usable real credentials or independent durable production key custody.
+
 ## Remaining coordinated recovery sequence
 
 The first release executor should use one permanent lock and durable pending

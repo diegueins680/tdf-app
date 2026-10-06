@@ -433,6 +433,7 @@
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
       "scripts/test-records-ingestion-runtime.sh",
       "scripts/test-records-youtube-catalog-migration.sh",
+      "scripts/test-recovery-bundle-ssh.py",
       "scripts/test-recovery-envelope.py",
       "scripts/test-recovery-files.py",
       "scripts/test-recovery-tools.py",
@@ -4791,6 +4792,12 @@
       "id": "SURFACE-28c67c7120c30700",
       "path": "scripts/test-records-youtube-catalog-migration.sh",
       "sha256": "58c82bb399ac31f59ed80624f39fa07b0bc6e1541655b3ccedd74fdafb67b21c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-67977e55fc723ce9",
+      "path": "scripts/test-recovery-bundle-ssh.py",
+      "sha256": "8daac0614090fa91ca0573b9e19fa297831cac58a60112d399d9e63cfccee07e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21935,7 +21942,7 @@
     },
     {
       "path": "formal/system/recovery-files.md",
-      "sha256": "fef9c45142303306fdec7168f5011cefad400b024dcd63cd28c9e1b64166d07d",
+      "sha256": "c413b074b4622a9cb9637be29f83f5835b8d74458a4ce84a941c47f39f9b5e5c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21956,7 +21963,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0093cb13615784017197b3fc443e598f022e48d2bec7f37e4efff0e8c6578462",
+      "sha256": "d62caba323ff391a9cb381ef0b87531ff79bee05894c7979e9a7eec985034933",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
