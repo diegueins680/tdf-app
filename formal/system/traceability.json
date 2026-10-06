@@ -6349,11 +6349,11 @@
     {
       "id": "MEDIA-INVENTORY-001",
       "title": "Authenticated uploads and complete inventory pagination",
-      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
-      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
+      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
+      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page. A failed load must not claim an empty inventory or empty filtered result, including filters entered while loading; retry preserves filter input.",
       "domain": "MEDIA",
       "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
-      "source": "Root #468 production cookie-upload and pagination regression",
+      "source": "Root #468 production cookie-upload and pagination regression; #492 loading/error/filter review correction",
       "contract": "formal/system/web-cutover-correspondence.md",
       "actors": [
         "Authenticated inventory operator",
@@ -6381,7 +6381,8 @@
       ],
       "forbiddenTransitions": [
         "Cookie-only session -> silently omit credentials",
-        "First page -> claim complete inventory when total is larger"
+        "First page -> claim complete inventory when total is larger",
+        "Failed inventory load -> empty inventory or zero-result count assertion"
       ],
       "effects": [
         "Upload one selected file; reading pages creates no asset records."
@@ -6411,7 +6412,7 @@
       "privacy": "Do not copy HttpOnly credentials into readable tokens or audit logs.",
       "concurrency": "Pages are sequential reads and not an atomic inventory snapshot; concurrent inventory changes remain possible.",
       "idempotency": "Listing retries are reads. Upload retries can create multiple blobs and are not claimed exactly once.",
-      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning.",
+      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning. Error state takes precedence over empty-result messaging; partial failed page collections are not presented as complete inventory.",
       "recovery": "Retry under a valid session; production smoke must use the unmodified deployed UI and compare uploaded bytes.",
       "observability": "XHR cookie/bearer/QR tests and multi-page regression; deployed Google login/upload acceptance remains separately recorded."
     },
@@ -7162,8 +7163,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
-    "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
-    "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
+    "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
+    "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
@@ -19618,7 +19619,7 @@
     {
       "id": "SURFACE-e69a77d56fe70d3a",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx",
-      "sha256": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
+      "sha256": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19630,7 +19631,7 @@
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-      "sha256": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
+      "sha256": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33625,7 +33626,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "23e7392d580cc940d284895909848820022cdec45b497a5bb89675f07b4988ac",
+      "sourceSha256": "37f7537507301217ddda630672c4996f8b9d869b7c7de8c3f5963b7ee7463f76",
       "definition": {
         "states": [
           "absent",
