@@ -44,7 +44,7 @@ jobs:
       publish_backend_artifact: true
 
   docker:
-    needs: required-tests
+    needs: [required-tests, legacy-shutdown-counterexample]
     runs-on: ubuntu-latest
     outputs:
       image_digest: ${{ steps.image-build.outputs.digest }}
@@ -151,3 +151,28 @@ jobs:
             PYTHONDONTWRITEBYTECODE=1 \
             timeout --signal=TERM --kill-after=15 660 \
             python3 scripts/test-production-writer-fence-linux.py
+
+  legacy-shutdown-counterexample:
+    name: Reject interrupted legacy application capture
+    needs: required-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Observe interrupted HTTP mutation on the pinned legacy image
+        run: |
+          set -euo pipefail
+          tdf_physical_image='pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21'
+          tdf_legacy_image='diegueins680/tdf-hq@sha256:38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0'
+          docker pull "$tdf_physical_image"
+          docker pull "$tdf_legacy_image"
+          test -z "$(docker ps --all --quiet)"
+          sudo install -d -m 700 /opt/tdf/backups
+          SOURCE_COMMIT="$GITHUB_SHA" node scripts/render-production-migration-batch.mjs > synthetic-fixture-migrations.sql
+          sudo env TDF_SYNTHETIC_WRITER_FENCE_HOST="$(cat /etc/machine-id)" \
+            TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" TDF_CANARY_TEST_IMAGE="$tdf_legacy_image" \
+            TDF_TEST_ORIGINAL_DB_RECOVERY=1 TDF_TEST_ORIGINAL_APPLICATION_RECOVERY=1 \
+            PYTHONDONTWRITEBYTECODE=1 \
+            timeout --signal=TERM --kill-after=15 660 \
+            python3 scripts/test-legacy-shutdown-linux.py

@@ -82,3 +82,21 @@ late-listener closure, publication admission, request-drain and startup-join
 guards. Safety invariants require each of these boundaries. Passing TLC is bounded
 model evidence, not a refinement proof of the implementation or a whole-system
 shutdown guarantee.
+
+## Legacy image counterexample
+
+`python3 scripts/test-legacy-shutdown-linux.py` reuses the exclusively owned empty
+Linux-host fixture with its explicit machine-id acknowledgement. It pins the
+legacy production image digest `38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0`.
+It first accepts a synthetic administrative room insert, then holds a second real
+HTTP insert at a PostgreSQL advisory-lock trigger and requests SIGINT on that
+exact fixture container. The test requires a lost HTTP response, exit255, retained
+committed data and rejection by the unchanged production capture validator. It
+records whether the interrupted insert committed; it does not infer rollback
+from the client's disconnected socket. No product/customer data or provider
+credentials are used. The fixture removes only its owned resources.
+
+This is a counterexample to interpreting legacy process termination as HTTP
+drain. It does not authorize exit255 in a production recovery, establish every
+transaction's outcome, test interrupted uploads or reconcile provider effects.
+The new supervisor and the separate image clean-stop gate remain required.

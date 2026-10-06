@@ -435,6 +435,7 @@
       "scripts/test-interrupted-release-recovery.py",
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-isolated-application-canary.py",
+      "scripts/test-legacy-shutdown-linux.py",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
       "scripts/test-marketplace-operations-migration.sh",
@@ -2387,7 +2388,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "a38f50147e164ec7ee34a8c04cfc14950f87dca113fb09587d4d4e7ca27639b4",
+      "sha256": "9742c22b6211816ce5de12874d92b47e4d614941093ee2dd1198a6b311a05c4a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4866,6 +4867,12 @@
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
       "sha256": "8faf83595b05a5aed75c7add43b04d58591b7d450ffd91b0b98294c5f6105a24",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-077f91a5acaf4688",
+      "path": "scripts/test-legacy-shutdown-linux.py",
+      "sha256": "50ca62c49d0cf591a4a3f89c1e4ae82d5a11bf7c0b98a33dc7e67ca25c091cb2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22425,7 +22432,7 @@
     },
     {
       "path": "formal/system/application-shutdown.md",
-      "sha256": "0b1d58f0d299a78cb6ff75a808f79de07b5723de51a338963156321d8fd2ddc9",
+      "sha256": "c5729b53ebcfd59a6aa49700e73ba0b9a3d59d9a2ed672171ee5ee4aee89b96d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22747,7 +22754,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "75936d9a7e7140811daf09a136abc1048702ef318928f0d21db1d8d8e06711a8",
+      "sha256": "4a821a04128939af327f86331ddf8032aa3477f9945718b5d22545c37dc9ae24",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

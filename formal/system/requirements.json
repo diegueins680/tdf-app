@@ -7077,7 +7077,8 @@
         "scripts/verify-shutdown.py",
         "scripts/quality-backend.sh",
         "scripts/test-production-writer-fence-linux.py",
-        ".github/workflows/build.yml"
+        ".github/workflows/build.yml",
+        "scripts/test-legacy-shutdown-linux.py"
       ],
       "formalModels": [
         "formal/event-operations/ApplicationShutdown.cfg",

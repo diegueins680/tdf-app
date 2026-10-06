@@ -7078,7 +7078,8 @@
         "scripts/verify-shutdown.py",
         "scripts/quality-backend.sh",
         "scripts/test-production-writer-fence-linux.py",
-        ".github/workflows/build.yml"
+        ".github/workflows/build.yml",
+        "scripts/test-legacy-shutdown-linux.py"
       ],
       "formalModels": [
         "formal/event-operations/ApplicationShutdown.cfg",
@@ -7104,7 +7105,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/build.yml": "a38f50147e164ec7ee34a8c04cfc14950f87dca113fb09587d4d4e7ca27639b4",
+    ".github/workflows/build.yml": "9742c22b6211816ce5de12874d92b47e4d614941093ee2dd1198a6b311a05c4a",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "098b6616672b5aaf9addd8c8615c1ba397e0c320e049ce25a986adf5d79c3886",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
@@ -7371,6 +7372,7 @@
     "scripts/test-interrupted-release-recovery-linux.py": "2f596d8b107520765b5ad791827f680451abfda465dddbb0eec25d733c16fc8a",
     "scripts/test-interrupted-release-recovery.py": "e477198a3adcefb951fd985e681fee2d3df071b06627dc056a941c45a54bbe8f",
     "scripts/test-isolated-application-canary.py": "8faf83595b05a5aed75c7add43b04d58591b7d450ffd91b0b98294c5f6105a24",
+    "scripts/test-legacy-shutdown-linux.py": "50ca62c49d0cf591a4a3f89c1e4ae82d5a11bf7c0b98a33dc7e67ca25c091cb2",
     "scripts/test-live-intake-identity.sh": "d0f234b038d1f0fb83f65e8d16bc4b8d5f4fbbcfbc028aa09da31064c6e051a5",
     "scripts/test-marketplace-contact-identity.sh": "e8366b9aea5eb474c77acfd0c1816d51fe93e35d19eb46af6f583ed139f24cef",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -12368,6 +12370,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-legacy-shutdown-linux.py": [
+      {
+        "requirement": "OPS-SHUTDOWN-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ApplicationShutdown.cfg": [
       {
         "requirement": "OPS-SHUTDOWN-001",
@@ -12421,7 +12429,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "a38f50147e164ec7ee34a8c04cfc14950f87dca113fb09587d4d4e7ca27639b4",
+      "sha256": "9742c22b6211816ce5de12874d92b47e4d614941093ee2dd1198a6b311a05c4a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16538,6 +16546,18 @@
         },
         {
           "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-077f91a5acaf4688",
+      "path": "scripts/test-legacy-shutdown-linux.py",
+      "sha256": "50ca62c49d0cf591a4a3f89c1e4ae82d5a11bf7c0b98a33dc7e67ca25c091cb2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-SHUTDOWN-001",
           "relationship": "tests"
         }
       ]
@@ -35296,7 +35316,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "75936d9a7e7140811daf09a136abc1048702ef318928f0d21db1d8d8e06711a8",
+      "sourceSha256": "4a821a04128939af327f86331ddf8032aa3477f9945718b5d22545c37dc9ae24",
       "definition": {
         "states": [
           "absent",
