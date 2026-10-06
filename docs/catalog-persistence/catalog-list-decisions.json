@@ -15241,7 +15241,7 @@
               "specializedModel": "technical_constant_allowlist",
               "priority": "P1-integrity",
               "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+              "justification": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
               "reviewed": true,
               "evidence": {
                 "file": "scripts/production-migrations.json",
@@ -15256,7 +15256,7 @@
                 "specializedModel": "technical_constant_allowlist",
                 "priority": "P1-integrity",
                 "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+                "justification": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
                 "reviewed": true,
                 "evidence": {
                   "file": "scripts/production-migrations.json",
@@ -23108,6 +23108,21 @@
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
         "line": 7
+      }
+    },
+    {
+      "id": "e737974c72d66115cfe8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a telemetry phase changes the published event schema and breaks funnel queries; none of these names grant payment, inventory or admission authority.",
+      "justification": "Nine browser analytics protocol event names requested by the event ticketing scope, emitted only through the existing PostHog client. This literal union is not a selectable ticket catalog, persisted commercial lifecycle or authorization registry. The canonical financial/admission states remain server-owned. Contract docs/events/ticket-funnel-observations.md and EVT-FUNNEL-001 define the browser observation boundary and explicit non-authority.",
+      "reviewed": true,
+      "reviewBatch": "ticket-funnel-browser-protocol-2026-10-06",
+      "evidence": {
+        "file": "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+        "line": 4
       }
     }
   ]
