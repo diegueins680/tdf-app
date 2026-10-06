@@ -17763,7 +17763,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "f7aeb1eec88c29b26c00ef22a9a0c2216da233b0f9d292ec803070e08f45bcef",
+      "sha256": "197f55215f79c6b185f74a1271582f5142aef297f8c3ff82b8262a5c3d249a7c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
