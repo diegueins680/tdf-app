@@ -368,6 +368,66 @@ retain their existing checks.
 This helper does not install units, enroll a newly observed hash as authority,
 change the ordinary WriterFence, or admit a release/recovery transition. Its new
 controls use synthetic systemd/guard responses; the existing persistent packet
-guard has separate owned-VM evidence. Restricted original preparation and the
-composite host guard must explicitly select this path and seal its policy identity
-before the first maintenance intent. Those callers remain unimplemented.
+guard has separate owned-VM evidence. Restricted original preparation and the completed-boundary composite below select
+this path and seal its policy identity before the first maintenance intent. The
+in-flight release/recovery controller remains unimplemented.
+
+## Completed-boundary host composition
+
+`original-deployment-admission.prepare_restricted` separately prepares a version2
+release after the independently authorized restriction is already installed. It
+performs the same double observation/private publication as ordinary preparation,
+but requires the separately supplied restriction configuration hash and retains
+the restricted unit receipt. It does not install the guard or issue a stop.
+Ordinary preparation retains its original unit inventory.
+
+`restricted-cold-host-admission.py` constructs only before the first intent. The
+closed policy bundle binds the source revision, exact source fingerprints,
+persistent restriction identity, packet/reboot evidence references, dormant/UFW/
+BPF policies, process/scheduler policies and intended network IDs/uplink. Its hash
+must match `restrictionPolicySha256` in the privately persisted legacy policy
+that is already bound to the plan and prepared original. The restriction identity
+must also match that saved original admission. The bundle is independently
+reviewed input; this code does not generate one from current observations or
+authenticate the referenced evidence artifacts.
+
+Before importing local admission helpers, the bootstrap captures all seventeen
+listed source files. Its loader compiles and executes those exact bytes for every
+local/transitive dependency, bypassing `.pyc` caches. The temporary import hook is
+restricted to the closed file list during single-threaded bootstrap and restored
+on success or failure. Current source hashes must equal the captured bytes after
+import and before/after every composite observation. The externally verified
+launcher, Python/standard library and this bootstrap remain trusted; this is not
+a self-authenticating interpreter or a defense against privileged code injection.
+
+At a supported completed journal boundary, one observation encloses these checks
+within opening/closing persistent restriction observations:
+
+- exact container configuration/incarnation and journal-derived running services;
+- restricted unit identity and journal-derived backup timer state;
+- configured source mounts and original runtime configuration;
+- qualified UFW and bounded BPF instruction/map/attachment predicates;
+- namespace/bridge/packet-path predicates, with bridge identity matching the guard;
+- reviewed process classes and scheduler inventory.
+
+Each component is sampled again; the journal, prepared original, legacy policy
+and code/policy hashes must remain unchanged. Returned evidence contains hashes
+and component names, not environment values or customer content. Failure emits
+no composite receipt and no journal intent. The original source admission still
+rejects legacy exit255: composition does not silently broaden accepted exit codes.
+
+This closes a component-composition gap at acknowledged same-boot boundaries,
+not the in-flight controller or full host-bypass proof. In particular, configured
+source mounts do not establish live inode/mount-table admission. Held filesystem
+identities, in-flight stop/capture guards, exceptional legacy shutdown, reboot
+epochs, disposable/candidate stages, reference authentication and provider
+reconciliation remain obligations. Process sampling is not continuous exclusion.
+`hostBypassAdmissionVerified`, `continuousIsolationVerified`, `stopAuthorized`,
+`recoveryAuthorized` and `qualificationReferencesVerified` remain false.
+
+Fourteen tests exercise real journal, prepared-original and legacy-policy files
+with synthetic host observations. Two isolated copied-source controls reproduce
+replacement after dependency execution and a valid stale timestamp `.pyc`; the
+former is rejected and the latter cannot substitute old code. No production
+restriction, real stopped-host composition or integrated reboot qualification is
+claimed by these tests.

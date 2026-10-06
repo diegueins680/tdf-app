@@ -109,6 +109,7 @@
       "ops/hetzner/recovery-transfer.py",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
+      "ops/hetzner/restricted-cold-host-admission.py",
       "ops/hetzner/stopped-application-storage.py",
       "ops/hetzner/ufw-recovery-admission.py",
       "ops/privacy/request-workflow.json"
@@ -512,6 +513,7 @@
       "scripts/test-recovery-transfer.py",
       "scripts/test-release-journal.py",
       "scripts/test-requirement-declarations.py",
+      "scripts/test-restricted-cold-host-admission.py",
       "scripts/test-service-booking-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-checkout-runtime-migration.sh",
       "scripts/test-service-storefront-phase0-migration.sh",
@@ -2898,7 +2900,7 @@
     {
       "id": "SURFACE-98c278d5be0e29e8",
       "path": "ops/hetzner/original-deployment-admission.py",
-      "sha256": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+      "sha256": "f58ca133061fd373727e0ad1f3a44dacc0ac1ba511d37a8dfbe9eeedac630a38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2995,6 +2997,12 @@
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
       "sha256": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-aecc8d956c3d4133",
+      "path": "ops/hetzner/restricted-cold-host-admission.py",
+      "sha256": "08ba4ca9a432eafc14a4b00b24f4d92cefa2dfadcd62d1d10fc06ffbd4ba8e67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4188,7 +4196,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e863ed3e63abf81ec8dfb4c34202ba251b51697ae7cdbac10f784affee2ca5da",
+      "sha256": "30e1ed87d47df1108c719cb5f1686be57cdb096ed81d232f2429b302e3b4c74c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5148,7 +5156,7 @@
     {
       "id": "SURFACE-c721b1cec5c19b2c",
       "path": "scripts/test-original-deployment-admission.py",
-      "sha256": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
+      "sha256": "2c15295fc3adf9023a090122838f1d9cf7e2d7e79d547ea18257307611c86abe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5377,6 +5385,12 @@
       "id": "SURFACE-674ff0cbe7311bec",
       "path": "scripts/test-requirement-declarations.py",
       "sha256": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b1a40fa4d491a95",
+      "path": "scripts/test-restricted-cold-host-admission.py",
+      "sha256": "47894865e34908817bfc62bda9976c84f3dc15fecddb3109f19c9c03ebd5dc5e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23174,7 +23188,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "3bdd2da8aed82f015aea7627b395b17a5e17299de55cb9b83a35734678fea5ed",
+      "sha256": "1c5c77370689700de208676f6361decf8d7c4f92b7e1af378e6f88d783b53957",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23251,7 +23265,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4a79270988e4a34c2c40b1d8678f198f6f07ef6617d069ce01dae1c456bd2397",
+      "sha256": "3eb6d4338e4b1ae415fe3dab719f9967bb83e866607e5cca572784e675c3ce66",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

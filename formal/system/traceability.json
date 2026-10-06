@@ -7630,7 +7630,9 @@
         "ops/hetzner/network-recovery-admission.py",
         "ops/hetzner/legacy-stop-policy.py",
         "ops/hetzner/cold-container-admission.py",
-        "ops/hetzner/production-writer-fence.py"
+        "ops/hetzner/production-writer-fence.py",
+        "ops/hetzner/restricted-cold-host-admission.py",
+        "ops/hetzner/original-deployment-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
@@ -7644,7 +7646,9 @@
         "scripts/test-network-namespace-linux.py",
         "scripts/test-legacy-stop-policy.py",
         "scripts/test-cold-container-admission.py",
-        "scripts/test-production-writer-fence.py"
+        "scripts/test-production-writer-fence.py",
+        "scripts/test-restricted-cold-host-admission.py",
+        "scripts/test-original-deployment-admission.py"
       ],
       "formalModels": [
         "formal/event-operations/LegacyInterruptedStop.cfg",
@@ -7658,7 +7662,7 @@
         "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
         "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg"
       ],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission. A same-boot completed-prefix check binds the independently reviewed initial container snapshot to the prepared original full configuration and derives running original services from the durable journal. Twelve real-file journal tests use synthetic Docker observations; no actual stop or recovery occurs. Pending intents, daemon/host restart and disposable phases reject. This predicate neither verifies exit-code/drain evidence nor authenticates qualification references. A separate restricted systemd observer admits only the exact persistent quarantine unit in addition to the ordinary backup units, with opening/closing inventory and live-policy equality. Synthetic negative controls cover missing, additional, duplicate and changed units/policy; ordinary WriterFence authority is unchanged.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission. A same-boot completed-prefix check binds the independently reviewed initial container snapshot to the prepared original full configuration and derives running original services from the durable journal. Twelve real-file journal tests use synthetic Docker observations; no actual stop or recovery occurs. Pending intents, daemon/host restart and disposable phases reject. This predicate neither verifies exit-code/drain evidence nor authenticates qualification references. A separate restricted systemd observer admits only the exact persistent quarantine unit in addition to the ordinary backup units, with opening/closing inventory and live-policy equality. Synthetic negative controls cover missing, additional, duplicate and changed units/policy; ordinary WriterFence authority is unchanged. Restricted original preparation seals the already-installed guard identity under a version2 plan. A read-only completed-boundary composite binds a closed policy bundle to the immutable legacy policy and composes container, unit, configured storage, UFW, BPF, network, process and scheduler observations between persistent restriction samples. Fourteen tests use real journals/envelopes/source files but synthetic host samplers. Local dependencies execute captured source bytes, with isolated replacement-during-import and stale timestamp-cache controls. Launcher/Python/bootstrap integrity remains trusted. Live inode/mount-table admission, in-flight effects, legacy exit255, reboot and disposable phases remain excluded; no complete host-bypass or recovery authority is asserted.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7839,7 +7843,7 @@
     "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
     "ops/hetzner/original-application-recovery.py": "37f59153386b015d565d8da2a7faeeb26db27ecf2a76c4307d1ad4a405be21b5",
     "ops/hetzner/original-database-recovery.py": "94b61ec2db602f4a3a16c9c9b573a8261944c715cbb90e51ff1df24b32183a64",
-    "ops/hetzner/original-deployment-admission.py": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+    "ops/hetzner/original-deployment-admission.py": "f58ca133061fd373727e0ad1f3a44dacc0ac1ba511d37a8dfbe9eeedac630a38",
     "ops/hetzner/original-disposable-absence.py": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
     "ops/hetzner/original-disposable-cleanup.py": "5ee11be5857ce6a78c17e8ac733e85b27d1ad116f767310fe755420881e5f5fe",
     "ops/hetzner/original-edge-recovery.py": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
@@ -7856,6 +7860,7 @@
     "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
     "ops/hetzner/rehearse-postgres-restore.py": "c08c7a075c444b882d56b5ebf90fc2903ad5cad8b03dc052783cfc8ef4c6c138",
     "ops/hetzner/release-journal.py": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
+    "ops/hetzner/restricted-cold-host-admission.py": "08ba4ca9a432eafc14a4b00b24f4d92cefa2dfadcd62d1d10fc06ffbd4ba8e67",
     "ops/hetzner/stopped-application-storage.py": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
@@ -7942,7 +7947,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "e863ed3e63abf81ec8dfb4c34202ba251b51697ae7cdbac10f784affee2ca5da",
+    "scripts/quality-repo.sh": "30e1ed87d47df1108c719cb5f1686be57cdb096ed81d232f2429b302e3b4c74c",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7990,7 +7995,7 @@
     "scripts/test-offline-recovery-capacity.py": "8699587b8f72b58f5f12473028605dce43eb9683b12a29af530dd1db06fcf5e8",
     "scripts/test-original-application-recovery.py": "5ddd368a6a106eacf168f61af69cc78310f8e0ea31723ffc0415bd336197da72",
     "scripts/test-original-database-recovery.py": "923fe04cb0ce3df1713120e84e46c856a05f5c413856b501876fe8322752af2d",
-    "scripts/test-original-deployment-admission.py": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
+    "scripts/test-original-deployment-admission.py": "2c15295fc3adf9023a090122838f1d9cf7e2d7e79d547ea18257307611c86abe",
     "scripts/test-original-disposable-absence.py": "5aafe03bb0085bfcc536f448b736ee0eb153ed26163e11007542a7b441df0c7c",
     "scripts/test-original-disposable-cleanup.py": "306cbf7263b67d87521e1aac915c4e5623ce64871b46f31ebdfeb76b92a7bd87",
     "scripts/test-original-edge-recovery.py": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
@@ -8021,6 +8026,7 @@
     "scripts/test-recovery-transfer.py": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
     "scripts/test-release-journal.py": "d26a52fed682444dda8e83fb9978e8d534f8c11155be92d83b3ce7e5d3bf670e",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
+    "scripts/test-restricted-cold-host-admission.py": "47894865e34908817bfc62bda9976c84f3dc15fecddb3109f19c9c03ebd5dc5e",
     "scripts/test-specification-conformance.py": "3f9249e5aac45bbe99213c4184d0fb0dc88693bc2631a15d8b8ad2197a76e17d",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-stopped-application-docker.py": "4890b5ece9e4f68a210e6d53450e1f5198afa967817ddb5a76e745e6eb6dfc26",
@@ -12206,6 +12212,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
       }
     ],
     "ops/hetzner/abort-service-journal.py": [
@@ -12343,6 +12353,10 @@
     "scripts/test-original-deployment-admission.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
       }
     ],
@@ -13624,6 +13638,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/restricted-cold-host-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-outbound-quarantine.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
@@ -13685,6 +13705,12 @@
       }
     ],
     "scripts/test-cold-container-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-restricted-cold-host-admission.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
@@ -14579,11 +14605,15 @@
     {
       "id": "SURFACE-98c278d5be0e29e8",
       "path": "ops/hetzner/original-deployment-admission.py",
-      "sha256": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+      "sha256": "f58ca133061fd373727e0ad1f3a44dacc0ac1ba511d37a8dfbe9eeedac630a38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "implementation"
         }
       ]
@@ -14796,6 +14826,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-aecc8d956c3d4133",
+      "path": "ops/hetzner/restricted-cold-host-admission.py",
+      "sha256": "08ba4ca9a432eafc14a4b00b24f4d92cefa2dfadcd62d1d10fc06ffbd4ba8e67",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "implementation"
         }
       ]
@@ -16828,7 +16870,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e863ed3e63abf81ec8dfb4c34202ba251b51697ae7cdbac10f784affee2ca5da",
+      "sha256": "30e1ed87d47df1108c719cb5f1686be57cdb096ed81d232f2429b302e3b4c74c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18360,11 +18402,15 @@
     {
       "id": "SURFACE-c721b1cec5c19b2c",
       "path": "scripts/test-original-deployment-admission.py",
-      "sha256": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
+      "sha256": "2c15295fc3adf9023a090122838f1d9cf7e2d7e79d547ea18257307611c86abe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "tests"
         }
       ]
@@ -18829,6 +18875,18 @@
         },
         {
           "requirement": "SYS-INVENTORY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6b1a40fa4d491a95",
+      "path": "scripts/test-restricted-cold-host-admission.py",
+      "sha256": "47894865e34908817bfc62bda9976c84f3dc15fecddb3109f19c9c03ebd5dc5e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
           "relationship": "tests"
         }
       ]
@@ -37474,7 +37532,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4a79270988e4a34c2c40b1d8678f198f6f07ef6617d069ce01dae1c456bd2397",
+      "sourceSha256": "3eb6d4338e4b1ae415fe3dab719f9967bb83e866607e5cca572784e675c3ce66",
       "definition": {
         "states": [
           "absent",

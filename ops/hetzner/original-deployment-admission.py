@@ -130,7 +130,7 @@ def database_identity(target):
     return value
 
 
-def observe(expected,unit_hashes):
+def observe(expected,unit_hashes,*,restriction_hash=None):
     capture=sources.inspector.capture;docker=sources.inspector.DOCKER
     ids=capture(docker+['ps','--all','--quiet','--no-trunc']).split()
     require(0<len(ids)<=128 and len(ids)==len(set(ids)) and all(abort.j.hash_value(x) for x in ids))
@@ -139,7 +139,8 @@ def observe(expected,unit_hashes):
     require(len(volume_rows)==len(sources.VOLUMES))
     volumes={row['Name']:row for row in volume_rows};require(len(volumes)==len(volume_rows))
     admitted=sources.admit(containers,volumes,expected)
-    units=fence.observe_units(unit_hashes,timer_stopped=False)
+    units=(fence.observe_units(unit_hashes,timer_stopped=False) if restriction_hash is None else
+           fence.observe_restricted_units(unit_hashes,restriction_hash,timer_stopped=False))
     selected={service:next(row for row in containers if row['Id']==binding['containerId'])
               for service,binding in expected.items()}
     stable={service:{'Id':row['Id'],'Image':row['Image'],'Config':row['Config'],'HostConfig':row['HostConfig'],
@@ -155,7 +156,7 @@ def observe(expected,unit_hashes):
     return result
 
 
-def prepare(journal,directory,expected,unit_hashes):
+def _prepare(journal,directory,expected,unit_hashes,observer):
     """Call under the release and common restore reservations, before maintenance.
 
     Saves actual sampled identities/configuration/migration history. The caller
@@ -167,7 +168,7 @@ def prepare(journal,directory,expected,unit_hashes):
         saved,control=os.fstat(parent),os.fstat(journal.directory_fd)
         require((saved.st_dev,saved.st_ino)!=(control.st_dev,control.st_ino))
     plan=records[0]['event']['plan'];host=abort.boot_identity()
-    value=observe(expected,unit_hashes)
+    value=observer(expected,unit_hashes)
     require(value['runtimeConfigurationSha256']==plan['runtimeHash'])
     admission={'schemaVersion':1,'releaseNonce':records[0]['releaseNonce'],'planHash':records[0]['planHash'],
         'host':host,'originalDeployment':value}
@@ -178,11 +179,31 @@ def prepare(journal,directory,expected,unit_hashes):
         require(raw==canonical(admission))
     # Changed roots/configuration/ledger/host reject readiness even if a private
     # evidence file was published. Do not overwrite it or infer successful prepare.
-    require(journal.records()==records and abort.boot_identity()==host and observe(expected,unit_hashes)==value)
+    require(journal.records()==records and abort.boot_identity()==host and observer(expected,unit_hashes)==value)
     receipt={'schemaVersion':1,'sha256':sha(raw),'releaseNonce':admission['releaseNonce'],
              'planHash':admission['planHash'],'preparedBeforeShutdown':True}
     with abort.j.files.directory(str(directory),private=True) as parent:abort.publish(parent,RECEIPT,receipt)
     return {**receipt,'path':str(Path(directory)/NAME),'continuousWriterExclusionVerified':False}
+
+
+def prepare(journal,directory,expected,unit_hashes):
+    return _prepare(journal,directory,expected,unit_hashes,observe)
+
+
+def prepare_restricted(journal,directory,expected,unit_hashes,restriction_hash):
+    """Seal already-installed restriction identity before the first intent.
+
+    No installation or stop occurs. The future composite guard must bind this
+    identity to its independently reviewed legacy restriction policy bundle.
+    """
+    records=journal.records();require(len(records)==1)
+    require(records[0]['event']['plan'].get('schemaVersion')==2
+            and abort.j.hash_value(restriction_hash))
+    def restricted(expected,unit_hashes):
+        value=observe(expected,unit_hashes,restriction_hash=restriction_hash)
+        require(value['units']['admission']['restriction']['persistentConfigurationSha256']==restriction_hash)
+        return value
+    return _prepare(journal,directory,expected,unit_hashes,restricted)
 
 
 def read(path,expected_hash,release_nonce,plan_hash):
