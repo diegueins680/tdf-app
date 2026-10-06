@@ -27,6 +27,7 @@ def load(name, filename):
 
 w = load('linux_writer_fence', 'production-writer-fence.py')
 j = load('linux_fence_journal', 'release-journal.py')
+a = load('linux_original_admission', 'original-deployment-admission.py')
 s = load('linux_fence_storage', 'stopped-application-storage.py')
 p = load('linux_fence_physical', 'physical-postgres-recovery.py')
 require = w.require
@@ -161,6 +162,8 @@ def main():
             'for n in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h 127.0.0.1 -U postgres -d tdf_hq && exit 0; sleep 1; done; exit 1'])
         system_id = run(DOCKER+['exec', db, 'psql', '-X', '-qAt', '-U', 'postgres', '-d', 'tdf_hq',
                                   '-c', 'SELECT system_identifier FROM pg_control_system();'])
+        run(DOCKER+['exec', db, 'psql', '-X', '-qAt', '-U', 'postgres', '-d', 'tdf_hq', '-c',
+            'CREATE TABLE public.tdf_schema_migration (migration_id text PRIMARY KEY, checksum text NOT NULL, source_commit text NOT NULL)'])
         for service in ('api', 'edge'):
             run(DOCKER+['exec', created_containers[service], 'sh', '-c',
                 'for n in 1 2 3 4 5; do test -f /tmp/ready && exit 0; sleep 1; done; exit 1'])
@@ -177,10 +180,27 @@ def main():
                   for service, target in created_containers.items()}
         plan = {key: ('sha256:'+'1'*64 if key.endswith('Image') else '1'*(40 if key.endswith('Revision') else 64))
                 for key in j.PLAN_KEYS}
+        plan['runtimeHash'] = admitted['runtimeConfigurationSha256']
         source = s.RetainedRoot(**dict(target=expected['api']['containerId'],
             image=expected['api']['image'], image_id=expected['api']['imageId']))
         with j.open_journal(str(archive/'journal')) as journal, source.pinned():
             journal.initialize(plan, nonce)
+            # Docker's source string stays unchanged when its host path is
+            # replaced. The live mount still references the original directory.
+            assets = DIRECTORY/'assets'; held_assets = DIRECTORY/'assets-held'
+            assets.rename(held_assets); assets.mkdir(mode=0o700)
+            rejected_replacement = False
+            try:
+                try: a.bind_directory_identities(inspect(expected['api']['containerId']))
+                except ValueError: rejected_replacement = True
+            finally:
+                assets.rmdir(); held_assets.rename(assets)
+            require(rejected_replacement)
+            original_admission = a.prepare(journal, archive, expected, hashes)
+            saved = a.read_prepared(archive, nonce, journal.records()[0]['planHash'])
+            require(saved['originalDeployment']['database']['systemIdentifier'] == system_id
+                    and saved['originalDeployment']['database']['migrations'] == []
+                    and set(saved['originalDeployment']['containers']) == {'api', 'db', 'edge'})
             fence = w.WriterFence(journal, expected, admitted['runtimeConfigurationSha256'], hashes, source)
             fence.maintenance(); fence.stop_writers(); fence.stop_database()
             require(fence.observe()['sources']['dockerWritersStopped'])
@@ -192,6 +212,8 @@ def main():
             evidence = {'schemaVersion': 1, 'status': 'synthetic-real-daemon-fence-passed',
                 'completedStages': journal.status()['completedStages'],
                 'dockerWritersStopped': True, 'registeredTimerStopped': True,
+                'originalDeploymentAdmissionVerified': original_admission['preparedBeforeShutdown'],
+                'liveBindDirectoryReplacementRejected': rejected_replacement,
                 'legacyUploadReplay': True, 'databaseSystemIdentifier': system_id,
                 'limitations': ['Disposable empty Linux host; no production effect.',
                     'API and edge are inert shell processes, not backend/Caddy behavior.',

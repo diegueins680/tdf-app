@@ -5976,7 +5976,8 @@
         "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md.",
         "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
         "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md.",
-        "Interrupted pre-write abort requires independently durable original admission and authenticated same-host fresh boot; see formal/system/interrupted-release-recovery.md."
+        "Interrupted pre-write abort requires independently durable original admission and authenticated same-host fresh boot; see formal/system/interrupted-release-recovery.md.",
+        "Actual original-deployment admission must be privately and durably prepared before any shutdown intent; live assets/uploads bind-directory identities must match host sources. See formal/system/original-deployment-admission.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -6005,7 +6006,8 @@
         "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation.",
         "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
         "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation.",
-        "Recognized frozen pre-write journal -> irreversible abort latch -> durable write-possible reboot intent -> observe changed boot on same trusted host. Original service recovery remains separately unimplemented."
+        "Recognized frozen pre-write journal -> irreversible abort latch -> durable write-possible reboot intent -> observe changed boot on same trusted host. Original service recovery remains separately unimplemented.",
+        "Single journal plan -> actual original deployment sample -> exclusive private admission -> matching closing sample -> durable preparation receipt; mutation and late mismatch never authorize shutdown."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6019,7 +6021,8 @@
         "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion.",
         "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
         "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel.",
-        "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command."
+        "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command.",
+        "Prepare original admission after any shutdown intent, overwrite uncertain evidence, admit replaced live bind directories, or publish raw original container configuration."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6044,7 +6047,8 @@
         "ops/hetzner/coordinated-capture.py",
         "ops/hetzner/coordinated-encryption.py",
         "ops/hetzner/coordinated-retrieval.py",
-        "ops/hetzner/interrupted-release-recovery.py"
+        "ops/hetzner/interrupted-release-recovery.py",
+        "ops/hetzner/original-deployment-admission.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6059,7 +6063,8 @@
         "scripts/test-coordinated-encryption.py",
         "scripts/test-coordinated-retrieval.py",
         "scripts/test-interrupted-release-recovery.py",
-        "scripts/test-interrupted-release-recovery-linux.py"
+        "scripts/test-interrupted-release-recovery-linux.py",
+        "scripts/test-original-deployment-admission.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",

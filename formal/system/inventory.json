@@ -81,6 +81,7 @@
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/offline-recovery-capacity.py",
+      "ops/hetzner/original-deployment-admission.py",
       "ops/hetzner/physical-postgres-recovery.py",
       "ops/hetzner/production-recovery-sources.py",
       "ops/hetzner/production-writer-fence.py",
@@ -439,6 +440,7 @@
       "scripts/test-notification-alert-context.mjs",
       "scripts/test-notification-navigation-migration.sh",
       "scripts/test-offline-recovery-capacity.py",
+      "scripts/test-original-deployment-admission.py",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
@@ -2760,6 +2762,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-98c278d5be0e29e8",
+      "path": "ops/hetzner/original-deployment-admission.py",
+      "sha256": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f291d88fdd7054a3",
       "path": "ops/hetzner/physical-postgres-recovery.py",
       "sha256": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
@@ -4004,7 +4012,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "384efb849367c2e55e7b620df55653da78592147fd5c248276232ece618a3332",
+      "sha256": "bb41292405516d3d32217efdf048ab73198c7bf99efd4873b64386ec1d09b43d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4872,6 +4880,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c721b1cec5c19b2c",
+      "path": "scripts/test-original-deployment-admission.py",
+      "sha256": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9649a5eac5beddfa",
       "path": "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "sha256": "1ebaa8ac0f615de08870302dbfbad60a62a98b88eb5c999be03fcf7c7018eef0",
@@ -4928,7 +4942,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "31bba77185b8780683b3ed906c754af6e7d476488e71178366d348634169e9a1",
+      "sha256": "f536b4bb4b30acbc0eebed1c796e4b6bec9237ff57266efc71943c58fdf3a6e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22341,7 +22355,7 @@
     },
     {
       "path": "formal/system/interrupted-release-recovery.md",
-      "sha256": "39098d3da625fca8923788764391ebe65298b9d4b7db03a1618e3341a7c990fc",
+      "sha256": "a224ce220cf40267692b91acb1eb14a267fbe95cfa2e44e04a16a0136bc57687",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22424,6 +22438,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/original-deployment-admission.md",
+      "sha256": "7c86d26a5f7c17a1b692a72bf30aaf6a3807eb6712f7f7444dd34390f4326ee3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -22488,7 +22509,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3a88d916b57ce420a2204b50d192da2704b2fde1421075e53c51b3044b11f297",
+      "sha256": "98bd942d57ca87f531429522102c2e0db9ecee526f6177b76f3625a87a1d4ed0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

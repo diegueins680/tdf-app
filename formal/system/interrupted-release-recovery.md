@@ -7,7 +7,8 @@ authenticate an SSH endpoint or certify deployment recovery.
 
 ## Authority and failure policy
 
-The coordinator must durably retain the **full original deployment admission before
+The [original-deployment sampler](original-deployment-admission.md) implements the
+private preparation boundary. The coordinator must durably retain the **full original deployment admission before
 its first shutdown effect**: original container IDs/images/configuration, storage
 and volume identities, installed configuration, original enabled/active timer state,
 migration history, release/plan identity and host identity. This library binds a
