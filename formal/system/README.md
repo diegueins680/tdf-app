@@ -45,6 +45,10 @@ Historical green results are not current-candidate evidence.
 - [authority-decisions.json](authority-decisions.json): competing sources and their
   explicit resolution. [research.json](research.json) records primary sources,
   applicability and adoption rationale separately from verification evidence.
+- [state-machine-correspondence.md](state-machine-correspondence.md) and [state-machine-bindings.json](state-machine-bindings.json):
+  declared lifecycle states and SQL transitions checked against the migrated schema (SYS-STATE-001).
+- [public-route-admission.md](public-route-admission.md) and [public-routes.json](public-routes.json):
+  reviewed boundary for every unauthenticated compiled route (AUTH-PUBLIC-001).
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
 - [dependency-security.md](dependency-security.md): known-version regression floors, scan evidence and unresolved runtime/build-tool exposure.

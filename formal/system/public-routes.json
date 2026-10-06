@@ -1,0 +1,1016 @@
+{
+ "schemaVersion": 1,
+ "requirement": "AUTH-PUBLIC-001",
+ "authority": "Reviewed register of every compiled route served without a Servant AuthProtect combinator and the boundary that admits it. Admission is checked against compiled-api-surface.json, which CI separately proves matches the built executable. A registered boundary is a reviewed claim about the handler, not proof of its implementation.",
+ "boundaries": {
+  "public-read": {
+   "mutating": false,
+   "rule": "Anonymous read of content intended for public display. Must not return private, staff-only or per-person data."
+  },
+  "public-diagnostic": {
+   "mutating": false,
+   "mutatingPaths": [
+    "/mcp"
+   ],
+   "rule": "Service identity/health/contract only. /mcp is JSON-RPC over POST and exposes only tdf_health_check."
+  },
+  "capability-header": {
+   "mutating": true,
+   "requiresHeader": true,
+   "rule": "Handler must verify the named server-issued lookup secret (stored as a hash, compared in constant time) before reading or changing the resource."
+  },
+  "capability-path": {
+   "mutating": true,
+   "rule": "Path identifier is a server-generated random UUIDv4 bearer capability; sequential or user-chosen identifiers are not admissible."
+  },
+  "signed-provider-callback": {
+   "mutating": true,
+   "rawBody": true,
+   "rule": "Handler authenticates the exact request body against the provider signature or provider query-back before any effect (ADR-0101, ADR-0118, AUTH-WEBHOOK-001)."
+  },
+  "provider-verification-challenge": {
+   "mutating": false,
+   "requiresQuery": "hub.verify_token",
+   "rule": "Meta subscription challenge; echoes hub.challenge only when the configured verify token matches."
+  },
+  "handler-session": {
+   "mutating": true,
+   "requiresAnyHeader": [
+    "Authorization",
+    "Cookie"
+   ],
+   "rule": "Handler resolves the session from the Authorization or Cookie header itself and rejects missing, expired or revoked sessions."
+  },
+  "credential-intake": {
+   "mutating": true,
+   "rule": "Login, signup and password-reset intake. Must not disclose account existence beyond the documented identity contract."
+  },
+  "public-intake": {
+   "mutating": true,
+   "rule": "Anonymous creation of a new record owned by the submitter (lead, order, registration, cart). Must not read or modify existing records of other parties; follow-up access uses a capability-header or capability-path boundary."
+  },
+  "operator-secret": {
+   "mutating": true,
+   "requiresHeader": true,
+   "rule": "Requires the configured operator seed secret; disabled when unset."
+  },
+  "known-debt": {
+   "mutating": true,
+   "requiresDebt": true,
+   "rule": "Reviewed and found insufficient. Kept visible until repaired; never counted as conformant."
+  }
+ },
+ "debt": {
+  "DEBT-AUTH-ACADEMY-001": {
+   "priority": "P2",
+   "summary": "Academy enroll/progress and referral claim identify the actor only by a submitted email. Anyone can create or alter enrollment, progress and referral attribution for any email, and the progress 404 discloses whether an email is enrolled."
+  },
+  "DEBT-PRIV-WHATSAPP-001": {
+   "priority": "P2",
+   "summary": "Public WhatsApp consent records consent for any phone number without proof of control and immediately sends a WhatsApp message to it; the public GET discloses consent state and timestamps for any number; anyone can opt any number out."
+  }
+ },
+ "routes": [
+  {
+   "method": "POST",
+   "path": "/NotificacionPago",
+   "boundary": "signed-provider-callback"
+  },
+  {
+   "method": "POST",
+   "path": "/academy/enroll",
+   "boundary": "known-debt",
+   "debt": "DEBT-AUTH-ACADEMY-001"
+  },
+  {
+   "method": "GET",
+   "path": "/academy/microcourse/{slug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/academy/progress",
+   "boundary": "known-debt",
+   "debt": "DEBT-AUTH-ACADEMY-001"
+  },
+  {
+   "method": "POST",
+   "path": "/ads/inquiry",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/artists",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/artists/search",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/artists/{artistId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/artists/{artistRef}/public",
+   "boundary": "public-read"
+  },
+  {
+   "method": "RAW",
+   "path": "/assets/serve",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/bookings/public/availability",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public/checkout",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/bookings/public/orders/{bookingId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/bookings/public/orders/{bookingId}/datafast/status",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public/orders/{bookingId}/manual-payment",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public/orders/{bookingId}/paypal/capture",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/bookings/public/orders/{bookingId}/paypal/create",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/catalogs/batch",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/catalogs/definitions",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/catalogs/workflows/{workflowCode}/states",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/catalogs/{catalogCode}/items",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/catalogs/{catalogCode}/items/{itemId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/cms/content",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/cms/contents",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/cohorts/next",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/commerce/checkouts/{checkoutId}/payment-sessions",
+   "boundary": "capability-header",
+   "header": "X-Checkout-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}",
+   "boundary": "capability-header",
+   "header": "X-Checkout-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/commerce/payment-capabilities",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/commerce/provider-notifications/payphone",
+   "boundary": "signed-provider-callback"
+  },
+  {
+   "method": "POST",
+   "path": "/commerce/provider-notifications/placetopay",
+   "boundary": "signed-provider-callback"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/classifieds/{slug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/events/{eventId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/party-profiles/{partyId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/profiles/{slug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/profiles/{slug}/reviews",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/search",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/suggestions",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/taxonomies",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/directory/venues/{venueId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/docs",
+   "boundary": "public-diagnostic"
+  },
+  {
+   "method": "GET",
+   "path": "/engineers",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/facebook/webhook",
+   "boundary": "provider-verification-challenge"
+  },
+  {
+   "method": "POST",
+   "path": "/facebook/webhook",
+   "boundary": "signed-provider-callback",
+   "header": "X-Hub-Signature-256"
+  },
+  {
+   "method": "GET",
+   "path": "/fans/artists",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/fans/artists/{artistId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/fans/artists/{artistId}/fans",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/fans/artists/{artistId}/releases",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/fans/artists/{artistId}/tips",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/fans/clubs/{artistId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/fans/clubs/{artistId}/events",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/feedback",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/feedback/account-deletion",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "GET",
+   "path": "/health",
+   "boundary": "public-diagnostic"
+  },
+  {
+   "method": "GET",
+   "path": "/hooks/whatsapp",
+   "boundary": "provider-verification-challenge"
+  },
+  {
+   "method": "POST",
+   "path": "/hooks/whatsapp",
+   "boundary": "signed-provider-callback",
+   "header": "X-Hub-Signature-256"
+  },
+  {
+   "method": "GET",
+   "path": "/input-list/inventory",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/input-list/inventory/seed",
+   "boundary": "operator-secret",
+   "header": "X-Seed-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/input-list/sessions/seed",
+   "boundary": "operator-secret",
+   "header": "X-Seed-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/instagram/webhook",
+   "boundary": "provider-verification-challenge"
+  },
+  {
+   "method": "POST",
+   "path": "/instagram/webhook",
+   "boundary": "signed-provider-callback",
+   "header": "X-Hub-Signature-256"
+  },
+  {
+   "method": "RAW",
+   "path": "/inventory",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/login",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "POST",
+   "path": "/login/google",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/marketplace",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/cart",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/marketplace/cart/{cartId}",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/cart/{cartId}/checkout",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/cart/{cartId}/datafast/checkout",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/cart/{cartId}/items",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/cart/{cartId}/paypal/create",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/cart/{cartId}/stripe/payment-intent",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "GET",
+   "path": "/marketplace/datafast/status",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/marketplace/orders/{orderId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/orders/{orderId}/manual-payment/evidence",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/marketplace/orders/{orderId}/requests",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/orders/{orderId}/requests",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/marketplace/paypal/capture",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/marketplace/{id}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/mcp",
+   "boundary": "public-diagnostic"
+  },
+  {
+   "method": "GET",
+   "path": "/merch/capabilities",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/merch/carts",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/merch/carts/{cartId}",
+   "boundary": "capability-header",
+   "header": "X-Cart-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/merch/carts/{cartId}/checkout",
+   "boundary": "capability-header",
+   "header": "X-Cart-Lookup-Token"
+  },
+  {
+   "method": "PUT",
+   "path": "/merch/carts/{cartId}/items",
+   "boundary": "capability-header",
+   "header": "X-Cart-Lookup-Token"
+  },
+  {
+   "method": "DELETE",
+   "path": "/merch/carts/{cartId}/items/{variantId}",
+   "boundary": "capability-header",
+   "header": "X-Cart-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/merch/orders/{orderId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/merch/orders/{orderId}/cancel",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/merch/orders/{orderId}/issues",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/merch/storefronts",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/merch/storefronts/{storeSlug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/merch/storefronts/{storeSlug}/products/{productSlug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/openapi.yaml",
+   "boundary": "public-diagnostic"
+  },
+  {
+   "method": "POST",
+   "path": "/password/change",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "GET",
+   "path": "/public/assets/qr/{token}",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/public/assets/qr/{token}/checkin",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/public/assets/qr/{token}/checkout",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "POST",
+   "path": "/public/assets/qr/{token}/upload",
+   "boundary": "capability-path"
+  },
+  {
+   "method": "GET",
+   "path": "/public/courses/{slug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/public/courses/{slug}/registrations",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/public/courses/{slug}/registrations/{registrationId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/courses/{slug}/registrations/{registrationId}/datafast/checkout",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/public/courses/{slug}/registrations/{registrationId}/datafast/status",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/courses/{slug}/registrations/{registrationId}/paypal/capture",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/courses/{slug}/registrations/{registrationId}/paypal/create",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/public/domo",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/public/domo/quotes",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/public/domo/quotes/{quoteId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/domo/quotes/{quoteId}/accept",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/domo/quotes/{quoteId}/datafast/checkout",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/public/domo/quotes/{quoteId}/datafast/status",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/domo/quotes/{quoteId}/paypal/capture",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/domo/quotes/{quoteId}/paypal/create",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/events/{eventId}/ticket-orders",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}/datafast/status",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}/paypal/capture",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}/paypal/create",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/public/events/{eventId}/tickets",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/public/interactions/resolve/{destinationKind}/{destinationId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/public/interactions/targets/{kind}/{entityKey}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/public/interactions/targets/{kind}/{entityKey}/comments",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/public/interactions/targets/{kind}/{entityKey}/comments/{commentId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/public/interactions/targets/{kind}/{entityKey}/reactors",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/public/whatsapp/consent",
+   "boundary": "known-debt",
+   "debt": "DEBT-PRIV-WHATSAPP-001"
+  },
+  {
+   "method": "POST",
+   "path": "/public/whatsapp/consent",
+   "boundary": "known-debt",
+   "debt": "DEBT-PRIV-WHATSAPP-001"
+  },
+  {
+   "method": "POST",
+   "path": "/public/whatsapp/opt-out",
+   "boundary": "known-debt",
+   "debt": "DEBT-PRIV-WHATSAPP-001"
+  },
+  {
+   "method": "GET",
+   "path": "/records/feed",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/referrals/claim",
+   "boundary": "known-debt",
+   "debt": "DEBT-AUTH-ACADEMY-001"
+  },
+  {
+   "method": "GET",
+   "path": "/reputation/categories",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/reputation/profiles/{partyId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/{targetKind}/{targetId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/rooms/public",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/seed",
+   "boundary": "operator-secret",
+   "header": "X-Seed-Token"
+  },
+  {
+   "method": "GET",
+   "path": "/services/catalog/public",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/services/storefront",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/services/storefront/datafast/status",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/order",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/services/storefront/order/{orderId}",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/order/{orderId}/datafast/checkout",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/order/{orderId}/manual-payment",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/order/{orderId}/paypal/create",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/order/{orderId}/revision",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/paypal/capture",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/services/storefront/paypal/webhook",
+   "boundary": "signed-provider-callback",
+   "header": "PayPal-Transmission-Sig"
+  },
+  {
+   "method": "GET",
+   "path": "/services/storefront/{packageId}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/session",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/currency-conversions",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "GET",
+   "path": "/session/experiments/{experimentId}/assignment",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/experiments/{experimentId}/exposure",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/logout",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "GET",
+   "path": "/session/onboarding",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/onboarding/complete",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "PUT",
+   "path": "/session/onboarding/intent",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/onboarding/reconcile",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "GET",
+   "path": "/session/preferences",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "PUT",
+   "path": "/session/preferences",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/signup",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "POST",
+   "path": "/social-events/stripe/webhook",
+   "boundary": "signed-provider-callback",
+   "header": "Stripe-Signature"
+  },
+  {
+   "method": "GET",
+   "path": "/social-events/upcoming",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/trials/v1/interests",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "POST",
+   "path": "/trials/v1/signup",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/trials/v1/subjects",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/trials/v1/trial-requests",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/trials/v1/trial-slots",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/password-reset",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/password-reset/confirm",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/password/change",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/signup",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/version",
+   "boundary": "public-diagnostic"
+  },
+  {
+   "method": "GET",
+   "path": "/webhooks/whatsapp",
+   "boundary": "provider-verification-challenge"
+  },
+  {
+   "method": "POST",
+   "path": "/webhooks/whatsapp",
+   "boundary": "signed-provider-callback",
+   "header": "X-Hub-Signature-256"
+  }
+ ]
+}

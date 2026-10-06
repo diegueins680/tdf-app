@@ -140,3 +140,16 @@ test('backend artifact builds can force backend validation', () => {
     migrations: false,
   });
 });
+
+test('declared lifecycle models and their bindings select migrated-schema checks', () => {
+  for (const file of [
+    'docs/revenue-platform/formal-model.yaml',
+    'docs/music-directory/formal-model.yaml',
+    'formal/system/state-machine-bindings.json',
+    'scripts/check-state-machines.py',
+    'scripts/test-state-machines.py',
+  ]) {
+    assert.equal(classifyChangedFiles([file]).migrations, true, file);
+  }
+  assert.equal(classifyChangedFiles(['docs/revenue-platform/operator-runbooks.md']).migrations, false);
+});

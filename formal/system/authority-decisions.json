@@ -497,6 +497,27 @@
       "conflict": "Main5c2e0bb28 now ships Mobile6297e3f1, seven additional mapped requirements and a consolidated migration order while follow-up233188726 adds receipt/readiness/recovery boundaries. Historical enrichment schema rollback instructions also compete with the current no-data-loss deployment authority.",
       "authority": "Approved main PR478, prior user instruction to retain newly shipped Mobile and the current canonical operations safety contract",
       "resolution": "Normal merge preserves every unique requirement and combines observation mappings/privacy. Main analytics scalar-label contract and event supersession remain authoritative. Mobile76d19fc merges the shipped pin with exact generated readiness/receipt compatibility; no unrelated Mobile branch is substituted. Preserve main migration order and historical entries/SQL, append receipt snapshot migration, and rerun actual rehearsal. Keep current enrichment deployment authority and omit duplicated destructive schema rollback instructions; no guarded executor or current-head success is inferred from historical evidence."
+    },
+    {
+      "id": "AUTHORITY-047",
+      "sources": [
+        "docs/revenue-platform/formal-model.yaml",
+        "docs/adr/0114-domo-authoritative-quotes-and-deposit-gate.md",
+        "tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql"
+      ],
+      "conflict": "The 2026-08-13 revenue model declared quote states partially_refunded/refunded after deposit_paid and omitted accepted -> expired. The effective schema (all 184 manifest migrations applied) rejects both refund states, the domo_validate_quote_runtime_update trigger permits accepted -> expired, and no code writes a quote refund state.",
+      "authority": "Accepted ADR-0114 (2026-08-18), which is Domo-specific and later: quote, payment and venue states are independent, and refunds are separate domain operations outside the first slice.",
+      "resolution": "Correct the model to the trigger's transition relation. Deposit refunds belong to the canonical `refund` machine. The state-machine gate now checks the quote states and transitions against the migrated database."
+    },
+    {
+      "id": "AUTHORITY-048",
+      "sources": [
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql"
+      ],
+      "conflict": "The declared distribution and royalty_statement machines disagree with the distribution_release_version.state and royalty_statement.state CHECK sets (for example delivering/live_confirmation_pending versus package_generated/delivery_queued/sent; variance_review/rejected absent from royalty statements). No backend code reads or writes either table.",
+      "authority": "No approved product decision selects either vocabulary; neither surface has runtime behavior.",
+      "resolution": "Classify both as SPECIFICATION AMBIGUITY and NOT IMPLEMENTED. Record the exact differences as reviewed deviations so any further drift fails; reconcile before any distribution runtime is built. No schema change is made for an unused feature."
     }
   ]
 }
