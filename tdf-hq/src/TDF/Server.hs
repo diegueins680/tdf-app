@@ -1364,225 +1364,6 @@ createArtistTip artistIdRaw req = do
             }
     _ -> throwError err500 { errBody = "Stripe is not configured" }
 
--- | POST /public/courses/:slug/registrations/:id/payment-intent
---
--- Issues a Stripe PaymentIntent against the course's listed @priceCents@ and
--- tags it with metadata @{purpose, course_registration_id, course_slug}@ so the
--- @payment_intent.succeeded@ webhook (in 'SocialEventsHandlers') can flip this
--- registration to @paid@. The PaymentIntent id is persisted on the registration
--- row for O(1) webhook lookup.
---
--- When the request carries @mobileSdkStripeVersion@, returns the
--- 'PaymentSheetParamsDTO' block (customer + ephemeral key + publishable key);
--- this path requires the registration already have a linked party — anonymous
--- mobile checkouts are not supported in this phase.
-createCoursePaymentIntent
-  :: Text
-  -> Int64
-  -> Courses.CoursePaymentIntentRequest
-  -> AppM StripePaymentIntentDTO
-createCoursePaymentIntent rawSlug regIdRaw req = do
-  Env{..} <- ask
-  Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
-  canonicalRuntime <- runDB (rawSql
-    "SELECT EXISTS (SELECT 1 FROM course_registration_checkout_runtime WHERE registration_id = ?)"
-    [toPersistValue regKey] :: SqlPersistT IO [Single Bool])
-  when (canonicalRuntime == [Single True]) $
-    throwError err503
-      { errBody = "Stripe course checkout is disabled until it uses the canonical verified-payment adapter; use an offered Datafast or PayPal method" }
-  when (ME.courseRegistrationStatus reg /= "pending_payment") $
-    throwError err400 { errBody = "Registration is not awaiting payment" }
-  when (isJust (ME.courseRegistrationStripePaymentIntentId reg)) $
-    throwError err409 { errBody = "Payment already initiated for this registration" }
-  let slugVal = ME.courseRegistrationCourseSlug reg
-  mCourse <- runDB $ getBy (Trials.UniqueCourseSlug slugVal)
-  courseEnt <- maybe (throwNotFound "Curso no encontrado") pure mCourse
-  let course = entityVal courseEnt
-      amountCents = Trials.coursePriceCents course
-      currency = Trials.courseCurrency course
-  when (amountCents <= 0) $
-    throwError err400 { errBody = "Course is free; no payment required." }
-  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-    (Just secretKey, Just webhookSecret) -> do
-      let stripeCfg = Stripe.StripeConfig
-            { Stripe.stripeSecretKey = secretKey
-            , Stripe.stripeWebhookSecret = webhookSecret
-            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-            }
-          description = "Course registration " <> slugVal <> " #" <> T.pack (show regIdRaw)
-          metadata = object
-            [ "purpose" .= ("course_registration" :: Text)
-            , "course_registration_id" .= regIdRaw
-            , "course_slug" .= slugVal
-            ]
-          metadataJson =
-            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
-          persistPi piId =
-            runDB $ update regKey
-              [ ME.CourseRegistrationStripePaymentIntentId =. Just piId
-              , ME.CourseRegistrationUpdatedAt =. ME.courseRegistrationUpdatedAt reg
-              ]
-          stripeFailure prefix err =
-            throwError err500
-              { errBody = BL.fromStrict (TE.encodeUtf8 (prefix <> err))
-              }
-      case Courses.mobileSdkStripeVersion req of
-        Nothing -> do
-          result <- liftIO $
-            Stripe.createPaymentIntent stripeCfg amountCents currency description metadataJson
-          case result of
-            Left err -> stripeFailure "Stripe error: " err
-            Right paymentIntent -> do
-              (piId, clientSecret) <- eitherStripeServerError $
-                parseStripePaymentIntentResponse paymentIntent
-              persistPi piId
-              pure StripePaymentIntentDTO
-                { spiClientSecret = clientSecret
-                , spiOrderId = T.pack (show regIdRaw)
-                , spiAmountCents = amountCents
-                , spiCurrency = currency
-                , spiPaymentSheet = Nothing
-                , spiLookupToken = Nothing
-                }
-        Just mobileSdkVer ->
-          case (ME.courseRegistrationPartyId reg, stripePublishableKey envConfig) of
-            (Nothing, _) ->
-              throwError err400
-                { errBody = "Mobile payment requires a logged-in attendee."
-                }
-            (_, Nothing) ->
-              throwError err500
-                { errBody = "Stripe publishable key not configured."
-                }
-            (Just partyKey, Just publishableKey) -> do
-              customerId <- resolveStripeCustomerForBuyer stripeCfg partyKey
-                (ME.courseRegistrationEmail reg)
-                (ME.courseRegistrationFullName reg)
-              ephResult <- liftIO $
-                Stripe.createEphemeralKey stripeCfg customerId mobileSdkVer
-              ephemeralKeySecret <- case ephResult of
-                Left err -> stripeFailure "Stripe ephemeral key error: " err
-                Right ephJson -> eitherStripeServerError $
-                  parseStripeEphemeralKeySecret ephJson
-              piResult <- liftIO $
-                Stripe.createPaymentIntentForCustomer
-                  stripeCfg customerId amountCents currency description metadataJson
-              case piResult of
-                Left err -> stripeFailure "Stripe error: " err
-                Right paymentIntent -> do
-                  (piId, clientSecret) <- eitherStripeServerError $
-                    parseStripePaymentIntentResponse paymentIntent
-                  persistPi piId
-                  pure StripePaymentIntentDTO
-                    { spiClientSecret = clientSecret
-                    , spiOrderId = T.pack (show regIdRaw)
-                    , spiAmountCents = amountCents
-                    , spiCurrency = currency
-                    , spiPaymentSheet = Just PaymentSheetParamsDTO
-                        { psCustomerId = customerId
-                        , psEphemeralKeySecret = ephemeralKeySecret
-                        , psPaymentIntentClientSecret = clientSecret
-                        , psPublishableKey = publishableKey
-                        }
-                    , spiLookupToken = Nothing
-                    }
-    _ -> throwError err500 { errBody = "Stripe is not configured" }
-
--- | POST /public/courses/:slug/registrations/:id/checkout-session
---
--- Creates a Stripe Checkout Session in @subscription@ mode for a course that
--- has been configured with a recurring Stripe Price. Returns the hosted
--- Checkout URL the buyer is redirected to.
---
--- Preconditions enforced:
--- * The course must have @stripeSubscriptionPriceId@ set — non-recurring
---   courses must use 'createCoursePaymentIntent' instead.
--- * The registration must be in @pending_payment@ and not already linked to a
---   subscription.
--- * The registration must have a linked party; anonymous subscriptions are
---   not supported.
-createCourseCheckoutSession
-  :: Text
-  -> Int64
-  -> Courses.CourseCheckoutSessionRequest
-  -> AppM Courses.CourseCheckoutSessionResponse
-createCourseCheckoutSession rawSlug regIdRaw req = do
-  Env{..} <- ask
-  Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
-  canonicalRuntime <- runDB (rawSql
-    "SELECT EXISTS (SELECT 1 FROM course_registration_checkout_runtime WHERE registration_id = ?)"
-    [toPersistValue regKey] :: SqlPersistT IO [Single Bool])
-  when (canonicalRuntime == [Single True]) $
-    throwError err503
-      { errBody = "Automatic course renewal is disabled until a canonical provider capability is verified" }
-  when (ME.courseRegistrationStatus reg /= "pending_payment") $
-    throwError err400 { errBody = "Registration is not awaiting payment" }
-  when (isJust (ME.courseRegistrationStripeSubscriptionId reg)) $
-    throwError err409 { errBody = "Subscription already started for this registration" }
-  let slugVal = ME.courseRegistrationCourseSlug reg
-  mCourse <- runDB $ getBy (Trials.UniqueCourseSlug slugVal)
-  courseEnt <- maybe (throwNotFound "Curso no encontrado") pure mCourse
-  let course = entityVal courseEnt
-  priceId <- case Trials.courseStripeSubscriptionPriceId course of
-    Nothing -> throwError err400
-      { errBody = "This course is not configured for subscription billing" }
-    Just p -> pure p
-  partyKey <- case ME.courseRegistrationPartyId reg of
-    Nothing -> throwError err400
-      { errBody = "Subscription checkout requires a logged-in attendee" }
-    Just p -> pure p
-  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-    (Just secretKey, Just webhookSecret) -> do
-      let stripeCfg = Stripe.StripeConfig
-            { Stripe.stripeSecretKey = secretKey
-            , Stripe.stripeWebhookSecret = webhookSecret
-            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-            }
-      customerId <- resolveStripeCustomerForBuyer stripeCfg partyKey
-        (ME.courseRegistrationEmail reg)
-        (ME.courseRegistrationFullName reg)
-      let metadata = object
-            [ "purpose" .= ("course_subscription" :: Text)
-            , "course_registration_id" .= regIdRaw
-            , "course_slug" .= slugVal
-            ]
-          metadataJson =
-            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
-      result <- liftIO $
-        Stripe.createCheckoutSessionForSubscription
-          stripeCfg
-          priceId
-          customerId
-          (Courses.successUrl req)
-          (Courses.cancelUrl req)
-          metadataJson
-      sessionJson <- case result of
-        Left err -> throwError err500
-          { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe checkout error: " <> err))
-          }
-        Right val -> pure val
-      (sid, sUrl) <- eitherStripeServerError $
-        parseStripeCheckoutSessionResponse sessionJson
-      -- Intentionally do NOT persist subscription_id yet: the buyer may abandon
-      -- Checkout. The webhook handler for `checkout.session.completed` records
-      -- the subscription id once the session resolves.
-      _ <- pure regKey
-      pure Courses.CourseCheckoutSessionResponse
-        { Courses.sessionId  = sid
-        , Courses.sessionUrl = sUrl
-        }
-    _ -> throwError err500 { errBody = "Stripe is not configured" }
-
--- | Extract (@id@, @url@) from a Checkout Session response. Both are required
--- — Stripe always returns them for subscription-mode sessions.
-parseStripeCheckoutSessionResponse :: Value -> Either Text (Text, Text)
-parseStripeCheckoutSessionResponse v =
-  let sidM = parseMaybe (withObject "session" (\o -> o .: "id")) v
-      urlM = parseMaybe (withObject "session" (\o -> o .: "url")) v
-  in case (sidM, urlM) of
-       (Just sid, Just sUrl) -> Right (sid, sUrl)
-       _ -> Left "Could not parse Stripe Checkout Session response"
-
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
        courseMetadataH
@@ -1592,8 +1373,6 @@ coursesPublicServer =
   :<|> datafastStatusH
   :<|> paypalCreateH
   :<|> paypalCaptureH
-  :<|> paymentIntentH
-  :<|> checkoutSessionH
   where
     courseMetadataH slug = loadCourseMetadata slug
     registrationH slug idempotencyKey payload =
@@ -1604,8 +1383,6 @@ coursesPublicServer =
     datafastStatusH = CourseCheckoutServer.confirmPublicCourseDatafastStatus
     paypalCreateH = CourseCheckoutServer.createPublicCoursePaypalOrder
     paypalCaptureH = CourseCheckoutServer.capturePublicCoursePaypalOrder
-    paymentIntentH slug regId payload = createCoursePaymentIntent slug regId payload
-    checkoutSessionH slug regId payload = createCourseCheckoutSession slug regId payload
 
 coursesAdminServer :: AuthedUser -> ServerT Courses.CoursesAdminAPI AppM
 coursesAdminServer user =
@@ -14028,7 +13805,7 @@ loadUserRoleSummaries = do
         }
 
 adsPublicServer :: ServerT AdsPublicAPI AppM
-adsPublicServer = adsInquiryPublic :<|> adsAssistPublic
+adsPublicServer = adsInquiryPublic
 
 validateAdsInquiry :: AdsInquiry -> Either ServerError AdsInquiry
 validateAdsInquiry AdsInquiry{..} = do
@@ -14269,8 +14046,10 @@ validAdsAdminStatus statusVal =
         (\(left, right) -> isStatusSeparator left && isStatusSeparator right)
         (T.zip txt (T.drop 1 txt))
 
-adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
-adsAssistPublic req = do
+adsAssistStaff :: AuthedUser -> AdsAssistRequest -> AppM AdsAssistResponse
+adsAssistStaff user req = do
+  unless (hasSocialInboxAccess user) $
+    throwError err403 { errBody = "Missing required module access" }
   (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
   env <- ask
   let hasScope = isJust adKey || isJust campaignKey
@@ -14342,7 +14121,8 @@ adsAssistNoAiFallback cfg =
 
 adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
 adsAdminServer user =
-       adsListInquiries user
+       adsAssistStaff user
+  :<|> adsListInquiries user
   :<|> adsListCampaigns user
   :<|> adsUpsertCampaign user
   :<|> adsGetCampaign user

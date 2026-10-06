@@ -760,6 +760,33 @@ spec = describe "TDF.Server helpers" $ do
                     lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
                     (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
                         `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
+    describe "served authorization boundary (AUTH-PUBLIC-001)" $ do
+        it "denies staff ads assistance to anonymous and non-inbox callers and no longer serves legacy course Stripe routes" $
+            withNotificationFixture $ \env _ _ _ _ ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    let post path body authenticated = do
+                            base <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+                            NotificationHTTP.httpLbs (base
+                                { NotificationHTTP.method = "POST"
+                                , NotificationHTTP.requestBody = NotificationHTTP.RequestBodyLBS body
+                                , NotificationHTTP.requestHeaders =
+                                    ("Content-Type","application/json")
+                                      : [("Authorization","Bearer google-token") | authenticated]
+                                }) manager
+                        status = statusCode . NotificationHTTP.responseStatus
+                        assistBody = "{\"aarMessage\":\"precio de grabacion\",\"aarChannel\":\"whatsapp\"}"
+                    anonymousAssist <- post "/ads/assist" assistBody False
+                    status anonymousAssist `shouldBe` 401
+                    BL8.unpack (NotificationHTTP.responseBody anonymousAssist) `shouldNotContain` "Detalle:"
+                    customerAssist <- post "/ads/assist" assistBody True
+                    status customerAssist `shouldBe` 403
+                    paymentIntent <- post "/public/courses/beatmaking/registrations/1/payment-intent"
+                        "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\"}" False
+                    status paymentIntent `shouldBe` 404
+                    checkoutSession <- post "/public/courses/beatmaking/registrations/1/checkout-session"
+                        "{\"successUrl\":\"https://example.com/ok\",\"cancelUrl\":\"https://example.com/no\"}" False
+                    status checkoutSession `shouldBe` 404
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
