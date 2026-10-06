@@ -67,7 +67,28 @@ returns constant success; `roomsPublicServer` actually queries the database.
 Therefore health alone never qualifies recovery. The public database-backed read
 and independent system-ID/migration checks are mandatory. This remains a scoped
 availability/security smoke boundary, not complete endpoint conformance or proof
-of all application authorization. Edge routing/TLS are a separate unfinished stage.
+of all application authorization. Edge routing/TLS requires the separate adapter below.
+
+## Original TLS edge boundary
+
+`original-edge-recovery.py` requires the completed DB/API journal stages and the
+same original reservation/configuration/cluster admission. It starts only the exact
+original edge CID, only if stopped; a lost start response leaves pending intent.
+Starting edge may immediately restore public requests and writes. It is not a
+continuing maintenance boundary.
+
+Four redacted probes use the same PID/pidfd/cgroup/network-namespace binding as the
+API probes, with a closed `api|edge` selector. Edge transport connects only to
+127.0.0.1:443 inside that held namespace, using api.tdfrecords.net for TLS SNI,
+certificate hostname validation and HTTP Host. The default CA chain policy remains
+enabled. TLS verification failure is terminal; ordinary initial connection refusal
+can retry read-only readiness. Redirects, wrong revision, malformed public DTOs and
+anonymous booking success reject completion. Database identity/history and all
+three original services are rechecked before recording the observation.
+
+This establishes the namespace-local TLS/routing path only. External DNS, host port
+forwarding, firewall and public-network reachability require separate safe probes.
+It does not complete timer restoration or the overall abort sequence.
 
 ## Executable evidence and limits
 
@@ -90,8 +111,14 @@ persistent uploads and real immutable backend image on internal-only Docker
 networks, with selected optional workers disabled and synthetic credentials.
 Other existing workers can run against that synthetic database; this fixture does
 not claim universal worker suspension. It tests the real API
-recovery adapter and namespace probes; edge remains inert and boot epochs remain
-synthetic. The separate
+recovery adapter and namespace probes. `TDF_TEST_ORIGINAL_EDGE_RECOVERY=1` adds the
+immutable Caddy image and actual TLS edge adapter. Its temporary nonce-owned CA and
+explicit leaf certificates disable ACME; networks stay internal-only. Untrusted and
+wrong-host certificates must reject before the trusted edge is qualified. The exact
+trust file is removed even if other resource cleanup fails; an identity mismatch
+fails and preserves the changed file. Portable real TLS socket controls additionally
+show that a client-hostname-verification mutation defeats the hostname rejection.
+Boot epochs remain synthetic. The separate
 `test-interrupted-release-recovery-linux.py` checks an actual owned-host reboot;
 combining these results is not an end-to-end coordinator proof.
 
@@ -108,14 +135,12 @@ fsync, Docker, kernel boot behavior, PostgreSQL recovery/checksums or HTTP readi
 The real immutable backend component experiment also observed Docker's60-second
 SIGTERM stop ending in exit137. Capture correctly rejected this state; the fixture
 then exercised original database/API abort recovery instead of labelling it clean.
-Boot currently does not install an explicit Warp shutdown handler. A candidate
-shutdown repair must supervise startup, prevent readiness/worker publication after
-stop, preserve startup failure, and distinguish successful HTTP drainage from an
-expired shutdown deadline. It cannot retroactively repair the old image's first
-stop. This is an open release-design limitation; no forced stop is qualified as a
+The new [shutdown supervisor](application-shutdown.md) addresses startup and HTTP
+drain in newly built images, and its image gate requires exit0. It cannot
+retroactively repair the old image's first stop. This is an open release-design limitation; no forced stop is qualified as a
 clean capture by these results.
 
-The original edge start and routing adapter, identity-bound disposable
-cleanup, timer restoration, full coordinator, operational key custody and terminal
+Identity-bound disposable cleanup, timer restoration, full coordinator,
+operational key custody and terminal
 recovery receipt remain unfinished. Do not use this library alone to stop or reboot
 production. The aggregate requirement remains PARTIAL.

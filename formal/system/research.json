@@ -718,6 +718,15 @@
       "applicability": "Observed exit137 from Docker stop of the synthetic actual API; Warp3.4.9 Run.hs discards its internal timeout result.",
       "decision": "adopted",
       "rationale": "Early TERM/INT supervisor owns cancellation and30-second deadline. Exact installed Warp package source was inspected via Stack unpack; HTTP, signal, negative-control and image gates remain distinct evidence boundaries."
+    },
+    {
+      "id": "RES-EDGE-TLS-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9525.html",
+      "title": "RFC9525 service identity in TLS",
+      "recommendation": "Verify the expected service identity against the certificate as well as the certificate chain.",
+      "applicability": "Original edge probe reaches a fixed namespace-local loopback address but must authenticate api.tdfrecords.net.",
+      "decision": "adopted",
+      "rationale": "Keep the reference service hostname for SNI, certificate verification and HTTP Host while pinning transport separately; use default CA validation and reject TLS failures without downgrade. No public-network reachability claim follows."
     }
   ]
 }

@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import stat
 import sys
@@ -69,7 +70,78 @@ def preserve_owned_directory(directory, destination, owned):
     directory.rename(destination)
 
 
-def exercise_database_recovery(archive, saved, db, actual_application=False):
+class SyntheticTLS:
+    """Nonce-owned CA only on the acknowledged empty fixture host, never production."""
+    def __init__(self,archive,volume,nonce):
+        self.directory=archive/'synthetic-tls';self.directory.mkdir(mode=0o700)
+        self.trust=Path('/usr/local/share/ca-certificates')/('tdf-synthetic-'+nonce+'.crt')
+        require(not os.path.lexists(self.trust));self.trust_identity=None
+        row=json.loads(run(DOCKER+['volume','inspect',volume]))
+        require(len(row)==1 and row[0]['Labels'].get(LABEL)==nonce)
+        self.destination=Path(row[0]['Mountpoint'])/'synthetic-tls'
+        self.destination.mkdir(mode=0o700)
+        directory=self.directory
+        run(['openssl','req','-x509','-newkey','rsa:2048','-nodes','-days','1',
+             '-keyout',str(directory/'ca.key'),'-out',str(directory/'ca.crt'),
+             '-subj','/CN=TDF synthetic '+nonce,'-addext','basicConstraints=critical,CA:TRUE',
+             '-addext','keyUsage=critical,keyCertSign,cRLSign'])
+        for prefix,hostname in (('valid','api.tdfrecords.net'),('wrong','wrong.invalid')):
+            run(['openssl','req','-newkey','rsa:2048','-nodes','-keyout',str(directory/(prefix+'.key')),
+                 '-out',str(directory/(prefix+'.csr')),'-subj','/CN='+hostname])
+            (directory/(prefix+'.ext')).write_text('subjectAltName=DNS:'+hostname+'\nbasicConstraints=CA:FALSE\nkeyUsage=digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n')
+            run(['openssl','x509','-req','-in',str(directory/(prefix+'.csr')),'-CA',str(directory/'ca.crt'),
+                 '-CAkey',str(directory/'ca.key'),'-CAcreateserial','-days','1',
+                 '-out',str(directory/(prefix+'.crt')),'-extfile',str(directory/(prefix+'.ext'))])
+        for key in directory.glob('*.key'):key.chmod(0o600)
+        self.select('valid')
+
+    def select(self,prefix):
+        require(prefix in ('valid','wrong'))
+        for suffix in ('crt','key'):
+            source=self.directory/(prefix+'.'+suffix);destination=self.destination/('server.'+suffix)
+            shutil.copyfile(source,destination);destination.chmod(0o600 if suffix=='key' else 0o644)
+
+    def verify(self,cid):
+        application=load('linux_edge_tls_probe','original-application-recovery.py')
+        def sample():
+            row=inspect(cid)
+            saved={'expected':{'edge':{'containerId':cid}},'containers':{'edge':{
+                key:(sorted(row[key],key=lambda m:m['Destination']) if key=='Mounts' else row[key])
+                for key in ('Id','Image','Config','HostConfig','Mounts')}}}
+            for _ in range(60):
+                value=application.probe(saved,'/health','edge')
+                if not value['transportUnavailable']:return value
+                time.sleep(0.25)
+            require(False)
+        invalid=sample()
+        require(invalid=={'code':None,'valid':False,'metadata':{},'transportUnavailable':False})
+        content=(self.directory/'ca.crt').read_bytes()
+        with self.trust.open('xb') as stream:stream.write(content)
+        self.trust.chmod(0o644)
+        st=self.trust.lstat();self.trust_identity=(st.st_dev,st.st_ino,hashlib.sha256(content).hexdigest())
+        run(['update-ca-certificates'])
+        run(DOCKER+['stop','--time','10',cid]);self.select('wrong');run(DOCKER+['start',cid])
+        invalid=sample()
+        require(invalid=={'code':None,'valid':False,'metadata':{},'transportUnavailable':False})
+        run(DOCKER+['stop','--time','10',cid]);self.select('valid');run(DOCKER+['start',cid])
+        valid=sample();require(valid['valid'] and valid['code']==200)
+
+    def cleanup(self):
+        if self.trust_identity is not None:
+            st=self.trust.lstat()
+            require(stat.S_ISREG(st.st_mode) and not self.trust.is_symlink() and st.st_uid==os.geteuid()
+                    and (st.st_dev,st.st_ino,hashlib.sha256(self.trust.read_bytes()).hexdigest())==self.trust_identity)
+            self.trust.unlink();run(['update-ca-certificates'])
+            require(not os.path.lexists(self.trust))
+
+
+def cleanup_preserving_tls(resource_cleanup,tls):
+    try:resource_cleanup()
+    finally:
+        if tls is not None:tls.cleanup()
+
+
+def exercise_database_recovery(archive, saved, db, actual_application=False, actual_edge=False):
     """Real PostgreSQL/Docker/files; synthetic boot epoch, explicitly no reboot."""
     recovery=load('linux_original_db_recovery','original-database-recovery.py')
     service=load('linux_original_db_journal','abort-service-journal.py')
@@ -153,6 +225,12 @@ def exercise_database_recovery(archive, saved, db, actual_application=False):
                 app_status=app_adapter.recover()
                 require(app_status['completedStages']==['remove-disposables','recover-db','recover-api'])
                 require(application.probe(saved['originalDeployment'],'/rooms/public')['valid'])
+                if actual_edge:
+                    edge=load('linux_original_edge','original-edge-recovery.py')
+                    edge_reservation=edge.a.d.Reservation(reservation.directory,reservation.descriptor)
+                    edge_status=edge.OriginalEdge(journal,archive,edge_reservation).recover()
+                    require(edge_status['completedStages']==['remove-disposables','recover-db','recover-api','recover-edge'])
+                    require(edge.a.probe(saved['originalDeployment'],'/version','edge')['valid'])
     require(run(DOCKER+['exec',db,'psql','-X','-qAt','-U','postgres','-d','tdf_hq','-c',
                 'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
     require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
@@ -160,7 +238,7 @@ def exercise_database_recovery(archive, saved, db, actual_application=False):
             'missingClusterControls':rejected,'sameEpochDuplicateDenied':True,'missingClusterDeniedBeforeActualStart':True,
             'secondRecordedSyntheticEpochRequired':True,
             'bootEpoch':'synthetic; no actual reboot in this component fixture',
-            'actualServiceAdapter':'original database and real backend' if actual_application else 'original database only; API/edge remain inert and stopped'}
+            'actualServiceAdapter':'original database, backend and TLS edge' if actual_edge else 'original database and real backend' if actual_application else 'original database only; API/edge remain inert and stopped'}
 
 
 def main():
@@ -191,6 +269,10 @@ def main():
     require(Path('/opt/tdf').is_dir())
     actual_application=os.environ.get('TDF_TEST_ORIGINAL_APPLICATION_RECOVERY')=='1'
     if actual_application:require(os.environ.get('TDF_TEST_ORIGINAL_DB_RECOVERY')=='1')
+    actual_edge=os.environ.get('TDF_TEST_ORIGINAL_EDGE_RECOVERY')=='1'
+    if actual_edge:require(actual_application)
+    edge_image='caddy@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b'
+    if actual_edge:require(edge_image in json.loads(run(DOCKER+['image','inspect',edge_image]))[0]['RepoDigests'])
     app_environment={}
     nonce = os.urandom(16).hex()
     archive = Path('/opt/tdf')/('synthetic-fence-'+nonce)
@@ -202,6 +284,7 @@ def main():
     evidence = None
     before = {}
     owned_production = None
+    tls=None
     try:
         DIRECTORY.mkdir(mode=0o700)
         created = DIRECTORY.lstat()
@@ -211,7 +294,7 @@ def main():
             os.chown(DIRECTORY/'assets',1000,1000)
             (DIRECTORY/'uploads').mkdir(mode=0o700);os.chown(DIRECTORY/'uploads',1000,1000)
         exclusive_file(DIRECTORY/'postgres_password', 'synthetic-fixture-only\n')
-        exclusive_file(DIRECTORY/'Caddyfile', '# Inert fixture; not an actual edge configuration\n')
+        exclusive_file(DIRECTORY/'Caddyfile', ('{\n auto_https off\n}\nhttps://api.tdfrecords.net {\n tls /data/synthetic-tls/server.crt /data/synthetic-tls/server.key\n reverse_proxy tdf-synthetic-fence-api-'+nonce+':8080\n}\n') if actual_edge else '# Inert fixture; not an actual edge configuration\n')
         exclusive_file(DIRECTORY/'compose.yaml', '# Synthetic Docker inventory only\n')
         for network in networks:
             run(DOCKER+['network', 'create', '--internal', '--label', LABEL+'='+nonce, network])
@@ -219,8 +302,9 @@ def main():
         for volume in volumes:
             run(DOCKER+['volume', 'create', '--label', LABEL+'='+nonce, volume])
             created_volumes.append(volume)
+        if actual_edge:tls=SyntheticTLS(archive,volumes[1],nonce)
         for service in ('db', 'api', 'edge'):
-            reference = image if service == 'db' else inert
+            reference = image if service == 'db' else edge_image if actual_edge and service=='edge' else inert
             command = DOCKER+['create', '--pull=never', '--name', 'tdf-synthetic-fence-'+service+'-'+nonce,
                 '--label', LABEL+'='+nonce, '--label', 'com.docker.compose.project=tdf-production',
                 '--label', 'com.docker.compose.service='+service,
@@ -242,6 +326,10 @@ def main():
                             '--mount','type=bind,source='+str(DIRECTORY/'uploads')+',target=/app/uploads']
                 for key,value in app_environment.items():command += ['--env',key+'='+value]
                 command += [reference]
+            elif actual_edge and service=='edge':
+                command += ['--mount','type=bind,source='+str(DIRECTORY/'Caddyfile')+',target=/etc/caddy/Caddyfile,readonly',
+                            '--mount','type=volume,source='+volumes[1]+',target=/data',
+                            '--mount','type=volume,source='+volumes[2]+',target=/config',reference]
             else:
                 command += ['--user=0:0', '--entrypoint=/bin/sh', '--stop-signal=SIGTERM']
                 if service == 'api':
@@ -302,6 +390,9 @@ def main():
                 require(ready)
                 run(DOCKER+['exec',row['Id'],'sh','-c','mkdir -p /app/uploads; printf synthetic-upload > /app/uploads/sentinel; chmod 600 /app/uploads/sentinel'])
                 continue
+            if actual_edge and service=='edge':
+                tls.verify(created_containers['edge'])
+                continue
             run(DOCKER+['exec', created_containers[service], 'sh', '-c',
                 'for n in 1 2 3 4 5; do test -f /tmp/ready && exit 0; sleep 1; done; exit 1'])
         for name, content in ((w.SERVICE, SERVICE), (w.TIMER, TIMER)):
@@ -361,7 +452,7 @@ def main():
             require(captured['presence'] == 'present')
             s.files.restore(str(archive/'uploads.tar'), captured['manifest'], str(archive/'restored-uploads'))
             require((archive/'restored-uploads/sentinel').read_bytes() == b'synthetic-upload')
-            evidence = {'schemaVersion': 1, 'status': 'synthetic-original-db-api-recovery-passed' if actual_application else 'synthetic-real-daemon-fence-passed',
+            evidence = {'schemaVersion': 1, 'status': 'synthetic-original-db-api-edge-recovery-passed' if actual_edge else 'synthetic-original-db-api-recovery-passed' if actual_application else 'synthetic-real-daemon-fence-passed',
                 'completedStages': journal.status()['completedStages'],
                 'dockerWritersStopped':not unclean_api_rejected,'uncleanApiExitRejected':unclean_api_rejected, 'registeredTimerStopped': True,
                 'originalDeploymentAdmissionVerified': original_admission['preparedBeforeShutdown'],
@@ -372,52 +463,55 @@ def main():
                     'No complete host-worker exclusion, clean-control or database recovery proof.',
                     'No production key custody, migration, rollout or restart recovery.']}
         if os.environ.get('TDF_TEST_ORIGINAL_DB_RECOVERY')=='1':
-            evidence['originalDatabaseRecovery']=exercise_database_recovery(archive,saved,db,actual_application)
+            evidence['originalDatabaseRecovery']=exercise_database_recovery(archive,saved,db,actual_application,actual_edge)
             evidence['fenceFlagsScope']='Historical successful or rejected fence observation before fixture-only recovery'
             evidence['limitations']=['Disposable PG17 component fixture; no production effect.',
-                'Edge is inert; boot epochs are synthetic; API is real only when explicitly enabled.',
+                'Boot epochs are synthetic; API and TLS edge are real only when explicitly enabled.',
                 'No complete host-worker, clean-shutdown, key-custody, migration or rollout proof.']
     finally:
-        if evidence is None and before:
-            def paths(left, right, prefix):
-                if type(left) is not type(right): return [prefix]
-                if isinstance(left, dict):
-                    return [p for key in set(left) | set(right)
-                            for p in paths(left.get(key), right.get(key), prefix+'/'+key)]
-                if isinstance(left, list):
-                    if len(left) != len(right): return [prefix]
-                    return [p for index, (a,b) in enumerate(zip(left,right))
-                            for p in paths(a,b,prefix+'/'+str(index))]
-                return [] if left == right else [prefix]
-            changed = []
-            for service, baseline in before.items():
-                actual = inspect(created_containers[service])
-                changed += paths(baseline, {key: actual[key] for key in baseline}, service)
-            print('Synthetic changed configuration fields: '+json.dumps(sorted(changed)), file=sys.stderr)
-        # Verify nonce ownership before any destructive fixture cleanup. Unknown
-        # resources or cleanup failures stop here and retain the remaining state.
-        for name in reversed(created_units):
-            require(hashlib.sha256((w.DIRECTORY/name).read_bytes()).hexdigest() == hashes[name])
-            if name == w.TIMER: run(['systemctl', 'disable', '--now', name])
-            (w.DIRECTORY/name).unlink()
-        if created_units: run(['systemctl', 'daemon-reload'])
-        for target in reversed(list(created_containers.values())):
-            value = inspect(target)
-            require(value['Config']['Labels'].get(LABEL) == nonce)
-            run(DOCKER+['rm', '--force', value['Id']])
-        for volume in reversed(created_volumes):
-            row = json.loads(run(DOCKER+['volume', 'inspect', volume]))
-            require(len(row) == 1 and row[0]['Labels'].get(LABEL) == nonce)
-            run(DOCKER+['volume', 'rm', volume])
-        for network in reversed(created_networks):
-            row = json.loads(run(DOCKER+['network', 'inspect', network]))
-            require(len(row) == 1 and row[0]['Labels'].get(LABEL) == nonce)
-            run(DOCKER+['network', 'rm', network])
-        # A failed mkdir or replaced canonical name must never authorize moving
-        # an unowned tree that appeared after the initial absence observation.
-        preserve_owned_directory(DIRECTORY, archive/'synthetic-production', owned_production)
+        def cleanup_owned_resources():
+            if evidence is None and before:
+                def paths(left, right, prefix):
+                    if type(left) is not type(right): return [prefix]
+                    if isinstance(left, dict):
+                        return [p for key in set(left) | set(right)
+                                for p in paths(left.get(key), right.get(key), prefix+'/'+key)]
+                    if isinstance(left, list):
+                        if len(left) != len(right): return [prefix]
+                        return [p for index, (a,b) in enumerate(zip(left,right))
+                                for p in paths(a,b,prefix+'/'+str(index))]
+                    return [] if left == right else [prefix]
+                changed = []
+                for service, baseline in before.items():
+                    actual = inspect(created_containers[service])
+                    changed += paths(baseline, {key: actual[key] for key in baseline}, service)
+                print('Synthetic changed configuration fields: '+json.dumps(sorted(changed)), file=sys.stderr)
+            # Verify nonce ownership before any destructive fixture cleanup. Unknown
+            # resources or cleanup failures stop here and retain the remaining state.
+            for name in reversed(created_units):
+                require(hashlib.sha256((w.DIRECTORY/name).read_bytes()).hexdigest() == hashes[name])
+                if name == w.TIMER: run(['systemctl', 'disable', '--now', name])
+                (w.DIRECTORY/name).unlink()
+            if created_units: run(['systemctl', 'daemon-reload'])
+            for target in reversed(list(created_containers.values())):
+                value = inspect(target)
+                require(value['Config']['Labels'].get(LABEL) == nonce)
+                run(DOCKER+['rm', '--force', value['Id']])
+            for volume in reversed(created_volumes):
+                row = json.loads(run(DOCKER+['volume', 'inspect', volume]))
+                require(len(row) == 1 and row[0]['Labels'].get(LABEL) == nonce)
+                run(DOCKER+['volume', 'rm', volume])
+            for network in reversed(created_networks):
+                row = json.loads(run(DOCKER+['network', 'inspect', network]))
+                require(len(row) == 1 and row[0]['Labels'].get(LABEL) == nonce)
+                run(DOCKER+['network', 'rm', network])
+            # A failed mkdir or replaced canonical name must never authorize moving
+            # an unowned tree that appeared after the initial absence observation.
+            preserve_owned_directory(DIRECTORY, archive/'synthetic-production', owned_production)
+        cleanup_preserving_tls(cleanup_owned_resources,tls)
     require(evidence is not None and not run(DOCKER+['ps', '--all', '--quiet']))
     evidence['ownedContainersRemoved'] = True
+    if actual_edge:evidence['edgeTLSControls']={'untrustedCertificateRejected':True,'wrongHostnameRejected':True,'trustedOriginalEdgeVerified':True,'temporaryTrustRemoved':True}
     print(json.dumps(evidence, sort_keys=True))
 
 

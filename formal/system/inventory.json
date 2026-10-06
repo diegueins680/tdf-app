@@ -85,6 +85,7 @@
       "ops/hetzner/original-application-recovery.py",
       "ops/hetzner/original-database-recovery.py",
       "ops/hetzner/original-deployment-admission.py",
+      "ops/hetzner/original-edge-recovery.py",
       "ops/hetzner/physical-postgres-recovery.py",
       "ops/hetzner/production-recovery-sources.py",
       "ops/hetzner/production-writer-fence.py",
@@ -447,6 +448,8 @@
       "scripts/test-original-application-recovery.py",
       "scripts/test-original-database-recovery.py",
       "scripts/test-original-deployment-admission.py",
+      "scripts/test-original-edge-recovery.py",
+      "scripts/test-original-edge-tls.py",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
@@ -2378,7 +2381,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "fd1a0bb8f9d2b5b737091fa6afbdef90a613c4220f4b232f8259d456ebef4f60",
+      "sha256": "7309c5afc40c61b0fcd45b21dad7c015574665d31cfc002dfe694ad9f3dfd89b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2780,7 +2783,7 @@
     {
       "id": "SURFACE-f805846153e8a517",
       "path": "ops/hetzner/original-application-recovery.py",
-      "sha256": "c36512cc2ff77f3902bc880ab7f5cc814bc12411b8329e5164b90d5dae491b32",
+      "sha256": "37f59153386b015d565d8da2a7faeeb26db27ecf2a76c4307d1ad4a405be21b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2793,6 +2796,12 @@
       "id": "SURFACE-98c278d5be0e29e8",
       "path": "ops/hetzner/original-deployment-admission.py",
       "sha256": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b48528514b0d3831",
+      "path": "ops/hetzner/original-edge-recovery.py",
+      "sha256": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4040,7 +4049,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "5a1abaa0050dbfb8a0348e0b622bf0d8e85bb69104e5b9636f10b473f96acbd7",
+      "sha256": "e1a3b7a0b0d565036bb0c6c59ba0973fb901fe1d7c762b00199fedef7426fa51",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4932,6 +4941,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2367aa1681a81b5b",
+      "path": "scripts/test-original-edge-recovery.py",
+      "sha256": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-12c06af62e1efad1",
+      "path": "scripts/test-original-edge-tls.py",
+      "sha256": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9649a5eac5beddfa",
       "path": "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "sha256": "1ebaa8ac0f615de08870302dbfbad60a62a98b88eb5c999be03fcf7c7018eef0",
@@ -4988,7 +5009,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "507ad1b9347f26b0e51b15190f68afd465607e7bcc9e083bb6196453bcac013e",
+      "sha256": "f57122be1984b6d317641683fc14592330edadd68df67b73be8302ed6ee5acc0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5240,7 +5261,7 @@
     {
       "id": "SURFACE-bde8e6717fb9ee2c",
       "path": "scripts/test-writer-fence-fixture-ownership.py",
-      "sha256": "75f46ddd498962674dfb1b907a9faf2a12342e9159b31d595ce030433ec5ec72",
+      "sha256": "ef53420ceb2145bbc757640c29bac2a8fa91a12261613ff15429d01fca8adb38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22614,7 +22635,7 @@
     },
     {
       "path": "formal/system/original-service-recovery.md",
-      "sha256": "6bd5b301b165e103151b622129dc71b1ddc942f547c28aab3e145bf7f7c00e84",
+      "sha256": "c113e7f28b12de5f4fec420df96ea44f57c30627bfe94943b7328126f10af2cd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22684,14 +22705,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6debdae498e34d67de440de97c8f65bed456615f486454939a2e06e644829e69",
+      "sha256": "c398a909a095b02348f22b7bd2c130858fd6d13d3018444f9a4f9852a258e788",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "633cb4f4b8a22fa32bc974775794f233d1d5d2d9ad9b968ef15873d9340484a1",
+      "sha256": "de5e2c28388897c45bb07290f3dcf66830a7aefd63af16eb3ab00d3e924d9063",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

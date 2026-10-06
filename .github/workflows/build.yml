@@ -124,7 +124,7 @@ jobs:
             python3 scripts/test-physical-application-docker.py
 
   original-recovery:
-    name: Original database and API recovery
+    name: Original database, API and TLS edge recovery
     needs: docker
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -139,13 +139,14 @@ jobs:
           tdf_physical_image='pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21'
           docker pull "$tdf_physical_image"
           docker pull "$TDF_CANARY_TEST_IMAGE"
+          docker pull caddy@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
           test -z "$(docker ps --all --quiet)"
           sudo install -d -m 700 /opt/tdf/backups
           SOURCE_COMMIT="$GITHUB_SHA" node scripts/render-production-migration-batch.mjs > synthetic-fixture-migrations.sql
           sudo env TDF_SYNTHETIC_WRITER_FENCE_HOST="$(cat /etc/machine-id)" \
             TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" \
             TDF_CANARY_TEST_IMAGE="$TDF_CANARY_TEST_IMAGE" \
-            TDF_TEST_ORIGINAL_DB_RECOVERY=1 TDF_TEST_ORIGINAL_APPLICATION_RECOVERY=1 \
+            TDF_TEST_ORIGINAL_DB_RECOVERY=1 TDF_TEST_ORIGINAL_APPLICATION_RECOVERY=1 TDF_TEST_ORIGINAL_EDGE_RECOVERY=1 \
             TDF_TEST_REQUIRE_CLEAN_APPLICATION_STOP=1 \
             PYTHONDONTWRITEBYTECODE=1 \
             timeout --signal=TERM --kill-after=15 660 \

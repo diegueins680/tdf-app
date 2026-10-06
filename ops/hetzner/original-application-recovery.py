@@ -50,6 +50,24 @@ finally:connection.close()
 '''
 
 
+# Fixed SNI/Host with a loopback transport in the held original edge namespace.
+# Default certificate/hostname verification stays enabled; TLS failures are not
+# classified as retryable absence. No DNS, proxy, redirect or arbitrary endpoint.
+EDGE_CONNECTION = r'''import http.client,json,sys,ssl,socket
+class LoopbackHTTPS(http.client.HTTPSConnection):
+    def connect(self):
+        raw=socket.create_connection(('127.0.0.1',443),timeout=self.timeout)
+        try:self.sock=self._context.wrap_socket(raw,server_hostname='api.tdfrecords.net')
+        except BaseException:
+            raw.close()
+            raise
+'''
+require(PROBE.count('import http.client,json,sys')==1 and PROBE.count("http.client.HTTPConnection('127.0.0.1',8080,timeout=5)")==1)
+EDGE_PROBE=PROBE.replace('import http.client,json,sys',EDGE_CONNECTION).replace(
+    "http.client.HTTPConnection('127.0.0.1',8080,timeout=5)",
+    "LoopbackHTTPS('api.tdfrecords.net',443,timeout=5,context=ssl.create_default_context())")
+
+
 def revision(saved):
     values={}
     for raw in saved['containers']['api']['Config']['Env']:
@@ -63,19 +81,21 @@ def revision(saved):
     return expected
 
 
-def target(saved):
-    expected=saved['expected']['api']['containerId']
+def target(saved,service='api'):
+    require(service in ('api','edge'))
+    expected=saved['expected'][service]['containerId']
     rows=json.loads(d.o.sources.inspector.capture(d.o.sources.inspector.DOCKER+['inspect',expected]))
     require(len(rows)==1 and rows[0]['Id']==expected and rows[0]['State']['Running'] is True)
     row=rows[0];require(type(row['State']['Pid']) is int and row['State']['Pid']>0)
-    stable={key:(sorted(row[key],key=lambda m:m['Destination']) if key=='Mounts' else row[key]) for key in saved['containers']['api']}
-    require(stable==saved['containers']['api'])
+    stable={key:(sorted(row[key],key=lambda m:m['Destination']) if key=='Mounts' else row[key]) for key in saved['containers'][service]}
+    require(stable==saved['containers'][service])
     return row
 
 
-def probe(saved,path):
-    require(path in PATHS)
-    row=target(saved);pid=row['State']['Pid'];cid=row['Id']
+def probe(saved,path,service='api'):
+    require(path in PATHS and service in ('api','edge'))
+    program=PROBE if service=='api' else EDGE_PROBE
+    row=target(saved,service);pid=row['State']['Pid'];cid=row['Id']
     proc=os.open('/proc/'+str(pid),os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
     pidfd=namespace=None
     try:
@@ -87,10 +107,10 @@ def probe(saved,path):
                     line.split(':',2)[-1].endswith('/docker/'+cid) for line in groups))
         namespace=os.open('ns/net',os.O_RDONLY,dir_fd=proc)
         require(not select.select([pidfd],[],[],0)[0])
-        result=subprocess.run(['nsenter','--net=/proc/self/fd/'+str(namespace),'python3','-c',PROBE,path],
+        result=subprocess.run(['nsenter','--net=/proc/self/fd/'+str(namespace),'python3','-c',program,path],
             env=d.o.fence.ENV,pass_fds=(namespace,),text=True,capture_output=True,timeout=8)
         require(result.returncode==0 and len(result.stdout)<=4096 and not select.select([pidfd],[],[],0)[0])
-        closing=target(saved)
+        closing=target(saved,service)
         require(closing['State']['Pid']==pid and closing['State']['StartedAt']==row['State']['StartedAt'])
         value=json.loads(result.stdout)
         require(set(value)=={'code','valid','metadata','transportUnavailable'} and type(value['valid']) is bool

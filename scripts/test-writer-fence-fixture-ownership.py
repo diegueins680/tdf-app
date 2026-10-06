@@ -4,12 +4,36 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+import hashlib
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('fence_linux_fixture', Path(__file__).with_name('test-production-writer-fence-linux.py'))
 f = importlib.util.module_from_spec(spec); spec.loader.exec_module(f)
 
 
 class OwnershipTests(unittest.TestCase):
+    def test_owned_tls_trust_removed_even_when_resource_cleanup_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            trust=Path(directory)/'synthetic.crt';trust.write_bytes(b'synthetic-only')
+            st=trust.lstat();tls=object.__new__(f.SyntheticTLS)
+            tls.trust=trust;tls.trust_identity=(st.st_dev,st.st_ino,hashlib.sha256(trust.read_bytes()).hexdigest())
+            def fail():raise RuntimeError('owned Docker cleanup failed')
+            with patch.object(f,'run',return_value='') as run:
+                with self.assertRaisesRegex(RuntimeError,'owned Docker cleanup failed'):
+                    f.cleanup_preserving_tls(fail,tls)
+            self.assertFalse(trust.exists())
+            run.assert_called_once_with(['update-ca-certificates'])
+
+    def test_changed_trust_file_is_preserved_and_cleanup_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            trust=Path(directory)/'synthetic.crt';trust.write_bytes(b'synthetic-only')
+            st=trust.lstat();tls=object.__new__(f.SyntheticTLS)
+            tls.trust=trust;tls.trust_identity=(st.st_dev,st.st_ino,hashlib.sha256(trust.read_bytes()).hexdigest())
+            trust.write_bytes(b'changed')
+            with patch.object(f,'run') as run, self.assertRaises(ValueError):
+                f.cleanup_preserving_tls(lambda:None,tls)
+            self.assertEqual(trust.read_bytes(),b'changed');run.assert_not_called()
+
     def test_failed_exclusive_creation_never_moves_an_unowned_tree(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); source = root/'production'; source.mkdir(mode=0o700)
