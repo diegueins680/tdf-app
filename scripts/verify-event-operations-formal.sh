@@ -119,6 +119,7 @@ run_negative_tlc AccountDeletionResolutionNoOwnerLock.cfg deletion-resolution-ra
 run_negative_tlc AccountDeletionIntakeNoOwnerLock.cfg deletion-intake-race 'Invariant OnePendingOwnerReceipt is violated' AccountDeletionIntake.tla
 run_negative_tlc AccountDeletionIntakeReplayNotification.cfg deletion-intake-replay 'Invariant OneNoticePerNewReceipt is violated' AccountDeletionIntake.tla
 run_negative_tlc AccountDeletionIntakeGeneralAudience.cfg deletion-intake-audience 'Invariant OnlyPrivacyAudience is violated' AccountDeletionIntake.tla
+run_negative_tlc AccountDeletionIntakeInvalidLegacy.cfg deletion-intake-legacy 'Invariant OnlyValidReceipt is violated' AccountDeletionIntake.tla
 run_tlc PrivacyDeletionWorkflow.tla PrivacyDeletionWorkflow.cfg privacy-deletion
 run_negative_tlc PrivacyDeletionEarlyClose.cfg privacy-deletion-earlyclose 'Invariant ClosureEvidence is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionDeadlineReset.cfg privacy-deletion-deadline 'Invariant FixedDeadline is violated' PrivacyDeletionWorkflow.tla

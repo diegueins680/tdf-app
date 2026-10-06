@@ -99,8 +99,12 @@ behaviour.
 
 The authenticated owner has one unresolved receipt. Intake holds a transaction-scoped,
 owner-specific PostgreSQL advisory lock across lookup and insertion, including requests
-from different live sessions. A retry returns the oldest pending receipt without changing
-its original timestamp/content or sending another notification. Existing duplicate legacy
+from different live sessions. A retry returns the oldest pending receipt whose owner claim passes the same validator
+as strict intake and resolution. Missing, duplicated or mismatched legacy owner claims
+are ignored for reuse and preserved for operator reconciliation. The lookup pages through
+100 candidates at a time under the owner mutex, so invalid rows cannot hide a later valid
+receipt or cause unbounded row materialization. A retry does not change
+its original timestamp/content or send another notification. Existing duplicate legacy
 records are retained for operator reconciliation, not deleted. After terminal resolution,
 a new request may create a new receipt; there is no permanent client-key idempotency
 promise across completed cases. Resolution takes the same owner mutex before locking
@@ -133,3 +137,10 @@ waiting on that row and intake waiting on the owner advisory lock, then releases
 the barrier and checks one fresh pending receipt plus one immutable resolution.
 The previous binary must fail that same test. No timing-only sleep determines
 which request wins.
+
+The intake model includes an abstract invalid legacy receipt; an additional negative
+configuration disables owner validation and must violate `OnlyValidReceipt`. Actual
+HTTP/PostgreSQL checks seed 105 older invalid rows (missing, duplicated and foreign
+claims), accept a fresh valid request, and race eight retries that must reuse that
+valid receipt beyond the first page while preserving every legacy row. This does
+not automatically reconcile or erase historical records.

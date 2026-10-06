@@ -4270,7 +4270,7 @@
     {
       "id": "SURFACE-1185f571edd4c1d3",
       "path": "scripts/test-account-deletion-api.mjs",
-      "sha256": "d1c34e1eeef4a3341e228714347fbadbf8698bba2a870454a1a08b0813244b55",
+      "sha256": "43786b19e1cffce3ec53fda0df7927fbd0e099c40b8e5fec28d0ffb8b87b9abd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4846,7 +4846,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "c8c2b8232e5c122cee3608d4ee7a0db1411bd75072adaa30f03c1bfd91a66427",
+      "sha256": "100d7c8b9d7791af89f20ccb68c01aea580ae8c9384c6c7c72fcaa0b4068acb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12616,7 +12616,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "5e0d5ecb4d9b57a1ce79d6253932eaf260e28da6c3442d80c7091d339a6feec5",
+      "sha256": "4eb1e45809eb9627c582f316925adc6652fa3402a0db866c0a3a9169f1b9a36a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17735,7 +17735,7 @@
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "fdecf07d0dc9674a23518a0bd674421a5f0e06f903a700888d59ae8a16ce8482",
+      "sha256": "f1d8610cfd38cf0b2ba0d1e9d8e10fa6d68847101b2ce6d22270cd462e853eea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18904,35 +18904,42 @@
     },
     {
       "path": "formal/event-operations/AccountDeletionIntake.cfg",
-      "sha256": "090a1c7e78668b35d85f6132beee95a25b7ee0dd310c3c07853ce9d56df553c4",
+      "sha256": "05217a45c108319eb9594bc15d1a70e6e20ff3b3cc3e72a1105dc3ec22279294",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccountDeletionIntake.tla",
-      "sha256": "b89c99173d8f5b14f70a003d6c6d19f52bbf21e2876d3091259ccaab2b92cc20",
+      "sha256": "f2525e6c22ab4530ab33367fd17c2fc62ff24ebd5f5957abc5005f859c33eea8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg",
-      "sha256": "d908f45d0dc392a5bc29f7ba6a3c9289a4a3f3d8eeb4de59e5de4e9d05c80c43",
+      "sha256": "4031ae0a1e98fb7b6dfb4854f2e5c5b9c382be56ac1d796cfd95f3b2c8e36689",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccountDeletionIntakeInvalidLegacy.cfg",
+      "sha256": "fe6bc325b6cc089743e2cd9782ff95c9b7d4248b4e26ee8dabb732ade77c380c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
-      "sha256": "a07c4cb9c809ab676d039a29ecfc56d8e80e17577fb9cfafb8b90d5d41617318",
+      "sha256": "5497ef8adbb266d1efa5e70a038d1155199125722a1df85aec17398084dbaa20",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
-      "sha256": "0d1e2917dd904b2b671b3d091f1c7593b8e42643b6ef639a2515c853776b8f5b",
+      "sha256": "dffc751ceaaa5be8d4f4fd359b51997d3e120a291f0b2da542d979bb42291b38",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -21697,7 +21704,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7c571ae68bd293d2905cc49a3cb87d4435cc1bb937d0b1e01c75f1c134de5c08",
+      "sha256": "6da5afe96f21362b2c53ad394c7316db0c2ed0a3c67fc77dea58b13e732d258d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -28860,13 +28867,15 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  ValidateLegacy = TRUE",
         "  SerializeOwner = TRUE",
         "  NotifyOnlyNew = TRUE",
         "  PrivacyAudience = TRUE",
         "INVARIANTS",
         "  OnePendingOwnerReceipt",
         "  OneNoticePerNewReceipt",
-        "  OnlyPrivacyAudience"
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -28877,13 +28886,34 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  ValidateLegacy = TRUE",
         "  SerializeOwner = TRUE",
         "  NotifyOnlyNew = TRUE",
         "  PrivacyAudience = FALSE",
         "INVARIANTS",
         "  OnePendingOwnerReceipt",
         "  OneNoticePerNewReceipt",
-        "  OnlyPrivacyAudience"
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccountDeletionIntakeInvalidLegacy.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  ValidateLegacy = FALSE",
+        "  SerializeOwner = TRUE",
+        "  NotifyOnlyNew = TRUE",
+        "  PrivacyAudience = TRUE",
+        "INVARIANTS",
+        "  OnePendingOwnerReceipt",
+        "  OneNoticePerNewReceipt",
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -28894,13 +28924,15 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  ValidateLegacy = TRUE",
         "  SerializeOwner = FALSE",
         "  NotifyOnlyNew = TRUE",
         "  PrivacyAudience = TRUE",
         "INVARIANTS",
         "  OnePendingOwnerReceipt",
         "  OneNoticePerNewReceipt",
-        "  OnlyPrivacyAudience"
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -28911,13 +28943,15 @@
         "SPECIFICATION Spec",
         "CHECK_DEADLOCK FALSE",
         "CONSTANTS",
+        "  ValidateLegacy = TRUE",
         "  SerializeOwner = TRUE",
         "  NotifyOnlyNew = FALSE",
         "  PrivacyAudience = TRUE",
         "INVARIANTS",
         "  OnePendingOwnerReceipt",
         "  OneNoticePerNewReceipt",
-        "  OnlyPrivacyAudience"
+        "  OnlyPrivacyAudience",
+        "  OnlyValidReceipt"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

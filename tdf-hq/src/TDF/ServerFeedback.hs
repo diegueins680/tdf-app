@@ -1786,15 +1786,25 @@ reuseActiveAccountDeletion
   -> SqlPersistT IO (ME.FeedbackId, Bool)
 reuseActiveAccountDeletion owner insertRequest = do
   lockAccountDeletionOwner owner
-  rows <- (rawSql
-    "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) = ? AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 1"
-    [toPersistValue owner, PersistText "account_deletion_request\n"]
-    :: SqlPersistT IO [Entity ME.Feedback])
-  case rows of
-    Entity key _ : _ -> pure (key, False)
-    [] -> do
-      key <- insertRequest
-      pure (key, True)
+  findPending 0
+  where
+    -- Pre-upgrade generic feedback may contain an invalid owner claim. Apply
+    -- the same validator as strict intake/resolution before reusing a receipt.
+    -- Page under the owner mutex so poisoned legacy rows neither block valid
+    -- intake nor hide a valid pending receipt beyond the first page.
+    findPending :: Int64 -> SqlPersistT IO (ME.FeedbackId, Bool)
+    findPending offset = do
+      rows <- (rawSql
+        "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) = ? AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 100 OFFSET ?"
+        [toPersistValue owner, PersistText "account_deletion_request\n", PersistInt64 offset]
+        :: SqlPersistT IO [Entity ME.Feedback])
+      case [key | Entity key row <- rows,
+                  accountDeletionOwnerMatches (fromSqlKey owner) (feedbackDescription row)] of
+        key : _ -> pure (key, False)
+        [] | length rows == 100 -> findPending (offset + 100)
+        [] -> do
+          key <- insertRequest
+          pure (key, True)
 
 -- All authenticated deletion writers take session -> owner -> feedback locks.
 -- Legacy anonymous records have no competing owner intake and retain row locking.

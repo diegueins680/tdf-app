@@ -103,14 +103,35 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   ]);
   assert.deepEqual(raced.sort(), [200, 409], 'Concurrent operators may append exactly one terminal outcome');
 
-  // Hold the existing row in an independent transaction, then observe the real
-  // resolution handler blocked on it. Intake must wait for that resolution's
-  // owner mutex rather than acknowledging its soon-to-be-terminal receipt.
-  const pending = await request(endpoint, { token: account.token, method: 'POST', body: form(23) });
+  // Old generic feedback could carry missing, duplicated or foreign owner
+  // claims. More than one page of such rows must neither poison acceptance nor
+  // hide an existing valid receipt on a later page.
   const database = process.env.TDF_AUDIT_E2E_DATABASE ?? '';
   assert.match(database, /^[a-z0-9_]+$/, 'Only the runner-created database is allowed');
-  assert.match(pending.adrRequestId, /^[0-9a-f-]{36}$/i);
+  assert.match(newRaced.adrRequestId, /^[0-9a-f-]{36}$/i);
+  assert.ok(Number.isSafeInteger(account.partyId) && account.partyId > 0);
+  assert.ok(Number.isSafeInteger(admin.partyId) && admin.partyId > 0);
   const sql = statement => execFileSync('psql', ['-X', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-d', database, '-c', statement], { encoding: 'utf8', timeout: 10000 }).trim();
+  sql(`INSERT INTO feedback (id,title,description,category_id,severity_id,consent,created_by,created_at)
+    SELECT gen_random_uuid(), 'Synthetic invalid legacy',
+      E'account_deletion_request\\n' || CASE n % 3
+        WHEN 0 THEN 'requested_account_party_id: ${admin.partyId}'
+        WHEN 1 THEN 'Missing owner claim'
+        ELSE E'requested_account_party_id: ${account.partyId}\\nrequested_account_party_id: ${account.partyId}' END,
+      category_id,severity_id,consent,created_by,created_at - INTERVAL '1 day'
+    FROM feedback CROSS JOIN generate_series(1,105) n WHERE id='${newRaced.adrRequestId}'`);
+  const invalidIds = sql("SELECT id FROM feedback WHERE title='Synthetic invalid legacy'").split('\n');
+  assert.equal(invalidIds.length, 105);
+  const pending = await request(endpoint, { token: account.token, method: 'POST', body: form(23) });
+  assert.ok(!invalidIds.includes(pending.adrRequestId), 'Invalid legacy owner claims must not become accepted deletion receipts');
+  assert.match(pending.adrRequestId, /^[0-9a-f-]{36}$/i);
+  const legacyRetries = await Promise.all(Array.from({ length: 8 }, () => request(endpoint, { token: account.token, method: 'POST', body: form(23) })));
+  assert.ok(legacyRetries.every(value => value.adrRequestId === pending.adrRequestId), 'Reuse the valid pending receipt beyond the first page of invalid legacy rows');
+  assert.equal(sql("SELECT count(*) FROM feedback WHERE title='Synthetic invalid legacy'"), '105', 'Preserve legacy rows for explicit operator reconciliation');
+  console.log('Account deletion ignores 105 invalid legacy owner claims and reuses the valid receipt across pages.');
+
+  // Hold the row independently and observe real resolution blocked on it.
+  // Intake must then wait for the shared owner mutex and receive a fresh case.
   const gate = spawn('psql', ['-X', '-A', '-t', '-v', 'ON_ERROR_STOP=1', '-d', database], { stdio: ['pipe', 'pipe', 'pipe'] });
   let output = '';
   let errorOutput = '';
