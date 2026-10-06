@@ -70,11 +70,19 @@ def run(args):
     return q.run(args).decode().strip()
 
 
+def require_active_ufw():
+    require(re.search(r'^ENABLED=yes\s*$',Path('/etc/ufw/ufw.conf').read_text(),re.MULTILINE))
+    for command,suffix in (('iptables',''),('ip6tables','6')):
+        for chain in ('INPUT','OUTPUT','FORWARD'):
+            run([command,'--wait','2','--check',chain,'--jump','ufw'+suffix+'-before-'+chain.lower()])
+
+
 def main():
     machine = Path('/etc/machine-id').read_text().strip()
     require(os.geteuid() == 0 and re.fullmatch('[a-f0-9]{32}', machine)
             and os.environ.get('TDF_SYNTHETIC_QUARANTINE_HOST') == machine)
     require(not run(DOCKER+['ps', '--all', '--quiet']) and not Path('/opt/tdf/production').exists())
+    if os.environ.get('TDF_QUARANTINE_TEST_UFW')=='1':require_active_ufw()
     require(not any(row.get('table', {}).get('name') == q.TABLE
                     for row in json.loads(run(['nft','--json','list','tables']))['nftables']))
     image = os.environ.get('TDF_QUARANTINE_TEST_IMAGE', '')
@@ -195,6 +203,7 @@ def main():
             for command in (['ufw','reload'],['systemctl','restart','ufw.service']):
                 before=counts(attempts)
                 run(command);time.sleep(.3)
+                require_active_ufw()
                 require(all(p.poll() is None for p in children))
                 require(all(a>b for a,b in zip(counts(attempts),before)))
                 require(counts(providers)==accepted)

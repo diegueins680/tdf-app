@@ -34,7 +34,7 @@ def run(command):
     return result.stdout.strip()
 
 
-def fingerprint(path):
+def fingerprint(path,*,content=False):
     path=Path(path)
     with files.directory(str(path.parent)) as parent:
         fd=os.open(path.name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=parent)
@@ -49,8 +49,9 @@ def fingerprint(path):
                 raw+=block
             require(len(raw)==before.st_size and files.identity(os.fstat(fd))==files.identity(before)
                     and files.identity(os.stat(path.name,dir_fd=parent,follow_symlinks=False))==files.identity(before))
-            return {'path':str(path),'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),
-                    'mode':stat.S_IMODE(before.st_mode),'uid':before.st_uid}
+            row={'path':str(path),'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw),
+                 'mode':stat.S_IMODE(before.st_mode),'uid':before.st_uid}
+            return (row,raw) if content else row
         finally:os.close(fd)
 
 
@@ -73,11 +74,51 @@ def tree(path,*,python_only=False):
     return result
 
 
+def configured_setting(path,key,expected):
+    row,raw=fingerprint(path,content=True);require(row==expected)
+    # UFW sources these files as shell code. Accept only complete, unique,
+    # literal assignments; ignoring a later exported/quoted/conditional value
+    # could otherwise report a different effective setting than the loader.
+    require(all(byte in (9,10) or 32<=byte<=126 for byte in raw))
+    assignments={}
+    for line in raw.decode('ascii').split('\n'):
+        line=line.strip(' \t')
+        if not line or line.startswith('#'):continue
+        match=re.fullmatch(r'''([A-Z][A-Z0-9_]*)=(?:"([A-Za-z0-9_./,: +\-]*)"|'([A-Za-z0-9_./,: +\-]*)'|([A-Za-z0-9_./,:+\-]*))''',line)
+        require(match and match[1] not in assignments)
+        assignments[match[1]]=next(value for value in match.groups()[1:] if value is not None)
+    require(key in assignments and assignments[key] in ('yes','YES','no','NO'))
+    return assignments[key].lower()=='yes'
+
+
+def kernel_rules(command):
+    """Observe only UFW chains/hooks, excluding Docker's changing rule bodies."""
+    rows=[];chains=[];hooks=[]
+    for line in run([command,'--wait','2','-S']).splitlines():
+        words=line.split()
+        if len(words)>=2 and words[0] in ('-N','-A') and words[1].startswith('ufw'):
+            rows.append(line)
+            if words[0]=='-N':chains.append(words[1])
+        elif any(word in ('-j','-g') and i+1<len(words) and words[i+1].startswith('ufw')
+                 for i,word in enumerate(words)):
+            rows.append(line)
+            if len(words)==4 and words[0]=='-A' and words[1] in ('INPUT','OUTPUT','FORWARD') and words[2]=='-j':
+                hooks.append({'chain':words[1],'target':words[3]})
+    hooked=all(any(h['chain']==name for h in hooks) for name in ('INPUT','OUTPUT','FORWARD'))
+    state='hooked' if hooked else 'absent' if not rows else 'partial'
+    return {'state':state,'chains':sorted(chains),'hooks':hooks,
+            'rulesSha256':hashlib.sha256(('\n'.join(rows)+'\n').encode()).hexdigest()}
+
+
 def observe():
     require(os.geteuid()==0)
     config=tree(CONFIG)+[fingerprint('/etc/default/ufw')]
     hooks=[row for row in config if row['path'] in ('/etc/ufw/before.init','/etc/ufw/after.init')]
     require(len(hooks)==2 and all(not row['mode'] & 0o111 for row in hooks))
+    by_path={row['path']:row for row in config}
+    settings={name:configured_setting(path,key,by_path[path]) for name,path,key in (
+        ('enabled','/etc/ufw/ufw.conf','ENABLED'),('ipv6','/etc/default/ufw','IPV6'),
+        ('manageBuiltins','/etc/default/ufw','MANAGE_BUILTINS'))}
     implementation=tree(MODULES,python_only=True)
     require(implementation)
     for name in ('ufw-init','ufw-init-functions'):
@@ -102,7 +143,8 @@ def observe():
     unit_files=[fingerprint(Path(path).resolve(strict=True)) for path in paths]
     return {'schemaVersion':1,'version':version,'backend':backend,'binaries':binaries,
             'implementation':sorted(implementation,key=lambda row:row['path']),
-            'configuration':sorted(config,key=lambda row:row['path']),'unit':unit,'unitFiles':unit_files}
+            'configuration':sorted(config,key=lambda row:row['path']),'unit':unit,'unitFiles':unit_files,
+            'settings':settings,'kernelRules':{'ipv4':kernel_rules('iptables'),'ipv6':kernel_rules('ip6tables')}}
 
 
 def admit(observed,policy):
@@ -115,11 +157,17 @@ def admit(observed,policy):
     for key in ('packetEvidenceSha256','rebootEvidenceSha256'):
         require(isinstance(evidence[key],str) and re.fullmatch('[a-f0-9]{64}',evidence[key]))
     require(isinstance(observed,dict) and set(observed)=={'schemaVersion','version','backend','binaries',
-            'implementation','configuration','unit','unitFiles'} and observed['schemaVersion']==1
+            'implementation','configuration','unit','unitFiles','settings','kernelRules'} and observed['schemaVersion']==1
             and observed['version']=='0.36.2-6'
             and all(isinstance(observed[key],list) and observed[key]
                     for key in ('binaries','implementation','configuration','unitFiles'))
             and observed==policy['snapshot'])
+    settings=observed['settings'];kernel=observed['kernelRules']
+    require(isinstance(settings,dict) and set(settings)=={'enabled','ipv6','manageBuiltins'}
+            and all(type(value) is bool for value in settings.values())
+            and settings['ipv6'] and not settings['manageBuiltins'])
+    require(isinstance(kernel,dict) and set(kernel)=={'ipv4','ipv6'}
+            and all(row['state']==('hooked' if settings['enabled'] else 'absent') for row in kernel.values()))
     return {'schemaVersion':1,'ufwIdentityMatchesReviewedQualification':True,
             'qualification':evidence,'hostBypassAdmissionVerified':False,
             'snapshotSha256':hashlib.sha256(json.dumps(observed,sort_keys=True,separators=(',',':')).encode()).hexdigest()}

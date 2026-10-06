@@ -2964,7 +2964,7 @@
     {
       "id": "SURFACE-847fe2a0c78f4f8f",
       "path": "ops/hetzner/ufw-recovery-admission.py",
-      "sha256": "8033dc3b119591df44afde2327a4bac737efcda2af9fc2981211926f0482b6c2",
+      "sha256": "defe6112b7b2e379b528ee06fa328dded87aeec62123f78301c14ad072185a75",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5106,13 +5106,13 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "d440cec3ca9511e885b104d8d3f24021f058b24d5729c101c227899a811cd70c",
+      "sha256": "c91d9011f1db0891248f0742ff2f3847ee88b72e574ec89eb524d426e0e6abb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f5285339f83a13bc",
       "path": "scripts/test-outbound-quarantine-reboot-linux.py",
-      "sha256": "3c3049fa57d84ced4c1ccb178787d3d8b63ca60a29c8961191c179faed7b4ed7",
+      "sha256": "c06dafeea2b569d76ad5d6399549448fd4dc1d117cd40e7539beefb9d7e55386",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5400,7 +5400,7 @@
     {
       "id": "SURFACE-8e680d9cce7fe4ce",
       "path": "scripts/test-ufw-recovery-admission.py",
-      "sha256": "9fe4a3ac9b7755fed06165ed8f4984545c9f3b0efd30a0c97108a37ca4b5cd73",
+      "sha256": "63fc0e99a9c6edfe832a9586e469a742c3e551a3a063a63759ae542d0c4eab7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23020,7 +23020,7 @@
     },
     {
       "path": "formal/system/outbound-quarantine.md",
-      "sha256": "74c4f1cd2bc2022726b49bda0dced0df2cbdfc52d81a879c546da496ff845847",
+      "sha256": "95bd17eb5084524aa97b17efc0f668ee65fde755d6d3d15ff324b09c5cf6dc8c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

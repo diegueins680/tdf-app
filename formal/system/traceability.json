@@ -7819,7 +7819,7 @@
     "ops/hetzner/stopped-application-storage.py": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
-    "ops/hetzner/ufw-recovery-admission.py": "8033dc3b119591df44afde2327a4bac737efcda2af9fc2981211926f0482b6c2",
+    "ops/hetzner/ufw-recovery-admission.py": "defe6112b7b2e379b528ee06fa328dded87aeec62123f78301c14ad072185a75",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "9f39b97dcc5f96ac6db9a43eda43d7c91f5ed77de65b4f679a94201772fac544",
     "package.json": "09eec3742b073d43514688b8e9fb4562acab0144ea0dab0975625d7ddd6878b6",
@@ -7950,8 +7950,8 @@
     "scripts/test-original-edge-tls.py": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
     "scripts/test-original-recovery-completion.py": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
     "scripts/test-original-timer-recovery.py": "2273e2069fedbb15e7ca84cfb0136750700f29c0727dc7f67a5c84ced0bed5a2",
-    "scripts/test-outbound-quarantine-linux.py": "d440cec3ca9511e885b104d8d3f24021f058b24d5729c101c227899a811cd70c",
-    "scripts/test-outbound-quarantine-reboot-linux.py": "3c3049fa57d84ced4c1ccb178787d3d8b63ca60a29c8961191c179faed7b4ed7",
+    "scripts/test-outbound-quarantine-linux.py": "c91d9011f1db0891248f0742ff2f3847ee88b72e574ec89eb524d426e0e6abb0",
+    "scripts/test-outbound-quarantine-reboot-linux.py": "c06dafeea2b569d76ad5d6399549448fd4dc1d117cd40e7539beefb9d7e55386",
     "scripts/test-outbound-quarantine.py": "7103a1db5ae42a3d6e9e5aa777755f81e7d2b5b4ba999663f7ab52af256a5b00",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
@@ -7986,7 +7986,7 @@
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-trial-identity.sh": "29e6c3a4cdb56b9c6f13fadf86991d97e3b5e9e93392ac6951c742f3b32a2d2b",
-    "scripts/test-ufw-recovery-admission.py": "9fe4a3ac9b7755fed06165ed8f4984545c9f3b0efd30a0c97108a37ca4b5cd73",
+    "scripts/test-ufw-recovery-admission.py": "63fc0e99a9c6edfe832a9586e469a742c3e551a3a063a63759ae542d0c4eab7a",
     "scripts/test-writer-fence-fixture-ownership.py": "2b3baa150c9cef39cace797d60142ecd0bb505d21b34ab811d77c404c028ba16",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
@@ -14568,7 +14568,7 @@
     {
       "id": "SURFACE-847fe2a0c78f4f8f",
       "path": "ops/hetzner/ufw-recovery-admission.py",
-      "sha256": "8033dc3b119591df44afde2327a4bac737efcda2af9fc2981211926f0482b6c2",
+      "sha256": "defe6112b7b2e379b528ee06fa328dded87aeec62123f78301c14ad072185a75",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18109,7 +18109,7 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "d440cec3ca9511e885b104d8d3f24021f058b24d5729c101c227899a811cd70c",
+      "sha256": "c91d9011f1db0891248f0742ff2f3847ee88b72e574ec89eb524d426e0e6abb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18121,7 +18121,7 @@
     {
       "id": "SURFACE-f5285339f83a13bc",
       "path": "scripts/test-outbound-quarantine-reboot-linux.py",
-      "sha256": "3c3049fa57d84ced4c1ccb178787d3d8b63ca60a29c8961191c179faed7b4ed7",
+      "sha256": "c06dafeea2b569d76ad5d6399549448fd4dc1d117cd40e7539beefb9d7e55386",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18696,7 +18696,7 @@
     {
       "id": "SURFACE-8e680d9cce7fe4ce",
       "path": "scripts/test-ufw-recovery-admission.py",
-      "sha256": "9fe4a3ac9b7755fed06165ed8f4984545c9f3b0efd30a0c97108a37ca4b5cd73",
+      "sha256": "63fc0e99a9c6edfe832a9586e469a742c3e551a3a063a63759ae542d0c4eab7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

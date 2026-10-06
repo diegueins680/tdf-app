@@ -70,12 +70,24 @@ the installed UFW Python/shell implementation, resolved command binaries,
 iptables-nft version strings, all UFW configuration files and the loaded service
 fragment/drop-ins. It rejects executable custom hooks, unsafe file metadata,
 pending daemon reload and drift from caller-supplied reviewed policy. A second
-observation must agree. Portable controls cover changed hooks, modes, rules,
+observation must agree. Saved `ENABLED`, IPv6 and built-in-chain management settings
+are distinct from systemd's active/enabled unit flags. Observed UFW chains and
+unconditional input/output/forward hooks distinguish absent, hooked and partial
+kernel filtering; admission rejects a boot-configuration/runtime mismatch. The
+active-UFW fixture requires both `ENABLED=yes` and actual IPv4/IPv6 hooks before
+it exercises reload, restart or boot ordering, so a skipped loader cannot pass.
+Portable controls cover changed hooks, modes, rules,
 backend alternatives, package files, unit definitions and evidence references.
 The caller must verify the source/packet/reboot receipt provenance: hexadecimal
 hashes alone are not verified receipts or approval. No trusted policy is generated
 from observation. OS libraries/Python bytecode cache remain trusted, and a matching
 UFW identity still reports complete host-bypass admission as false.
+
+The October6 read-only production observation found `ENABLED=no` and no UFW
+chains/hooks in either family, despite the service being active/enabled. This is
+a disabled UFW configuration, not evidence of active host filtering. The current
+production configuration must be re-observed before release; it is not changed by
+this component or by synthetic VM qualification.
 
 Run portable checks with `python3 scripts/test-outbound-quarantine.py`. Linux
 fixtures require root on an explicitly acknowledged empty owned VM, an existing
