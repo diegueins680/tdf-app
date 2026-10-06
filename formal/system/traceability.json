@@ -6017,7 +6017,8 @@
         "Completed database stage -> exact API start only if stopped -> namespace-bound health/version/public-database-read and anonymous-booking denial -> unchanged database identity/history -> API observation.",
         "Completed API stage -> exact original edge start only if stopped -> namespace-bound default-verified TLS and four redacted probes -> unchanged database history -> edge observation; public writes may resume.",
         "Completed edge stage -> admitted original enabled timer start only if inactive -> unchanged units/services/database and active waiting timer -> scheduling-restored observation; backup completion is not inferred.",
-        "Completed timer stage -> fresh original runtime/database/timer admission and eight namespace API/TLS probes -> terminal abort observation; normal release stays permanently latched."
+        "Completed timer stage -> fresh original runtime/database/timer admission and eight namespace API/TLS probes -> terminal abort observation; normal release stays permanently latched.",
+        "Fresh abort epoch and shared restore lock -> exactly the three saved original CIDs and no pending restore marker at repeated observations -> empty-disposable first-stage receipt without deletion."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6033,7 +6034,8 @@
         "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel.",
         "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command.",
         "Prepare original admission after any shutdown intent, overwrite uncertain evidence, admit replaced live bind directories, or publish raw original container configuration.",
-        "Retry an uncertain recovery effect in the same boot, initialize an absent original cluster, weaken normal capture exit policy, or infer API/edge recovery from database readiness."
+        "Retry an uncertain recovery effect in the same boot, initialize an absent original cluster, weaken normal capture exit policy, or infer API/edge recovery from database readiness.",
+        "Treat missing live processes, labels, an empty response, missing originals or legacy nonce/image markers as authority to remove or adopt an uncertain disposable; the empty-disposable adapter must reject every extra container and every pending marker."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6065,7 +6067,8 @@
         "ops/hetzner/original-application-recovery.py",
         "ops/hetzner/original-edge-recovery.py",
         "ops/hetzner/original-timer-recovery.py",
-        "ops/hetzner/original-recovery-completion.py"
+        "ops/hetzner/original-recovery-completion.py",
+        "ops/hetzner/original-disposable-absence.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6088,7 +6091,8 @@
         "scripts/test-original-edge-recovery.py",
         "scripts/test-original-edge-tls.py",
         "scripts/test-original-timer-recovery.py",
-        "scripts/test-original-recovery-completion.py"
+        "scripts/test-original-recovery-completion.py",
+        "scripts/test-original-disposable-absence.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6115,7 +6119,7 @@
       "ambiguity": [
         "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
       ],
-      "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release.",
+      "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release. Empty-disposable controls preserve pending markers/symlinks and extra containers, reject changed inventories and lost-read replay, and check two exact complete inventory reads without deletion.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
@@ -7232,6 +7236,7 @@
     "ops/hetzner/original-application-recovery.py": "37f59153386b015d565d8da2a7faeeb26db27ecf2a76c4307d1ad4a405be21b5",
     "ops/hetzner/original-database-recovery.py": "94b61ec2db602f4a3a16c9c9b573a8261944c715cbb90e51ff1df24b32183a64",
     "ops/hetzner/original-deployment-admission.py": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+    "ops/hetzner/original-disposable-absence.py": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
     "ops/hetzner/original-edge-recovery.py": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
     "ops/hetzner/original-recovery-completion.py": "c130c481e943507ac0894373ab6f31befc2beebf343f70c5480bddbe1a8c1f96",
     "ops/hetzner/original-timer-recovery.py": "a816d29085d590739d189c27e88753e022d0ef2c6fce6aaa7d0401061ec4a297",
@@ -7329,7 +7334,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "e45e3b70c196b50134c8ea4a4f1cdd17708cdc877e5d3d6ed8a30ebbd6195c15",
+    "scripts/quality-repo.sh": "5d1cdf7311e49b2470e5a729ebaddb4af1fb44635830f78b6e18d17bb4d98f3f",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7364,6 +7369,7 @@
     "scripts/test-original-application-recovery.py": "5ddd368a6a106eacf168f61af69cc78310f8e0ea31723ffc0415bd336197da72",
     "scripts/test-original-database-recovery.py": "923fe04cb0ce3df1713120e84e46c856a05f5c413856b501876fe8322752af2d",
     "scripts/test-original-deployment-admission.py": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
+    "scripts/test-original-disposable-absence.py": "5aafe03bb0085bfcc536f448b736ee0eb153ed26163e11007542a7b441df0c7c",
     "scripts/test-original-edge-recovery.py": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
     "scripts/test-original-edge-tls.py": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
     "scripts/test-original-recovery-completion.py": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
@@ -7375,7 +7381,7 @@
     "scripts/test-physical-postgres-recovery.py": "15d607ae20a7ca294ff3c2c285ef48af66d9f3f91ef1e4379e9ada4c121af7e7",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-production-recovery-sources.py": "4021b8fdbb5dc8cebe73c594201149f1207edd89faadb0631e2fd7220898f2dc",
-    "scripts/test-production-writer-fence-linux.py": "c8a822645a8455ef418d410686d832b3d9578a2b8714a429ab4071a97b70ed81",
+    "scripts/test-production-writer-fence-linux.py": "d528d0ef0848a68d703e4ffebb8fad9dd38214f4b2c096e5ae9a7d83c26729ff",
     "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
@@ -11255,6 +11261,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/original-disposable-absence.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-release-journal.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -11356,6 +11368,12 @@
       }
     ],
     "scripts/test-original-recovery-completion.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-original-disposable-absence.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
@@ -13051,6 +13069,18 @@
       "id": "SURFACE-98c278d5be0e29e8",
       "path": "ops/hetzner/original-deployment-admission.py",
       "sha256": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5d210d33b182d334",
+      "path": "ops/hetzner/original-disposable-absence.py",
+      "sha256": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15218,7 +15248,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e45e3b70c196b50134c8ea4a4f1cdd17708cdc877e5d3d6ed8a30ebbd6195c15",
+      "sha256": "5d1cdf7311e49b2470e5a729ebaddb4af1fb44635830f78b6e18d17bb4d98f3f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16594,6 +16624,18 @@
       ]
     },
     {
+      "id": "SURFACE-2ab995b300e73c64",
+      "path": "scripts/test-original-disposable-absence.py",
+      "sha256": "5aafe03bb0085bfcc536f448b736ee0eb153ed26163e11007542a7b441df0c7c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2367aa1681a81b5b",
       "path": "scripts/test-original-edge-recovery.py",
       "sha256": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
@@ -16754,7 +16796,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "c8a822645a8455ef418d410686d832b3d9578a2b8714a429ab4071a97b70ed81",
+      "sha256": "d528d0ef0848a68d703e4ffebb8fad9dd38214f4b2c096e5ae9a7d83c26729ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35161,7 +35203,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "43ff47d7e7b4b618b564ae5f6f682fdf6a5ab77fb5e2cd7b01f80a296c1e1c72",
+      "sourceSha256": "3dd03674f779b88bcff958574e84423e4e71548b5186b1443eb2d6c9eea7550a",
       "definition": {
         "states": [
           "absent",

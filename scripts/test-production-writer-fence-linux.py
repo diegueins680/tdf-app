@@ -189,8 +189,11 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
             return original_execute(command)
         with patch.object(service.a,'boot_identity',return_value=synthetic),patch.object(recovery.o.fence,'execute',side_effect=traced_execute),recovery.recovery_reservation() as reservation:
             journal=service.ServiceJournal(abort);journal.begin_epoch()
-            # This fixture owns no restore/canary containers. No cleanup adapter claim.
-            journal.perform('remove-disposables','c'*64,lambda c:{**c,'evidenceHash':'d'*64})
+            absence=load('linux_original_absence','original-disposable-absence.py')
+            absence_reservation=absence.d.Reservation(reservation.directory,reservation.descriptor)
+            absence_adapter=absence.OriginalDisposableAbsence(journal,archive,absence_reservation)
+            absence_state=absence_adapter.recover()
+            require(absence_state['completedStages']==['remove-disposables'])
             adapter=recovery.OriginalDatabase(journal,archive,reservation)
             version.rename(held)
             try:
@@ -208,7 +211,7 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
             journal.request_next_reboot(lambda:None)
             synthetic['bootId']='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
             journal.begin_epoch()
-            journal.perform('remove-disposables','c'*64,lambda c:{**c,'evidenceHash':'d'*64})
+            require(absence_adapter.recover()['completedStages']==['remove-disposables'])
             allow_start=True
             status=adapter.recover()
             require(start_commands==[DOCKER+['start',db]])
@@ -250,6 +253,7 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
                 'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
     require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
     return {'actualPostgresExit137Recovered':True,'committedDataPreserved':True,
+            'emptyDisposableSetAdmitted':True,'disposableRemovalExercised':False,
             'terminalRecoverySequenceComplete':terminal_verified,
             'missingClusterControls':rejected,'sameEpochDuplicateDenied':True,'missingClusterDeniedBeforeActualStart':True,
             'secondRecordedSyntheticEpochRequired':True,

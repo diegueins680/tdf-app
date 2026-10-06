@@ -6016,7 +6016,8 @@
         "Completed database stage -> exact API start only if stopped -> namespace-bound health/version/public-database-read and anonymous-booking denial -> unchanged database identity/history -> API observation.",
         "Completed API stage -> exact original edge start only if stopped -> namespace-bound default-verified TLS and four redacted probes -> unchanged database history -> edge observation; public writes may resume.",
         "Completed edge stage -> admitted original enabled timer start only if inactive -> unchanged units/services/database and active waiting timer -> scheduling-restored observation; backup completion is not inferred.",
-        "Completed timer stage -> fresh original runtime/database/timer admission and eight namespace API/TLS probes -> terminal abort observation; normal release stays permanently latched."
+        "Completed timer stage -> fresh original runtime/database/timer admission and eight namespace API/TLS probes -> terminal abort observation; normal release stays permanently latched.",
+        "Fresh abort epoch and shared restore lock -> exactly the three saved original CIDs and no pending restore marker at repeated observations -> empty-disposable first-stage receipt without deletion."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6032,7 +6033,8 @@
         "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel.",
         "Normal release continuation after any abort latch; reboot effect replay; pre-write abort after any possible sequence15 publication; infer fresh boot from a returned command.",
         "Prepare original admission after any shutdown intent, overwrite uncertain evidence, admit replaced live bind directories, or publish raw original container configuration.",
-        "Retry an uncertain recovery effect in the same boot, initialize an absent original cluster, weaken normal capture exit policy, or infer API/edge recovery from database readiness."
+        "Retry an uncertain recovery effect in the same boot, initialize an absent original cluster, weaken normal capture exit policy, or infer API/edge recovery from database readiness.",
+        "Treat missing live processes, labels, an empty response, missing originals or legacy nonce/image markers as authority to remove or adopt an uncertain disposable; the empty-disposable adapter must reject every extra container and every pending marker."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6064,7 +6066,8 @@
         "ops/hetzner/original-application-recovery.py",
         "ops/hetzner/original-edge-recovery.py",
         "ops/hetzner/original-timer-recovery.py",
-        "ops/hetzner/original-recovery-completion.py"
+        "ops/hetzner/original-recovery-completion.py",
+        "ops/hetzner/original-disposable-absence.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6087,7 +6090,8 @@
         "scripts/test-original-edge-recovery.py",
         "scripts/test-original-edge-tls.py",
         "scripts/test-original-timer-recovery.py",
-        "scripts/test-original-recovery-completion.py"
+        "scripts/test-original-recovery-completion.py",
+        "scripts/test-original-disposable-absence.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6114,7 +6118,7 @@
       "ambiguity": [
         "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
       ],
-      "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release.",
+      "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release. Empty-disposable controls preserve pending markers/symlinks and extra containers, reject changed inventories and lost-read replay, and check two exact complete inventory reads without deletion.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."

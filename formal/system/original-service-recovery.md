@@ -17,6 +17,22 @@ attempt from the first stage, retaining the earlier uncertain history. This neve
 re-enables normal release continuation. Partial records deny recovery rather than
 being deleted or repaired automatically. At most 512 records are accepted.
 
+## Empty disposable set
+
+`original-disposable-absence.py` implements the first stage only when there is
+nothing to remove: the complete Docker inventory, including stopped containers,
+must contain exactly the saved three original CIDs, and the pending restore
+creation marker must be absent. It checks marker absence before and after two
+inventory reads under the fresh-boot epoch and shared restore reservation. Even
+a dangling marker symlink, unrelated stopped container or lost observation
+blocks the stage. It deletes no containers, markers, archives or directories.
+
+This supports aborts before disposable creation. Existing or ambiguously created
+disposables need a separate cleanup adapter with a durably recorded pre-create
+identity; the legacy nonce/image marker alone cannot authorize adoption or
+deletion. The actual fresh host boot must quiesce earlier daemon requests, and
+privileged noncooperating creation remains outside the sampled boundary.
+
 The database adapter `ops/hetzner/original-database-recovery.py` loads the separately
 prepared original admission and compares it with the abort latch. It holds the
 same permanent restore lock used by canonical rehearsal tools; closed, replaced
@@ -122,9 +138,10 @@ epoch. Terminal journal observation retains the context-bound evidence hash.
 
 Completion seals only this recovery sequence: normal release remains permanently
 latched. Public network reachability, backup success, continuous writer exclusion
-and whole-system conformance are not certified. The disposable cleanup adapter
-and integrated controller remain separate obligations; the component fixture
-explicitly substitutes its empty-disposable prerequisite, not real cleanup.
+and whole-system conformance are not certified. Actual disposable removal and
+the integrated controller remain separate obligations. The component fixture
+exercises the real empty-disposable admission, without creating or deleting
+restore/canary containers.
 
 ## Executable evidence and limits
 

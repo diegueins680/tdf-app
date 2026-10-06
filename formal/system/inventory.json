@@ -85,6 +85,7 @@
       "ops/hetzner/original-application-recovery.py",
       "ops/hetzner/original-database-recovery.py",
       "ops/hetzner/original-deployment-admission.py",
+      "ops/hetzner/original-disposable-absence.py",
       "ops/hetzner/original-edge-recovery.py",
       "ops/hetzner/original-recovery-completion.py",
       "ops/hetzner/original-timer-recovery.py",
@@ -450,6 +451,7 @@
       "scripts/test-original-application-recovery.py",
       "scripts/test-original-database-recovery.py",
       "scripts/test-original-deployment-admission.py",
+      "scripts/test-original-disposable-absence.py",
       "scripts/test-original-edge-recovery.py",
       "scripts/test-original-edge-tls.py",
       "scripts/test-original-recovery-completion.py",
@@ -2803,6 +2805,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5d210d33b182d334",
+      "path": "ops/hetzner/original-disposable-absence.py",
+      "sha256": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b48528514b0d3831",
       "path": "ops/hetzner/original-edge-recovery.py",
       "sha256": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
@@ -4065,7 +4073,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e45e3b70c196b50134c8ea4a4f1cdd17708cdc877e5d3d6ed8a30ebbd6195c15",
+      "sha256": "5d1cdf7311e49b2470e5a729ebaddb4af1fb44635830f78b6e18d17bb4d98f3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4957,6 +4965,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2ab995b300e73c64",
+      "path": "scripts/test-original-disposable-absence.py",
+      "sha256": "5aafe03bb0085bfcc536f448b736ee0eb153ed26163e11007542a7b441df0c7c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2367aa1681a81b5b",
       "path": "scripts/test-original-edge-recovery.py",
       "sha256": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
@@ -5037,7 +5051,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "c8a822645a8455ef418d410686d832b3d9578a2b8714a429ab4071a97b70ed81",
+      "sha256": "d528d0ef0848a68d703e4ffebb8fad9dd38214f4b2c096e5ae9a7d83c26729ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22663,7 +22677,7 @@
     },
     {
       "path": "formal/system/original-service-recovery.md",
-      "sha256": "4f42b22697318ed1f9542f1b8883c32e5abe72b2098dda62c2d8138d6c0cad60",
+      "sha256": "7f787221a717b593ad0d596445a61c7a284a97f75f91a0102f04ec71d888c9b9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22733,7 +22747,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "43ff47d7e7b4b618b564ae5f6f682fdf6a5ab77fb5e2cd7b01f80a296c1e1c72",
+      "sha256": "3dd03674f779b88bcff958574e84423e4e71548b5186b1443eb2d6c9eea7550a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
