@@ -91,7 +91,15 @@ def main():
     entry(register, "GET", "/version")["boundary"] = "trusted"
     expect_rejected("unknown boundary", SURFACE, register, "unknown boundary")
 
-    print("Public route admission controls passed (1 positive, 12 negative)")
+    register = copy.deepcopy(REGISTER)
+    entry(register, "RAW", "/assets/serve")["boundary"] = "public-read"
+    expect_rejected("raw mount under method-limited boundary", SURFACE, register, "raw-capable boundary")
+
+    register = copy.deepcopy(REGISTER)
+    entry(register, "GET", "/version")["boundary"] = "public-static-files"
+    expect_rejected("typed route under raw boundary", SURFACE, register, "raw-capable boundary")
+
+    print("Public route admission controls passed (1 positive, 14 negative)")
     return 0
 
 

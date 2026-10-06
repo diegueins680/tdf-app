@@ -100,8 +100,7 @@ import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (ArtistDTO (..), EventMomentReactionDTO (..))
 import TDF.Handlers.InputList
-    ( AssetField (..)
-    , renderInputListLatex
+    ( renderInputListLatex
     , renderInputListLatexWithAssets
     )
 import TDF.Models
@@ -292,7 +291,6 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validateSessionPathId
-    , validateInputListInventoryFilters
     , listInventory
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
@@ -622,12 +620,6 @@ allFutureStubs user =
        , experienceDesign
        , experienceAuditing
        ]
-
-inputListSessionKey :: ME.SessionId
-inputListSessionKey =
-    case fromPathPiece ("00000000-0000-0000-0000-000000000084" :: Text) of
-        Just keyVal -> keyVal
-        Nothing -> error "Expected fixture input-list session id to parse"
 
 mkDriveMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
 mkDriveMultipart fields uploads =
@@ -1377,23 +1369,24 @@ spec = describe "TDF.Server helpers" $ do
             partySelectorVisibleLegalName "crm_assignment" legalName `shouldBe` legalName
 
     describe "listInventory" $
-        it "rejects non-canonical public session ids before inventory fallback lookup" $ do
-            result <-
-                runHandler $
-                    runReaderT
-                        ( listInventory
-                            (Just "mic")
-                            (Just "AAAAAAAA-0000-0000-0000-000000000084")
-                            Nothing
-                        )
-                        (error "listInventory should reject invalid sessionId before reading Env")
-            case result of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "Invalid sessionId"
-                Right value ->
-                    expectationFailure
-                        ("Expected non-canonical inventory sessionId to be rejected, got: " <> show value)
+        it "refuses session-scoped availability on the anonymous inventory list (AUTH-PUBLIC-001)" $ do
+            let reject mSession mChannel = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (listInventory (Just "mic") mSession mChannel)
+                                (error "listInventory must reject session context before reading Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "not available on the public inventory list"
+                        Right value ->
+                            expectationFailure
+                                ("Expected session-scoped public inventory to be rejected, got: " <> show value)
+            reject (Just "00000000-0000-0000-0000-000000000084") Nothing
+            reject (Just "00000000-0000-0000-0000-000000000084") (Just 1)
+            reject Nothing (Just 1)
 
     describe "validateSessionPathId" $ do
         it "accepts canonical session UUID path identifiers" $ do
@@ -1421,45 +1414,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid " 00000000-0000-0000-0000-000000000084"
             assertInvalid "AAAAAAAA-0000-0000-0000-000000000084"
             assertInvalid "00000000000000000000000000000084"
-
-    describe "validateInputListInventoryFilters" $ do
-        it "accepts broad inventory browsing and scoped field availability lookups" $ do
-            validateInputListInventoryFilters Nothing Nothing Nothing `shouldBe` Right ()
-            validateInputListInventoryFilters (Just AssetFieldMic) Nothing Nothing
-                `shouldBe` Right ()
-            validateInputListInventoryFilters
-                (Just AssetFieldMic)
-                (Just inputListSessionKey)
-                (Just 3)
-                `shouldBe` Right ()
-
-        it "rejects ignored availability context before inventory queries run" $ do
-            let assertInvalid expectedMessage result =
-                    case result of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ( "Expected invalid inventory filters to be rejected, got: "
-                                    <> show value
-                                )
-            assertInvalid
-                "channel must be greater than or equal to 1"
-                ( validateInputListInventoryFilters
-                    (Just AssetFieldMic)
-                    (Just inputListSessionKey)
-                    (Just 0)
-                )
-            assertInvalid
-                "channel requires field"
-                (validateInputListInventoryFilters Nothing Nothing (Just 1))
-            assertInvalid
-                "sessionId requires field"
-                (validateInputListInventoryFilters Nothing (Just inputListSessionKey) Nothing)
-            assertInvalid
-                "channel requires sessionId"
-                (validateInputListInventoryFilters (Just AssetFieldMic) Nothing (Just 1))
 
     describe "renderInputListLatex" $ do
         it "keeps generated headings single-line by neutralizing control and formatting characters" $ do

@@ -58,6 +58,11 @@
    "mutating": true,
    "requiresDebt": true,
    "rule": "Reviewed and found insufficient. Kept visible until repaired; never counted as conformant."
+  },
+  "public-static-files": {
+   "mutating": false,
+   "raw": true,
+   "rule": "Opaque Raw mount serving static files (GET/HEAD) from the public media root. Private stores must reside outside that root (settlement evidence is refused inside it) or in an excluded path (.internal-feedback). A Raw mount accepts every method, so only raw-capable boundaries may register one."
   }
  },
  "debt": {
@@ -121,7 +126,7 @@
   {
    "method": "RAW",
    "path": "/assets/serve",
-   "boundary": "public-read"
+   "boundary": "public-static-files"
   },
   {
    "method": "POST",
@@ -405,7 +410,7 @@
   {
    "method": "RAW",
    "path": "/inventory",
-   "boundary": "public-read"
+   "boundary": "public-static-files"
   },
   {
    "method": "POST",

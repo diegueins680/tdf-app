@@ -57,6 +57,8 @@ def check(surface, register):
             errors.append(f"unknown boundary {name!r}: {label}")
             continue
         method = entry["method"]
+        if (method == "RAW") != bool(rule.get("raw")):
+            errors.append(f"Raw mounts, and only Raw mounts, require a raw-capable boundary: {label}")
         if method in MUTATING and not rule.get("mutating") and entry["path"] not in rule.get("mutatingPaths", []):
             errors.append(f"mutating route cannot use non-mutating boundary {name}: {label}")
         params = op.get("parameters", [])
@@ -66,7 +68,7 @@ def check(surface, register):
             header = entry.get("header")
             if not header:
                 errors.append(f"boundary {name} requires a declared header: {label}")
-            elif header not in headers and not (name == "signed-provider-callback" and rule.get("rawBody")):
+            elif header not in headers:
                 errors.append(f"declared header {header} is not an input of {label}")
         if name == "signed-provider-callback":
             header = entry.get("header")

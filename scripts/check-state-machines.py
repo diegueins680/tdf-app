@@ -29,14 +29,21 @@ BINDINGS = ROOT / "formal/system/state-machine-bindings.json"
 
 
 def declared_machines(root=ROOT):
+    """Every declared machine, found independently of the bindings."""
     machines = {}
-    for source in sorted({b["source"] for b in json.loads(BINDINGS.read_text())["machines"].values()}):
-        doc = yaml.safe_load((root / source).read_text())
+    for path in sorted(root.glob("docs/*/formal-model.yaml")):
+        source = path.relative_to(root).as_posix()
+        doc = yaml.safe_load(path.read_text()) or {}
         found = dict(doc.get("state_machines", {}))
         if "lifecycle" in doc:
             found[doc["feature"]] = doc["lifecycle"]
         for name, definition in found.items():
             machines[f"{source}#{name}"] = definition
+    requirements = json.loads((root / "formal/system/requirements.json").read_text())["requirements"]
+    for requirement in requirements:
+        state = requirement.get("state")
+        if isinstance(state, dict) and "states" in state and "transitions" in state:
+            machines[requirement["id"]] = state
     return machines
 
 
@@ -73,8 +80,14 @@ def check_static(bindings, machines):
         for field in ("table", "column", "decision"):
             if not binding.get(field):
                 errors.append(f"{machine_id}: binding requires {field}")
+    unbound = bindings.get("unbound", {})
+    for machine_id in unbound:
+        if machine_id not in machines:
+            errors.append(f"exclusion for undeclared machine: {machine_id}")
+        if machine_id in bindings["machines"]:
+            errors.append(f"machine is both bound and excluded: {machine_id}")
     for machine_id in machines:
-        if machine_id not in bindings["machines"] and machine_id not in bindings.get("unbound", {}):
+        if machine_id not in bindings["machines"] and machine_id not in unbound:
             errors.append(f"declared machine has no database binding or reviewed exclusion: {machine_id}")
     return errors
 

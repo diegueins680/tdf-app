@@ -30,7 +30,7 @@ module TDF.Routes.Courses
   ) where
 
 import           Data.Char (isAlphaNum)
-import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:), (.:!))
+import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (Parser)

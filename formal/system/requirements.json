@@ -1006,7 +1006,7 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database and nine negative controls",
+      "evidence": "Gate output on the migrated CI database and twelve negative controls",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
@@ -1016,7 +1016,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Gate and controls pass on a local PG16 rehearsal; PG17 CI execution and application-level transition evidence remain."
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
       }
     },
     {
@@ -2923,7 +2923,7 @@
       "statement": "Customer-facing knowledge retrieval may rank existing public courses using cached embeddings, but must render current public metadata, never raw indexed private content, and omit a course absent when its metadata is read.",
       "domain": "PRIV",
       "actors": [
-        "Anonymous assistant visitor",
+        "Authenticated Social Inbox staff using the assistant",
         "Instagram/Facebook/WhatsApp automated reply recipient"
       ],
       "preconditions": [
@@ -2956,7 +2956,7 @@
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
       ],
-      "authorization": "Anonymous and customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
+      "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
       "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
@@ -4943,7 +4943,7 @@
         "classification": "PARTIAL",
         "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
       },
-      "evidence": "Gate output, twelve negative controls and served-application HTTP status checks",
+      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
       "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
@@ -4985,8 +4985,9 @@
       ],
       "effects": [
         "Legacy course Stripe payment-intent/checkout-session routes retired.",
-        "/ads/assist limited to authenticated Social Inbox staff.",
-        "Public session input-list routes retired; scheduling-module routes remain."
+        "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
+        "Public session input-list routes retired; scheduling-module routes remain.",
+        "Public inventory list rejects session-scoped availability filters."
       ],
       "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
@@ -5004,7 +5005,8 @@
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "scripts/test-public-routes.py"
+        "scripts/test-public-routes.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [],
       "ambiguity": [

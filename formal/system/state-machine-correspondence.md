@@ -16,7 +16,9 @@ production migration manifest to PostgreSQL 17. For each bound machine it compar
 Every difference must equal the machine's reviewed `deviation` exactly. New drift
 fails, and so does a repaired drift whose deviation was not removed.
 `--static` (formal workflow, every PR) rejects unbound declared machines and bindings
-to undeclared ones. `scripts/test-state-machines.py` runs nine negative controls on
+to undeclared ones; declared machines are discovered from every `docs/*/formal-model.yaml`
+and requirement-defined state machine, independently of the bindings, and exclusions must
+name a declared, unbound machine. `scripts/test-state-machines.py` runs twelve negative controls on
 the migrated database, including a disposable table that drops a declared state.
 
 ## Result at audit baseline

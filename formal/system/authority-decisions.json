@@ -518,6 +518,18 @@
       "conflict": "The declared distribution and royalty_statement machines disagree with the distribution_release_version.state and royalty_statement.state CHECK sets (for example delivering/live_confirmation_pending versus package_generated/delivery_queued/sent; variance_review/rejected absent from royalty statements). No backend code reads or writes either table.",
       "authority": "No approved product decision selects either vocabulary; neither surface has runtime behavior.",
       "resolution": "Classify both as SPECIFICATION AMBIGUITY and NOT IMPLEMENTED. Record the exact differences as reviewed deviations so any further drift fails; reconcile before any distribution runtime is built. No schema change is made for an unused feature."
+    },
+    {
+      "id": "AUTHORITY-049",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/bookings.md",
+        "scripts/test-booking-conformance.py",
+        "tdf-hq/src/TDF/API.hs"
+      ],
+      "conflict": "PRIV-RAG-001 named an anonymous assistant visitor and the booking conformance script asserted anonymous /ads/assist availability, while the only caller is the staff Social Inbox and anonymous responses included staff-authored ad conversation examples and unmetered paid-model calls.",
+      "authority": "Explicit product-owner decision on 2026-10-06: staff-only.",
+      "resolution": "/ads/assist requires authentication and hasSocialInboxAccess. PRIV-RAG-001 retains its retrieval boundary with authenticated staff as the assistant actor. A future public assistant requires its own reviewed endpoint."
     }
   ]
 }

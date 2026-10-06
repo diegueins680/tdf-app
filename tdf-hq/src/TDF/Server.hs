@@ -175,14 +175,11 @@ import           TDF.Server.SocialEventsHandlers
   , socialEventsServer
   , stripeWebhookServer
   , eitherStripeServerError
-  , parseStripeEphemeralKeySecret
   , parseStripePaymentIntentResponse
-  , resolveStripeCustomerForBuyer
   )
 import qualified TDF.Services.Stripe as Stripe
 import           TDF.DTO.SocialEventsDTO
-  ( PaymentSheetParamsDTO(..)
-  , StripePaymentIntentDTO(..)
+  ( StripePaymentIntentDTO(..)
   )
 import           TDF.ServerExtra (bandsServer, facebookServer, facebookWebhookServer, instagramServer, instagramWebhookServer, inventoryPublicServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import qualified TDF.ServerExtra as ServerExtra
@@ -1028,14 +1025,12 @@ listInventory mFieldParam mSessionParam mChannelParam = do
       case InputList.parseAssetField rawField of
         Nothing    -> throwBadRequest "Unsupported field"
         Just field -> pure (Just field)
-  sessionKey <- case mSessionParam of
-    Nothing   -> pure Nothing
-    Just raw  ->
-      Just <$> either throwError pure (validatePublicSessionIdParam raw)
-  either throwError pure $
-    validateInputListInventoryFilters parsedField sessionKey mChannelParam
+  -- Session-scoped availability is derived from a session's private input
+  -- rows, so the anonymous route serves only the public inventory list.
+  when (isJust mSessionParam || isJust mChannelParam) $
+    throwBadRequest "sessionId and channel filters are not available on the public inventory list"
   Env{..} <- ask
-  liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField sessionKey mChannelParam)
+  liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField Nothing Nothing)
 
 seedInventory :: Maybe Text -> AppM NoContent
 seedInventory rawToken = do
@@ -1070,27 +1065,6 @@ requireSeedToken rawToken = do
   when (token /= T.strip token || T.any invalidTokenChar token) malformed
   when (token /= secret) invalid
   pure ()
-
-validatePublicSessionIdParam :: Text -> Either ServerError ME.SessionId
-validatePublicSessionIdParam rawId =
-  case validateSessionPathId rawId of
-    Right keyVal -> Right keyVal
-    Left _ -> Left err400 { errBody = "Invalid sessionId" }
-
-validateInputListInventoryFilters
-  :: Maybe InputList.AssetField
-  -> Maybe ME.SessionId
-  -> Maybe Int
-  -> Either ServerError ()
-validateInputListInventoryFilters mField mSession mChannel = do
-  when (maybe False (< 1) mChannel) $
-    Left err400 { errBody = "channel must be greater than or equal to 1" }
-  when (isJust mChannel && isNothing mField) $
-    Left err400 { errBody = "channel requires field" }
-  when (isJust mSession && isNothing mField) $
-    Left err400 { errBody = "sessionId requires field" }
-  when (isJust mChannel && isNothing mSession) $
-    Left err400 { errBody = "channel requires sessionId" }
 
 fanPublicServer :: ServerT FanPublicAPI AppM
 fanPublicServer =

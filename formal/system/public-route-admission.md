@@ -20,10 +20,11 @@ is proven to match the built executable by the compiled-API gate (SYS-API-003).
 | `credential-intake` | Login, signup, password reset | Reviewed |
 | `public-intake` | Anonymous creation of the submitter's own new record | Reviewed |
 | `operator-secret` | Seed operations | Named secret header is a route input |
+| `public-static-files` | Raw static file mounts from the public media root | Only Raw mounts may use it, and Raw mounts may use nothing else |
 | `known-debt` | Reviewed and found insufficient | Must reference a registered debt |
 
 The gate rejects unregistered routes, stale or duplicate entries, unknown
-boundaries and structural inconsistencies. Twelve mutation controls in
+boundaries and structural inconsistencies. Fourteen mutation controls in
 `scripts/test-public-routes.py` exercise each rejection. Passing establishes that
 the declaration is reviewed and structurally consistent. It does **not** prove that
 a handler verifies its capability; handler enforcement needs its own HTTP evidence.
@@ -31,7 +32,7 @@ a handler verifies its capability; handler enforcement needs its own HTTP eviden
 ## Repairs from the 2026-10-06 audit
 
 The audit of main `1f99d143900a67aa9b82f4138630684afbd7db2f` found 89 mutating and
-90 read routes without `AuthProtect`. Three groups were repaired:
+90 read routes without `AuthProtect`. Four groups were repaired:
 
 - `POST /public/courses/{slug}/registrations/{registrationId}/payment-intent` and
   `/checkout-session` were retired. They served only legacy registrations, which
@@ -40,17 +41,23 @@ The audit of main `1f99d143900a67aa9b82f4138630684afbd7db2f` found 89 mutating a
   customer, and any caller could consume the registration's single PaymentIntent
   slot. No web or Mobile client called them and OpenAPI did not document them.
   Canonical course checkout (ADR-0111) uses lookup-token Datafast/PayPal routes.
-- `POST /ads/assist` now requires authentication and `hasSocialInboxAccess`. It
-  returned retrieved RAG context containing campaign budgets, ad notes, internal
-  studio-knowledge entries and booking/teacher schedules, and invoked a paid model
-  without rate limiting. The staff Social Inbox page is its only caller.
+- `POST /ads/assist` now requires authentication and `hasSocialInboxAccess`
+  (product-owner decision, AUTHORITY-049). Retrieval already rendered only current
+  public course data (PRIV-RAG-001), but anonymous callers received the six latest
+  staff-authored ad conversation examples, scopable by ad or campaign ID, and could
+  invoke the paid model without metering. The staff Social Inbox page is its only
+  caller; a future public assistant needs its own reviewed endpoint.
 - `GET /input-list/sessions` and `/input-list/sessions/pdf` were retired. They
   enumerated studio sessions by index and disclosed client names. Scheduling staff
   keep `GET /sessions/{id}/input-list` and `/sessions/{id}/input-list.pdf`.
+- `GET /input-list/inventory` now rejects `sessionId` and `channel`. Those filters
+  derived availability from a session's private input rows; no client used them.
 
 `tdf-hq/test/TDF/ServerSpec.hs` ("served authorization boundary") exercises the
 served application: anonymous assistance returns 401, a signed-in user without
 Social Inbox access receives 403, and the retired course routes return 404.
+`scripts/test-booking-conformance.py` repeats the 401/403 checks against a real
+PostgreSQL-backed server and exercises retrieval privacy as authenticated staff.
 
 ## Open debt
 

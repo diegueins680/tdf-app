@@ -77,6 +77,21 @@ def main():
     orphan["machines"]["docs/revenue-platform/formal-model.yaml#retired"] = {"table": "t", "column": "c", "decision": "x"}
     expect("binding without declaration", gate.check_static(orphan, machines), "binding for undeclared machine")
 
+    unsourced = copy.deepcopy(bindings)
+    unsourced["machines"] = {k: v for k, v in unsourced["machines"].items()
+                             if not k.startswith("docs/music-directory/")}
+    expect("every binding for one source removed", gate.check_static(unsourced, machines),
+           "has no database binding")
+
+    stale_exclusion = copy.deepcopy(bindings)
+    stale_exclusion["unbound"]["PAY-RETIRED-001"] = "retired"
+    expect("exclusion for undeclared machine", gate.check_static(stale_exclusion, machines),
+           "exclusion for undeclared machine")
+
+    double = copy.deepcopy(bindings)
+    double["unbound"][CLAIM] = "also excluded"
+    expect("bound and excluded", gate.check_static(double, machines), "both bound and excluded")
+
     gate.query(url, "DROP TABLE IF EXISTS public.state_machine_negative_control;"
                     " CREATE TABLE public.state_machine_negative_control"
                     " (status text CHECK (status IN ('draft','submitted','under_review','approved')))")
@@ -87,7 +102,7 @@ def main():
     finally:
         gate.query(url, "DROP TABLE IF EXISTS public.state_machine_negative_control")
 
-    print("State machine correspondence controls passed (17 positive, 9 negative)")
+    print("State machine correspondence controls passed (17 positive, 12 negative)")
     return 0
 
 
