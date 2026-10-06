@@ -147,7 +147,10 @@ def admit(containers,volumes,expected,*,stopped=False,stopped_services=None):
     # All reported mount roots are absolute canonical paths. Descriptor/no-follow,
     # inode, host mount-table and complete-file admission remain separate checks.
     stable={service:{'Id':item['Id'],'Image':item['Image'],'Config':item['Config'],
-                     'HostConfig':item['HostConfig'],'Mounts':item['Mounts']}
+                     'HostConfig':item['HostConfig'],
+                     # Docker can reorder this destination-unique collection on stop.
+                     # Keep every mount field while making set order irrelevant.
+                     'Mounts':sorted(item['Mounts'], key=lambda mount: mount['Destination'])}
             for service,item in by_service.items()}
     return {'roots':roots,'legacyUploads':('/app/uploads' not in api),
             'runtimeConfigurationSha256':hashlib.sha256(canonical(stable)).hexdigest(),

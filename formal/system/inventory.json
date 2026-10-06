@@ -427,6 +427,7 @@
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
       "scripts/test-production-recovery-sources.py",
+      "scripts/test-production-writer-fence-linux.py",
       "scripts/test-production-writer-fence.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
@@ -467,6 +468,7 @@
       "scripts/test-user-onboarding-progress-migration.sh",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
+      "scripts/test-writer-fence-fixture-ownership.py",
       "scripts/test_mail_deliverability_monitor.py",
       "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
@@ -2668,7 +2670,7 @@
     {
       "id": "SURFACE-1b5222b0a6f2443b",
       "path": "ops/hetzner/production-recovery-sources.py",
-      "sha256": "aeb6f5abaf0accf294d811b95763a888bf9b015e4bbd74f0c0cfda186724a3a9",
+      "sha256": "bf5109dd999cc2db4600ff2b92dfc283c05fd04cbc666684683d223a6b7a8476",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3898,7 +3900,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c11b2a38387f0acc250b2c0dd1f11179115f12b4b5414aead9b79fec226049f1",
+      "sha256": "4857ce6f839dda66daa7245277d5b55a4743bea73d1befe4cf42dfcd8b4ed58a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4762,7 +4764,13 @@
     {
       "id": "SURFACE-d55fcf511cec4c82",
       "path": "scripts/test-production-recovery-sources.py",
-      "sha256": "3bc8982f0f7a4ee711c5a85239af4f2791955f1b4de078f95baba840d7c4647d",
+      "sha256": "0dfd7ba212282d49ccaa24d700bdb29be70383f9d2441d35310b0da583d5cd9f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b42b59299d730ebb",
+      "path": "scripts/test-production-writer-fence-linux.py",
+      "sha256": "31bba77185b8780683b3ed906c754af6e7d476488e71178366d348634169e9a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5003,6 +5011,12 @@
       "id": "SURFACE-773458db4c86e811",
       "path": "scripts/test-versioned-revenue-products-migration.sh",
       "sha256": "b848c1dbfbf90a97fd2cef8c5bf26b61a43cd95609b33ea017abbc78b0f19489",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bde8e6717fb9ee2c",
+      "path": "scripts/test-writer-fence-fixture-ownership.py",
+      "sha256": "75f46ddd498962674dfb1b907a9faf2a12342e9159b31d595ce030433ec5ec72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22012,7 +22026,7 @@
     },
     {
       "path": "formal/system/release-journal.md",
-      "sha256": "85fa80a899d3b67f8a9c29a2b0060cd79d16d75a5bb63b95906f735b3a2e4d66",
+      "sha256": "c37fcd2a8e225b6d18098724774ec4ab1e272a956881eb290cb6147f21742491",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22026,7 +22040,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "18f0f2e2de3acb69c4cb8cfb73618c673562a4b2ca3c4f640ffe4c1128af29b7",
+      "sha256": "c011237ee12963a951e1a206a66d397784a2bcb2ec5244165eb4a2edd56dff5d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

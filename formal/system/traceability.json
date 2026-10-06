@@ -6010,12 +6010,16 @@
       "implementation": [
         "ops/hetzner/release-journal.py",
         "scripts/verify-event-operations-formal.sh",
-        "ops/hetzner/production-writer-fence.py"
+        "ops/hetzner/production-writer-fence.py",
+        "ops/hetzner/production-recovery-sources.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
         "scripts/quality-repo.sh",
-        "scripts/test-production-writer-fence.py"
+        "scripts/test-production-writer-fence.py",
+        "scripts/test-production-writer-fence-linux.py",
+        "scripts/test-production-recovery-sources.py",
+        "scripts/test-writer-fence-fixture-ownership.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6029,13 +6033,13 @@
       "ambiguity": [
         "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
       ],
-      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls. Synthetic Linux fixture checks actual systemd/Docker shutdown with inert API/edge, real PG17 and retained-upload replay; it requires explicit empty-host admission.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
       },
       "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
-      "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
+      "evidence": "Source-qualified filesystem/process controls and synthetic Linux receipts; no production shutdown or recovery claim."
     },
     {
       "id": "MOB-ONBOARD-001",
@@ -6846,7 +6850,7 @@
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
-    "ops/hetzner/production-recovery-sources.py": "aeb6f5abaf0accf294d811b95763a888bf9b015e4bbd74f0c0cfda186724a3a9",
+    "ops/hetzner/production-recovery-sources.py": "bf5109dd999cc2db4600ff2b92dfc283c05fd04cbc666684683d223a6b7a8476",
     "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
@@ -6937,7 +6941,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "c11b2a38387f0acc250b2c0dd1f11179115f12b4b5414aead9b79fec226049f1",
+    "scripts/quality-repo.sh": "4857ce6f839dda66daa7245277d5b55a4743bea73d1befe4cf42dfcd8b4ed58a",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6965,7 +6969,8 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-production-recovery-sources.py": "3bc8982f0f7a4ee711c5a85239af4f2791955f1b4de078f95baba840d7c4647d",
+    "scripts/test-production-recovery-sources.py": "0dfd7ba212282d49ccaa24d700bdb29be70383f9d2441d35310b0da583d5cd9f",
+    "scripts/test-production-writer-fence-linux.py": "31bba77185b8780683b3ed906c754af6e7d476488e71178366d348634169e9a1",
     "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
@@ -6986,6 +6991,7 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test-writer-fence-fixture-ownership.py": "75f46ddd498962674dfb1b907a9faf2a12342e9159b31d595ce030433ec5ec72",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
@@ -10536,6 +10542,10 @@
       {
         "requirement": "DEPLOY-FILES-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/test-recovery-files.py": [
@@ -10575,6 +10585,10 @@
     "scripts/test-production-recovery-sources.py": [
       {
         "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
       }
     ],
@@ -10645,6 +10659,18 @@
       }
     ],
     "scripts/test-production-writer-fence.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-production-writer-fence-linux.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-writer-fence-fixture-ownership.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
@@ -11704,11 +11730,15 @@
     {
       "id": "SURFACE-1b5222b0a6f2443b",
       "path": "ops/hetzner/production-recovery-sources.py",
-      "sha256": "aeb6f5abaf0accf294d811b95763a888bf9b015e4bbd74f0c0cfda186724a3a9",
+      "sha256": "bf5109dd999cc2db4600ff2b92dfc283c05fd04cbc666684683d223a6b7a8476",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
         }
       ]
@@ -13792,7 +13822,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c11b2a38387f0acc250b2c0dd1f11179115f12b4b5414aead9b79fec226049f1",
+      "sha256": "4857ce6f839dda66daa7245277d5b55a4743bea73d1befe4cf42dfcd8b4ed58a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15100,11 +15130,27 @@
     {
       "id": "SURFACE-d55fcf511cec4c82",
       "path": "scripts/test-production-recovery-sources.py",
-      "sha256": "3bc8982f0f7a4ee711c5a85239af4f2791955f1b4de078f95baba840d7c4647d",
+      "sha256": "0dfd7ba212282d49ccaa24d700bdb29be70383f9d2441d35310b0da583d5cd9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b42b59299d730ebb",
+      "path": "scripts/test-production-writer-fence-linux.py",
+      "sha256": "31bba77185b8780683b3ed906c754af6e7d476488e71178366d348634169e9a1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "tests"
         }
       ]
@@ -15524,6 +15570,18 @@
       "sha256": "b848c1dbfbf90a97fd2cef8c5bf26b61a43cd95609b33ea017abbc78b0f19489",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-bde8e6717fb9ee2c",
+      "path": "scripts/test-writer-fence-fixture-ownership.py",
+      "sha256": "75f46ddd498962674dfb1b907a9faf2a12342e9159b31d595ce030433ec5ec72",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
@@ -33206,7 +33264,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "18f0f2e2de3acb69c4cb8cfb73618c673562a4b2ca3c4f640ffe4c1128af29b7",
+      "sourceSha256": "c011237ee12963a951e1a206a66d397784a2bcb2ec5244165eb4a2edd56dff5d",
       "definition": {
         "states": [
           "absent",

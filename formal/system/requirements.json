@@ -3316,7 +3316,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -6009,12 +6009,16 @@
       "implementation": [
         "ops/hetzner/release-journal.py",
         "scripts/verify-event-operations-formal.sh",
-        "ops/hetzner/production-writer-fence.py"
+        "ops/hetzner/production-writer-fence.py",
+        "ops/hetzner/production-recovery-sources.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
         "scripts/quality-repo.sh",
-        "scripts/test-production-writer-fence.py"
+        "scripts/test-production-writer-fence.py",
+        "scripts/test-production-writer-fence-linux.py",
+        "scripts/test-production-recovery-sources.py",
+        "scripts/test-writer-fence-fixture-ownership.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6028,13 +6032,13 @@
       "ambiguity": [
         "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open."
       ],
-      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls.",
+      "verification": "Actual process death, lock contention, fsync errors and invalid journal/observation controls. Synthetic Linux fixture checks actual systemd/Docker shutdown with inert API/edge, real PG17 and retained-upload replay; it requires explicit empty-host admission.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Ordering library exists; integrated coordinator and production deployment/recovery are not implemented."
       },
       "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
-      "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
+      "evidence": "Source-qualified filesystem/process controls and synthetic Linux receipts; no production shutdown or recovery claim."
     },
     {
       "id": "MOB-ONBOARD-001",

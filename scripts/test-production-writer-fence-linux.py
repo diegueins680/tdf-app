@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""Real systemd/Docker shutdown of an exclusively owned synthetic Linux host.
+
+Requires an explicit machine-id acknowledgement, empty Docker inventory and no
+canonical production directory, networks, volumes or TDF units. Never invoke on
+production. API and edge use inert shell workloads; PostgreSQL is real PG17.
+"""
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import stat
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def load(name, filename):
+    spec = importlib.util.spec_from_file_location(name, ROOT/'ops/hetzner'/filename)
+    value = importlib.util.module_from_spec(spec); spec.loader.exec_module(value)
+    return value
+
+
+w = load('linux_writer_fence', 'production-writer-fence.py')
+j = load('linux_fence_journal', 'release-journal.py')
+s = load('linux_fence_storage', 'stopped-application-storage.py')
+p = load('linux_fence_physical', 'physical-postgres-recovery.py')
+require = w.require
+DOCKER = w.sources.inspector.DOCKER
+LABEL = 'net.tdf.synthetic-writer-fence'
+DIRECTORY = Path('/opt/tdf/production')
+SERVICE = '[Unit]\nDescription=TDF synthetic fence fixture only\n[Service]\nType=oneshot\nExecStart=/usr/bin/true\n'
+TIMER = '[Unit]\nDescription=TDF synthetic fence fixture only\n[Timer]\nOnActiveSec=1d\nUnit=tdf-postgres-backup.service\n[Install]\nWantedBy=timers.target\n'
+SHELL = "mkdir -p /app/uploads; printf synthetic-upload > /app/uploads/sentinel; chmod 600 /app/uploads/sentinel; touch /tmp/ready; trap 'exit 0' TERM; while :; do sleep 1; done"
+
+
+def run(command, *, timeout=90):
+    result = subprocess.run(command, env=w.ENV, text=True, capture_output=True, timeout=timeout)
+    require(result.returncode == 0 and len(result.stdout) <= 4*1024**2)
+    return result.stdout.strip()
+
+
+def inspect(target):
+    values = json.loads(run(DOCKER+['inspect', target]))
+    require(len(values) == 1)
+    return values[0]
+
+
+def exclusive_file(path, content):
+    with path.open('x') as output:
+        output.write(content)
+    path.chmod(0o644)
+
+
+def preserve_owned_directory(directory, destination, owned):
+    if owned is None: return
+    current = directory.lstat()
+    require(stat.S_ISDIR(current.st_mode) and not directory.is_symlink()
+            and (current.st_dev, current.st_ino) == owned
+            and current.st_uid == os.geteuid() and stat.S_IMODE(current.st_mode) == 0o700
+            and not os.path.lexists(destination))
+    directory.rename(destination)
+
+
+def main():
+    require(sys.platform == 'linux' and os.geteuid() == 0)
+    machine = Path('/etc/machine-id').read_text().strip()
+    require(re.fullmatch('[a-f0-9]{32}', machine)
+            and os.environ.get('TDF_SYNTHETIC_WRITER_FENCE_HOST') == machine)
+    image = os.environ.get('TDF_PHYSICAL_TEST_IMAGE', '')
+    inert = os.environ.get('TDF_CANARY_TEST_IMAGE', '')
+    require(re.fullmatch(r'pgvector/pgvector@sha256:[a-f0-9]{64}', image)
+            and re.fullmatch(r'diegueins680/tdf-hq@sha256:[a-f0-9]{64}', inert))
+    for reference in (image, inert):
+        row = json.loads(run(DOCKER+['image', 'inspect', reference]))
+        require(len(row) == 1 and reference in row[0]['RepoDigests'])
+    # These independent absence checks run before any fixture mutation.
+    require(not os.path.lexists(DIRECTORY) and not run(DOCKER+['ps', '--all', '--quiet']))
+    networks = ('tdf-production_database', 'tdf-production_outbound')
+    volumes = tuple(w.sources.VOLUMES.values())
+    require(not set(run(DOCKER+['network', 'ls', '--format', '{{.Name}}']).split()) & set(networks))
+    require(not set(run(DOCKER+['volume', 'ls', '--format', '{{.Name}}']).split()) & set(volumes))
+    for operation in ('list-units', 'list-unit-files'):
+        empty = subprocess.run(['systemctl', operation, '--all', '--plain', '--no-legend', '--no-pager', 'tdf*'],
+                               env=w.ENV, text=True, capture_output=True, timeout=30)
+        # systemd list-unit-files returns1 for an empty pattern match.
+        require(empty.returncode in (0, 1) and not empty.stdout.strip() and not empty.stderr.strip())
+    for name in w.UNITS:
+        require(not os.path.lexists(w.DIRECTORY/name))
+    require(Path('/opt/tdf').is_dir())
+    nonce = os.urandom(16).hex()
+    archive = Path('/opt/tdf')/('synthetic-fence-'+nonce)
+    archive.mkdir(mode=0o700)
+    (archive/'journal').mkdir(mode=0o700)
+    created_containers, created_networks, created_volumes, created_units = {}, [], [], []
+    hashes = {w.SERVICE: hashlib.sha256(SERVICE.encode()).hexdigest(),
+              w.TIMER: hashlib.sha256(TIMER.encode()).hexdigest()}
+    evidence = None
+    before = {}
+    owned_production = None
+    try:
+        DIRECTORY.mkdir(mode=0o700)
+        created = DIRECTORY.lstat()
+        owned_production = (created.st_dev, created.st_ino)
+        (DIRECTORY/'assets').mkdir(mode=0o700)
+        exclusive_file(DIRECTORY/'postgres_password', 'synthetic-fixture-only\n')
+        exclusive_file(DIRECTORY/'Caddyfile', '# Inert fixture; not an actual edge configuration\n')
+        exclusive_file(DIRECTORY/'compose.yaml', '# Synthetic Docker inventory only\n')
+        for network in networks:
+            run(DOCKER+['network', 'create', '--internal', '--label', LABEL+'='+nonce, network])
+            created_networks.append(network)
+        for volume in volumes:
+            run(DOCKER+['volume', 'create', '--label', LABEL+'='+nonce, volume])
+            created_volumes.append(volume)
+        for service in ('db', 'api', 'edge'):
+            reference = image if service == 'db' else inert
+            command = DOCKER+['create', '--pull=never', '--name', 'tdf-synthetic-fence-'+service+'-'+nonce,
+                '--label', LABEL+'='+nonce, '--label', 'com.docker.compose.project=tdf-production',
+                '--label', 'com.docker.compose.service='+service,
+                '--label', 'com.docker.compose.project.working_dir='+str(DIRECTORY),
+                '--label', 'com.docker.compose.project.config_files='+str(DIRECTORY/'compose.yaml'),
+                '--restart=unless-stopped', '--network', networks[1 if service == 'edge' else 0],
+                '--memory=268435456', '--memory-swap=268435456', '--cpus=0.5', '--pids-limit=64']
+            if service == 'db':
+                command += ['--mount', 'type=volume,source='+volumes[0]+',target=/var/lib/postgresql/data',
+                    '--mount', 'type=bind,source='+str(DIRECTORY/'postgres_password')+',target=/run/secrets/postgres_password,readonly',
+                    '--env', 'POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password', '--env', 'POSTGRES_DB=tdf_hq',
+                    '--env', 'POSTGRES_INITDB_ARGS=--encoding=UTF8', reference]
+            else:
+                command += ['--user=0:0', '--entrypoint=/bin/sh', '--stop-signal=SIGTERM']
+                if service == 'api':
+                    command += ['--mount', 'type=bind,source='+str(DIRECTORY/'assets')+',target=/data/assets']
+                else:
+                    command += ['--mount', 'type=bind,source='+str(DIRECTORY/'Caddyfile')+',target=/etc/caddy/Caddyfile,readonly',
+                        '--mount', 'type=volume,source='+volumes[1]+',target=/data',
+                        '--mount', 'type=volume,source='+volumes[2]+',target=/config']
+                command += [reference, '-c', SHELL]
+            # Record nonce name before creation so a lost response retains evidence.
+            name = command[command.index('--name')+1]
+            created_containers[service] = name
+            target = run(command)
+            value = inspect(target)
+            require(value['Config']['Labels'][LABEL] == nonce and value['Name'] == '/'+name)
+            created_containers[service] = target
+            if service == 'api': run(DOCKER+['network', 'connect', networks[1], target])
+            run(DOCKER+['start', target])
+        db = created_containers['db']
+        for _ in range(60):
+            probe = subprocess.run(DOCKER+['exec', db, 'pg_isready', '-U', 'postgres', '-d', 'tdf_hq'],
+                                   env=w.ENV, capture_output=True, timeout=10)
+            if probe.returncode == 0: break
+            time.sleep(0.5)
+        require(probe.returncode == 0)
+        # Initializing entrypoint's temporary server can answer pg_isready; require
+        # the final entrypoint process and its actual TCP listener as well.
+        run(DOCKER+['exec', db, 'sh', '-c',
+            'for n in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h 127.0.0.1 -U postgres -d tdf_hq && exit 0; sleep 1; done; exit 1'])
+        system_id = run(DOCKER+['exec', db, 'psql', '-X', '-qAt', '-U', 'postgres', '-d', 'tdf_hq',
+                                  '-c', 'SELECT system_identifier FROM pg_control_system();'])
+        for service in ('api', 'edge'):
+            run(DOCKER+['exec', created_containers[service], 'sh', '-c',
+                'for n in 1 2 3 4 5; do test -f /tmp/ready && exit 0; sleep 1; done; exit 1'])
+        for name, content in ((w.SERVICE, SERVICE), (w.TIMER, TIMER)):
+            exclusive_file(w.DIRECTORY/name, content); created_units.append(name)
+        run(['systemctl', 'daemon-reload'])
+        run(['systemctl', 'enable', '--now', w.TIMER])
+        expected = {}
+        for service, target in created_containers.items():
+            value = inspect(target)
+            expected[service] = {'containerId': target, 'image': value['Config']['Image'], 'imageId': value['Image']}
+        admitted = w.sources.observe(expected)
+        before = {service: {key: inspect(target)[key] for key in ('Config','HostConfig','Mounts')}
+                  for service, target in created_containers.items()}
+        plan = {key: ('sha256:'+'1'*64 if key.endswith('Image') else '1'*(40 if key.endswith('Revision') else 64))
+                for key in j.PLAN_KEYS}
+        source = s.RetainedRoot(**dict(target=expected['api']['containerId'],
+            image=expected['api']['image'], image_id=expected['api']['imageId']))
+        with j.open_journal(str(archive/'journal')) as journal, source.pinned():
+            journal.initialize(plan, nonce)
+            fence = w.WriterFence(journal, expected, admitted['runtimeConfigurationSha256'], hashes, source)
+            fence.maintenance(); fence.stop_writers(); fence.stop_database()
+            require(fence.observe()['sources']['dockerWritersStopped'])
+            require(journal.status()['completedStages'] == list(j.STAGES[:3]))
+            captured = source.capture_uploads(str(archive/'uploads.tar'))
+            require(captured['presence'] == 'present')
+            s.files.restore(str(archive/'uploads.tar'), captured['manifest'], str(archive/'restored-uploads'))
+            require((archive/'restored-uploads/sentinel').read_bytes() == b'synthetic-upload')
+            evidence = {'schemaVersion': 1, 'status': 'synthetic-real-daemon-fence-passed',
+                'completedStages': journal.status()['completedStages'],
+                'dockerWritersStopped': True, 'registeredTimerStopped': True,
+                'legacyUploadReplay': True, 'databaseSystemIdentifier': system_id,
+                'limitations': ['Disposable empty Linux host; no production effect.',
+                    'API and edge are inert shell processes, not backend/Caddy behavior.',
+                    'No complete host-worker exclusion, clean-control or database recovery proof.',
+                    'No production key custody, migration, rollout or restart recovery.']}
+    finally:
+        if evidence is None and before:
+            def paths(left, right, prefix):
+                if type(left) is not type(right): return [prefix]
+                if isinstance(left, dict):
+                    return [p for key in set(left) | set(right)
+                            for p in paths(left.get(key), right.get(key), prefix+'/'+key)]
+                if isinstance(left, list):
+                    if len(left) != len(right): return [prefix]
+                    return [p for index, (a,b) in enumerate(zip(left,right))
+                            for p in paths(a,b,prefix+'/'+str(index))]
+                return [] if left == right else [prefix]
+            changed = []
+            for service, baseline in before.items():
+                actual = inspect(created_containers[service])
+                changed += paths(baseline, {key: actual[key] for key in baseline}, service)
+            print('Synthetic changed configuration fields: '+json.dumps(sorted(changed)), file=sys.stderr)
+        # Verify nonce ownership before any destructive fixture cleanup. Unknown
+        # resources or cleanup failures stop here and retain the remaining state.
+        for name in reversed(created_units):
+            require(hashlib.sha256((w.DIRECTORY/name).read_bytes()).hexdigest() == hashes[name])
+            if name == w.TIMER: run(['systemctl', 'disable', '--now', name])
+            (w.DIRECTORY/name).unlink()
+        if created_units: run(['systemctl', 'daemon-reload'])
+        for target in reversed(list(created_containers.values())):
+            value = inspect(target)
+            require(value['Config']['Labels'].get(LABEL) == nonce)
+            run(DOCKER+['rm', '--force', value['Id']])
+        for volume in reversed(created_volumes):
+            row = json.loads(run(DOCKER+['volume', 'inspect', volume]))
+            require(len(row) == 1 and row[0]['Labels'].get(LABEL) == nonce)
+            run(DOCKER+['volume', 'rm', volume])
+        for network in reversed(created_networks):
+            row = json.loads(run(DOCKER+['network', 'inspect', network]))
+            require(len(row) == 1 and row[0]['Labels'].get(LABEL) == nonce)
+            run(DOCKER+['network', 'rm', network])
+        # A failed mkdir or replaced canonical name must never authorize moving
+        # an unowned tree that appeared after the initial absence observation.
+        preserve_owned_directory(DIRECTORY, archive/'synthetic-production', owned_production)
+    require(evidence is not None and not run(DOCKER+['ps', '--all', '--quiet']))
+    evidence['ownedContainersRemoved'] = True
+    print(json.dumps(evidence, sort_keys=True))
+
+
+if __name__ == '__main__': main()

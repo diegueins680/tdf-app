@@ -2,6 +2,7 @@
 """Canonical source topology admission; no Docker mutation or production fixtures."""
 import copy
 import importlib.util
+import itertools
 from pathlib import Path
 import unittest
 
@@ -47,6 +48,20 @@ class SourceTests(unittest.TestCase):
         self.assertIs(stopped['dockerWritersStopped'],True)
         self.assertIs(stopped['hostWorkersFenced'],False);self.assertIs(stopped['databaseCleanShutdownVerified'],False)
         self.assertNotIn('SYNTHETIC_SECRET',str(result));self.assertNotIn('not-a-real-secret',str(result))
+
+    def test_mount_order_is_irrelevant_but_every_mount_field_remains_bound(self):
+        baseline = s.admit(*fixture())['runtimeConfigurationSha256']
+        for edge_order in itertools.permutations(range(3)):
+            c,v,e = fixture()
+            c[1]['Mounts'].reverse()
+            c[2]['Mounts'] = [c[2]['Mounts'][index] for index in edge_order]
+            self.assertEqual(s.admit(c,v,e)['runtimeConfigurationSha256'], baseline)
+        c,v,e = fixture()
+        c[2]['Mounts'][0]['Mode'] = 'ro'
+        self.assertNotEqual(s.admit(c,v,e)['runtimeConfigurationSha256'], baseline)
+        c,v,e = fixture()
+        c[2]['Mounts'].append(copy.deepcopy(c[2]['Mounts'][0]))
+        with self.assertRaises(ValueError): s.admit(c,v,e)
 
     def test_identity_lifecycle_restart_and_privilege_denials(self):
         for mutate in (lambda c:c['Config'].update(Image='mutable:latest'),lambda c:c.update(Image='sha256:'+'f'*64),

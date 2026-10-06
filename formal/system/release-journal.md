@@ -121,3 +121,19 @@ configuration changes, a backup dispatch race and lost stop responses. No actual
 Docker/systemd stop or production recovery is claimed by those tests. The bounded
 release-journal model covers intent ordering only; it does not refine systemd,
 Docker, kernel descriptors or these exact effect implementations.
+
+`test-production-writer-fence-linux.py` additionally exercises actual systemd units,
+Docker stop effects, canonical source resampling, retained legacy uploads and the
+private journal on an exclusively owned synthetic Linux host. It requires explicit
+machine-id acknowledgement, an empty Docker inventory and absence of the canonical
+production directory, networks, volumes and TDF units before setup. API and edge
+are inert shell processes; PostgreSQL17 is real. Nonce-labelled resources are
+identity-checked before fixture cleanup, and files/journal evidence are retained.
+Never invoke this fixture on production. It does not qualify complete host-worker
+exclusion, production recovery, migration, restart or application behavior.
+
+Actual Docker execution exposed that `Mounts` can reorder during a stop. Source
+fingerprinting now sorts this already destination-unique collection by destination,
+while preserving every field. Permutation controls require stable identity, changed
+mount fields still change identity, and duplicate destinations still reject. No
+configuration field is dropped to make the shutdown observation pass.
