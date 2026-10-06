@@ -5962,7 +5962,8 @@
         "Coordinator independently validates effect-specific evidence",
         "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery.",
         "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md.",
-        "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md."
+        "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md.",
+        "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5987,7 +5988,8 @@
       "allowedTransitions": [
         "Initialize once -> ready",
         "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
-        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state."
+        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state.",
+        "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -5997,7 +5999,8 @@
         "Restore old database over possible new writes",
         "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit.",
         "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers.",
-        "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion."
+        "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion.",
+        "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6018,7 +6021,8 @@
         "ops/hetzner/host-scheduler-admission.py",
         "ops/hetzner/host-scheduler-policy.json",
         "ops/hetzner/host-process-admission.py",
-        "ops/hetzner/host-process-policy.json"
+        "ops/hetzner/host-process-policy.json",
+        "ops/hetzner/coordinated-capture.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6028,7 +6032,8 @@
         "scripts/test-production-recovery-sources.py",
         "scripts/test-writer-fence-fixture-ownership.py",
         "scripts/test-host-scheduler-admission.py",
-        "scripts/test-host-process-admission.py"
+        "scripts/test-host-process-admission.py",
+        "scripts/test-coordinated-capture.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",

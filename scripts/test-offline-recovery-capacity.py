@@ -19,8 +19,8 @@ class CapacityTests(unittest.TestCase):
         memory=c.physical.restore.MEMORY_LIMIT+c.canary.MEMORY+c.HEADROOM
         self.assertEqual(memory,1408*c.MiB)
         for bundle in (1,640*c.MiB,c.MAX_BUNDLE):
-            disk=8*bundle+6*4096+c.DISK_HEADROOM
-            inodes=c.MIN_FREE_INODES+6
+            disk=10*bundle+12*4096+c.DISK_HEADROOM
+            inodes=c.MIN_FREE_INODES+12
             row=c.admit(memory,disk,inodes,bundle,6,4096)
             self.assertEqual(row['requiredMemoryBytes'],memory)
             for values in ((memory-1,disk,inodes,bundle,6,4096),
@@ -77,7 +77,7 @@ class CapacityTests(unittest.TestCase):
         fence,clone,_=self.fixture()
         result=self.sample(fence,clone)
         self.assertEqual(result['requiredMemoryBytes'],1408*c.MiB)
-        self.assertEqual(result['minimumInodes'],24000+c.MIN_FREE_INODES)
+        self.assertEqual(result['minimumInodes'],48000+c.MIN_FREE_INODES)
         self.assertFalse(result['deploymentAuthorized'])
         self.assertFalse(result['hostWorkerExclusionVerifiedByHelper'])
         self.assertFalse(result['resourcesAllocated'])

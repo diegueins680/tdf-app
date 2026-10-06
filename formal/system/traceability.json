@@ -5963,7 +5963,8 @@
         "Coordinator independently validates effect-specific evidence",
         "Canonical shutdown caller separately holds the shared restore reservation, admits host workers, pins legacy application descriptors before maintenance and retains original timer state for explicit recovery.",
         "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md.",
-        "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md."
+        "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md.",
+        "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5988,7 +5989,8 @@
       "allowedTransitions": [
         "Initialize once -> ready",
         "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
-        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state."
+        "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state.",
+        "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -5998,7 +6000,8 @@
         "Restore old database over possible new writes",
         "Continue after ambiguous stop response, changed configuration, unexpected TDF unit, active backup job or inadmissible process exit.",
         "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers.",
-        "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion."
+        "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion.",
+        "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6019,7 +6022,8 @@
         "ops/hetzner/host-scheduler-admission.py",
         "ops/hetzner/host-scheduler-policy.json",
         "ops/hetzner/host-process-admission.py",
-        "ops/hetzner/host-process-policy.json"
+        "ops/hetzner/host-process-policy.json",
+        "ops/hetzner/coordinated-capture.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6029,7 +6033,8 @@
         "scripts/test-production-recovery-sources.py",
         "scripts/test-writer-fence-fixture-ownership.py",
         "scripts/test-host-scheduler-admission.py",
-        "scripts/test-host-process-admission.py"
+        "scripts/test-host-process-admission.py",
+        "scripts/test-coordinated-capture.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6780,7 +6785,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/build.yml": "63e3f4aa43beaf77916a453da425a5fc6cad2cbab94203005c8e05c745e36cde",
+    ".github/workflows/build.yml": "3105ec6d394211d85fdee6f80d0ba54af9319a687c3fd940a915ef30b47bff22",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "e15228e5291295a6bf1daf27f62b2c0ced89091391b868848881672248132286",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
@@ -6864,6 +6869,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
+    "ops/hetzner/coordinated-capture.py": "02f3078953f0ddb95fcc487cefdcd5ab830df1965311ee17d9c6cd187b7f3411",
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/host-process-admission.py": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
     "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
@@ -6871,7 +6877,7 @@
     "ops/hetzner/host-scheduler-policy.json": "134dd49cfd8c7017a80cbfa9466db4d911f6e8e285fad1f884b1981ee53cb4ca",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "edc25c4d1581e7402e45e75f42820c4b43a216699047889a5afdd0b535fc66ec",
-    "ops/hetzner/offline-recovery-capacity.py": "9c7e7cc094611351c6c0bb58bf25a8e31b3720892526d0f90c6823df3a9963c6",
+    "ops/hetzner/offline-recovery-capacity.py": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
     "ops/hetzner/production-recovery-sources.py": "bf5109dd999cc2db4600ff2b92dfc283c05fd04cbc666684683d223a6b7a8476",
     "ops/hetzner/production-writer-fence.py": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
@@ -6965,7 +6971,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "cb7eb004b1fff7a8ec849507d34336c381a279ada50a8d622e755fefc7871d0e",
+    "scripts/quality-repo.sh": "de461495654503f1ec7477ca4943a0559d9e90473a4f6ab07f8988c04fec8a09",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6978,6 +6984,7 @@
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+    "scripts/test-coordinated-capture.py": "673b42c6f53262a3ccb7f0321c3fe59f35d839783a1b0fc5d02e9b4ad037324f",
     "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
@@ -6989,7 +6996,7 @@
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
-    "scripts/test-offline-recovery-capacity.py": "aad3e881a55a0cc0685db354a8ad48d2a3f4324a906d24e05cc8a0a3b1ee1d5c",
+    "scripts/test-offline-recovery-capacity.py": "8699587b8f72b58f5f12473028605dce43eb9683b12a29af530dd1db06fcf5e8",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-application-docker.py": "b301dc65a18bed233decde7f43586e3fc0a548554e19fbd88911291047a08de0",
@@ -10704,6 +10711,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/coordinated-capture.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-release-journal.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -10735,6 +10748,12 @@
       }
     ],
     "scripts/test-host-process-admission.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-coordinated-capture.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
@@ -11283,7 +11302,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "63e3f4aa43beaf77916a453da425a5fc6cad2cbab94203005c8e05c745e36cde",
+      "sha256": "3105ec6d394211d85fdee6f80d0ba54af9319a687c3fd940a915ef30b47bff22",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11745,6 +11764,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-d681f7e5079bf17c",
+      "path": "ops/hetzner/coordinated-capture.py",
+      "sha256": "02f3078953f0ddb95fcc487cefdcd5ab830df1965311ee17d9c6cd187b7f3411",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e2cca7d2630a1f7b",
       "path": "ops/hetzner/coordinated-recovery-bundle.py",
       "sha256": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
@@ -11854,7 +11885,7 @@
     {
       "id": "SURFACE-5d2a33bd01a22c0f",
       "path": "ops/hetzner/offline-recovery-capacity.py",
-      "sha256": "9c7e7cc094611351c6c0bb58bf25a8e31b3720892526d0f90c6823df3a9963c6",
+      "sha256": "5a590d3a46a3f080a722b7d63bf4db83852da93c834c55cf13f90d76b30ef879",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13982,7 +14013,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "cb7eb004b1fff7a8ec849507d34336c381a279ada50a8d622e755fefc7871d0e",
+      "sha256": "de461495654503f1ec7477ca4943a0559d9e90473a4f6ab07f8988c04fec8a09",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14810,6 +14841,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-9b49263414d1aee1",
+      "path": "scripts/test-coordinated-capture.py",
+      "sha256": "673b42c6f53262a3ccb7f0321c3fe59f35d839783a1b0fc5d02e9b4ad037324f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-26ea9f6d8b902fdd",
       "path": "scripts/test-coordinated-recovery-bundle.py",
       "sha256": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
@@ -15220,7 +15263,7 @@
     {
       "id": "SURFACE-3e377b2301b0e7ce",
       "path": "scripts/test-offline-recovery-capacity.py",
-      "sha256": "aad3e881a55a0cc0685db354a8ad48d2a3f4324a906d24e05cc8a0a3b1ee1d5c",
+      "sha256": "8699587b8f72b58f5f12473028605dce43eb9683b12a29af530dd1db06fcf5e8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33472,7 +33515,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d60f20b106a0ae2d70beecb13472536cd402b9ae357092c2295b1a17fc3deb7b",
+      "sourceSha256": "d06ad9b80e048aa4b2ae9f5575b16c4de4e4460266d8cee2f7ea8deaa7b3858b",
       "definition": {
         "states": [
           "absent",

@@ -191,13 +191,14 @@ actual384MiB PostgreSQL and512MiB application caps plus512MiB host headroom:
 1408MiB. This is a separate offline policy; the existing2GiB online application
 rehearsal guard remains unchanged.
 
-Required disk is eight outer-bundle byte counts, plus one filesystem allocation
-block per replayed entry, plus2GiB growth headroom. Seven forms can coexist:
-captured component archives, outer plaintext, encrypted output, retrieved
-ciphertext, decrypted archive, replayed inner archives and replayed trees. The
-eighth allowance covers envelope/metadata overhead; file allocation rounding and
-growth have separate allowances. Renaming replayed DB/content trees adds no copy.
-Required free inodes are the component entry count plus65,536. Additional
+Required disk is ten outer-bundle byte counts, plus two filesystem allocation
+blocks per component entry, plus2GiB growth headroom. Nine forms can coexist:
+legacy capture archive and staged legacy tree, captured component archives,
+outer plaintext, encrypted output, retrieved ciphertext, decrypted archive,
+replayed inner archives and replayed trees. The tenth allowance covers
+envelope/metadata overhead; staging/replay allocation rounding and growth have
+separate allowances. Renaming replayed DB/content trees adds no copy.
+Required free inodes are twice the component entry count plus65,536. Additional
 coordinator copies or retained attempts require a newly reviewed budget.
 
 These are TDF admission policies, not vendor-guaranteed sizing or reservations.

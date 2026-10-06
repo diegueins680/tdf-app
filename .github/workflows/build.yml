@@ -109,6 +109,7 @@ jobs:
           docker pull "$TDF_CANARY_TEST_IMAGE"
           sudo install -d -m 700 /opt/tdf/backups
           sudo env PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-recovered-application-content.py
+          sudo env PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-coordinated-capture.py
           sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" \
             TDF_CANARY_TEST_IMAGE="$TDF_CANARY_TEST_IMAGE" \
             TDF_CANARY_TEST_REVISION="$TDF_CANARY_TEST_REVISION" \

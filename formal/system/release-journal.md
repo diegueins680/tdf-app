@@ -145,3 +145,7 @@ does not replace process admission or the production writer fence.
 [Sampled host process admission](host-processes.md) complements scheduler policy
 with executable/invocation classes and observer ancestry. It does not establish
 continuous writer exclusion or replace effect-specific lifecycle checks.
+
+[Journaled capture](coordinated-capture.md) binds the next stage to this same
+reservation and exact plan, preserving a durable private receipt before completion.
+Complete deployment and interrupted-intent recovery remain unimplemented.

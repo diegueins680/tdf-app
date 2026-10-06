@@ -43,14 +43,14 @@ def admit(memory, disk, inodes, bundle_bytes, bundle_entries, block_size):
     require(0<bundle_bytes<=MAX_BUNDLE)
     require(6 <= bundle_entries <= 6*physical.files.MAX_ENTRIES)
     require(512 <= block_size <= 65536 and block_size & (block_size-1) == 0)
-    # Seven retained forms: capture components, outer archive, ciphertext,
-    # retrieved ciphertext, decrypted archive, replayed components, replayed trees.
-    # Eighth equivalent covers envelope/metadata overhead; add one full block per
-    # replayed entry for allocation rounding, then separate fixed growth headroom.
+    # Nine retained forms: legacy staging archive/tree, capture components, outer
+    # archive, ciphertext, retrieved ciphertext, decrypted archive, replayed
+    # components and replayed trees. Tenth equivalent covers envelope/metadata
+    # overhead; add two blocks per entry for staging/replay allocation rounding.
     # Renamed DB/content trees do not add copies. This is policy, not an ENOSPC proof.
     required_memory=physical.restore.MEMORY_LIMIT+canary.MEMORY+HEADROOM
-    required_disk=8*bundle_bytes+bundle_entries*block_size+DISK_HEADROOM
-    required_inodes=bundle_entries+MIN_FREE_INODES
+    required_disk=10*bundle_bytes+2*bundle_entries*block_size+DISK_HEADROOM
+    required_inodes=2*bundle_entries+MIN_FREE_INODES
     require(memory>=required_memory and disk>=required_disk and inodes>=required_inodes)
     return {'availableMemoryBytes':memory,'requiredMemoryBytes':required_memory,
             'databaseLimitBytes':physical.restore.MEMORY_LIMIT,'applicationLimitBytes':canary.MEMORY,
