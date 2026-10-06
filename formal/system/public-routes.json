@@ -704,6 +704,18 @@
   },
   {
    "method": "POST",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
+   "path": "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence",
+   "boundary": "capability-header",
+   "header": "X-Order-Lookup-Token"
+  },
+  {
+   "method": "POST",
    "path": "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout",
    "boundary": "capability-header",
    "header": "X-Order-Lookup-Token"
