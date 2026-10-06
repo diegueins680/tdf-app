@@ -7474,6 +7474,91 @@
         "classification": "PARTIAL",
         "reason": "Admission containment only; replay repair, current tests and rollout remain outstanding."
       }
+    },
+    {
+      "id": "NOTIF-TRANSPORT-001",
+      "title": "No automatic replay of ambiguous social message sends",
+      "statement": "One production social-message transport invocation selects one account, refuses redirects and suppresses connection-level automatic retries; cancellation and unknown external outcomes must not trigger another send.",
+      "domain": "NOTIF",
+      "authority": "inferred",
+      "source": "Source audit of social provider adapters and pinned http-client0.7.19; formal/system/social-transport.md",
+      "property": "One invocation has at most one application/message HTTP request dispatch under the specified production manager; ambiguous outcome does not authorize a fallback.",
+      "contract": "formal/system/social-transport.md",
+      "actors": [
+        "Authorized calling handler or worker",
+        "Instagram adapter",
+        "Facebook adapter",
+        "WhatsApp adapter",
+        "External provider"
+      ],
+      "preconditions": [
+        "Existing caller authorization and consent checks apply independently.",
+        "Production adapter constructs the dedicated no-retry messaging manager; injected managers are trusted."
+      ],
+      "inputs": [
+        "Validated recipient/body",
+        "Validated configured or explicit account and token",
+        "Provider response or transport exception"
+      ],
+      "state": {
+        "initial": "unvalidated",
+        "states": [
+          "rejected",
+          "ready",
+          "dispatched",
+          "response",
+          "unknown",
+          "cancelled"
+        ]
+      },
+      "allowedTransitions": [
+        "unvalidated -> rejected or ready",
+        "ready -> dispatched once",
+        "dispatched -> response, unknown or cancelled"
+      ],
+      "forbiddenTransitions": [
+        "unknown -> automatic second dispatch",
+        "redirect -> another message POST",
+        "explicit account failure -> platform account fallback",
+        "asynchronous cancellation -> routine transport error"
+      ],
+      "effects": [
+        "One selected endpoint may receive a message; return response/error without retrying the external effect."
+      ],
+      "authorization": "Retain caller authorization. Explicit Instagram context cannot silently cross to configured account authority.",
+      "privacy": "Transport exception errors do not expose request headers, recipient or payload; provider response formatting retains its existing scope.",
+      "concurrency": "Shared pooled manager disables automatic retry on reused connections. No cross-invocation, queue or provider-internal duplicate guarantee.",
+      "idempotency": "No provider idempotency key is asserted. Ambiguous external outcomes require reconciliation before another call.",
+      "failure": "Validation rejects before dispatch. Synchronous transport failure returns unknown outcome. Async cancellation escapes. Redirect is an error.",
+      "recovery": "Caller must preserve ambiguous state. Do not activate default-off background workers until durable claim/reconciliation repairs qualify.",
+      "observability": "Source-bound local loopback request counts, mutation results and exact source gate receipts; no production messages.",
+      "implementation": [
+        "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
+        "tdf-hq/src/TDF/Services/MessagingManager.hs",
+        "tdf-hq/src/TDF/WhatsApp/Client.hs",
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/WhatsApp/Service.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/SocialTransportSpec.hs",
+        "scripts/verify-social-transport.py"
+      ],
+      "formalModels": [],
+      "verification": "Twelve actual loopback cases and four deliberately invalid compiled source controls. No provider or whole-program refinement proof.",
+      "evidence": "Exact candidate transport and backend gate receipts required.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Implementation and local source controls under evaluation; deployment not verified.",
+      "ambiguity": [
+        "Durable queue claims, caller retries, SMTP and provider reconciliation remain separate open requirements.",
+        "Injected low-level managers require the stated no-retry policy; production bindings have static correspondence checks."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped transport repair; full final backend gates and deployed acceptance remain outstanding."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7725,7 +7810,7 @@
     "scripts/production-migrations.json": "4c9d8de8d406f9fc5c530b801eb154e116a4b1cb45cb0ae38f589aad17b285e3",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/quality-backend.sh": "cb2314fd0cabc999f38a5bbb0ce07e7fb48fa054c6dcc9e2306b8976f3f1a2ba",
+    "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "8770f51fd49d485ab31f2811a5056412ae99abac26aa4c51ec4f1d0582743406",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -7824,6 +7909,7 @@
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-shutdown.py": "90a2da5514f21e1d28db21a9c59bf3a2e17bf8d3595474ad6058932092ab2824",
+    "scripts/verify-social-transport.py": "3cc59160cf419bcb6b8fedc83417c18a74c9a6c1d260a0fbebdf14700147424a",
     "scripts/verify-system-evidence.mjs": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
@@ -8023,6 +8109,9 @@
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "1c94a8debdfac2ea16990a34f0a224514201ff4c240e1884d112ed4308ec6120",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
+    "tdf-hq/src/TDF/Services/FacebookMessaging.hs": "6de64687cae3a56d79578b328cf54dbc5a6996fb41f86e78f04e6f0f4a09c02e",
+    "tdf-hq/src/TDF/Services/InstagramMessaging.hs": "654102cb356dfe9594f67a79cbc7baad323469bca2d485c636a92ddb1ce72462",
+    "tdf-hq/src/TDF/Services/MessagingManager.hs": "961859a5645dd94df8004a2f9ce3f52bea35b11205d873f193527d94e6df09e7",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/src/TDF/Storage/AtomicPublication.hs": "cf9be2f055402dc28fe16952c90032bd1fd9cccb4c85e8a309637771b390407a",
@@ -8034,11 +8123,14 @@
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
+    "tdf-hq/src/TDF/WhatsApp/Client.hs": "c7001e7b97b0031ba20123c32473170f24bffe50bc96f50c736015d29e19d250",
+    "tdf-hq/src/TDF/WhatsApp/Service.hs": "1782eeafb283d5f1920891ebdc5846d7cfb46b0da70f06b413ecb64cce4ed694",
+    "tdf-hq/src/TDF/WhatsApp/Transport.hs": "842156a347f411628204fc0bb4785e1f883a5c32c8d62e452f50a20c282422f0",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "10d8fff402cee7083fadb04a1de580b1047931b8aabc7432acecc0daafba634a",
+    "tdf-hq/tdf-hq.cabal": "3c311f6542256b5977ededf941832bdad52a438f2401ae1a1af788e62b723875",
     "tdf-hq/test/AtomicPublicationMain.hs": "8b996b343e701dc9b9bdd1c357460755edcc79f6db69bd61e7883f6353b01bfa",
     "tdf-hq/test/ContractStorageMain.hs": "41b4e77398fb9409d8bd345987d3500d30c3e71098e745ceffc2730ee8fadf79",
-    "tdf-hq/test/Spec.hs": "e2c4973de99aa55e3962d1504812456faef9c5b528006ca8532980bab7109f01",
+    "tdf-hq/test/Spec.hs": "73142b7e5fdea13560dc4045af502caea3547d8e5f4ee90337638ad9c656c01b",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/AtomicPublicationSpec.hs": "0b9ed0f1d318f7f042767d28ce240a3b8ce1c05f9d50d792dcb11f7a1927a844",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -8067,6 +8159,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "4b0da029e03fbf86ebf78458ccf1239d7fd7ebc56fe264d15234d142725912fa",
     "tdf-hq/test/TDF/ShutdownSpec.hs": "6994abf744401b992eb891d4faed6b9c860045fd9f5e9ac62ca3d32fba54f6b7",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "46794f38066c347f4d642754d202dd1059a3876406e106bac44cd01a33a2f27d",
+    "tdf-hq/test/TDF/SocialTransportSpec.hs": "53331585a81cab694e9736a21efec0db720afa4ec538c5676be2f6b748e73e40",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -9135,6 +9228,10 @@
       },
       {
         "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
         "relationship": "implementation"
       }
     ],
@@ -13271,6 +13368,54 @@
         "requirement": "NOTIF-WORKER-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/Services/InstagramMessaging.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/FacebookMessaging.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/MessagingManager.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/WhatsApp/Client.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/WhatsApp/Transport.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/WhatsApp/Service.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/SocialTransportSpec.hs": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-social-transport.py": [
+      {
+        "requirement": "NOTIF-TRANSPORT-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -16191,7 +16336,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "cb2314fd0cabc999f38a5bbb0ce07e7fb48fa054c6dcc9e2306b8976f3f1a2ba",
+      "sha256": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16220,6 +16365,10 @@
         },
         {
           "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
           "relationship": "implementation"
         }
       ]
@@ -18636,6 +18785,18 @@
       "sha256": "b2ffcd9f4185d1ce3c35a13ef9920dd8d09684495b13deac0ff3ef3bf144b3c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-81c0d7dbcd9380ee",
+      "path": "scripts/verify-social-transport.py",
+      "sha256": "3cc59160cf419bcb6b8fedc83417c18a74c9a6c1d260a0fbebdf14700147424a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-df96772a4b1d23c5",
@@ -29172,16 +29333,26 @@
     {
       "id": "SURFACE-d8a42e512f685ab6",
       "path": "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
-      "sha256": "5a8c6ed733fa35661debdc934f84462f644eea7b038fd02f420fe7da9d1dbdc1",
+      "sha256": "6de64687cae3a56d79578b328cf54dbc5a6996fb41f86e78f04e6f0f4a09c02e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f70cbdf0bd82961f",
       "path": "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
-      "sha256": "6d19867406d4e0d6d56be6b241f91e90c3070cbc267078315194e7081b070529",
+      "sha256": "654102cb356dfe9594f67a79cbc7baad323469bca2d485c636a92ddb1ce72462",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b4b451c7f0a9bfab",
@@ -29189,6 +29360,18 @@
       "sha256": "e16d11f884ad009aa3d7695165db99fc9b245c8e863c10ad0eea4f3c5625ade7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-9693c332b7272adb",
+      "path": "tdf-hq/src/TDF/Services/MessagingManager.hs",
+      "sha256": "961859a5645dd94df8004a2f9ce3f52bea35b11205d873f193527d94e6df09e7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9aa25107f33c9fd3",
@@ -29438,9 +29621,14 @@
     {
       "id": "SURFACE-5460b30af99d955f",
       "path": "tdf-hq/src/TDF/WhatsApp/Client.hs",
-      "sha256": "3d4f77df3147460fc741b21537b7cd74762fd672d15513089649e85075f55aff",
+      "sha256": "c7001e7b97b0031ba20123c32473170f24bffe50bc96f50c736015d29e19d250",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9070029de4202bc2",
@@ -29452,16 +29640,26 @@
     {
       "id": "SURFACE-6f165e3ac5d9480f",
       "path": "tdf-hq/src/TDF/WhatsApp/Service.hs",
-      "sha256": "04bfa24d267b6ba341b34d9f1f0498aa6cf70e4d528b8d31c4b41232e3cf27b8",
+      "sha256": "1782eeafb283d5f1920891ebdc5846d7cfb46b0da70f06b413ecb64cce4ed694",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-424d590d8771f755",
       "path": "tdf-hq/src/TDF/WhatsApp/Transport.hs",
-      "sha256": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
+      "sha256": "842156a347f411628204fc0bb4785e1f883a5c32c8d62e452f50a20c282422f0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-824cc950db597cff",
@@ -29485,7 +29683,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "10d8fff402cee7083fadb04a1de580b1047931b8aabc7432acecc0daafba634a",
+      "sha256": "3c311f6542256b5977ededf941832bdad52a438f2401ae1a1af788e62b723875",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29575,7 +29773,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e2c4973de99aa55e3962d1504812456faef9c5b528006ca8532980bab7109f01",
+      "sha256": "73142b7e5fdea13560dc4045af502caea3547d8e5f4ee90337638ad9c656c01b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30195,6 +30393,18 @@
       "sha256": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-74643c20b139d2e6",
+      "path": "tdf-hq/test/TDF/SocialTransportSpec.hs",
+      "sha256": "53331585a81cab694e9736a21efec0db720afa4ec538c5676be2f6b748e73e40",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "NOTIF-TRANSPORT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-6e0e63efd78f6dcd",
@@ -35108,8 +35318,6 @@
     "SURFACE-3538414933fee775",
     "SURFACE-f53dee8d468f33b8",
     "SURFACE-8feae87922bfebcd",
-    "SURFACE-d8a42e512f685ab6",
-    "SURFACE-f70cbdf0bd82961f",
     "SURFACE-b4b451c7f0a9bfab",
     "SURFACE-9aa25107f33c9fd3",
     "SURFACE-1ac6ca33fd4e0411",
@@ -35126,10 +35334,7 @@
     "SURFACE-35696a048b2fd035",
     "SURFACE-41f19892e354f9ef",
     "SURFACE-8e95ce26cbe1127d",
-    "SURFACE-5460b30af99d955f",
     "SURFACE-9070029de4202bc2",
-    "SURFACE-6f165e3ac5d9480f",
-    "SURFACE-424d590d8771f755",
     "SURFACE-824cc950db597cff",
     "SURFACE-62789f17ffbc8c94",
     "SURFACE-fab784f3f5226e09",
@@ -35573,7 +35778,8 @@
     "SOC-ABUSE-001",
     "MEDIA-RIDER-001",
     "DATA-CONTRACT-001",
-    "NOTIF-WORKER-001"
+    "NOTIF-WORKER-001",
+    "NOTIF-TRANSPORT-001"
   ],
   "stateMachines": [
     {
@@ -36695,7 +36901,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5b88ba2b72420add79bb17e0e7fe6e19be20fd4685ff75a3f9537c709e2e1ce0",
+      "sourceSha256": "35f40a8b0a3d81e7423d33b93d9f7d8d802d85e29355b7de00a7ca92377ebe85",
       "definition": {
         "states": [
           "absent",
@@ -58667,7 +58873,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 93,
+    "PARTIAL": 94,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

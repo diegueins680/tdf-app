@@ -103,6 +103,7 @@ import TDF.API.WhatsApp
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.StartupResponseSpec as StartupResponseSpec
 import qualified TDF.ShutdownSpec as ShutdownSpec
+import qualified TDF.SocialTransportSpec as SocialTransportSpec
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import TDF.Reputation.Worker
     ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
@@ -872,6 +873,7 @@ main = hspec $ do
     ReceiptSpec.spec
     StartupResponseSpec.spec
     ShutdownSpec.spec
+    SocialTransportSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
     CheckoutMoneySpec.spec

@@ -31,7 +31,8 @@ import qualified Data.ByteString.Char8 as BS
 import Network.HTTP.Client
 import Network.HTTP.Types.Header (hAuthorization)
 import Network.HTTP.Types.Status (statusCode)
-import Control.Exception (try, SomeException)
+import Control.Exception (SomeException)
+import qualified Control.Exception.Safe as Safe
 import qualified Data.ByteString.Lazy as LBS
 
 data SendTextResult = SendTextResult
@@ -167,13 +168,15 @@ sendMessagePayload mgr version accessToken normalizedPhoneId payload = do
               [ ("Content-Type", "application/json")
               , (hAuthorization, BS.pack $ "Bearer " <> T.unpack accessToken)
               ]
+          , redirectCount = 0
+          , checkResponse = \_ _ -> pure ()
           , requestBody = RequestBodyLBS (encode payload)
           }
   res <-
-    (try (httpLbs req mgr) ::
+    (Safe.tryAny (httpLbs req mgr) ::
       IO (Either SomeException (Response LBS.ByteString)))
   pure $ case res of
-    Left err -> Left (show err)
+    Left _ -> Left "WhatsApp delivery outcome unknown; automatic resend is not safe"
     Right ok ->
       let status = statusCode (responseStatus ok)
           rawBody = responseBody ok

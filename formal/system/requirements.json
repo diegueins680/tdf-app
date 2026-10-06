@@ -7473,6 +7473,91 @@
         "classification": "PARTIAL",
         "reason": "Admission containment only; replay repair, current tests and rollout remain outstanding."
       }
+    },
+    {
+      "id": "NOTIF-TRANSPORT-001",
+      "title": "No automatic replay of ambiguous social message sends",
+      "statement": "One production social-message transport invocation selects one account, refuses redirects and suppresses connection-level automatic retries; cancellation and unknown external outcomes must not trigger another send.",
+      "domain": "NOTIF",
+      "authority": "inferred",
+      "source": "Source audit of social provider adapters and pinned http-client0.7.19; formal/system/social-transport.md",
+      "property": "One invocation has at most one application/message HTTP request dispatch under the specified production manager; ambiguous outcome does not authorize a fallback.",
+      "contract": "formal/system/social-transport.md",
+      "actors": [
+        "Authorized calling handler or worker",
+        "Instagram adapter",
+        "Facebook adapter",
+        "WhatsApp adapter",
+        "External provider"
+      ],
+      "preconditions": [
+        "Existing caller authorization and consent checks apply independently.",
+        "Production adapter constructs the dedicated no-retry messaging manager; injected managers are trusted."
+      ],
+      "inputs": [
+        "Validated recipient/body",
+        "Validated configured or explicit account and token",
+        "Provider response or transport exception"
+      ],
+      "state": {
+        "initial": "unvalidated",
+        "states": [
+          "rejected",
+          "ready",
+          "dispatched",
+          "response",
+          "unknown",
+          "cancelled"
+        ]
+      },
+      "allowedTransitions": [
+        "unvalidated -> rejected or ready",
+        "ready -> dispatched once",
+        "dispatched -> response, unknown or cancelled"
+      ],
+      "forbiddenTransitions": [
+        "unknown -> automatic second dispatch",
+        "redirect -> another message POST",
+        "explicit account failure -> platform account fallback",
+        "asynchronous cancellation -> routine transport error"
+      ],
+      "effects": [
+        "One selected endpoint may receive a message; return response/error without retrying the external effect."
+      ],
+      "authorization": "Retain caller authorization. Explicit Instagram context cannot silently cross to configured account authority.",
+      "privacy": "Transport exception errors do not expose request headers, recipient or payload; provider response formatting retains its existing scope.",
+      "concurrency": "Shared pooled manager disables automatic retry on reused connections. No cross-invocation, queue or provider-internal duplicate guarantee.",
+      "idempotency": "No provider idempotency key is asserted. Ambiguous external outcomes require reconciliation before another call.",
+      "failure": "Validation rejects before dispatch. Synchronous transport failure returns unknown outcome. Async cancellation escapes. Redirect is an error.",
+      "recovery": "Caller must preserve ambiguous state. Do not activate default-off background workers until durable claim/reconciliation repairs qualify.",
+      "observability": "Source-bound local loopback request counts, mutation results and exact source gate receipts; no production messages.",
+      "implementation": [
+        "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
+        "tdf-hq/src/TDF/Services/MessagingManager.hs",
+        "tdf-hq/src/TDF/WhatsApp/Client.hs",
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/WhatsApp/Service.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/SocialTransportSpec.hs",
+        "scripts/verify-social-transport.py"
+      ],
+      "formalModels": [],
+      "verification": "Twelve actual loopback cases and four deliberately invalid compiled source controls. No provider or whole-program refinement proof.",
+      "evidence": "Exact candidate transport and backend gate receipts required.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Implementation and local source controls under evaluation; deployment not verified.",
+      "ambiguity": [
+        "Durable queue claims, caller retries, SMTP and provider reconciliation remain separate open requirements.",
+        "Injected low-level managers require the stated no-retry policy; production bindings have static correspondence checks."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped transport repair; full final backend gates and deployed acceptance remain outstanding."
+      }
     }
   ]
 }

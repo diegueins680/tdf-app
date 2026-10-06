@@ -42,3 +42,7 @@ section4.5.3.2.6. We adopt conservative unknown-outcome handling as the target,
 not exactly-once claims. PostgreSQL transaction-level advisory locks may serialize
 future per-recipient claims, but every competing writer must honor them and no
 lock makes the external provider effect transactional.
+
+The later `NOTIF-TRANSPORT-001` repair qualifies cancellation and no automatic
+replay inside the three social adapters. This does not close the queue, SMTP or
+legacy-image recovery gaps described above.

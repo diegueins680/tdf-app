@@ -537,6 +537,7 @@
       "scripts/verify-request-failures.py",
       "scripts/verify-shutdown.py",
       "scripts/verify-simulator-health.sh",
+      "scripts/verify-social-transport.py",
       "scripts/verify-system-evidence.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
     ],
@@ -1863,6 +1864,7 @@
       "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramSync.hs",
+      "tdf-hq/src/TDF/Services/MessagingManager.hs",
       "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Services/Stripe.hs",
       "tdf-hq/src/TDF/Services/YouTube.hs",
@@ -1957,6 +1959,7 @@
       "tdf-hq/test/TDF/ShutdownSpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
+      "tdf-hq/test/TDF/SocialTransportSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
       "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
@@ -4107,7 +4110,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "cb2314fd0cabc999f38a5bbb0ce07e7fb48fa054c6dcc9e2306b8976f3f1a2ba",
+      "sha256": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5506,6 +5509,12 @@
       "id": "SURFACE-488ec868b5fc5265",
       "path": "scripts/verify-simulator-health.sh",
       "sha256": "b2ffcd9f4185d1ce3c35a13ef9920dd8d09684495b13deac0ff3ef3bf144b3c7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-81c0d7dbcd9380ee",
+      "path": "scripts/verify-social-transport.py",
+      "sha256": "3cc59160cf419bcb6b8fedc83417c18a74c9a6c1d260a0fbebdf14700147424a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13413,19 +13422,25 @@
     {
       "id": "SURFACE-d8a42e512f685ab6",
       "path": "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
-      "sha256": "5a8c6ed733fa35661debdc934f84462f644eea7b038fd02f420fe7da9d1dbdc1",
+      "sha256": "6de64687cae3a56d79578b328cf54dbc5a6996fb41f86e78f04e6f0f4a09c02e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f70cbdf0bd82961f",
       "path": "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
-      "sha256": "6d19867406d4e0d6d56be6b241f91e90c3070cbc267078315194e7081b070529",
+      "sha256": "654102cb356dfe9594f67a79cbc7baad323469bca2d485c636a92ddb1ce72462",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b4b451c7f0a9bfab",
       "path": "tdf-hq/src/TDF/Services/InstagramSync.hs",
       "sha256": "e16d11f884ad009aa3d7695165db99fc9b245c8e863c10ad0eea4f3c5625ade7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9693c332b7272adb",
+      "path": "tdf-hq/src/TDF/Services/MessagingManager.hs",
+      "sha256": "961859a5645dd94df8004a2f9ce3f52bea35b11205d873f193527d94e6df09e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13587,7 +13602,7 @@
     {
       "id": "SURFACE-5460b30af99d955f",
       "path": "tdf-hq/src/TDF/WhatsApp/Client.hs",
-      "sha256": "3d4f77df3147460fc741b21537b7cd74762fd672d15513089649e85075f55aff",
+      "sha256": "c7001e7b97b0031ba20123c32473170f24bffe50bc96f50c736015d29e19d250",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13599,13 +13614,13 @@
     {
       "id": "SURFACE-6f165e3ac5d9480f",
       "path": "tdf-hq/src/TDF/WhatsApp/Service.hs",
-      "sha256": "04bfa24d267b6ba341b34d9f1f0498aa6cf70e4d528b8d31c4b41232e3cf27b8",
+      "sha256": "1782eeafb283d5f1920891ebdc5846d7cfb46b0da70f06b413ecb64cce4ed694",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-424d590d8771f755",
       "path": "tdf-hq/src/TDF/WhatsApp/Transport.hs",
-      "sha256": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
+      "sha256": "842156a347f411628204fc0bb4785e1f883a5c32c8d62e452f50a20c282422f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13623,7 +13638,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "10d8fff402cee7083fadb04a1de580b1047931b8aabc7432acecc0daafba634a",
+      "sha256": "3c311f6542256b5977ededf941832bdad52a438f2401ae1a1af788e62b723875",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13677,7 +13692,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e2c4973de99aa55e3962d1504812456faef9c5b528006ca8532980bab7109f01",
+      "sha256": "73142b7e5fdea13560dc4045af502caea3547d8e5f4ee90337638ad9c656c01b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13990,6 +14005,12 @@
       "id": "SURFACE-3871c8d09b71bf61",
       "path": "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "sha256": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-74643c20b139d2e6",
+      "path": "tdf-hq/test/TDF/SocialTransportSpec.hs",
+      "sha256": "53331585a81cab694e9736a21efec0db720afa4ec538c5676be2f6b748e73e40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22957,7 +22978,7 @@
     },
     {
       "path": "formal/system/outbound-worker-admission.md",
-      "sha256": "38ba0df389baeb75970d80e22f8c3d0653e298c5d69de1a43825f2efbf566495",
+      "sha256": "4226354d3820874b1e4cc8553cd4ea0d80f7b761655f9934608785483470adc5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23027,14 +23048,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5b88ba2b72420add79bb17e0e7fe6e19be20fd4685ff75a3f9537c709e2e1ce0",
+      "sha256": "35f40a8b0a3d81e7423d33b93d9f7d8d802d85e29355b7de00a7ca92377ebe85",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "7fb289267aefbba2ea83740820878be1457f1e9ed21c25152b335f65b8a1739b",
+      "sha256": "78510a2f70a58ffe8cd7b2597cfde376a154e0cd78bd7c5e2f3b884bb63be884",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23056,6 +23077,13 @@
     {
       "path": "formal/system/session-query-isolation.md",
       "sha256": "2a3d72f757e9d8b5bde86bc778f0d1c9569b36c516771bb1699854d265806353",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/social-transport.md",
+      "sha256": "f9c055e96244f7750e3c04fe040ca9c8996ec41ac6c92c7fd4a4537721df7da3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
