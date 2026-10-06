@@ -37,6 +37,17 @@ CULTURE vol. 1 (event 141).
 emission point and next sequential) for the environment and enable it. Use an
 emission point not used by any other invoicing tool to avoid number collisions.
 
+## Evidence
+
+- 2026-10-06, local backend with a full migrated schema: guest checkout over USD 50
+  without identification refused; identified order, bank transfer selection, evidence,
+  staff approval, three issued tickets, one enqueued invoice `001-900-000000001` for
+  USD 60, idempotent re-approval, single check-in, reject/resubmit/approve path.
+- 2026-10-06, the payload produced by `invoicePayload` was posted to
+  `https://link.datil.co/invoices/issue` with an invalid key: Dátil accepted the schema
+  and answered `401 INVALID_CREDENTIALS` (validation precedes authentication), so no
+  document was created. A real pruebas authorization still requires credentials.
+
 ## Limits
 
 Only IVA 0% is supported; other rates are refused rather than guessed. Credit

@@ -17686,7 +17686,7 @@
     },
     {
       "path": "docs/events/ticket-electronic-invoices.md",
-      "sha256": "824436b17f9e38e685a77f1aefeb78f9ccd3749fc11cd12ab53b0c6ef5b2e359",
+      "sha256": "959a058a02c7ce1e7d338c40d6d980f3a11429c5dd0746cae84e5daea17d27e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
