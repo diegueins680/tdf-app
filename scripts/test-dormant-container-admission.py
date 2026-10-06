@@ -19,7 +19,7 @@ class AdmissionTests(unittest.TestCase):
     def setUp(self):
         cid='a'*64
         self.row={'id':cid,'configurationSha256':'9'*64,'running':False,'pid':0,'paused':False,'restarting':False,
-                  'dead':False,'status':'exited','restartPolicy':{'Name':'unless-stopped','MaximumRetryCount':0},
+                  'dead':False,'status':'exited','startedAt':'2026-10-06T00:00:00Z','restartCount':0,'restartPolicy':{'Name':'unless-stopped','MaximumRetryCount':0},
                   'networkMode':'legacy','networkIds':['b'*64],
                   'metadata':{'id':cid,'sha256':'c'*64,'manuallyStopped':True,'startedBefore':True}}
         self.snapshot={'schemaVersion':1,'version':'29.1.3','socket':'/run/docker.sock',

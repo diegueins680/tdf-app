@@ -7628,7 +7628,8 @@
         "ops/hetzner/dormant-container-admission.py",
         "ops/hetzner/bpf-recovery-admission.py",
         "ops/hetzner/network-recovery-admission.py",
-        "ops/hetzner/legacy-stop-policy.py"
+        "ops/hetzner/legacy-stop-policy.py",
+        "ops/hetzner/cold-container-admission.py"
       ],
       "tests": [
         "scripts/test-outbound-quarantine.py",
@@ -7640,7 +7641,8 @@
         "scripts/test-bpf-recovery-admission.py",
         "scripts/test-network-recovery-admission.py",
         "scripts/test-network-namespace-linux.py",
-        "scripts/test-legacy-stop-policy.py"
+        "scripts/test-legacy-stop-policy.py",
+        "scripts/test-cold-container-admission.py"
       ],
       "formalModels": [
         "formal/event-operations/LegacyInterruptedStop.cfg",
@@ -7654,7 +7656,7 @@
         "formal/event-operations/LegacyInterruptedStopUnrestrictedStop.cfg",
         "formal/event-operations/LegacyInterruptedStopWrongIdentity.cfg"
       ],
-      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission.",
+      "verification": "Exact policy admission with controlled mutations; real IPv4/IPv6 Docker bridge host/routed probes, existing connections, local peers and incoming replies; real owned-VM reboot and failed-start controls. No kernel or whole-system proof. Explicit IPv6 neighbor-cache eviction and a removed-Neighbor-Discovery negative control prevent warm-cache false confidence. Read-only UFW qualification identity is compared twice against separately reviewed policy; configuration, executable hooks, selected backend, binary and unit drift reject. Evidence hashes are references whose provenance the coordinator must verify. Dormant-container admission binds the actual Docker29.1.3 executable and persisted literal manual-stop flags through read-only sampling; a separate owned daemon fixture exercises a cleared-flag negative, daemon restart and actual host reboot. This does not qualify production storage behavior or the complete coordinator. BPF admission classifies bounded observed pure-verdict, systemd address-verdict and empty HID-tail-call shapes, binding bytecode, actual helper resolution, map and BTF attachment relationships with repeated read-only observations and controlled mutations; the kernel and absence of privileged concurrent changes remain trusted. Network admission joins exact container/network/endpoint/MAC identities with bridge membership and reciprocal veth indices plus namespace IDs obtained from held opposite namespace descriptors. It rejects unsupported packet duplication/queue/flowtable/TC/XDP/legacy and routing paths. A real owned Linux fixture distinguishes duplicate interface indices across unrelated namespaces and verifies unassigned GETNSID queries do not allocate mappings. Repeated observations establish sampled structural provenance, not continuous isolation or complete host-bypass admission. LegacyInterruptedStop is a bounded target safety contract with eight isolated negative controls; the exceptional exit255 implementation and restricted recovery integration remain absent. Passing this model is not implementation conformance. Version2 release plans durably bind an exact legacy policy hash. Policy publication requires the prepared original admission and no maintenance intent; ordinary writer and abort adapters reject these exceptional plans before effects. Qualification digests remain unverified references and do not grant stop permission. A same-boot completed-prefix check binds the independently reviewed initial container snapshot to the prepared original full configuration and derives running original services from the durable journal. Twelve real-file journal tests use synthetic Docker observations; no actual stop or recovery occurs. Pending intents, daemon/host restart and disposable phases reject. This predicate neither verifies exit-code/drain evidence nor authenticates qualification references.",
       "evidence": "Fresh exact-source qualification required; working results do not establish deployed conformance.",
       "critical": true,
       "status": "specified and implemented",
@@ -7813,6 +7815,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/bpf-recovery-admission.py": "a4d5150b9ca39ab2a2e4276d5c75d1bba12490ed602c8a24de6a2b2546987fd6",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
+    "ops/hetzner/cold-container-admission.py": "a43ba0ed22b2fcdd936028ade3e6c9fc93deb6b73c01e753d690ba3e28992d40",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/coordinated-capture.py": "9359bf8d7dc9db757fa840ebce5530196220b9789edb54e99c757a1c72e548c3",
     "ops/hetzner/coordinated-disposable-creation.py": "d09aa0c2528b8079766e1faa56a9687a9620efd3ee0822d083457f996892069c",
@@ -7820,7 +7823,7 @@
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/coordinated-retrieval.py": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
     "ops/hetzner/disposable-creation-spec.py": "a8d6645e7bdf829f32efe86689bc73b74aed25ddfbc743c43eadb9ff1ebad0c1",
-    "ops/hetzner/dormant-container-admission.py": "9647e2b63cdc2a05ed673b0ac46bac822b7d24e52cbaff98f801063f6321a3c8",
+    "ops/hetzner/dormant-container-admission.py": "f44490aeca05eaaf1e5bf4465aef341f7e7bebf95350367c976ef82eb7846795",
     "ops/hetzner/durable-disposable-records.py": "1e588f9bbe838cde7269a2428332f0c80502c77532dbb6418c74949737c9d55b",
     "ops/hetzner/host-process-admission.py": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
     "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
@@ -7937,7 +7940,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "0bbe4b8a05634d4f75d4f9b7519fa874b9997d126aea6b47342553cfaf2f2e93",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "730294ab06eaa24865f84394f9a7dbe652269ec5eecefc5513574f33807a5370",
+    "scripts/quality-repo.sh": "e863ed3e63abf81ec8dfb4c34202ba251b51697ae7cdbac10f784affee2ca5da",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7953,6 +7956,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "b3ba31f78fa10e86a14389b11768f8b91f950101db8a565a67e9515e12992361",
     "scripts/test-bpf-recovery-admission.py": "2a517e966c4881ee0cc52d3ea5bfd2ec7c572486ccee13c083ced8ee5d4d1f2d",
+    "scripts/test-cold-container-admission.py": "42522176fc98680ae0ba23cbc68d8ab4d7d13c8abf8716e31a6f2ec3138a619c",
     "scripts/test-coordinated-capture.py": "985533f688d3921709a02ca94ff6092c8e806de3633b4302fc135ec9cd34cc5e",
     "scripts/test-coordinated-disposable-creation.py": "42fab595f45f4bd936a3814ee54c669d1a1120cdfaa9164c82eb4287c0a7fb9e",
     "scripts/test-coordinated-disposable-linux.py": "1e154fdbaefe37d5f3f1d21ebb4e9fc836f8f4e6e1fab6fca33995d1a05b5560",
@@ -7962,7 +7966,7 @@
     "scripts/test-course-identity.sh": "1913c964fce91156eba43cfe4dee2aa531e4b8885eec9ef9a47b50f8e64c059f",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-disposable-creation-spec.py": "bf172d6d33beb27ffc92af0fd1cd168b1c8c0edb5fb75e65691a55d6d901c008",
-    "scripts/test-dormant-container-admission.py": "b4bdb4d628ac274323b1df8ac108a936846bdf76ba4660e55465ccd0e7618137",
+    "scripts/test-dormant-container-admission.py": "46c7d38d96cd8c914ee98429b52b049e692c3930349e968e17937de0dacf6d57",
     "scripts/test-dormant-container-reboot-linux.py": "39ab8874b8ff4b3773853955e6005deb1c7056d8753eeb888203460a27965585",
     "scripts/test-durable-disposable-records.py": "5e055f74d14f238eb376249d368745236adb3e174ed763f01897973aba4c0c0a",
     "scripts/test-hetzner-backup.py": "ca7c23199f118b05edf3f753a6fb49a40e84beddc883ba9d0eb3a8131eb9cd43",
@@ -13604,6 +13608,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/cold-container-admission.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-outbound-quarantine.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
@@ -13659,6 +13669,12 @@
       }
     ],
     "scripts/test-legacy-stop-policy.py": [
+      {
+        "requirement": "DEPLOY-QUARANTINE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-cold-container-admission.py": [
       {
         "requirement": "DEPLOY-QUARANTINE-001",
         "relationship": "tests"
@@ -14237,6 +14253,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-32f43b422285068f",
+      "path": "ops/hetzner/cold-container-admission.py",
+      "sha256": "a43ba0ed22b2fcdd936028ade3e6c9fc93deb6b73c01e753d690ba3e28992d40",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-93a9612c9f1fea9b",
       "path": "ops/hetzner/compose.production.yaml",
       "sha256": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
@@ -14346,7 +14374,7 @@
     {
       "id": "SURFACE-7a734da2701e0301",
       "path": "ops/hetzner/dormant-container-admission.py",
-      "sha256": "9647e2b63cdc2a05ed673b0ac46bac822b7d24e52cbaff98f801063f6321a3c8",
+      "sha256": "f44490aeca05eaaf1e5bf4465aef341f7e7bebf95350367c976ef82eb7846795",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16786,7 +16814,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "730294ab06eaa24865f84394f9a7dbe652269ec5eecefc5513574f33807a5370",
+      "sha256": "e863ed3e63abf81ec8dfb4c34202ba251b51697ae7cdbac10f784affee2ca5da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17647,6 +17675,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-06dfe55047c11b77",
+      "path": "scripts/test-cold-container-admission.py",
+      "sha256": "42522176fc98680ae0ba23cbc68d8ab4d7d13c8abf8716e31a6f2ec3138a619c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-QUARANTINE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9d1fe37e56cb7506",
       "path": "scripts/test-contextual-reputation-worker-migration.sh",
       "sha256": "2e8b71b4f9773e9271351c105c2158a3e255264c924eba039e2c2023cc63aa95",
@@ -17822,7 +17862,7 @@
     {
       "id": "SURFACE-a869af36ac58760b",
       "path": "scripts/test-dormant-container-admission.py",
-      "sha256": "b4bdb4d628ac274323b1df8ac108a936846bdf76ba4660e55465ccd0e7618137",
+      "sha256": "46c7d38d96cd8c914ee98429b52b049e692c3930349e968e17937de0dacf6d57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37416,7 +37456,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9943505c30024dfb6bfd941035a25d70ab9227c813bd954b04a386d9e70ae548",
+      "sourceSha256": "af15897819270ef11b9ce7a6f0c0de003c49e1b6896febfb45f5bcdd4c952f92",
       "definition": {
         "states": [
           "absent",

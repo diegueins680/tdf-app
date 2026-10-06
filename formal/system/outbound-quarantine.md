@@ -316,3 +316,39 @@ revision declarations, failed synchronization,
 late/repeated preparation, changed saved bytes, and denial before ordinary stop
 or reboot effects. These checks qualify durable binding, not the referenced
 legacy captures, provider outcomes, host restriction or rollout.
+
+## Container states at acknowledged cold-release boundaries
+
+`cold-container-admission.py` connects the reviewed initial Docker snapshot with
+the privately prepared original deployment and the real release journal. Its
+constructor is allowed only before the first maintenance intent. It binds all
+three original IDs and full configuration fingerprints, requires exactly those
+originals to be running, and retains an independent copy of the reviewed policy.
+
+The acknowledged prefix determines the required running original services:
+
+| Completed boundary | Running originals |
+| --- | --- |
+| Prepared | API, database, edge |
+| Maintenance | API, database |
+| Stop writers | Database |
+| Stop database, capture, encrypt, retrieve off host | None |
+
+Still-running originals and pre-existing dormant containers must match the exact
+initial rows. A planned stopped original must retain its complete configuration,
+network identities, original start time, restart count and restart policy, have PID zero and exited status, and carry
+literal persisted manual-stop/started-before flags. Its changed private metadata
+digest remains in the observation. No unknown or disposable container is allowed.
+The daemon incarnation and host boot identity must remain unchanged. The prepared
+original file is revalidated and the journal prefix is held constant across two
+samples. A pending intent, process transfer, reboot, or restore-isolate boundary
+rejects; constructing a new checker after maintenance also rejects.
+
+This is a completed-boundary container predicate, not a controller or live network
+guard. It does not authenticate the referenced qualification artifacts, admit an
+in-flight effect, prove an acknowledged effect correct, establish a graceful
+shutdown or exit code, or permit legacy capture/recovery. Existing source/capture
+checks remain required. Fresh-boot recovery, descriptor-bound disposable phases
+and the composite host guard remain separate integration obligations. The twelve
+portable tests use real journal files but synthetic Docker/host observations;
+they do not establish an actual production cold-stop qualification.

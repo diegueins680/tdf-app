@@ -72,9 +72,12 @@ def configuration_fingerprint(value):
 def container_row(value,metadata=None):
     cid=identifier(value['Id']);state=value['State'];host=value['HostConfig']
     require(all(type(state[key]) is bool for key in ('Running','Paused','Restarting','Dead'))
-            and type(state['Pid']) is int and state['Pid']>=0)
+            and type(state['Pid']) is int and state['Pid']>=0
+            and isinstance(state['StartedAt'],str) and 0<len(state['StartedAt'])<=64
+            and type(value['RestartCount']) is int and value['RestartCount']>=0)
     row={'id':cid,'configurationSha256':configuration_fingerprint(value),'running':state['Running'],'pid':state['Pid'],'paused':state['Paused'],
          'restarting':state['Restarting'],'dead':state['Dead'],'status':state['Status'],
+         'startedAt':state['StartedAt'],'restartCount':value['RestartCount'],
          'restartPolicy':host['RestartPolicy'],'networkMode':host['NetworkMode'],
          'networkIds':sorted(identifier(n['NetworkID']) for n in value['NetworkSettings']['Networks'].values()),
          'metadata':metadata}
@@ -215,6 +218,8 @@ def admit(snapshot,policy):
     ids=[]
     for row in snapshot['containers']:
         ids.append(identifier(row['id']))
+        require(isinstance(row.get('startedAt'),str) and 0<len(row['startedAt'])<=64
+                and type(row.get('restartCount')) is int and row['restartCount']>=0)
         require(isinstance(row.get('configurationSha256'),str) and re.fullmatch('[a-f0-9]{64}',row['configurationSha256']))
         if row['running']:
             require(row['pid']>0 and row['status']=='running' and row['metadata'] is None
