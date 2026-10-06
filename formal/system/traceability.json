@@ -7025,7 +7025,16 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
-        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/api/eventTickets.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "formal/system/compiled-api-surface.json"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
@@ -7146,7 +7155,7 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "c0e4699bc5fd5331c75b44c91e2542d7831d511ebd83eb166b732b2e599f0514",
+    "formal/system/compiled-api-surface.json": "ad7ba5c5b46dabc3ee52381ebcb52b713cfddccfc54415db9a30a95bef3e0206",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
@@ -7324,6 +7333,7 @@
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a2f12da2f608410ce851d0327a3311bf5a04a8b32295a487ec6ddfed718f89dd",
+    "tdf-hq-ui/src/api/eventTickets.ts": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
     "tdf-hq-ui/src/api/generated/types.ts": "3d5e9e22af3434fe660a24f5e16a94b92ff169bf267b632837b441263815e97b",
@@ -7331,6 +7341,7 @@
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+    "tdf-hq-ui/src/api/socialEvents.ts": "26b020b83adee5965951116a738dd516ada39825ca4458ff4e7a0dc1d04db82a",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "e44b0092e64730479c4742b9d1e0ba8719d6dd9d835e628f31ac6de1362436f3",
@@ -7444,6 +7455,7 @@
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "74dd59f67c481f005bfb5183e3cea12fed33aa8182c7f96b94f95984055f1a2a",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
@@ -7468,6 +7480,7 @@
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "c73b9e9232e3581b27826b1e8ed52af13eb9bd97bf49f41f6cf0ecabf6a3c7a0",
+    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "4097090d8de171c6100bd8d2270cd1edd335b33e24a90ae677543d942b2aed42",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
     "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
@@ -8036,6 +8049,10 @@
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/api/generated/types.ts": [
@@ -8285,6 +8302,10 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "implementation"
       }
     ],
@@ -9619,6 +9640,10 @@
     "formal/system/compiled-api-surface.json": [
       {
         "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "implementation"
       }
     ],
@@ -11926,6 +11951,10 @@
       {
         "requirement": "EVT-FUNNEL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/analytics/useTicketFunnel.ts": [
@@ -11943,6 +11972,10 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": [
       {
         "requirement": "EVT-FUNNEL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "implementation"
       }
     ],
@@ -11989,6 +12022,30 @@
       }
     ],
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventTickets.ts": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/socialEvents.ts": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": [
       {
         "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "implementation"
@@ -16922,6 +16979,10 @@
         {
           "requirement": "EVT-FUNNEL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -17301,7 +17362,12 @@
       "path": "tdf-hq-ui/src/api/eventTickets.ts",
       "sha256": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-743e4202864493ee",
@@ -17374,6 +17440,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
           "relationship": "implementation"
         }
       ]
@@ -17781,7 +17851,12 @@
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
       "sha256": "26b020b83adee5965951116a738dd516ada39825ca4458ff4e7a0dc1d04db82a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5658ebb431d6a53d",
@@ -20943,6 +21018,10 @@
         {
           "requirement": "EVT-FUNNEL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -22305,6 +22384,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
           "relationship": "implementation"
         }
       ]
@@ -25439,7 +25522,12 @@
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
       "sha256": "74dd59f67c481f005bfb5183e3cea12fed33aa8182c7f96b94f95984055f1a2a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c1e9e07dfd2c941f",
@@ -26180,7 +26268,12 @@
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
       "sha256": "4097090d8de171c6100bd8d2270cd1edd335b33e24a90ae677543d942b2aed42",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d8b4f1e2ff66bf87",
@@ -31842,7 +31935,6 @@
     "SURFACE-538da406d34b654f",
     "SURFACE-3bcebc3f217667b8",
     "SURFACE-258dda11b4e34b82",
-    "SURFACE-36051dc74bb3ac84",
     "SURFACE-743e4202864493ee",
     "SURFACE-ffd1f7d4f06774cf",
     "SURFACE-1466b07a94b92eb2",
@@ -31898,7 +31990,6 @@
     "SURFACE-56d69609ed44245e",
     "SURFACE-0996ea3719ee9457",
     "SURFACE-f2b48a740f534a82",
-    "SURFACE-b4f37f74b12d2493",
     "SURFACE-5658ebb431d6a53d",
     "SURFACE-44b36f2b091d43e1",
     "SURFACE-241686c2bc3e55cd",
@@ -32788,7 +32879,6 @@
     "SURFACE-fa3f38351dbfe318",
     "SURFACE-d6409fbc750d012c",
     "SURFACE-5f0cc56e954d47f0",
-    "SURFACE-200737fdda273f28",
     "SURFACE-c1e9e07dfd2c941f",
     "SURFACE-224511e286675674",
     "SURFACE-c9bd1bcf315011ee",
@@ -32843,7 +32933,6 @@
     "SURFACE-a8df78704d34c42a",
     "SURFACE-fdec05e03ccd2156",
     "SURFACE-1be6b33abdbda822",
-    "SURFACE-3ff9ad29b119eeb6",
     "SURFACE-d8b4f1e2ff66bf87",
     "SURFACE-5a5861ba5432460f",
     "SURFACE-185047159b48a7cf",
@@ -34477,7 +34566,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dbd1b97322735f24fd4585ddd3bccc1b553f243774a25ca08097352dfc870db2",
+      "sourceSha256": "8b1c8c2f9041befe579f7bd45cd369583b91071fe737f97b4a9da2ee192e635d",
       "definition": {
         "states": [
           "absent",

@@ -7024,7 +7024,16 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
-        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/api/eventTickets.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/analytics/ticketFunnel.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "formal/system/compiled-api-surface.json"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
