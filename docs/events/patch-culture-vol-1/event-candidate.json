@@ -3,7 +3,7 @@
   "status": "commercial_proposal_approved_implementation_in_progress",
   "tdfEventId": "141",
   "publicationAllowed": false,
-  "liveChargesApproved": false,
+  "liveChargesApproved": true,
   "canonicalOrigin": "https://www.tdfrecords.net",
   "sourceUrl": "https://www.instagram.com/p/DeFRIIplgpU/",
   "sourceAuthor": "elemental.zoser",
@@ -221,12 +221,13 @@
     "providerAccountRowsEnabled": false,
     "stripeLiveAccountChargesEnabled": false,
     "stripeLiveAccountPayoutsEnabled": false,
-    "officialSandboxPurchaseVerified": false,
+    "officialSandboxPurchaseVerified": true,
     "officialLivePurchaseVerified": false,
     "secretsExported": false,
     "chargesCreated": 0,
     "smtpTlsAndAuthenticationVerified": true,
-    "externalEmailDeliveryVerified": false
+    "externalEmailDeliveryVerified": false,
+    "chargesCreatedScope": "Production charges only; official sandbox purchases are recorded in the linked evidence."
   },
   "approvedTaxPolicy": {
     "taxBps": 0,

@@ -1003,7 +1003,10 @@ processPaypalWebhookEventIO Env{envPool = pool} environment merchantRef envelope
           result <- tryAny $ flip runSqlPool pool $ do
             mBound <- loadBoundPaypalCapture environment merchantRef captureId
             case mBound of
-              Nothing -> pure PaypalEventIgnored
+              -- Signed provider events can arrive before the capture binding.
+              -- Retain a retryable inbox entry; terminal ignore would lose the
+              -- admission fence when the delayed capture subsequently commits.
+              Nothing -> pure (PaypalEventRetry "PayPal capture binding is not available yet")
               Just bound
                 | currency /= bpcCurrency bound || actualAmount > bpcExpectedAmount bound ->
                     pure (PaypalEventPermanentFailure
@@ -2439,6 +2442,7 @@ data PaypalEventProcessResult
   | PaypalEventIgnored
   | PaypalEventPermanentFailure Text (Maybe Text) (Maybe Text) (Maybe Text)
   | PaypalEventRetry Text
+  deriving (Eq, Show)
 
 data BoundPaypalCapture = BoundPaypalCapture
   { bpcCheckoutId     :: Text
