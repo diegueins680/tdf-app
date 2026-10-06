@@ -5865,7 +5865,8 @@
         "Private native X25519 identity held independently of production for actual off-host recovery",
         "Independently trusted capture and transfer content hashes",
         "Transfer caller authenticates both endpoints and supplies only ciphertext with the independently trusted encryption receipt; channel ownership is exclusive.",
-        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md."
+        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
+        "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md."
       ],
       "inputs": [
         "Private captured bundle or transferred ciphertext",
@@ -5894,7 +5895,8 @@
         "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
         "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified",
         "Trusted ciphertext -> nonce/size/hash-bound offer -> exclusive private durable retention and reopen/hash -> return persisted bytes -> trusted round-trip verification; decryption/restoration remain false.",
-        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation."
+        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
+        "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation."
       ],
       "forbiddenTransitions": [
         "Execute a subsequently replaced pathname instead of verified bytes",
@@ -5904,7 +5906,8 @@
         "Treat public-key encryption as sender authentication",
         "Infer transfer or restored system from encryption/decryption",
         "A changed nonce, frame kind, byte count, hash, truncated stream, persistence failure or substituted path must not complete transfer; existing output cannot be overwritten.",
-        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone."
+        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
+        "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel."
       ],
       "effects": [
         "Exclusive private ciphertext or plaintext output",
@@ -5923,7 +5926,8 @@
         "scripts/install-recovery-tools.py",
         ".github/workflows/ci.yml",
         "ops/hetzner/recovery-transfer.py",
-        "ops/hetzner/coordinated-encryption.py"
+        "ops/hetzner/coordinated-encryption.py",
+        "ops/hetzner/coordinated-retrieval.py"
       ],
       "tests": [
         "scripts/test-recovery-envelope.py",
@@ -5932,7 +5936,8 @@
         "scripts/test-recovery-transfer.py",
         "scripts/test-recovery-transfer-ssh.py",
         "scripts/test-recovery-bundle-ssh.py",
-        "scripts/test-coordinated-encryption.py"
+        "scripts/test-coordinated-encryption.py",
+        "scripts/test-coordinated-retrieval.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -5970,7 +5975,8 @@
         "Reviewed system/root-user scheduler policy and separate process admission; see formal/system/host-schedulers.md.",
         "Reviewed sampled process classes, exact Docker IDs and observer ancestry; see formal/system/host-processes.md.",
         "Capture requires bound candidate/runtime identities, stopped sources, admitted host samples and ten-copy/two-block capacity; see formal/system/coordinated-capture.md.",
-        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md."
+        "Journaled encryption requires the completed capture prefix and the exact recorded private capture receipt; see formal/system/coordinated-encryption.md.",
+        "Journaled retrieval requires the exact completed encryption chain and caller-owned authenticated endpoints; see formal/system/coordinated-retrieval.md."
       ],
       "inputs": [
         "Canonical source/runtime/image/manifest/recipient plan",
@@ -5997,7 +6003,8 @@
         "Ready -> durable ordered intent -> external effect -> context-bound observation -> ready or sequence-complete",
         "Journal maintenance intent -> stop registered backup timer -> require no dispatched backup -> stop edge; next writer intent -> stop exact API with retained legacy root; next database intent -> stop exact DB and admit exited state.",
         "Capture intent -> admit unchanged source manifests -> six-tree bundle -> fsynced private context-bound receipt -> closing source/host admission -> journal observation.",
-        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation."
+        "Recorded capture with unchanged context, binding and plaintext hash -> recipient-bound encrypt intent -> sealed pinned age encryption -> durable private receipt -> closing source admission -> encrypt observation.",
+        "Completed capture/encryption evidence -> ciphertext-bound retrieval intent -> exact durable byte round trip over caller-authenticated channel -> private receipt -> closing source admission -> retrieval observation. Independent endpoint/storage/custody admission remains a separate coordinator obligation."
       ],
       "forbiddenTransitions": [
         "Effect before durable intent",
@@ -6009,7 +6016,8 @@
         "Treat matching scheduler samples as continuous writer exclusion or accept unknown/changed cron, timers, unit configuration or user managers.",
         "Treat executable-file fingerprints or matching process samples as process-memory attestation or continuous writer exclusion.",
         "Complete capture after sampled legacy/unit/source drift or unsupported unit metadata; treat a persisted receipt without journal observation as completion.",
-        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone."
+        "Treat an unobserved, changed or context-mismatched capture receipt as authority to encrypt; claim off-host recovery or key custody from encryption alone.",
+        "Complete retrieval after returned ciphertext corruption, source drift, receipt persistence failure or sampled late writer; infer independent off-host custody from a local byte channel."
       ],
       "effects": [
         "Private immutable records and permanent lock",
@@ -6032,7 +6040,8 @@
         "ops/hetzner/host-process-admission.py",
         "ops/hetzner/host-process-policy.json",
         "ops/hetzner/coordinated-capture.py",
-        "ops/hetzner/coordinated-encryption.py"
+        "ops/hetzner/coordinated-encryption.py",
+        "ops/hetzner/coordinated-retrieval.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6044,7 +6053,8 @@
         "scripts/test-host-scheduler-admission.py",
         "scripts/test-host-process-admission.py",
         "scripts/test-coordinated-capture.py",
-        "scripts/test-coordinated-encryption.py"
+        "scripts/test-coordinated-encryption.py",
+        "scripts/test-coordinated-retrieval.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6933,7 +6943,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/build.yml": "1fb2ed40e91941ec91cfc8bf17ab1622221a9433e7d865cfdfa6cb907bb88aa7",
+    ".github/workflows/build.yml": "b0b2601613392e594597bf921f87aedfa04343be380182fa4700f152dc88732c",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "098b6616672b5aaf9addd8c8615c1ba397e0c320e049ce25a986adf5d79c3886",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
@@ -6941,7 +6951,7 @@
     "docs/catalog-persistence/catalog-list-decisions.json": "d34cc2c8fe9da22e976e5e046538641354413998fbf3c2e863c2be7c06d802ed",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
-    "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+    "e2e/web/persona-public.spec.mjs": "80baeedb18b6f93197e1a8f45a68d73610effd4fbec46bc1d416f1cfab1b2a1f",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -7038,9 +7048,10 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
-    "ops/hetzner/coordinated-capture.py": "00f5cfeba0448174a7f944b2ee3a019914e56e5f99591a302a58da51a8987833",
+    "ops/hetzner/coordinated-capture.py": "a658f4ba429e041b8711c2b047402f317bfbdf87805e0f7d64d5ef8b0aafe87b",
     "ops/hetzner/coordinated-encryption.py": "dc589ccd89a30f8b8d8b6f509f5c2ea92d474fbd547684dc72f9a74db3aa188d",
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
+    "ops/hetzner/coordinated-retrieval.py": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
     "ops/hetzner/host-process-admission.py": "0fdea1014751628b6dd940ddc9b2c3b0208a085db0d5f3a1c0b679e099a51206",
     "ops/hetzner/host-process-policy.json": "06aef37c87efe5df075978071125a7087b049d49d0b3f7c1116aa7d6c6b036d6",
     "ops/hetzner/host-scheduler-admission.py": "5c98446d3fc788bad2c81a231a80b8d33c72d212ab04f966cdf046fe747850ab",
@@ -7142,7 +7153,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "a422a4db2e9768e80258dbe55fba0b6de556a9fb7d4e63e5838ba3df519398dc",
+    "scripts/quality-repo.sh": "49e3641d980d72d040b54d00aca431cd2ed01f012d409ade073e3c92033ba179",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7159,6 +7170,7 @@
     "scripts/test-coordinated-capture.py": "673b42c6f53262a3ccb7f0321c3fe59f35d839783a1b0fc5d02e9b4ad037324f",
     "scripts/test-coordinated-encryption.py": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
     "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
+    "scripts/test-coordinated-retrieval.py": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
@@ -10896,6 +10908,16 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/coordinated-retrieval.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-recovery-envelope.py": [
       {
         "requirement": "DEPLOY-ENVELOPE-001",
@@ -10921,6 +10943,16 @@
       }
     ],
     "scripts/test-coordinated-encryption.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-coordinated-retrieval.py": [
       {
         "requirement": "DEPLOY-ENVELOPE-001",
         "relationship": "tests"
@@ -11851,7 +11883,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "1fb2ed40e91941ec91cfc8bf17ab1622221a9433e7d865cfdfa6cb907bb88aa7",
+      "sha256": "b0b2601613392e594597bf921f87aedfa04343be380182fa4700f152dc88732c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12141,7 +12173,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+      "sha256": "80baeedb18b6f93197e1a8f45a68d73610effd4fbec46bc1d416f1cfab1b2a1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12344,7 +12376,7 @@
     {
       "id": "SURFACE-d681f7e5079bf17c",
       "path": "ops/hetzner/coordinated-capture.py",
-      "sha256": "00f5cfeba0448174a7f944b2ee3a019914e56e5f99591a302a58da51a8987833",
+      "sha256": "a658f4ba429e041b8711c2b047402f317bfbdf87805e0f7d64d5ef8b0aafe87b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12377,6 +12409,22 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-71696c7cf4e02830",
+      "path": "ops/hetzner/coordinated-retrieval.py",
+      "sha256": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
         }
       ]
@@ -14607,7 +14655,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a422a4db2e9768e80258dbe55fba0b6de556a9fb7d4e63e5838ba3df519398dc",
+      "sha256": "49e3641d980d72d040b54d00aca431cd2ed01f012d409ade073e3c92033ba179",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15482,6 +15530,22 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-03fa8beae0c73ea0",
+      "path": "scripts/test-coordinated-retrieval.py",
+      "sha256": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "tests"
         }
       ]
@@ -34354,7 +34418,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "eec521b3ef98e9bb6744b2d575bb4ee062c0be420be3bd253d6976bdb03cd2c7",
+      "sourceSha256": "629b6837f13bfaa7ae3231b1979ed004305f339e2415668a21a7db2c8afc30af",
       "definition": {
         "states": [
           "absent",

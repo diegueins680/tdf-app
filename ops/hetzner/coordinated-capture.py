@@ -70,7 +70,8 @@ class Capture:
 
     def guard(self,*,pending=False,stage='capture'):
         prefixes={'capture':['maintenance','stop-writers','stop-database'],
-                  'encrypt':['maintenance','stop-writers','stop-database','capture']}
+                  'encrypt':['maintenance','stop-writers','stop-database','capture'],
+                  'retrieve-off-host':['maintenance','stop-writers','stop-database','capture','encrypt']}
         require(stage in prefixes)
         require(os.getpid()==self.owner and self.clone.reservation_pid==self.owner
                 and self.clone.target is None and not self.clone.creation_attempted and not self.clone.start_attempted)

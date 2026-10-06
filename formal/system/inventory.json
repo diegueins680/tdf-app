@@ -71,6 +71,7 @@
       "ops/hetzner/coordinated-capture.py",
       "ops/hetzner/coordinated-encryption.py",
       "ops/hetzner/coordinated-recovery-bundle.py",
+      "ops/hetzner/coordinated-retrieval.py",
       "ops/hetzner/host-process-admission.py",
       "ops/hetzner/host-process-policy.json",
       "ops/hetzner/host-scheduler-admission.py",
@@ -387,6 +388,7 @@
       "scripts/test-coordinated-capture.py",
       "scripts/test-coordinated-encryption.py",
       "scripts/test-coordinated-recovery-bundle.py",
+      "scripts/test-coordinated-retrieval.py",
       "scripts/test-course-checkout-runtime-migration.sh",
       "scripts/test-course-identity.sh",
       "scripts/test-credential-lifecycle.sh",
@@ -2361,7 +2363,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "1fb2ed40e91941ec91cfc8bf17ab1622221a9433e7d865cfdfa6cb907bb88aa7",
+      "sha256": "b0b2601613392e594597bf921f87aedfa04343be380182fa4700f152dc88732c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2559,7 +2561,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+      "sha256": "80baeedb18b6f93197e1a8f45a68d73610effd4fbec46bc1d416f1cfab1b2a1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2679,7 +2681,7 @@
     {
       "id": "SURFACE-d681f7e5079bf17c",
       "path": "ops/hetzner/coordinated-capture.py",
-      "sha256": "00f5cfeba0448174a7f944b2ee3a019914e56e5f99591a302a58da51a8987833",
+      "sha256": "a658f4ba429e041b8711c2b047402f317bfbdf87805e0f7d64d5ef8b0aafe87b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2692,6 +2694,12 @@
       "id": "SURFACE-e2cca7d2630a1f7b",
       "path": "ops/hetzner/coordinated-recovery-bundle.py",
       "sha256": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-71696c7cf4e02830",
+      "path": "ops/hetzner/coordinated-retrieval.py",
+      "sha256": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3987,7 +3995,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a422a4db2e9768e80258dbe55fba0b6de556a9fb7d4e63e5838ba3df519398dc",
+      "sha256": "49e3641d980d72d040b54d00aca431cd2ed01f012d409ade073e3c92033ba179",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4552,6 +4560,12 @@
       "id": "SURFACE-26ea9f6d8b902fdd",
       "path": "scripts/test-coordinated-recovery-bundle.py",
       "sha256": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-03fa8beae0c73ea0",
+      "path": "scripts/test-coordinated-retrieval.py",
+      "sha256": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22165,6 +22179,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/coordinated-retrieval.md",
+      "sha256": "f6edbe307f8e2f63d559fa47ee49349cfb7375a8ec94ca0c117dbb68be3693a7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/cors-boundary.md",
       "sha256": "f38d760a8c5c331767874b7c35c91760d9b09055a7b2670f825d859a79b4da3d",
       "authority": "inferred",
@@ -22397,7 +22418,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "eec521b3ef98e9bb6744b2d575bb4ee062c0be420be3bd253d6976bdb03cd2c7",
+      "sha256": "629b6837f13bfaa7ae3231b1979ed004305f339e2415668a21a7db2c8afc30af",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
