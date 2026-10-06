@@ -946,6 +946,80 @@
       }
     },
     {
+      "id": "SYS-STATE-001",
+      "title": "Declared lifecycle machines correspond to the migrated schema",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision.",
+      "domain": "SYS",
+      "actors": [
+        "Reviewer",
+        "CI",
+        "Schema migration author",
+        "Model author"
+      ],
+      "preconditions": [
+        "The production migration manifest applies to an empty baseline fixture."
+      ],
+      "inputs": [
+        "Domain formal-model.yaml machines",
+        "formal/system/state-machine-bindings.json",
+        "Migrated PostgreSQL catalog"
+      ],
+      "state": {
+        "machine": [
+          "unbound",
+          "bound-conformant",
+          "bound-deviation"
+        ]
+      },
+      "allowedTransitions": [
+        "Model or schema change with matching counterpart -> bound-conformant",
+        "Reviewed difference with authority decision -> bound-deviation"
+      ],
+      "forbiddenTransitions": [
+        "Unreviewed difference -> admitted",
+        "Repaired difference with stale deviation -> admitted",
+        "Declared machine -> unbound without exclusion"
+      ],
+      "effects": [
+        "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
+        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048)."
+      ],
+      "authorization": "Not applicable; schema and declaration check only.",
+      "privacy": "Uses schema catalog only; no row data.",
+      "concurrency": "Checked against a quiescent migrated database.",
+      "idempotency": "Deterministic for an unchanged manifest and model.",
+      "failure": "Any unbound machine, catalog lookup failure or non-exact difference fails CI.",
+      "recovery": "Correct the model, add an additive migration, or record a reviewed deviation with an authority decision.",
+      "observability": "Gate output names the machine, comparison and observed difference.",
+      "authority": "reconciled",
+      "source": "formal/system/state-machine-correspondence.md; ADR-0114; effective schema from 184 manifest migrations on 2026-10-06",
+      "property": "Declared states (and SQL-encoded transitions) equal the migrated schema up to reviewed deviations",
+      "contract": "formal/system/state-machine-correspondence.md",
+      "implementation": [
+        "scripts/check-state-machines.py",
+        "formal/system/state-machine-bindings.json",
+        "docs/revenue-platform/formal-model.yaml"
+      ],
+      "tests": [
+        "scripts/test-state-machines.py",
+        "scripts/__tests__/ci-change-scope.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
+      "evidence": "Gate output on the migrated CI database and twelve negative controls",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
+      "ambiguity": [
+        "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
+        "Fourteen machines enforce transitions only in application code."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
+      }
+    },
+    {
       "id": "AUTH-CORS-001",
       "title": "Explicit production credentialed browser origins",
       "statement": "Production must reject credentialed allow-all or wildcard CORS configuration and reject requests from origins outside its explicit trusted origins before the application handler executes. Explicitly trusted origins must support the existing X-Order-Lookup-Token header for public checkout GET/POST preflights; header permission does not replace server-side order authorization.",
@@ -2849,7 +2923,7 @@
       "statement": "Customer-facing knowledge retrieval may rank existing public courses using cached embeddings, but must render current public metadata, never raw indexed private content, and omit a course absent when its metadata is read.",
       "domain": "PRIV",
       "actors": [
-        "Anonymous assistant visitor",
+        "Authenticated Social Inbox staff using the assistant",
         "Instagram/Facebook/WhatsApp automated reply recipient"
       ],
       "preconditions": [
@@ -2882,7 +2956,7 @@
       "effects": [
         "Only current public course documents reach the calling assistant adapter."
       ],
-      "authorization": "Anonymous and customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
+      "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
       "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
@@ -4856,6 +4930,91 @@
       "ambiguity": [
         "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
         "SQL/role conformance is empirical; not formally covered."
+      ]
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/public-route-admission.md",
+      "critical": true,
+      "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
+      "status": "specified and implemented",
+      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+      },
+      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "observability": "Gate output names each offending method and path.",
+      "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
+      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "id": "AUTH-PUBLIC-001",
+      "title": "Reviewed admission of every unauthenticated route",
+      "domain": "AUTH",
+      "statement": "Every compiled route served without AuthProtect must be registered with exactly one reviewed boundary. Routes exposing staff-only, internal or other-party data, or acting on an existing record identified only by a sequential or user-chosen identifier, must require authentication or a capability. Unregistered, stale or structurally inconsistent registrations fail admission.",
+      "actors": [
+        "Unauthenticated HTTP client",
+        "Authenticated staff",
+        "Payment/messaging provider",
+        "Reviewer"
+      ],
+      "preconditions": [
+        "compiled-api-surface.json matches the built executable (SYS-API-003)."
+      ],
+      "inputs": [
+        "Compiled Servant operation declarations",
+        "formal/system/public-routes.json"
+      ],
+      "state": {
+        "route": [
+          "unregistered",
+          "registered",
+          "debt",
+          "retired"
+        ]
+      },
+      "allowedTransitions": [
+        "New unauthenticated route -> registered with a reviewed boundary",
+        "Insufficient boundary -> registered debt",
+        "Debt -> authenticated, capability-bound or retired"
+      ],
+      "forbiddenTransitions": [
+        "Unregistered unauthenticated route -> served",
+        "Mutating route -> public-read boundary",
+        "Registered capability or signature input removed",
+        "Sequential identifier -> capability for an existing record"
+      ],
+      "effects": [
+        "Legacy course Stripe payment-intent/checkout-session routes retired.",
+        "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
+        "Public session input-list routes retired; scheduling-module routes remain.",
+        "Public inventory list rejects session-scoped availability filters."
+      ],
+      "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
+      "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
+      "concurrency": "Static declaration check; no runtime concurrency assumption.",
+      "idempotency": "Deterministic over the committed snapshot and register.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
+      "implementation": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "formal/system/public-routes.json",
+        "scripts/check-public-routes.py",
+        "tdf-hq/src/TDF/Handlers/InputList.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "scripts/test-public-routes.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Handler enforcement of each registered capability is not mechanically verified.",
+        "Raw mounts may serve paths beyond their prefix.",
+        "DEBT-AUTH-ACADEMY-001 and DEBT-PRIV-WHATSAPP-001 need an identity-proof product decision."
       ]
     },
     {

@@ -45,6 +45,10 @@ function affectsMigrations(file) {
     || file === 'scripts/lib/production-release.mjs'
     || file.startsWith('scripts/render-production-')
     || isPathOrChild(file, 'scripts/__tests__/fixtures')
+    || /^docs\/[^/]+\/formal-model\.yaml$/.test(file)
+    || file === 'formal/system/state-machine-bindings.json'
+    || file === 'scripts/check-state-machines.py'
+    || file === 'scripts/test-state-machines.py'
     || /^tdf-hq\/src\/TDF\/(Models(?:Extra)?|Models\/[^/]+)\.hs$/.test(file);
 }
 

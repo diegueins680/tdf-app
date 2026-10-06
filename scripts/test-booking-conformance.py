@@ -537,7 +537,8 @@ try:
     check('catalog stale retry returns conflict', request(catalog_path, valid, method='POST')[0] == 409)
     check('catalog stale retry has no effect', catalog_state() == after)
 
-    # Anonymous assistant retrieval must not treat the internal index as public.
+    # Staff assistant retrieval must still render only current public course data
+    # (PRIV-RAG-001); the assistant itself is staff-only (AUTH-PUBLIC-001).
     # No OPENAI_API_KEY is present; local embeddings and fallback reply are used.
     embedding = [0] * 1536
     word_hash = 5381
@@ -545,9 +546,11 @@ try:
     embedding[word_hash % 1536] = 1
     def rag_chunk(source, identity, content):
         sql("INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) VALUES ('" + source + "','" + identity + "',0,'" + content + "','{}','" + json.dumps(embedding) + "'::vector)")
+    check('assistant rejects anonymous caller', request('/ads/assist', {'aarMessage': 'hola'}, token=None, method='POST')[0] == 401)
+    check('assistant rejects caller without Social Inbox access', request('/ads/assist', {'aarMessage': 'hola'}, token='fixture-fan', method='POST')[0] == 403)
     def knowledge():
-        status, body = request('/ads/assist', {'aarMessage': 'hola'}, token=None, method='POST')
-        check('anonymous assistant remains available', status == 200)
+        status, body = request('/ads/assist', {'aarMessage': 'hola'}, token='fixture-admin', method='POST')
+        check('staff assistant remains available', status == 200)
         return json.loads(body)['aasKnowledgeUsed']
     for source in ['availability', 'studio_brain', 'campaign', 'ad', 'resource', 'service', 'unknown']:
         rag_chunk(source, 'private-' + source, 'PRIVATE_SENTINEL_' + source)

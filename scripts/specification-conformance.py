@@ -182,6 +182,22 @@ def generate(root=ROOT):
     surfaces = [{**surface, 'requirements': reverse.get(surface['path'], [])}
                 for surface in inventory['surfaces']]
     models = []
+    bindings = json.loads((root/'formal/system/state-machine-bindings.json').read_text())['machines']
+
+    def correspondence(machine_id):
+        binding = bindings.get(machine_id)
+        if binding is None:
+            return 'requires per-transition implementation review'
+        scope = 'states and SQL transitions' if binding.get('transitionFunction') else 'states'
+        deviation = binding.get('deviation', {}).get('classification')
+        result = (f"{scope} checked against migrated {binding['table']}.{binding['column']} "
+                  'by scripts/check-state-machines.py')
+        if deviation:
+            result += f'; reviewed deviation: {deviation}'
+        if not binding.get('transitionFunction'):
+            result += '; application-enforced transitions require separate evidence'
+        return result
+
     for source in ['docs/revenue-platform/formal-model.yaml', 'docs/music-directory/formal-model.yaml',
                    'docs/operations-control-center/formal-model.yaml']:
         doc = load_yaml(root/source)
@@ -192,7 +208,7 @@ def generate(root=ROOT):
             # Retain absent guards/roles as absent; never invent behavioral policy.
             models.append({'id': f'{source}#{name}', 'source': source,
                            'sourceSha256': sha(root/source), 'definition': definition,
-                           'correspondence': 'requires per-transition implementation review'})
+                           'correspondence': correspondence(f'{source}#{name}')})
     for requirement in requirements:
         state = requirement['state']
         if isinstance(state, dict) and 'states' in state and 'transitions' in state:
