@@ -1143,14 +1143,30 @@
       "reviewed": true
     },
     {
-      "id": "b49e7cbf2d277aeb3533",
-      "classification": "dynamic-business-catalog",
+      "id": "5a2099d4b06d892edc92",
+      "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
+      "justification": "Typed API-client method names are implementation mechanics; adding bank transfer selection and evidence calls does not create a selectable or reportable domain value.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/eventTickets.ts",
+        "line": 30
+      },
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "mergedDecision": {
+        "id": "b49e7cbf2d277aeb3533",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+        "reviewed": true
+      }
     },
     {
       "id": "9df2f1a6995553f233ea",
@@ -1354,7 +1370,7 @@
       "reviewed": true
     },
     {
-      "id": "74f76e178df15df54768",
+      "id": "e858a9fa43eea647e38e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -1362,17 +1378,33 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
       "evidence": {
         "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 539,
-        "kind": "object-registry",
-        "name": "SocialEventsAPI",
-        "valueCount": 66,
-        "consumerCount": 29,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
+        "line": 562
+      },
+      "mergedDecision": {
+        "id": "74f76e178df15df54768",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+        "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+        "reviewed": true,
+        "reviewMethod": "deterministic-policy-v3",
+        "reviewBatch": "ci-recovery-2026-09-12",
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/socialEvents.ts",
+          "line": 539,
+          "kind": "object-registry",
+          "name": "SocialEventsAPI",
+          "valueCount": 66,
+          "consumerCount": 29,
+          "exactDuplicateIds": [],
+          "similarCandidateIds": []
+        }
       }
     },
     {
@@ -15519,85 +15551,20 @@
       }
     },
     {
-      "id": "8ce8a7e2948f5c0f4c26",
+      "id": "be304ef51a5f288f27e3",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 185-entry manifest: the reviewed 184 entries unchanged, then the additive manual bank transfer hold migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "ticketing-invoice-consolidation-2026-10-06",
-      "reviewMethod": "source-comparison-pending-independent-review",
-      "mergedDecision": {
-        "id": "d8e73943d72078a492ae",
-        "classification": "genuine-technical-constant",
-        "disposition": "explicit-allowlist",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P1-integrity",
-        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 168-entry production migration registry. All 167 prior entries and introduction SHAs are preserved. One additive nullable transfer deadline and immutable-after-approval guard extends the existing versioned checkout policy; rollback refuses to discard configured deadlines. Deployment ancestry and checksums remain required. This registry is release authority, not editable event catalog data.",
-        "reviewed": true,
-        "evidence": {
-          "file": "scripts/production-migrations.json",
-          "line": 3
-        },
-        "reviewBatch": "ticket-transfer-2026-10-05",
-        "previousDecision": {
-          "id": "c66b265a7ea297c37542",
-          "classification": "genuine-technical-constant",
-          "disposition": "explicit-allowlist",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Ordered 167-entry production migration registry. All previous entries and introduction SHAs remain byte-for-byte unchanged; one additive ticket admission audit table is appended. Deployment ancestry, checksums and evidence-preserving rollback remain required. This is release execution authority, not administrator-selectable event data.",
-          "reviewed": true,
-          "evidence": {
-            "file": "scripts/production-migrations.json",
-            "line": 3
-          },
-          "reviewBatch": "ticket-admission-2026-10-05",
-          "previousDecision": {
-            "id": "c6915506d0f7b802519d",
-            "classification": "genuine-technical-constant",
-            "disposition": "explicit-allowlist",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "The ordered production migration protocol preserves all 160 current-main entries with their original introduction SHAs and appends six payment migrations in source order. SQL checksums, deployment ancestry and release approval remain mandatory. This immutable registry is not administrator-selectable product data.",
-            "reviewed": true,
-            "evidence": {
-              "file": "scripts/production-migrations.json",
-              "line": 3
-            },
-            "reviewBatch": "event-editorial-ownership-2026-10-03",
-            "previousDecision": {
-              "id": "dc6d60d733c6eb69ebbf",
-              "classification": "genuine-technical-constant",
-              "disposition": "explicit-allowlist",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P1-integrity",
-              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
-              "reviewed": true,
-              "evidence": {
-                "file": "scripts/production-migrations.json",
-                "line": 3
-              },
-              "reviewBatch": "event-editorial-ownership-2026-10-03",
-              "previousDecision": {
-                "id": "7bf93825f1431a6d52d6",
-                "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
-                "reviewBatch": "universal-interactions-2026-09-28"
-              }
-            }
-          }
-        }
-      },
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06",
+      "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
         "classification": "genuine-technical-constant",
@@ -57189,6 +57156,23 @@
             "reason": "Full prior decision remains in this immutable Git revision; nested earlier provenance is preserved here."
           }
         ]
+      },
+      "mergedDecision": {
+        "id": "8ce8a7e2948f5c0f4c26",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+        "reviewed": true,
+        "evidence": {
+          "file": "scripts/production-migrations.json",
+          "line": 3
+        },
+        "reviewBatch": "ticketing-invoice-consolidation-2026-10-06",
+        "reviewMethod": "source-comparison-pending-independent-review",
+        "predecessorChain": "Complete earlier chain retained at 0bd125024f3c139269444d1b85c43b9acbf0490d:docs/catalog-persistence/catalog-list-decisions.json"
       }
     },
     {
@@ -57205,6 +57189,66 @@
         "line": 354
       },
       "reviewBatch": "ticket-review-regressions-2026-10-06"
+    },
+    {
+      "id": "043590096c6e65c532c7",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could hide a payment-method regression in tests.",
+      "justification": "Synthetic payment method labels in a component regression fixture mirror the server contract; they are not a business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "line": 268
+      },
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06"
+    },
+    {
+      "id": "8d85231b66abb5d8010d",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Mislabeling evidence states could make staff approve unverified transfers.",
+      "justification": "Display labels for the closed manual-evidence state machine enforced by commerce_manual_payment_evidence; states are protocol values, not configurable catalog entries.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
+        "line": 7
+      },
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06"
+    },
+    {
+      "id": "d40548202fb311feb694",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Contract drift could let clients misread evidence as payment.",
+      "justification": "OpenAPI enum of the database-enforced manual evidence state machine; changing it requires a migration, not catalog edits.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 11430
+      },
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06"
+    },
+    {
+      "id": "20bc2548c6d8597e0f15",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Adding review actions without the evidence state machine would bypass separation of duties.",
+      "justification": "Closed staff review action type for the manual evidence state machine; implementation dispatch, not a business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "line": 31
+      },
+      "reviewBatch": "ticket-manual-bank-transfer-2026-10-06"
     }
   ]
 }

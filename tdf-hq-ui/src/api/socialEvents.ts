@@ -411,6 +411,29 @@ export interface StripePaymentIntentDTO {
   spiCurrency: string;
 }
 
+// Manual bank transfer review
+export interface TicketManualPaymentDTO {
+  tmpOrderId: string;
+  tmpPaymentReference: string;
+  tmpBuyerName?: string | null;
+  tmpBuyerEmail?: string | null;
+  tmpQuantity: number;
+  tmpAmountMinor: number;
+  tmpCurrency: string;
+  tmpEvidenceStatus: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  tmpCustomerReference?: string | null;
+  tmpSubmittedAt?: string | null;
+  tmpReviewedAt?: string | null;
+  tmpReviewNotes?: string | null;
+  tmpCheckoutStatus: string;
+  tmpHoldExpiresAt: string;
+}
+
+export interface TicketManualPaymentReviewDTO {
+  tmprAction: 'approve' | 'reject';
+  tmprNotes: string;
+}
+
 // Refunds
 export interface RefundRequestDTO {
   refundRequestReason?: string | null;
@@ -730,6 +753,11 @@ export const SocialEventsAPI = {
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds/${encodeURIComponent(refundId)}/approve`, {}) as RefundDTO,
   rejectRefund: async (eventId: string, refundId: string, data: RejectionReasonDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds/${encodeURIComponent(refundId)}/reject`, data) as RefundDTO,
+  // Manual bank transfer review
+  listManualPayments: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/manual-payments`) as TicketManualPaymentDTO[],
+  reviewManualPayment: async (eventId: string, orderId: string, data: TicketManualPaymentReviewDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/review`, data) as TicketManualPaymentDTO,
   // Transfers
   createTransfer: async (eventId: string, ticketId: string, data: TicketTransferCreateDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/transfer`, data) as TicketTransferDTO,

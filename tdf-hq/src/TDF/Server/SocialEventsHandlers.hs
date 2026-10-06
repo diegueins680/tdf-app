@@ -202,6 +202,7 @@ import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Ticketing.Refund as TicketRefund
+import qualified TDF.Server.TicketManualPayments as ManualPayments
 import qualified TDF.Server.TicketRefunds as TicketRefunds
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.EventResearch as EventResearch
@@ -255,6 +256,8 @@ import TDF.DTO.SocialEventsDTO (
     RefundDTO (..),
     RefundRequestDTO (..),
     RejectionReasonDTO (..),
+    TicketManualPaymentDTO (..),
+    TicketManualPaymentReviewDTO (..),
     RsvpCreateDTO (..),
     RsvpDTO (..),
     RsvpSummaryDTO (..),
@@ -4100,6 +4103,9 @@ socialEventsServer user =
             :<|> listRefunds
             :<|> approveRefund
             :<|> rejectRefund
+            -- Manual bank transfer review
+            :<|> listManualPayments
+            :<|> reviewManualPayment
             -- Transfers
             :<|> createTransfer
             :<|> listTransfers
@@ -5509,6 +5515,39 @@ socialEventsServer user =
             (throwError err500{errBody = "Could not reject refund"})
             (pure . refundEntityToDTO (eventTicketOrderCurrency order))
             mUpdated
+
+    -- Manual bank transfer review
+    listManualPayments :: T.Text -> AppM [TicketManualPaymentDTO]
+    listManualPayments eventIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        liftIO $ runSqlPool (ManualPayments.listTicketManualPayments eventKey) envPool
+
+    reviewManualPayment :: T.Text -> T.Text -> TicketManualPaymentReviewDTO -> AppM TicketManualPaymentDTO
+    reviewManualPayment eventIdStr orderIdStr TicketManualPaymentReviewDTO{..} = do
+        Env{..} <- ask
+        now <- liftIO getCurrentTime
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        orderKey <- parseKeyOr400 "order" orderIdStr
+        action <- either (\msg -> throwError err400{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure $
+            ManualPayments.parseManualReviewAction tmprAction
+        notes <- either (\msg -> throwError err400{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure $
+            ManualPayments.validateManualReviewNotes tmprNotes
+        let reviewer =
+                ManualPayments.ManualReviewer
+                    { ManualPayments.mrPartyId = fromSqlKey (auPartyId user)
+                    , ManualPayments.mrStrictAdmin = hasStrictAdminAccess user
+                    }
+        result <- liftIO $
+            runSqlPool (ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now) envPool
+        paid <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
+        -- Issuance is idempotent and runs after the payment commit, as for provider captures.
+        when paid $
+            void $ liftIO $ runSqlPool (finalizePaidTicketOrder now orderKey) envPool
+        rows <- liftIO $ runSqlPool (ManualPayments.listTicketManualPayments eventKey) envPool
+        case filter ((== T.pack (show (fromSqlKey orderKey))) . tmpOrderId) rows of
+            dto : _ -> pure dto
+            [] -> throwError err404{errBody = "Ticket order not found"}
 
     -- Transfers
     createTransfer :: T.Text -> T.Text -> TicketTransferCreateDTO -> AppM TicketTransferDTO

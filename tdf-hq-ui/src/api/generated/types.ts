@@ -6954,6 +6954,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Choose staff-verified bank transfer for a held ticket order
+         * @description Allowed only while the event policy's selection window is open. Extends the seat hold once, within the approved policy, and returns the transfer instructions and payment reference. No ticket is issued until staff verifies the deposit.
+         */
+        post: operations["selectPublicEventTicketBankTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report the bank transfer reference for staff verification
+         * @description The reference is evidence for review, not payment. Submitting it keeps the seat while staff verifies, bounded by the approved policy.
+         */
+        post: operations["submitPublicEventTicketBankTransferEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/domo": {
         parameters: {
             query?: never;
@@ -10219,6 +10259,11 @@ export interface components {
             termsSummary: string;
             refundPolicy: string;
             transferAllowed: boolean;
+            /**
+             * Format: date-time
+             * @description When set, new checkouts may still choose staff-verified bank transfer until this instant. Null when the policy did not opt in, the window closed, or the rail is not configured.
+             */
+            bankTransferAvailableUntil?: string | null;
         };
         PublicEventTicketStorefront: {
             /** Format: int64 */
@@ -10299,9 +10344,28 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
+            /** @description Present only after the buyer selected bank transfer. */
+            bankTransfer?: components["schemas"]["PublicEventTicketBankTransfer"] | null;
+        };
+        PublicEventTicketBankTransfer: {
+            /** @description Server-configured account details. */
+            instructions: string;
+            /** @description Public order reference the buyer includes with the transfer. */
+            paymentReference: string;
+            /** Format: int64 */
+            amountMinor: number;
+            currency: string;
+            /** @enum {string} */
+            evidenceStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            customerReference?: string | null;
+            /** @description Staff reason, shown only after a rejection. */
+            reviewNotes?: string | null;
+        };
+        PublicEventTicketBankTransferEvidenceRequest: {
+            customerReference: string;
         };
         PublicEventTicketPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -32481,6 +32545,104 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectPublicEventTicketBankTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current checkout state with bank transfer instructions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bank transfer is not configured in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitPublicEventTicketBankTransferEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketBankTransferEvidenceRequest"];
+            };
+        };
+        responses: {
+            /** @description Current checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Invalid reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transfer not selected */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

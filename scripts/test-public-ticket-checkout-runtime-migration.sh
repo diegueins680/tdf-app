@@ -352,4 +352,14 @@ if apply_file tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql; then
   exit 1
 fi
 
-echo "Public ticket checkout migration passed rerun, clean rollback, inactive policy preservation, immutable price/fee binding, verified-payment gating, explicit issuance, exact hold expiry, promotion release, and evidence-aware rollback checks."
+apply_file tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer_rollback.sql
+apply_file tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql
+apply_file tdf-hq/test/integration/ticket_manual_bank_transfer.sql
+if apply_file tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer_rollback.sql; then
+  echo "Manual transfer rollback discarded approved terms or extended holds" >&2
+  exit 1
+fi
+
+echo "Public ticket checkout migration passed rerun, clean rollback, inactive policy preservation, immutable price/fee binding, verified-payment gating, explicit issuance, exact hold expiry, promotion release, manual bank transfer hold bounds, and evidence-aware rollback checks."
