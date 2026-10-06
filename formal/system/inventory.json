@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "5a1984371320fb0bb8ee58eac3e8f52651764146",
+  "mobileRevision": "2059a78d6544c1427f17e7d16f3778d8e42087b9",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -6056,7 +6056,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
+      "sha256": "98a5c66ced513bddfcfd2ca1540f35b4a5bc9097f6215dfdfdd0c605fc773c20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9890,7 +9890,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "8b62fd7457ffb6d4bf94a3f7efa766c2963465539e3a3ffa774a8d298a9eba2f",
+      "sha256": "ef358401f0aa975e292b623bf65f135df8bf618aff2cb36bc92778ac43ad834e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15584,7 +15584,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
+      "sha256": "98a5c66ced513bddfcfd2ca1540f35b4a5bc9097f6215dfdfdd0c605fc773c20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23132,7 +23132,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "8b62fd7457ffb6d4bf94a3f7efa766c2963465539e3a3ffa774a8d298a9eba2f",
+      "sha256": "ef358401f0aa975e292b623bf65f135df8bf618aff2cb36bc92778ac43ad834e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

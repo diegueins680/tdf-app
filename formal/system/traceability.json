@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "5a1984371320fb0bb8ee58eac3e8f52651764146",
+  "mobileRevision": "2059a78d6544c1427f17e7d16f3778d8e42087b9",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -7628,7 +7628,7 @@
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
+    "tdf-hq-ui/src/api/generated/types.ts": "98a5c66ced513bddfcfd2ca1540f35b4a5bc9097f6215dfdfdd0c605fc773c20",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -7688,7 +7688,7 @@
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
     "tdf-hq/config/default.env.example": "5681d9b6ae87dd2bb3d6d3540675b10b39d0615de3380b45ef0f98a24a11f8f6",
-    "tdf-hq/docs/openapi/api.yaml": "8b62fd7457ffb6d4bf94a3f7efa766c2963465539e3a3ffa774a8d298a9eba2f",
+    "tdf-hq/docs/openapi/api.yaml": "ef358401f0aa975e292b623bf65f135df8bf618aff2cb36bc92778ac43ad834e",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -7882,7 +7882,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
+    "tdf-mobile/src/api/generated/types.ts": "98a5c66ced513bddfcfd2ca1540f35b4a5bc9097f6215dfdfdd0c605fc773c20",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -18783,7 +18783,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
+      "sha256": "98a5c66ced513bddfcfd2ca1540f35b4a5bc9097f6215dfdfdd0c605fc773c20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23582,7 +23582,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "8b62fd7457ffb6d4bf94a3f7efa766c2963465539e3a3ffa774a8d298a9eba2f",
+      "sha256": "ef358401f0aa975e292b623bf65f135df8bf618aff2cb36bc92778ac43ad834e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31571,7 +31571,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
+      "sha256": "98a5c66ced513bddfcfd2ca1540f35b4a5bc9097f6215dfdfdd0c605fc773c20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
