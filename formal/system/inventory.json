@@ -6812,7 +6812,7 @@
     {
       "id": "SURFACE-2a696a014a007a73",
       "path": "tdf-hq-ui/src/config/appConfig.ts",
-      "sha256": "5ac7f36cc11c6bb2738e4309db91b38148ef18d65f610395cc1683e84f564f0d",
+      "sha256": "ac196e4a26b5e6f47e58cffb528467a05e6fe456a4185aef38455c19dd05bd42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8378,7 +8378,7 @@
     {
       "id": "SURFACE-6905749d4696f870",
       "path": "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
-      "sha256": "5b33d40189bd337c6b5742e2b9786ac27f2bf3e0bd00b588452e6c1cdc825643",
+      "sha256": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9434,7 +9434,7 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "f61b48185ea9d328e2700e29617e83b0b18cafe84459d12e723d8abdde95ac2b",
+      "sha256": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12854,7 +12854,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "d3696369e426d9fa6d4238a0c4d746e3f86eb62a31cb926e748cff719aed4424",
+      "sha256": "ca5b4906941fc1b096e5893fd956029c2d93d7464d3e256caa399b4dd67c2025",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13604,7 +13604,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "a7d4e25e0247abacf6fb3d95c60ffb53596a274f4d42c72e941d6f0e854b5d50",
+      "sha256": "188af92e48e758565e75d2e40863a8923f88b3767de7b3ed4c0f4855d65c5faa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22439,7 +22439,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8fd344098be69c91b343075d4965bbaa0ec1a8b7580e65e12f7ca2674a6a441b",
+      "sha256": "aa7f13491ef047c8081ab8d1c9c2fd9d18535a0e2b68e564e8eba632fbcec4ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
