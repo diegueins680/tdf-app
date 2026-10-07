@@ -82,7 +82,7 @@ const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata 
   locationLabel: 'TDF Records - Quito',
   locationMapUrl: 'https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6',
   whatsappCtaUrl: 'https://wa.me/?text=INSCRIBIRME',
-  landingUrl: 'https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026',
+  landingUrl: 'https://www.tdfrecords.net/curso/bateria-guillermo-diaz-abr-2026',
   daws: ['Bateria acustica', 'Groove'],
   includes: ['8 sesiones presenciales con Guillermo Diaz'],
   sessions: [{ label: 'Nivel 1', date: '2026-04-25' }],
@@ -94,7 +94,7 @@ const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata 
   sessionDurationHours: 2,
   instructorName: 'Guillermo Diaz',
   instructorBio: 'Baterista e instructor.',
-  instructorAvatarUrl: 'https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg',
+  instructorAvatarUrl: 'https://www.tdfrecords.net/assets/tdf-ui/guillermo-diaz-bateria.jpg',
   ...overrides,
 } as CourseMetadata);
 
@@ -201,7 +201,7 @@ describe('CourseProductionLandingPage', () => {
         expect(text(container)).toContain('Guillermo Diaz');
         expect(text(container)).toContain('Enfoque: Bateria acustica, Groove');
         expect(text(container)).toContain('Nivel 8 - Ensamble, performance y proyecto final');
-        expect(container.querySelector('img[src="https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg"]')).not.toBeNull();
+        expect(container.querySelector('img[src="https://www.tdfrecords.net/assets/tdf-ui/guillermo-diaz-bateria.jpg"]')).not.toBeNull();
       });
     } finally {
       await cleanup();

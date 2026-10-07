@@ -21,7 +21,7 @@ export async function onRequest(context) {
 
   try {
     const event = await eventResponse.json();
-    const preview = renderEventMetadata(event, eventId, new URL(context.request.url).origin);
+    const preview = renderEventMetadata(event, eventId);
     const html = injectEventPreview(await assetResponse.text(), preview);
     const headers = new Headers(assetResponse.headers);
     headers.set('Content-Type', 'text/html; charset=utf-8');

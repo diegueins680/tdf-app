@@ -116,10 +116,10 @@ PY
   fi
   report "| ${name} | ${http_code} | ${title//|/\\|} | ${sha} | ${verdict} |"
 done <<'EOF'
-support|https://tdf-app.pages.dev/mobile-app/support.html
-privacy|https://tdf-app.pages.dev/mobile-app/privacy.html
-terms|https://tdf-app.pages.dev/mobile-app/terms.html
-data-deletion|https://tdf-app.pages.dev/mobile-app/data-deletion.html
+support|https://www.tdfrecords.net/mobile-app/support.html
+privacy|https://www.tdfrecords.net/mobile-app/privacy.html
+terms|https://www.tdfrecords.net/mobile-app/terms.html
+data-deletion|https://www.tdfrecords.net/mobile-app/data-deletion.html
 EOF
 
 report ""

@@ -55,6 +55,7 @@
     "functions": [
       "functions/.well-known/apple-app-site-association.js",
       "functions/.well-known/assetlinks.json.js",
+      "functions/_middleware.js",
       "functions/_shared/event-preview.mjs",
       "functions/_shared/ticket-page.mjs",
       "functions/eventos/[eventId].js",
@@ -2613,9 +2614,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6d25c31944ebbae3",
+      "path": "functions/_middleware.js",
+      "sha256": "ab00d7f6b98d3d5b788034a5de2ea774649ab9211e2c6b637433f70089c84611",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
-      "sha256": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
+      "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2627,7 +2634,7 @@
     {
       "id": "SURFACE-8780cd8d489d13bd",
       "path": "functions/eventos/[eventId].js",
-      "sha256": "6320247e4ff5983acd86a4a16b5bfc9c1f82a01b84cf15f1048f62ffec20afe1",
+      "sha256": "b187d6e72c55ccb34930bac8e64928470ef98def12849c046d4004a14aec2fb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2873,7 +2880,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
+      "sha256": "8017978e7babcc0c5786495805a025d1d7b34940ce471a24a992e1b2c2869e52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3809,7 +3816,7 @@
     {
       "id": "SURFACE-8cdaeb57d09457bd",
       "path": "scripts/mobile-publishing-admin-audit.sh",
-      "sha256": "549882acfda89b6af55d59a7154ee97f7b3a4c64892b80957a0182f8b684f072",
+      "sha256": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5015,7 +5022,7 @@
     {
       "id": "SURFACE-d71afc2bac6fdf73",
       "path": "scripts/upsert-course.mjs",
-      "sha256": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
+      "sha256": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5147,25 +5154,25 @@
     {
       "id": "SURFACE-03e3d269984814cc",
       "path": "tdf-hq-ui/public/account/privacy-es.html",
-      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "sha256": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf83998210f0bb9e",
       "path": "tdf-hq-ui/public/account/privacy.html",
-      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "sha256": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-eaa9b5372d91a318",
       "path": "tdf-hq-ui/public/account/terms-es.html",
-      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "sha256": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ee14fa660066a784",
       "path": "tdf-hq-ui/public/account/terms.html",
-      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "sha256": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6803,7 +6810,7 @@
     {
       "id": "SURFACE-2a696a014a007a73",
       "path": "tdf-hq-ui/src/config/appConfig.ts",
-      "sha256": "5ac7f36cc11c6bb2738e4309db91b38148ef18d65f610395cc1683e84f564f0d",
+      "sha256": "7a311c38299457b847c3419222e80323056de9a281664e945d9fc8542150bb7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7217,7 +7224,7 @@
     {
       "id": "SURFACE-15e822b2783165c0",
       "path": "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
-      "sha256": "f28390c4989666ea551f7e6da262ebea7c79ac865e05f9157471b5f495663bb4",
+      "sha256": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7661,7 +7668,7 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "fd4c56048e88fcd529f41f76d9cbdf16b42b6c4898b12cc12fade1247699e27f",
+      "sha256": "b4bff55ea470982276d1ba24e50b05d923b53cef0d0c45568bfe1271d6684d59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9527,7 +9534,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
+      "sha256": "3dede5650855d68f7d48cbfa068a45ba9a06b7c951a9b068e0f8d0575e608a67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12833,7 +12840,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "34d32a48006af10bd01a54341a9b26c38b558fd4c09dd160b33aec307b396605",
+      "sha256": "6024c925fac36d2709f326a5ce398544aa5324261367386842edad94e49e6f4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16363,7 +16370,7 @@
     },
     {
       "path": "IMPLEMENTATION_SUMMARY.md",
-      "sha256": "91c11103297cf7ec92b00ee6543f5dfdf87497817a7dab07d778009ad8b89f2c",
+      "sha256": "177086454456e8ccc689d03625bf987ed029035beef42fc517fafb8c7434393f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16412,7 +16419,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "b55dd35776b160c09b956c310d198f0174eb4da0373c4d4439e8a6a6cf14c648",
+      "sha256": "590b2c2fcc4858c3b8c589a9e68d3b628c90773071a838cbbc0ab7c453a4b42a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16510,7 +16517,7 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "32fa67d90a79511f17e10b61a6d6114eabe68f6111859ce47d37afe57dff5d55",
+      "sha256": "03dd8aa2436dd0d1399a14a963bb1b701d62d13cb2f5acd7cd4575fe764849f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17112,7 +17119,7 @@
     },
     {
       "path": "docs/courses/README.md",
-      "sha256": "b1ae3130c896f1f62029896cf158018bea1a2b3c067e22ecd81aada48652712e",
+      "sha256": "e7aa43be406b9c8f15dc8d162531308be2ed836c76fa2396fbfcad98662f2dca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18190,7 +18197,7 @@
     },
     {
       "path": "docs/mobile-app-store-submission-checklist.md",
-      "sha256": "06f840e58831f2038ac8c7f403fe6ae8e6fc0c35310185cc6325b387a7257438",
+      "sha256": "c32e333e598977aaa43fca92d7ea1e79efe86e9b3cd525426ab6e108e1dce376",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19107,7 +19114,7 @@
     },
     {
       "path": "docs/venue-manager/domo-lender-one-pager.md",
-      "sha256": "19d0be62af7fd9cf728c34b46ea0ea12224b2d105f37cb582c170c0e1fbb7b4f",
+      "sha256": "b0492e503fa54df82da76d92fa41c87f11796760a57021bf5242eecd438667ea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19339,6 +19346,13 @@
     {
       "path": "docs/venue-manager/domo-loan-packet/README.md",
       "sha256": "6404a02822e745cc020ce832f841765c1b49a3b1acc1f8657be08449ebf1c3b0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/web/canonical-public-origin.md",
+      "sha256": "ab1b4ea784baebd1998ec47ba87c8fbdd31b1b2fa2ff9a12cb8f63708ee5661c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22418,7 +22432,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c6ef762822fc14d7c64af18a80cffd90052c32b99f418e4442538959ba1de5bf",
+      "sha256": "3726d2b433f0501f3fdf95893a70c814ddb931224ba34e4e99910f005353a868",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -22586,28 +22600,28 @@
     },
     {
       "path": "tdf-hq-ui/public/account/privacy-es.html",
-      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "sha256": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/account/privacy.html",
-      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "sha256": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/account/terms-es.html",
-      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "sha256": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/account/terms.html",
-      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "sha256": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"

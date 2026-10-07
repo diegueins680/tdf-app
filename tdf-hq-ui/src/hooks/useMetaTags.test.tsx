@@ -7,8 +7,8 @@ function Harness() {
   useMetaTags({
     title: 'Synthetic directory profile',
     description: 'Public SEO fixture',
-    canonical: 'https://tdf-app.pages.dev/directorio/synthetic-profile',
-    ogImage: 'https://tdf-app.pages.dev/artist-fallback.svg',
+    canonical: 'https://www.tdfrecords.net/directorio/synthetic-profile',
+    ogImage: 'https://www.tdfrecords.net/artist-fallback.svg',
     structuredData: { '@context': 'https://schema.org', '@type': 'Person', name: 'Synthetic directory profile' },
   });
   return null;
@@ -23,8 +23,8 @@ describe('useMetaTags directory SEO', () => {
     const root = createRoot(container);
     try {
       await act(async () => root.render(<Harness />));
-      expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe('https://tdf-app.pages.dev/directorio/synthetic-profile');
-      expect(document.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.content).toBe('https://tdf-app.pages.dev/directorio/synthetic-profile');
+      expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe('https://www.tdfrecords.net/directorio/synthetic-profile');
+      expect(document.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.content).toBe('https://www.tdfrecords.net/directorio/synthetic-profile');
       expect(document.querySelector<HTMLMetaElement>('meta[name="twitter:card"]')?.content).toBe('summary_large_image');
       expect(document.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content).toBe('index,follow');
       expect(document.querySelector('script[type="application/ld+json"]')?.textContent).toContain('Synthetic directory profile');

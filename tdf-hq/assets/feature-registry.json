@@ -220,7 +220,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "none",
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/tdf", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/tdf", "documentedException": null },
       "accessRequestEligible": false,
       "aliases": ["/instagram", "/ig", "/sobre-tdf"]
     },
@@ -242,7 +242,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "none",
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/comercio", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/comercio", "documentedException": null },
       "accessRequestEligible": false,
       "aliases": ["/commerce"]
     },
@@ -266,7 +266,7 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "none",
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/distribucion", "documentedException": "Protected release management remains authenticated." },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/distribucion", "documentedException": "Protected release management remains authenticated." },
       "accessRequestEligible": false,
       "aliases": ["/distribution"]
     },
@@ -284,7 +284,7 @@
       "breadcrumb": [],
       "requiredAuth": "public",
       "globalMenu": true,
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/inicio", "documentedException": "The pinned native client does not yet include the directory landing route; use the public responsive web home." },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/inicio", "documentedException": "The pinned native client does not yet include the directory landing route; use the public responsive web home." },
       "aliases": ["/"],
       "apiScopes": [{ "pathPrefix": "/directory", "methods": { "GET": "view" } }]
     },
@@ -550,7 +550,7 @@
       "requiredAuth": "optional",
       "permissions": { "discover": {}, "view": {}, "create": { "recordScope": "cart-or-customer" }, "edit": { "recordScope": "order-owner-or-fulfillment-staff" }, "delete": { "recordScope": "cart-owner-or-admin" } },
       "globalMenu": true,
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/marketplace", "documentedException": "Native commerce catalog is not implemented; secure checkout remains web based." },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/marketplace", "documentedException": "Native commerce catalog is not implemented; secure checkout remains web based." },
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/marketplace", "methods": { "GET": "view", "POST": "create", "PATCH": "edit", "PUT": "edit", "DELETE": "delete" } }, { "pathPrefix": "/packages", "methods": { "GET": "view", "POST": "create" } }, { "pathPrefix": "/service-marketplace", "methods": { "GET": "view", "POST": "create", "PUT": "edit", "PATCH": "edit", "DELETE": "delete" } }]
     },
@@ -850,7 +850,7 @@
       "breadcrumb": [],
       "requiredAuth": "public",
       "globalMenu": true,
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/donar", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/donar", "documentedException": null },
       "accessRequestEligible": false
     },
     {
@@ -867,7 +867,7 @@
       "breadcrumb": [],
       "requiredAuth": "public",
       "globalMenu": true,
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/domo-del-pululahua", "documentedException": null },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/domo-del-pululahua", "documentedException": null },
       "accessRequestEligible": false,
       "aliases": ["/venues/domo-del-pululahua"]
     },
@@ -1426,7 +1426,7 @@
       "requiredModules": ["Internships"],
       "permissions": { "discover": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "view": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"], "recordScope": "self-or-internship-admin" }, "create": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "edit": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"], "recordScope": "self-or-internship-admin" }, "approve": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] } },
       "globalMenu": false,
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/practicas/auditorias/:planId", "documentedException": "The audit checklist uses the responsive authenticated web workflow on mobile." },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/practicas/auditorias/:planId", "documentedException": "The audit checklist uses the responsive authenticated web workflow on mobile." },
       "accessRequestEligible": true,
       "apiScopes": [{ "pathPrefix": "/internships/audit-plans", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }, { "pathPrefix": "/internships/test-cases", "methods": { "GET": "view", "POST": "edit" } }, { "pathPrefix": "/internships/test-executions", "methods": { "PATCH": "edit" } }]
     },
@@ -2484,7 +2484,7 @@
       "requiredModules": ["Internships"],
       "permissions": { "discover": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "view": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"], "recordScope": "own-or-report-admin" }, "create": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "edit": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"], "recordScope": "own-or-report-admin" }, "assign": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "approve": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "export": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] } },
       "globalMenu": true,
-      "mobilePresentation": { "kind": "external-web", "destination": "https://tdf-app.pages.dev/feedback/interno", "documentedException": "Internal reports use the responsive authenticated web workflow on mobile." },
+      "mobilePresentation": { "kind": "external-web", "destination": "https://www.tdfrecords.net/feedback/interno", "documentedException": "Internal reports use the responsive authenticated web workflow on mobile." },
       "aliases": ["/feedback/interno/:reportId"],
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/feedback/internal", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }]

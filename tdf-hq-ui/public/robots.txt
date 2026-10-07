@@ -7,4 +7,4 @@ Allow: /eventos/
 Allow: /venues/
 Disallow: /admin/
 Disallow: /mis-clasificados
-Sitemap: https://tdf-app.pages.dev/sitemap.xml
+Sitemap: https://www.tdfrecords.net/sitemap.xml

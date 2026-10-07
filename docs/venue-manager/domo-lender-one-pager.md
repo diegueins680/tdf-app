@@ -76,7 +76,7 @@ Punto de equilibrio operativo: aproximadamente 2 eventos fuertes por mes si los 
 
 La página pública de cotización y solicitud de reserva ya está activa:
 
-- https://tdf-app.pages.dev/domo-del-pululahua
+- https://www.tdfrecords.net/domo-del-pululahua
 
 El formulario permite estimar una cotizacion, registrar datos del cliente, evento, fecha, invitados y servicios requeridos. La solicitud entra por el API público de reservas de TDF para seguimiento comercial.
 
@@ -93,5 +93,5 @@ El formulario permite estimar una cotizacion, registrar datos del cliente, event
 ## Soportes públicos
 
 - Sitio Domo: https://www.domopululahua.com/
-- Página de cotización: https://tdf-app.pages.dev/domo-del-pululahua
+- Página de cotización: https://www.tdfrecords.net/domo-del-pululahua
 - Tasas BCE abril 2026: https://contenido.bce.fin.ec/documentos/Estadisticas/SectorMonFin/TasasInteres/Indice.htm
