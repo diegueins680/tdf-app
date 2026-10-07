@@ -13790,7 +13790,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "5087a7dd1e0e798843fdc315131f8d267be062d52ae9179aa4a141afd4c96d9a",
+      "sha256": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23538,7 +23538,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "70b123000e9a6e4e5f9752c984e3fb139362952b5ef68d00041cc6d330690fd1",
+      "sha256": "eb33c90bb5437a4a9a224a659ce777c1968317c622febf5ac50bb9510cb1c8e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

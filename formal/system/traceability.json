@@ -7972,7 +7972,7 @@
       "preconditions": [
         "Authenticated session",
         "Policy artist.invitation.artist active",
-        "Admin module for issuance and revocation"
+        "Strict administrator for issuance and revocation"
       ],
       "inputs": [
         "POST /artist-invitations {inviteeLabel, campaign?, expiresInDays?}",
@@ -8010,7 +8010,7 @@
         "Link bound to the redeeming party",
         "Stored onboarding intent artist_profile"
       ],
-      "authorization": "Issuance, listing and revocation require the Admin module; redemption requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
+      "authorization": "Issuance, listing and revocation require a strict administrator (Admin role with only admin/fan/customer roles, plus the Admin module); Studio Manager and Webmaster holders of the Admin module are refused. Redemption requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
       "privacy": "Stores the invitee label typed by staff and the redeeming party; never stores the raw token.",
       "concurrency": "Redemption claims the link with a single conditional UPDATE; concurrent redemptions by different accounts cannot both succeed.",
       "idempotency": "Re-redemption by the bound account is idempotent; revocation of an unused link is idempotent.",
@@ -8751,7 +8751,7 @@
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
-    "tdf-hq/src/TDF/ServerAuth.hs": "5087a7dd1e0e798843fdc315131f8d267be062d52ae9179aa4a141afd4c96d9a",
+    "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
     "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
@@ -31326,7 +31326,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "5087a7dd1e0e798843fdc315131f8d267be062d52ae9179aa4a141afd4c96d9a",
+      "sha256": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39132,7 +39132,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70b123000e9a6e4e5f9752c984e3fb139362952b5ef68d00041cc6d330690fd1",
+      "sourceSha256": "eb33c90bb5437a4a9a224a659ce777c1968317c622febf5ac50bb9510cb1c8e7",
       "definition": {
         "states": [
           "absent",
