@@ -11,6 +11,8 @@ module TDF.Server.TicketManualPayments
   , validateManualReviewNotes
   , listTicketManualPayments
   , reviewTicketManualPayment
+  , validateBankRefundReference
+  , completeBankTransferTicketRefund
   ) where
 
 import           Control.Monad (when)
@@ -25,6 +27,8 @@ import           Database.Persist.Sql
   )
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Ticketing.Refund as TicketRefund
 import           TDF.DTO.SocialEventsDTO (TicketManualPaymentDTO(..))
 import qualified TDF.Models.SocialEventsModels as SM
 
@@ -303,3 +307,62 @@ data Decision = Decision
   , dOrganizer      :: Maybe Text
   , dReviewerEmail  :: Maybe Text
   }
+
+-- | The reference of the bank transfer staff made back to the buyer. It becomes
+-- the canonical provider refund ID, so it must be stable and unique per refund.
+validateBankRefundReference :: Text -> Either Text Text
+validateBankRefundReference raw
+  | T.length clean < 3 || T.length clean > 60 =
+      Left "Bank refund reference must contain 3 to 60 characters"
+  | T.any (\c -> not (isAsciiAlphaNum c || c `elem` ("-_." :: String))) clean =
+      Left "Bank refund reference may contain letters, digits, '-', '_' and '.'"
+  | otherwise = Right ("BT-" <> clean)
+  where
+    clean = T.strip raw
+    isAsciiAlphaNum c = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+
+-- | Complete a requested refund of a bank-transfer ticket order after staff
+-- returned the money. The completing party must differ from the requester
+-- (RefundStore), and only the event organizer or an administrator may act.
+-- Ticket invalidation and inventory release follow the canonical projection.
+completeBankTransferTicketRefund
+  :: ManualReviewer
+  -> SM.SocialEventId
+  -> SM.TicketRefundRequestId
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either Text ())
+completeBankTransferTicketRefund reviewer eventKey requestKey providerRefund now = do
+  binding <- TicketRefund.loadTicketRefundReference requestKey
+  case binding of
+    Nothing -> pure (Left "This refund request has no canonical refund")
+    Just ref -> do
+      authority <- rawSql
+        "SELECT event.organizer_party_id FROM ticket_refund_request request\
+        \ JOIN event_ticket_order ticket_order ON ticket_order.id = request.order_id\
+        \ JOIN social_event event ON event.id = ticket_order.event_id\
+        \ WHERE request.id = ? AND ticket_order.event_id = ?"
+        [toPersistValue requestKey, toPersistValue eventKey]
+        :: SqlPersistT IO [Single (Maybe Text)]
+      record <- Refund.loadRefund ref
+      case (authority, record) of
+        ([Single organizer], Just existing)
+          | not (mrStrictAdmin reviewer || organizer == Just (T.pack (show (mrPartyId reviewer)))) ->
+              pure (Left "Only the event organizer or an administrator may complete this refund")
+          | Refund.rrProvider existing /= "bank_transfer" ->
+              pure (Left "Only bank-transfer payments are refunded manually; use refund approval")
+          | otherwise -> do
+              approved <- Refund.approveRefundForProcessing ref (mrPartyId reviewer) now
+              case approved of
+                Left problem -> pure (Left problem)
+                Right _ -> do
+                  _ <- TicketRefund.completeTicketRefund Refund.VerifiedRefund
+                    { Refund.vrRefund = ref
+                    , Refund.vrProviderRefund = providerRefund
+                    , Refund.vrAmountMinor = Refund.rrAmountMinor existing
+                    , Refund.vrCurrency = Refund.rrCurrency existing
+                    , Refund.vrOccurredAt = now
+                    , Refund.vrCorrelationId = "event-ticket-refund:" <> Refund.refundReferenceId ref <> ":bank_transfer:manual"
+                    }
+                  pure (Right ())
+        _ -> pure (Left "Refund request does not belong to this event")
