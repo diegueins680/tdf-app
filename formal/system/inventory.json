@@ -22480,6 +22480,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/mobile-entry-ux.md",
+      "sha256": "e5591040ee08cf1fad49a7c10a6349705cee350578302a0301f520e93f398509",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/mobile-query-isolation.md",
       "sha256": "b2982e1e88342ee6b6e93853534c7db1060fec384e9e5ee61a27f6e954fe8ffe",
       "authority": "inferred",
@@ -22572,7 +22579,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e4801cb91d4e5096dc711e779d06506709be99ae6e4c3ef7c0c8dab22226b3e5",
+      "sha256": "ec015fa68634800a6a831ca2735a396f1620a0353e740bc21a90e40131db1afc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
