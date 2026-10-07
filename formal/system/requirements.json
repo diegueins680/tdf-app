@@ -7462,7 +7462,8 @@
         "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
         "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx",
         "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
-        "tdf-hq-ui/src/api/whatsappConsentPublic.ts"
+        "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
+        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql"
       ],
       "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
       "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",

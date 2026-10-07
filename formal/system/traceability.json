@@ -7463,7 +7463,8 @@
         "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
         "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx",
         "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
-        "tdf-hq-ui/src/api/whatsappConsentPublic.ts"
+        "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
+        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql"
       ],
       "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
       "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
@@ -7939,6 +7940,7 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql": "c74e42fe9a9b45d2456e0eef00e1a93811d27f816da525519a2920ba0c09b7d5",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
+    "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/src/TDF/API.hs": "1798175ef7aad36f8624bdf9b1bae8e665ade083deeeb54a857b6d0099c8c45e",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
@@ -12863,6 +12865,12 @@
       }
     ],
     "tdf-hq-ui/src/api/whatsappConsentPublic.ts": [
+      {
+        "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": [
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
@@ -26182,7 +26190,12 @@
       "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
       "sha256": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c4cd603babd8c4c",
@@ -34013,7 +34026,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-a4416e6206088130",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-b4cc3e91d4f2bb58",
     "SURFACE-87ed7351125c499c",
@@ -35733,7 +35745,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9a3445c6564a01a3b4b9f7b9d2518fac114e0d4cc8ac8ad068150f47150b722f",
+      "sourceSha256": "8c47668b89a7b64cc497894269069aa66444609858c6382b07b0f25c71a712bb",
       "definition": {
         "states": [
           "absent",
