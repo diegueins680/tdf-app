@@ -38,11 +38,12 @@ never started. A concurrent runner also exits nonzero instead of executing the
 same batch twice. Fly's rolling strategy and `max_unavailable = 1` preserve one
 serving Machine while the candidate starts.
 
-The schema verifier requires all four provider webhook/refund gates to exist.
-It accepts either configured state for PayPal webhook intake, which was enabled
-by the approved live rollout. It does not enable intake or alter any gate.
-PayPal refunds and Datafast webhook/refund capabilities must remain disabled.
-This keeps subsequent releases and restarts compatible with the approved state.
+The schema verifier requires all six provider webhook/refund gates to exist.
+It accepts either configured state for PayPal webhooks, PayPal refunds, Datafast
+webhooks and Datafast refunds, which are approved production capabilities
+(AUTHORITY-050, 2026-10-06). PlaceToPay and Payphone remain staged and must stay
+disabled. The verifier never enables or alters a gate, so subsequent releases and
+restarts preserve the configured production state.
 
 ## Adding a migration
 

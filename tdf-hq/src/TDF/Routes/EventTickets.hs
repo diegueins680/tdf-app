@@ -58,6 +58,7 @@ data PublicEventTicketPolicyDTO = PublicEventTicketPolicyDTO
   , transferAllowed   :: Bool
   , maxTicketsPerOrder :: Int
   , bankTransferAvailableUntil :: Maybe UTCTime
+  , taxInvoiceIssued  :: Bool
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketPolicyDTO
@@ -71,6 +72,7 @@ data PublicEventTicketStorefrontDTO = PublicEventTicketStorefrontDTO
   , timezone          :: Maybe Text
   , venueName         :: Maybe Text
   , venueAddress      :: Maybe Text
+  , imageUrl          :: Maybe Text
   , tiers             :: [PublicEventTicketTierDTO]
   , policy            :: Maybe PublicEventTicketPolicyDTO
   , checkoutAvailable :: Bool
@@ -87,6 +89,9 @@ data PublicEventTicketCheckoutRequest = PublicEventTicketCheckoutRequest
   , buyerPhone    :: Maybe Text
   , promoCode     :: Maybe Text
   , termsAccepted :: Bool
+  , billingIdType :: Maybe Text
+  , billingIdNumber :: Maybe Text
+  , billingName   :: Maybe Text
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketCheckoutRequest
@@ -94,7 +99,7 @@ instance FromJSON PublicEventTicketCheckoutRequest where
   parseJSON value = do
     rejectNullOptionalFields
       "PublicEventTicketCheckoutRequest"
-      ["buyerPhone", "promoCode"]
+      ["buyerPhone", "promoCode", "billingIdType", "billingIdNumber", "billingName"]
       value
     genericParseJSON defaultOptions { rejectUnknownFields = True } value
 

@@ -60,8 +60,8 @@
 - [ ] Keep Datafast callbacks and refunds disabled until an authenticated merchant contract is verified
 
 ### Feature Flags
-- [ ] Confirm `checkout.paypal`, `checkout.paypal.webhooks`, `checkout.paypal.refunds`, and `commerce.mixing_mastering` remain disabled in production until separate approval
-- [ ] Confirm `checkout.datafast.webhooks` and `checkout.datafast.refunds` remain disabled
+- [ ] Confirm `commerce.mixing_mastering` remains disabled in production until separate approval
+- [ ] PayPal and Datafast webhook/refund gates are approved production capabilities (AUTHORITY-050); confirm their configured state is intentional, not a release default
 
 ---
 

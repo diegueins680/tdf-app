@@ -2704,6 +2704,74 @@
       "critical": true
     },
     {
+      "authority": "reconciled",
+      "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
+      "contract": "docs/automatic-production-migrations.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Production entrypoint",
+        "Release operator",
+        "Product owner"
+      ],
+      "preconditions": [
+        "AUTO_APPLY_PRODUCTION_MIGRATIONS=true for the serving API."
+      ],
+      "inputs": [
+        "revenue_feature_flag production rows",
+        "Reviewed production migration bundle"
+      ],
+      "state": {
+        "startup": [
+          "verifying",
+          "serving",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Approved gate state -> serving",
+        "Missing gate or enabled staged provider -> rejected before serving"
+      ],
+      "forbiddenTransitions": [
+        "Approved enabled PayPal/Datafast gate -> rejected",
+        "Verification -> gate enablement"
+      ],
+      "effects": [
+        "Restarts preserve the configured provider state."
+      ],
+      "authorization": "Gate approval is a product decision recorded in authority-decisions.json; verification only checks it.",
+      "privacy": "Reads gate rows only.",
+      "concurrency": "Runs once per container start before the server accepts traffic.",
+      "idempotency": "Repeated verification of an unchanged database is equivalent.",
+      "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "observability": "Fixed exception text names the violated gate class.",
+      "formalModels": [],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
+      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "status": "specified and implemented",
+      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "ambiguity": [
+        "Other startup assertions may encode states that later become approved; each needs the same review."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PG16 test and negative control pass; CI and production release pending."
+      },
+      "id": "DEPLOY-STARTUP-001",
+      "title": "Startup schema verification accepts approved production state",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
+      "implementation": [
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/production-entrypoint.sh"
+      ],
+      "tests": [
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "critical": true
+    },
+    {
       "authority": "approved",
       "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
       "contract": "formal/system/bookings.md",
@@ -7215,6 +7283,171 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Implemented and tested at database and browser boundaries; production configuration and a real verified transfer are pending."
+      }
+    },
+    {
+      "id": "EVT-TICKET-INVOICE-001",
+      "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
+      "domain": "EVT",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "source": "docs/events/ticket-electronic-invoices.md",
+      "contract": "docs/events/ticket-electronic-invoices.md",
+      "actors": [
+        "Ticket buyer",
+        "Event organizer",
+        "Strict administrator",
+        "Invoice worker"
+      ],
+      "preconditions": [
+        "Approved policy with tax_invoice_required",
+        "Provider credentials, issuer identity and an enabled issuer point for the environment"
+      ],
+      "inputs": [
+        "Buyer identification",
+        "Paid checkout snapshot",
+        "Provider document responses"
+      ],
+      "state": {
+        "boundary": "commerce_tax_document, commerce_tax_issuer_point, event_ticket_billing_identity",
+        "authority": "PostgreSQL triggers and lease-fenced worker"
+      },
+      "allowedTransitions": [
+        "Paid invoiced order -> pending invoice",
+        "pending -> submitted -> authorized | rejected",
+        "pending -> failed -> pending (administrator resend)",
+        "pending/submitted -> uncertain on unknown outcome"
+      ],
+      "forbiddenTransitions": [
+        "Selling an invoiced event without configured invoicing",
+        "Paying an invoiced order without an issuer point",
+        "Two invoices for one order",
+        "Changing number, amount or bound access key",
+        "Reopening an authorized invoice",
+        "Automatically resending an uncertain submission"
+      ],
+      "effects": [
+        "One invoice document per paid order",
+        "Provider submission and status polling",
+        "Buyer email by the provider"
+      ],
+      "authorization": "Event organizer or administrator views invoices; only strict administrators resend failed ones.",
+      "privacy": "Identification only when required by the SRI USD 50 rule; credentials stay in server configuration and are redacted from stored errors.",
+      "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims with lease fencing.",
+      "idempotency": "Unique invoice per order; stable access key per document; paid re-transitions do not enqueue again.",
+      "failure": "Validation refusal -> failed; unknown transport outcome -> uncertain; status query failures retry.",
+      "recovery": "Administrators resend failed documents after fixing configuration; uncertain documents are reconciled in the provider.",
+      "observability": "Staff invoice list with status, number, access key, authorization and last error.",
+      "property": "Every paid order of an invoiced policy has exactly one invoice document whose identity never changes.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql",
+        "tdf-hq/src/TDF/Invoice/AccessKey.hs",
+        "tdf-hq/src/TDF/Invoice/BuyerIdentity.hs",
+        "tdf-hq/src/TDF/Invoice/Datil.hs",
+        "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
+        "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql",
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Ticketing/Refund.hs",
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/ticket_tax_invoices.sql",
+        "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "ambiguity": [
+        "Regime legends (e.g. RIMPE) are not automated."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and tested locally; Dátil pruebas authorization and production configuration are pending."
+      }
+    },
+    {
+      "id": "DATA-CRM-001",
+      "statement": "The web CRM contact list must request contacts in explicit server pages (limit 500) until a short page is returned, so contacts beyond the server's default first page of 200 are not silently hidden. The backend remains authoritative for CRM module access and page bounds.",
+      "authority": "reconciled",
+      "source": "PR #504 (CRM contact paging); tdf-hq validatePartyListPagination bounds",
+      "property": "Listing continues until a page shorter than the requested limit",
+      "contract": "tdf-hq-ui/src/api/parties.ts",
+      "implementation": [
+        "tdf-hq-ui/src/api/parties.ts"
+      ],
+      "verification": "Client unit tests; no backend change",
+      "evidence": "Unit tests of multi-page and short-page termination",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact list loads every server page",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/api/parties.test.ts"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests pass; deployed web verification pending."
       }
     }
   ]
