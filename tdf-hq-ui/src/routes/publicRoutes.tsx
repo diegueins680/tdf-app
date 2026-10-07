@@ -3,6 +3,8 @@ import { Navigate, Route, useLocation } from 'react-router-dom';
 
 import PublicBranding from '../components/PublicBranding';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
+import { useSession } from '../session/SessionContext';
+import { COMMUNITY_LANDING_PATH } from '../utils/loginRouting';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
@@ -62,10 +64,16 @@ export function LegacySocialEventsRedirect() {
   return <Navigate to={target ?? '/social/eventos'} replace />;
 }
 
+/** Returning signed-in visitors open Comunidad; guests keep the public start page. */
+export function RootLandingRedirect() {
+  const { session } = useSession();
+  return <Navigate to={session ? COMMUNITY_LANDING_PATH : '/inicio'} replace />;
+}
+
 export function renderPublicRoutes() {
   return (
     <>
-      <Route path="/" element={<Navigate to="/inicio" replace />} />
+      <Route path="/" element={<RootLandingRedirect />} />
       <Route path="/instagram" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/ig" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />

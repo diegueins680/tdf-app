@@ -758,6 +758,460 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     ? `No encontramos artistas en "${selectedGenreFilterName ?? 'el género seleccionado'}". Prueba otro género o limpia el filtro.`
     : 'Pronto encontrarás artistas disponibles para seguir.';
 
+  // Comunidad is artist-first: on the fan/guest view these shortcut sections render
+  // after the artist catalog (in DOM order, so focus order matches what is seen).
+  // The manager hub keeps them at the top as its control panel.
+  const hubShortcutSections = (
+    <>
+      <Grid container spacing={2}>
+        {isHomeManagerView ? (
+          <>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(14,165,233,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <PlayArrowIcon color="primary" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Lanzamientos activos</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Publica, corrige enlaces a plataformas y revisa qué lanzamientos ya están listos para salir al hub.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/label/releases" variant="contained" size="small">
+                      Abrir lanzamientos
+                    </Button>
+                    <Button component={RouterLink} to="/records" variant="text" size="small">
+                      Ver catálogo público
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(34,197,94,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <EditIcon color="success" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Artistas y perfil</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Ajusta bio, portada y slugs desde el panel del sello sin perder el contexto del inicio.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/label/artistas" variant="contained" color="success" size="small">
+                      Editar artistas
+                    </Button>
+                    <Button component={RouterLink} to={artistPublicPath ?? '/label/artistas'} variant="text" size="small">
+                      {artistPublicPath ? 'Ver perfil público' : 'Preparar perfil'}
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <StorefrontIcon color="info" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">CMS y visibilidad</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Cambia hero, texto y bloques visibles del hub antes de revisar cómo sale en público.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/configuracion/cms" variant="contained" color="info" size="small">
+                      Editar CMS
+                    </Button>
+                    <Button component={RouterLink} to="/fans" variant="text" size="small">
+                      Vista comunidad
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(249,115,22,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <EventAvailableIcon color="secondary" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Reservas y activaciones</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Revisa el flujo público de reservas y mantén a mano los accesos a sesiones y radio.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/reservar" variant="contained" color="secondary" size="small">
+                      Abrir reservas
+                    </Button>
+                    <Button component={RouterLink} to="/dj-booth" variant="outlined" color="secondary" size="small">
+                      DJ Booth
+                    </Button>
+                    <Button component={RouterLink} to={radioTargetPath} variant="text" size="small">
+                      Radio y en vivo
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+          </>
+        ) : (
+          <>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(14,165,233,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <EventAvailableIcon color="primary" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Experiencias y reservas</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Agenda sesiones privadas, escuchas guiadas o transmisiones con tus artistas favoritos.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/reservar" variant="contained" size="small">
+                      Reservar ahora
+                    </Button>
+                    <Button component={RouterLink} to="/dj-booth" variant="outlined" size="small">
+                      DJ Booth
+                    </Button>
+                    <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
+                      Sesión en vivo
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(34,197,94,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <WorkspacePremiumIcon color="success" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Membresías y niveles</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Accede a beneficios, lanzamientos anticipados y contenido exclusivo por artista.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/marketplace?category=packages" variant="contained" color="success" size="small">
+                      Ver membresías
+                    </Button>
+                    <Button
+                      component={RouterLink}
+                      to={canManageReleases ? '/label/releases' : '/marketplace'}
+                      variant="text"
+                      size="small"
+                    >
+                      {canManageReleases ? 'Gestionar lanzamientos' : 'Explorar catálogo'}
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <StorefrontIcon color="info" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Tienda</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Compra merch, paquetes digitales y ediciones limitadas directo del artista o del sello.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to="/marketplace" variant="contained" color="info" size="small">
+                      Abrir tienda
+                    </Button>
+                    <Button component={RouterLink} to="/records" variant="text" size="small">
+                      Lanzamientos del sello
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  height: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(249,115,22,0.08))',
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <RadioIcon color="secondary" />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">Radio y audio</Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Únete a transmisiones en vivo o escucha la radio curada mientras sigues artistas.
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button component={RouterLink} to={radioTargetPath} variant="contained" color="secondary" size="small">
+                      Abrir radio
+                    </Button>
+                    {session?.partyId && (
+                      <Button component={RouterLink} to={`/perfil/${session.partyId}`} variant="text" size="small">
+                        Ver mi perfil
+                      </Button>
+                    )}
+                  </Stack>
+                </Stack>
+              </Card>
+            </Grid>
+          </>
+        )}
+      </Grid>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={8}>
+          <ReleaseFeed
+            audioFileInputRef={audioFileInputRef}
+            canManageReleases={canManageReleases}
+            canSeeReleaseFeed={canSeeReleaseFeed}
+            enableFanRolePending={enableFanRoleMutation.isPending}
+            feedLimit={feedLimit}
+            hasAuthToken={hasAuthToken}
+            hasFollows={hasFollows}
+            hasReleaseTargets={hasReleaseTargets}
+            isAuthenticated={isAuthenticated}
+            isFan={isFan}
+            isHomeManagerView={isHomeManagerView}
+            loading={releaseFeedQuery.isLoading}
+            loginPath={loginPath}
+            pendingUploadRelease={pendingUploadRelease}
+            releaseAudioMap={releaseAudioMap}
+            releaseFeed={releaseFeed}
+            releaseLinkDraft={releaseLinkDraft}
+            streamingFallbacks={streamingFallbacks}
+            uploadError={uploadError}
+            uploadingReleaseId={uploadingReleaseId}
+            visibleFeed={visibleFeed}
+            onCancelUpload={handleCancelReleaseUpload}
+            onDriveUploadComplete={handleDriveReleaseUploadComplete}
+            onEnableFanRole={() => enableFanRoleMutation.mutate()}
+            onPlayRelease={handlePlayRelease}
+            onReleaseLinkDraftChange={setReleaseLinkDraft}
+            onSaveReleaseLink={handleSaveReleaseLink}
+            onShowLess={() => setFeedLimit(4)}
+            onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
+            onUploadTrigger={handleUploadTrigger}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Stack spacing={2} height="100%">
+            <Card sx={{ p: 3 }}>
+              <Stack spacing={1.5}>
+                <Typography variant="h6">
+                  {!isAuthenticated ? 'Empieza aquí' : canManageReleases ? 'Panel del sello' : 'Panel rápido'}
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {isHomeManagerView ? (
+                    <>
+                      <StatPill label="Artistas en hub" value={artists.length} />
+                      <StatPill label="Lanzamientos visibles" value={releaseFeed.length} />
+                      {artistProfileQuery.data && (
+                        <StatPill label="Fans de tu perfil" value={artistProfileQuery.data.apFollowerCount} />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <StatPill label="Artistas que sigues" value={follows.length} />
+                      {artistProfileQuery.data && (
+                        <StatPill label="Fans de tu perfil" value={artistProfileQuery.data.apFollowerCount} />
+                      )}
+                    </>
+                  )}
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  {!isAuthenticated
+                    ? 'Explora artistas, guarda favoritos al crear tu cuenta y vuelve para seguir sus lanzamientos.'
+                    : canManageReleases
+                      ? 'Revisa lanzamientos, perfiles y activos del hub desde un solo lugar.'
+                      : isFan
+                        ? 'Actualiza tu perfil fan y sigue artistas para ordenar mejor tu feed.'
+                        : 'Activa tu rol Fan para guardar artistas y recibir novedades personalizadas.'}
+                </Typography>
+                {!isAuthenticated && (
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button
+                      component={RouterLink}
+                      to="/login?signup=1&intent=follow_artists&redirect=/fans"
+                      variant="outlined"
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Crear cuenta fan
+                    </Button>
+                    <Button component={RouterLink} to="/records" variant="text" sx={{ textTransform: 'none' }}>
+                      Ver lanzamientos
+                    </Button>
+                  </Stack>
+                )}
+                {isAuthenticated && canManageReleases && (
+                  <Button component={RouterLink} to="/label/releases" variant="outlined">
+                    Gestionar lanzamientos
+                  </Button>
+                )}
+                {isAuthenticated && !canManageReleases && (
+                  <Button component={RouterLink} to="/records" variant="outlined">
+                    Ver sesiones y lanzamientos
+                  </Button>
+                )}
+              </Stack>
+            </Card>
+            <Card sx={{ p: 3 }}>
+              <Stack spacing={1.5}>
+                <Typography variant="h6">
+                  {isHomeManagerView ? 'Atajos de gestión' : !isAuthenticated ? 'Artistas destacados' : 'Sugerencias para seguir'}
+                </Typography>
+                {isHomeManagerView ? (
+                  <Stack spacing={1.25}>
+                    {homeManagerActions.map((action) => (
+                      <Box
+                        key={action.title}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          bgcolor: 'background.paper',
+                        }}
+                      >
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                            {action.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {action.description}
+                          </Typography>
+                          <Button component={RouterLink} to={action.to} variant="outlined" size="small" sx={{ alignSelf: 'flex-start' }}>
+                            {action.label}
+                          </Button>
+                        </Stack>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <>
+                    {suggestedArtists.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        {!isAuthenticated
+                          ? 'Inicia sesión para guardar favoritos y recibir nuevos lanzamientos aquí.'
+                          : 'Ya sigues a todos los artistas activos en el hub.'}
+                      </Typography>
+                    )}
+                    {suggestedArtists.length > 0 && (
+                      <Stack spacing={1.25}>
+                        {suggestedArtists.map((artist) => (
+                          <Box
+                            key={artist.apArtistId}
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              bgcolor: 'background.paper',
+                            }}
+                          >
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
+                              <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
+                                <Box>
+                                  <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                                    {artist.apDisplayName}
+                                  </Typography>
+                                  {artist.apCity && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      {artist.apCity}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </Stack>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => handleFollowToggle(artist.apArtistId, false)}
+                                disabled={followMutation.isPending || unfollowMutation.isPending}
+                              >
+                                Seguir
+                              </Button>
+                            </Stack>
+                            {artist.apGenres && (
+                              <Stack direction="row" spacing={0.5} mt={1} flexWrap="wrap">
+                                {artist.apGenres.split(',').slice(0, 3).map((genre) => (
+                                  <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
+                                ))}
+                              </Stack>
+                            )}
+                          </Box>
+                        ))}
+                      </Stack>
+                    )}
+                  </>
+                )}
+              </Stack>
+            </Card>
+          </Stack>
+        </Grid>
+      </Grid>
+    </>
+  );
+
   return (
     <>
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
@@ -924,452 +1378,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Alert>
         )}
 
-        <Grid container spacing={2}>
-          {isHomeManagerView ? (
-            <>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(14,165,233,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <PlayArrowIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Lanzamientos activos</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Publica, corrige enlaces a plataformas y revisa qué lanzamientos ya están listos para salir al hub.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/label/releases" variant="contained" size="small">
-                        Abrir lanzamientos
-                      </Button>
-                      <Button component={RouterLink} to="/records" variant="text" size="small">
-                        Ver catálogo público
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(34,197,94,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EditIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Artistas y perfil</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Ajusta bio, portada y slugs desde el panel del sello sin perder el contexto del inicio.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/label/artistas" variant="contained" color="success" size="small">
-                        Editar artistas
-                      </Button>
-                      <Button component={RouterLink} to={artistPublicPath ?? '/label/artistas'} variant="text" size="small">
-                        {artistPublicPath ? 'Ver perfil público' : 'Preparar perfil'}
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">CMS y visibilidad</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Cambia hero, texto y bloques visibles del hub antes de revisar cómo sale en público.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/configuracion/cms" variant="contained" color="info" size="small">
-                        Editar CMS
-                      </Button>
-                      <Button component={RouterLink} to="/fans" variant="text" size="small">
-                        Vista comunidad
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(249,115,22,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EventAvailableIcon color="secondary" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Reservas y activaciones</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Revisa el flujo público de reservas y mantén a mano los accesos a sesiones y radio.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/reservar" variant="contained" color="secondary" size="small">
-                        Abrir reservas
-                      </Button>
-                      <Button component={RouterLink} to="/dj-booth" variant="outlined" color="secondary" size="small">
-                        DJ Booth
-                      </Button>
-                      <Button component={RouterLink} to={radioTargetPath} variant="text" size="small">
-                        Radio y en vivo
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-            </>
-          ) : (
-            <>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(14,165,233,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EventAvailableIcon color="primary" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Experiencias y reservas</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Agenda sesiones privadas, escuchas guiadas o transmisiones con tus artistas favoritos.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/reservar" variant="contained" size="small">
-                        Reservar ahora
-                      </Button>
-                      <Button component={RouterLink} to="/dj-booth" variant="outlined" size="small">
-                        DJ Booth
-                      </Button>
-                      <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
-                        Sesión en vivo
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(34,197,94,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <WorkspacePremiumIcon color="success" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Membresías y niveles</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Accede a beneficios, lanzamientos anticipados y contenido exclusivo por artista.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/marketplace?category=packages" variant="contained" color="success" size="small">
-                        Ver membresías
-                      </Button>
-                      <Button
-                        component={RouterLink}
-                        to={canManageReleases ? '/label/releases' : '/marketplace'}
-                        variant="text"
-                        size="small"
-                      >
-                        {canManageReleases ? 'Gestionar lanzamientos' : 'Explorar catálogo'}
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <StorefrontIcon color="info" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Tienda</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Compra merch, paquetes digitales y ediciones limitadas directo del artista o del sello.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to="/marketplace" variant="contained" color="info" size="small">
-                        Abrir tienda
-                      </Button>
-                      <Button component={RouterLink} to="/records" variant="text" size="small">
-                        Lanzamientos del sello
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    height: '100%',
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, rgba(236,72,153,0.08), rgba(249,115,22,0.08))',
-                  }}
-                >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <RadioIcon color="secondary" />
-                      <Typography variant="subtitle1" fontWeight={700} color="text.primary">Radio y audio</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      Únete a transmisiones en vivo o escucha la radio curada mientras sigues artistas.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button component={RouterLink} to={radioTargetPath} variant="contained" color="secondary" size="small">
-                        Abrir radio
-                      </Button>
-                      {session?.partyId && (
-                        <Button component={RouterLink} to={`/perfil/${session.partyId}`} variant="text" size="small">
-                          Ver mi perfil
-                        </Button>
-                      )}
-                    </Stack>
-                  </Stack>
-                </Card>
-              </Grid>
-            </>
-          )}
-        </Grid>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={8}>
-            <ReleaseFeed
-              audioFileInputRef={audioFileInputRef}
-              canManageReleases={canManageReleases}
-              canSeeReleaseFeed={canSeeReleaseFeed}
-              enableFanRolePending={enableFanRoleMutation.isPending}
-              feedLimit={feedLimit}
-              hasAuthToken={hasAuthToken}
-              hasFollows={hasFollows}
-              hasReleaseTargets={hasReleaseTargets}
-              isAuthenticated={isAuthenticated}
-              isFan={isFan}
-              isHomeManagerView={isHomeManagerView}
-              loading={releaseFeedQuery.isLoading}
-              loginPath={loginPath}
-              pendingUploadRelease={pendingUploadRelease}
-              releaseAudioMap={releaseAudioMap}
-              releaseFeed={releaseFeed}
-              releaseLinkDraft={releaseLinkDraft}
-              streamingFallbacks={streamingFallbacks}
-              uploadError={uploadError}
-              uploadingReleaseId={uploadingReleaseId}
-              visibleFeed={visibleFeed}
-              onCancelUpload={handleCancelReleaseUpload}
-              onDriveUploadComplete={handleDriveReleaseUploadComplete}
-              onEnableFanRole={() => enableFanRoleMutation.mutate()}
-              onPlayRelease={handlePlayRelease}
-              onReleaseLinkDraftChange={setReleaseLinkDraft}
-              onSaveReleaseLink={handleSaveReleaseLink}
-              onShowLess={() => setFeedLimit(4)}
-              onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
-              onUploadTrigger={handleUploadTrigger}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Stack spacing={2} height="100%">
-              <Card sx={{ p: 3 }}>
-                <Stack spacing={1.5}>
-                  <Typography variant="h6">
-                    {!isAuthenticated ? 'Empieza aquí' : canManageReleases ? 'Panel del sello' : 'Panel rápido'}
-                  </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {isHomeManagerView ? (
-                      <>
-                        <StatPill label="Artistas en hub" value={artists.length} />
-                        <StatPill label="Lanzamientos visibles" value={releaseFeed.length} />
-                        {artistProfileQuery.data && (
-                          <StatPill label="Fans de tu perfil" value={artistProfileQuery.data.apFollowerCount} />
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <StatPill label="Artistas que sigues" value={follows.length} />
-                        {artistProfileQuery.data && (
-                          <StatPill label="Fans de tu perfil" value={artistProfileQuery.data.apFollowerCount} />
-                        )}
-                      </>
-                    )}
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {!isAuthenticated
-                      ? 'Explora artistas, guarda favoritos al crear tu cuenta y vuelve para seguir sus lanzamientos.'
-                      : canManageReleases
-                        ? 'Revisa lanzamientos, perfiles y activos del hub desde un solo lugar.'
-                        : isFan
-                          ? 'Actualiza tu perfil fan y sigue artistas para ordenar mejor tu feed.'
-                          : 'Activa tu rol Fan para guardar artistas y recibir novedades personalizadas.'}
-                  </Typography>
-                  {!isAuthenticated && (
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      <Button
-                        component={RouterLink}
-                        to="/login?signup=1&intent=follow_artists&redirect=/fans"
-                        variant="outlined"
-                        sx={{ textTransform: 'none' }}
-                      >
-                        Crear cuenta fan
-                      </Button>
-                      <Button component={RouterLink} to="/records" variant="text" sx={{ textTransform: 'none' }}>
-                        Ver lanzamientos
-                      </Button>
-                    </Stack>
-                  )}
-                  {isAuthenticated && canManageReleases && (
-                    <Button component={RouterLink} to="/label/releases" variant="outlined">
-                      Gestionar lanzamientos
-                    </Button>
-                  )}
-                  {isAuthenticated && !canManageReleases && (
-                    <Button component={RouterLink} to="/records" variant="outlined">
-                      Ver sesiones y lanzamientos
-                    </Button>
-                  )}
-                </Stack>
-              </Card>
-              <Card sx={{ p: 3 }}>
-                <Stack spacing={1.5}>
-                  <Typography variant="h6">
-                    {isHomeManagerView ? 'Atajos de gestión' : !isAuthenticated ? 'Artistas destacados' : 'Sugerencias para seguir'}
-                  </Typography>
-                  {isHomeManagerView ? (
-                    <Stack spacing={1.25}>
-                      {homeManagerActions.map((action) => (
-                        <Box
-                          key={action.title}
-                          sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            bgcolor: 'background.paper',
-                          }}
-                        >
-                          <Stack spacing={1}>
-                            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                              {action.title}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {action.description}
-                            </Typography>
-                            <Button component={RouterLink} to={action.to} variant="outlined" size="small" sx={{ alignSelf: 'flex-start' }}>
-                              {action.label}
-                            </Button>
-                          </Stack>
-                        </Box>
-                      ))}
-                    </Stack>
-                  ) : (
-                    <>
-                      {suggestedArtists.length === 0 && (
-                        <Typography variant="body2" color="text.secondary">
-                          {!isAuthenticated
-                            ? 'Inicia sesión para guardar favoritos y recibir nuevos lanzamientos aquí.'
-                            : 'Ya sigues a todos los artistas activos en el hub.'}
-                        </Typography>
-                      )}
-                      {suggestedArtists.length > 0 && (
-                        <Stack spacing={1.25}>
-                          {suggestedArtists.map((artist) => (
-                            <Box
-                              key={artist.apArtistId}
-                              sx={{
-                                p: 2,
-                                borderRadius: 2,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                bgcolor: 'background.paper',
-                              }}
-                            >
-                              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
-                                <Stack direction="row" spacing={1.5} alignItems="center">
-                                  <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
-                                  <Box>
-                                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                                      {artist.apDisplayName}
-                                    </Typography>
-                                    {artist.apCity && (
-                                      <Typography variant="caption" color="text.secondary">
-                                        {artist.apCity}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Stack>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={() => handleFollowToggle(artist.apArtistId, false)}
-                                  disabled={followMutation.isPending || unfollowMutation.isPending}
-                                >
-                                  Seguir
-                                </Button>
-                              </Stack>
-                              {artist.apGenres && (
-                                <Stack direction="row" spacing={0.5} mt={1} flexWrap="wrap">
-                                  {artist.apGenres.split(',').slice(0, 3).map((genre) => (
-                                    <Chip key={genre.trim()} label={genre.trim()} size="small" variant="outlined" />
-                                  ))}
-                                </Stack>
-                              )}
-                            </Box>
-                          ))}
-                        </Stack>
-                      )}
-                    </>
-                  )}
-                </Stack>
-              </Card>
-            </Stack>
-          </Grid>
-        </Grid>
+        {isHomeManagerView && hubShortcutSections}
 
         {!isFan && !canManageReleases && session && (
           <Alert
@@ -2122,6 +2131,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             )}
           />
         )}
+
+        {!isHomeManagerView && hubShortcutSections}
       </Stack>
       </Box>
       <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>
