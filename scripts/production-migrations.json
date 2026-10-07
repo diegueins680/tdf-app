@@ -955,6 +955,16 @@
       "id": "2026-10-06_ticket_tax_credit_notes",
       "path": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
       "introducedBy": "4ef3cb7bc9653071f973e7b2af4cb272c75685c6"
+    },
+    {
+      "id": "2026-10-07_directory_artist_derived_listings",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+      "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
+    },
+    {
+      "id": "2026-10-07_directory_artist_listing_backfill_apply",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+      "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
     }
   ]
 }

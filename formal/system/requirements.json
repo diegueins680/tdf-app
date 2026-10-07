@@ -7449,6 +7449,105 @@
         "classification": "PARTIAL",
         "reason": "Client tests pass; deployed web verification pending."
       }
+    },
+    {
+      "id": "MKT-ARTIST-LISTING-001",
+      "title": "Canonical directory preview images and one synchronized listing per public artist profile",
+      "domain": "MKT",
+      "statement": "Every directory preview card uses one database-resolved canonical image (cover, featured, linked profile media, avatar/logo, first portfolio image; placeholder only without valid media). Every publicly listed artist or band profile owns exactly one derived artist-profile listing that is linked to it, derived from it in the same transaction, never independently editable, hidden whenever the profile is not public and restored (not duplicated) when it becomes public again.",
+      "authority": "User request of 2026-10-07 with recommended defaults approved (designated cover column, non-expiring derived listings)",
+      "source": "docs/music-directory/artist-derived-listings.md",
+      "contract": "docs/music-directory/artist-derived-listings.md",
+      "actors": [
+        "Anonymous visitor",
+        "Profile manager",
+        "Directory moderator",
+        "Operator running the backfill"
+      ],
+      "preconditions": [
+        "Directory profile kinds artist or band classify artists",
+        "Publication requires the existing completeness, location, moderation and age-assurance gates"
+      ],
+      "inputs": [
+        "Profile create, update and status changes",
+        "Taxonomy and public location changes",
+        "Moderation and merge decisions"
+      ],
+      "state": {
+        "boundary": "directory_profile, classified.source_profile_id, directory_search_document",
+        "authority": "PostgreSQL triggers, guard trigger and partial unique index"
+      },
+      "allowedTransitions": [
+        "No listing -> published (first public publication)",
+        "published -> paused (profile not public)",
+        "paused -> published (profile public again)",
+        "published|paused -> moderated|withdrawn (moderator)"
+      ],
+      "forbiddenTransitions": [
+        "Second derived listing for a profile",
+        "Derived listing for a non-artist, private or draft profile",
+        "Manual creation or content edit of a derived listing",
+        "Profile change reviving a moderated listing"
+      ],
+      "effects": [
+        "Derived listing content, taxonomy, approximate location and preview image mirror the profile",
+        "Mixed search shows the profile once; classified results link to the canonical profile"
+      ],
+      "authorization": "Only profile managers with edit/publish capabilities change the source profile; derived listings accept no direct author edits; moderators keep moderated/withdrawn transitions.",
+      "privacy": "Only public location rows are read; sector and commercial-exact precision are reduced to the city and private locations are never read.",
+      "concurrency": "Partial unique index plus INSERT ON CONFLICT DO NOTHING; concurrent creators wait and reuse the same row.",
+      "idempotency": "Sync, reconcile and backfill are idempotent; one derived row per profile ever.",
+      "failure": "Sync runs in the profile transaction, so a failure rolls back the profile change; the backfill fails on any hard invariant violation.",
+      "recovery": "directory_reconcile_artist_listings() re-derives every listing; directory_artist_listing_audit() reports remaining divergence.",
+      "observability": "Backfill run counts and persisted audit findings; profile.cover_assigned audit events; production schema verification gate.",
+      "property": "For every profile p: count(derived listings of p) <= 1, and the listing is publicly discoverable iff p is a publicly listed artist profile and the listing is not moderated.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+        "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
+        "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+        "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
+        "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/directory/previewImage.ts",
+        "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
+        "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
+        "tdf-mobile/app/(tabs)/directory.tsx",
+        "tdf-mobile/app/directory/manage.tsx"
+      ],
+      "tests": [
+        "scripts/test-directory-artist-listings.sh",
+        "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
+        "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
+        "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
+        "tdf-mobile/__tests__/directoryPreviewImage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "PostgreSQL 16 production-shaped schema: image priority, creation, sync, privacy, lifecycle, idempotency, real two-session race, backfill twice, rollback/re-apply and the HTTP flow through the built API; Jest web and mobile component tests; production schema verification gate.",
+      "evidence": "Local PostgreSQL 16 and built tdf-hq-exe on 2026-10-07; production backfill counts pending deployment.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Behavior verified locally end to end; production data distribution (existing manual lookalikes) is reported by the audit, not assumed.",
+      "ambiguity": [
+        "Legacy artist_profile rows without a directory profile are not auto-published; they enter through claim/backfill."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
+      }
     }
   ]
 }

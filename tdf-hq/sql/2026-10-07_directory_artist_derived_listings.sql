@@ -798,75 +798,9 @@ WHERE document.entity_kind = 'venue'
   AND document.entity_id = venue.id::text
   AND document.image_url IS DISTINCT FROM directory_safe_image_url(directory_try_jsonb_object(venue.contact)->>'imageUrl');
 
--- Public projection gains the derivation link (appended column).
-CREATE OR REPLACE VIEW directory_public_search_document AS
-SELECT
-  document.entity_kind,
-  document.entity_id,
-  document.slug,
-  document.title,
-  document.subtitle,
-  document.summary,
-  document.image_url,
-  document.city_id,
-  document.city_name,
-  document.country_code,
-  document.public_latitude,
-  document.public_longitude,
-  document.location_precision,
-  document.profession_ids,
-  document.service_ids,
-  document.instrument_ids,
-  document.genre_ids,
-  document.search_text,
-  document.search_vector,
-  document.profile_completeness,
-  document.reputation_score,
-  document.availability_score,
-  document.effective_at,
-  document.expires_at,
-  document.source_updated_at,
-  document.source_version,
-  document.sponsored,
-  document.sponsor_disclosure,
-  document.onsite,
-  document.remote,
-  document.available_to_travel,
-  document.source_profile_id
-FROM directory_search_document document
-WHERE document.source_status = 'published'
-  AND document.visibility = 'public'
-  AND document.moderation_status = 'allowed'
-  AND (document.effective_at IS NULL OR document.effective_at <= now())
-  AND (document.expires_at IS NULL OR document.expires_at > now())
-  AND CASE document.entity_kind
-    WHEN 'event' THEN
-      EXISTS (
-        SELECT 1
-        FROM directory_public_event event
-        WHERE event.id = CASE
-          WHEN document.entity_id ~ '^[0-9]+$' THEN document.entity_id::bigint
-          ELSE NULL
-        END
-      )
-    WHEN 'venue' THEN
-      EXISTS (
-        SELECT 1
-        FROM directory_public_venue venue
-        WHERE venue.id = CASE
-          WHEN document.entity_id ~ '^[0-9]+$' THEN document.entity_id::bigint
-          ELSE NULL
-        END
-      )
-    -- A derived listing is public only while its source profile is.
-    WHEN 'classified' THEN
-      document.source_profile_id IS NULL
-      OR EXISTS (
-        SELECT 1
-        FROM directory_public_profile profile
-        WHERE profile.id = document.source_profile_id
-      )
-    ELSE TRUE
-  END;
+-- The public projection view is deliberately unchanged: older registered
+-- migrations may re-apply its previous definition, and derived listings never
+-- depend on it for privacy because their source_status is kept paused, in the
+-- same transaction, whenever the source profile is not publicly listed.
 
 COMMIT;

@@ -15545,19 +15545,19 @@
       }
     },
     {
-      "id": "7cf054414f50446f625b",
+      "id": "59317444d15c99b7219f",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 187-entry manifest keeps the reviewed 186 entries unchanged and appends the additive ticket credit note migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 189-entry manifest keeps the reviewed 187 entries unchanged and appends the additive directory artist-derived listings migration and its idempotent backfill, both with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "ticket-credit-notes-2026-10-06",
+      "reviewBatch": "directory-artist-listings-2026-10-07",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57152,19 +57152,19 @@
         ]
       },
       "mergedDecision": {
-        "id": "69cdb78be851110faed4",
+        "id": "7cf054414f50446f625b",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 186-entry manifest keeps the reviewed 185 entries unchanged and appends the additive ticket electronic invoice migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 187-entry manifest keeps the reviewed 186 entries unchanged and appends the additive ticket credit note migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "ticket-tax-invoices-2026-10-06",
+        "reviewBatch": "ticket-credit-notes-2026-10-06",
         "reviewMethod": "successor-of-reviewed-decision"
       }
     },
@@ -57377,6 +57377,21 @@
         "line": 437
       },
       "reviewBatch": "ticket-credit-notes-2026-10-06"
+    },
+    {
+      "id": "3f03f8c0763d11d0cd5f",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P2-domain",
+      "risk": "Adding review states without operator semantics could hide unresolved listing inconsistencies.",
+      "justification": "Review lifecycle of artist-listing audit findings (open, resolved, dismissed), enforced by the directory_artist_listing_audit_finding CHECK; an operational review protocol, not an editable business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+        "line": 39
+      },
+      "reviewBatch": "directory-artist-listings-2026-10-07"
     }
   ]
 }

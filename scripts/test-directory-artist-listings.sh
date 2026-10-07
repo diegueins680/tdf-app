@@ -74,4 +74,44 @@ run_sql -f "${migration}"
 run_sql -f "${backfill}"
 test "$(query "SELECT count(*) FROM classified WHERE source_profile_id IS NOT NULL AND status='published';")" = "${published_before}"
 
+# Optional HTTP flow through the real API when a backend binary is supplied.
+server_bin="${TDF_ARTIST_LISTINGS_SERVER_BIN:-}"
+if [ -n "${server_bin}" ]; then
+  server_port="${TDF_ARTIST_LISTINGS_SERVER_PORT:-18979}"
+  api="http://127.0.0.1:${server_port}"
+  query "INSERT INTO party(id,display_name,is_org,created_at) VALUES (930001,'HTTP Artist Owner',false,now());
+    INSERT INTO api_token(token,party_id,label,active) VALUES ('synthetic-artist-listing-token',930001,'artist listing http test',true);
+    INSERT INTO directory_age_assurance(account_party_id,assurance_status,verified_at,updated_at) VALUES (930001,'adult_attested',now(),now());" >/dev/null
+  DATABASE_URL="${database_url}" APP_PORT="${server_port}" RUN_MIGRATIONS=false AUTO_APPLY_PRODUCTION_MIGRATIONS=false \
+    RESET_DB=false SEED_DB=false DEFAULT_LOCALE=es EVENT_DISCOVERY_ENABLED=false \
+    "${server_bin}" > "${work_dir}/api.log" 2>&1 &
+  server_pid=$!
+  trap 'kill "${server_pid}" >/dev/null 2>&1 || true; rm -rf "${work_dir}"' EXIT INT TERM
+  for _ in $(seq 1 120); do
+    curl -fsS "${api}/health" 2>/dev/null | grep -q '"db":"ok"' && break
+    kill -0 "${server_pid}" 2>/dev/null || { tail -40 "${work_dir}/api.log" >&2; exit 1; }
+    sleep 1
+  done
+  auth="Authorization: Bearer synthetic-artist-listing-token"
+  json() { curl -fsS -H "${auth}" -H 'Content-Type: application/json' "$@"; }
+  field() { node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const v=process.argv[1].split(".").reduce((o,k)=>o==null?o:o[k],JSON.parse(s));console.log(typeof v==="object"?JSON.stringify(v):String(v))})' "$1"; }
+  body='{"profileKind":"band","publicName":"HTTP Test Band","slug":"http-test-band","bio":"Banda creada mediante la API para verificar el anuncio derivado automático.","professionIds":["21000000-0000-4000-8000-000000000001"],"instrumentIds":[],"genreIds":["2109e4ab-c2b5-493a-aa5e-97c00dd6fa9c"],"serviceOfferingIds":[],"countryId":"1cb3600a-c7e3-4f5f-8e67-55db001de6d5","cityId":"24000000-0000-4000-8000-000000000002","onsite":true,"remote":false,"availableToTravel":false,"coverImageUrl":"https://cdn.example.test/http-band.jpg"}'
+  profile_id="$(json -X POST "${api}/directory/profiles" -H 'Idempotency-Key: http-band-create-0001' -d "${body}" | field id)"
+  test "$(json -X POST "${api}/directory/profiles" -H 'Idempotency-Key: http-band-create-0001' -d "${body}" | field id)" = "${profile_id}"
+  test "$(json -X PATCH "${api}/directory/profiles/${profile_id}/status" -d '{"status":"published"}' | field derivedListing.status)" = "published"
+  listing_id="$(json "${api}/directory/profiles" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>console.log(JSON.parse(s).find(p=>p.slug==="http-test-band").derivedListing.id))')"
+  test "$(curl -fsS "${api}/directory/classifieds/http-test-band-perfil" | field imageUrl)" = "https://cdn.example.test/http-band.jpg"
+  test "$(curl -fsS "${api}/directory/classifieds/http-test-band-perfil" | field sourceProfile.canonicalUrl)" = "/directorio/http-test-band"
+  test "$(curl -fsS "${api}/directory/search?q=http%20test%20band" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>console.log(JSON.parse(s).items.filter(i=>i.type==="classified").length))')" = "0"
+  json -X PUT "${api}/directory/profiles/${profile_id}" -d "${body/HTTP Test Band\"/HTTP Test Band Renamed\"}" >/dev/null
+  test "$(curl -fsS "${api}/directory/classifieds/http-test-band-perfil" | field title)" = "HTTP Test Band Renamed"
+  json -X PATCH "${api}/directory/profiles/${profile_id}/status" -d '{"status":"paused"}' >/dev/null
+  test "$(curl -s -o /dev/null -w '%{http_code}' "${api}/directory/classifieds/http-test-band-perfil")" = "404"
+  json -X PATCH "${api}/directory/profiles/${profile_id}/status" -d '{"status":"published"}' >/dev/null
+  test "$(json "${api}/directory/profiles" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>console.log(JSON.parse(s).find(p=>p.slug==="http-test-band").derivedListing.id))')" = "${listing_id}"
+  test "$(curl -s -o /dev/null -w '%{http_code}' -H "${auth}" -H 'Content-Type: application/json' -X PATCH "${api}/directory/classifieds/${listing_id}/status" -d '{"status":"paused"}')" = "409"
+  test "$(query "SELECT count(*) FROM classified WHERE source_profile_id='${profile_id}';")" = "1"
+  kill "${server_pid}" >/dev/null 2>&1 || true
+fi
+
 echo "Directory artist listings: migration, behavior, concurrency, backfill and rollback verified"

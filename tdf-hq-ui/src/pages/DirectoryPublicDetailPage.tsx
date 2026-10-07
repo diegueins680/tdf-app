@@ -27,7 +27,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
-import { API_BASE_URL } from '../api/client';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -37,7 +36,9 @@ import {
 } from '../utils/directoryContactRouting';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
-import { canonicalEventUrl, safePublicImageUrl } from '../utils/eventSharing';
+import { canonicalEventUrl } from '../utils/eventSharing';
+import { resolveDirectoryPreviewImage } from '../utils/directoryPreviewImage';
+import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
@@ -84,17 +85,11 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const english = displayLocale.toLowerCase().startsWith('en');
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
-  const absoluteProfileImage = kind === 'profile'
-    ? rows(value['portfolio'])
-        .filter((item) => text(item['itemType']) === 'image')
-        .flatMap((item) => [text(item['thumbnailUrl']), text(item['url'])])
-        .map((url) => safePublicImageUrl(url, API_BASE_URL || window.location.origin))
-        .find((url): url is string => Boolean(url))
-    : undefined;
-  const absoluteEventImage = kind === 'event'
-    ? safePublicImageUrl(text(value['imageUrl']), API_BASE_URL || window.location.origin)
-    : undefined;
-  const absolutePreviewImage = absoluteProfileImage ?? absoluteEventImage;
+  // The backend resolves the canonical preview image for every entity kind.
+  const absolutePreviewImage = resolveDirectoryPreviewImage(
+    kind === 'profile' ? value['previewImageUrl'] : value['imageUrl'],
+  );
+  const sourceProfile = kind === 'classified' ? record(value['sourceProfile']) : undefined;
   const eventDate = kind === 'event' ? formatEventDate(value['startTime'], displayLocale, text(value['timezone'])) : undefined;
   const eventCancelled = kind === 'event' && text(value['workflowStateCode']) === 'cancelled';
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;
@@ -196,17 +191,20 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
                   {absolutePreviewImage && (
-                    <Box
-                      component="img"
-                      src={absolutePreviewImage}
+                    <DirectoryPreviewImage
+                      kind={kind === 'profile' || kind === 'classified' || kind === 'event' ? kind : 'venue'}
+                      imageUrl={absolutePreviewImage}
                       alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
+                      fallbackAlt={`Imagen de referencia de ${title}`}
+                      width={440}
+                      height={440}
+                      sizes="(min-width: 600px) 220px, 100vw"
+                      eager
                       sx={{
                         width: { xs: '100%', sm: 220 },
                         height: { xs: 300, sm: 220 },
+                        aspectRatio: 'auto',
                         borderRadius: 3,
-                        objectFit: 'cover',
-                        objectPosition: 'center',
-                        flexShrink: 0,
                       }}
                     />
                   )}
@@ -219,6 +217,16 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
                     {eventDate && <Typography variant="h6" color="text.secondary" mt={1}>{eventDate}</Typography>}
                     {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
+                    {sourceProfile && text(sourceProfile['canonicalUrl']) && (
+                      <Button
+                        component={RouterLink}
+                        to={text(sourceProfile['canonicalUrl']) ?? '/buscar'}
+                        variant="contained"
+                        sx={{ mt: 2 }}
+                      >
+                        Ver perfil
+                      </Button>
+                    )}
                     {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
                   </Box>
                 </Stack>

@@ -15051,6 +15051,14 @@ export interface components {
             effectiveAt?: string | null;
             /** Format: date-time */
             expiresAt?: string | null;
+            /** @description Present on listings derived automatically from a public artist profile; links back to that canonical profile. */
+            sourceProfile?: {
+                /** Format: uuid */
+                id: string;
+                slug: string;
+                name: string;
+                canonicalUrl: string;
+            } | null;
         };
         DirectoryFacets: {
             entityTypes: {
@@ -15088,6 +15096,8 @@ export interface components {
             requirements?: {
                 [key: string]: unknown;
             };
+            /** @description Classified category generated from profiles; never offered for manual creation */
+            derived?: boolean;
             metadata?: {
                 [key: string]: unknown;
             };
@@ -15192,6 +15202,15 @@ export interface components {
                 reviewAverage?: number;
                 reviewCount?: number;
             };
+            /** @description Canonical preview image (cover */
+            previewImageUrl?: string | null;
+            /** @description The listing derived automatically from this artist profile, when public. */
+            derivedListing?: {
+                /** Format: uuid */
+                id: string;
+                slug: string;
+                canonicalUrl: string;
+            } | null;
             canonicalUrl: string;
         };
         ApiError: {
@@ -15263,8 +15282,21 @@ export interface components {
             startsAt?: string | null;
             /** Format: date-time */
             endsAt?: string | null;
-            /** Format: date-time */
-            expiresAt: string;
+            /**
+             * Format: date-time
+             * @description Null for listings derived from artist profiles
+             */
+            expiresAt: string | null;
+            imageUrl?: string | null;
+            /** @description Canonical artist profile this listing is derived from; the listing content is read-only and follows it. */
+            sourceProfile?: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string;
+                kind: components["schemas"]["DirectoryProfileKind"];
+                canonicalUrl: string;
+            } | null;
             canonicalUrl: string;
         };
         /** @description Public-listable event with approximate location. */
@@ -15371,6 +15403,15 @@ export interface components {
             remote: boolean;
             availableToTravel: boolean;
             travelRadiusKm: number | null;
+            coverImageUrl?: string | null;
+            previewImageUrl?: string | null;
+            derivedListing?: {
+                /** Format: uuid */
+                id: string;
+                slug: string;
+                status: string;
+                canonicalUrl: string;
+            } | null;
             professionIds: string[];
             professionDetails: components["schemas"]["DirectoryProfessionInput"][];
             instrumentIds: string[];
@@ -15450,6 +15491,8 @@ export interface components {
             remote: boolean;
             availableToTravel: boolean;
             travelRadiusKm?: number;
+            /** @description Designated preview image (HTTPS or same-origin path). An empty string clears it; omit to keep the current cover. */
+            coverImageUrl?: string | null;
         };
         StatusRequest: {
             status: string;
@@ -15460,6 +15503,11 @@ export interface components {
             id: string;
             /** Format: uuid */
             authorProfileId: string;
+            /**
+             * Format: uuid
+             * @description Set on listings derived from an artist profile; their content and status follow that profile
+             */
+            sourceProfileId?: string | null;
             title: string;
             slug: string;
             status: string;

@@ -59,8 +59,10 @@ $$;
 
 CREATE OR REPLACE FUNCTION pg_temp.public_listing(profile_id_value UUID)
 RETURNS directory_public_search_document LANGUAGE SQL AS $$
-  SELECT * FROM directory_public_search_document
-  WHERE entity_kind = 'classified' AND source_profile_id = profile_id_value;
+  SELECT public_document.* FROM directory_public_search_document public_document
+  JOIN directory_search_document raw
+    ON raw.entity_kind = public_document.entity_kind AND raw.entity_id = public_document.entity_id
+  WHERE public_document.entity_kind = 'classified' AND raw.source_profile_id = profile_id_value;
 $$;
 
 -- Image resolution ------------------------------------------------------------

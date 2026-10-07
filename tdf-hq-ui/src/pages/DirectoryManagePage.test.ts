@@ -78,6 +78,13 @@ describe('directory professional profile form policy', () => {
       .toBe('Selecciona al menos una ciudad y marca la principal.');
   });
 
+  it('accepts an empty or safe cover image and rejects unsafe ones', () => {
+    expect(profileFormError({ ...validProfile, coverImageUrl: '' })).toBeNull();
+    expect(profileFormError({ ...validProfile, coverImageUrl: 'https://cdn.example.test/cover.jpg' })).toBeNull();
+    expect(profileFormError({ ...validProfile, coverImageUrl: 'javascript:alert(1)' }))
+      .toBe('La imagen de portada necesita una URL HTTP(S) o ruta interna válida sin credenciales.');
+  });
+
   it('rejects invalid ranges and URLs with embedded credentials', () => {
     expect(profileFormError({ ...validProfile, rateMin: '-1' }))
       .toBe('Las tarifas deben ser números no negativos.');
