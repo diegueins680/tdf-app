@@ -7381,7 +7381,7 @@
     },
     {
       "id": "PRIV-WHATSAPP-001",
-      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request and sends at most one confirmation request per number per 24 hours; consent becomes active only when the same number replies with an affirmative keyword within 7 days. Public responses never disclose a number's consent state, and there is no public consent lookup. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
+      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request and sends at most one confirmation request per number per 24 hours; consent becomes active only when the same number replies with an affirmative keyword within 7 days. Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
       "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052)",
       "property": "Consent is active only after a timely reply from the same number or admin capture",
@@ -7452,7 +7452,8 @@
       "formalModels": [],
       "confidence": "High for the tested transitions; WhatsApp delivery and Meta webhook timing are external.",
       "ambiguity": [
-        "Affirmative keywords are exact single-word matches; free-text consent is not inferred."
+        "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
+        "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration."
       ],
       "conformance": {
         "classification": "PARTIAL",

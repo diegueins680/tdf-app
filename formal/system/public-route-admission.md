@@ -67,5 +67,5 @@ PostgreSQL-backed server and exercises retrieval privacy as authenticated staff.
 
 `DEBT-PRIV-WHATSAPP-001` was repaired on 2026-10-07 (AUTHORITY-052, PRIV-WHATSAPP-001):
 public consent is a double opt-in request activated only by a timely SI reply from
-the number, the public lookup is removed, and public opt-out is a non-disclosing
+the number, the public lookup is retired (410), and public opt-out is a non-disclosing
 withdrawal. Existing consent rows are unchanged by the additive migration.

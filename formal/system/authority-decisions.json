@@ -540,7 +540,7 @@
       ],
       "conflict": "Public WhatsApp consent accepted any number without proof of control, recorded consent and messaged the number immediately, and exposed consent state and timestamps through a public lookup.",
       "authority": "Explicit product-owner decision on 2026-10-06: double opt-in.",
-      "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is removed; public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
+      "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
     }
   ]
 }

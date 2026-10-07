@@ -811,7 +811,8 @@ spec = describe "TDF.Server helpers" $ do
                     request <- NotificationHTTP.parseRequest
                         ("http://127.0.0.1:" <> show port <> "/public/whatsapp/consent?phone=%2B593990000001")
                     response <- NotificationHTTP.httpLbs request manager
-                    statusCode (NotificationHTTP.responseStatus response) `shouldSatisfy` (`elem` [404, 405])
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 410
+                    BL8.unpack (NotificationHTTP.responseBody response) `shouldNotContain` "consent\":true"
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->

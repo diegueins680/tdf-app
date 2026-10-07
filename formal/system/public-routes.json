@@ -769,6 +769,11 @@
    "boundary": "public-read"
   },
   {
+   "method": "GET",
+   "path": "/public/whatsapp/consent",
+   "boundary": "public-read"
+  },
+  {
    "method": "POST",
    "path": "/public/whatsapp/consent",
    "boundary": "public-intake"

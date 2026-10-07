@@ -1670,7 +1670,11 @@ whatsappConsentServer user =
 
 whatsappConsentPublicServer :: ServerT Api.WhatsAppConsentPublicAPI AppM
 whatsappConsentPublicServer =
-  publicRequestWhatsAppConsent :<|> publicWhatsAppOptOut
+  publicRequestWhatsAppConsent :<|> publicWhatsAppOptOut :<|> retiredPublicConsentLookup
+  where
+    retiredPublicConsentLookup _ =
+      throwError err410
+        { errBody = "The public WhatsApp consent lookup was retired; consent state is not disclosed." }
 
 -- | A public form cannot prove control of a phone number, so it records a
 -- pending request and asks the number itself to confirm by replying. The

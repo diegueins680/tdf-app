@@ -261,17 +261,10 @@ type WhatsAppConsentAPI =
        "whatsapp" :> WhatsAppConsentRoutes
 
 -- | Public consent is a double opt-in request and never discloses whether a
--- number has consented; the status lookup is staff-only.
-type WhatsAppConsentPublicRoutes =
-       "consent"
-         :> ReqBody '[JSON] WhatsAppConsentRequest
-         :> Post '[JSON] WhatsAppConsentResponse
-  :<|> "opt-out"
-         :> ReqBody '[JSON] WhatsAppOptOutRequest
-         :> Post '[JSON] WhatsAppConsentResponse
-
+-- number has consented. The public status lookup keeps its declared shape for
+-- client compatibility but is retired (410); the lookup is staff-only.
 type WhatsAppConsentPublicAPI =
-       "public" :> "whatsapp" :> WhatsAppConsentPublicRoutes
+       "public" :> "whatsapp" :> WhatsAppConsentRoutes
 
 data WhatsAppConsentRequest = WhatsAppConsentRequest
   { wcrPhone       :: Text
