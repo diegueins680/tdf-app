@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "d801d39815c443690c99c4e58f2fb325b4f15ec6",
+  "mobileRevision": "4cec2b41336f0253f3fcf1f014dd002a4a982012",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -4719,7 +4719,7 @@
     {
       "id": "SURFACE-fd48a407a0e55486",
       "path": "scripts/test-artist-invitation-auto-approval-migration.sh",
-      "sha256": "de1dba69c65c54cab3a670b01d210c4fe40ee8b84636105606f71e31ed6c4aa4",
+      "sha256": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11685,13 +11685,13 @@
     {
       "id": "SURFACE-00817b0ac41a264a",
       "path": "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
-      "sha256": "7e8dd400ed455818a5b78e56516861e4967acfb668f0de4995a7d37954eb90af",
+      "sha256": "0e29380aaba2feaf34103c03c737f4eda6e21c9f0383fd1bb98a6102b467d09d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-abc624ab27684337",
       "path": "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval_rollback.sql",
-      "sha256": "b63426235599a7ca905920c06e77cd6e726f72021e2a38b3f434a231bfd730e5",
+      "sha256": "d19f49603dbd567e07dcc955ecc41f0fcb912d95e7c0b2ed2902d6783f66862e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
