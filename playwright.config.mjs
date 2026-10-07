@@ -50,6 +50,22 @@ export default defineConfig({
         isMobile: true,
       },
     },
+    {
+      // Redmi-class Android Chrome (360 CSS px wide), where the white-screen,
+      // squeezed-column and hidden-cart reports were observed (2026-10-07).
+      name: 'android-chrome-small',
+      grep: /@mobile-flow/,
+      use: {
+        browserName: 'chromium',
+        viewport: { width: 360, height: 740 },
+        screen: { width: 360, height: 800 },
+        deviceScaleFactor: 2.75,
+        isMobile: true,
+        hasTouch: true,
+        userAgent: 'Mozilla/5.0 (Linux; Android 13; 22111317G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36',
+      },
+    },
+    { name: 'webkit-iphone', grep: /@mobile-flow/, use: { ...devices['iPhone 13'] } },
     { name: 'firefox-critical', grep: /@critical/, use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit-critical', grep: /@critical/, use: { ...devices['Desktop Safari'] } },
   ],
