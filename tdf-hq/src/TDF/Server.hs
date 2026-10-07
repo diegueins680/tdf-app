@@ -238,6 +238,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , validateArtistProfileUpsert
                                      )
 import           TDF.Routes.Academy ( AcademyAPI
+                                    , AcademyAccountAPI
                                     , EnrollReq(..)
                                     , ProgressReq(..)
                                     , ReferralClaimReq(..)
@@ -3492,6 +3493,7 @@ protectedServer user =
   :<|> internshipsServer user
   :<|> internalFeedbackServer user
   :<|> adsAdminServer user
+  :<|> academyAccountServer user
   :<|> coursesAdminServer user
   :<|> labelServer user
   :<|> calendarServer user
@@ -8422,21 +8424,9 @@ metaServer = hoistServer metaProxy lift Meta.metaServer
 
 academyServer :: ServerT AcademyAPI AppM
 academyServer =
-       enrollH
-  :<|> microcourseH
-  :<|> progressH
-  :<|> claimReferralH
+       microcourseH
   :<|> nextCohortH
   where
-    enrollH EnrollReq{..} = do
-      normalizedEmail <- requireEmail email
-      normalizedRole  <- requireRole role
-      let platformClean = cleanOptional platform
-      user <- upsertAcademyUser normalizedEmail normalizedRole platformClean
-      for_ (cleanOptional referralCode) $ \codeTxt ->
-        claimReferral normalizedEmail (Just (entityKey user)) codeTxt
-      pure NoContent
-
     microcourseH rawSlug = do
       slug <- requireSlug rawSlug
       mCourse <- runDB $ getBy (UniqueAcademyMicrocourseSlug slug)
@@ -8452,32 +8442,6 @@ academyServer =
             , mcSummary = academyMicrocourseSummary course
             , lessons   = map lessonToDTO lessons
             }
-
-    progressH ProgressReq{..} = do
-      normalizedEmail <- requireEmail email
-      courseSlug <- requireSlug slug
-      dayNumber <- requireDay day
-      mUser <- runDB $ getBy (UniqueAcademyUserEmail normalizedEmail)
-      user <- maybe (throwNotFound "Usuario no inscrito") pure mUser
-      mCourse <- runDB $ getBy (UniqueAcademyMicrocourseSlug courseSlug)
-      course <- maybe (throwNotFound "Microcurso no disponible") pure mCourse
-      mLesson <- runDB $ selectFirst
-        [ AcademyLessonMicrocourseId ==. entityKey course
-        , AcademyLessonDay ==. dayNumber
-        ]
-        []
-      lesson <- maybe (throwNotFound "Lección no encontrada") pure mLesson
-      now <- liftIO getCurrentTime
-      void $ runDB $ upsert
-        (AcademyProgress (entityKey user) (entityKey lesson) now)
-        [AcademyProgressCompletedAt =. now]
-      pure NoContent
-
-    claimReferralH ReferralClaimReq{..} = do
-      normalizedEmail <- requireEmail email
-      mUser <- runDB $ getBy (UniqueAcademyUserEmail normalizedEmail)
-      claimReferral normalizedEmail (entityKey <$> mUser) code
-      pure NoContent
 
     nextCohortH = do
       now <- liftIO getCurrentTime
@@ -8508,6 +8472,61 @@ cleanOptional Nothing = Nothing
 cleanOptional (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+academyAccountServer :: AuthedUser -> ServerT AcademyAccountAPI AppM
+academyAccountServer user =
+       enrollH
+  :<|> progressH
+  :<|> claimReferralH
+  where
+    enrollH EnrollReq{..} = do
+      normalizedEmail <- requireAcademyAccountEmail user email
+      normalizedRole  <- requireRole role
+      let platformClean = cleanOptional platform
+      academyUser <- upsertAcademyUser normalizedEmail normalizedRole platformClean
+      for_ (cleanOptional referralCode) $ \codeTxt ->
+        claimReferral normalizedEmail (Just (entityKey academyUser)) codeTxt
+      pure NoContent
+
+    progressH ProgressReq{..} = do
+      normalizedEmail <- requireAcademyAccountEmail user email
+      courseSlug <- requireSlug slug
+      dayNumber <- requireDay day
+      mUser <- runDB $ getBy (UniqueAcademyUserEmail normalizedEmail)
+      academyUser <- maybe (throwNotFound "Usuario no inscrito") pure mUser
+      mCourse <- runDB $ getBy (UniqueAcademyMicrocourseSlug courseSlug)
+      course <- maybe (throwNotFound "Microcurso no disponible") pure mCourse
+      mLesson <- runDB $ selectFirst
+        [ AcademyLessonMicrocourseId ==. entityKey course
+        , AcademyLessonDay ==. dayNumber
+        ]
+        []
+      lesson <- maybe (throwNotFound "Lección no encontrada") pure mLesson
+      now <- liftIO getCurrentTime
+      void $ runDB $ upsert
+        (AcademyProgress (entityKey academyUser) (entityKey lesson) now)
+        [AcademyProgressCompletedAt =. now]
+      pure NoContent
+
+    claimReferralH ReferralClaimReq{..} = do
+      normalizedEmail <- requireAcademyAccountEmail user email
+      mUser <- runDB $ getBy (UniqueAcademyUserEmail normalizedEmail)
+      claimReferral normalizedEmail (entityKey <$> mUser) code
+      pure NoContent
+
+-- | The academy record belongs to the signed-in account's email. A request for
+-- any other email is refused rather than silently rebound.
+requireAcademyAccountEmail :: AuthedUser -> Text -> AppM Text
+requireAcademyAccountEmail user suppliedRaw = do
+  supplied <- requireEmail suppliedRaw
+  mParty <- runDB $ get (auPartyId user)
+  let accountEmail = T.toLower . T.strip <$> (mParty >>= partyPrimaryEmail)
+  case accountEmail of
+    Just account | not (T.null account) -> do
+      unless (supplied == account) $
+        throwError err403 { errBody = "email must match the signed-in account" }
+      pure account
+    _ -> throwError err409 { errBody = "The signed-in account has no email address" }
 
 requireEmail :: Text -> AppM Text
 requireEmail raw = do
