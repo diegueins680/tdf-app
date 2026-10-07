@@ -49,6 +49,7 @@ module TDF.ServerAuth
   , validateSignupFanArtistTargets
   , validateOnboardingIntent
   , validateOnboardingFirstValue
+  , validateArtistInvitation
   , isOnboardingEligible
   ) where
 
@@ -460,6 +461,7 @@ sessionServer =
   :<|> updateOnboardingIntent
   :<|> completeOnboarding
   :<|> reconcileOnboarding
+  :<|> redeemArtistInvitation
   :<|> currentExperimentAssignment
   :<|> recordExperimentExposure
 
@@ -472,6 +474,9 @@ onboardingIntentValues = Set.fromList
   , "learning"
   , "professional_tools"
   ]
+
+artistInvitationValues :: Set.Set Text
+artistInvitationValues = Set.singleton "tu_escena_conectada_piloto"
 
 onboardingFirstValueValues :: Set.Set Text
 onboardingFirstValueValues = Set.fromList onboardingFirstValuePriority
@@ -494,6 +499,10 @@ validateOnboardingIntent raw =
 validateOnboardingFirstValue :: Text -> Either ServerError Text
 validateOnboardingFirstValue raw =
   validateOnboardingValue "firstValue" onboardingFirstValueValues raw
+
+validateArtistInvitation :: Text -> Either ServerError Text
+validateArtistInvitation raw =
+  validateOnboardingValue "artistInvitation" artistInvitationValues raw
 
 validateOnboardingValue :: Text -> Set.Set Text -> Text -> Either ServerError Text
 validateOnboardingValue fieldName allowed raw =
@@ -788,6 +797,53 @@ updateOnboardingIntent mAuthorizationHeader mCookieHeader OnboardingIntentUpdate
   progressEntity <- liftIO $ flip runSqlPool pool $
     storeOnboardingIntent (auPartyId user) intentValue now
   pure (onboardingProgressToDTO now (Just progressEntity))
+
+redeemArtistInvitation
+  :: Maybe Text
+  -> Maybe Text
+  -> ArtistInvitationRedeemRequest
+  -> AppM SessionResponse
+redeemArtistInvitation
+  mAuthorizationHeader
+  mCookieHeader
+  ArtistInvitationRedeemRequest{artistInvitation = rawInvitation}
+  = do
+      invitation <- either throwError pure (validateArtistInvitation rawInvitation)
+      Env pool cfg <- ask
+      user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+      token <-
+        either
+          (\message -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 message) })
+          pure
+          (extractTokenFromHeaders cfg mAuthorizationHeader mCookieHeader)
+      now <- liftIO getCurrentTime
+      result <- liftIO $ flip runSqlPool pool $ do
+        roleResult <- applySecurityRoleAssignmentPolicy
+          "artist.invitation.artist"
+          (auPartyId user)
+          False
+          (Just (auPartyId user))
+          "instagram-dm"
+          ( "artist-invitation:"
+              <> invitation
+              <> ":"
+              <> T.pack (show (fromSqlKey (auPartyId user)))
+          )
+          now
+        case roleResult of
+          Left policyError -> pure (Left policyError)
+          Right _ -> do
+            void (storeOnboardingIntent (auPartyId user) "artist_profile" now)
+            mRefreshedUser <- loadAuthedUser token
+            case mRefreshedUser of
+              Nothing -> pure (Left "Failed to reload the invited artist session")
+              Just refreshedUser -> do
+                mUsername <- lookupUsernameFromToken token
+                Right <$> buildSessionResponse cfg mUsername refreshedUser
+      either
+        (\message -> throwError err503 { errBody = BL.fromStrict (TE.encodeUtf8 message) })
+        pure
+        result
 
 completeOnboarding
   :: Maybe Text

@@ -28,6 +28,8 @@ let sessionMock: SessionUser | null = {
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: sessionMock, loading: sessionLoading }),
   getActiveSession: () => sessionMock,
+  // The canonical release API reaches SessionContext through api/client.
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({

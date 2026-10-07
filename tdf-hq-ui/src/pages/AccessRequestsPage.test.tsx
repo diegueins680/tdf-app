@@ -196,6 +196,26 @@ describe('internal access request flow', () => {
     }
   });
 
+  it('discloses the exact Artist role grant before an admin approves it', async () => {
+    listReviewMock.mockResolvedValue([
+      {
+        ...buildRequest(),
+        featureId: 'artist.onboarding',
+        action: 'create',
+      },
+    ]);
+    const view = await renderReviewPage();
+    try {
+      expect(listReviewMock).toHaveBeenCalledWith('pending');
+      expect(view.container.textContent).toContain(
+        'La aprobación asigna el rol Artista mediante una revisión auditable.',
+      );
+      expect(view.container.textContent).toContain('Aprobar solicitud');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
   it.each<FeatureAccessRequestStatus>(['pending', 'approved', 'rejected', 'cancelled', 'expired'])(
     'shows the requester name on %s review cards without opening history',
     async (status) => {

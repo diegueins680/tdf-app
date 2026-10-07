@@ -65,6 +65,7 @@ import           TDF.API.Feedback    (FeedbackAPI, InternalFeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Merch (MerchPublicAPI, MerchProtectedAPI)
+import           TDF.API.MusicRelease (MusicReleasePublicAPI, MusicReleaseProtectedAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
@@ -556,6 +557,7 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "intent" :> ReqBody '[JSON] OnboardingIntentUpdate :> Put '[JSON] OnboardingProgressDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "complete" :> ReqBody '[JSON] OnboardingCompletionRequest :> Post '[JSON] OnboardingCompletionResult
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "reconcile" :> Post '[JSON] OnboardingCompletionResult
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "artist-invitation" :> ReqBody '[JSON] ArtistInvitationRedeemRequest :> Post '[JSON] SessionResponse
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "assignment" :> Get '[JSON] ExperimentAssignmentDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "exposure" :> Post '[JSON] ExperimentExposureResult
 
@@ -643,6 +645,7 @@ type ProtectedAPI =
   :<|> EventOperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
+  :<|> MusicReleaseProtectedAPI
   :<|> InteractionsAPI
 
 type API =
@@ -680,6 +683,7 @@ type API =
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI
   :<|> PaymentCapabilitiesAPI
+  :<|> MusicReleasePublicAPI
   :<|> ProviderExecutionAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.

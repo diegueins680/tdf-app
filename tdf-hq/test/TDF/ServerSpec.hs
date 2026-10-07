@@ -4999,7 +4999,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -5038,7 +5038,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5110,7 +5110,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSessionAction action =
                             liftIO $ runHandler $ runReaderT action env
                     current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
@@ -5230,7 +5230,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeWith tokenValue request =
                             liftIO $ runHandler $ runReaderT
                                 (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
@@ -5328,7 +5328,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         reconcileWith mToken =
                             liftIO $ runHandler $ runReaderT
                                 (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
@@ -5462,7 +5462,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeAccessRequest =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5574,7 +5574,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeEventSave =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5688,7 +5688,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeMomentReaction =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5899,7 +5899,7 @@ spec = describe "TDF.Server helpers" $ do
                                     }
                         pausedEnv = Env pool (marketplaceTestConfig False)
                         enabledEnv = Env pool ((marketplaceTestConfig False) {singleFeatureOnboardingExperimentEnabled = True})
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> _completeProgress :<|> _reconcileOnboarding :<|> getExperiment :<|> recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> _completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> getExperiment :<|> recordExposure = sessionServer
                         runExperiment env tokenValue action =
                             liftIO $ runHandler $ runReaderT
                                 (action (Just ("Bearer " <> tokenValue)) Nothing "single-feature-onboarding-v1")
@@ -15596,6 +15596,7 @@ marketplaceTestConfig seedFlag =
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
         , contextualReputationEnabled = False
+        , publicReputationProjectionEnabled = False
         , singleFeatureOnboardingExperimentEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False

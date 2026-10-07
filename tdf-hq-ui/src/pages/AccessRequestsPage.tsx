@@ -39,6 +39,7 @@ import {
 } from '../features/featureRegistry';
 import { positiveNotificationId } from '../components/notificationTarget';
 import { useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 
 const supportedActions = new Set<FeatureAction>([
   'discover', 'view', 'create', 'edit', 'delete', 'archive', 'deactivate',
@@ -71,7 +72,9 @@ const copy = {
     reviewerNotes: 'Notas del revisor',
     cancel: 'Cancelar solicitud',
     audit: 'Historial completo',
-    provisioning: 'Una aprobación acepta la solicitud para provisión. No modifica roles ni módulos automáticamente; el acceso solo cambia mediante un permiso compatible y auditable.',
+    provisioning: 'Las aprobaciones con un rol compatible otorgan el acceso mediante una revisión auditable. Las demás solicitudes quedan listas para provisión manual en Roles y permisos.',
+    automaticProvisioning: 'La aprobación asigna el rol Artista mediante una revisión auditable.',
+    manualProvisioning: 'Esta aprobación no asigna un rol automáticamente; requiere provisión manual en Roles y permisos.',
     loadError: 'No se pudieron cargar las solicitudes.',
     createTitle: 'Solicitar acceso',
     missingTarget: 'El destino solicitado no existe, es técnico o no admite solicitudes de acceso.',
@@ -88,7 +91,7 @@ const copy = {
     unnamedRequester: 'Nombre no disponible',
     currentContext: 'Contexto al solicitar',
     reviewerNote: 'Nota del revisor',
-    approve: 'Aprobar para provisión',
+    approve: 'Aprobar solicitud',
     reject: 'Rechazar',
     rejectionNote: 'Se requiere una nota clara para rechazar.',
     noReview: 'No hay solicitudes que puedas revisar en este estado.',
@@ -110,7 +113,9 @@ const copy = {
     reviewerNotes: 'Reviewer notes',
     cancel: 'Cancel request',
     audit: 'Complete history',
-    provisioning: 'Approval accepts the request for provisioning. It does not automatically change roles or modules; access changes only through a compatible, auditable permission.',
+    provisioning: 'Approvals with a compatible role grant access through an auditable review. Other requests remain ready for manual provisioning in Roles and permissions.',
+    automaticProvisioning: 'Approval assigns the Artist role through an auditable review.',
+    manualProvisioning: 'This approval does not assign a role automatically; it requires manual provisioning in Roles and permissions.',
     loadError: 'Access requests could not be loaded.',
     createTitle: 'Request access',
     missingTarget: 'The requested destination does not exist, is technical, or is not eligible for access requests.',
@@ -127,7 +132,7 @@ const copy = {
     unnamedRequester: 'Name unavailable',
     currentContext: 'Context when requested',
     reviewerNote: 'Reviewer note',
-    approve: 'Approve for provisioning',
+    approve: 'Approve request',
     reject: 'Reject',
     rejectionNote: 'A clear reviewer note is required for rejection.',
     noReview: 'There are no requests you can review in this state.',
@@ -218,7 +223,13 @@ function AccessRequestDetail({ requestId }: { requestId: string | null }) {
 
 function AccessRequestList() {
   const { locale, text } = useAccessCopy();
+  const { session } = useSession();
   const queryClient = useQueryClient();
+  const canReview = canAccessPath(
+    '/solicitudes-acceso/revision',
+    session?.roles,
+    session?.modules,
+  );
   const requestsQuery = useQuery({ queryKey: ['access-requests', 'mine'], queryFn: AccessRequests.listMine });
   const cancelMutation = useMutation({
     mutationFn: (requestId: number) => AccessRequests.cancel(requestId),
@@ -241,9 +252,11 @@ function AccessRequestList() {
         <Button component={RouterLink} to="/solicitudes-acceso/nueva" variant="contained" sx={{ minHeight: 44 }}>
           {text.newRequest}
         </Button>
-        <Button component={RouterLink} to="/solicitudes-acceso/revision" variant="outlined" sx={{ minHeight: 44 }}>
-          {text.review}
-        </Button>
+        {canReview ? (
+          <Button component={RouterLink} to="/solicitudes-acceso/revision" variant="outlined" sx={{ minHeight: 44 }}>
+            {text.review}
+          </Button>
+        ) : null}
       </Stack>
       {requestsQuery.isPending ? <CircularProgress aria-label={text.title} /> : null}
       {requestsQuery.isError ? <Alert severity="error">{text.loadError}</Alert> : null}
@@ -403,6 +416,8 @@ function ReviewCard({ request, onChanged, canReview = true }: { request: Feature
     () => [...request.roleContext.map(() => locale === 'en' ? 'role' : 'rol'), ...request.moduleContext.map(() => locale === 'en' ? 'module' : 'módulo')],
     [locale, request.moduleContext, request.roleContext],
   );
+  const provisionsArtistRole = request.featureId.trim().toLowerCase() === 'artist.onboarding'
+    && request.action.trim().toLowerCase() === 'create';
 
   return (
     <Card variant="outlined">
@@ -415,6 +430,9 @@ function ReviewCard({ request, onChanged, canReview = true }: { request: Feature
         <Typography>{text.action}: {request.action}</Typography>
         <Typography color="text.secondary">{text.currentContext}: {context.join(', ') || '—'}</Typography>
         {request.justification ? <Alert severity="info" sx={{ mt: 2 }}>{request.justification}</Alert> : null}
+        <Alert severity={provisionsArtistRole ? 'warning' : 'info'} sx={{ mt: 2 }}>
+          {provisionsArtistRole ? text.automaticProvisioning : text.manualProvisioning}
+        </Alert>
         {canReview && request.status === 'pending' ? (
           <TextField
             label={text.reviewerNote}

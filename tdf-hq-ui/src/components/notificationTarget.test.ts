@@ -33,6 +33,9 @@ describe('notification destination identities', () => {
   it.each(['//evil.example', 'https://evil.example', '../secret', key + '?redirect=https://evil.example'])('rejects unsafe UUID identity %s', (nTargetKey) => {
     expect(notificationTargetPath(notification({ nTargetType: 'intern_audit_plan', nTargetKey }))).toBeNull();
   });
+  it('opens the release workspace for music editorial notifications', () => {
+    expect(notificationTargetPath(notification({ nType: 'music_release_changes_requested', nTargetType: 'music_release', nTargetId: 84 }))).toBe('/label/releases');
+  });
   it('keeps unknown and unresolved historical records actionable without inventing a target', () => {
     expect(notificationLink(notification({ nType: 'weekly_top', nTargetType: 'unknown' }))).toBe('/notificaciones/1');
   });

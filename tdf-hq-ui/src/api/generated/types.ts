@@ -8675,6 +8675,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/playback-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record anonymous playback telemetry
+         * @description Requires anonymousId. Session identity is bound on first insert; exact retries are deduplicated. Client identity is not proof of a real listener. Only published and territorially available recordings are accepted.
+         */
+        post: operations["recordAnonymousMusicPlayback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/me/playback-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record playback and update the current user's history atomically
+         * @description Identity comes exclusively from authentication. Use a new session after login, logout or account change. Late events do not rewind the latest history position. Replays must preserve the original payload.
+         */
+        post: operations["recordAuthenticatedMusicPlayback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate release metadata, rights, resources and availability
+         * @description Read-only validation requiring release.edit. Includes resource graph errors with version-local field paths; does not repair approved content.
+         */
+        post: operations["validateMusicReleaseVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request an editorial state transition
+         * @description Submission requires release.submit; review, approval and scheduling require strict TDF administration. Validation is repeated under the version lock before review/approval/scheduling. Invalid content returns 422 without consuming the idempotency key. Publication is scheduler-only.
+         */
+        post: operations["transitionMusicReleaseVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an auditable correction of an immutable release version
+         * @description Requires verified artist ownership or release.edit permission and the authoring feature flag. Allocation is serialized per release. Repeating a key for the same source returns its correction; reusing that key for another source returns 409. Resources remain private and reference immutable bytes. Publication terms must be accepted again.
+         */
+        post: operations["createMusicReleaseCorrection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/artist-invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redeem a recognized artist invitation
+         * @description Idempotently activates only the non-administrative Artist role through a persisted automatic security policy. The invitation must be an explicitly allowlisted campaign value; ordinary artist onboarding continues through reviewed access requests.
+         */
+        post: operations["redeemArtistInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -14922,6 +15042,58 @@ export interface components {
             active: boolean;
             /** Format: date-time */
             updatedAt: string;
+        };
+        MusicPlaybackConflict: {
+            /** @enum {string} */
+            code: "playback_identity_conflict";
+            message: string;
+        };
+        MusicPlaybackEventInput: {
+            /** Format: uuid */
+            eventId: string;
+            /** Format: uuid */
+            sessionId: string;
+            sequenceNumber: number;
+            anonymousId?: string | null;
+            /** Format: uuid */
+            releaseVersionId: string;
+            /** Format: uuid */
+            recordingId: string;
+            /** @enum {string} */
+            eventType: "play_start" | "progress" | "pause" | "seek" | "complete" | "skip" | "error" | "buffering" | "quality_selected";
+            /** Format: int64 */
+            positionMs: number;
+            /** Format: int64 */
+            listenedDeltaMs: number;
+            quality?: string | null;
+            /** @description Not trusted for access or stored territory; the server uses the configured edge. */
+            territoryCode?: string | null;
+            /** Format: date-time */
+            occurredAt: string;
+            /** @description JSON metadata limited to 16 KiB when encoded. */
+            metadata: unknown;
+        };
+        MusicValidationIssue: {
+            fieldPath: string;
+            code: string;
+            message: string;
+        };
+        MusicCorrectionFailure: {
+            message: string;
+            errors: {
+                /** @enum {string} */
+                code: "correction_resource_graph_invalid" | "correction_recording_reference_invalid" | "correction_source_unavailable" | "correction_retry_required";
+                /** @enum {string} */
+                fieldPath: "assets" | "assets.recordingId" | "sourceVersionId";
+                message: string;
+            }[];
+        };
+        ArtistInvitationRedeemRequest: {
+            /**
+             * @description Explicit allowlisted campaign invitation. It is accepted only by the authenticated redemption endpoint and grants no administrative role.
+             * @enum {string}
+             */
+            artistInvitation: "tu_escena_conectada_piloto";
         };
         SocialV2Me: {
             discoverable: boolean;
@@ -35648,6 +35820,401 @@ export interface operations {
                 content?: never;
             };
             /** @description Durable private evidence storage is not configured in production */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordAnonymousMusicPlayback: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Trusted only when the origin is restricted to the configured edge. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusicPlaybackEventInput"] & {
+                    anonymousId: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Inserted or identical replay; no response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid telemetry or missing anonymous identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Recording unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session owner, sequence or event payload conflicts; no event or history is written */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicPlaybackConflict"];
+                };
+            };
+            /** @description Music playback telemetry disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordAuthenticatedMusicPlayback: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Trusted only when the origin is restricted to the configured edge. */
+                "CF-IPCountry"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusicPlaybackEventInput"];
+            };
+        };
+        responses: {
+            /** @description Inserted or identical replay; no response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid telemetry */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Recording unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session owner, sequence or event payload conflicts; no event or history is written */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicPlaybackConflict"];
+                };
+            };
+            /** @description Music playback telemetry disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    validateMusicReleaseVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current validation result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        valid: boolean;
+                        errors: components["schemas"]["MusicValidationIssue"][];
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoring disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionMusicReleaseVersion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    targetState: string;
+                    reason?: string | null;
+                    /** Format: date-time */
+                    releaseAtUtc?: string | null;
+                    releaseTimezone?: string | null;
+                    /** Format: date-time */
+                    embargoUntilUtc?: string | null;
+                    /** Format: date-time */
+                    takedownAtUtc?: string | null;
+                    takedownTimezone?: string | null;
+                    snapshot?: unknown;
+                    snapshotSha256?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Resulting version or idempotent prior result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Invalid request or supplied snapshot hash */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Editorial role or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation errors; no state change, approval snapshot or transition audit committed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message: string;
+                        errors: components["schemas"]["MusicValidationIssue"][];
+                    };
+                };
+            };
+            /** @description Authoring disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMusicReleaseCorrection: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Correction version graph, or the current graph of its existing idempotent correction */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        versionNumber: number;
+                        state: string;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Missing or invalid idempotency key */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release or version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ineligible source, source/key mismatch, or retryable transaction conflict; no new correction committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                    "application/json": components["schemas"]["MusicCorrectionFailure"];
+                };
+            };
+            /** @description Source resource graph has invalid parent or recording references; transaction rolled back */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicCorrectionFailure"];
+                };
+            };
+            /** @description Music release authoring is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    redeemArtistInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistInvitationRedeemRequest"];
+            };
+        };
+        responses: {
+            /** @description Refreshed authenticated session with the Artist role */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            /** @description Invitation campaign is not recognized */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Persisted automatic assignment policy is unavailable or inconsistent */
             503: {
                 headers: {
                     [name: string]: unknown;

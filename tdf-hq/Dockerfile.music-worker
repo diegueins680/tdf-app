@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+FROM haskell:9.10.3-bookworm@sha256:f5400211315c07ff6bc47c1f14333b75d02960ed9b7e93e68a5f89ddc3e232d0 AS builder
+WORKDIR /app
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates git libpq-dev pkg-config && rm -rf /var/lib/apt/lists/*
+ENV STACK_ROOT=/root/.stack
+ENV STACK_SYSTEM_GHC=true
+COPY tdf-hq/music-worker/stack.yaml tdf-hq/music-worker/stack.yaml.lock tdf-hq/music-worker/tdf-music-worker.cabal music-worker/
+COPY tdf-hq/app/MusicDdexRenderMain.hs app/MusicDdexRenderMain.hs
+COPY tdf-hq/src/TDF/MusicRelease/Domain.hs src/TDF/MusicRelease/Domain.hs
+COPY tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs src/TDF/MusicRelease/DDEX/ERN432.hs
+WORKDIR /app/music-worker
+RUN --mount=type=cache,target=/root/.stack,sharing=locked \
+    stack --no-terminal --system-ghc --no-install-ghc \
+      build tdf-music-worker:exe:tdf-ddex-render --copy-bins --local-bin-path /out && \
+    sha256sum /app/app/MusicDdexRenderMain.hs \
+      /app/src/TDF/MusicRelease/Domain.hs /app/src/TDF/MusicRelease/DDEX/ERN432.hs \
+      /app/music-worker/stack.yaml /app/music-worker/stack.yaml.lock \
+      /app/music-worker/tdf-music-worker.cabal > /out/renderer-inputs.sha256
+
+FROM debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+ARG DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      bash ca-certificates curl ffmpeg jq libpq5 libxml2-utils perl postgresql-client tini unzip zip && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /out/tdf-ddex-render /app/tdf-ddex-render
+COPY --from=builder /out/renderer-inputs.sha256 /app/renderer-inputs.sha256
+COPY scripts/process-music-release-audio.sh /app/scripts/process-music-release-audio.sh
+COPY scripts/process-music-release-preview.sh /app/scripts/process-music-release-preview.sh
+COPY scripts/music-preview-spec.jq /app/scripts/music-preview-spec.jq
+COPY scripts/process-music-release-artwork.sh /app/scripts/process-music-release-artwork.sh
+COPY scripts/build-ddex-ern432-package.sh /app/scripts/build-ddex-ern432-package.sh
+COPY scripts/run-music-release-worker-once.sh /app/scripts/run-music-release-worker-once.sh
+COPY scripts/music-s3-upload.pl /app/scripts/music-s3-upload.pl
+COPY scripts/run-music-release-worker.sh /app/scripts/run-music-release-worker.sh
+RUN chmod 0755 /app/tdf-ddex-render /app/scripts/*.sh && \
+    useradd -m -u 1000 worker && chown -R worker:worker /app
+USER worker
+ENV LANG=C.UTF-8
+ENV MUSIC_DDEX_RENDER_BIN=/app/tdf-ddex-render
+ENV MUSIC_AUDIO_PIPELINE=/app/scripts/process-music-release-audio.sh
+ENV MUSIC_ARTWORK_PIPELINE=/app/scripts/process-music-release-artwork.sh
+ENV MUSIC_DDEX_PACKAGE_BUILDER=/app/scripts/build-ddex-ern432-package.sh
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["/app/scripts/run-music-release-worker.sh"]

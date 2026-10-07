@@ -2,6 +2,7 @@ import {
   buildLoginRedirectPath,
   normalizeOnboardingIntent,
   pickLandingPath,
+  readArtistInvitation,
   readSafeRedirectPath,
   readOnboardingIntent,
   resolvePostAuthPath,
@@ -95,6 +96,21 @@ describe('onboarding intent routing', () => {
     expect(readOnboardingIntent('?roles=Fan')).toBe('follow_artists');
     expect(normalizeOnboardingIntent('Intern')).toBe('internships');
     expect(normalizeOnboardingIntent('Admin')).toBeNull();
+  });
+
+  it('recognizes only the allowlisted Instagram DM artist invitation', () => {
+    expect(readArtistInvitation(
+      '?intent=artist&roles=Artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto',
+    )).toBe('tu_escena_conectada_piloto');
+    expect(readArtistInvitation(
+      '?intent=artist&utm_source=instagram&utm_medium=social&utm_campaign=tu_escena_conectada_piloto',
+    )).toBeNull();
+    expect(readArtistInvitation(
+      '?intent=artist&utm_source=instagram&utm_medium=dm&utm_campaign=unknown_campaign',
+    )).toBeNull();
+    expect(readArtistInvitation(
+      '?intent=follow_artists&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto',
+    )).toBeNull();
   });
 
   it('honors a redirect only when the returned session can access it', () => {

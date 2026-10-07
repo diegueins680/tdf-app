@@ -9,6 +9,7 @@ module TDF.FeatureRegistry
   , allRegistryFeatures
   , findRegistryFeature
   , registryFeatureAllows
+  , registryFeatureAccessGrantRole
   , registryFeatureRequestable
   , registryReviewerCanDecide
   , supportedFeatureActions
@@ -29,7 +30,10 @@ import           Data.Text                (Text)
 import qualified Data.Text                as T
 
 import           TDF.Auth                 (AuthedUser(..), moduleName)
-import           TDF.Models               (RoleEnum(Admin, Manager, StudioManager), roleToText)
+import           TDF.Models
+  ( RoleEnum(Admin, Artist, Manager, StudioManager)
+  , roleToText
+  )
 
 data FeatureRule = FeatureRule
   { featureRuleRolesAny   :: [Text]
@@ -139,6 +143,16 @@ registryFeatureRequestable feature rawAction =
       && registryFeatureMaturity feature `notElem` ["broken", "incomplete"]
       && (action == "view" || action == "discover" || action `elem` map fst (registryFeaturePermissions feature))
 
+-- Approved access requests may provision a role only when the feature/action
+-- pair has one unambiguous, code-owned grant. Most feature rules express
+-- authorization rather than a grant target, so they deliberately remain
+-- manual instead of guessing among roles or record-scoped permissions.
+registryFeatureAccessGrantRole :: RegistryFeature -> Text -> Maybe RoleEnum
+registryFeatureAccessGrantRole feature rawAction
+  | normalizeToken (registryFeatureId feature) == normalizeToken "artist.onboarding"
+      && normalizeToken rawAction == "create" = Just Artist
+  | otherwise = Nothing
+
 registryFeatureAllows :: [RoleEnum] -> [Text] -> RegistryFeature -> Text -> Bool
 registryFeatureAllows roles modules RegistryFeature{..} rawAction =
   let action = normalizeToken rawAction
@@ -167,7 +181,9 @@ registryFeatureAllows roles modules RegistryFeature{..} rawAction =
 
 registryReviewerCanDecide :: AuthedUser -> RegistryFeature -> Text -> Bool
 registryReviewerCanDecide AuthedUser{..} feature action =
-  let reviewerRole = any (`elem` auRoles) [Admin, Manager, StudioManager]
+  let reviewerRole = case registryFeatureAccessGrantRole feature action of
+        Just _ -> Admin `elem` auRoles
+        Nothing -> any (`elem` auRoles) [Admin, Manager, StudioManager]
       modules = map moduleName (Set.toList auModules)
   in reviewerRole && registryFeatureAllows auRoles modules feature action
 

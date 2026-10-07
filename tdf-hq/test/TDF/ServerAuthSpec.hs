@@ -51,6 +51,7 @@ import TDF.ServerAuth
   , validateOptionalSignupPhone
   , validateOnboardingFirstValue
   , validateOnboardingIntent
+  , validateArtistInvitation
   , isOnboardingEligible
   )
 
@@ -72,6 +73,7 @@ spec = do
   signupPhoneSpec
   signupFanArtistIdsSpec
   signupArtistClaimAuthoritySpec
+  artistInvitationSpec
   onboardingProgressSpec
   passwordResetTokenSpec
   googleIdTokenInputSpec
@@ -500,6 +502,18 @@ signupArtistClaimAuthoritySpec = describe "password signup artist authority" $ d
     mapM_ (\artistId -> case validateOptionalSignupClaimArtistId (Just artistId) of
       Left err -> errHTTPCode err `shouldBe` 400
       Right _ -> expectationFailure "Invalid artist identity accepted") [0, -1]
+
+artistInvitationSpec :: Spec
+artistInvitationSpec = describe "validateArtistInvitation" $ do
+  it "accepts only the explicit Tu Escena campaign invitation" $ do
+    validateArtistInvitation " Tu_Escena_Conectada_Piloto "
+      `shouldBe` Right "tu_escena_conectada_piloto"
+    case validateArtistInvitation "unknown_campaign" of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "artistInvitation is unsupported"
+      Right value ->
+        expectationFailure ("Expected an unknown artist invitation to fail, got " <> show value)
 
 onboardingProgressSpec :: Spec
 onboardingProgressSpec = describe "account-bound onboarding progress" $ do

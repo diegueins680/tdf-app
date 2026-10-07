@@ -1095,6 +1095,13 @@ data SessionResponse = SessionResponse
 instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
 
+data ArtistInvitationRedeemRequest = ArtistInvitationRedeemRequest
+  { artistInvitation :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON ArtistInvitationRedeemRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
+
 data OnboardingIntentUpdate = OnboardingIntentUpdate
   { onboardingIntent :: Text
   } deriving (Show, Generic)
