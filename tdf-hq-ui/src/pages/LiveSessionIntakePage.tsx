@@ -32,6 +32,7 @@ import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import { useSession } from '../session/SessionContext';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 
 interface MusicianEntry {
   id: string;
@@ -660,19 +661,26 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
         <Stack spacing={2}>
           <Typography variant="h6">Términos y logística</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Participar en las TDF Live Sessions implica autorizar el uso de audio y video grabado durante la sesión para fines
-            promocionales, respetar los horarios pactados y entregar información veraz del rider técnico y los músicos.
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            También confirmas que tienes los derechos para interpretar y grabar el material presentado y que aceptarás la agenda
-            definitiva propuesta por TDF Records según disponibilidad de salas y staff.
-          </Typography>
+          <LegalDisclosure
+            id="live-session-terms"
+            title="Términos de participación"
+            summary={`Versión ${termsVersion}`}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Participar en las TDF Live Sessions implica autorizar el uso de audio y video grabado durante la sesión para fines
+              promocionales, respetar los horarios pactados y entregar información veraz del rider técnico y los músicos.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              También confirmas que tienes los derechos para interpretar y grabar el material presentado y que aceptarás la agenda
+              definitiva propuesta por TDF Records según disponibilidad de salas y staff.
+            </Typography>
+          </LegalDisclosure>
           <FormControlLabel
             control={
               <Checkbox
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
+                inputProps={{ 'aria-describedby': 'live-session-terms-button' }}
               />
             }
             label={
