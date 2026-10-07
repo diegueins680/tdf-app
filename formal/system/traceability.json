@@ -8237,8 +8237,8 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "0cbdd30b7a2b6289ec46431cb70954f646f00918d05d72cacea77f0e35dc3183",
-    "formal/system/public-routes.json": "bb0d9e03743beed586c831fddd6c036d665af4baceda13e2ec9c0b8db4a6e6d9",
+    "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
+    "formal/system/public-routes.json": "a8c114a5796fa83b97b449480d0139aef3c1130ef5b8c86f064646e238d33d6f",
     "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
@@ -8526,8 +8526,8 @@
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
     "tdf-hq-ui/src/main.tsx": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
     "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
-    "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx": "b665530428db1becb65b90f823593f681896ebe1bc161221a870069f4e5d084a",
-    "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "2015552efef6c3dbc137f3f21e640bcb559d1e8df7b704198dbb40a9d64ab95a",
+    "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx": "6db6ff370e4f3d207168fdd7be610ac28c6e4a6f9f6da7e3930e9154aba2f2e6",
+    "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
@@ -22914,7 +22914,7 @@
     {
       "id": "SURFACE-f3ed014e95930721",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
-      "sha256": "b665530428db1becb65b90f823593f681896ebe1bc161221a870069f4e5d084a",
+      "sha256": "6db6ff370e4f3d207168fdd7be610ac28c6e4a6f9f6da7e3930e9154aba2f2e6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22930,7 +22930,7 @@
     {
       "id": "SURFACE-53c8ba4f1cec8bc4",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-      "sha256": "2015552efef6c3dbc137f3f21e640bcb559d1e8df7b704198dbb40a9d64ab95a",
+      "sha256": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
