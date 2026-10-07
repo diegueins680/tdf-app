@@ -133,13 +133,11 @@ test('Marketplace cart stays reachable after adding on a small phone @mobile-flo
   await expect(page).toHaveURL(/\/marketplace(?:\?.*)?$/);
   await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');
   await expect(header.locator('.MuiBadge-badge')).toHaveText('1');
-  // Without scrolling back up, a cart entry point is on screen: below the md
-  // breakpoint the sticky mobile bar (the header may have scrolled away while
-  // reaching the product); on wider layouts the header cart control.
+  // Without scrolling back up, the header cart control is still on screen
+  // (the Marketplace header is pinned), and on phones the sticky bar too.
+  await expect(cartButton).toBeInViewport();
   if ((page.viewportSize()?.width ?? 0) < 900) {
     await expect(page.getByRole('button', { name: /^Ver carrito \(1\)/ })).toBeInViewport();
-  } else {
-    await expect(cartButton).toBeInViewport();
   }
   expect(state.upserts).toEqual([{ mciuListingId: 'listing-mic', mciuQuantity: 1 }]);
   expect(state.creates).toBe(1);

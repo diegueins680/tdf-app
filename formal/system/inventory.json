@@ -2583,7 +2583,7 @@
     {
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
-      "sha256": "7c4389d13cf2e9da97824c47d870368abc156d9b848ff137733ab3e2be9b6bcd",
+      "sha256": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6447,7 +6447,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "0f0ad08cea94d98e7f7191279809a4bf0833a5d74c974b45ffd13eaedffa4f92",
+      "sha256": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
       "semanticConformance": "not-established-by-discovery"
     },
     {

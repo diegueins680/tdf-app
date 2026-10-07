@@ -57,6 +57,9 @@ export default function PublicBranding({
   });
   const open = Boolean(menuAnchor);
   const profileRoute = /^\/(artista|a|perfil)\//.test(location.pathname);
+  // Commerce pages keep the header (and its cart control) pinned so the cart
+  // stays one tap away after scrolling to a product, on every width.
+  const stickyHeader = location.pathname === '/marketplace' || location.pathname.startsWith('/marketplace/');
   const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -154,6 +157,9 @@ export default function PublicBranding({
             borderColor: 'divider',
             bgcolor: 'background.paper',
             py: 1.5,
+            ...(stickyHeader
+              ? { position: 'sticky', top: 'env(safe-area-inset-top, 0px)', zIndex: (theme) => theme.zIndex.appBar }
+              : {}),
           }}
         >
           <Container maxWidth="xl">
