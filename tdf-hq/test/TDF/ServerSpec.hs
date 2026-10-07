@@ -25,7 +25,7 @@ import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getJust, insert, insert_, insertKey
+    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -777,6 +777,41 @@ spec = describe "TDF.Server helpers" $ do
                     checkoutSession <- post "/public/courses/beatmaking/registrations/1/checkout-session"
                         "{\"successUrl\":\"https://example.com/ok\",\"cancelUrl\":\"https://example.com/no\"}" False
                     status checkoutSession `shouldBe` 404
+    describe "WhatsApp double opt-in (PRIV-WHATSAPP-001)" $ do
+        it "treats only an exact affirmative reply as confirmation" $ do
+            map NotificationServer.isWhatsAppConsentConfirmationMessage ["SI", " Sí! ", "yes", "Acepto"]
+                `shouldBe` [True, True, True, True]
+            map NotificationServer.isWhatsAppConsentConfirmationMessage ["si quiero", "no", "STOP", ""]
+                `shouldBe` [False, False, False, False]
+        it "confirms only a pending request inside the window" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                now <- getCurrentTime
+                runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
+                let row phone requested consent =
+                        ME.WhatsAppConsent phone Nothing consent (Just "public") Nothing
+                            (if consent then Just now else Nothing) Nothing requested now now
+                runSqlPool (do
+                    _ <- insert (row "+593990000001" (Just (addUTCTime (-3600) now)) False)
+                    _ <- insert (row "+593990000002" (Just (addUTCTime (-8 * 86400) now)) False)
+                    _ <- insert (row "+593990000003" Nothing False)
+                    pure ()) pool
+                let confirm phone = runSqlPool (NotificationServer.applyWhatsAppConsentConfirmation now phone) pool
+                confirm "+593990000001" `shouldReturn` True
+                confirm "+593990000001" `shouldReturn` False
+                confirm "+593990000002" `shouldReturn` False
+                confirm "+593990000003" `shouldReturn` False
+                confirm "+593990000099" `shouldReturn` False
+                confirmed <- runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000001")) pool
+                fmap (ME.whatsAppConsentConsent . entityVal) confirmed `shouldBe` Just True
+                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) confirmed `shouldBe` Just Nothing
+        it "serves no public consent lookup" $
+            withNotificationFixture $ \env _ _ _ _ ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    request <- NotificationHTTP.parseRequest
+                        ("http://127.0.0.1:" <> show port <> "/public/whatsapp/consent?phone=%2B593990000001")
+                    response <- NotificationHTTP.httpLbs request manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldSatisfy` (`elem` [404, 405])
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
@@ -11678,6 +11713,7 @@ spec = describe "TDF.Server helpers" $ do
                         , ME.whatsAppConsentNote = Just "consent"
                         , ME.whatsAppConsentConsentedAt = Just now
                         , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentConfirmationRequestedAt = Nothing
                         , ME.whatsAppConsentCreatedAt = now
                         , ME.whatsAppConsentUpdatedAt = now
                         }
@@ -11700,6 +11736,7 @@ spec = describe "TDF.Server helpers" $ do
                         , ME.whatsAppConsentNote = Just "consent"
                         , ME.whatsAppConsentConsentedAt = Just now
                         , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentConfirmationRequestedAt = Nothing
                         , ME.whatsAppConsentCreatedAt = now
                         , ME.whatsAppConsentUpdatedAt = now
                         }

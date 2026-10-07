@@ -21,6 +21,7 @@ is proven to match the built executable by the compiled-API gate (SYS-API-003).
 | `public-intake` | Anonymous creation of the submitter's own new record | Reviewed |
 | `operator-secret` | Seed operations | Named secret header is a route input |
 | `public-static-files` | Raw static file mounts from the public media root | Only Raw mounts may use it, and Raw mounts may use nothing else |
+| `public-withdrawal` | Anonymous withdrawal of a permission (WhatsApp opt-out) | Reviewed: may only reduce permissions, never disclose prior state |
 | `known-debt` | Reviewed and found insufficient | Must reference a registered debt |
 
 The gate rejects unregistered routes, stale or duplicate entries, unknown
@@ -63,8 +64,8 @@ PostgreSQL-backed server and exercises retrieval privacy as authenticated staff.
 
 - `DEBT-AUTH-ACADEMY-001` (P2): academy enroll/progress and referral claim trust a
   submitted email.
-- `DEBT-PRIV-WHATSAPP-001` (P2): public WhatsApp consent lacks proof of number
-  control, messages the submitted number, and discloses consent state.
 
-Both need a product decision on identity proof (for example a one-time code) before
-repair; until then they stay visible as registered debt.
+`DEBT-PRIV-WHATSAPP-001` was repaired on 2026-10-07 (AUTHORITY-052, PRIV-WHATSAPP-001):
+public consent is a double opt-in request activated only by a timely SI reply from
+the number, the public lookup is removed, and public opt-out is a non-disclosing
+withdrawal. Existing consent rows are unchanged by the additive migration.
