@@ -17,6 +17,89 @@
   <body>
     <a href="#main-content" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;padding:8px 16px;background:#7c3aed;color:white;text-decoration:none;font-size:14px;border-radius:0 0 4px 0;" onfocus="this.style.position='fixed';this.style.left='0';this.style.top='0';this.style.width='auto';this.style.height='auto';" onblur="this.style.position='absolute';this.style.left='-9999px';this.style.width='1px';this.style.height='1px';">Saltar al contenido principal</a>
     <div id="root"></div>
+    <noscript>
+      <div style="font-family:system-ui,sans-serif;max-width:480px;margin:48px auto;padding:0 16px;color:#111827;">
+        <h1 style="font-size:20px;">Activa JavaScript para usar TDF Records</h1>
+        <p>Esta aplicación necesita JavaScript. Actívalo en tu navegador y recarga la página.</p>
+      </div>
+    </noscript>
+    <script>
+      /* Blank-screen watchdog. Runs even when the app bundle fails to load or
+         parse, so a valid navigation never ends on an empty white page: if
+         #root has no visible content after a grace period, show recovery
+         actions. The overlay removes itself as soon as the app renders. The
+         app reports detections from window.__tdfBlankScreen (see bootSafety). */
+      (function () {
+        var GRACE_MS = 9000;
+        var CHECK_MS = 2500;
+        var startedAt = Date.now();
+        var blankSince = null;
+        var overlay = null;
+        window.__tdfBlankScreen = { shown: 0, lastRoute: null };
+        // 'content' | 'loading' (only spinners/skeletons) | 'blank'
+        function rootState(root) {
+          if (!root || !root.firstElementChild) return 'blank';
+          var text = root.textContent || '';
+          if (text.length > 2000) return 'content';
+          var visible = (root.innerText || '').replace(/\s+/g, ' ').trim();
+          if (visible.length >= 40 || root.querySelector('img,video,canvas,iframe')) return 'content';
+          return root.querySelector('[role="progressbar"],[aria-busy="true"]') ? 'loading' : 'blank';
+        }
+        function button(label, onClick, primary) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = label;
+          b.style.cssText = 'min-height:44px;padding:10px 16px;border-radius:10px;font:600 15px system-ui,sans-serif;cursor:pointer;'
+            + (primary ? 'background:#6d28d9;color:#fff;border:0;' : 'background:#fff;color:#4c1d95;border:1px solid #6d28d9;');
+          b.onclick = onClick;
+          return b;
+        }
+        function show(state) {
+          if (overlay) return;
+          overlay = document.createElement('div');
+          overlay.id = 'tdf-blank-screen-recovery';
+          overlay.setAttribute('role', 'alert');
+          overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;'
+            + 'padding:24px 16px calc(24px + env(safe-area-inset-bottom));background:#f8fafc;font-family:system-ui,sans-serif;color:#111827;';
+          var card = document.createElement('div');
+          card.style.cssText = 'max-width:420px;width:100%;';
+          var h = document.createElement('h1');
+          h.textContent = 'La página no terminó de cargar';
+          h.style.cssText = 'font-size:20px;margin:0 0 8px;';
+          var p = document.createElement('p');
+          p.textContent = 'Puede deberse a una conexión lenta o a una versión anterior guardada en tu navegador. Tus datos están a salvo.';
+          p.style.cssText = 'margin:0 0 16px;line-height:1.5;';
+          var actions = document.createElement('div');
+          actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+          actions.appendChild(button('Recargar', function () { window.location.reload(); }, true));
+          actions.appendChild(button('Ir a Comunidad', function () { window.location.assign('/fans'); }));
+          actions.appendChild(button('Iniciar sesión', function () { window.location.assign('/login'); }));
+          card.appendChild(h); card.appendChild(p); card.appendChild(actions);
+          overlay.appendChild(card);
+          document.body.appendChild(overlay);
+          window.__tdfBlankScreen.shown += 1;
+          window.__tdfBlankScreen.lastRoute = window.location.pathname;
+          window.__tdfBlankScreen.state = state;
+          try { window.dispatchEvent(new Event('tdf:blank-screen')); } catch (e) { /* old browsers */ }
+        }
+        var LOADING_LIMIT_MS = 25000;
+        function check() {
+          var state = rootState(document.getElementById('root'));
+          if (state === 'content') {
+            blankSince = null;
+            if (overlay) { overlay.parentNode && overlay.parentNode.removeChild(overlay); overlay = null; }
+            return;
+          }
+          if (document.visibilityState === 'hidden') return;
+          var now = Date.now();
+          if (blankSince === null) blankSince = now;
+          var limit = state === 'loading' ? LOADING_LIMIT_MS : GRACE_MS;
+          if (now - startedAt >= GRACE_MS && now - blankSince >= limit - CHECK_MS) show(state);
+        }
+        setInterval(check, CHECK_MS);
+        document.addEventListener('visibilitychange', check);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

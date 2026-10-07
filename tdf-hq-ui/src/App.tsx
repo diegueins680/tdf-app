@@ -23,8 +23,9 @@ function RoutedRadioWidget() {
 }
 
 export default function App() {
+  const location = useLocation();
   return (
-    <AppErrorBoundary>
+    <AppErrorBoundary resetKey={location.pathname}>
       <OnboardingRecovery />
       <Suspense fallback={<RouteLoadingFallback />}>
         <AppRoutes />
