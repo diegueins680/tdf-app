@@ -58705,6 +58705,86 @@
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "8c80d98c11e7d2dca074",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. Web type for the API status union.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/artistInvitations.ts",
+        "line": 3
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "25bef0a2b44ce140e985",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. Display labels for the staff panel.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+        "line": 25
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "4e84ef6ee94c1086c764",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. Chip colors for the staff panel.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+        "line": 32
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "239051ed5dff81995c92",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. OpenAPI enum for ArtistInvitationLink.status.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 18159
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "a86872972efe04fbd789",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test session fixture for the access-request review page; it exercises admin-only visibility of invitation links and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "line": 32
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }
