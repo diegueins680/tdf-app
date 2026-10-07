@@ -53,6 +53,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   CART_HASH,
   CART_OPEN_EVENT,
+  CART_META_KEY,
   CART_STORAGE_KEY,
   clearStoredCart,
   readCartMeta,
@@ -598,6 +599,22 @@ export default function MarketplacePage() {
     const meta = readCartMeta();
     return meta ? { cartId: meta.cartId, count: meta.count, updatedAt: meta.updatedAt } : null;
   });
+  // Another tab can create, replace or change the cart. The header badge
+  // follows storage events; mirror them into this page's cart state so the
+  // drawer and checkout act on the same cart the badge counts.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== CART_STORAGE_KEY && event.key !== CART_META_KEY) return;
+      const nextCartId = readOptionalBrowserStorage('local', CART_STORAGE_KEY);
+      const meta = readCartMeta();
+      setCartId(nextCartId);
+      setSavedCartMeta(meta ? { cartId: meta.cartId, count: meta.count, updatedAt: meta.updatedAt } : null);
+      void qc.invalidateQueries({ queryKey: ['marketplace-cart'] });
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [qc]);
   const datafastReturnUrl = useMemo(() => {
     if (!datafastCheckout || typeof window === 'undefined') return '';
     const url = new URL('/marketplace/pago-datafast', window.location.origin);

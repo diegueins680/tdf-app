@@ -7865,7 +7865,7 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "ad7db05fe6f1add11fcdf676b6b84d3095b0182ed8459b3b679e9bbeb7db4be1",
+    "docs/catalog-persistence/catalog-list-decisions.json": "de5c3f842498ddef75cb892b3c14c50ee30b3660ca6e63bd9cd227dfdd2af59c",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -8137,7 +8137,7 @@
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
     "tdf-hq-ui/public/mobile-distribution.json": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
     "tdf-hq-ui/src/App.tsx": "809888c62861f5b7260e161c4bf40e5459783c012a0c3780c8d93b0a5a2ad65e",
-    "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6b98f7fa1a0ea1604f61d892725f4900aefd926b901527573a2f36460559d39a",
+    "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "5cbdc0c477e949097b12399d02a0927f3c3e85d51386812caa5efa0193e8c057",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
@@ -8227,7 +8227,7 @@
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "6986ea4755a6c7bb126e05d4a7a53a220235ff357ca92094b79443ce13def547",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "e4271fcd1840f2122fc85c51ea3c8625207bcb5a1642e3d89b4a4feab6755d74",
-    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "a731e97f77eb7453fee5a4365f8499a7e6c118dd04921114634efb84d62c1fd1",
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "41f6891744481de7fb85a5670753a09c1d1547ded4ab7f16a5edc136cd5cb6f1",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
@@ -18390,7 +18390,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "6b98f7fa1a0ea1604f61d892725f4900aefd926b901527573a2f36460559d39a",
+      "sha256": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22320,7 +22320,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "a731e97f77eb7453fee5a4365f8499a7e6c118dd04921114634efb84d62c1fd1",
+      "sha256": "41f6891744481de7fb85a5670753a09c1d1547ded4ab7f16a5edc136cd5cb6f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

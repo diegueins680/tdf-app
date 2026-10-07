@@ -5338,7 +5338,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "6b98f7fa1a0ea1604f61d892725f4900aefd926b901527573a2f36460559d39a",
+      "sha256": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8242,7 +8242,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "a731e97f77eb7453fee5a4365f8499a7e6c118dd04921114634efb84d62c1fd1",
+      "sha256": "41f6891744481de7fb85a5670753a09c1d1547ded4ab7f16a5edc136cd5cb6f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {

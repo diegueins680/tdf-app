@@ -778,6 +778,42 @@ describe('MarketplacePage', () => {
       await cleanup();
     });
 
+    it('follows a cart created in another tab so the drawer matches the badge', async () => {
+      getCartMock.mockImplementation(async (cartId: string) => (cartId === 'cart-2'
+        ? buildCart({
+          mcCartId: 'cart-2',
+          mcItems: [{
+            mciListingId: 'listing-2', mciTitle: 'Bajo Fender', mciQuantity: 1,
+            mciSubtotalDisplay: 'USD $300.00', mciUnitPriceDisplay: 'USD $300.00', mciCategory: 'Bajos',
+          }],
+        } as Partial<MarketplaceCartDTO>)
+        : buildCart()));
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      expect(getCartMock).not.toHaveBeenCalledWith('cart-2');
+
+      // Another tab creates a cart and writes it to shared storage.
+      await act(async () => {
+        window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-2');
+        window.localStorage.setItem(
+          'tdf-marketplace-cart-meta',
+          JSON.stringify({ cartId: 'cart-2', count: 1, updatedAt: Date.now() }),
+        );
+        window.dispatchEvent(new StorageEvent('storage', { key: 'tdf-marketplace-cart-id' }));
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(headerBadge()).toBe('1'));
+      await act(async () => {
+        headerButton()?.click();
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(drawer()?.textContent).toContain('Bajo Fender'));
+      expect(getCartMock).toHaveBeenCalledWith('cart-2');
+
+      await cleanup();
+    });
+
     it('opens the cart drawer when arriving at /marketplace#carrito', async () => {
       window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
       const container = document.createElement('div');

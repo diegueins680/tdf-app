@@ -57407,6 +57407,16 @@
       "risk": "Changing a key could detach a server validation error from its input, hiding why an enrollment failed.",
       "justification": "Names of the course registration form inputs used to place validation errors next to the right field; they mirror the public registration request DTO fields, not a selectable business catalog.",
       "reviewed": true
+    },
+    {
+      "id": "ee71cefaff1543a724c4",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
+      "justification": "Test-only mock of the useSession() return shape (session, loading); React hook state, not a selectable or reportable business list.",
+      "reviewed": true
     }
   ]
 }
