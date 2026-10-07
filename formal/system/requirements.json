@@ -7604,7 +7604,8 @@
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
-        "e2e/web/event-rsvp-sharing.spec.mjs"
+        "e2e/web/event-rsvp-sharing.spec.mjs",
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

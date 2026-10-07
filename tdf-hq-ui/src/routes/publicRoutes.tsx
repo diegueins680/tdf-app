@@ -5,6 +5,7 @@ import PublicBranding from '../components/PublicBranding';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 import { useSession } from '../session/SessionContext';
 import { COMMUNITY_LANDING_PATH } from '../utils/loginRouting';
+import RouteLoadingFallback from './RouteLoadingFallback';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
@@ -66,7 +67,10 @@ export function LegacySocialEventsRedirect() {
 
 /** Returning signed-in visitors open Comunidad; guests keep the public start page. */
 export function RootLandingRedirect() {
-  const { session } = useSession();
+  const { session, loading } = useSession();
+  // A valid server cookie can exist without a cached session (cleared or
+  // blocked storage); wait for the bootstrap before choosing a destination.
+  if (loading && !session) return <RouteLoadingFallback />;
   return <Navigate to={session ? COMMUNITY_LANDING_PATH : '/inicio'} replace />;
 }
 

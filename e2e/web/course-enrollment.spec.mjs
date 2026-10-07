@@ -48,7 +48,13 @@ const leadReceived = {
   checkoutAvailable: false,
 };
 
-async function fixture(page, baseURL, { registrationFailure = null } = {}) {
+const signedInAccount = {
+  username: 'llamaestepez@gmail.com', displayName: 'Llamaestepez', partyId: 77,
+  roles: ['customer'], modules: [], featureFlags: [],
+  preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' },
+};
+
+async function fixture(page, baseURL, { registrationFailure = null, authenticated = false } = {}) {
   const origin = new URL(baseURL).origin;
   const state = { registrations: [], idempotencyKeys: [] };
   await page.route('**/*', async (route) => {
@@ -58,7 +64,13 @@ async function fixture(page, baseURL, { registrationFailure = null } = {}) {
       return url.origin === origin ? route.continue() : route.abort('blockedbyclient');
     }
     const path = url.pathname.replace(/^\/api(?=\/)/, '');
-    if (path === '/session') return route.fulfill({ status: 401, json: { error: 'unauthenticated' } });
+    if (path === '/session') {
+      return authenticated
+        ? route.fulfill({ json: signedInAccount })
+        : route.fulfill({ status: 401, json: { error: 'unauthenticated' } });
+    }
+    if (path.startsWith('/radio/presence')) return route.fulfill({ json: null });
+    if (path.startsWith('/radio/')) return route.fulfill({ json: [] });
     if (path === `/public/courses/${SLUG}`) return route.fulfill({ json: courseMetadata });
     if (path === `/public/courses/${SLUG}/registrations` && request.method() === 'POST') {
       state.registrations.push(request.postDataJSON());
@@ -197,6 +209,26 @@ test.describe('Course enrollment on a small Android phone', () => {
     await expectInViewport(page, dialog.getByLabel('Nombre completo'));
     await dialog.getByRole('button', { name: 'Cerrar' }).click();
     await expect(dialog).toBeHidden();
+  });
+
+  test('Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow', async ({ page, baseURL }) => {
+    await fixture(page, baseURL, { authenticated: true });
+    await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
+    await expectRenderedRoot(page);
+    const radioBar = page.getByTestId('radio-docked-bar');
+    await expect(radioBar).toBeVisible({ timeout: 15_000 });
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
+    if ((page.viewportSize()?.width ?? 0) >= 900) {
+      await expect(stickyBar).toBeHidden();
+      return;
+    }
+    await expect(stickyBar).toBeVisible();
+    const [stickyBox, radioBox] = await Promise.all([stickyBar.boundingBox(), radioBar.boundingBox()]);
+    // Stacked, not overlapping: the enrollment CTA stays fully tappable.
+    expect(stickyBox.y + stickyBox.height).toBeLessThanOrEqual(radioBox.y + 0.5);
+    await stickyBar.getByRole('button', { name: 'Inscribirme' }).click();
+    await expect(page.getByRole('dialog', { name: 'Inscríbete en Curso de Batería con Guillermo Díaz' })).toBeVisible();
   });
 
   test('Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow', async ({ page, baseURL }) => {

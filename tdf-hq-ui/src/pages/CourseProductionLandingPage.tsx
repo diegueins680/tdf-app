@@ -934,6 +934,7 @@ export default function CourseProductionLandingPage() {
           pt: { xs: 4, md: 6 },
           // Leave room for the mobile sticky CTA so it never covers the last card.
           pb: { xs: 'calc(96px + env(safe-area-inset-bottom, 0px))', md: 6 },
+          // The radio bar's own height is reserved on <body> by RadioWidget.
         }}
       >
         <Stack spacing={4}>
@@ -1658,7 +1659,9 @@ function StickyEnrollBar({
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 0,
+        // Sit above the docked radio bar (signed-in visitors) instead of
+        // competing for the same fixed position; 0 when the bar is hidden.
+        bottom: 'var(--tdf-radio-bar-height, 0px)',
         zIndex: (theme) => theme.zIndex.appBar,
         alignItems: 'center',
         gap: 2,

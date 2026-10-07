@@ -7605,7 +7605,8 @@
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
-        "e2e/web/event-rsvp-sharing.spec.mjs"
+        "e2e/web/event-rsvp-sharing.spec.mjs",
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -7869,7 +7870,7 @@
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
-    "e2e/web/course-enrollment.spec.mjs": "debc676b499d93131b742e1194aba556eb219b679dc6823203058e8997b2a486",
+    "e2e/web/course-enrollment.spec.mjs": "c170c10b80feec1d66997f2955f6935c85f48220e3f3ce036a8be584a789ec8a",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/marketplace-cart.spec.mjs": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
@@ -8209,7 +8210,7 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "5eb825653a6125c926f9fc94925ee9aed93fbda0aa25915d4e9985dd38eaac1a",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "7a9eadce056daf16c3788752aab9f4911dd2924700fa1157ab74ede3549e3930",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "6b9434ca713ae3fa4e8695bcee00bd420a6f7e7bd88d14acbf20d6aff88705f0",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -8235,7 +8236,8 @@
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
-    "tdf-hq-ui/src/routes/publicRoutes.tsx": "7680d858e73882533f34c020b76f8215ee2825e2551ba5e57d8345f69e7fc4e7",
+    "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "f78d0ec7366247d735944f8c540914b8e2490929a8ccd1d9ca12ca4b2a497c33",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "28be890b79dce34aeb78dbb3880b6337548ada32e5d6cfa237f1207f3f7caf93",
     "tdf-hq-ui/src/session/SessionContext.tsx": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
@@ -13333,6 +13335,12 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": [
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": [
       {
         "requirement": "MKT-CART-001",
@@ -13720,7 +13728,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "debc676b499d93131b742e1194aba556eb219b679dc6823203058e8997b2a486",
+      "sha256": "c170c10b80feec1d66997f2955f6935c85f48220e3f3ce036a8be584a789ec8a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21661,7 +21669,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "7a9eadce056daf16c3788752aab9f4911dd2924700fa1157ab74ede3549e3930",
+      "sha256": "6b9434ca713ae3fa4e8695bcee00bd420a6f7e7bd88d14acbf20d6aff88705f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23177,6 +23185,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-a23a18e5ad13967c",
+      "path": "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
+      "sha256": "f78d0ec7366247d735944f8c540914b8e2490929a8ccd1d9ca12ca4b2a497c33",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b81f4ee712780e85",
       "path": "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx",
       "sha256": "f46aa78c638e0f9cb5a994eadc3a926f99c1ced2b867b23d049a4b1a1b7f0d32",
@@ -23200,7 +23220,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "7680d858e73882533f34c020b76f8215ee2825e2551ba5e57d8345f69e7fc4e7",
+      "sha256": "28be890b79dce34aeb78dbb3880b6337548ada32e5d6cfa237f1207f3f7caf93",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36673,7 +36693,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "abcc1b5e55da39827285fa491ead4dfe26d8f002ed0c9992c502b897b445c6c7",
+      "sourceSha256": "f60798851e10472be6b445d12d6a75f0c02a3df6026c686ddd0a7b76ccf8dcd4",
       "definition": {
         "states": [
           "absent",
