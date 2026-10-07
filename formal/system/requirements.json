@@ -7971,7 +7971,7 @@
       "preconditions": [
         "Authenticated session",
         "Policy artist.invitation.artist active",
-        "Admin module for issuance and revocation"
+        "Strict administrator for issuance and revocation"
       ],
       "inputs": [
         "POST /artist-invitations {inviteeLabel, campaign?, expiresInDays?}",
@@ -8009,7 +8009,7 @@
         "Link bound to the redeeming party",
         "Stored onboarding intent artist_profile"
       ],
-      "authorization": "Issuance, listing and revocation require the Admin module; redemption requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
+      "authorization": "Issuance, listing and revocation require a strict administrator (Admin role with only admin/fan/customer roles, plus the Admin module); Studio Manager and Webmaster holders of the Admin module are refused. Redemption requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
       "privacy": "Stores the invitee label typed by staff and the redeeming party; never stores the raw token.",
       "concurrency": "Redemption claims the link with a single conditional UPDATE; concurrent redemptions by different accounts cannot both succeed.",
       "idempotency": "Re-redemption by the bound account is idempotent; revocation of an unused link is idempotent.",

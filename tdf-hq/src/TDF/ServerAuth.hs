@@ -106,6 +106,7 @@ import qualified TDF.API as Api
 import TDF.Auth (
     AuthedUser (..),
     ModuleAccess (ModuleAdmin),
+    hasStrictAdminAccess,
     validateModuleAccess,
     clearSessionCookieHeader,
     extractTokenFromHeaders,
@@ -924,7 +925,12 @@ artistInvitationsServer user =
   :<|> createInvitation
   :<|> revokeInvitation
   where
-    requireIssuer = either throwError pure (validateModuleAccess ModuleAdmin user)
+    -- Strict admins only: ModuleAdmin alone is also granted to Studio Manager
+    -- and Webmaster roles, and a redeemed link assigns the Artist role.
+    requireIssuer = do
+      either throwError pure (validateModuleAccess ModuleAdmin user)
+      unless (hasStrictAdminAccess user) $
+        throwError err403 { errBody = "Only administrators can manage artist invitation links" }
 
     listInvitations = do
       requireIssuer
