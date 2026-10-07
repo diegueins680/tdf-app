@@ -11,6 +11,7 @@ import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import InstagramEntryLinks from './InstagramEntryLinks';
 import SessionMenu from './SessionMenu';
+import MarketplaceCartButton from './MarketplaceCartButton';
 import { useSession } from '../session/SessionContext';
 import {
   hasInstagramTrafficSignal,
@@ -205,7 +206,8 @@ export default function PublicBranding({
                   ))}
                 </Stack>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ maxWidth: '100%', minWidth: 0 }}>
+              <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
+                <MarketplaceCartButton />
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
