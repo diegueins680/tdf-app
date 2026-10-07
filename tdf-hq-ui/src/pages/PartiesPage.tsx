@@ -180,12 +180,14 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
   const [phone, setPhone] = useState(party?.primaryPhone ?? '');
   const [displayName, setDisplayName] = useState(party?.displayName ?? '');
   const [email, setEmail] = useState(party?.primaryEmail ?? '');
+  const [notes, setNotes] = useState(party?.notes ?? '');
 
   useEffect(() => {
     setInstagram(party?.instagram ?? '');
     setPhone(party?.primaryPhone ?? '');
     setDisplayName(party?.displayName ?? '');
     setEmail(party?.primaryEmail ?? '');
+    setNotes(party?.notes ?? '');
   }, [party, open]);
 
   const mutation = useMutation<PartyDTO, Error, PartyUpdate>({
@@ -216,6 +218,14 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
           />
           <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
           <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField
+            label="Notas"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            multiline
+            minRows={3}
+            helperText="Historial de seguimiento del contacto. Agrega nuevas entradas sin borrar las anteriores."
+          />
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -227,6 +237,8 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
               uInstagram: instagram,
               uPrimaryPhone: phone,
               uPrimaryEmail: email.trim() || null,
+              // Only send notes when edited so saving other fields never overwrites notes changed elsewhere.
+              ...(notes !== (party?.notes ?? '') ? { uNotes: notes } : {}),
             })
           }
           variant="contained"

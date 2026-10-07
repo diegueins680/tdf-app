@@ -798,6 +798,84 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('edits contact notes and only sends them when they changed', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 7,
+        displayName: 'Quito Bohemio',
+        isOrg: false,
+        primaryEmail: null,
+        instagram: 'quitobohemio',
+        notes: 'Nota previa',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    const notesField = () => {
+      const label = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label')).find(
+        (element) => buttonText(element).trim() === 'Notas',
+      );
+      const field = label ? document.getElementById(label.htmlFor) : null;
+      if (!(field instanceof HTMLTextAreaElement)) throw new Error('Notes field not found');
+      return field;
+    };
+    const openEditor = async () => {
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Completar contacto')[0]!);
+        await flushPromises();
+      });
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Completar contacto'));
+        await flushPromises();
+        await flushPromises();
+      });
+    };
+    const save = async () => {
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Guardar')[0]!);
+        await flushPromises();
+        await flushPromises();
+      });
+    };
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
+      });
+
+      await openEditor();
+      await waitForExpectation(() => {
+        expect(notesField().value).toBe('Nota previa');
+      });
+      await save();
+      await waitForExpectation(() => {
+        expect(updatePartyMock).toHaveBeenCalledTimes(1);
+      });
+      expect(updatePartyMock.mock.calls[0]?.[1]).not.toHaveProperty('uNotes');
+
+      await openEditor();
+      await act(async () => {
+        const field = notesField();
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(
+          field,
+          'Nota previa\n2026-10-07 invitación enviada',
+        );
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await save();
+      await waitForExpectation(() => {
+        expect(updatePartyMock).toHaveBeenLastCalledWith(7, expect.objectContaining({
+          uNotes: 'Nota previa\n2026-10-07 invitación enviada',
+        }));
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the optional username empty until the admin asks for a custom login', async () => {
     listPartiesMock.mockResolvedValue([
       {
