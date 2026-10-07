@@ -13,8 +13,23 @@ const omitNullPartyUpdateFields = (body: PartyUpdate): PartyUpdate =>
     Object.entries(body).filter(([, value]) => value !== null),
   ) as PartyUpdate;
 
+// Server caps each page at 500 and offsets at 10000; without explicit paging it
+// silently returns only the first 200 contacts, hiding newer ones from the CRM.
+const PARTY_PAGE_SIZE = 500;
+const PARTY_MAX_OFFSET = 10000;
+
+const listAllParties = async (): Promise<PartyDTO[]> => {
+  const parties: PartyDTO[] = [];
+  for (let offset = 0; offset <= PARTY_MAX_OFFSET; offset += PARTY_PAGE_SIZE) {
+    const page = await get<PartyDTO[]>(`/parties?limit=${PARTY_PAGE_SIZE}&offset=${offset}`);
+    parties.push(...page);
+    if (page.length < PARTY_PAGE_SIZE) break;
+  }
+  return parties;
+};
+
 export const Parties = {
-  list: () => get<PartyDTO[]>('/parties'),
+  list: () => listAllParties(),
   create: (body: PartyCreate, requestKey: string) => post<PartyDTO>('/parties', body,
     requestKey ? { headers: { 'Idempotency-Key': requestKey } } : {}),
   getOne: (id: number) => get<PartyDTO>(`/parties/${requirePositiveInteger(id, 'id')}`),
