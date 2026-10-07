@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -39,7 +39,6 @@ import {
 } from '../features/featureRegistry';
 import { positiveNotificationId } from '../components/notificationTarget';
 import { useSession } from '../session/SessionContext';
-import ArtistInvitationLinksPanel from '../components/ArtistInvitationLinksPanel';
 import { canAccessPath, hasStrictAdminAccess } from '../utils/accessControl';
 
 const supportedActions = new Set<FeatureAction>([
@@ -476,6 +475,9 @@ function ReviewCard({ request, onChanged, canReview = true }: { request: Feature
   );
 }
 
+// Loaded only for admins, so reviewers never download the invitation tooling.
+const ArtistInvitationLinksPanel = lazy(() => import('../components/ArtistInvitationLinksPanel'));
+
 export function AccessRequestReviewPage() {
   const { text } = useAccessCopy();
   const { session } = useSession();
@@ -518,7 +520,11 @@ export function AccessRequestReviewPage() {
           />
         ))}
       </Stack>
-      {canIssueArtistInvitations ? <ArtistInvitationLinksPanel /> : null}
+      {canIssueArtistInvitations ? (
+        <Suspense fallback={<CircularProgress aria-label="Invitaciones de artista" />}>
+          <ArtistInvitationLinksPanel />
+        </Suspense>
+      ) : null}
     </Stack>
   );
 }

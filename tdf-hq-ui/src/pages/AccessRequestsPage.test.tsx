@@ -167,6 +167,10 @@ describe('internal access request flow', () => {
     mockSession = { ...readonlySession, username: 'admin', roles: ['Admin'], modules: ['admin'] };
     const adminView = await renderReviewPage();
     try {
+      await act(async () => {
+        await flushPromises();
+        await flushPromises();
+      });
       expect(adminView.container.querySelector('[data-testid="artist-invitation-panel"]')).not.toBeNull();
     } finally {
       await adminView.cleanup();
