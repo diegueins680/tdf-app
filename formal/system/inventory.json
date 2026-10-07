@@ -8087,13 +8087,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
+      "sha256": "886fe17587d0fd4b031825376e6fc9d30cb843fe28aecc32a18c8bdd727a107c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
+      "sha256": "c6af1fadf03efae8f9befb8659274d6c68477d52da802abea66fec9611e42095",
       "semanticConformance": "not-established-by-discovery"
     },
     {
