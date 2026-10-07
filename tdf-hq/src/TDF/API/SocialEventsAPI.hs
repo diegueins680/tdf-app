@@ -93,6 +93,8 @@ import TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO,
     TicketManualPaymentDTO,
     TicketManualPaymentReviewDTO,
+    TicketTaxDocumentDTO,
+    BankRefundCompletionDTO,
     RsvpCreateDTO,
     RsvpDTO,
     RsvpSummaryDTO,
@@ -524,6 +526,16 @@ type TicketsRoutes =
             :> "review"
             :> ReqBody '[JSON] TicketManualPaymentReviewDTO
             :> Post '[JSON] TicketManualPaymentDTO
+        -- SRI electronic invoices
+        :<|> "events" :> Capture "eventId" Text :> "tax-documents" :> Get '[JSON] [TicketTaxDocumentDTO]
+        :<|> "events" :> Capture "eventId" Text :> "tax-documents" :> Capture "documentId" Text :> "retry" :> Post '[JSON] [TicketTaxDocumentDTO]
+        :<|> "events"
+            :> Capture "eventId" Text
+            :> "refunds"
+            :> Capture "refundId" Text
+            :> "bank-transfer-complete"
+            :> ReqBody '[JSON] BankRefundCompletionDTO
+            :> Post '[JSON] RefundDTO
         -- Transfers
         :<|> "events"
             :> Capture "eventId" Text

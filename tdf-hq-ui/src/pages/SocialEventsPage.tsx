@@ -64,6 +64,8 @@ import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from
 import { hasStrictAdminAccess } from '../utils/accessControl';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
+import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
+import { RefundManagementPanel } from '../components/RefundManagementPanel';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -1761,6 +1763,17 @@ export default function SocialEventsPage() {
 
                           {eventId && (
                             <EventManualPaymentsPanel eventId={eventId} formatMoney={formatMoney} formatDate={formatDate} />
+                          )}
+
+                          {eventId && (
+                            <EventTaxDocumentsPanel eventId={eventId} formatMoney={formatMoney} formatDate={formatDate} />
+                          )}
+
+                          {eventId && (
+                            <Stack spacing={1}>
+                              <Typography variant="subtitle2" fontWeight={700}>Reembolsos</Typography>
+                              <RefundManagementPanel eventId={eventId} />
+                            </Stack>
                           )}
 
                           <Divider />

@@ -10264,6 +10264,8 @@ export interface components {
              * @description When set, new checkouts may still choose staff-verified bank transfer until this instant. Null when the policy did not opt in, the window closed, or the rail is not configured.
              */
             bankTransferAvailableUntil?: string | null;
+            /** @description Every paid order receives an SRI electronic invoice; checkout collects buyer identification when required. */
+            taxInvoiceIssued?: boolean;
         };
         PublicEventTicketStorefront: {
             /** Format: int64 */
@@ -10277,6 +10279,8 @@ export interface components {
             timezone?: string | null;
             venueName?: string | null;
             venueAddress?: string | null;
+            /** @description Public event artwork (flyer) shown on the ticket checkout. */
+            imageUrl?: string | null;
             tiers: components["schemas"]["PublicEventTicketTier"][];
             policy: components["schemas"]["PublicEventTicketPolicy"] | null;
             checkoutAvailable: boolean;
@@ -10293,6 +10297,13 @@ export interface components {
             promoCode?: string;
             /** @enum {boolean} */
             termsAccepted: true;
+            /**
+             * @description Used only when the policy issues electronic invoices. Consumidor final is accepted up to USD 50; above that an identification is required.
+             * @enum {string}
+             */
+            billingIdType?: "consumidor_final" | "cedula" | "ruc" | "pasaporte";
+            billingIdNumber?: string;
+            billingName?: string;
         };
         PublicEventTicketQuote: {
             policyVersion: string;

@@ -125,16 +125,17 @@ state_machines:
       draft: [sent, cancelled]
       sent: [viewed, accepted, cancelled, expired]
       viewed: [accepted, cancelled, expired]
-      accepted: [deposit_due, cancelled]
+      # Accepted terms can still lapse before the deposit is due (AUTHORITY-047).
+      accepted: [deposit_due, cancelled, expired]
       deposit_due: [deposit_paid, cancelled, expired]
-      deposit_paid: [in_progress, cancelled, refunded, partially_refunded]
+      # Deposit refunds are separate domain operations in the `refund` machine,
+      # not quote states (ADR-0114, AUTHORITY-047).
+      deposit_paid: [in_progress, cancelled]
       in_progress: [balance_due, cancelled]
       balance_due: [completed, cancelled]
       completed: []
       cancelled: []
       expired: []
-      partially_refunded: [refunded]
-      refunded: []
   distribution:
     initial: draft
     transitions:

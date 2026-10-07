@@ -55,6 +55,8 @@ module TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO (..),
     TicketManualPaymentDTO (..),
     TicketManualPaymentReviewDTO (..),
+    TicketTaxDocumentDTO (..),
+    BankRefundCompletionDTO (..),
     TicketTransferCreateDTO (..),
     TicketTransferDTO (..),
     WaitlistJoinDTO (..),
@@ -1444,6 +1446,38 @@ data TicketManualPaymentDTO = TicketManualPaymentDTO
 
 instance ToJSON TicketManualPaymentDTO
 instance FromJSON TicketManualPaymentDTO
+
+-- | Bank reference of the money staff returned for a bank-transfer ticket order.
+data BankRefundCompletionDTO = BankRefundCompletionDTO
+    { brcReference :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON BankRefundCompletionDTO
+instance FromJSON BankRefundCompletionDTO where
+    parseJSON = withObject "BankRefundCompletionDTO" $ \o -> do
+        rejectUnknownObjectFields "BankRefundCompletionDTO" ["brcReference"] o
+        BankRefundCompletionDTO <$> o .: "brcReference"
+
+-- | Staff view of the SRI electronic invoice for a paid ticket order.
+data TicketTaxDocumentDTO = TicketTaxDocumentDTO
+    { ttdId :: Text
+    , ttdKind :: Text
+    , ttdOrderId :: Text
+    , ttdNumber :: Text
+    , ttdStatus :: Text
+    , ttdAmountMinor :: Int
+    , ttdAccessKey :: Maybe Text
+    , ttdAuthorizationNumber :: Maybe Text
+    , ttdAuthorizedAt :: Maybe UTCTime
+    , ttdLastError :: Maybe Text
+    , ttdEnvironment :: Text
+    , ttdCreatedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON TicketTaxDocumentDTO
+instance FromJSON TicketTaxDocumentDTO
 
 data TicketManualPaymentReviewDTO = TicketManualPaymentReviewDTO
     { tmprAction :: Text
