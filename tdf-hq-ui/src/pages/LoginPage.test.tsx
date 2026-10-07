@@ -338,10 +338,14 @@ describe('LoginPage Google signup consent flow', () => {
         fireEvent.change(dialog.querySelector('[name="newPassword"]')!, { target: { value: 'fictional-password-42' } });
       });
       expect(findButton('Crear e ingresar')?.disabled).toBe(true);
+      expect(findButton('Crear e ingresar')?.getAttribute('aria-describedby')).toBe('signup-consent-hint');
+      expect(document.getElementById('signup-consent-hint')?.textContent)
+        .toBe('Acepta los términos y la política de privacidad para continuar.');
       expect(signupRequestMock).not.toHaveBeenCalled();
       await act(async () => {
         fireEvent.click(dialog.querySelector('[aria-label="Acepto los términos y la política de privacidad"]')!);
       });
+      expect(document.getElementById('signup-consent-hint')).toBeNull();
       await act(async () => {
         findButton('Crear e ingresar')?.click();
         await flushPromises();

@@ -2705,6 +2705,74 @@
       "critical": true
     },
     {
+      "authority": "reconciled",
+      "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
+      "contract": "docs/automatic-production-migrations.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Production entrypoint",
+        "Release operator",
+        "Product owner"
+      ],
+      "preconditions": [
+        "AUTO_APPLY_PRODUCTION_MIGRATIONS=true for the serving API."
+      ],
+      "inputs": [
+        "revenue_feature_flag production rows",
+        "Reviewed production migration bundle"
+      ],
+      "state": {
+        "startup": [
+          "verifying",
+          "serving",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Approved gate state -> serving",
+        "Missing gate or enabled staged provider -> rejected before serving"
+      ],
+      "forbiddenTransitions": [
+        "Approved enabled PayPal/Datafast gate -> rejected",
+        "Verification -> gate enablement"
+      ],
+      "effects": [
+        "Restarts preserve the configured provider state."
+      ],
+      "authorization": "Gate approval is a product decision recorded in authority-decisions.json; verification only checks it.",
+      "privacy": "Reads gate rows only.",
+      "concurrency": "Runs once per container start before the server accepts traffic.",
+      "idempotency": "Repeated verification of an unchanged database is equivalent.",
+      "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "observability": "Fixed exception text names the violated gate class.",
+      "formalModels": [],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
+      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "status": "specified and implemented",
+      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "ambiguity": [
+        "Other startup assertions may encode states that later become approved; each needs the same review."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PG16 test and negative control pass; CI and production release pending."
+      },
+      "id": "DEPLOY-STARTUP-001",
+      "title": "Startup schema verification accepts approved production state",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
+      "implementation": [
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/production-entrypoint.sh"
+      ],
+      "tests": [
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "critical": true
+    },
+    {
       "authority": "approved",
       "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
       "contract": "formal/system/bookings.md",
@@ -7318,6 +7386,70 @@
       }
     },
     {
+      "id": "DATA-CRM-001",
+      "statement": "The web CRM contact list must request contacts in explicit server pages (limit 500) until a short page is returned, so contacts beyond the server's default first page of 200 are not silently hidden. The backend remains authoritative for CRM module access and page bounds.",
+      "authority": "reconciled",
+      "source": "PR #504 (CRM contact paging); tdf-hq validatePartyListPagination bounds",
+      "property": "Listing continues until a page shorter than the requested limit",
+      "contract": "tdf-hq-ui/src/api/parties.ts",
+      "implementation": [
+        "tdf-hq-ui/src/api/parties.ts"
+      ],
+      "verification": "Client unit tests; no backend change",
+      "evidence": "Unit tests of multi-page and short-page termination",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact list loads every server page",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/api/parties.test.ts"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests pass; deployed web verification pending."
+      }
+    },
+    {
       "id": "WEB-CANONICAL-001",
       "title": "Public links use the canonical tdfrecords.net origin",
       "domain": "WEB",
@@ -7596,7 +7728,7 @@
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+    "scripts/lib/production-release.mjs": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -7624,6 +7756,7 @@
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
+    "scripts/test-automatic-migrations-production-schema.sh": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -7704,6 +7837,8 @@
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+    "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
+    "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/socialEvents.ts": "d2a41072887bfce5156ba3599c4b77828b0e88e99e3cceadbb82ee18e40e549e",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
@@ -7753,8 +7888,8 @@
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "886fe17587d0fd4b031825376e6fc9d30cb843fe28aecc32a18c8bdd727a107c",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "c6af1fadf03efae8f9befb8659274d6c68477d52da802abea66fec9611e42095",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "5a689514081aae0e98de08db9d4377696fa832b05d1b2b37a02accbddfe2bcd0",
@@ -9087,6 +9222,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "REC-DDEX-001",
         "relationship": "implementation"
       },
@@ -9513,6 +9652,10 @@
       {
         "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
       }
     ],
     "scripts/lib/migration-contract.mjs": [
@@ -9845,6 +9988,22 @@
         "relationship": "formalModels"
       }
     ],
+    "tdf-hq/production-entrypoint.sh": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-automatic-migrations-production-schema.sh": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
       {
         "requirement": "AUTH-BOOK-001",
@@ -10003,12 +10162,6 @@
       {
         "requirement": "SYS-UX-001",
         "relationship": "tests"
-      }
-    ],
-    "tdf-hq/production-entrypoint.sh": [
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/persistent-uploads.sh": [
@@ -12689,6 +12842,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/api/parties.ts": [
+      {
+        "requirement": "DATA-CRM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/parties.test.ts": [
+      {
+        "requirement": "DATA-CRM-001",
+        "relationship": "tests"
+      }
+    ],
     "functions/_middleware.js": [
       {
         "requirement": "WEB-CANONICAL-001",
@@ -14175,6 +14340,10 @@
         {
           "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -15121,7 +15290,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15134,6 +15303,10 @@
         },
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-STARTUP-001",
           "relationship": "implementation"
         },
         {
@@ -16185,9 +16358,14 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
+      "sha256": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c86f69c773ab4140",
@@ -18472,11 +18650,28 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-1b76690fcc43ff5f",
+      "path": "tdf-hq-ui/src/api/parties.test.ts",
+      "sha256": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f57fa043e71dbbe2",
       "path": "tdf-hq-ui/src/api/parties.ts",
-      "sha256": "82f5ee12c60f21dc28d976877a9937e7a7e1c5d9582c3f713a9ef377bdd43fc0",
+      "sha256": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d8478b8e80f80942",
@@ -21344,7 +21539,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
+      "sha256": "886fe17587d0fd4b031825376e6fc9d30cb843fe28aecc32a18c8bdd727a107c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21360,7 +21555,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
+      "sha256": "c6af1fadf03efae8f9befb8659274d6c68477d52da802abea66fec9611e42095",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23382,6 +23577,10 @@
       "sha256": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "implementation"
@@ -32910,7 +33109,6 @@
     "SURFACE-a8dfded8bd6214c5",
     "SURFACE-b646ef7b32ab67a4",
     "SURFACE-a2d5738156c69d37",
-    "SURFACE-5786747bd405aa1a",
     "SURFACE-d6c33dc1652ba8f2",
     "SURFACE-0f2cda2d581ad0b8",
     "SURFACE-1910077a9107778a",
@@ -33069,7 +33267,6 @@
     "SURFACE-fac7d7003037286f",
     "SURFACE-b95398e74646e7cc",
     "SURFACE-76f18b79d7a706c4",
-    "SURFACE-f57fa043e71dbbe2",
     "SURFACE-d8478b8e80f80942",
     "SURFACE-b7a144db5e173cbd",
     "SURFACE-9e1dbd68b39d926a",
@@ -34519,6 +34716,7 @@
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
+    "DEPLOY-STARTUP-001",
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
@@ -35666,7 +35864,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "205b4e8b525caa5c2acfcd3e8bd0c2f8f19bd4d59ad5c7d1958cacb32d966f2e",
+      "sourceSha256": "2d868c86df60942e0a6f6c6e44fbf44f83973fd3dbe25495d4490d75a6471635",
       "definition": {
         "states": [
           "absent",
@@ -57598,7 +57796,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 94,
+    "PARTIAL": 96,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

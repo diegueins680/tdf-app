@@ -2704,6 +2704,74 @@
       "critical": true
     },
     {
+      "authority": "reconciled",
+      "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
+      "contract": "docs/automatic-production-migrations.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Production entrypoint",
+        "Release operator",
+        "Product owner"
+      ],
+      "preconditions": [
+        "AUTO_APPLY_PRODUCTION_MIGRATIONS=true for the serving API."
+      ],
+      "inputs": [
+        "revenue_feature_flag production rows",
+        "Reviewed production migration bundle"
+      ],
+      "state": {
+        "startup": [
+          "verifying",
+          "serving",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Approved gate state -> serving",
+        "Missing gate or enabled staged provider -> rejected before serving"
+      ],
+      "forbiddenTransitions": [
+        "Approved enabled PayPal/Datafast gate -> rejected",
+        "Verification -> gate enablement"
+      ],
+      "effects": [
+        "Restarts preserve the configured provider state."
+      ],
+      "authorization": "Gate approval is a product decision recorded in authority-decisions.json; verification only checks it.",
+      "privacy": "Reads gate rows only.",
+      "concurrency": "Runs once per container start before the server accepts traffic.",
+      "idempotency": "Repeated verification of an unchanged database is equivalent.",
+      "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "observability": "Fixed exception text names the violated gate class.",
+      "formalModels": [],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
+      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "status": "specified and implemented",
+      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "ambiguity": [
+        "Other startup assertions may encode states that later become approved; each needs the same review."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PG16 test and negative control pass; CI and production release pending."
+      },
+      "id": "DEPLOY-STARTUP-001",
+      "title": "Startup schema verification accepts approved production state",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
+      "implementation": [
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/production-entrypoint.sh"
+      ],
+      "tests": [
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "critical": true
+    },
+    {
       "authority": "approved",
       "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
       "contract": "formal/system/bookings.md",
@@ -7314,6 +7382,70 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Implemented and tested locally; Dátil pruebas authorization and production configuration are pending."
+      }
+    },
+    {
+      "id": "DATA-CRM-001",
+      "statement": "The web CRM contact list must request contacts in explicit server pages (limit 500) until a short page is returned, so contacts beyond the server's default first page of 200 are not silently hidden. The backend remains authoritative for CRM module access and page bounds.",
+      "authority": "reconciled",
+      "source": "PR #504 (CRM contact paging); tdf-hq validatePartyListPagination bounds",
+      "property": "Listing continues until a page shorter than the requested limit",
+      "contract": "tdf-hq-ui/src/api/parties.ts",
+      "implementation": [
+        "tdf-hq-ui/src/api/parties.ts"
+      ],
+      "verification": "Client unit tests; no backend change",
+      "evidence": "Unit tests of multi-page and short-page termination",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact list loads every server page",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/api/parties.test.ts"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests pass; deployed web verification pending."
       }
     },
     {
