@@ -24,6 +24,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.Persist
     ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
@@ -795,27 +796,51 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` [True, True, True, True]
             map NotificationServer.isWhatsAppConsentConfirmationMessage ["si quiero", "no", "STOP", ""]
                 `shouldBe` [False, False, False, False]
-        it "confirms only a pending request inside the window" $
+        it "confirms only a pending request inside the window and only by a later reply" $
             bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
                 now <- getCurrentTime
                 runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
-                let row phone requested consent =
+                let hourAgo = addUTCTime (-3600) now
+                    row phone requested consent =
                         ME.WhatsAppConsent phone Nothing consent (Just "public") Nothing
                             (if consent then Just now else Nothing) Nothing requested now now
                 runSqlPool (do
-                    _ <- insert (row "+593990000001" (Just (addUTCTime (-3600) now)) False)
+                    _ <- insert (row "+593990000001" (Just hourAgo) False)
                     _ <- insert (row "+593990000002" (Just (addUTCTime (-8 * 86400) now)) False)
                     _ <- insert (row "+593990000003" Nothing False)
+                    _ <- insert (row "+593990000004" (Just hourAgo) False)
                     pure ()) pool
-                let confirm phone = runSqlPool (NotificationServer.applyWhatsAppConsentConfirmation now phone) pool
-                confirm "+593990000001" `shouldReturn` True
-                confirm "+593990000001" `shouldReturn` False
-                confirm "+593990000002" `shouldReturn` False
-                confirm "+593990000003" `shouldReturn` False
-                confirm "+593990000099" `shouldReturn` False
+                let confirm sentAt phone =
+                        runSqlPool (NotificationServer.applyWhatsAppConsentConfirmation now sentAt phone) pool
+                -- A reply sent before the request (delayed or replayed) cannot confirm it.
+                confirm (Just (addUTCTime (-7200) now)) "+593990000004" `shouldReturn` False
+                confirm Nothing "+593990000004" `shouldReturn` False
+                confirm (Just now) "+593990000001" `shouldReturn` True
+                confirm (Just now) "+593990000001" `shouldReturn` False
+                confirm (Just now) "+593990000002" `shouldReturn` False
+                confirm (Just now) "+593990000003" `shouldReturn` False
+                confirm (Just now) "+593990000099" `shouldReturn` False
                 confirmed <- runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000001")) pool
                 fmap (ME.whatsAppConsentConsent . entityVal) confirmed `shouldBe` Just True
                 fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) confirmed `shouldBe` Just Nothing
+        it "claims one confirmation request per interval and releases a failed claim" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                now <- getCurrentTime
+                runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
+                let claim at = runSqlPool
+                        (NotificationServer.claimWhatsAppConfirmationRequest at "+593990000010" Nothing (Just "public")) pool
+                claim now `shouldReturn` True
+                claim (addUTCTime 60 now) `shouldReturn` False
+                runSqlPool (NotificationServer.releaseWhatsAppConfirmationClaim now "+593990000010") pool
+                claim (addUTCTime 120 now) `shouldReturn` True
+                claim (addUTCTime (25 * 3600) now) `shouldReturn` True
+                runSqlPool (rawExecute "UPDATE whats_app_consent SET consent=1, consented_at=? WHERE phone_e164='+593990000010'" [PersistUTCTime now]) pool
+                claim (addUTCTime (50 * 3600) now) `shouldReturn` False
+        it "reads Meta message timestamps as POSIX seconds" $ do
+            NotificationServer.parseWhatsAppMessageTimestamp (Just "1791300000")
+                `shouldBe` Just (posixSecondsToUTCTime 1791300000)
+            map NotificationServer.parseWhatsAppMessageTimestamp [Nothing, Just "", Just "12a", Just "9999999999999"]
+                `shouldBe` [Nothing, Nothing, Nothing, Nothing]
         it "serves no public consent lookup" $
             withNotificationFixture $ \env _ _ _ _ ->
                 testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do

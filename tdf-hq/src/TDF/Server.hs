@@ -53,6 +53,7 @@ import           Data.Char
   , toLower
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
+import           Data.Either (isLeft)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
@@ -287,7 +288,8 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
                                       , recordIncomingWhatsAppMessage
                                       , recordOutgoingWhatsAppMessage
                                       )
-import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
+import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTemplateIO, sendWhatsAppTextIO)
+import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import           TDF.RagStore        (retrieveRagContext)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Types.URI (urlDecode, urlEncode, renderQuery, renderSimpleQuery)
@@ -1447,7 +1449,7 @@ whatsappWebhookServer =
               (ME.whatsAppMessagePartyId (entityVal incomingEntity))
         when (isWhatsAppConsentConfirmationMessage waInboundText) $ do
           confirmed <- liftIO $ flip runSqlPool envPool $
-            applyWhatsAppConsentConfirmation now waInboundSenderId
+            applyWhatsAppConsentConfirmation now waInboundSentAt waInboundSenderId
           when confirmed $
             sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
               "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
@@ -1688,38 +1690,12 @@ publicRequestWhatsAppConsent WhatsAppConsentRequest{..} = do
   nameClean <- either throwError pure (validateWhatsAppConsentDisplayName wcrName)
   sourceClean <- either throwError pure (validateWhatsAppConsentSource "public" wcrSource)
   now <- liftIO getCurrentTime
-  shouldSend <- runDB $ do
-    existing <- getBy (ME.UniqueWhatsAppConsent phoneVal)
-    case existing of
-      Just (Entity key row)
-        | ME.whatsAppConsentConsent row -> pure False
-        | maybe False (\requested -> diffUTCTime now requested < whatsAppConfirmationResendInterval)
-            (ME.whatsAppConsentConfirmationRequestedAt row) -> pure False
-        | otherwise -> do
-            update key
-              [ ME.WhatsAppConsentConfirmationRequestedAt =. Just now
-              , ME.WhatsAppConsentDisplayName =. nameClean
-              , ME.WhatsAppConsentSource =. sourceClean
-              , ME.WhatsAppConsentNote =. Just "pending_confirmation"
-              , ME.WhatsAppConsentUpdatedAt =. now
-              ]
-            pure True
-      Nothing ->
-        isJust <$> insertUnique ME.WhatsAppConsent
-          { ME.whatsAppConsentPhoneE164 = phoneVal
-          , ME.whatsAppConsentDisplayName = nameClean
-          , ME.whatsAppConsentConsent = False
-          , ME.whatsAppConsentSource = sourceClean
-          , ME.whatsAppConsentNote = Just "pending_confirmation"
-          , ME.whatsAppConsentConsentedAt = Nothing
-          , ME.whatsAppConsentRevokedAt = Nothing
-          , ME.whatsAppConsentConfirmationRequestedAt = Just now
-          , ME.whatsAppConsentCreatedAt = now
-          , ME.whatsAppConsentUpdatedAt = now
-          }
-  when shouldSend $
-    sendWhatsAppConsentNotice now phoneVal nameClean "consent_confirmation_request"
-      (whatsAppConfirmationRequestMessage nameClean)
+  claimed <- runDB (claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean)
+  when claimed $ do
+    result <- sendWhatsAppConfirmationRequest now phoneVal nameClean
+    -- A request that never reached the number must not block a retry.
+    when (isLeft result) $
+      runDB (releaseWhatsAppConfirmationClaim now phoneVal)
   pure (publicWhatsAppConsentResponse phoneVal
     "Si el número es válido, recibirá un WhatsApp de TDF Records. Responde SI a ese mensaje para confirmar tu suscripción.")
 
@@ -1777,6 +1753,34 @@ sendWhatsAppConsentNotice :: UTCTime -> Text -> Maybe Text -> Text -> Text -> Ap
 sendWhatsAppConsentNotice now phoneVal nameClean source message = do
   waEnv <- liftIO loadWhatsAppEnv
   result <- sendWhatsAppText waEnv phoneVal message
+  recordWhatsAppConsentNotice now phoneVal nameClean source message result
+
+-- | Business-initiated messages outside a customer-service window require an
+-- approved template; configure WHATSAPP_CONSENT_TEMPLATE (body without
+-- variables) and optionally WHATSAPP_CONSENT_TEMPLATE_LANGUAGE (default es).
+-- Without it the free-form request only reaches numbers inside an open window,
+-- and the person can still confirm by messaging SI first.
+sendWhatsAppConfirmationRequest :: UTCTime -> Text -> Maybe Text -> AppM (Either Text SendTextResult)
+sendWhatsAppConfirmationRequest now phoneVal nameClean = do
+  waEnv <- liftIO loadWhatsAppEnv
+  mTemplate <- liftIO (lookupEnv "WHATSAPP_CONSENT_TEMPLATE")
+  mLanguage <- liftIO (lookupEnv "WHATSAPP_CONSENT_TEMPLATE_LANGUAGE")
+  let template = T.strip . T.pack <$> mTemplate
+      language = maybe "es" (T.strip . T.pack) mLanguage
+  (body, result) <- case template of
+    Just name | not (T.null name) -> do
+      res <- liftIO (sendWhatsAppTemplateIO waEnv phoneVal name language [])
+      pure ("[template " <> name <> "/" <> language <> "]", res)
+    _ -> do
+      let message = whatsAppConfirmationRequestMessage nameClean
+      res <- sendWhatsAppText waEnv phoneVal message
+      pure (message, res)
+  recordWhatsAppConsentNotice now phoneVal nameClean "consent_confirmation_request" body result
+  pure result
+
+recordWhatsAppConsentNotice
+  :: UTCTime -> Text -> Maybe Text -> Text -> Text -> Either Text SendTextResult -> AppM ()
+recordWhatsAppConsentNotice now phoneVal nameClean source message result =
   void $ runDB $
     recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
       { owrRecipientPhone = phoneVal
@@ -1792,6 +1796,56 @@ sendWhatsAppConsentNotice now phoneVal nameClean source message = do
       , owrMetadata = Nothing
       }
       result
+
+-- | Claims the right to send one confirmation request: at most once per number
+-- per resend interval, never for an active consent. One conditional update, so
+-- concurrent submissions cannot both claim.
+claimWhatsAppConfirmationRequest
+  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO Bool
+claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
+  _ <- insertUnique ME.WhatsAppConsent
+    { ME.whatsAppConsentPhoneE164 = phoneVal
+    , ME.whatsAppConsentDisplayName = nameClean
+    , ME.whatsAppConsentConsent = False
+    , ME.whatsAppConsentSource = sourceClean
+    , ME.whatsAppConsentNote = Just "pending_confirmation"
+    , ME.whatsAppConsentConsentedAt = Nothing
+    , ME.whatsAppConsentRevokedAt = Nothing
+    , ME.whatsAppConsentConfirmationRequestedAt = Nothing
+    , ME.whatsAppConsentCreatedAt = now
+    , ME.whatsAppConsentUpdatedAt = now
+    }
+  changed <- updateWhereCount
+    ( [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
+      , ME.WhatsAppConsentConsent ==. False
+      ]
+      ++ ( [ME.WhatsAppConsentConfirmationRequestedAt ==. Nothing]
+           ||. [ME.WhatsAppConsentConfirmationRequestedAt <. Just (addUTCTime (negate whatsAppConfirmationResendInterval) now)] )
+    )
+    [ ME.WhatsAppConsentConfirmationRequestedAt =. Just now
+    , ME.WhatsAppConsentDisplayName =. nameClean
+    , ME.WhatsAppConsentSource =. sourceClean
+    , ME.WhatsAppConsentNote =. Just "pending_confirmation"
+    , ME.WhatsAppConsentUpdatedAt =. now
+    ]
+  pure (changed == 1)
+
+-- | Undoes a claim whose request was not accepted by the provider.
+releaseWhatsAppConfirmationClaim :: UTCTime -> Text -> SqlPersistT IO ()
+releaseWhatsAppConfirmationClaim claimedAt phoneVal =
+  updateWhere
+    [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
+    , ME.WhatsAppConsentConsent ==. False
+    , ME.WhatsAppConsentConfirmationRequestedAt ==. Just claimedAt
+    ]
+    [ME.WhatsAppConsentConfirmationRequestedAt =. Nothing]
+
+parseWhatsAppMessageTimestamp :: Maybe Text -> Maybe UTCTime
+parseWhatsAppMessageTimestamp rawTimestamp = do
+  digits <- T.strip <$> rawTimestamp
+  if T.null digits || T.length digits > 12 || not (T.all isDigit digits)
+    then Nothing
+    else Just (posixSecondsToUTCTime (fromInteger (read (T.unpack digits))))
 
 whatsAppConfirmationRequestMessage :: Maybe Text -> Text
 whatsAppConfirmationRequestMessage nameClean =
@@ -1812,25 +1866,26 @@ isWhatsAppConsentConfirmationMessage rawMessage =
     normalized = T.toCaseFold (T.dropAround (not . isAlphaNum) (T.strip rawMessage))
 
 -- | Activates consent only for a pending request on the replying number that is
--- still inside the confirmation window.
-applyWhatsAppConsentConfirmation :: UTCTime -> Text -> SqlPersistT IO Bool
-applyWhatsAppConsentConfirmation now senderPhone = do
-  existing <- getBy (ME.UniqueWhatsAppConsent senderPhone)
-  case existing of
-    Just (Entity key row)
-      | not (ME.whatsAppConsentConsent row)
-      , Just requested <- ME.whatsAppConsentConfirmationRequestedAt row
-      , diffUTCTime now requested <= whatsAppConfirmationWindow -> do
-          update key
-            [ ME.WhatsAppConsentConsent =. True
-            , ME.WhatsAppConsentConsentedAt =. Just now
-            , ME.WhatsAppConsentRevokedAt =. Nothing
-            , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
-            , ME.WhatsAppConsentNote =. Just "confirmed_by_reply"
-            , ME.WhatsAppConsentUpdatedAt =. now
-            ]
-          pure True
-    _ -> pure False
+-- inside the confirmation window and was created no later than the reply itself.
+-- One conditional update: a concurrent opt-out that clears the request wins, and
+-- a delayed or replayed earlier reply cannot confirm a newer request.
+applyWhatsAppConsentConfirmation :: UTCTime -> Maybe UTCTime -> Text -> SqlPersistT IO Bool
+applyWhatsAppConsentConfirmation _ Nothing _ = pure False
+applyWhatsAppConsentConfirmation now (Just sentAt) senderPhone = do
+  changed <- updateWhereCount
+    [ ME.WhatsAppConsentPhoneE164 ==. senderPhone
+    , ME.WhatsAppConsentConsent ==. False
+    , ME.WhatsAppConsentConfirmationRequestedAt >=. Just (addUTCTime (negate whatsAppConfirmationWindow) now)
+    , ME.WhatsAppConsentConfirmationRequestedAt <=. Just sentAt
+    ]
+    [ ME.WhatsAppConsentConsent =. True
+    , ME.WhatsAppConsentConsentedAt =. Just now
+    , ME.WhatsAppConsentRevokedAt =. Nothing
+    , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
+    , ME.WhatsAppConsentNote =. Just "confirmed_by_reply"
+    , ME.WhatsAppConsentUpdatedAt =. now
+    ]
+  pure (changed == 1)
 
 whatsAppConsentStatusFromRow
   :: Bool
@@ -6683,6 +6738,7 @@ data WAInbound = WAInbound
   , waInboundCampaignExternalId :: Maybe Text
   , waInboundCampaignName :: Maybe Text
   , waInboundMetadata   :: Maybe Text
+  , waInboundSentAt     :: Maybe UTCTime
   } deriving (Show)
 
 extractWhatsAppInbound :: WAMetaWebhook -> [WAInbound]
@@ -6708,6 +6764,7 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
             , waInboundCampaignExternalId = Nothing
             , waInboundCampaignName = Nothing
             , waInboundMetadata = metaTxt
+            , waInboundSentAt = parseWhatsAppMessageTimestamp (waTimestamp msg)
             }
         | msg@WAMessage{waType, text=Just txtBody} <- msgs
         , waType == "text"
