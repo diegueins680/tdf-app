@@ -5056,7 +5056,8 @@
         "Legacy course Stripe payment-intent/checkout-session routes retired.",
         "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
         "Public session input-list routes retired; scheduling-module routes remain.",
-        "Public inventory list rejects session-scoped availability filters."
+        "Public inventory list rejects session-scoped availability filters.",
+        "Academy enroll/progress/referral claim require a session bound to the account email (AUTHORITY-051)."
       ],
       "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
@@ -5071,7 +5072,8 @@
         "formal/system/public-routes.json",
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
-        "tdf-hq/src/TDF/Services/Stripe.hs"
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/src/TDF/Routes/Academy.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -5083,7 +5085,7 @@
       "ambiguity": [
         "Handler enforcement of each registered capability is not mechanically verified.",
         "Raw mounts may serve paths beyond their prefix.",
-        "DEBT-AUTH-ACADEMY-001 and DEBT-PRIV-WHATSAPP-001 need an identity-proof product decision."
+        "DEBT-PRIV-WHATSAPP-001 awaits the approved double opt-in repair."
       ]
     },
     {
@@ -8139,7 +8141,7 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "34dedf707931bf1140277e80ead5d3c7dadc2f10500f107863ba7f9a5bff9294",
+    "docs/catalog-persistence/catalog-list-decisions.json": "29ed27409999c9cf0d3d9d0a75f53dc8ae942f048f90a8ea249d20104efbdb73",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -8235,8 +8237,8 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "194ecec56d0e0e241bac710251e05822a261fcd55c2396fa7122396a4ad4273e",
-    "formal/system/public-routes.json": "910d363cf85799d2a54d1bbfcefbdb1a7bb3f9b69ee762aedc9ffac3a64317b5",
+    "formal/system/compiled-api-surface.json": "0cbdd30b7a2b6289ec46431cb70954f646f00918d05d72cacea77f0e35dc3183",
+    "formal/system/public-routes.json": "bb0d9e03743beed586c831fddd6c036d665af4baceda13e2ec9c0b8db4a6e6d9",
     "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
@@ -8409,7 +8411,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
-    "scripts/test-public-routes.py": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
+    "scripts/test-public-routes.py": "c595f057105b8cdfb039e2f0b76e69e4d0511554cc6c6fe3d17fabe0dbbeb0e7",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -8665,7 +8667,7 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_artist_invitation_links.sql": "b0e80b3b2dbb884460e40bef8e9c9a29fe0ef3ef3059fc998bb531fde179c3a2",
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
-    "tdf-hq/src/TDF/API.hs": "a9773cd705eb7532dfa93a3f70c26f03d9a764aadfb7389199d179e2b9570404",
+    "tdf-hq/src/TDF/API.hs": "5985b0c6fefa400b8e28fa981fb7e8ab2fc83e18d122185161dacd39c1c5c869",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
     "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
@@ -8724,9 +8726,10 @@
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
+    "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "dbc10b1312258333b70dc8419943c9794d9613f047596a42829b3b2892c56778",
+    "tdf-hq/src/TDF/Server.hs": "8f462db1c72e082b0cffd0d0d93e0c7470fbb01f3047bdc0f8c356ce7545e390",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -8797,7 +8800,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
-    "tdf-hq/test/TDF/ServerSpec.hs": "d2009aadfd2c9979de4205a91cf6c8eed8423cd495b9aa3ef395865c16a9e5a0",
+    "tdf-hq/test/TDF/ServerSpec.hs": "909bb82bf2af576334d380e38e847322c6d27d68a853f5cbef5344b021b8b46b",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -12163,6 +12166,12 @@
       }
     ],
     "tdf-hq/src/TDF/Services/Stripe.hs": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Routes/Academy.hs": [
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "implementation"
@@ -19113,7 +19122,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
+      "sha256": "c595f057105b8cdfb039e2f0b76e69e4d0511554cc6c6fe3d17fabe0dbbeb0e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29259,7 +29268,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "a9773cd705eb7532dfa93a3f70c26f03d9a764aadfb7389199d179e2b9570404",
+      "sha256": "5985b0c6fefa400b8e28fa981fb7e8ab2fc83e18d122185161dacd39c1c5c869",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30840,9 +30849,14 @@
     {
       "id": "SURFACE-08cd86a43181517d",
       "path": "tdf-hq/src/TDF/Routes/Academy.hs",
-      "sha256": "6a1ac5ca51295258fc3b3b8305d065ba0dd1704771b51a4e5584e568e135f40b",
+      "sha256": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-52b73c408ae18bc0",
@@ -30897,7 +30911,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "dbc10b1312258333b70dc8419943c9794d9613f047596a42829b3b2892c56778",
+      "sha256": "8f462db1c72e082b0cffd0d0d93e0c7470fbb01f3047bdc0f8c356ce7545e390",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32457,7 +32471,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "d2009aadfd2c9979de4205a91cf6c8eed8423cd495b9aa3ef395865c16a9e5a0",
+      "sha256": "909bb82bf2af576334d380e38e847322c6d27d68a853f5cbef5344b021b8b46b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37506,7 +37520,6 @@
     "SURFACE-de59a337fc1e94a1",
     "SURFACE-5204086b1469543d",
     "SURFACE-6f37d3a5f8237996",
-    "SURFACE-08cd86a43181517d",
     "SURFACE-21573408c23f618c",
     "SURFACE-6076c182710c4ad6",
     "SURFACE-5cbf72ef8bf21ded",
@@ -39119,7 +39132,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dfaeb26d45c47bdf98af31bba59c1bbb51e216ee60cda1488e9647875b794dc4",
+      "sourceSha256": "70b123000e9a6e4e5f9752c984e3fb139362952b5ef68d00041cc6d330690fd1",
       "definition": {
         "states": [
           "absent",
