@@ -3744,7 +3744,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+      "sha256": "6256063b69b533338d0d90b8f853514582e187d5bc9f40c671f35c73141c40d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4440,7 +4440,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
+      "sha256": "35170b8373849359e349de90b5f1df020d6ea7ae3d1d074d00069fdadf6ca96c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22425,7 +22425,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "19b6cb4f97d37123c4ebc330e12d3fd08e3c4049fc163f7eec1d6cbb544692e8",
+      "sha256": "2dbc87b0b5eb250f879509bc8275376e607a4ecd4e076b670840308ea92df946",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

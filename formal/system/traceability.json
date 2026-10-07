@@ -2700,7 +2700,8 @@
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },
@@ -7571,7 +7572,7 @@
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+    "scripts/lib/production-release.mjs": "6256063b69b533338d0d90b8f853514582e187d5bc9f40c671f35c73141c40d2",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -7598,6 +7599,7 @@
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
+    "scripts/test-automatic-migrations-production-schema.sh": "35170b8373849359e349de90b5f1df020d6ea7ae3d1d074d00069fdadf6ca96c",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -9748,6 +9750,12 @@
       }
     ],
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": [
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-automatic-migrations-production-schema.sh": [
       {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "tests"
@@ -14940,7 +14948,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+      "sha256": "6256063b69b533338d0d90b8f853514582e187d5bc9f40c671f35c73141c40d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15999,9 +16007,14 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
+      "sha256": "35170b8373849359e349de90b5f1df020d6ea7ae3d1d074d00069fdadf6ca96c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c86f69c773ab4140",
@@ -32675,7 +32688,6 @@
     "SURFACE-a8dfded8bd6214c5",
     "SURFACE-b646ef7b32ab67a4",
     "SURFACE-a2d5738156c69d37",
-    "SURFACE-5786747bd405aa1a",
     "SURFACE-d6c33dc1652ba8f2",
     "SURFACE-0f2cda2d581ad0b8",
     "SURFACE-1910077a9107778a",
@@ -35442,7 +35454,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "19b6cb4f97d37123c4ebc330e12d3fd08e3c4049fc163f7eec1d6cbb544692e8",
+      "sourceSha256": "2dbc87b0b5eb250f879509bc8275376e607a4ecd4e076b670840308ea92df946",
       "definition": {
         "states": [
           "absent",
