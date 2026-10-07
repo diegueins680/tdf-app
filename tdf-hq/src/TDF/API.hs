@@ -56,7 +56,7 @@ import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
-import           TDF.Routes.Academy (AcademyAPI)
+import           TDF.Routes.Academy (AcademyAPI, AcademyAccountAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppHooksAPI, WhatsAppWebhookAPI)
 import           TDF.Routes.EventTickets (PublicEventTicketsAPI)
 import           TDF.Routes.DomoQuotes (PublicDomoQuotesAPI)
@@ -628,6 +628,7 @@ type ProtectedAPI =
   :<|> InternshipsAPI
   :<|> "feedback" :> "internal" :> InternalFeedbackAPI
   :<|> AdsAdminAPI
+  :<|> AcademyAccountAPI
   :<|> "admin" :> CoursesAdminAPI
   :<|> "label" :> LabelAPI
   :<|> "calendar" :> CalendarAPI

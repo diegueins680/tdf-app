@@ -5055,7 +5055,8 @@
         "Legacy course Stripe payment-intent/checkout-session routes retired.",
         "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
         "Public session input-list routes retired; scheduling-module routes remain.",
-        "Public inventory list rejects session-scoped availability filters."
+        "Public inventory list rejects session-scoped availability filters.",
+        "Academy enroll/progress/referral claim require a session bound to the account email (AUTHORITY-051)."
       ],
       "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
@@ -5070,7 +5071,8 @@
         "formal/system/public-routes.json",
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
-        "tdf-hq/src/TDF/Services/Stripe.hs"
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/src/TDF/Routes/Academy.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",

@@ -5056,7 +5056,8 @@
         "Legacy course Stripe payment-intent/checkout-session routes retired.",
         "/ads/assist limited to authenticated Social Inbox staff (AUTHORITY-049).",
         "Public session input-list routes retired; scheduling-module routes remain.",
-        "Public inventory list rejects session-scoped availability filters."
+        "Public inventory list rejects session-scoped availability filters.",
+        "Academy enroll/progress/referral claim require a session bound to the account email (AUTHORITY-051)."
       ],
       "authorization": "Register membership is admission evidence, not authorization; handler checks remain authoritative.",
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
@@ -5071,7 +5072,8 @@
         "formal/system/public-routes.json",
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
-        "tdf-hq/src/TDF/Services/Stripe.hs"
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/src/TDF/Routes/Academy.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -5082,7 +5084,8 @@
       "formalModels": [],
       "ambiguity": [
         "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "DEBT-PRIV-WHATSAPP-001 awaits the approved double opt-in repair."
       ]
     },
     {
@@ -7447,88 +7450,6 @@
         "classification": "PARTIAL",
         "reason": "Client tests pass; deployed web verification pending."
       }
-    },
-    {
-      "id": "PRIV-WHATSAPP-001",
-      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request and sends at most one confirmation request per number per 24 hours; consent becomes active only when the same number replies with an affirmative keyword within 7 days. Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
-      "authority": "reconciled",
-      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052)",
-      "property": "Consent is active only after a timely reply from the same number or admin capture",
-      "contract": "formal/system/public-route-admission.md",
-      "implementation": [
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/API.hs",
-        "tdf-hq/src/TDF/ModelsExtra.hs",
-        "tdf-hq/src/TDF/CampaignAutomation.hs",
-        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
-        "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx",
-        "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
-        "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
-        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql"
-      ],
-      "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
-      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
-      "status": "specified and implemented",
-      "historicalStatus": null,
-      "critical": true,
-      "title": "WhatsApp marketing consent requires confirmation from the number",
-      "domain": "PRIV",
-      "actors": [
-        "Anonymous visitor",
-        "WhatsApp number holder",
-        "Admin staff",
-        "Meta webhook"
-      ],
-      "preconditions": [
-        "whats_app_consent has confirmation_requested_at (migration 2026-10-07_whatsapp_consent_confirmation)."
-      ],
-      "inputs": [
-        "POST /public/whatsapp/consent",
-        "POST /public/whatsapp/opt-out",
-        "Signed inbound WhatsApp text messages"
-      ],
-      "state": {
-        "consent": [
-          "none",
-          "pending",
-          "active",
-          "withdrawn"
-        ]
-      },
-      "allowedTransitions": [
-        "none/withdrawn -> pending (public request)",
-        "pending -> active (affirmative reply within 7 days)",
-        "any -> withdrawn (opt-out or STOP)",
-        "admin capture -> active"
-      ],
-      "forbiddenTransitions": [
-        "public request -> active",
-        "pending older than 7 days -> active",
-        "withdrawn -> active without a new request and reply"
-      ],
-      "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
-      ],
-      "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
-      "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
-      "concurrency": "Unique phone constraint; a concurrent duplicate public request inserts at most one row and sends at most one request.",
-      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
-      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
-      "recovery": "A number can request again after 24 hours or after a request expires.",
-      "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
-      "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
-      ],
-      "formalModels": [],
-      "confidence": "High for the tested transitions; WhatsApp delivery and Meta webhook timing are external.",
-      "ambiguity": [
-        "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
-        "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
-      }
     }
   ],
   "sourceFingerprints": {
@@ -7537,7 +7458,7 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "be6ec2422a9cb245a9e06ebb9745ee71be6be8fc3170cf0a170f2be71750392c",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c98f7b75ce1f04f177a677b17e2a9f9d1d292086a68844786e839f7750f0176f",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -7629,8 +7550,8 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "194ecec56d0e0e241bac710251e05822a261fcd55c2396fa7122396a4ad4273e",
-    "formal/system/public-routes.json": "432d55c14119c6952d97296a06cf6d37d0a00989832796da3ab09283b676ac49",
+    "formal/system/compiled-api-surface.json": "0cbdd30b7a2b6289ec46431cb70954f646f00918d05d72cacea77f0e35dc3183",
+    "formal/system/public-routes.json": "bb0d9e03743beed586c831fddd6c036d665af4baceda13e2ec9c0b8db4a6e6d9",
     "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
@@ -7729,7 +7650,7 @@
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+    "scripts/production-migrations.json": "192c177e6be4cb4ac8ef032ed661fae81ff4ab0ef5e2c133625b2f1cd55433ea",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -7763,7 +7684,7 @@
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
-    "scripts/test-public-routes.py": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
+    "scripts/test-public-routes.py": "c595f057105b8cdfb039e2f0b76e69e4d0511554cc6c6fe3d17fabe0dbbeb0e7",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -7826,7 +7747,6 @@
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/socialEvents.ts": "d2a41072887bfce5156ba3599c4b77828b0e88e99e3cceadbb82ee18e40e549e",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
-    "tdf-hq-ui/src/api/whatsappConsentPublic.ts": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "e44b0092e64730479c4742b9d1e0ba8719d6dd9d835e628f31ac6de1362436f3",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
@@ -7876,8 +7796,6 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "5a689514081aae0e98de08db9d4377696fa832b05d1b2b37a02accbddfe2bcd0",
-    "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
-    "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "5b33d40189bd337c6b5742e2b9786ac27f2bf3e0bd00b588452e6c1cdc825643",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
@@ -7939,9 +7857,7 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql": "9d6dc0aa6c9f5aff03bdfc62c16a38681892c1923d9413f4eaf505af86894302",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql": "c74e42fe9a9b45d2456e0eef00e1a93811d27f816da525519a2920ba0c09b7d5",
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
-    "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
-    "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-    "tdf-hq/src/TDF/API.hs": "1798175ef7aad36f8624bdf9b1bae8e665ade083deeeb54a857b6d0099c8c45e",
+    "tdf-hq/src/TDF/API.hs": "c7e73f5230f66d066b0406d5a91f5640e3af3c6932027a7ea828777ff1cdcbf4",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
     "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
@@ -7955,7 +7871,6 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
-    "tdf-hq/src/TDF/CampaignAutomation.hs": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "b330b3fa88c6f63de6bed83991e7f2356934d02fe5f4fc390dde8865dcb341dd",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -7985,16 +7900,16 @@
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
     "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
+    "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "5bdb685e621d0ef7dd2e1b4237b7a811f2ef425ae69ef66efa826e7321b8bfd2",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "f74c6c8c6767f68923a749755c11a1a766f4b8883c797ae01470bcc4904a7326",
+    "tdf-hq/src/TDF/Server.hs": "76a54d4b394015beb916adc0c8add25348c0a57b38b162b2ef7235cd0db5a131",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -8050,7 +7965,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
-    "tdf-hq/test/TDF/ServerSpec.hs": "1f164f1c68e1274f6c38449cba35c544786e27ac6fde6f1fe54e429de2a135c5",
+    "tdf-hq/test/TDF/ServerSpec.hs": "79b4bb743f508f1bc03a8b092873282a3a88d09ab5e9b59c20d8052ae45f2085",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -8434,10 +8349,6 @@
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -8463,10 +8374,6 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
       }
     ],
@@ -8507,10 +8414,6 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
         "relationship": "tests"
       }
     ],
@@ -11404,6 +11307,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Routes/Academy.hs": [
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-public-routes.py": [
       {
         "requirement": "AUTH-PUBLIC-001",
@@ -12832,48 +12741,6 @@
       {
         "requirement": "DATA-CRM-001",
         "relationship": "tests"
-      }
-    ],
-    "tdf-hq/src/TDF/ModelsExtra.hs": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/CampaignAutomation.hs": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/api/whatsappConsentPublic.ts": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
       }
     ]
   },
@@ -15410,7 +15277,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+      "sha256": "192c177e6be4cb4ac8ef032ed661fae81ff4ab0ef5e2c133625b2f1cd55433ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16873,7 +16740,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
+      "sha256": "c595f057105b8cdfb039e2f0b76e69e4d0511554cc6c6fe3d17fabe0dbbeb0e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18831,14 +18698,9 @@
     {
       "id": "SURFACE-53ccbdf692a3b60f",
       "path": "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
-      "sha256": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
+      "sha256": "e679e1b41bc86a3fdf357030af08149cc08f1948ba726de9043d9e955ed99e08",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-526786b1dccd2ea9",
@@ -21754,26 +21616,16 @@
     {
       "id": "SURFACE-c6f6d5d6b41dedd8",
       "path": "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx",
-      "sha256": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
+      "sha256": "d2d10b7a30aa3af6e11c1913469353f240713405479a9695230d427be9ff3f80",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-6905749d4696f870",
       "path": "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
-      "sha256": "5b33d40189bd337c6b5742e2b9786ac27f2bf3e0bd00b588452e6c1cdc825643",
+      "sha256": "3a6425758da6fd57894a5ae012d64ee9f626be5fe092471d29296a1d930bbf00",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-69678f180f18c65b",
@@ -26174,30 +26026,6 @@
       ]
     },
     {
-      "id": "SURFACE-7c84d5e2371daa21",
-      "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
-      "sha256": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-a4416e6206088130",
-      "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
-      "sha256": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -26228,7 +26056,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "1798175ef7aad36f8624bdf9b1bae8e665ade083deeeb54a857b6d0099c8c45e",
+      "sha256": "c7e73f5230f66d066b0406d5a91f5640e3af3c6932027a7ea828777ff1cdcbf4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26253,10 +26081,6 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-WHATSAPP-001",
           "relationship": "implementation"
         }
       ]
@@ -26732,14 +26556,9 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
+      "sha256": "beb103ca5db1c8186ebb149870c67f2798e1306c11cdfc8ac6ef72c45d9894e9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-9655351d027b1acb",
@@ -27581,14 +27400,9 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
+      "sha256": "f25191d986bd0ad9bb31fec940fcbed176b6e05e9f87ebe2652ea8bc256efed2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-1dcc9bbe9a600d46",
@@ -27726,9 +27540,14 @@
     {
       "id": "SURFACE-08cd86a43181517d",
       "path": "tdf-hq/src/TDF/Routes/Academy.hs",
-      "sha256": "6a1ac5ca51295258fc3b3b8305d065ba0dd1704771b51a4e5584e568e135f40b",
+      "sha256": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-52b73c408ae18bc0",
@@ -27783,7 +27602,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f74c6c8c6767f68923a749755c11a1a766f4b8883c797ae01470bcc4904a7326",
+      "sha256": "76a54d4b394015beb916adc0c8add25348c0a57b38b162b2ef7235cd0db5a131",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27832,10 +27651,6 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-WHATSAPP-001",
           "relationship": "implementation"
         }
       ]
@@ -29158,7 +28973,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "1f164f1c68e1274f6c38449cba35c544786e27ac6fde6f1fe54e429de2a135c5",
+      "sha256": "79b4bb743f508f1bc03a8b092873282a3a88d09ab5e9b59c20d8052ae45f2085",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29183,10 +28998,6 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "PRIV-WHATSAPP-001",
           "relationship": "tests"
         }
       ]
@@ -33183,6 +32994,7 @@
     "SURFACE-4db04fec7552683c",
     "SURFACE-356a0fb82dec0531",
     "SURFACE-8843dbd0dcd5f79a",
+    "SURFACE-53ccbdf692a3b60f",
     "SURFACE-8070ded38d77e27b",
     "SURFACE-a9b3d376033e852a",
     "SURFACE-7ea641b5f7015bf3",
@@ -33508,6 +33320,8 @@
     "SURFACE-254fb45706913119",
     "SURFACE-1018b41644005497",
     "SURFACE-55c10f12f3d3f4ab",
+    "SURFACE-c6f6d5d6b41dedd8",
+    "SURFACE-6905749d4696f870",
     "SURFACE-69678f180f18c65b",
     "SURFACE-899553a57a354dd7",
     "SURFACE-8eb003936dd293c6",
@@ -34070,6 +33884,7 @@
     "SURFACE-2d41912c8db6a2cf",
     "SURFACE-8c41b16bda1eb6d1",
     "SURFACE-f4b05f36ec59f290",
+    "SURFACE-83024dbf8c244b83",
     "SURFACE-9655351d027b1acb",
     "SURFACE-fafba19435170b95",
     "SURFACE-cb63116a4466dd13",
@@ -34133,10 +33948,10 @@
     "SURFACE-da7dbfc9ff1416c5",
     "SURFACE-b5b5aa3bc4cc0232",
     "SURFACE-9913c975520e953f",
+    "SURFACE-de59a337fc1e94a1",
     "SURFACE-2d796ef32d3ee01d",
     "SURFACE-5204086b1469543d",
     "SURFACE-6f37d3a5f8237996",
-    "SURFACE-08cd86a43181517d",
     "SURFACE-21573408c23f618c",
     "SURFACE-6076c182710c4ad6",
     "SURFACE-5cbf72ef8bf21ded",
@@ -34627,8 +34442,7 @@
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
     "EVT-TICKET-MANUAL-001",
-    "EVT-TICKET-INVOICE-001",
-    "PRIV-WHATSAPP-001"
+    "EVT-TICKET-INVOICE-001"
   ],
   "stateMachines": [
     {
@@ -35745,7 +35559,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8c47668b89a7b64cc497894269069aa66444609858c6382b07b0f25c71a712bb",
+      "sourceSha256": "dc13ab791779cb273ffb74042e819aa812f9e972ab8d8ea7706af362e55058bc",
       "definition": {
         "states": [
           "absent",
@@ -57677,7 +57491,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 96,
+    "PARTIAL": 95,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

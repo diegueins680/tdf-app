@@ -62,8 +62,11 @@ PostgreSQL-backed server and exercises retrieval privacy as authenticated staff.
 
 ## Open debt
 
-- `DEBT-AUTH-ACADEMY-001` (P2): academy enroll/progress and referral claim trust a
-  submitted email.
+No registered debt remains.
+
+`DEBT-AUTH-ACADEMY-001` was repaired on 2026-10-07 (AUTHORITY-051): academy enroll,
+progress and referral claim require a session and bind to the signed-in account's
+email; a different email is refused with 403.
 
 `DEBT-PRIV-WHATSAPP-001` was repaired on 2026-10-07 (AUTHORITY-052, PRIV-WHATSAPP-001):
 public consent is a double opt-in request activated only by a timely SI reply from

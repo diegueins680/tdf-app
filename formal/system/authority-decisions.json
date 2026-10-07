@@ -545,6 +545,16 @@
       "resolution": "The verifier still requires all six provider gates to exist but accepts either state for PayPal webhooks/refunds and Datafast webhooks/refunds; only PlaceToPay and Payphone remain staged. The migration test asserts approved states are accepted and staged providers rejected. ADR-0128's 'keep disabled' guidance is superseded for production by this decision; its execution fences and evidence requirements are unchanged. The verifier never enables a gate: Datafast gates remain disabled in production until separately turned on."
     },
     {
+      "id": "AUTHORITY-051",
+      "sources": [
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "formal/system/public-routes.json"
+      ],
+      "conflict": "Academy enroll/progress and referral claim were anonymous and identified the actor only by a submitted email, so anyone could create or alter another person's enrollment, progress or referral attribution, and the progress 404 disclosed enrollment.",
+      "authority": "Explicit product-owner decision on 2026-10-06: require login.",
+      "resolution": "The three write routes move to the authenticated API on unchanged paths and bind to party.primary_email of the signed-in account; a mismatching email returns 403 and an account without email returns 409. Public microcourse content and next-cohort reads stay public. No client called the write routes."
+    },
+    {
       "id": "AUTHORITY-052",
       "sources": [
         "tdf-hq/src/TDF/Server.hs",
