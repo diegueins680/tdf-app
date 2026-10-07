@@ -7406,7 +7406,7 @@
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+    "scripts/lib/production-release.mjs": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -14612,7 +14612,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15671,7 +15671,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
+      "sha256": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
