@@ -140,7 +140,7 @@ test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT enabled FRO
 verification_sql="$(node "${repo_root}/scripts/render-production-schema-verification.mjs")"
 assert_gate_rejected() {
   local mutation="$1"
-  local expected_error="${2:-Production provider capability gates must exist; refunds and Datafast must remain disabled}"
+  local expected_error="${2:-Production provider capability gates must exist; PlaceToPay and Payphone must remain staged}"
   local output
   if output="$(psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 <<SQL
 BEGIN;
@@ -163,10 +163,29 @@ assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_toke
 assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"
 
-for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+assert_gate_accepted() {
+  local mutation="$1"
+  if ! psql "${database_url}" -X -q -v ON_ERROR_STOP=1 >/dev/null <<SQL
+BEGIN;
+${mutation}
+${verification_sql}
+ROLLBACK;
+SQL
+  then
+    echo "Schema verification rejected an approved provider state: ${mutation}" >&2
+    exit 1
+  fi
+}
+
+for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds checkout.placetopay.webhooks checkout.payphone.notifications; do
   assert_gate_rejected "DELETE FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = '${flag}';"
 done
+# Approved production capabilities (AUTHORITY-050) must not block a restart.
 for flag in checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+  assert_gate_accepted "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
+done
+assert_gate_accepted "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds', 'checkout.datafast.webhooks', 'checkout.datafast.refunds');"
+for flag in checkout.placetopay.webhooks checkout.payphone.notifications; do
   assert_gate_rejected "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
 done
 psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
