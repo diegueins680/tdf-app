@@ -22425,7 +22425,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c6ef762822fc14d7c64af18a80cffd90052c32b99f418e4442538959ba1de5bf",
+      "sha256": "19b6cb4f97d37123c4ebc330e12d3fd08e3c4049fc163f7eec1d6cbb544692e8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

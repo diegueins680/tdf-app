@@ -7316,6 +7316,70 @@
         "classification": "PARTIAL",
         "reason": "Implemented and tested locally; Dátil pruebas authorization and production configuration are pending."
       }
+    },
+    {
+      "id": "DATA-CRM-001",
+      "statement": "The web CRM contact list must request contacts in explicit server pages (limit 500) until a short page is returned, so contacts beyond the server's default first page of 200 are not silently hidden. The backend remains authoritative for CRM module access and page bounds.",
+      "authority": "reconciled",
+      "source": "PR #504 (CRM contact paging); tdf-hq validatePartyListPagination bounds",
+      "property": "Listing continues until a page shorter than the requested limit",
+      "contract": "tdf-hq-ui/src/api/parties.ts",
+      "implementation": [
+        "tdf-hq-ui/src/api/parties.ts"
+      ],
+      "verification": "Client unit tests; no backend change",
+      "evidence": "Unit tests of multi-page and short-page termination",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact list loads every server page",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/api/parties.test.ts"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests pass; deployed web verification pending."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7608,6 +7672,8 @@
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
+    "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
+    "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/socialEvents.ts": "d2a41072887bfce5156ba3599c4b77828b0e88e99e3cceadbb82ee18e40e549e",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
@@ -12566,6 +12632,18 @@
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": [
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/parties.ts": [
+      {
+        "requirement": "DATA-CRM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/parties.test.ts": [
+      {
+        "requirement": "DATA-CRM-001",
         "relationship": "tests"
       }
     ]
@@ -18188,14 +18266,24 @@
       "path": "tdf-hq-ui/src/api/parties.test.ts",
       "sha256": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f57fa043e71dbbe2",
       "path": "tdf-hq-ui/src/api/parties.ts",
       "sha256": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d8478b8e80f80942",
@@ -32750,8 +32838,6 @@
     "SURFACE-fac7d7003037286f",
     "SURFACE-b95398e74646e7cc",
     "SURFACE-76f18b79d7a706c4",
-    "SURFACE-1b76690fcc43ff5f",
-    "SURFACE-f57fa043e71dbbe2",
     "SURFACE-d8478b8e80f80942",
     "SURFACE-b7a144db5e173cbd",
     "SURFACE-9e1dbd68b39d926a",
@@ -35356,7 +35442,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c6ef762822fc14d7c64af18a80cffd90052c32b99f418e4442538959ba1de5bf",
+      "sourceSha256": "19b6cb4f97d37123c4ebc330e12d3fd08e3c4049fc163f7eec1d6cbb544692e8",
       "definition": {
         "states": [
           "absent",
@@ -57288,7 +57374,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 93,
+    "PARTIAL": 94,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
