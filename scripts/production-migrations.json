@@ -960,6 +960,61 @@
       "id": "2026-10-07_whatsapp_consent_confirmation",
       "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
       "introducedBy": "f8807c07ddbfacda5cae1c268a05cd8666f56406"
+    },
+    {
+      "id": "2026-09-11_music_release_platform",
+      "path": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-14_artist_invitation_auto_approval",
+      "path": "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
+      "introducedBy": "3e1e6feea25345cfc2c52da07dde694f2fec11a6"
+    },
+    {
+      "id": "2026-09-15_music_party_details",
+      "path": "tdf-hq/sql/2026-09-15_music_party_details.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-15_music_preview_ranges",
+      "path": "tdf-hq/sql/2026-09-15_music_preview_ranges.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-15_music_version_parties",
+      "path": "tdf-hq/sql/2026-09-15_music_version_parties.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-16_music_correction_asset_graph",
+      "path": "tdf-hq/sql/2026-09-16_music_correction_asset_graph.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-16_music_correction_concurrency",
+      "path": "tdf-hq/sql/2026-09-16_music_correction_concurrency.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-16_music_ddex_operations",
+      "path": "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-16_music_playback_identity",
+      "path": "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-16_music_resource_graph_validation",
+      "path": "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-10-07_artist_invitation_links",
+      "path": "tdf-hq/sql/2026-10-07_artist_invitation_links.sql",
+      "introducedBy": "8cefeb61335cf60d7c3c8683a3045d26a749f987"
     }
   ]
 }

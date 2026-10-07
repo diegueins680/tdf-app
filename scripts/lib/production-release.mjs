@@ -697,6 +697,7 @@ DECLARE
   social_table TEXT;
   ticketing_table TEXT;
   enrichment_table TEXT;
+  music_table TEXT;
 BEGIN
   IF to_regclass('public.receipt_number_counter') IS NULL THEN
     RAISE EXCEPTION 'Receipt number allocation counter is missing';
@@ -2525,6 +2526,39 @@ BEGIN
        AND table_name='interaction_notification' AND column_name='last_event_id'
        AND data_type='bigint' AND is_nullable='NO') THEN
     RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
+  FOREACH music_table IN ARRAY ARRAY[
+    'music_release', 'music_release_version', 'music_party', 'music_party_identifier',
+    'music_recording', 'music_release_track', 'music_credit', 'music_identifier',
+    'music_rights_declaration', 'music_rights_split', 'music_asset', 'music_upload_session',
+    'music_upload_part', 'music_processing_job', 'music_availability_rule',
+    'music_terms_acceptance', 'music_editorial_comment', 'music_release_audit_event',
+    'music_infringement_report', 'music_purchase_order', 'music_entitlement',
+    'music_download_event', 'music_playback_event', 'music_ddex_party_registry',
+    'music_ddex_export', 'music_release_version_party'
+  ] LOOP
+    IF to_regclass('public.' || music_table) IS NULL THEN
+      RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
+    END IF;
+  END LOOP;
+  IF to_regprocedure('music_public_asset_accessible(uuid,text)') IS NULL
+     OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_record_playback_event'
+       AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music release access and playback functions are missing';
+  END IF;
+  IF to_regclass('public.artist_invitation_link') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid='public.artist_invitation_link'::regclass
+         AND conname='artist_invitation_link_redeemed_or_revoked' AND contype='c' AND convalidated
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM security_role_assignment_policy
+       WHERE code='artist.invitation.artist' AND trigger_code='artist-invitation-redeemed'
+     )
+     OR position('''artist-invitation-redeemed''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0
+     OR position('''artist-self-service-activated''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0 THEN
+    RAISE EXCEPTION 'Personal artist invitation links or their assignment policy are missing';
   END IF;
 END
 $verify$;`;
