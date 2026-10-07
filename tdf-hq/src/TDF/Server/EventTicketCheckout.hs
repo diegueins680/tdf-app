@@ -45,6 +45,8 @@ import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
+import qualified TDF.Invoice.BuyerIdentity as BuyerId
+import qualified TDF.Invoice.Datil as Datil
 import qualified TDF.Models as Models
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
@@ -72,6 +74,7 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpMaxTicketsPerOrder :: Int
   , atpManualTransferHoldMinutes :: Maybe Int
   , atpManualTransferCutoffAt :: Maybe UTCTime
+  , atpTaxInvoiceRequired :: Bool
   } deriving (Eq, Show)
 
 data TicketRuntimeView = TicketRuntimeView
@@ -210,7 +213,7 @@ loadApprovedTicketPolicy now eventKey = do
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
     \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order, tax_included,\
-    \ manual_transfer_hold_minutes, manual_transfer_cutoff_at\
+    \ manual_transfer_hold_minutes, manual_transfer_cutoff_at, tax_invoice_required\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -221,6 +224,7 @@ loadApprovedTicketPolicy now eventKey = do
       [( Single Text, Single Text, Single Text, Single Int, Single Int
        , Single Int, Single Int, Single Text, Single Text, Single Text
        , Single Bool, Single Int, Single Bool, Single (Maybe Int), Single (Maybe UTCTime)
+       , Single Bool
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
@@ -228,6 +232,7 @@ loadApprovedTicketPolicy now eventKey = do
      , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
      , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder, Single atpTaxIncluded
      , Single atpManualTransferHoldMinutes, Single atpManualTransferCutoffAt
+     , Single atpTaxInvoiceRequired
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -294,8 +299,11 @@ getPublicEventTicketStorefront rawEventId = do
             (fromIntegral (SM.eventTicketTierPriceCents firstTier))
             (T.toUpper (SM.eventTicketTierCurrency firstTier)) True
     _ -> pure False
+  invoicingOk <- case policy of
+    Just ApprovedTicketPolicy{ atpTaxInvoiceRequired = True } -> invoicingReadyFor checkoutEnvironment
+    _ -> pure True
   let hasInventory = any ((> 0) . Routes.remaining) publicTiers
-      available = domainEnabled && isJust policy && hasInventory
+      available = domainEnabled && isJust policy && hasInventory && invoicingOk
       publicPolicy = (\ApprovedTicketPolicy{..} ->
         Routes.PublicEventTicketPolicyDTO
           { Routes.policyVersion = atpVersion
@@ -312,12 +320,14 @@ getPublicEventTicketStorefront rawEventId = do
           , Routes.maxTicketsPerOrder = atpMaxTicketsPerOrder
           , Routes.bankTransferAvailableUntil =
               if bankTransferReady then atpManualTransferCutoffAt else Nothing
+          , Routes.taxInvoiceIssued = atpTaxInvoiceRequired
           }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
         | not (isJust policy) = Just "This event has no approved active ticket price and fee policy"
         | null publicTiers = Just "No ticket tiers are currently on sale"
         | not hasInventory = Just "Ticket inventory is currently exhausted"
+        | not invoicingOk = Just "Ticket sales open once electronic invoicing is configured"
         | otherwise = Nothing
   pure Routes.PublicEventTicketStorefrontDTO
     { Routes.eventId = eventId
@@ -328,6 +338,8 @@ getPublicEventTicketStorefront rawEventId = do
     , Routes.timezone = SM.socialEventTimezone eventRow
     , Routes.venueName = venueName
     , Routes.venueAddress = venueAddress
+    , Routes.imageUrl = either (const Nothing) SocialEvents.emImageUrl
+        (SocialEvents.decodeStoredEventMetadata (SM.socialEventMetadata eventRow))
     , Routes.tiers = publicTiers
     , Routes.policy = publicPolicy
     , Routes.checkoutAvailable = available
@@ -460,6 +472,16 @@ createPublicEventTicketCheckout rawEventId mIdempotency
   when (TicketDomain.tpbCheckoutTotalMinor price <= 0) $
     throwError (badRequest
       "A fully discounted ticket requires an explicit no-payment entitlement workflow")
+  billing <- if atpTaxInvoiceRequired policy
+    then do
+      ready <- invoicingReadyFor checkoutEnvironment
+      unless ready $
+        throwError err503 { errBody = "Ticket sales open once electronic invoicing is configured" }
+      either (throwError . badRequest) (pure . Just) $
+        BuyerId.validateBillingIdentity (TicketDomain.tpbCheckoutTotalMinor price)
+          (Routes.billingIdType request) (Routes.billingIdNumber request)
+          (Routes.billingName request)
+    else pure Nothing
   lookupSecret <- loadTicketLookupTokenSecret
   lookupToken <- either (throwError . internal) pure $
     deriveTicketLookupToken lookupSecret idempotencyKey eventId
@@ -474,6 +496,7 @@ createPublicEventTicketCheckout rawEventId mIdempotency
         , "policy_id" .= atpId policy
         , "policy_version" .= atpVersion policy
         , "terms_version" .= atpTermsVersion policy
+        , "billing" .= fmap show billing
         ]
       lookupHash = sha256Text lookupToken
       holdExpiresAt = addUTCTime (fromIntegral (atpHoldMinutes policy) * 60) now
@@ -488,7 +511,7 @@ createPublicEventTicketCheckout rawEventId mIdempotency
       orderKey <- createTicketCheckoutTransaction
         checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
         buyerName buyerEmail buyerPhone eventKey tierKey tier
-        requestedQuantity policy validPromo price
+        requestedQuantity policy validPromo price billing
       loadTicketCheckoutDTO orderKey (Just lookupToken)
 
 lookupTicketCheckoutIdempotency
@@ -539,11 +562,12 @@ createTicketCheckoutTransaction
   -> ApprovedTicketPolicy
   -> Maybe ValidPromo
   -> TicketDomain.TicketPriceBreakdown
+  -> Maybe BuyerId.BillingIdentity
   -> AppM SM.EventTicketOrderId
 createTicketCheckoutTransaction
     checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
     buyerName buyerEmail buyerPhone eventKey tierKey tier quantityInt
-    policy validPromo price = do
+    policy validPromo price billing = do
   Env{ envPool } <- ask
   result <- liftIO $
     (try (runSqlPool transactionBody envPool)
@@ -750,6 +774,14 @@ createTicketCheckoutTransaction
         \) VALUES (?, NULL, 'seat_held', 'system', 'checkout_created',\
         \ 'Atomic expiring seat hold created; payment and issuance remain separate')"
         [toPersistValue orderKey]
+      forM_ billing $ \identity -> rawExecute
+        "INSERT INTO event_ticket_billing_identity(order_id, id_type, id_number, legal_name)\
+        \ VALUES (?, ?, ?, ?)"
+        [ toPersistValue orderKey
+        , PersistText (BuyerId.billingIdentityType identity)
+        , maybe PersistNull PersistText (billingNumber identity)
+        , maybe PersistNull PersistText (billingLegalName identity)
+        ]
       pure (Right orderKey)
 
 loadTicketRuntimeView
@@ -1698,3 +1730,22 @@ submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
       _ -> pure (Left "Manual payment evidence is ambiguous")
   either (throwError . conflict) pure outcome
   loadTicketCheckoutDTO (tpcOrderKey context) Nothing
+
+invoicingReadyFor :: Checkout.CheckoutEnvironment -> AppM Bool
+invoicingReadyFor environment = do
+  Env{ envPool } <- ask
+  liftIO (Datil.invoicingReady envPool (Checkout.checkoutEnvironmentText environment))
+
+billingNumber :: BuyerId.BillingIdentity -> Maybe Text
+billingNumber identity = case identity of
+  BuyerId.BillingConsumidorFinal -> Nothing
+  BuyerId.BillingCedula number _ -> Just number
+  BuyerId.BillingRuc number _ -> Just number
+  BuyerId.BillingPasaporte number _ -> Just number
+
+billingLegalName :: BuyerId.BillingIdentity -> Maybe Text
+billingLegalName identity = case identity of
+  BuyerId.BillingConsumidorFinal -> Nothing
+  BuyerId.BillingCedula _ name -> Just name
+  BuyerId.BillingRuc _ name -> Just name
+  BuyerId.BillingPasaporte _ name -> Just name

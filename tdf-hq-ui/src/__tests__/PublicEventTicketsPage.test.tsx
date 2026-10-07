@@ -241,6 +241,13 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
   });
 
+  it('shows the event artwork above the checkout', async () => {
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture, imageUrl: 'https://api.example.invalid/flyer.png' });
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('img[alt="Arte de Festival TDF"]')).toBeTruthy());
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('https://api.example.invalid/flyer.png');
+  });
+
   it('uses the event canonical and does not advertise a disabled checkout as a priced offer', async () => {
     getStorefrontMock.mockResolvedValue({ ...storefrontFixture, checkoutAvailable: false });
     await renderTracking('/eventos/41/entradas?utm_source=artist');
@@ -383,6 +390,33 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       expect.objectContaining({ quantity: 4, buyerEmail: 'buyer@example.invalid' }), expect.any(String));
     expect(funnelCaptureMock).toHaveBeenCalledWith('ticketing_checkout_started', expect.objectContaining({ event_id: 41, quantity: 4 }));
     expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/buyer@example|Comprador|secure-lookup/);
+  });
+
+  it.each([[true], [false]])('sends invoice identification only when the policy issues invoices (%s)', async (invoiced) => {
+    getStorefrontMock.mockResolvedValue({
+      ...storefrontFixture,
+      policy: { ...storefrontFixture.policy, maxTicketsPerOrder: 4, taxInvoiceIssued: invoiced },
+    });
+    await renderTracking('/eventos/41/entradas?tierId=8&quantity=1');
+    await waitForExpectation(() => expect(container.textContent).toContain('Hasta 4 entradas por orden.'));
+    expect(container.textContent?.includes('Datos para tu factura electrónica')).toBe(invoiced);
+    await act(async () => {
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[maxlength="160"]')!,
+        { target: { value: 'Comprador de prueba' } });
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[type="email"]')!,
+        { target: { value: 'buyer@example.invalid' } });
+      fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    });
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
+    const payload = createCheckoutMock.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+    if (invoiced) {
+      expect(payload).toMatchObject({ billingIdType: 'consumidor_final' });
+    } else {
+      expect(payload).not.toHaveProperty('billingIdType');
+    }
+    expect(payload).not.toHaveProperty('billingIdNumber');
   });
 
   it('keeps the legacy policy fallback bounded by remaining inventory', async () => {
