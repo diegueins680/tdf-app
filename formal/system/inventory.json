@@ -608,6 +608,7 @@
       "tdf-hq-ui/src/api/navigationPreferences.ts",
       "tdf-hq-ui/src/api/operations.test.ts",
       "tdf-hq-ui/src/api/operations.ts",
+      "tdf-hq-ui/src/api/parties.test.ts",
       "tdf-hq-ui/src/api/parties.ts",
       "tdf-hq-ui/src/api/partySelector.test.ts",
       "tdf-hq-ui/src/api/partySelector.ts",
@@ -5859,9 +5860,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1b76690fcc43ff5f",
+      "path": "tdf-hq-ui/src/api/parties.test.ts",
+      "sha256": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f57fa043e71dbbe2",
       "path": "tdf-hq-ui/src/api/parties.ts",
-      "sha256": "82f5ee12c60f21dc28d976877a9937e7a7e1c5d9582c3f713a9ef377bdd43fc0",
+      "sha256": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
       "semanticConformance": "not-established-by-discovery"
     },
     {

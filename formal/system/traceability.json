@@ -18184,9 +18184,16 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-1b76690fcc43ff5f",
+      "path": "tdf-hq-ui/src/api/parties.test.ts",
+      "sha256": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-f57fa043e71dbbe2",
       "path": "tdf-hq-ui/src/api/parties.ts",
-      "sha256": "82f5ee12c60f21dc28d976877a9937e7a7e1c5d9582c3f713a9ef377bdd43fc0",
+      "sha256": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -32743,6 +32750,7 @@
     "SURFACE-fac7d7003037286f",
     "SURFACE-b95398e74646e7cc",
     "SURFACE-76f18b79d7a706c4",
+    "SURFACE-1b76690fcc43ff5f",
     "SURFACE-f57fa043e71dbbe2",
     "SURFACE-d8478b8e80f80942",
     "SURFACE-b7a144db5e173cbd",
