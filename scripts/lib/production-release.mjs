@@ -2456,12 +2456,13 @@ BEGIN
     ) AS expected(flag_key)
     LEFT JOIN revenue_feature_flag AS flag
       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
-    -- PayPal webhook intake is an approved production capability. Restarts
-    -- must preserve its configured state; refunds and Datafast stay staged.
+    -- PayPal webhook intake and PayPal refunds are approved production
+    -- capabilities (refunds since the 2026-10-06 ticketing activation).
+    -- Releases must preserve their configured state; Datafast stays staged.
     WHERE flag.flag_key IS NULL
-       OR (flag.enabled AND expected.flag_key <> 'checkout.paypal.webhooks')
+       OR (flag.enabled AND expected.flag_key NOT IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds'))
   ) THEN
-    RAISE EXCEPTION 'Production provider capability gates must exist; refunds and Datafast must remain disabled';
+    RAISE EXCEPTION 'Production provider capability gates must exist; Datafast must remain disabled';
   END IF;
 
   IF EXISTS (
