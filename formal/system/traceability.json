@@ -2705,6 +2705,74 @@
       "critical": true
     },
     {
+      "authority": "reconciled",
+      "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
+      "contract": "docs/automatic-production-migrations.md",
+      "domain": "DEPLOY",
+      "actors": [
+        "Production entrypoint",
+        "Release operator",
+        "Product owner"
+      ],
+      "preconditions": [
+        "AUTO_APPLY_PRODUCTION_MIGRATIONS=true for the serving API."
+      ],
+      "inputs": [
+        "revenue_feature_flag production rows",
+        "Reviewed production migration bundle"
+      ],
+      "state": {
+        "startup": [
+          "verifying",
+          "serving",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Approved gate state -> serving",
+        "Missing gate or enabled staged provider -> rejected before serving"
+      ],
+      "forbiddenTransitions": [
+        "Approved enabled PayPal/Datafast gate -> rejected",
+        "Verification -> gate enablement"
+      ],
+      "effects": [
+        "Restarts preserve the configured provider state."
+      ],
+      "authorization": "Gate approval is a product decision recorded in authority-decisions.json; verification only checks it.",
+      "privacy": "Reads gate rows only.",
+      "concurrency": "Runs once per container start before the server accepts traffic.",
+      "idempotency": "Repeated verification of an unchanged database is equivalent.",
+      "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "observability": "Fixed exception text names the violated gate class.",
+      "formalModels": [],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
+      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "status": "specified and implemented",
+      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "ambiguity": [
+        "Other startup assertions may encode states that later become approved; each needs the same review."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PG16 test and negative control pass; CI and production release pending."
+      },
+      "id": "DEPLOY-STARTUP-001",
+      "title": "Startup schema verification accepts approved production state",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
+      "implementation": [
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/production-entrypoint.sh"
+      ],
+      "tests": [
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "critical": true
+    },
+    {
       "authority": "approved",
       "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
       "contract": "formal/system/bookings.md",
@@ -7571,7 +7639,7 @@
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+    "scripts/lib/production-release.mjs": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -7598,6 +7666,7 @@
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
+    "scripts/test-automatic-migrations-production-schema.sh": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -9045,6 +9114,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "REC-DDEX-001",
         "relationship": "implementation"
       },
@@ -9471,6 +9544,10 @@
       {
         "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
       }
     ],
     "scripts/lib/migration-contract.mjs": [
@@ -9803,6 +9880,22 @@
         "relationship": "formalModels"
       }
     ],
+    "tdf-hq/production-entrypoint.sh": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-automatic-migrations-production-schema.sh": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
       {
         "requirement": "AUTH-BOOK-001",
@@ -9961,12 +10054,6 @@
       {
         "requirement": "SYS-UX-001",
         "relationship": "tests"
-      }
-    ],
-    "tdf-hq/production-entrypoint.sh": [
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/persistent-uploads.sh": [
@@ -13994,6 +14081,10 @@
         {
           "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -14940,7 +15031,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14953,6 +15044,10 @@
         },
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-STARTUP-001",
           "relationship": "implementation"
         },
         {
@@ -15999,9 +16094,14 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
+      "sha256": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c86f69c773ab4140",
@@ -23170,6 +23270,10 @@
       "sha256": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "implementation"
@@ -32675,7 +32779,6 @@
     "SURFACE-a8dfded8bd6214c5",
     "SURFACE-b646ef7b32ab67a4",
     "SURFACE-a2d5738156c69d37",
-    "SURFACE-5786747bd405aa1a",
     "SURFACE-d6c33dc1652ba8f2",
     "SURFACE-0f2cda2d581ad0b8",
     "SURFACE-1910077a9107778a",
@@ -34295,6 +34398,7 @@
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
+    "DEPLOY-STARTUP-001",
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
@@ -35442,7 +35546,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "19b6cb4f97d37123c4ebc330e12d3fd08e3c4049fc163f7eec1d6cbb544692e8",
+      "sourceSha256": "e4801cb91d4e5096dc711e779d06506709be99ae6e4c3ef7c0c8dab22226b3e5",
       "definition": {
         "states": [
           "absent",
@@ -57374,7 +57478,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 94,
+    "PARTIAL": 95,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
