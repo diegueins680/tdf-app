@@ -7842,7 +7842,8 @@
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
         "tdf-hq-ui/src/utils/musicPreviewRange.ts",
         "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
-        "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",

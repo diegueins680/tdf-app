@@ -7843,7 +7843,8 @@
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
         "tdf-hq-ui/src/utils/musicPreviewRange.ts",
         "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
-        "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8776,6 +8777,7 @@
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
@@ -14143,6 +14145,12 @@
       }
     ],
     "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/navigation/notificationTarget.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
@@ -35572,7 +35580,12 @@
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
       "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-861d18c6230228f5",
@@ -37610,7 +37623,6 @@
     "SURFACE-ab2f22b78d9a1a9a",
     "SURFACE-335f0e863443a35b",
     "SURFACE-1d9d50d0957c7af7",
-    "SURFACE-1b440686d0fdbde2",
     "SURFACE-861d18c6230228f5",
     "SURFACE-8610f72192678eb2",
     "SURFACE-96659afab4076863",
@@ -38814,7 +38826,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9b25f89e9bc75f057576ece336ecffd2e0c2ff9b5be956eb86a840ffe4f1a9c3",
+      "sourceSha256": "ffdddb21e0e8e3b445b674cf60f7fd6bc7316867c3385a374fc77b52218046a5",
       "definition": {
         "states": [
           "absent",
