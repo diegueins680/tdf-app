@@ -15,6 +15,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Fade,
   FormControlLabel,
   IconButton,
@@ -54,7 +55,8 @@ import {
 } from '../utils/loginRouting';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
-import { isValidAuthPassword } from '../utils/passwordPolicy';
+import { deriveSignupDisplayName, validateSignupFields } from '../utils/signupFields';
+import { reportClientError } from '../analytics/errorReporting';
 import { env } from '../utils/env';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
@@ -172,7 +174,8 @@ export default function LoginPage() {
     password: '',
   });
   const [signupIntent, setSignupIntent] = useState<OnboardingIntent | null>(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [signupFieldErrors, setSignupFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [googleCreating, setGoogleCreating] = useState(false);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const { session, loading, login } = useSession();
@@ -184,7 +187,6 @@ export default function LoginPage() {
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
-  const signupNameInputRef = useRef<HTMLInputElement | null>(null);
   const signupEmailInputRef = useRef<HTMLInputElement | null>(null);
   const signupPasswordInputRef = useRef<HTMLInputElement | null>(null);
   const googleInitRef = useRef(false);
@@ -330,7 +332,7 @@ export default function LoginPage() {
     });
     setClaimArtistId(signupPreset.claimArtistId);
     setSignupIntent(signupPreset.intent);
-    setTermsAccepted(false);
+    setSignupFieldErrors({});
     captureGrowthEvent(analytics, 'signup_started', {
       route: '/login',
       entry: 'campaign_link',
@@ -438,7 +440,7 @@ export default function LoginPage() {
     });
     setClaimArtistId(null);
     setSignupIntent(intent);
-    setTermsAccepted(false);
+    setSignupFieldErrors({});
     captureGrowthEvent(analytics, 'signup_started', {
       route: '/login',
       entry,
@@ -449,7 +451,15 @@ export default function LoginPage() {
   }, [analytics, requestedIntent, signupMutation]);
 
   const handleGoogleCredential = useCallback(
-    async (credentialResponse: { credential?: string }, linkAccount?: { username: string; password: string }) => {
+    async (
+      credentialResponse: { credential?: string },
+      linkAccount?: { username: string; password: string },
+      createAccount = false,
+    ) => {
+      // Account creation happens from the signup dialog or from the explicit
+      // "create my account with Google" choice offered after a login-card
+      // attempt finds no TDF account for this Google identity.
+      const creatingAccount = signupDialogOpen || createAccount;
       // The Google login contract cannot claim an existing artist. Keep the
       // selected claim in the email signup form, including late popup callbacks.
       if (claimArtistId !== null) {
@@ -463,12 +473,6 @@ export default function LoginPage() {
         } else {
           setFormError(message);
         }
-        return;
-      }
-      if (signupDialogOpen && !termsAccepted) {
-        const termsErrorMessage = t('authEntry.googleConsent');
-        setGoogleError(termsErrorMessage);
-        setSignupFeedback({ type: 'error', message: termsErrorMessage });
         return;
       }
       const credential = credentialResponse?.credential;
@@ -490,7 +494,7 @@ export default function LoginPage() {
         const response = await googleLoginMutation.mutateAsync({
           idToken: credential,
           ...(linkAccount ? { linkAccount } : {}),
-          ...(signupDialogOpen ? {
+          ...(creatingAccount ? {
             createNewAccount: true,
             marketingOptIn: false,
             termsAccepted: true,
@@ -508,6 +512,7 @@ export default function LoginPage() {
           partyId: response.partyId,
         });
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
+        setGoogleCreating(false);
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
         const googleCreatedAccount = response.accountCreated === true;
@@ -520,28 +525,30 @@ export default function LoginPage() {
         setSignupFeedback(null);
         navigate(googleTargetPath, { replace: true, ...(googleCreatedAccount ? { state: { mobileInvitation: true } } : {}) });
       } catch (err) {
-        if (!signupDialogOpen && isGoogleSignupConsentRequiredError(err)) {
+        setGoogleCreating(false);
+        if (!creatingAccount && isGoogleSignupConsentRequiredError(err)) {
           setGoogleLinkToken(credential);
           setGoogleLinkAccount({ username: '', password: '' });
           return;
         }
         const message = authErrorMessage(err, t, 'authEntry.googleLoginError');
-        captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {
+        reportClientError('auth_flow', err, { method: 'google', creating_account: creatingAccount, linking: Boolean(linkAccount) });
+        captureGrowthEvent(analytics, creatingAccount ? 'signup_failed' : 'login_failed', {
           route: '/login',
           method: 'google',
-          ...(signupDialogOpen ? { intent: signupIntent ?? 'general' } : {}),
+          ...(creatingAccount ? { intent: signupIntent ?? 'general' } : {}),
         });
         setGoogleError(message);
         if (signupDialogOpen) {
           setSignupFeedback({ type: 'error', message });
-        } else {
+        } else if (!linkAccount && !createAccount) {
           setFormError(message);
         }
       } finally {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
+    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, t],
   );
 
   useEffect(() => {
@@ -595,6 +602,11 @@ export default function LoginPage() {
               void googleCredentialHandlerRef.current(credentialResponse);
             },
             ux_mode: 'popup',
+            // FedCM button mode shows the browser's native account chooser
+            // (Android Chrome bottom sheet) instead of a popup tab, which on
+            // mobile could be left blank/white when the tab hand-off failed.
+            // Browsers without FedCM fall back to the popup automatically.
+            use_fedcm_for_button: true,
             auto_select: false,
           });
           googleInitRef.current = true;
@@ -627,7 +639,7 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, termsAccepted, t]);
+  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, t]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -715,7 +727,7 @@ export default function LoginPage() {
     setShowSignupPassword(false);
     setClaimArtistId(null);
     setSignupIntent(null);
-    setTermsAccepted(false);
+    setSignupFieldErrors({});
     signupMutation.reset();
   };
 
@@ -725,29 +737,31 @@ export default function LoginPage() {
       return;
     }
 
+    // Only email + password are asked for. The account API still needs a
+    // display-name part, so start from the email's local part (the same
+    // fallback Google accounts get); people can change it later in their profile.
     const payload = {
-      ...buildSignupPayload(signupForm, []),
+      ...buildSignupPayload(
+        { ...signupForm, firstName: deriveSignupDisplayName(signupForm.email), lastName: '' },
+        [],
+      ),
       marketingOptIn: false,
+      // Acceptance is given by pressing the create button next to the terms
+      // notice (clickwrap); the server records the accepted version.
       termsAccepted: true as const,
       termsVersion: ACCOUNT_TERMS_VERSION,
     };
-    if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: t('authEntry.signupRequired') });
-      if (!payload.firstName && !payload.lastName) signupNameInputRef.current?.focus();
-      else if (!payload.email) signupEmailInputRef.current?.focus();
+    const fieldErrors = validateSignupFields(payload.email, payload.password, t);
+    setSignupFieldErrors(fieldErrors);
+    if (fieldErrors.email || fieldErrors.password) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', {
+        route: '/login',
+        reason: fieldErrors.email ? 'invalid_email' : 'invalid_password',
+        intent: signupIntent ?? 'general',
+      });
+      setSignupFeedback(null);
+      if (fieldErrors.email) signupEmailInputRef.current?.focus();
       else signupPasswordInputRef.current?.focus();
-      return;
-    }
-    if (!isValidAuthPassword(payload.password)) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'invalid_password', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: passwordHint });
-      signupPasswordInputRef.current?.focus();
-      return;
-    }
-    if (!termsAccepted) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'terms_not_accepted', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: t('authEntry.consentRequired') });
       return;
     }
     setSignupFeedback(null);
@@ -756,7 +770,7 @@ export default function LoginPage() {
       const effectiveRoles = deriveEffectiveRoles(response.roles);
       const nextSession = await buildResolvedSession({
         username: payload.email,
-        displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
+        displayName: payload.firstName || payload.email,
         roles: effectiveRoles,
         apiToken: response.token,
         modules: response.modules,
@@ -956,15 +970,17 @@ export default function LoginPage() {
                       ref={googleButtonRef}
                       sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
                     />
-                    <Button
-                      type="button"
-                      variant="text"
-                      size="small"
-                      onClick={() => openSignupDialog(requestedIntent, 'google_signup_cta')}
-                      sx={{ color: '#bfdbfe', textTransform: 'none' }}
-                    >
-                      {t('authEntry.googleSignup')}
-                    </Button>
+                    {/* First-time Google users are offered one-tap account creation
+                        after this same sign-in (no second form or popup). */}
+                    <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.78)', textAlign: 'center', '& a': { color: '#bfdbfe' } }}>
+                      <Trans
+                        i18nKey="authEntry.googleClickwrap"
+                        components={{
+                          terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />,
+                          privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" />,
+                        }}
+                      />
+                    </Typography>
                     {googleStatus && (
                       <Typography variant="caption" color="text.secondary">
                         {googleStatus}
@@ -1270,14 +1286,40 @@ export default function LoginPage() {
       </Container>
       <Dialog open={googleLinkToken !== null} fullWidth maxWidth="xs"
         onClose={() => { setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' }); }}>
-        <DialogTitle>{t('authEntry.googleLinkTitle')}</DialogTitle>
+        <DialogTitle>{t('authEntry.googleNewAccountTitle')}</DialogTitle>
         <Box component="form" onSubmit={(event: FormEvent<HTMLFormElement>) => {
           event.preventDefault();
           if (googleLinkToken) void handleGoogleCredential({ credential: googleLinkToken }, googleLinkAccount);
         }}>
           <DialogContent>
             <Stack spacing={2}>
-              <Typography>{t('authEntry.googleLinkExplanation')}</Typography>
+              <Typography>{t('authEntry.googleNewAccountBody')}</Typography>
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={googleLoginMutation.isPending}
+                aria-busy={googleCreating}
+                startIcon={googleCreating ? <CircularProgress size={16} color="inherit" /> : undefined}
+                onClick={() => {
+                  if (!googleLinkToken) return;
+                  setGoogleCreating(true);
+                  void handleGoogleCredential({ credential: googleLinkToken }, undefined, true);
+                }}
+              >
+                {googleCreating ? t('authEntry.googleCreating') : t('authEntry.googleCreateWithGoogle')}
+              </Button>
+              <Typography variant="body2" color="text.secondary">
+                <Trans
+                  i18nKey="authEntry.signupClickwrap"
+                  components={{
+                    terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />,
+                    privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" />,
+                  }}
+                />
+              </Typography>
+              <Divider />
+              <Typography variant="subtitle2">{t('authEntry.googleLinkInstead')}</Typography>
               <TextField required autoComplete="username" label={t('authEntry.googleLinkUsername')}
                 value={googleLinkAccount.username} onChange={event => setGoogleLinkAccount(value => ({ ...value, username: event.target.value }))} />
               <TextField required type="password" autoComplete="current-password" label={t('authEntry.googleLinkPassword')}
@@ -1291,9 +1333,8 @@ export default function LoginPage() {
           <DialogActions>
             <Button disabled={googleLoginMutation.isPending} onClick={() => {
               setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' });
-              openSignupDialog(requestedIntent, 'google_login_handoff');
-            }}>{t('authEntry.googleLinkCreate')}</Button>
-            <Button type="submit" disabled={googleLoginMutation.isPending}>{t('authEntry.googleLinkConnect')}</Button>
+            }}>{t('common.cancel', { defaultValue: 'Cancelar' })}</Button>
+            <Button type="submit" variant="outlined" disabled={googleLoginMutation.isPending}>{t('authEntry.googleLinkConnect')}</Button>
           </DialogActions>
         </Box>
       </Dialog>
@@ -1351,6 +1392,8 @@ export default function LoginPage() {
         onClose={closeSignupDialog}
         fullWidth
         maxWidth="sm"
+        fullScreen={isMobile}
+        TransitionProps={{ onEntered: () => signupEmailInputRef.current?.focus() }}
         aria-labelledby="login-signup-dialog-title"
       >
         <DialogTitle id="login-signup-dialog-title">{t('login.signupDialog.title')}</DialogTitle>
@@ -1372,26 +1415,15 @@ export default function LoginPage() {
             {signupFeedback?.type === 'info' && (
               <Alert severity="info">{signupFeedback.message}</Alert>
             )}
-            <FormControlLabel
-              control={(
-                <Checkbox
-                  checked={termsAccepted}
-                  onChange={(event) => setTermsAccepted(event.target.checked)}
-                  inputProps={{ 'aria-label': t('authEntry.acceptConsent') }}
-                />
-              )}
-              label={(
-                <Typography variant="body2">
-                  <Trans i18nKey="authEntry.consentText" components={{ terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />, privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" /> }} />
-                </Typography>
-              )}
-            />
+            <Typography variant="body2" color="text.secondary">
+              {t('authEntry.signupIntro')}
+            </Typography>
             {claimArtistId !== null && (
               <Alert severity="info">
                 {t('authEntry.claimReviewAfterSignup')}
               </Alert>
             )}
-            {googleClientId && termsAccepted && claimArtistId === null && (
+            {googleClientId && claimArtistId === null && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   {t('authEntry.googleCreateEnter')}
@@ -1412,28 +1444,6 @@ export default function LoginPage() {
                 )}
               </Stack>
             )}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                label={t('authEntry.firstName')}
-                inputRef={signupNameInputRef}
-                name="givenName"
-                autoComplete="given-name"
-                required
-                value={signupForm.firstName}
-                onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
-                fullWidth
-                sx={dialogFieldSx}
-              />
-              <TextField
-                label={t('authEntry.lastName')}
-                name="familyName"
-                autoComplete="family-name"
-                value={signupForm.lastName}
-                onChange={(event) => setSignupForm((prev) => ({ ...prev, lastName: event.target.value }))}
-                fullWidth
-                sx={dialogFieldSx}
-              />
-            </Stack>
             <TextField
               label={t('authEntry.email')}
               inputRef={signupEmailInputRef}
@@ -1442,9 +1452,21 @@ export default function LoginPage() {
               autoComplete="email"
               required
               value={signupForm.email}
-              onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
+              onChange={(event) => {
+                const { value } = event.target;
+                setSignupForm((prev) => ({ ...prev, email: value }));
+                if (signupFieldErrors.email) setSignupFieldErrors((prev) => ({ ...prev, email: undefined }));
+              }}
+              onBlur={() => {
+                if (signupForm.email.trim()) {
+                  setSignupFieldErrors((prev) => ({ ...prev, email: validateSignupFields(signupForm.email, null, t).email }));
+                }
+              }}
+              error={Boolean(signupFieldErrors.email)}
+              helperText={signupFieldErrors.email}
+              inputProps={{ inputMode: 'email', autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
               fullWidth
-              placeholder="tu.correo@tdf.com"
+              placeholder="nombre@gmail.com"
               sx={dialogFieldSx}
             />
             {(signupIntent === 'artist_profile' || claimArtistId !== null) && (
@@ -1488,9 +1510,14 @@ export default function LoginPage() {
               autoComplete="new-password"
               required
               value={signupForm.password}
-              onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
+              onChange={(event) => {
+                const { value } = event.target;
+                setSignupForm((prev) => ({ ...prev, password: value }));
+                if (signupFieldErrors.password) setSignupFieldErrors((prev) => ({ ...prev, password: undefined }));
+              }}
               fullWidth
-              helperText={passwordHint}
+              error={Boolean(signupFieldErrors.password)}
+              helperText={signupFieldErrors.password ?? passwordHint}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -1515,17 +1542,24 @@ export default function LoginPage() {
             )}
             </Stack>
           </DialogContent>
-          {!termsAccepted && (
-            <Typography id="signup-consent-hint" variant="body2" color="text.secondary" sx={{ px: 3, textAlign: 'right' }}>
-              {t('authEntry.consentRequired')}
-            </Typography>
-          )}
+          <Typography id="signup-consent-notice" variant="body2" color="text.secondary" sx={{ px: 3, pb: 1 }}>
+            <Trans
+              i18nKey="authEntry.signupClickwrap"
+              components={{
+                terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />,
+                privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" />,
+              }}
+            />
+          </Typography>
           <DialogActions>
             <Button type="button" onClick={closeSignupDialog}>{t('authEntry.haveAccount')}</Button>
             <Button
               type="submit"
-              disabled={signupMutation.isPending || servicePreparing || !termsAccepted}
-              aria-describedby={termsAccepted ? undefined : 'signup-consent-hint'}
+              variant="contained"
+              disabled={signupMutation.isPending || servicePreparing}
+              aria-describedby="signup-consent-notice"
+              aria-busy={signupMutation.isPending}
+              startIcon={signupMutation.isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
             >
               {signupMutation.isPending ? t('authEntry.creating') : servicePreparing ? t('authEntry.preparing') : t('authEntry.createEnter')}
             </Button>

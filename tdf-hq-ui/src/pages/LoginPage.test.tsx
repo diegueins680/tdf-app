@@ -202,30 +202,42 @@ describe('LoginPage Google signup consent flow', () => {
     }
   });
 
-  it('opens the consent-first signup flow directly for new Google users', async () => {
+  it('opens an email-and-password-only signup with clickwrap terms and an ungated Google option', async () => {
     const cleanup = await renderLoginPage();
 
     try {
       await waitFor(() => {
-        expect(findButton('¿Primera vez? Crear cuenta con Google')).not.toBeNull();
+        expect(findButton('Crear cuenta general')).not.toBeNull();
       });
+      // The login card no longer offers a second "first time? create with
+      // Google" entry; the Google button itself handles first-time users.
+      expect(findButton('¿Primera vez? Crear cuenta con Google')).toBeNull();
       await act(async () => {
-        findButton('¿Primera vez? Crear cuenta con Google')?.click();
+        findButton('Crear cuenta general')?.click();
         await flushPromises();
       });
 
       const signupDialog = document.querySelector<HTMLElement>('[role="dialog"]');
       expect(signupDialog).not.toBeNull();
-      expect(Array.from(signupDialog?.querySelectorAll('button') ?? []).some(
-        (button) => button.textContent === 'Ya tengo una cuenta',
-      )).toBe(true);
-      expect(signupDialog?.querySelector(
-        'input[aria-label="Acepto los términos y la política de privacidad"]',
-      )).not.toBeNull();
-      const existingAccountButton = findButton('Ya tengo una cuenta');
-      expect(existingAccountButton).not.toBeNull();
+      // Only email and password are asked for: no name, phone or consent checkbox.
+      expect(signupDialog?.querySelector('[name="givenName"]')).toBeNull();
+      expect(signupDialog?.querySelector('[name="familyName"]')).toBeNull();
+      expect(signupDialog?.querySelector('input[type="checkbox"]')).toBeNull();
+      expect(signupDialog?.querySelector('input[name="email"]')).not.toBeNull();
+      expect(signupDialog?.querySelector('input[name="newPassword"]')).not.toBeNull();
+      // Terms are acknowledged next to the create button, with links.
+      const createButton = findButton('Crear e ingresar');
+      expect(createButton?.disabled).toBe(false);
+      expect(createButton?.getAttribute('aria-describedby')).toBe('signup-consent-notice');
+      const notice = document.getElementById('signup-consent-notice');
+      expect(notice?.textContent).toContain('Al crear tu cuenta aceptas');
+      expect(notice?.querySelectorAll('a')).toHaveLength(2);
+      // Google signup is available immediately, without a consent gate.
+      expect(findButton('Google signup test button')).not.toBeNull();
       expect(googleLoginRequestMock).not.toHaveBeenCalled();
 
+      const existingAccountButton = findButton('Ya tengo una cuenta');
+      expect(existingAccountButton).not.toBeNull();
       // Complete the real Dialog exit transition deterministically instead of
       // racing its timer against waitFor's wall-clock deadline on a busy host.
       jest.useFakeTimers();
@@ -245,7 +257,7 @@ describe('LoginPage Google signup consent flow', () => {
     }
   }, 15_000);
 
-  it('offers existing-account connection before explicit new signup and retries with versioned terms', async () => {
+  it('offers one-tap Google account creation with the same credential when no TDF account exists', async () => {
     googleLoginRequestMock
       .mockRejectedValueOnce(new Error(GOOGLE_CONSENT_ERROR))
       .mockResolvedValueOnce({
@@ -259,46 +271,32 @@ describe('LoginPage Google signup consent flow', () => {
 
     try {
       await waitFor(() => {
-        expect(findButton('¿Primera vez? Crear cuenta con Google')).not.toBeNull();
+        expect(findButton('Google login test button')).not.toBeNull();
       });
-      const googleLoginButton = findButton('Google login test button');
-      expect(googleLoginButton).not.toBeNull();
+      expect(document.body.textContent).toContain('al continuar con Google se crea tu cuenta');
 
       await act(async () => {
-        googleLoginButton?.click();
+        findButton('Google login test button')?.click();
         await flushPromises();
         await flushPromises();
       });
 
-      const connectionDialog = document.querySelector<HTMLElement>('[role="dialog"]');
-      expect(connectionDialog?.textContent).toContain('Conecta tu cuenta TDF');
-      await act(async () => {
-        findButton('Crear una cuenta')?.click();
-        await flushPromises();
-      });
-      await waitFor(() => expect(document.querySelector('[aria-labelledby="login-signup-dialog-title"] input[type="checkbox"]')).not.toBeNull());
-      const signupDialog = document.querySelector<HTMLElement>('[aria-labelledby="login-signup-dialog-title"]');
-      expect(signupDialog).not.toBeNull();
+      const choiceDialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      expect(choiceDialog?.textContent).toContain('Crea tu cuenta con Google');
+      // Connecting an existing password account remains available.
+      expect(choiceDialog?.textContent).toContain('¿Ya tienes una cuenta TDF con contraseña?');
+      expect(choiceDialog?.querySelector('input[autocomplete="current-password"]')).not.toBeNull();
       expect(document.body.textContent).not.toContain(GOOGLE_CONSENT_ERROR);
       expect(googleLoginRequestMock).toHaveBeenNthCalledWith(1, { idToken: GOOGLE_CREDENTIAL });
 
-      const termsCheckbox = signupDialog?.querySelector<HTMLInputElement>(
-        'input[aria-label="Acepto los términos y la política de privacidad"]',
-      );
-      expect(termsCheckbox).not.toBeNull();
       await act(async () => {
-        termsCheckbox?.click();
-        await flushPromises();
-      });
-
-      const googleSignupButton = findButton('Google signup test button');
-      expect(googleSignupButton).not.toBeNull();
-      await act(async () => {
-        googleSignupButton?.click();
+        findButton('Crear mi cuenta con Google')?.click();
         await flushPromises();
         await flushPromises();
       });
 
+      // The credential from the single Google interaction is reused: no
+      // second popup and no extra form.
       expect(googleLoginRequestMock).toHaveBeenNthCalledWith(2, {
         idToken: GOOGLE_CREDENTIAL,
         marketingOptIn: false,
@@ -312,6 +310,7 @@ describe('LoginPage Google signup consent flow', () => {
       );
       expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'google' }));
       expect(document.querySelector('[data-testid="route-state"]')?.textContent).toContain('"mobileInvitation":true');
+      expect(document.querySelector('[data-testid="location"]')?.textContent).toBe('/fans');
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());
     } finally {
       await cleanup();
@@ -321,47 +320,61 @@ describe('LoginPage Google signup consent flow', () => {
   it.each([
     ['/login', null],
     ['/login?signup=1&intent=artist_profile&claimArtistId=42', '/artista/crear?claimArtistId=42'],
-  ])('signs up independently after consent from %s', async (entry, claimTarget) => {
+  ])('signs up with only email and password from %s', async (entry, claimTarget) => {
     signupRequestMock.mockResolvedValueOnce({
       token: 'fictional-password-session', partyId: 405, roles: ['Customer'], modules: [],
     });
     const cleanup = await renderLoginPage(entry);
     try {
       await act(async () => {
-        if (!claimTarget) findButton('¿Primera vez? Crear cuenta con Google')?.click();
+        if (!claimTarget) findButton('Crear cuenta general')?.click();
         await flushPromises();
       });
       const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+      // Invalid input is reported inline next to the field, without a request.
       await act(async () => {
-        fireEvent.change(dialog.querySelector('[name="givenName"]')!, { target: { value: 'Andrea' } });
-        fireEvent.change(dialog.querySelector('[name="email"]')!, { target: { value: 'andrea@example.com' } });
-        fireEvent.change(dialog.querySelector('[name="newPassword"]')!, { target: { value: 'fictional-password-42' } });
+        fireEvent.change(dialog.querySelector('[name="email"]')!, { target: { value: 'andrea@example' } });
+        fireEvent.change(dialog.querySelector('[name="newPassword"]')!, { target: { value: 'short' } });
       });
-      expect(findButton('Crear e ingresar')?.disabled).toBe(true);
-      expect(findButton('Crear e ingresar')?.getAttribute('aria-describedby')).toBe('signup-consent-hint');
-      expect(document.getElementById('signup-consent-hint')?.textContent)
-        .toBe('Acepta los términos y la política de privacidad para continuar.');
-      expect(signupRequestMock).not.toHaveBeenCalled();
-      await act(async () => {
-        fireEvent.click(dialog.querySelector('[aria-label="Acepto los términos y la política de privacidad"]')!);
-      });
-      expect(document.getElementById('signup-consent-hint')).toBeNull();
       await act(async () => {
         findButton('Crear e ingresar')?.click();
         await flushPromises();
       });
+      expect(signupRequestMock).not.toHaveBeenCalled();
+      expect(dialog.textContent).toContain('Escribe un correo válido');
+      expect(dialog.querySelector('[name="email"]')?.getAttribute('aria-invalid')).toBe('true');
+      expect(document.activeElement).toBe(dialog.querySelector('[name="email"]'));
+
+      await act(async () => {
+        fireEvent.change(dialog.querySelector('[name="email"]')!, { target: { value: 'andrea@example.com' } });
+      });
+      await act(async () => {
+        findButton('Crear e ingresar')?.click();
+        await flushPromises();
+      });
+      expect(signupRequestMock).not.toHaveBeenCalled();
+      expect(dialog.textContent).toContain('La contraseña necesita al menos 8 caracteres.');
+      expect(dialog.querySelector('[name="newPassword"]')?.getAttribute('aria-invalid')).toBe('true');
+
+      await act(async () => {
+        fireEvent.change(dialog.querySelector('[name="newPassword"]')!, { target: { value: 'fictional-password-42' } });
+      });
+      await act(async () => {
+        findButton('Crear e ingresar')?.click();
+        await flushPromises();
+      });
+      // The display name starts from the email and can be changed later.
       expect(signupRequestMock).toHaveBeenCalledWith(expect.objectContaining({
-        firstName: 'Andrea', email: 'andrea@example.com', termsAccepted: true,
+        firstName: 'Andrea', lastName: '', email: 'andrea@example.com', termsAccepted: true,
         termsVersion: 'tdf-account-terms-v1', marketingOptIn: false,
       }), expect.objectContaining({ client: expect.anything() }));
+      expect(signupRequestMock.mock.calls[0]?.[0]).not.toHaveProperty('phone', expect.anything());
       expect(loginMock).toHaveBeenCalledWith(
         expect.objectContaining({ partyId: 405, apiToken: 'fictional-password-session' }),
         { remember: true },
       );
       expect(signupRequestMock.mock.calls[0]?.[0]).not.toHaveProperty('claimArtistId');
-      if (claimTarget) {
-        expect(document.querySelector('[data-testid="location"]')?.textContent).toBe(claimTarget);
-      }
+      expect(document.querySelector('[data-testid="location"]')?.textContent).toBe(claimTarget ?? '/fans');
       expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'password' }));
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('first_value_completed', expect.anything());
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());
@@ -424,7 +437,7 @@ describe('LoginPage Google signup consent flow', () => {
         const field = entry.includes('recover')
           ? document.querySelector<HTMLInputElement>('[role="dialog"] input[name="email"]')
           : entry.includes('signup')
-            ? document.querySelector<HTMLInputElement>('[role="dialog"] input[name="givenName"]')
+            ? document.querySelector<HTMLInputElement>('[role="dialog"] input[name="email"]')
             : document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]');
         expect(field).not.toBeNull();
         await act(async () => { field?.focus(); });
