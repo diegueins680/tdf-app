@@ -1,44 +1,15 @@
 BEGIN;
 
-CREATE OR REPLACE FUNCTION security_validate_assignment_policy()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  role_allowed boolean;
-BEGIN
-  IF NEW.trigger_code NOT IN (
-    'account-signup',
-    'google-account-create',
-    'verified-artist-claim',
-    'artist-invitation-redeemed',
-    'generated-account-create',
-    'course-registration',
-    'trial-inquiry',
-    'teacher-subject-configured',
-    'teacher-student-linked',
-    'student-created',
-    'artist-profile-created'
-  ) THEN
-    RAISE EXCEPTION 'unknown automatic security policy trigger' USING ERRCODE='23514';
+-- Extend the existing validator without dropping independently added trigger
+-- codes (e.g. artist-self-service-activated from 2026-09-16).
+DO $$ DECLARE definition text; BEGIN
+  SELECT pg_get_functiondef('security_validate_assignment_policy()'::regprocedure) INTO definition;
+  IF position('''artist-invitation-redeemed''' IN definition)=0 THEN
+    IF position('''verified-artist-claim''' IN definition)=0 THEN
+      RAISE EXCEPTION 'Unrecognized automatic assignment policy validator';
+    END IF;
+    EXECUTE replace(definition, '''verified-artist-claim''', '''verified-artist-claim'',''artist-invitation-redeemed''');
   END IF;
-  IF NEW.effective_from IS NOT NULL
-     AND NEW.effective_to IS NOT NULL
-     AND NEW.effective_to <= NEW.effective_from THEN
-    RAISE EXCEPTION 'automatic security policy effective period is invalid' USING ERRCODE='23514';
-  END IF;
-  SELECT active AND automatic_assignable AND NOT emergency_administrator
-    INTO role_allowed
-    FROM security_role
-   WHERE id = NEW.role_id;
-  IF NOT COALESCE(role_allowed, FALSE) THEN
-    RAISE EXCEPTION 'automatic security policies require an active, explicitly automatic, non-emergency role' USING ERRCODE='42501';
-  END IF;
-  IF NEW.created_by IS NOT NULL
-     AND (NEW.approved_by IS NULL OR NEW.approved_by = NEW.created_by) THEN
-    RAISE EXCEPTION 'automatic security policy changes require a distinct approver' USING ERRCODE='42501';
-  END IF;
-  RETURN NEW;
 END $$;
 
 INSERT INTO security_role_assignment_policy (

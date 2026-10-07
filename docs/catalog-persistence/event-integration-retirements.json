@@ -63,7 +63,7 @@
         "kind": "haskell-list",
         "name": "expectedSecurityRoleAssignmentPolicyBindings"
       },
-      "replacementId": "0886e6835c7f5c533d9c",
+      "replacementId": "ff4edc0f8d2debecf71c",
       "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
     },
     {
@@ -105,7 +105,7 @@
         "kind": "array",
         "name": "items"
       },
-      "replacementId": "2223179c95a61ccff02d",
+      "replacementId": "3ebf5907a1b7715014a3",
       "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
     },
     {
