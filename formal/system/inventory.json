@@ -4806,7 +4806,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "072a77ac334a2e785e60f9b239a2af815bd5d891a40b06b3a1852f58e94c753b",
+      "sha256": "c595f057105b8cdfb039e2f0b76e69e4d0511554cc6c6fe3d17fabe0dbbeb0e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11820,7 +11820,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "0b1d53a3338bb947f5c5f822b67947c6995982e822018a8e5da03571823ae0da",
+      "sha256": "c7e73f5230f66d066b0406d5a91f5640e3af3c6932027a7ea828777ff1cdcbf4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12744,7 +12744,7 @@
     {
       "id": "SURFACE-08cd86a43181517d",
       "path": "tdf-hq/src/TDF/Routes/Academy.hs",
-      "sha256": "6a1ac5ca51295258fc3b3b8305d065ba0dd1704771b51a4e5584e568e135f40b",
+      "sha256": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12774,7 +12774,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "34d32a48006af10bd01a54341a9b26c38b558fd4c09dd160b33aec307b396605",
+      "sha256": "76a54d4b394015beb916adc0c8add25348c0a57b38b162b2ef7235cd0db5a131",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13512,7 +13512,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "388aed9085138bb7e02c80a2f479a794ef84b2ca460148283c17b5529e0a9cf3",
+      "sha256": "79b4bb743f508f1bc03a8b092873282a3a88d09ab5e9b59c20d8052ae45f2085",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22068,7 +22068,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "794610a7ebcdab3cd8b1faa77779e5851831100c98939ad0fd1d735475de5fc5",
+      "sha256": "2e27a1e284cdda85c3fddb03ef4808e87532a68fc9de146af3f595a6fdc0ffae",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22292,7 +22292,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "61634e1fbefbaba20162dc084433601ceeb017e4fe22b5a80736b2aaacf9ad4f",
+      "sha256": "23492daf11053e6b2c7fb7a9e831bb04eca2c390fcd5017d9b87699280c70255",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22334,7 +22334,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9092da8c5d748098b9feb66fe86f0d763f07ed729235618be03ebc745a82aa0f",
+      "sha256": "974dffa0289681135b3a2c96c60f9c19ac4160753f0c622c94b1f2bef2e76fc8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

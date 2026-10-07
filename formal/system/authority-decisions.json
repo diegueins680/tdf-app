@@ -530,6 +530,16 @@
       "conflict": "PRIV-RAG-001 named an anonymous assistant visitor and the booking conformance script asserted anonymous /ads/assist availability, while the only caller is the staff Social Inbox and anonymous responses included staff-authored ad conversation examples and unmetered paid-model calls.",
       "authority": "Explicit product-owner decision on 2026-10-06: staff-only.",
       "resolution": "/ads/assist requires authentication and hasSocialInboxAccess. PRIV-RAG-001 retains its retrieval boundary with authenticated staff as the assistant actor. A future public assistant requires its own reviewed endpoint."
+    },
+    {
+      "id": "AUTHORITY-051",
+      "sources": [
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "formal/system/public-routes.json"
+      ],
+      "conflict": "Academy enroll/progress and referral claim were anonymous and identified the actor only by a submitted email, so anyone could create or alter another person's enrollment, progress or referral attribution, and the progress 404 disclosed enrollment.",
+      "authority": "Explicit product-owner decision on 2026-10-06: require login.",
+      "resolution": "The three write routes move to the authenticated API on unchanged paths and bind to party.primary_email of the signed-in account; a mismatching email returns 403 and an account without email returns 409. Public microcourse content and next-cohort reads stay public. No client called the write routes."
     }
   ]
 }

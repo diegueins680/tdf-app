@@ -751,7 +751,7 @@ spec = describe "TDF.Server helpers" $ do
                     (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
                         `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
     describe "served authorization boundary (AUTH-PUBLIC-001)" $ do
-        it "denies staff ads assistance to anonymous and non-inbox callers and no longer serves legacy course Stripe routes" $
+        it "denies staff ads assistance and foreign academy writes, and no longer serves legacy course Stripe routes" $
             withNotificationFixture $ \env _ _ _ _ ->
                 testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
                     manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
@@ -777,6 +777,18 @@ spec = describe "TDF.Server helpers" $ do
                     checkoutSession <- post "/public/courses/beatmaking/registrations/1/checkout-session"
                         "{\"successUrl\":\"https://example.com/ok\",\"cancelUrl\":\"https://example.com/no\"}" False
                     status checkoutSession `shouldBe` 404
+                    let enrollBody email = BL8.pack ("{\"email\":\"" <> email <> "\",\"role\":\"artist\"}")
+                    anonymousEnroll <- post "/academy/enroll" (enrollBody "victim@example.com") False
+                    status anonymousEnroll `shouldBe` 401
+                    anonymousProgress <- post "/academy/progress"
+                        "{\"email\":\"victim@example.com\",\"slug\":\"intro\",\"day\":1}" False
+                    status anonymousProgress `shouldBe` 401
+                    anonymousReferral <- post "/referrals/claim"
+                        "{\"email\":\"victim@example.com\",\"code\":\"ABC123\"}" False
+                    status anonymousReferral `shouldBe` 401
+                    runSqlPool (rawExecute "UPDATE party SET primary_email='owner@example.com' WHERE id IN (SELECT party_id FROM api_token WHERE token='google-token')" []) (envPool env)
+                    foreignEnroll <- post "/academy/enroll" (enrollBody "victim@example.com") True
+                    status foreignEnroll `shouldBe` 403
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
