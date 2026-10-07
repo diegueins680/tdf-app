@@ -8926,7 +8926,7 @@
     {
       "id": "SURFACE-a23a18e5ad13967c",
       "path": "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
-      "sha256": "f78d0ec7366247d735944f8c540914b8e2490929a8ccd1d9ca12ca4b2a497c33",
+      "sha256": "502c2431f244468a68a3fa0f0ac0978649f7d32f4fa082b31cdac4b19987e690",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8950,7 +8950,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "28be890b79dce34aeb78dbb3880b6337548ada32e5d6cfa237f1207f3f7caf93",
+      "sha256": "77a7b89f0c96c97d739a9066e0f15ac245d6ad6376c8975d925a6af231c90b82",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -64,6 +64,23 @@ describe('RootLandingRedirect', () => {
     }
   });
 
+  it('does not trust an expired cached session before bootstrap verifies it', async () => {
+    sessionState.session = { username: 'expired@example.com' };
+    sessionState.loading = true;
+    const view = await renderRoot();
+    try {
+      expect(view.container.querySelector('[data-testid="location"]')).toBeNull();
+      expect(view.container.querySelector('[aria-busy="true"]')).not.toBeNull();
+      // The server rejects the cached session: the visitor is a guest.
+      sessionState.session = null;
+      sessionState.loading = false;
+      await view.render();
+      expect(view.container.querySelector('[data-testid="location"]')?.textContent).toBe('/inicio');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
   it('sends guests to the public start page once bootstrap finds no session', async () => {
     sessionState.session = null;
     sessionState.loading = false;

@@ -68,9 +68,10 @@ export function LegacySocialEventsRedirect() {
 /** Returning signed-in visitors open Comunidad; guests keep the public start page. */
 export function RootLandingRedirect() {
   const { session, loading } = useSession();
-  // A valid server cookie can exist without a cached session (cleared or
-  // blocked storage); wait for the bootstrap before choosing a destination.
-  if (loading && !session) return <RouteLoadingFallback />;
+  // The cached session is only a hint: a valid cookie can exist without it
+  // (cleared or blocked storage) and a cached user can be expired or revoked.
+  // Choose the destination only after the bounded /session bootstrap settles.
+  if (loading) return <RouteLoadingFallback />;
   return <Navigate to={session ? COMMUNITY_LANDING_PATH : '/inicio'} replace />;
 }
 
