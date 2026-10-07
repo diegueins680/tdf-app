@@ -7383,6 +7383,70 @@
         "classification": "PARTIAL",
         "reason": "Implemented and tested locally; Dátil pruebas authorization and production configuration are pending."
       }
+    },
+    {
+      "id": "DATA-CRM-001",
+      "statement": "The web CRM contact list must request contacts in explicit server pages (limit 500) until a short page is returned, so contacts beyond the server's default first page of 200 are not silently hidden. The backend remains authoritative for CRM module access and page bounds.",
+      "authority": "reconciled",
+      "source": "PR #504 (CRM contact paging); tdf-hq validatePartyListPagination bounds",
+      "property": "Listing continues until a page shorter than the requested limit",
+      "contract": "tdf-hq-ui/src/api/parties.ts",
+      "implementation": [
+        "tdf-hq-ui/src/api/parties.ts"
+      ],
+      "verification": "Client unit tests; no backend change",
+      "evidence": "Unit tests of multi-page and short-page termination",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact list loads every server page",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/api/parties.test.ts"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests pass; deployed web verification pending."
+      }
     }
   ]
 }

@@ -1515,9 +1515,18 @@ export default function LoginPage() {
             )}
             </Stack>
           </DialogContent>
+          {!termsAccepted && (
+            <Typography id="signup-consent-hint" variant="body2" color="text.secondary" sx={{ px: 3, textAlign: 'right' }}>
+              {t('authEntry.consentRequired')}
+            </Typography>
+          )}
           <DialogActions>
             <Button type="button" onClick={closeSignupDialog}>{t('authEntry.haveAccount')}</Button>
-            <Button type="submit" disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
+            <Button
+              type="submit"
+              disabled={signupMutation.isPending || servicePreparing || !termsAccepted}
+              aria-describedby={termsAccepted ? undefined : 'signup-consent-hint'}
+            >
               {signupMutation.isPending ? t('authEntry.creating') : servicePreparing ? t('authEntry.preparing') : t('authEntry.createEnter')}
             </Button>
           </DialogActions>
