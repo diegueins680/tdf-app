@@ -7367,10 +7367,25 @@
         "tdf-hq-ui/src/config/appConfig.ts",
         "tdf-hq-ui/public/sitemap.xml",
         "tdf-hq-ui/public/robots.txt",
-        "tdf-mobile/src/lib/eventSharing.ts"
+        "tdf-mobile/src/lib/eventSharing.ts",
+        "scripts/mobile-publishing-admin-audit.sh",
+        "scripts/upsert-course.mjs",
+        "screencast/meta-app-review/run.mjs",
+        "screencast/meta-app-review/review.env.example",
+        "tdf-hq-ui/public/account/privacy-es.html",
+        "tdf-hq-ui/public/account/privacy.html",
+        "tdf-hq-ui/public/account/terms-es.html",
+        "tdf-hq-ui/public/account/terms.html",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/src/features/featureRegistry.ts"
       ],
       "tests": [
-        "scripts/__tests__/event-preview.test.mjs"
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Node tests for redirect location, exclusions and preview canonical origin.",

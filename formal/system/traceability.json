@@ -7368,10 +7368,25 @@
         "tdf-hq-ui/src/config/appConfig.ts",
         "tdf-hq-ui/public/sitemap.xml",
         "tdf-hq-ui/public/robots.txt",
-        "tdf-mobile/src/lib/eventSharing.ts"
+        "tdf-mobile/src/lib/eventSharing.ts",
+        "scripts/mobile-publishing-admin-audit.sh",
+        "scripts/upsert-course.mjs",
+        "screencast/meta-app-review/run.mjs",
+        "screencast/meta-app-review/review.env.example",
+        "tdf-hq-ui/public/account/privacy-es.html",
+        "tdf-hq-ui/public/account/privacy.html",
+        "tdf-hq-ui/public/account/terms-es.html",
+        "tdf-hq-ui/public/account/terms.html",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/src/features/featureRegistry.ts"
       ],
       "tests": [
-        "scripts/__tests__/event-preview.test.mjs"
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Node tests for redirect location, exclusions and preview canonical origin.",
@@ -7513,6 +7528,8 @@
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "f3f77a10e1b8aa74e555d9db534dc2c35b404bded3732abefe1cfc21c83d98ac",
     "playwright.config.mjs": "6e67d8ef84dbf924afc14642654996f284363f4f18aa8cf712bc1ec052baef44",
+    "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
+    "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
@@ -7585,6 +7602,7 @@
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
+    "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
@@ -7653,6 +7671,10 @@
     "scripts/verify-system-evidence.mjs": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
+    "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
+    "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
+    "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
+    "tdf-hq-ui/public/account/terms.html": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
     "tdf-hq-ui/public/mobile-app/data-deletion.html": "93271be8eb80d03703b19a71d45625c876b758e7b08636b986c3f83b39425666",
     "tdf-hq-ui/public/mobile-app/index.html": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
@@ -7706,6 +7728,7 @@
     "tdf-hq-ui/src/config/appConfig.ts": "7a311c38299457b847c3419222e80323056de9a281664e945d9fc8542150bb7b",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
+    "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
@@ -7720,6 +7743,7 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "b4bff55ea470982276d1ba24e50b05d923b53cef0d0c45568bfe1271d6684d59",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
@@ -7944,9 +7968,12 @@
     "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
     "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
     "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
+    "tdf-mobile/app.config.ts": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
+    "tdf-mobile/app.json": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
     "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
+    "tdf-mobile/app/auth.tsx": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
@@ -7969,6 +7996,7 @@
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
     "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
+    "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "c8cf3bae3f3d364fec41f4cbc35ca5583fb34e0b872b7a417a63f96bda286cbd",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
@@ -8616,6 +8644,10 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
       }
     ],
@@ -12011,6 +12043,10 @@
       {
         "requirement": "OPS-CLIENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/scripts/create_artists_from_list.sh": [
@@ -12687,6 +12723,84 @@
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      }
+    ],
+    "scripts/mobile-publishing-admin-audit.sh": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "screencast/meta-app-review/run.mjs": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "screencast/meta-app-review/review.env.example": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/account/privacy-es.html": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/account/privacy.html": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/account/terms-es.html": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/account/terms.html": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app.config.ts": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app.json": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/auth.tsx": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/featureRegistry.ts": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": [
+      {
+        "requirement": "WEB-CANONICAL-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -15136,7 +15250,12 @@
       "path": "scripts/mobile-publishing-admin-audit.sh",
       "sha256": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0791e1b29e37b9cf",
@@ -17058,6 +17177,10 @@
         {
           "requirement": "OPS-CLIENT-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -17333,28 +17456,48 @@
       "path": "tdf-hq-ui/public/account/privacy-es.html",
       "sha256": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bf83998210f0bb9e",
       "path": "tdf-hq-ui/public/account/privacy.html",
       "sha256": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-eaa9b5372d91a318",
       "path": "tdf-hq-ui/public/account/terms-es.html",
       "sha256": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee14fa660066a784",
       "path": "tdf-hq-ui/public/account/terms.html",
       "sha256": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-3104f3d9aa895aea",
@@ -20051,7 +20194,12 @@
       "path": "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
       "sha256": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b335212ef0158e9e",
@@ -20647,7 +20795,12 @@
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
       "sha256": "b4bff55ea470982276d1ba24e50b05d923b53cef0d0c45568bfe1271d6684d59",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
@@ -23039,6 +23192,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "WEB-CANONICAL-001",
           "relationship": "implementation"
         }
       ]
@@ -30383,14 +30540,24 @@
       "path": "tdf-mobile/app.config.ts",
       "sha256": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-be1f54efcc2cd549",
       "path": "tdf-mobile/app.json",
       "sha256": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-58c233508e8c95bf",
@@ -30559,7 +30726,12 @@
       "path": "tdf-mobile/app/auth.tsx",
       "sha256": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9a1951f254de5d2b",
@@ -31730,7 +31902,12 @@
       "path": "tdf-mobile/src/features/featureRegistry.ts",
       "sha256": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-3cdceeb8afd26986",
@@ -32650,7 +32827,6 @@
     "SURFACE-f1db2c4adbf5dce0",
     "SURFACE-0aa382713c667a78",
     "SURFACE-8b09001cab518c05",
-    "SURFACE-8cdaeb57d09457bd",
     "SURFACE-0791e1b29e37b9cf",
     "SURFACE-f394573bbace766d",
     "SURFACE-cf4df00def876cc1",
@@ -32805,10 +32981,6 @@
     "SURFACE-4573385494ace809",
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-52eaee55a9a4d661",
-    "SURFACE-03e3d269984814cc",
-    "SURFACE-bf83998210f0bb9e",
-    "SURFACE-eaa9b5372d91a318",
-    "SURFACE-ee14fa660066a784",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
     "SURFACE-c13a12d2ea792bdf",
@@ -33099,7 +33271,6 @@
     "SURFACE-d7bacb6bb39fbb83",
     "SURFACE-6ebfd481fe3b0e51",
     "SURFACE-5969a542a219a1d4",
-    "SURFACE-15e822b2783165c0",
     "SURFACE-b335212ef0158e9e",
     "SURFACE-51294f78fb44c49b",
     "SURFACE-23c5b7dd2d415a8c",
@@ -33159,7 +33330,6 @@
     "SURFACE-cc160e8f39f921e2",
     "SURFACE-d380d4ada9543610",
     "SURFACE-86468d4e75140c87",
-    "SURFACE-fd4d2654b87334c2",
     "SURFACE-f12bf83921a15e4d",
     "SURFACE-ba081a4837547871",
     "SURFACE-b584e0770511a16a",
@@ -34099,8 +34269,6 @@
     "SURFACE-4ce4ed0b5b303e85",
     "SURFACE-f93a5b36f29ce79c",
     "SURFACE-bbc4187afb507320",
-    "SURFACE-c20fbacb648be9fa",
-    "SURFACE-be1f54efcc2cd549",
     "SURFACE-58c233508e8c95bf",
     "SURFACE-3bd8d92cee7ed241",
     "SURFACE-bba36fc1cc274031",
@@ -34119,7 +34287,6 @@
     "SURFACE-7e2df9aff623862f",
     "SURFACE-9ce6509ddd0f8106",
     "SURFACE-0107bafb8b438004",
-    "SURFACE-4a53be70534cf501",
     "SURFACE-9a1951f254de5d2b",
     "SURFACE-ec8ee7e5c6d5faf9",
     "SURFACE-1e3806b99ef0da67",
@@ -34248,7 +34415,6 @@
     "SURFACE-12818522512d2c5b",
     "SURFACE-f3000e7c8217ce74",
     "SURFACE-013a4a97d6ed52f9",
-    "SURFACE-cccb94b8666e62c2",
     "SURFACE-58dc9c7e3bda7226",
     "SURFACE-be2be2cfc49a8dc1",
     "SURFACE-c1ccdbcd91d58796",
@@ -35500,7 +35666,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3726d2b433f0501f3fdf95893a70c814ddb931224ba34e4e99910f005353a868",
+      "sourceSha256": "205b4e8b525caa5c2acfcd3e8bd0c2f8f19bd4d59ad5c7d1958cacb32d966f2e",
       "definition": {
         "states": [
           "absent",
