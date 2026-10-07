@@ -39,7 +39,8 @@ import {
 } from '../features/featureRegistry';
 import { positiveNotificationId } from '../components/notificationTarget';
 import { useSession } from '../session/SessionContext';
-import { canAccessPath } from '../utils/accessControl';
+import ArtistInvitationLinksPanel from '../components/ArtistInvitationLinksPanel';
+import { canAccessPath, hasStrictAdminAccess } from '../utils/accessControl';
 
 const supportedActions = new Set<FeatureAction>([
   'discover', 'view', 'create', 'edit', 'delete', 'archive', 'deactivate',
@@ -477,6 +478,8 @@ function ReviewCard({ request, onChanged, canReview = true }: { request: Feature
 
 export function AccessRequestReviewPage() {
   const { text } = useAccessCopy();
+  const { session } = useSession();
+  const canIssueArtistInvitations = hasStrictAdminAccess(session?.roles, session?.modules);
   const reviewQueryClient = useQueryClient();
   const [status, setStatus] = useState<FeatureAccessRequestStatus>('pending');
   const reviewQuery = useQuery({
@@ -515,6 +518,7 @@ export function AccessRequestReviewPage() {
           />
         ))}
       </Stack>
+      {canIssueArtistInvitations ? <ArtistInvitationLinksPanel /> : null}
     </Stack>
   );
 }

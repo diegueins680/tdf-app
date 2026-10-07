@@ -327,7 +327,7 @@ describe('LoginPage Google signup consent flow', () => {
     }
   }, 15_000);
 
-  it('redeems the allowlisted Instagram artist invitation before entering the artist profile', async () => {
+  it('redeems a personal artist invitation link before entering the artist profile', async () => {
     googleLoginRequestMock.mockResolvedValueOnce({
       token: 'invited-session-token',
       partyId: 405,
@@ -345,7 +345,7 @@ describe('LoginPage Google signup consent flow', () => {
       preferences: {},
     });
     const cleanup = await renderLoginPage(
-      '/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=invited_artist',
+      '/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&invite=3f2504e0-4f89-41d3-9a0c-0305e82c3301&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=invited_artist',
     );
 
     try {
@@ -381,7 +381,7 @@ describe('LoginPage Google signup consent flow', () => {
         onboardingIntent: 'artist_profile',
       });
       expect(redeemArtistInvitationMock).toHaveBeenCalledWith(
-        'tu_escena_conectada_piloto',
+        '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
         'invited-session-token',
       );
       expect(loginMock).toHaveBeenCalledWith(

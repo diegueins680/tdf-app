@@ -7233,6 +7233,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/artist-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List personal artist invitation links
+         * @description Admin only. Returns the 200 most recent links with their status. Link tokens are never returned after issuance.
+         */
+        get: operations["listArtistInvitationLinks"];
+        put?: never;
+        /**
+         * Issue a personal single-use artist invitation link
+         * @description Admin only. Stores only a SHA-256 digest of a new random token and returns the token once. The link expires after 30 days by default (at most 90).
+         */
+        post: operations["createArtistInvitationLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artist-invitations/{invitationId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke an unused artist invitation link
+         * @description Admin only. Idempotent for unused links; a redeemed link cannot be revoked.
+         */
+        post: operations["revokeArtistInvitationLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/access-requests": {
         parameters: {
             query?: never;
@@ -8785,8 +8829,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Redeem a recognized artist invitation
-         * @description Idempotently activates only the non-administrative Artist role through a persisted automatic security policy. The invitation must be an explicitly allowlisted campaign value; ordinary artist onboarding continues through reviewed access requests.
+         * Redeem a personal artist invitation link
+         * @description Activates only the non-administrative Artist role through a persisted automatic security policy. The invitation is a staff-issued, single-use link token; the link binds atomically to the first account that redeems it, re-redemption by that account is idempotent, and public campaign names are never accepted.
          */
         post: operations["redeemArtistInvitation"];
         delete?: never;
@@ -15090,10 +15134,45 @@ export interface components {
         };
         ArtistInvitationRedeemRequest: {
             /**
-             * @description Explicit allowlisted campaign invitation. It is accepted only by the authenticated redemption endpoint and grants no administrative role.
-             * @enum {string}
+             * Format: uuid
+             * @description Personal, staff-issued single-use invitation link token. It grants no administrative role.
              */
-            artistInvitation: "tu_escena_conectada_piloto";
+            artistInvitation: string;
+        };
+        ArtistInvitationLinkCreate: {
+            /** @description Name of the invited artist or band, for staff tracking. */
+            inviteeLabel: string;
+            /** @description Campaign attribution; defaults to tu_escena_conectada_piloto. */
+            campaign?: string;
+            /** @description Defaults to 30. */
+            expiresInDays?: number;
+        };
+        ArtistInvitationLink: {
+            /** Format: int64 */
+            id: number;
+            inviteeLabel: string;
+            campaign: string;
+            /** @enum {string} */
+            status: "active" | "redeemed" | "expired" | "revoked";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            redeemedAt: string | null;
+            /** Format: int64 */
+            redeemedByPartyId: number | null;
+            redeemedByName: string | null;
+            /** Format: date-time */
+            revokedAt: string | null;
+        };
+        ArtistInvitationLinkIssued: {
+            invitation: components["schemas"]["ArtistInvitationLink"];
+            /**
+             * Format: uuid
+             * @description Returned only at issuance; only its SHA-256 digest is stored.
+             */
+            token: string;
         };
         SocialV2Me: {
             discoverable: boolean;
@@ -33343,6 +33422,135 @@ export interface operations {
             };
         };
     };
+    listArtistInvitationLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation links, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistInvitationLink"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin module required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createArtistInvitationLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistInvitationLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Issued link and its one-time token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistInvitationLinkIssued"];
+                };
+            };
+            /** @description Invalid invitee label */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin module required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revokeArtistInvitationLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The revoked link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistInvitationLink"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin module required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invitation link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A redeemed invitation link cannot be revoked */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listMyFeatureAccessRequests: {
         parameters: {
             query?: never;
@@ -36200,7 +36408,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionResponse"];
                 };
             };
-            /** @description Invitation campaign is not recognized */
+            /** @description Invitation is not a personal invitation link token */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -36209,6 +36417,13 @@ export interface operations {
             };
             /** @description Authentication required */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invitation link is invalid, expired, revoked or already used by another account */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

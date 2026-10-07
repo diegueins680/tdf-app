@@ -14,9 +14,8 @@ import {
 const LOGIN_ROUTE = '/login';
 const URL_BASE = 'https://tdf.local';
 const PUBLIC_EVENT_RETURN_ROUTE = /^\/eventos\/[1-9]\d{0,18}$/;
-const ARTIST_INVITATION_CAMPAIGNS = new Set([
-  'tu_escena_conectada_piloto',
-]);
+const ARTIST_INVITATION_TOKEN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 
 export type OnboardingIntent =
   | 'events'
@@ -67,14 +66,21 @@ export function readOnboardingIntent(search: string): OnboardingIntent | null {
     ?? normalizeOnboardingIntent(params.get('roles'));
 }
 
+// A personal, staff-issued single-use token. Campaign names are public and
+// never act as an invitation.
 export function readArtistInvitation(search: string): string | null {
-  const params = new URLSearchParams(search);
-  if (readOnboardingIntent(search) !== 'artist_profile') return null;
-  if (params.get('utm_source')?.trim().toLowerCase() !== 'instagram') return null;
-  if (params.get('utm_medium')?.trim().toLowerCase() !== 'dm') return null;
+  const token = new URLSearchParams(search).get('invite')?.trim().toLowerCase() ?? '';
+  return ARTIST_INVITATION_TOKEN.test(token) && token !== NIL_UUID ? token : null;
+}
 
-  const campaign = params.get('utm_campaign')?.trim().toLowerCase() ?? '';
-  return ARTIST_INVITATION_CAMPAIGNS.has(campaign) ? campaign : null;
+export function buildArtistInvitationLink(origin: string, token: string, campaign: string): string {
+  const url = new URL(LOGIN_ROUTE, origin);
+  url.searchParams.set('intent', 'artist');
+  url.searchParams.set('invite', token);
+  url.searchParams.set('utm_source', 'instagram');
+  url.searchParams.set('utm_medium', 'dm');
+  url.searchParams.set('utm_campaign', campaign);
+  return url.toString();
 }
 
 const accessRequestPath = (feature: string, action: string) =>

@@ -7953,49 +7953,67 @@
       "formalModels": [],
       "status": "specified and implemented",
       "id": "AUTH-ARTIST-INVITE-001",
-      "title": "Campaign artist invitation grants the Artist role by automatic policy",
+      "title": "Personal single-use artist invitation links grant the Artist role by automatic policy",
       "domain": "AUTH",
       "critical": true,
-      "statement": "A signed-in user who arrives with intent artist_profile, utm_source=instagram, utm_medium=dm and a recognized campaign (currently tu_escena_conectada_piloto) may redeem the invitation. The backend validates the campaign value and applies the artist.invitation.artist automatic assignment policy (trigger artist-invitation-redeemed) to grant only the non-administrative Artist role, records the onboarding intent and returns a refreshed session.",
-      "authority": "Unreviewed recovered local implementation for the Tu Escena Conectada campaign (2026-09-14)",
-      "source": "Recovered local work; tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
+      "statement": "An admin issues a personal invitation link for one named artist. The link carries a random token whose SHA-256 digest alone is stored; it expires after 30 days by default (at most 90) and can be revoked while unused. A signed-in user who opens the link redeems it: the backend atomically binds the link to the first redeeming account and applies the artist.invitation.artist automatic assignment policy (trigger artist-invitation-redeemed) to grant only the non-administrative Artist role, records the onboarding intent and returns a refreshed session. Public campaign names are never accepted as invitations.",
+      "authority": "User decision 2026-10-07: replace the public campaign-string invitation with personal one-time links (Tu Escena Conectada campaign).",
+      "source": "PR #510; tdf-hq/sql/2026-10-07_artist_invitation_links.sql; tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
       "contract": "tdf-hq/src/TDF/ServerAuth.hs",
-      "property": "Redemption can only grant the active, automatic, non-emergency Artist role via a valid policy row.",
+      "property": "A link grants at most one account, only before expiry and revocation, and only the active, automatic, non-emergency Artist role via a valid policy row.",
       "actors": [
+        "Admin staff",
         "Invited artist",
         "Automatic security policy"
       ],
       "preconditions": [
         "Authenticated session",
-        "Policy artist.invitation.artist active"
+        "Policy artist.invitation.artist active",
+        "Admin module for issuance and revocation"
       ],
       "inputs": [
+        "POST /artist-invitations {inviteeLabel, campaign?, expiresInDays?}",
+        "GET /artist-invitations",
+        "POST /artist-invitations/{id}/revoke",
         "POST /session/artist-invitation {artistInvitation}"
       ],
       "state": {
+        "link": [
+          "active",
+          "redeemed",
+          "expired",
+          "revoked"
+        ],
         "grant": [
           "absent",
           "granted by system-policy"
         ]
       },
       "allowedTransitions": [
+        "active -> redeemed (first redeeming account)",
+        "active -> revoked (admin)",
+        "active -> expired (time)",
         "No Artist role -> Artist role via system-policy grant"
       ],
       "forbiddenTransitions": [
-        "Unknown campaign value -> any grant",
+        "Public campaign value -> any grant",
+        "redeemed link -> grant to a different account",
+        "revoked or expired link -> any grant",
+        "redeemed -> revoked",
         "Invitation -> administrative or emergency role"
       ],
       "effects": [
         "Artist role grant with policy provenance",
+        "Link bound to the redeeming party",
         "Stored onboarding intent artist_profile"
       ],
-      "authorization": "Requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
-      "privacy": "No new personal data beyond the onboarding intent.",
-      "concurrency": "Policy application is idempotent per correlation key artist-invitation:<campaign>:<party>.",
-      "idempotency": "Repeated redemption reuses the same correlation and grant.",
-      "failure": "Policy errors return 503 without partial grants.",
-      "recovery": "Deactivate the policy row to stop new grants; rollback SQL removes the trigger code.",
-      "observability": "Security audit events from policy application.",
+      "authorization": "Issuance, listing and revocation require the Admin module; redemption requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
+      "privacy": "Stores the invitee label typed by staff and the redeeming party; never stores the raw token.",
+      "concurrency": "Redemption claims the link with a single conditional UPDATE; concurrent redemptions by different accounts cannot both succeed.",
+      "idempotency": "Re-redemption by the bound account is idempotent; revocation of an unused link is idempotent.",
+      "failure": "Invalid, expired, revoked or foreign-bound links return 404; policy or session errors return 503 and roll back the claim.",
+      "recovery": "Revoke unused links; deactivate the policy row to stop all grants; the links rollback refuses to drop redemption evidence.",
+      "observability": "Security audit events from policy application with correlation artist-invitation:<link id>:<party>; link rows record issuer and redeemer.",
       "implementation": [
         "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
         "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval_rollback.sql",
@@ -8004,25 +8022,37 @@
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/utils/loginRouting.ts"
+        "tdf-hq-ui/src/utils/loginRouting.ts",
+        "tdf-hq/sql/2026-10-07_artist_invitation_links.sql",
+        "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq-ui/src/api/artistInvitations.ts",
+        "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
         "tdf-hq-ui/src/api/session.test.ts",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
-        "scripts/test-artist-invitation-auto-approval-migration.sh"
+        "scripts/test-artist-invitation-auto-approval-migration.sh",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
       ],
-      "verification": "Security catalog spec, client unit tests, migration test script",
+      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement",
       "evidence": "Local execution only",
-      "confidence": "Medium for policy enforcement; low for the invitation being a meaningful secret.",
+      "confidence": "Medium: claim SQL and validation exercised locally; end-to-end redemption not yet run against a deployed backend.",
       "ambiguity": [
-        "The invitation value is a public campaign string in URLs, so any signed-in user who knows it can self-grant Artist; whether that is acceptable needs an explicit decision.",
-        "The 2026-09-14 migration redefines security_validate_assignment_policy without artist-self-service-activated (added by 2026-09-16_artist_self_service.sql); applying it after that migration would drop the self-service trigger code.",
-        "tdf-hq/src/TDF/Profiles/Artist.hs change is only an unused import removal."
+        "tdf-hq/src/TDF/Profiles/Artist.hs change is only an unused import removal.",
+        "artist.self-service.artist (on main since 2026-09-16) already lets any signed-in user activate Artist without approval; invitation links add attribution, not a stronger boundary."
       ],
       "conformance": {
-        "classification": "SPECIFICATION AMBIGUITY",
-        "reason": "Grant boundary implemented, but campaign-string authority and migration ordering are unresolved."
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit and local SQL evidence; not deployed and no end-to-end redemption evidence."
       }
     },
     {

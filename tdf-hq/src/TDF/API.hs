@@ -573,6 +573,11 @@ type AccessRequestsAPI =
          :> ReqBody '[JSON] FeatureAccessRequestCancel
          :> Patch '[JSON] FeatureAccessRequestDTO
 
+type ArtistInvitationsAPI =
+       Get '[JSON] [ArtistInvitationLinkDTO]
+  :<|> ReqBody '[JSON] ArtistInvitationLinkCreate :> Post '[JSON] ArtistInvitationLinkIssued
+  :<|> Capture "invitationId" Int64 :> "revoke" :> Post '[JSON] ArtistInvitationLinkDTO
+
 type NavigationPreferencesAPI =
        Get '[JSON] [NavigationPreferenceDTO]
   :<|> Capture "featureId" Text
@@ -638,6 +643,7 @@ type ProtectedAPI =
   :<|> "catalog" :> CatalogAPI
   :<|> ServiceStorefrontAdminAPI
   :<|> "access-requests" :> AccessRequestsAPI
+  :<|> "artist-invitations" :> ArtistInvitationsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
   :<|> MerchProtectedAPI

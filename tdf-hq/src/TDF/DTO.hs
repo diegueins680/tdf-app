@@ -1102,6 +1102,41 @@ data ArtistInvitationRedeemRequest = ArtistInvitationRedeemRequest
 instance FromJSON ArtistInvitationRedeemRequest where
   parseJSON = genericParseJSON strictDecodeOptions
 
+-- Staff-issued, single-use artist invitation links. The bearer token is
+-- returned only once, at issuance; listings never include it.
+data ArtistInvitationLinkCreate = ArtistInvitationLinkCreate
+  { ailcInviteeLabel :: Text
+  , ailcCampaign :: Maybe Text
+  , ailcExpiresInDays :: Maybe Int
+  } deriving (Show, Generic)
+
+instance FromJSON ArtistInvitationLinkCreate where
+  parseJSON = genericParseJSON strictDecodeOptions { fieldLabelModifier = dtoCamelDrop 4 }
+
+data ArtistInvitationLinkDTO = ArtistInvitationLinkDTO
+  { ailId :: Int64
+  , ailInviteeLabel :: Text
+  , ailCampaign :: Text
+  , ailStatus :: Text
+  , ailCreatedAt :: UTCTime
+  , ailExpiresAt :: UTCTime
+  , ailRedeemedAt :: Maybe UTCTime
+  , ailRedeemedByPartyId :: Maybe Int64
+  , ailRedeemedByName :: Maybe Text
+  , ailRevokedAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON ArtistInvitationLinkDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
+data ArtistInvitationLinkIssued = ArtistInvitationLinkIssued
+  { ailiInvitation :: ArtistInvitationLinkDTO
+  , ailiToken :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ArtistInvitationLinkIssued where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 4 }
+
 data OnboardingIntentUpdate = OnboardingIntentUpdate
   { onboardingIntent :: Text
   } deriving (Show, Generic)

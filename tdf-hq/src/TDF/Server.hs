@@ -3507,6 +3507,7 @@ protectedServer user =
   :<|> CatalogServer.catalogServer user
   :<|> serviceStorefrontAdminServer user
   :<|> accessRequestsServer user
+  :<|> AuthServer.artistInvitationsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
   :<|> MerchServer.merchProtectedServer user

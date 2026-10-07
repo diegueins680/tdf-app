@@ -24,7 +24,7 @@ import TDF.Auth
   , resolveUsernameFromLabel
   , validateModuleAccess
   )
-import TDF.DTO (LoginRequest (..), SignupRequest)
+import TDF.DTO (ArtistInvitationLinkCreate (..), LoginRequest (..), SignupRequest)
 import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
@@ -52,6 +52,9 @@ import TDF.ServerAuth
   , validateOnboardingFirstValue
   , validateOnboardingIntent
   , validateArtistInvitation
+  , artistInvitationTokenHash
+  , validateArtistInvitationLinkCreate
+  , artistInvitationStatus
   , isOnboardingEligible
   )
 
@@ -504,16 +507,49 @@ signupArtistClaimAuthoritySpec = describe "password signup artist authority" $ d
       Right _ -> expectationFailure "Invalid artist identity accepted") [0, -1]
 
 artistInvitationSpec :: Spec
-artistInvitationSpec = describe "validateArtistInvitation" $ do
-  it "accepts only the explicit Tu Escena campaign invitation" $ do
-    validateArtistInvitation " Tu_Escena_Conectada_Piloto "
-      `shouldBe` Right "tu_escena_conectada_piloto"
-    case validateArtistInvitation "unknown_campaign" of
-      Left err -> do
-        errHTTPCode err `shouldBe` 400
-        BL8.unpack (errBody err) `shouldContain` "artistInvitation is unsupported"
-      Right value ->
-        expectationFailure ("Expected an unknown artist invitation to fail, got " <> show value)
+artistInvitationSpec = describe "artist invitation links" $ do
+  let rejectsInvitation raw = case validateArtistInvitation raw of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "personal invitation link token"
+        Right value ->
+          expectationFailure ("Expected invitation " <> show raw <> " to fail, got " <> show value)
+  it "rejects public campaign names, which anyone can read from a shared URL" $ do
+    rejectsInvitation "tu_escena_conectada_piloto"
+    rejectsInvitation " Tu_Escena_Conectada_Piloto "
+  it "rejects empty, malformed and nil tokens" $ do
+    rejectsInvitation ""
+    rejectsInvitation "not-a-token"
+    rejectsInvitation "00000000-0000-0000-0000-000000000000"
+  it "accepts a personal link token and canonicalizes it" $
+    validateArtistInvitation " 3F2504E0-4F89-41D3-9A0C-0305E82C3301 "
+      `shouldBe` Right "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+  it "stores only a SHA-256 digest of the token" $
+    artistInvitationTokenHash "abc"
+      `shouldBe` "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+  it "validates staff link requests with defaults and bounds" $ do
+    validateArtistInvitationLinkCreate (ArtistInvitationLinkCreate " Banda Sur " Nothing Nothing)
+      `shouldBe'` Right ("Banda Sur", "tu_escena_conectada_piloto", 30)
+    validateArtistInvitationLinkCreate (ArtistInvitationLinkCreate "Banda" (Just " Otra_Campana_2 ") (Just 90))
+      `shouldBe'` Right ("Banda", "otra_campana_2", 90)
+    mapM_ (\payload -> validateArtistInvitationLinkCreate payload `shouldSatisfy` isLeft)
+      [ ArtistInvitationLinkCreate "   " Nothing Nothing
+      , ArtistInvitationLinkCreate (T.replicate 121 "a") Nothing Nothing
+      , ArtistInvitationLinkCreate "Banda\nSur" Nothing Nothing
+      , ArtistInvitationLinkCreate "Banda" (Just "otra campana") Nothing
+      , ArtistInvitationLinkCreate "Banda" Nothing (Just 0)
+      , ArtistInvitationLinkCreate "Banda" Nothing (Just 91)
+      ]
+  it "reports redeemed, revoked, expired and active links" $ do
+    let now = UTCTime (fromGregorian 2026 10 7) 0
+        later = addUTCTime 3600 now
+        earlier = addUTCTime (-3600) now
+    artistInvitationStatus now later (Just earlier) Nothing `shouldBe` "redeemed"
+    artistInvitationStatus now later Nothing (Just earlier) `shouldBe` "revoked"
+    artistInvitationStatus now earlier Nothing Nothing `shouldBe` "expired"
+    artistInvitationStatus now later Nothing Nothing `shouldBe` "active"
+  where
+    shouldBe' actual expected = either (Left . errHTTPCode) Right actual `shouldBe` either (Left . errHTTPCode) Right expected
 
 onboardingProgressSpec :: Spec
 onboardingProgressSpec = describe "account-bound onboarding progress" $ do
