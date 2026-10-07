@@ -955,6 +955,11 @@
       "id": "2026-10-06_ticket_tax_credit_notes",
       "path": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
       "introducedBy": "4ef3cb7bc9653071f973e7b2af4cb272c75685c6"
+    },
+    {
+      "id": "2026-10-07_whatsapp_consent_confirmation",
+      "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
+      "introducedBy": "f8807c07ddbfacda5cae1c268a05cd8666f56406"
     }
   ]
 }
