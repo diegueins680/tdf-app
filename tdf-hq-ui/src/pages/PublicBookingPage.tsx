@@ -100,6 +100,34 @@ const QUICK_SLOT_STEP_MINUTES = 30;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
+// Page column: the booking card and the service reviews stack vertically so a
+// sibling can never squeeze the card into a ~120px column on phones.
+const BOOKING_LAYOUT_SX = {
+  minHeight: '80vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 3,
+  py: 4,
+  width: '100%',
+  minWidth: 0,
+} as const;
+const BOOKING_COLUMN_SX = { width: '100%', maxWidth: 880, minWidth: 0 } as const;
+// Informational chip rows: let long labels wrap by words instead of being
+// clipped (MUI chips are single-line) or broken letter by letter.
+const WRAPPING_CHIP_ROW_SX = {
+  minWidth: 0,
+  alignItems: { xs: 'flex-start', sm: 'center' },
+  '& .MuiChip-root': { maxWidth: '100%', height: 'auto', minHeight: 24 },
+  '& .MuiChip-label': {
+    whiteSpace: 'normal',
+    overflowWrap: 'break-word',
+    wordBreak: 'normal',
+    py: 0.25,
+  },
+} as const;
+
 const formatMinorAmount = (currency: string, amountMinor: number): string =>
   `${currency} ${(amountMinor / 100).toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -1403,11 +1431,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const manualPayment = checkoutSuccess?.manualPayment;
 
     return (
-      <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+      <Box data-testid="public-booking-layout" sx={BOOKING_LAYOUT_SX}>
         <Card
           sx={{
-            maxWidth: 880,
-            width: '100%',
+            ...BOOKING_COLUMN_SX,
             borderRadius: 3,
             boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -1467,7 +1494,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                         Resumen
                       </Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
                         <Chip label={`Fecha: ${successStartLabel}`} size="small" />
                         <Chip label={`Duración: ${successDuration} min`} size="small" />
                         <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
@@ -1739,11 +1766,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   }
 
   return (
-    <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+    <Box data-testid="public-booking-layout" sx={BOOKING_LAYOUT_SX}>
       <Card
+        data-testid="public-booking-card"
         sx={{
-          maxWidth: 880,
-          width: '100%',
+          ...BOOKING_COLUMN_SX,
           borderRadius: 3,
           boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -1785,7 +1812,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   {bookingReadinessNote}
                 </Alert>
               )}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
                 {introChips.map((label) => (
                   <Chip key={label} label={label} size="small" variant="outlined" />
                 ))}
@@ -1807,13 +1834,13 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     useFlexGap
                     flexWrap="wrap"
                   >
-                    <Stack spacing={0.3}>
+                    <Stack spacing={0.3} sx={{ minWidth: 0, flex: { sm: '1 1 240px' } }}>
                       <Typography variant="subtitle2">¿Ya tienes cuenta?</Typography>
                       <Typography variant="body2" color="text.secondary">
                         Inicia sesión para completar tus datos guardados. Si no tienes cuenta, puedes crearla de forma opcional.
                       </Typography>
                     </Stack>
-                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ ...WRAPPING_CHIP_ROW_SX, maxWidth: '100%' }}>
                       <Button size="small" variant="outlined" component={RouterLink} to={loginPath}>
                         Iniciar sesión
                       </Button>
@@ -1873,7 +1900,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   <Stack spacing={2.5}>
                     {isMobile ? (
                       <Stack spacing={1}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
                           <Typography variant="body2" color="text.secondary">
                             Paso {activeStep + 1} de {BOOKING_STEPS.length}
                           </Typography>
@@ -2339,7 +2366,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                   <Typography variant="subtitle2" color="text.secondary">
                                     Resumen rápido
                                   </Typography>
-                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
                                     <Chip label={form.serviceType || 'Servicio'} size="small" color="primary" variant="outlined" />
                                     {form.resourceLabels.length > 0 && (
                                       <Chip
@@ -2466,7 +2493,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         </CardContent>
       </Card>
       {form.serviceOfferingId && (
-        <Box sx={{ mt: 3 }}>
+        <Box data-testid="public-booking-reviews" sx={BOOKING_COLUMN_SX}>
           <ExperienceReviews
             targetKind="service_offering"
             targetId={form.serviceOfferingId}

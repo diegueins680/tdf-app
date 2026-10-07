@@ -20,7 +20,9 @@ import {
   Switch,
   FormControlLabel,
   MenuItem,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -168,6 +170,9 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
   );
 }
 
+/** CSS custom property carrying the docked radio bar's height (px) while it is shown. */
+const RADIO_BAR_HEIGHT_VAR = '--tdf-radio-bar-height';
+
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -184,6 +189,11 @@ export default function RadioWidget() {
   });
   const dragMovedRef = useRef(false);
   const miniContainerRef = useRef<HTMLDivElement | null>(null);
+  const dockedBarRef = useRef<HTMLDivElement | null>(null);
+  const muiTheme = useTheme();
+  // Phones (~360px) cannot fit six 44px controls plus the status text, so the
+  // docked bar drops prev/next there; both remain in the expanded panel.
+  const compactMiniBar = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountryId, setNewStationCountryId] = useState('');
@@ -1821,17 +1831,51 @@ export default function RadioWidget() {
   );
 
   const shouldInlineMiniBar = false; // always docked at bottom, even on login
+  const dockedBarVisible = !hideRadioForRoute && !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
+
+  useEffect(() => {
+    if (!dockedBarVisible || typeof document === 'undefined') return undefined;
+    const node = dockedBarRef.current;
+    if (!node) return undefined;
+    const root = document.documentElement;
+    const body = document.body;
+    const previousBodyPadding = body.style.paddingBottom;
+    const publish = () => {
+      const height = Math.ceil(node.getBoundingClientRect().height);
+      root.style.setProperty(RADIO_BAR_HEIGHT_VAR, `${height}px`);
+    };
+    publish();
+    // Reserve the docked bar's height at the bottom of the document so the last
+    // form fields and submit buttons can scroll above it instead of under it.
+    body.style.paddingBottom = `var(${RADIO_BAR_HEIGHT_VAR}, 0px)`;
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
+    observer?.observe(node);
+    window.addEventListener('resize', publish);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', publish);
+      root.style.removeProperty(RADIO_BAR_HEIGHT_VAR);
+      body.style.paddingBottom = previousBodyPadding;
+    };
+  }, [dockedBarVisible]);
+
   const miniBarNode = (
     <Box
+      ref={dockedBarRef}
+      data-testid="radio-docked-bar"
       sx={{
         position: shouldInlineMiniBar ? 'relative' : 'fixed',
         left: 0,
         right: 0,
         bottom: shouldInlineMiniBar ? 'auto' : 0,
+        // appBar (1100) stays below MUI modals (1300), so enrollment and
+        // other dialogs always render above the docked bar.
         zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.appBar,
         display: 'flex',
         justifyContent: 'center',
         px: 0,
+        maxWidth: '100vw',
+        boxSizing: 'border-box',
         pb: shouldInlineMiniBar ? 0 : 'env(safe-area-inset-bottom, 0px)',
         pointerEvents: shouldInlineMiniBar ? 'auto' : 'none',
         outline: 'none',
@@ -1849,10 +1893,12 @@ export default function RadioWidget() {
           py: shouldInlineMiniBar ? 1 : { xs: 0.75, sm: 1 },
           display: 'flex',
           alignItems: 'center',
-          gap: shouldInlineMiniBar ? 1 : 1.25,
+          gap: shouldInlineMiniBar ? 1 : { xs: 0.5, sm: 1.25 },
+          boxSizing: 'border-box',
+          minWidth: 0,
+          overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
-          minWidth: shouldInlineMiniBar ? '100%' : undefined,
           width: '100%',
           maxWidth: shouldInlineMiniBar ? 520 : '100%',
           mx: 0,
@@ -1871,32 +1917,36 @@ export default function RadioWidget() {
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title="Saltar al anterior">
-          <span>
-            <IconButton
-              sx={{ minWidth: 44, minHeight: 44 }}
-              onClick={jumpToPreviousStation}
-              data-no-drag
-              aria-label="Saltar a la estación anterior"
-              disabled={!canSkipStations}
-            >
-              <SkipPreviousIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title="Saltar al siguiente">
-          <span>
-            <IconButton
-              sx={{ minWidth: 44, minHeight: 44 }}
-              onClick={jumpToNextStation}
-              data-no-drag
-              aria-label="Saltar a la siguiente estación"
-              disabled={!canSkipStations}
-            >
-              <SkipNextIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
+        {!compactMiniBar && (
+          <>
+            <Tooltip title="Saltar al anterior">
+              <span>
+                <IconButton
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                  onClick={jumpToPreviousStation}
+                  data-no-drag
+                  aria-label="Saltar a la estación anterior"
+                  disabled={!canSkipStations}
+                >
+                  <SkipPreviousIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Saltar al siguiente">
+              <span>
+                <IconButton
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                  onClick={jumpToNextStation}
+                  data-no-drag
+                  aria-label="Saltar a la siguiente estación"
+                  disabled={!canSkipStations}
+                >
+                  <SkipNextIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </>
+        )}
         <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
           <IconButton
             sx={{ minWidth: 44, minHeight: 44 }}
@@ -1933,11 +1983,14 @@ export default function RadioWidget() {
             <OpenInFullIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Box sx={{ minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : 220 }}>
-          <Typography variant="caption" fontWeight={700} noWrap>
+        <Box
+          data-testid="radio-docked-status"
+          sx={{ flex: '1 1 auto', minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : { xs: 'none', sm: 220 } }}
+        >
+          <Typography variant="caption" fontWeight={700} noWrap component="p" sx={{ display: 'block' }}>
             {nowPlayingStatus}: {nowPlayingLabel}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" color="text.secondary" noWrap component="p" sx={{ display: 'block' }}>
             {nowPlayingSubtitle}
           </Typography>
         </Box>
