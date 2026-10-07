@@ -9,7 +9,6 @@ module TDF.Handlers.InputList
   , listInventoryDB
   , seedInventoryDB
   , seedHQDB
-  , fetchSessionInputRowsByIndex
   , fetchSessionInputRowsByKey
   , renderInputListLatex
   , renderInputListLatexWithAssets
@@ -113,17 +112,6 @@ seedInventoryDB = seedInventoryAssets
 
 seedHQDB :: UTCTime -> SqlPersistT IO ()
 seedHQDB = seedHolgerSession
-
-fetchSessionInputRowsByIndex
-  :: Int
-  -> SqlPersistT IO (Maybe (Entity ME.Session, [Entity InputListEntry]))
-fetchSessionInputRowsByIndex idx = do
-  sessions <- selectList [] [Asc ME.SessionStartAt]
-  case drop (max 0 (idx - 1)) sessions of
-    (sessionEnt:_) -> do
-      rows <- loadLatestInputRows (entityKey sessionEnt)
-      pure (Just (sessionEnt, rows))
-    [] -> pure Nothing
 
 fetchSessionInputRowsByKey
   :: ME.SessionId

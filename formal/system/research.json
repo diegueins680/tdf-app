@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -615,6 +615,36 @@
       "decision": "adopted",
       "rationale": "Compare exact trusted system identifier and shut-down state; this complements copied bytes and does not establish source writer fencing.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-AUTH-PUBLIC-001",
+      "source": "https://api-security.owasp.org/editions/2023/en/0xa1-broken-object-level-authorization",
+      "title": "OWASP API1:2023 Broken Object Level Authorization",
+      "recommendation": "Check that the caller may act on the record in every function that uses a client-supplied identifier; prefer random, unpredictable record identifiers.",
+      "applicability": "Unauthenticated routes acting on existing records by path identifier",
+      "decision": "adopted",
+      "rationale": "The public-route register admits path identifiers only as random UUIDv4 capabilities and requires lookup secrets for sequential IDs. The retired course Stripe routes acted on sequential registration IDs without either.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-AUTH-PUBLIC-002",
+      "source": "https://api-security.owasp.org/editions/2023/en/0xa5-broken-function-level-authorization",
+      "title": "OWASP API5:2023 Broken Function Level Authorization",
+      "recommendation": "Deny access by default and require explicit role grants for every function, especially administrative ones.",
+      "applicability": "Staff functions mounted in the public API",
+      "decision": "adopted",
+      "rationale": "Every route outside AuthProtect must be explicitly registered; staff ads assistance moved behind authentication and the Social Inbox role predicate.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-AUTH-PUBLIC-003",
+      "source": "https://docs.stripe.com/payments/accept-a-payment.md?payment-ui=mobile&platform=react-native",
+      "title": "Stripe mobile Payment Sheet customer credentials",
+      "recommendation": "Customer information is sensitive and cannot be retrieved directly from an app; the server issues a short-lived customer-scoped credential that grants the SDK temporary access to that Customer.",
+      "applicability": "Issuing a party-bound ephemeral key from an unauthenticated route",
+      "decision": "adopted",
+      "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
+      "verifiedAt": "2026-10-06"
     }
   ]
 }

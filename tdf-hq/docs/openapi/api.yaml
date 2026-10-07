@@ -11322,6 +11322,9 @@ components:
           format: date-time
           nullable: true
           description: When set, new checkouts may still choose staff-verified bank transfer until this instant. Null when the policy did not opt in, the window closed, or the rail is not configured.
+        taxInvoiceIssued:
+          type: boolean
+          description: Every paid order receives an SRI electronic invoice; checkout collects buyer identification when required.
     PublicEventTicketStorefront:
       type: object
       additionalProperties: false
@@ -11335,6 +11338,10 @@ components:
         timezone: { type: string, nullable: true }
         venueName: { type: string, nullable: true }
         venueAddress: { type: string, nullable: true }
+        imageUrl:
+          type: string
+          nullable: true
+          description: Public event artwork (flyer) shown on the ticket checkout.
         tiers:
           type: array
           items: { $ref: '#/components/schemas/PublicEventTicketTier' }
@@ -11356,6 +11363,12 @@ components:
         buyerPhone: { type: string, minLength: 1, maxLength: 24 }
         promoCode: { type: string, minLength: 1, maxLength: 50, pattern: '^[A-Za-z0-9-]+$' }
         termsAccepted: { type: boolean, enum: [true] }
+        billingIdType:
+          type: string
+          enum: [consumidor_final, cedula, ruc, pasaporte]
+          description: Used only when the policy issues electronic invoices. Consumidor final is accepted up to USD 50; above that an identification is required.
+        billingIdNumber: { type: string, minLength: 3, maxLength: 20, pattern: '^[A-Za-z0-9]+$' }
+        billingName: { type: string, minLength: 2, maxLength: 300 }
     PublicEventTicketQuote:
       type: object
       additionalProperties: false

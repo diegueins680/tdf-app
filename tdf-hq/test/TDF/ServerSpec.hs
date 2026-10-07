@@ -100,8 +100,7 @@ import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (ArtistDTO (..), EventMomentReactionDTO (..))
 import TDF.Handlers.InputList
-    ( AssetField (..)
-    , renderInputListLatex
+    ( renderInputListLatex
     , renderInputListLatexWithAssets
     )
 import TDF.Models
@@ -149,7 +148,6 @@ import TDF.Server
     , PayPalToken(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
-    , SessionInputLookup(..)
     , WAInbound(..)
     , extractWhatsAppInbound
     , normalizeOptionalInput
@@ -293,8 +291,6 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validateSessionPathId
-    , validateSessionInputLookup
-    , validateInputListInventoryFilters
     , listInventory
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
@@ -625,12 +621,6 @@ allFutureStubs user =
        , experienceAuditing
        ]
 
-inputListSessionKey :: ME.SessionId
-inputListSessionKey =
-    case fromPathPiece ("00000000-0000-0000-0000-000000000084" :: Text) of
-        Just keyVal -> keyVal
-        Nothing -> error "Expected fixture input-list session id to parse"
-
 mkDriveMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
 mkDriveMultipart fields uploads =
     MultipartData
@@ -760,6 +750,33 @@ spec = describe "TDF.Server helpers" $ do
                     lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
                     (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
                         `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
+    describe "served authorization boundary (AUTH-PUBLIC-001)" $ do
+        it "denies staff ads assistance to anonymous and non-inbox callers and no longer serves legacy course Stripe routes" $
+            withNotificationFixture $ \env _ _ _ _ ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    let post path body authenticated = do
+                            base <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+                            NotificationHTTP.httpLbs (base
+                                { NotificationHTTP.method = "POST"
+                                , NotificationHTTP.requestBody = NotificationHTTP.RequestBodyLBS body
+                                , NotificationHTTP.requestHeaders =
+                                    ("Content-Type","application/json")
+                                      : [("Authorization","Bearer google-token") | authenticated]
+                                }) manager
+                        status = statusCode . NotificationHTTP.responseStatus
+                        assistBody = "{\"aarMessage\":\"precio de grabacion\",\"aarChannel\":\"whatsapp\"}"
+                    anonymousAssist <- post "/ads/assist" assistBody False
+                    status anonymousAssist `shouldBe` 401
+                    BL8.unpack (NotificationHTTP.responseBody anonymousAssist) `shouldNotContain` "Detalle:"
+                    customerAssist <- post "/ads/assist" assistBody True
+                    status customerAssist `shouldBe` 403
+                    paymentIntent <- post "/public/courses/beatmaking/registrations/1/payment-intent"
+                        "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\"}" False
+                    status paymentIntent `shouldBe` 404
+                    checkoutSession <- post "/public/courses/beatmaking/registrations/1/checkout-session"
+                        "{\"successUrl\":\"https://example.com/ok\",\"cancelUrl\":\"https://example.com/no\"}" False
+                    status checkoutSession `shouldBe` 404
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
@@ -1351,60 +1368,25 @@ spec = describe "TDF.Server helpers" $ do
             partySelectorVisibleLegalName "social_connection" legalName `shouldBe` Nothing
             partySelectorVisibleLegalName "crm_assignment" legalName `shouldBe` legalName
 
-    describe "validateSessionInputLookup" $ do
-        it "accepts exactly one public input-list session selector" $ do
-            let validSessionId = "00000000-0000-0000-0000-000000000084"
-            validateSessionInputLookup Nothing Nothing `shouldBe` Right (SessionInputByIndex 1)
-            validateSessionInputLookup (Just 2) Nothing `shouldBe` Right (SessionInputByIndex 2)
-            case validateSessionInputLookup Nothing (Just validSessionId) of
-                Right (SessionInputByKey keyVal) ->
-                    toPathPiece keyVal `shouldBe` validSessionId
-                Right other ->
-                    expectationFailure ("Expected sessionId lookup, got: " <> show other)
-                Left serverErr ->
-                    expectationFailure ("Expected valid sessionId lookup, got: " <> show serverErr)
-
-        it "rejects ambiguous or malformed public input-list session selectors" $ do
-            let validSessionId = "00000000-0000-0000-0000-000000000084"
-            let assertInvalid expectedMessage result =
+    describe "listInventory" $
+        it "refuses session-scoped availability on the anonymous inventory list (AUTH-PUBLIC-001)" $ do
+            let reject mSession mChannel = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (listInventory (Just "mic") mSession mChannel)
+                                (error "listInventory must reject session context before reading Env")
                     case result of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "not available on the public inventory list"
                         Right value ->
                             expectationFailure
-                                ("Expected invalid input-list selector to be rejected, got: " <> show value)
-            assertInvalid
-                "Provide either index or sessionId, not both"
-                (validateSessionInputLookup (Just 1) (Just validSessionId))
-            assertInvalid
-                "index must be greater than or equal to 1"
-                (validateSessionInputLookup (Just 0) Nothing)
-            assertInvalid
-                "Invalid sessionId"
-                (validateSessionInputLookup Nothing (Just "not-a-session-id"))
-            assertInvalid
-                "Invalid sessionId"
-                (validateSessionInputLookup Nothing (Just "AAAAAAAA-0000-0000-0000-000000000084"))
-
-    describe "listInventory" $
-        it "rejects non-canonical public session ids before inventory fallback lookup" $ do
-            result <-
-                runHandler $
-                    runReaderT
-                        ( listInventory
-                            (Just "mic")
-                            (Just "AAAAAAAA-0000-0000-0000-000000000084")
-                            Nothing
-                        )
-                        (error "listInventory should reject invalid sessionId before reading Env")
-            case result of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "Invalid sessionId"
-                Right value ->
-                    expectationFailure
-                        ("Expected non-canonical inventory sessionId to be rejected, got: " <> show value)
+                                ("Expected session-scoped public inventory to be rejected, got: " <> show value)
+            reject (Just "00000000-0000-0000-0000-000000000084") Nothing
+            reject (Just "00000000-0000-0000-0000-000000000084") (Just 1)
+            reject Nothing (Just 1)
 
     describe "validateSessionPathId" $ do
         it "accepts canonical session UUID path identifiers" $ do
@@ -1432,45 +1414,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid " 00000000-0000-0000-0000-000000000084"
             assertInvalid "AAAAAAAA-0000-0000-0000-000000000084"
             assertInvalid "00000000000000000000000000000084"
-
-    describe "validateInputListInventoryFilters" $ do
-        it "accepts broad inventory browsing and scoped field availability lookups" $ do
-            validateInputListInventoryFilters Nothing Nothing Nothing `shouldBe` Right ()
-            validateInputListInventoryFilters (Just AssetFieldMic) Nothing Nothing
-                `shouldBe` Right ()
-            validateInputListInventoryFilters
-                (Just AssetFieldMic)
-                (Just inputListSessionKey)
-                (Just 3)
-                `shouldBe` Right ()
-
-        it "rejects ignored availability context before inventory queries run" $ do
-            let assertInvalid expectedMessage result =
-                    case result of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ( "Expected invalid inventory filters to be rejected, got: "
-                                    <> show value
-                                )
-            assertInvalid
-                "channel must be greater than or equal to 1"
-                ( validateInputListInventoryFilters
-                    (Just AssetFieldMic)
-                    (Just inputListSessionKey)
-                    (Just 0)
-                )
-            assertInvalid
-                "channel requires field"
-                (validateInputListInventoryFilters Nothing Nothing (Just 1))
-            assertInvalid
-                "sessionId requires field"
-                (validateInputListInventoryFilters Nothing (Just inputListSessionKey) Nothing)
-            assertInvalid
-                "channel requires sessionId"
-                (validateInputListInventoryFilters (Just AssetFieldMic) Nothing (Just 1))
 
     describe "renderInputListLatex" $ do
         it "keeps generated headings single-line by neutralizing control and formatting characters" $ do

@@ -45,6 +45,9 @@ jobs:
           python scripts/test-requirement-declarations.py
           python scripts/specification-conformance.py --check
           python scripts/test-specification-conformance.py
+          python scripts/check-public-routes.py
+          python scripts/test-public-routes.py
+          python scripts/check-state-machines.py --static
           node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
       - name: Verify actual payment arithmetic and negative controls
         run: |

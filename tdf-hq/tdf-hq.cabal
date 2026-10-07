@@ -128,6 +128,9 @@ executable tdf-hq-exe
     TDF.Email.Headers
     TDF.Handlers.InputList
     TDF.Invoice.Receipt
+    TDF.Invoice.AccessKey
+    TDF.Invoice.BuyerIdentity
+    TDF.Invoice.Datil
     TDF.Invoice.SRI
     TDF.Internationalization
     TDF.LogBuffer
@@ -195,6 +198,7 @@ executable tdf-hq-exe
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
+    TDF.Server.TicketTaxDocuments
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
@@ -323,6 +327,7 @@ test-suite tdf-hq-test
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
+    TDF.InvoiceDatilSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
@@ -441,6 +446,9 @@ test-suite tdf-hq-test
     TDF.Email.Service
     TDF.Handlers.InputList
     TDF.Invoice.Receipt
+    TDF.Invoice.AccessKey
+    TDF.Invoice.BuyerIdentity
+    TDF.Invoice.Datil
     TDF.Invoice.SRI
     TDF.Internationalization
     TDF.Leads.Model
@@ -499,6 +507,7 @@ test-suite tdf-hq-test
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
+    TDF.Server.TicketTaxDocuments
     TDF.Server.TicketRefunds
     TDF.ServerAuth
     TDF.ServerAuthSpec

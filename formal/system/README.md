@@ -5,6 +5,20 @@ conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
 
+## Executable gates
+
+These checks make drift fail CI; run them before changing a mapped surface.
+
+| Gate | Enforces |
+|---|---|
+| `scripts/specification-inventory.py --check`, `scripts/specification-conformance.py --check` | Source discovery, requirement register, traceability and fingerprints are current |
+| `scripts/check-new-specification-surfaces.py --base SHA` | Every changed material file maps to a requirement |
+| `node scripts/inspect-compiled-api.mjs` (CI, after build) | Served Servant routes equal `compiled-api-surface.json` |
+| `scripts/check-public-routes.py` | Every unauthenticated compiled route has a reviewed boundary (AUTH-PUBLIC-001) |
+| `scripts/check-state-machines.py --database-url URL` (CI, migrated PG17) | Declared lifecycle states and SQL transitions equal the migrated schema (SYS-STATE-001) |
+| `node scripts/check-generated-api.mjs` | Generated web/Mobile clients equal the OpenAPI contract |
+| `npm run verify:formal`, `scripts/verify-system-evidence.mjs` | Bounded TLA+/PlusCal/Alloy models and their negative controls |
+
 ## Canonical package
 
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
@@ -45,6 +59,10 @@ Historical green results are not current-candidate evidence.
 - [authority-decisions.json](authority-decisions.json): competing sources and their
   explicit resolution. [research.json](research.json) records primary sources,
   applicability and adoption rationale separately from verification evidence.
+- [state-machine-correspondence.md](state-machine-correspondence.md) and [state-machine-bindings.json](state-machine-bindings.json):
+  declared lifecycle states and SQL transitions checked against the migrated schema (SYS-STATE-001).
+- [public-route-admission.md](public-route-admission.md) and [public-routes.json](public-routes.json):
+  reviewed boundary for every unauthenticated compiled route (AUTH-PUBLIC-001).
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
 - [dependency-security.md](dependency-security.md): known-version regression floors, scan evidence and unresolved runtime/build-tool exposure.
