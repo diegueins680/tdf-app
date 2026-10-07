@@ -66,10 +66,6 @@
   }
  },
  "debt": {
-  "DEBT-AUTH-ACADEMY-001": {
-   "priority": "P2",
-   "summary": "Academy enroll/progress and referral claim identify the actor only by a submitted email. Anyone can create or alter enrollment, progress and referral attribution for any email, and the progress 404 discloses whether an email is enrolled."
-  },
   "DEBT-PRIV-WHATSAPP-001": {
    "priority": "P2",
    "summary": "Public WhatsApp consent records consent for any phone number without proof of control and immediately sends a WhatsApp message to it; the public GET discloses consent state and timestamps for any number; anyone can opt any number out."
@@ -82,21 +78,9 @@
    "boundary": "signed-provider-callback"
   },
   {
-   "method": "POST",
-   "path": "/academy/enroll",
-   "boundary": "known-debt",
-   "debt": "DEBT-AUTH-ACADEMY-001"
-  },
-  {
    "method": "GET",
    "path": "/academy/microcourse/{slug}",
    "boundary": "public-read"
-  },
-  {
-   "method": "POST",
-   "path": "/academy/progress",
-   "boundary": "known-debt",
-   "debt": "DEBT-AUTH-ACADEMY-001"
   },
   {
    "method": "POST",
@@ -790,12 +774,6 @@
    "method": "GET",
    "path": "/records/feed",
    "boundary": "public-read"
-  },
-  {
-   "method": "POST",
-   "path": "/referrals/claim",
-   "boundary": "known-debt",
-   "debt": "DEBT-AUTH-ACADEMY-001"
   },
   {
    "method": "GET",

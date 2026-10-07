@@ -61,10 +61,12 @@ PostgreSQL-backed server and exercises retrieval privacy as authenticated staff.
 
 ## Open debt
 
-- `DEBT-AUTH-ACADEMY-001` (P2): academy enroll/progress and referral claim trust a
-  submitted email.
 - `DEBT-PRIV-WHATSAPP-001` (P2): public WhatsApp consent lacks proof of number
   control, messages the submitted number, and discloses consent state.
 
-Both need a product decision on identity proof (for example a one-time code) before
-repair; until then they stay visible as registered debt.
+It needs the double opt-in repair approved on 2026-10-06; until then it stays visible
+as registered debt.
+
+`DEBT-AUTH-ACADEMY-001` was repaired on 2026-10-07 (AUTHORITY-051): academy enroll,
+progress and referral claim require a session and bind to the signed-in account's
+email; a different email is refused with 403.
