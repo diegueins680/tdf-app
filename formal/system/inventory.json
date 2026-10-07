@@ -3743,7 +3743,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "437d43d3930c67139a3c9d1d5c960042616e6e755201be9a390afcab31ced6a2",
+      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4439,7 +4439,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "a0362cdf94afc7a3bd8d108075dcb88a453cd2ddf7dcc6e63fd30d594b834670",
+      "sha256": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16433,7 +16433,7 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "fccbd65b4447b4ff46d1bb6881910ade8a3ecba1a52e16230729462837636e8e",
+      "sha256": "e315cc7767f7c522dc99c90f195a4031a017c9edf676d74d5b3e43baafac3e0e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16951,7 +16951,7 @@
     },
     {
       "path": "docs/automatic-production-migrations.md",
-      "sha256": "6ec3eb02c8fd6fa0b11cad4f8cfded8f713b1dbbe6341a15cfc32cec2aff3c04",
+      "sha256": "ffe2b7124e9b80ea1bacebeb98aa0c027fc1158a7b670d2882feb00d6554f9c8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22152,7 +22152,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "794610a7ebcdab3cd8b1faa77779e5851831100c98939ad0fd1d735475de5fc5",
+      "sha256": "66969cefbe19377acebeab708e28a27545eef68c914cb0912f8a690221614337",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22418,7 +22418,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c6ef762822fc14d7c64af18a80cffd90052c32b99f418e4442538959ba1de5bf",
+      "sha256": "57e0b15a9180056b8b1b05970af4ee352bce01029d850ad156fb60d3f967d0b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
