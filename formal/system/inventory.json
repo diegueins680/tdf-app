@@ -29,8 +29,10 @@
       "e2e/web/account-deletion.spec.mjs",
       "e2e/web/artist-follow.spec.mjs",
       "e2e/web/artist-merch.spec.mjs",
+      "e2e/web/auth-landing.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
+      "e2e/web/course-enrollment.spec.mjs",
       "e2e/web/directory-entry.spec.mjs",
       "e2e/web/directory-favorite-recovery.spec.mjs",
       "e2e/web/directory-language.spec.mjs",
@@ -40,6 +42,8 @@
       "e2e/web/fanhub-onboarding.spec.mjs",
       "e2e/web/helpers/local-api-fixture.mjs",
       "e2e/web/helpers/review-paint.mjs",
+      "e2e/web/marketplace-cart.spec.mjs",
+      "e2e/web/mobile-layout-regressions.spec.mjs",
       "e2e/web/mobile-program.spec.mjs",
       "e2e/web/notification-navigation.spec.mjs",
       "e2e/web/persona-public.spec.mjs",
@@ -519,7 +523,10 @@
       "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
       "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
       "tdf-hq-ui/src/__tests__/analytics.test.ts",
+      "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
       "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
+      "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+      "tdf-hq-ui/src/analytics/errorReporting.ts",
       "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
       "tdf-hq-ui/src/analytics/growthAttribution.ts",
       "tdf-hq-ui/src/analytics/onboardingCompletionAnalytics.ts",
@@ -652,6 +659,7 @@
       "tdf-hq-ui/src/api/types.ts",
       "tdf-hq-ui/src/api/whatsappConsent.ts",
       "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
+      "tdf-hq-ui/src/bootSafety.tsx",
       "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
       "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
@@ -677,6 +685,8 @@
       "tdf-hq-ui/src/components/KeyboardShortcutsDialog.tsx",
       "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx",
       "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
+      "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
+      "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
       "tdf-hq-ui/src/components/NotificationBell.contracts.test.ts",
       "tdf-hq-ui/src/components/NotificationBell.contracts.ts",
       "tdf-hq-ui/src/components/NotificationBell.tsx",
@@ -693,6 +703,7 @@
       "tdf-hq-ui/src/components/PublicBrandBar.tsx",
       "tdf-hq-ui/src/components/PublicBranding.test.tsx",
       "tdf-hq-ui/src/components/PublicBranding.tsx",
+      "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
       "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
       "tdf-hq-ui/src/components/RadioWidget.tsx",
       "tdf-hq-ui/src/components/ReactionBar.contracts.test.ts",
@@ -804,6 +815,8 @@
       "tdf-hq-ui/src/features/interactions/PublicationSelection.tsx",
       "tdf-hq-ui/src/features/interactions/model.test.ts",
       "tdf-hq-ui/src/features/interactions/model.ts",
+      "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
+      "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
       "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
@@ -1113,6 +1126,7 @@
       "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
       "tdf-hq-ui/src/session/SessionContext.test.ts",
       "tdf-hq-ui/src/session/SessionContext.tsx",
+      "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx",
       "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
       "tdf-hq-ui/src/session/SessionProviders.test.tsx",
       "tdf-hq-ui/src/session/SessionProviders.tsx",
@@ -1124,6 +1138,7 @@
       "tdf-hq-ui/src/test/accessibility.ts",
       "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
       "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
+      "tdf-hq-ui/src/theme/appTheme.ts",
       "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
       "tdf-hq-ui/src/utils/__tests__/serviceTypesStore.test.ts",
       "tdf-hq-ui/src/utils/accessControl.test.ts",
@@ -1141,6 +1156,8 @@
       "tdf-hq-ui/src/utils/chatkit.test.ts",
       "tdf-hq-ui/src/utils/chatkit.ts",
       "tdf-hq-ui/src/utils/checkoutStripe.ts",
+      "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
+      "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
       "tdf-hq-ui/src/utils/dateOnly.test.ts",
       "tdf-hq-ui/src/utils/dateOnly.ts",
       "tdf-hq-ui/src/utils/dateTime.test.ts",
@@ -1182,6 +1199,8 @@
       "tdf-hq-ui/src/utils/optionalBrowserStorage.ts",
       "tdf-hq-ui/src/utils/passwordPolicy.test.ts",
       "tdf-hq-ui/src/utils/passwordPolicy.ts",
+      "tdf-hq-ui/src/utils/phone.test.ts",
+      "tdf-hq-ui/src/utils/phone.ts",
       "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
       "tdf-hq-ui/src/utils/providerPaymentResume.ts",
       "tdf-hq-ui/src/utils/publicBookingRooms.ts",
@@ -1193,6 +1212,8 @@
       "tdf-hq-ui/src/utils/serviceTypesStore.ts",
       "tdf-hq-ui/src/utils/sessionPersonalData.test.ts",
       "tdf-hq-ui/src/utils/sessionPersonalData.ts",
+      "tdf-hq-ui/src/utils/signupFields.test.ts",
+      "tdf-hq-ui/src/utils/signupFields.ts",
       "tdf-hq-ui/src/utils/slug.ts",
       "tdf-hq-ui/src/utils/socialEventRoutes.ts",
       "tdf-hq-ui/src/utils/stringValues.test.ts",
@@ -2482,6 +2503,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8096aa6aaf7d328c",
+      "path": "e2e/web/auth-landing.spec.mjs",
+      "sha256": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-99efca801c54dd18",
       "path": "e2e/web/campaign-accessibility.spec.mjs",
       "sha256": "a139094a63cf3084ff1f5a47c7d282db5864e9ba9a052dd55df2087984904f95",
@@ -2491,6 +2518,12 @@
       "id": "SURFACE-e442d994f4a6caf5",
       "path": "e2e/web/checkout-readiness.spec.mjs",
       "sha256": "78cb0d746bb83dab84fe5b59d344fbcde396763452964a1c41c673f7d9dc32d4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-593f65650b716b87",
+      "path": "e2e/web/course-enrollment.spec.mjs",
+      "sha256": "debc676b499d93131b742e1194aba556eb219b679dc6823203058e8997b2a486",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2520,7 +2553,7 @@
     {
       "id": "SURFACE-78670b2c15a18002",
       "path": "e2e/web/event-rsvp-sharing.spec.mjs",
-      "sha256": "9bae64827c5a75b5186a6e17334ab2e89a3d3cf7c326275e5b9fab0970a1d3dd",
+      "sha256": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2548,6 +2581,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c5e7e7710b072a8d",
+      "path": "e2e/web/marketplace-cart.spec.mjs",
+      "sha256": "7c4389d13cf2e9da97824c47d870368abc156d9b848ff137733ab3e2be9b6bcd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0ff897863a04e3f4",
+      "path": "e2e/web/mobile-layout-regressions.spec.mjs",
+      "sha256": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8b406122e72d741c",
       "path": "e2e/web/mobile-program.spec.mjs",
       "sha256": "b611bd52c2811657f11373e7f7638875aea1d9e831919ab6fa9e0062d8e7541b",
@@ -2562,7 +2607,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+      "sha256": "98698dd8ff798654008941ef9899d5461f9ef1e6da8d26ce599f4056abea2007",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5250,7 +5295,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "4323e995fc9aa15d369a4f1783dcfc69097fa5a8cdb6a1de1f93c72d523a65de",
+      "sha256": "809888c62861f5b7260e161c4bf40e5459783c012a0c3780c8d93b0a5a2ad65e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5292,7 +5337,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "6ea019d3e2948c9e38748ad86b1e75f7fc807a13613c7ed83daa6d63157a6dce",
+      "sha256": "6b98f7fa1a0ea1604f61d892725f4900aefd926b901527573a2f36460559d39a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5304,7 +5349,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "abd968b685b44c9573dd88aebc7bef33ce0c14c777de6bc248eecbcfbc46df41",
+      "sha256": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5326,9 +5371,27 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-077e9bba1bd34cd9",
+      "path": "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
+      "sha256": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-27c2e340baf13c46",
       "path": "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
       "sha256": "9f3b39b4eb872ddadafd717ed226adfcbdbd5e41608036fa1835c3b4d4c1453c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b44fc1d5abce9ec3",
+      "path": "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+      "sha256": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bb290758952f3fdd",
+      "path": "tdf-hq-ui/src/analytics/errorReporting.ts",
+      "sha256": "9b0ab8f89cb0ab815cdaf58c41a5ca0c95788534dc913b5d8623d2d8e51d918d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6030,7 +6093,7 @@
     {
       "id": "SURFACE-e999a12d43def7e6",
       "path": "tdf-hq-ui/src/api/session.ts",
-      "sha256": "714aff9ed6293677fa52056a6805608ff5e863b3f752324f5369dd3fb829f8b4",
+      "sha256": "6d5e29d3ed7c82949026978b602bcf28a967410d3dbc9f7311fc0f67ee374d95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6121,6 +6184,12 @@
       "id": "SURFACE-53ccbdf692a3b60f",
       "path": "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
       "sha256": "e679e1b41bc86a3fdf357030af08149cc08f1948ba726de9043d9e955ed99e08",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d012a7e1199bfda1",
+      "path": "tdf-hq-ui/src/bootSafety.tsx",
+      "sha256": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6274,6 +6343,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-de5d7d4bb9406476",
+      "path": "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
+      "sha256": "a07a0f537aded9b0519eb2864340307f65a63bba0334e3293b12c8813cd58de4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cd0a274baaa9137b",
+      "path": "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
+      "sha256": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-df42e6ad7db6be04",
       "path": "tdf-hq-ui/src/components/NotificationBell.contracts.test.ts",
       "sha256": "c774849e62eeb57f8700a19f17c6f82cbffb3c84fb1aea1927079a9dc74dbd68",
@@ -6366,7 +6447,13 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "7b611aa98fbd9f7a80236089e593265e6b95f579c8b6b91b38bd72a41e66f1a8",
+      "sha256": "0f0ad08cea94d98e7f7191279809a4bf0833a5d74c974b45ffd13eaedffa4f92",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d385ed9b2a05df5c",
+      "path": "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+      "sha256": "f4472eeb35e04d8604487d65cf813251276cad085a92995d7a2f4cf41240bbc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6378,7 +6465,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "5a03a68ea34c02dc4f1bb49787b461d0adcd13f0a2f8625094dcaca92036e756",
+      "sha256": "bd8c98a4fd988554729243383cb1642e6194d78b0f572b72e672e76bcf68010a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7036,6 +7123,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cae765cc556fec1a",
+      "path": "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
+      "sha256": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a35c2de02e03cc6c",
+      "path": "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
+      "sha256": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1feafb0155431191",
       "path": "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "sha256": "a7b88782f84756ef1415d3ec5dda3e2a889ed9301e82e7a575f9349beef3f2cd",
@@ -7266,13 +7365,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
+      "sha256": "42156a0dbe195d88bc59cc6ddd9cea7419602966a1765e48c82f9679d0fc5d96",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
+      "sha256": "5ef17347a9d3926eddb5d366a210b8e9ed1028bce4f3f7720d4b6cf8d59a0446",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7344,7 +7443,7 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
+      "sha256": "aa5242c86d81fd37529b80f1dd5ec507d58288fe8fc7547f80dd1530c59233e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7668,13 +7767,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "fd4c56048e88fcd529f41f76d9cbdf16b42b6c4898b12cc12fade1247699e27f",
+      "sha256": "5eb825653a6125c926f9fc94925ee9aed93fbda0aa25915d4e9985dd38eaac1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "d55576b5d8a1679ea7585d7f9cb44f5529ceb11fa0ee9884842ed312088e7a1f",
+      "sha256": "7a9eadce056daf16c3788752aab9f4911dd2924700fa1157ab74ede3549e3930",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7698,7 +7797,7 @@
     {
       "id": "SURFACE-3a0858e52f7dba9e",
       "path": "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
-      "sha256": "83b46d520a061cc8c0aac422bfabd0636c6a9719c786a1bdc6f13a728d6b7f66",
+      "sha256": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7860,7 +7959,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "6bfc9876c745d6292bb8e4acc187c4e5cbfef14f2ed4cc1d9d3072397d1355f5",
+      "sha256": "23bd826af9ec868ad632daac4b4fb9969224482183e90d3508d147e1b4ed6ac9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8076,31 +8175,31 @@
     {
       "id": "SURFACE-517e48428bed4a91",
       "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-      "sha256": "0060e2be9c980072021098c62bef8d341a1a6f6ec7b52b5c81b70c26b604785e",
+      "sha256": "8101fb3cd04078b5b31df6e1b49110a858f7bef95a9d88924864941ac3a63fb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-07c0b63cc31dfe61",
       "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
-      "sha256": "9e3df694638cc9c09b05d6ef1730e424f995e1ce370b35f8012e2918e4a6fc96",
+      "sha256": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-aabfa794448b924b",
       "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
-      "sha256": "4ff65a59618aa87315a03651f9e21c84aee01599f31b9b5ada5205ec8208e880",
+      "sha256": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "886fe17587d0fd4b031825376e6fc9d30cb843fe28aecc32a18c8bdd727a107c",
+      "sha256": "6986ea4755a6c7bb126e05d4a7a53a220235ff357ca92094b79443ce13def547",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "c6af1fadf03efae8f9befb8659274d6c68477d52da802abea66fec9611e42095",
+      "sha256": "e4271fcd1840f2122fc85c51ea3c8625207bcb5a1642e3d89b4a4feab6755d74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8142,7 +8241,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "d4f14d90a03be1ce0edb84e3d646775def21d0cdec1345a398f09247eb9f650a",
+      "sha256": "a731e97f77eb7453fee5a4365f8499a7e6c118dd04921114634efb84d62c1fd1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8340,7 +8439,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "3c7a82107562130a6cd3ea8b905bea2a5a5e55bb84b0f36ea9f40a518e30291e",
+      "sha256": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8802,7 +8901,7 @@
     {
       "id": "SURFACE-bc010ac9824ecc6f",
       "path": "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
-      "sha256": "b9e8a4d87cb99a85795b75759f104db9a318b502d43a6a61d5b114e2cbda0f64",
+      "sha256": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8844,7 +8943,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "4f2025acbc29657ec9a2b1f289aae38edebe56c135b465912e8f57455628dce0",
+      "sha256": "7680d858e73882533f34c020b76f8215ee2825e2551ba5e57d8345f69e7fc4e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8886,7 +8985,13 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
+      "sha256": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f149aecd66c7e328",
+      "path": "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx",
+      "sha256": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8952,7 +9057,13 @@
     {
       "id": "SURFACE-5737a182b3afe136",
       "path": "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
-      "sha256": "f5d641bc9db0076e0da592894003bc7e5fde86f3ea67be604dc8f0046297248e",
+      "sha256": "840ccaf4c10eab5b8f5bbd570f65687c82332fbcdbc4d7e6e7804732e78d0a1a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-43521ec903ecc0c7",
+      "path": "tdf-hq-ui/src/theme/appTheme.ts",
+      "sha256": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9055,6 +9166,18 @@
       "id": "SURFACE-3bd1e7eea819bcf8",
       "path": "tdf-hq-ui/src/utils/checkoutStripe.ts",
       "sha256": "6767472727b065ba0664d9f4c13536708d26cf07da64b9391170d7157c584cdd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-827d822bd4c20ede",
+      "path": "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
+      "sha256": "24430baf37b1660622a9d0830fe0066f79a57f0ce7de88381f2854a14c9cdbba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b42bb88249b14540",
+      "path": "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
+      "sha256": "c95f0d906b0cb5dfe754d829bef159aaeca29f3e3ef59b37fb5fb45ab0d0ccd4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9222,7 +9345,7 @@
     {
       "id": "SURFACE-0475b0acdc163a7f",
       "path": "tdf-hq-ui/src/utils/lazyWithReload.ts",
-      "sha256": "d98d891114c55d945bb19bf417a8206e33ee0d333011e006a93ca631d9b8b7c0",
+      "sha256": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9234,13 +9357,13 @@
     {
       "id": "SURFACE-f57ff394c49a306f",
       "path": "tdf-hq-ui/src/utils/loginRouting.test.ts",
-      "sha256": "72ef425da8a7f81bb2f21dd2235ec5cd96ecc266b90ebf24f8df3971bcbc3fd5",
+      "sha256": "af1be8cc3f2df18abb058451f4a51821a178679300ac931c09fbe8264abee4cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2c5199a5b87938cc",
       "path": "tdf-hq-ui/src/utils/loginRouting.ts",
-      "sha256": "e00e452690889186a715b6de485256d4c73584f92ac1d7c8f325a9f421ee79e6",
+      "sha256": "0635e51bbf37ac86e135c0e5bf1d4a978c8b9f750b8866e6a9e1d5bb282a85f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9301,6 +9424,18 @@
       "id": "SURFACE-d1b051c0b8940563",
       "path": "tdf-hq-ui/src/utils/passwordPolicy.ts",
       "sha256": "0d5d349c0f13b432467fd972bc687a8cf14d667274e59c78b265e5f08cc730ca",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-79d156b5a231108c",
+      "path": "tdf-hq-ui/src/utils/phone.test.ts",
+      "sha256": "51ffabb6654f6441c507ee11e2cf2a2518e8fa6bce766c96377421638bb769af",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-92ac9e5d6124c8b2",
+      "path": "tdf-hq-ui/src/utils/phone.ts",
+      "sha256": "eb558c757e4f79a86c7ca3df1da08f98df111d8944c57206e85ea9bb5e1f6ff1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9367,6 +9502,18 @@
       "id": "SURFACE-859b559cd31bb0bf",
       "path": "tdf-hq-ui/src/utils/sessionPersonalData.ts",
       "sha256": "0e6e5a26f17b0846cdc920ee6db7ed1fc47bfa6d9d36113f660be03227e8f152",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-43dc31225ddf1005",
+      "path": "tdf-hq-ui/src/utils/signupFields.test.ts",
+      "sha256": "d64b0791128645c24fe39a5abb49b1a0c32b2d9fa193248b8e44e8cc514b7d87",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1db49bff24529d0b",
+      "path": "tdf-hq-ui/src/utils/signupFields.ts",
+      "sha256": "6f819b6c1897ad2440ecddf4c863887db3b6011481b64fb68b60d6abfea44f70",
       "semanticConformance": "not-established-by-discovery"
     },
     {
