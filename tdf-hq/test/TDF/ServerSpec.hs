@@ -11064,6 +11064,23 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationPhoneE164 (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationPhoneE164 (Just " +593 99 123 4567 ") `shouldBe` Right (Just "+593991234567")
 
+        it "accepts Ecuador national numbers as typed by local visitors and stores E.164" $ do
+            validateCourseRegistrationPhoneE164 (Just "0988384849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just " 098 838 4849 ") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "098-838-4849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "(02) 234-5678") `shouldBe` Right (Just "+59322345678")
+
+        it "keeps rejecting local-looking numbers with the wrong length or prefix" $ do
+            let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right phoneVal ->
+                        expectationFailure ("Expected invalid local phone to be rejected, got: " <> show phoneVal)
+            assertInvalid "098838484"
+            assertInvalid "09883848490"
+            assertInvalid "0188384849"
+            assertInvalid "0088384849"
+            assertInvalid "099 123 4567 ext"
+
         it "rejects explicitly invalid or implausible phones instead of silently discarding them" $ do
             let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
                     Left serverErr -> do

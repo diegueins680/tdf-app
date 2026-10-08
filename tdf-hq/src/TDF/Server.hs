@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
@@ -6911,35 +6912,7 @@ normalizePhone :: Text -> Maybe Text
 normalizePhone = normalizeWhatsAppPhone
 
 normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
-normalizeCourseRegistrationPhoneInput raw =
-  let trimmed = T.strip raw
-      onlyDigits = T.filter isAsciiPhoneDigit trimmed
-      digitCount = T.length onlyDigits
-      plusCount = T.count "+" trimmed
-      plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isAsciiPhoneDigit trimmed
-      allowedPhoneChar ch =
-        isAsciiPhoneDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
-      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
-      plusIsValid =
-        case plusIndex of
-          Nothing -> True
-          Just idx ->
-            case firstDigitIndex of
-              Nothing -> False
-              Just digitIdx -> plusCount == 1 && idx < digitIdx
-      hasInternationalPrefix =
-        T.isPrefixOf "+" trimmed
-          && maybe False (/= '0') (T.find isAsciiPhoneDigit trimmed)
-  in
-    if T.null onlyDigits
-         || digitCount < 8
-         || digitCount > 15
-         || hasInvalidChars
-         || not plusIsValid
-         || not hasInternationalPrefix
-      then Nothing
-      else Just ("+" <> onlyDigits)
+normalizeCourseRegistrationPhoneInput = CoursePhone.normalizeInternationalPhoneInput
 
 isAsciiPhoneDigit :: Char -> Bool
 isAsciiPhoneDigit ch = ch >= '0' && ch <= '9'
@@ -7011,7 +6984,8 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
   case cleanOptional (Just rawPhone) of
     Nothing -> Right Nothing
     Just _ ->
-      case normalizeCourseRegistrationPhoneInput rawPhone of
+      -- Course visitors may type an Ecuador national number (0988384849).
+      case CoursePhone.normalizeCoursePhone rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
 
