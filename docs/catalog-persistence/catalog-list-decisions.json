@@ -57417,6 +57417,16 @@
       "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
       "justification": "Test-only mock of the useSession() return shape (session, loading); React hook state, not a selectable or reportable business list.",
       "reviewed": true
+    },
+    {
+      "id": "17d2f7d3ddab07b8debd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
+      "justification": "Test-only mutable mock of the useSession() result (current session, loading flag); hook state, not a selectable or reportable business list.",
+      "reviewed": true
     }
   ]
 }
