@@ -8225,7 +8225,7 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0f7eb7a95881283a9a8efcae59be0aedda5a228b1265ac18a1694aad42a8a031",
+    "docs/catalog-persistence/catalog-list-decisions.json": "d4406fe958d67650f13dd96992c0e95a00477af3c529a678cc466e67a8adff24",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
