@@ -80,7 +80,7 @@ def main():
     expect_rejected("session headers removed", surface, REGISTER, "requires one of")
 
     register = copy.deepcopy(REGISTER)
-    del entry(register, "POST", "/public/whatsapp/consent")["debt"]
+    entry(register, "POST", "/public/whatsapp/consent")["boundary"] = "known-debt"
     expect_rejected("debt without reference", SURFACE, register, "registered debt")
 
     register = copy.deepcopy(REGISTER)

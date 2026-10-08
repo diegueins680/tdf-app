@@ -260,6 +260,9 @@ type WhatsAppConsentRoutes =
 type WhatsAppConsentAPI =
        "whatsapp" :> WhatsAppConsentRoutes
 
+-- | Public consent is a double opt-in request and never discloses whether a
+-- number has consented. The public status lookup keeps its declared shape for
+-- client compatibility but is retired (410); the lookup is staff-only.
 type WhatsAppConsentPublicAPI =
        "public" :> "whatsapp" :> WhatsAppConsentRoutes
 

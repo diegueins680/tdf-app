@@ -30,6 +30,7 @@ const appConfigEnv = {
   VITE_STUDIO_MAP_URL: import.meta.env?.VITE_STUDIO_MAP_URL,
   VITE_STUDIO_WHATSAPP_URL: import.meta.env?.VITE_STUDIO_WHATSAPP_URL,
   VITE_TRIALS_WHATSAPP_URL: import.meta.env?.VITE_TRIALS_WHATSAPP_URL,
+  VITE_WHATSAPP_OPTIN_URL: import.meta.env?.VITE_WHATSAPP_OPTIN_URL,
 } as const;
 type AppConfigEnvKey = keyof typeof appConfigEnv;
 
@@ -81,6 +82,10 @@ export const COURSE_DEFAULTS = {
   instructorAvatarUrl: defaultInstructorAvatar,
 };
 export const COURSE_COHORTS = defaultCourseCohorts.length ? defaultCourseCohorts : [defaultCourseSlug];
+
+// wa.me link to the WhatsApp Business number whose webhook confirms consent,
+// prefilled with SI. Unset: the page asks people to reply to the request instead.
+export const WHATSAPP_OPTIN_URL = envTrimmedOrUndefined(envString('VITE_WHATSAPP_OPTIN_URL'));
 
 export const TRIALS_WHATSAPP_URL =
   envTrimmedOrUndefined(envString('VITE_TRIALS_WHATSAPP_URL')) ??

@@ -553,6 +553,17 @@
       "conflict": "Academy enroll/progress and referral claim were anonymous and identified the actor only by a submitted email, so anyone could create or alter another person's enrollment, progress or referral attribution, and the progress 404 disclosed enrollment.",
       "authority": "Explicit product-owner decision on 2026-10-06: require login.",
       "resolution": "The three write routes move to the authenticated API on unchanged paths and bind to party.primary_email of the signed-in account; a mismatching email returns 403 and an account without email returns 409. Public microcourse content and next-cohort reads stay public. No client called the write routes."
+    },
+    {
+      "id": "AUTHORITY-052",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
+        "formal/system/public-routes.json"
+      ],
+      "conflict": "Public WhatsApp consent accepted any number without proof of control, recorded consent and messaged the number immediately, and exposed consent state and timestamps through a public lookup.",
+      "authority": "Explicit product-owner decision on 2026-10-06: double opt-in.",
+      "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
     }
   ]
 }

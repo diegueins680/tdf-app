@@ -15545,13 +15545,13 @@
       }
     },
     {
-      "id": "59317444d15c99b7219f",
+      "id": "9ad20c4ad4e435be0c9a",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 189-entry manifest keeps the reviewed 187 entries unchanged and appends the additive directory artist-derived listings migration and its idempotent backfill, both with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 190-entry manifest keeps the reviewed 188 entries unchanged and appends the additive directory artist-derived listings migration and its idempotent backfill, both with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
@@ -57152,19 +57152,19 @@
         ]
       },
       "mergedDecision": {
-        "id": "7cf054414f50446f625b",
+        "id": "7b3d355ec7c91ec29b07",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 187-entry manifest keeps the reviewed 186 entries unchanged and appends the additive ticket credit note migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 188-entry manifest keeps the reviewed 187 entries unchanged and appends the additive WhatsApp consent confirmation migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "ticket-credit-notes-2026-10-06",
+        "reviewBatch": "whatsapp-consent-confirmation-2026-10-07",
         "reviewMethod": "successor-of-reviewed-decision"
       }
     },
