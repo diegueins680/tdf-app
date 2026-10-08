@@ -972,11 +972,6 @@
       "introducedBy": "3e1e6feea25345cfc2c52da07dde694f2fec11a6"
     },
     {
-      "id": "2026-09-15_music_party_details",
-      "path": "tdf-hq/sql/2026-09-15_music_party_details.sql",
-      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
-    },
-    {
       "id": "2026-09-15_music_preview_ranges",
       "path": "tdf-hq/sql/2026-09-15_music_preview_ranges.sql",
       "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
@@ -984,6 +979,11 @@
     {
       "id": "2026-09-15_music_version_parties",
       "path": "tdf-hq/sql/2026-09-15_music_version_parties.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
+      "id": "2026-09-15_music_party_details",
+      "path": "tdf-hq/sql/2026-09-15_music_party_details.sql",
       "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
     },
     {
@@ -997,6 +997,11 @@
       "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
     },
     {
+      "id": "2026-09-16_music_resource_graph_validation",
+      "path": "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
+      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
+    },
+    {
       "id": "2026-09-16_music_ddex_operations",
       "path": "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
       "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
@@ -1004,11 +1009,6 @@
     {
       "id": "2026-09-16_music_playback_identity",
       "path": "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
-      "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
-    },
-    {
-      "id": "2026-09-16_music_resource_graph_validation",
-      "path": "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
       "introducedBy": "23c50670601af91568b810d796ee1f816d99853e"
     },
     {

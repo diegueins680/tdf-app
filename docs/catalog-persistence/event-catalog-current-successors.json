@@ -334,7 +334,7 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "32ece075904ed9b20ffd",
+      "currentId": "7ada75c638366c356dce",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",

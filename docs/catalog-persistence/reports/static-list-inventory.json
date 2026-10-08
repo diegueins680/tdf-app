@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-08T01:03:40.479Z",
+  "generatedAt": "2026-10-08T01:18:34.350Z",
   "repositoryRoot": ".",
   "filesScanned": 2200,
   "candidateCount": 1310,
@@ -12645,7 +12645,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "32ece075904ed9b20ffd",
+      "id": "7ada75c638366c356dce",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -12844,14 +12844,14 @@
         "{id=2026-10-07_whatsapp_consent_confirmation}",
         "{id=2026-09-11_music_release_platform}",
         "{id=2026-09-14_artist_invitation_auto_approval}",
-        "{id=2026-09-15_music_party_details}",
         "{id=2026-09-15_music_preview_ranges}",
         "{id=2026-09-15_music_version_parties}",
+        "{id=2026-09-15_music_party_details}",
         "{id=2026-09-16_music_correction_asset_graph}",
         "{id=2026-09-16_music_correction_concurrency}",
+        "{id=2026-09-16_music_resource_graph_validation}",
         "{id=2026-09-16_music_ddex_operations}",
         "{id=2026-09-16_music_playback_identity}",
-        "{id=2026-09-16_music_resource_graph_validation}",
         "{id=2026-10-07_artist_invitation_links}"
       ],
       "valueCount": 199,
