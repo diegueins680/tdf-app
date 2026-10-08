@@ -13811,7 +13811,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "6907947f52ca325bda4325e2ba8fbc7fafb372371867d1360d6cc567518cf9b1",
+      "sha256": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23734,7 +23734,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bfe510c8fdaf46de7105372d81d4743d3fa2d0ffa1c9a0eb91b51b2872481c02",
+      "sha256": "c1e1ad84aa758531519652af17b848761fe82858f50b57e082c2c1663da74e6a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

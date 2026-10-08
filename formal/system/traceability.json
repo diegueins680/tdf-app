@@ -8544,7 +8544,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Web behavior verified synthetically; backend normalization pending."
+        "reason": "Web flow verified synthetically and by read-only production smoke; server phone normalization covered by Haskell tests. A deployed backend release and a physical-device enrollment remain to be verified."
       },
       "critical": false,
       "property": "EnrollmentInView and E164Phone",
@@ -9277,7 +9277,7 @@
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
     "tdf-hq/src/TDF/Server.hs": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
-    "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6907947f52ca325bda4325e2ba8fbc7fafb372371867d1360d6cc567518cf9b1",
+    "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
@@ -32427,7 +32427,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "6907947f52ca325bda4325e2ba8fbc7fafb372371867d1360d6cc567518cf9b1",
+      "sha256": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40568,7 +40568,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bfe510c8fdaf46de7105372d81d4743d3fa2d0ffa1c9a0eb91b51b2872481c02",
+      "sourceSha256": "c1e1ad84aa758531519652af17b848761fe82858f50b57e082c2c1663da74e6a",
       "definition": {
         "states": [
           "absent",

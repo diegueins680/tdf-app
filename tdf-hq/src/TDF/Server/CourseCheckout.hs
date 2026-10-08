@@ -325,9 +325,13 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
       buyerName <- either throwError pure $
         normalizeRequiredText "fullName" 160 (Courses.fullName request)
       buyerEmail <- either throwError pure (normalizeEmail (Courses.email request))
-      buyerPhone <- either throwError pure $
+      buyerPhoneText <- either throwError pure $
         normalizeOptionalText "phoneE164" 24 (Courses.phoneE164 request)
-          >>= traverse normalizeBuyerPhone
+      -- Stored as E.164. The idempotency hash below keeps the trimmed text
+      -- exactly as earlier releases hashed it, so a retry of a checkout created
+      -- before this normalization (or served by an older replica during a
+      -- rollout) still matches its stored create_request_sha256.
+      buyerPhone <- either throwError pure (traverse normalizeBuyerPhone buyerPhoneText)
       sourceClean <- either throwError pure (normalizeSource registrationSource)
       howHeardClean <- either throwError pure $
         normalizeOptionalText "howHeard" 256 (Courses.howHeard request)
@@ -356,7 +360,7 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
             [ "course_slug" .= slugVal
             , "full_name" .= buyerName
             , "email" .= buyerEmail
-            , "phone" .= buyerPhone
+            , "phone" .= buyerPhoneText
             , "source" .= sourceClean
             , "how_heard" .= howHeardClean
             , "utm_source" .= utmSourceVal

@@ -8543,7 +8543,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Web behavior verified synthetically; backend normalization pending."
+        "reason": "Web flow verified synthetically and by read-only production smoke; server phone normalization covered by Haskell tests. A deployed backend release and a physical-device enrollment remain to be verified."
       },
       "critical": false,
       "property": "EnrollmentInView and E164Phone",
