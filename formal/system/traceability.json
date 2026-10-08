@@ -7450,6 +7450,89 @@
         "classification": "PARTIAL",
         "reason": "Client tests pass; deployed web verification pending."
       }
+    },
+    {
+      "id": "LEGAL-DISCLOSURE-001",
+      "title": "Legal text is collapsed by default without weakening consent",
+      "statement": "Terms, policies, consent texts and disclaimers render inside a shared disclosure that starts collapsed, can be opened to read the complete text before acceptance, and keeps every required acceptance control visible, associated with its documents and enforced exactly as before.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 (collapsible Terms and Conditions UX; each document an independent section)",
+      "source": "tdf-app PR #515; TDF-mobile PR #153",
+      "property": "Collapsing legal text never hides, pre-checks or bypasses a required acceptance control.; Every collapsed document remains readable in full before acceptance.",
+      "contract": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+      "actors": [
+        "Buyer, registrant or account holder",
+        "Screen-reader and keyboard user"
+      ],
+      "preconditions": [
+        "A surface renders long-form legal text next to, or instead of, a consent control."
+      ],
+      "inputs": [
+        "Document title, optional version summary and full legal text",
+        "Viewer locale (es/en)"
+      ],
+      "state": {
+        "initial": "collapsed",
+        "toggled": [
+          "expanded",
+          "collapsed"
+        ],
+        "scope": "per page or step; never persisted"
+      },
+      "allowedTransitions": [
+        "collapsed -> expanded on header activation (click, Enter or Space)",
+        "expanded -> collapsed on header activation",
+        "Deep link to #privacidad or #terminos on /seguridad opens that document expanded"
+      ],
+      "forbiddenTransitions": [
+        "Consent checkbox or switch placed inside a collapsed panel",
+        "Submission gating relaxed because legal text is collapsed",
+        "Expanded state persisted across sessions"
+      ],
+      "effects": [
+        "Header exposes aria-expanded/aria-controls (web) or accessibilityState.expanded (mobile)",
+        "Consent controls reference the disclosure headers through aria-describedby where applicable"
+      ],
+      "authorization": "Not applicable: presentation only; acceptance and its server-side enforcement are unchanged.",
+      "privacy": "No analytics, storage or network calls are added by the disclosure.",
+      "concurrency": "Not applicable: local component state only.",
+      "idempotency": "Toggling is a pure local state change.",
+      "failure": "When a document is unavailable the surrounding surface keeps its existing unavailable-terms behavior.",
+      "recovery": "Reloading the page or step restores the collapsed default.",
+      "observability": "Unit tests, persona e2e journeys and the accessibility (axe) checks cover the control.",
+      "implementation": [
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/pages/SecurityPage.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/InventoryPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "tdf-mobile/app/reputation/consents.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
+        "e2e/web/artist-merch.spec.mjs",
+        "e2e/web/persona-public.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Component unit tests, updated checkout/storefront persona journeys at desktop/phone/tablet, and manual responsive checks at 360/768/1280px.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": false,
+      "confidence": "high for the presentation boundary; legal sufficiency of the texts themselves is out of scope",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7462,6 +7545,7 @@
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
+    "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/persona-public.spec.mjs": "723d14d17f7d25a2374aa0b852f8199404d926f4a0829a980083f17ee1691d29",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -7760,6 +7844,8 @@
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "91676c519b0243344af73e96c82f85f58e9b41a9e97880dacf075b14f3862c06",
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "5e364604c8ff8dfb2088ee8a7af1a31586ac69b9517edc634f7fff9b12010699",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -7789,13 +7875,18 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
+    "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
+    "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "fd126fe0c90f82a2e4225c8d1f6dd05e4a93e38d7f0880cd2067349cd72c1e89",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "886fe17587d0fd4b031825376e6fc9d30cb843fe28aecc32a18c8bdd727a107c",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "c6af1fadf03efae8f9befb8659274d6c68477d52da802abea66fec9611e42095",
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "d1ab7afb6deb0805afbf8b6f35a38739e9d219223955bfa09e9fc0b33298db95",
+    "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+    "tdf-hq-ui/src/pages/SecurityPage.tsx": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
@@ -7993,6 +8084,7 @@
     "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
     "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
     "tdf-mobile/__tests__/FirstRunProvider.test.tsx": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
+    "tdf-mobile/__tests__/LegalDisclosure.test.tsx": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
     "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
     "tdf-mobile/__tests__/SocialScreen.test.tsx": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
     "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
@@ -8014,6 +8106,7 @@
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
+    "tdf-mobile/app/reputation/consents.tsx": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
@@ -8031,6 +8124,7 @@
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
     "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
+    "tdf-mobile/src/components/LegalDisclosure.tsx": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -8434,6 +8528,10 @@
       },
       {
         "requirement": "SYS-RELEASE-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
     ],
@@ -10835,6 +10933,10 @@
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Routes/EventTickets.hs": [
@@ -11044,6 +11146,10 @@
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
     ],
@@ -12299,17 +12405,29 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": [
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": [
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "implementation"
       }
     ],
@@ -12742,6 +12860,72 @@
         "requirement": "DATA-CRM-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/SecurityPage.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/InventoryPage.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/components/LegalDisclosure.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/reputation/consents.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/LegalDisclosure.test.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/artist-merch.spec.mjs": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -12945,7 +13129,12 @@
       "path": "e2e/web/artist-merch.spec.mjs",
       "sha256": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-99efca801c54dd18",
@@ -13050,6 +13239,10 @@
         },
         {
           "requirement": "SYS-RELEASE-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "tests"
         }
       ]
@@ -17619,6 +17812,10 @@
         {
           "requirement": "EVT-TICKET-INVOICE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -19361,14 +19558,24 @@
       "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
       "sha256": "91676c519b0243344af73e96c82f85f58e9b41a9e97880dacf075b14f3862c06",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-6f546685e4a6eb40",
       "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
       "sha256": "5e364604c8ff8dfb2088ee8a7af1a31586ac69b9517edc634f7fff9b12010699",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6c08dcce1c9676c9",
@@ -20158,6 +20365,10 @@
         {
           "requirement": "PRIV-INTAKE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -20169,6 +20380,10 @@
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -20421,6 +20636,10 @@
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -21125,7 +21344,12 @@
       "path": "tdf-hq-ui/src/pages/InventoryPage.tsx",
       "sha256": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-367ca1e43bc9470d",
@@ -21240,7 +21464,12 @@
       "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
       "sha256": "fd126fe0c90f82a2e4225c8d1f6dd05e4a93e38d7f0880cd2067349cd72c1e89",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-07c0b63cc31dfe61",
@@ -21335,7 +21564,12 @@
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
       "sha256": "d1ab7afb6deb0805afbf8b6f35a38739e9d219223955bfa09e9fc0b33298db95",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b8e4f0b3d0a3ec9f",
@@ -21426,7 +21660,12 @@
       "path": "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
       "sha256": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bee40b89d7a09a1d",
@@ -21603,6 +21842,10 @@
         {
           "requirement": "EVT-TICKET-INVOICE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -21758,7 +22001,12 @@
       "path": "tdf-hq-ui/src/pages/SecurityPage.tsx",
       "sha256": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6b44ad06b4487812",
@@ -29963,7 +30211,12 @@
       "path": "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
       "sha256": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-99b5cd25c1db6135",
@@ -30866,7 +31119,12 @@
       "path": "tdf-mobile/app/reputation/consents.tsx",
       "sha256": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cef1fa050e3f9d2c",
@@ -31648,7 +31906,12 @@
       "path": "tdf-mobile/src/components/LegalDisclosure.tsx",
       "sha256": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6094001768e3e5b7",
@@ -32609,7 +32872,6 @@
     "SURFACE-b18780932504c8a1",
     "SURFACE-b6a53fc19d550b31",
     "SURFACE-21d4d7e18c516e29",
-    "SURFACE-7f4616a1f534ab50",
     "SURFACE-99efca801c54dd18",
     "SURFACE-e442d994f4a6caf5",
     "SURFACE-6826ca2044602fd9",
@@ -33093,8 +33355,6 @@
     "SURFACE-3fb10adaf67ec8d5",
     "SURFACE-151891803a9e4745",
     "SURFACE-f29c4e265dd61680",
-    "SURFACE-88fbc73f4e77632c",
-    "SURFACE-6f546685e4a6eb40",
     "SURFACE-6c08dcce1c9676c9",
     "SURFACE-85bd4c6fc1a45c48",
     "SURFACE-793045e8bae5158b",
@@ -33293,7 +33553,6 @@
     "SURFACE-3b1ca178b6f6ea73",
     "SURFACE-d0e36c97b6f11244",
     "SURFACE-801f1bf8c99af8cd",
-    "SURFACE-4ad37d87d7a1bb3e",
     "SURFACE-367ca1e43bc9470d",
     "SURFACE-640476dec88bc7f2",
     "SURFACE-4fd1798287b449fb",
@@ -33306,7 +33565,6 @@
     "SURFACE-1ed3bac9b35b6a6b",
     "SURFACE-8c828ce60f323fd7",
     "SURFACE-ee05853b9d278f61",
-    "SURFACE-517e48428bed4a91",
     "SURFACE-07c0b63cc31dfe61",
     "SURFACE-aabfa794448b924b",
     "SURFACE-9f6c120925c7ada4",
@@ -33315,7 +33573,6 @@
     "SURFACE-d69d0e258765d7f2",
     "SURFACE-b76dc0f541131283",
     "SURFACE-e91e712671f722c0",
-    "SURFACE-ae8970a24d4f1f59",
     "SURFACE-b8e4f0b3d0a3ec9f",
     "SURFACE-61f97ffdc68a2602",
     "SURFACE-0e6e43a62c494812",
@@ -33328,7 +33585,6 @@
     "SURFACE-af6b03b0182f5f0b",
     "SURFACE-20d3b5c28f107b7d",
     "SURFACE-689d1c649ef08997",
-    "SURFACE-c223f9f65297d13a",
     "SURFACE-bee40b89d7a09a1d",
     "SURFACE-4a562abbc0b9c284",
     "SURFACE-c6ff06a2e2277d3e",
@@ -33368,7 +33624,6 @@
     "SURFACE-0841fa11b4af7d60",
     "SURFACE-e9006bbb523fee68",
     "SURFACE-24d2133b7f15822c",
-    "SURFACE-1e8f6a752f2cf8a5",
     "SURFACE-6b44ad06b4487812",
     "SURFACE-54a41f2ada423353",
     "SURFACE-ca2671adb5443ee0",
@@ -34139,7 +34394,6 @@
     "SURFACE-34f76aa7fd7d8a7d",
     "SURFACE-7924613b1e052502",
     "SURFACE-adcc415d122d0352",
-    "SURFACE-10425a8a6d1f81b5",
     "SURFACE-99b5cd25c1db6135",
     "SURFACE-b5094e4b58658656",
     "SURFACE-f52377912391d22a",
@@ -34232,7 +34486,6 @@
     "SURFACE-f8ab13d8cf59242e",
     "SURFACE-dbce244f2f58632f",
     "SURFACE-7ce895d9ef0ac4a5",
-    "SURFACE-4bc6c0b3d036cf61",
     "SURFACE-cef1fa050e3f9d2c",
     "SURFACE-69205bb0d640d69a",
     "SURFACE-603be2889dcb2b32",
@@ -34314,7 +34567,6 @@
     "SURFACE-8ce4ad416c6e61d1",
     "SURFACE-67484eb36a87ee67",
     "SURFACE-9513e7cf46c08071",
-    "SURFACE-1e306217e1e27195",
     "SURFACE-6094001768e3e5b7",
     "SURFACE-fce475d418ec1945",
     "SURFACE-c45676b39a013dfd",
@@ -35591,7 +35843,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dc13ab791779cb273ffb74042e819aa812f9e972ab8d8ea7706af362e55058bc",
+      "sourceSha256": "18b75f5bdd66be2463e1f1812042bdd232f7efd7c338da66a76ef7ca9f8b439a",
       "definition": {
         "states": [
           "absent",
@@ -57523,7 +57775,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 95,
+    "PARTIAL": 96,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
