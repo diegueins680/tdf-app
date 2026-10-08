@@ -953,3 +953,225 @@ Campaña tu_escena_conectada_piloto; aliado B; estado escalado. Dos respuestas r
 Se transferió a Diego sin responder ni aceptar condiciones. Mantienen propuesta de publicaciones colaborativas con medición Instagram y complementos web/prensa; todavía sin calendario, materiales, cantidad por producción, métricas específicas o fecha de reporte. No se ha aceptado la prueba ni confirmado artistas. Fuera de horario de envíos08–22, sin nuevos envíos. No suma nueva persona positiva; registro/perfil/activación sin confirmar.
 
 Bandeja QuitoSka conserva reemplazo20:39 comoúltimomensaje; Joel/Francisco conservanúltimasrespuestas nuestras. No revisiónexhaustiva19hilos.0nuevosenvíos/seleccionados/excluidos; totalcampañahoy6salidas(incluyeoriginalanulado+reemplazo),0nuevasinvitaciones. NuevasrespuestaBohemio no aumentan6positivasA2/B4;2neutralesconocidosNeil/QuitoSka. Sin advertenciasInstagram/optouts nuevos visibles. Clics/registros/perfiles/activaciones no revalidados, sin métricas inventadas. Pendiente definir conDiego alcance colaboración y preparar respuesta concreta para aprobación, enviable dentro08–22. CRM278 notas añadidas/verificadas, historialpreservado.
+
+
+## Quito Bohemio: propuesta de piloto de 1 producción — PREPARADA, NO enviada — 6/oct/2026 10:55 Ecuador
+
+[2026-10-06 10:55 America/Guayaquil]
+Campaña tu_escena_conectada_piloto; aliado B; estado escalado. Decisión de Diego (6/oct): aceptar piloto gratuito con UNA producción, medir 7 días y luego decidir las otras dos; elección de producción delegada, con revisión antes de enviar.
+
+Selección desde el catálogo público (API /fans/artists + /releases, 55 artistas, 65 lanzamientos): «Lune Vocale» — Diego Saá con Juano Ledesma, 2025-07-07, perfil /artista/diego-sa (HTTP 200), Spotify verificado («Lune Vocale - song and lyrics by Diego Saa, Juano Ledesma»). Descartado «Esencia Eterna» de Arkabuz (2025-08-16, más reciente) porque su enlace "Spotify" apunta a tdf-app.pages.dev y no tiene portada ni descripción. Riesgos: Lune Vocale no tiene portada cargada en el catálogo; existen dos perfiles de Diego (diego-saa id9 y diego-sa id28).
+
+Texto propuesto:
+¡Buenísimo, amigos! Medir con las métricas de Instagram nos parece lo más claro 🤟
+Para arrancar proponemos una sola producción como prueba: «Lune Vocale» de Diego Saá con Juano Ledesma → https://www.tdfrecords.net/artista/diego-sa?utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+La idea sería una publicación colaborativa + historias y, si les suma, el posteo en su web o una nota de prensa.
+Nosotros les pasamos enlace, portada, fotos y un texto base; cuéntennos qué fecha les funciona.
+A los 7 días nos comparten alcance, interacciones, guardados y compartidos, y con eso vemos juntos las otras dos producciones.
+— TDF Records
+
+Esta sesión (Claude Code) NO tiene acceso al navegador adjunto de campaña ni al CRM; no se revisó bandeja ni hilos, 0 envíos, 0 escrituras CRM. Envío requiere aprobación del texto por Diego y ejecución desde el navegador oficial dentro de 08:00–22:00, con revalidación del hilo y CRM278 antes de enviar. Quito Ska Society sigue esperando respuesta al reemplazo 20:39 del 5/oct.
+
+### Investigación de producción — 6/oct/2026 ~11:30 Ecuador (sustituye la selección «Lune Vocale»)
+Fuentes públicas: /records/feed (67 lanzamientos, 33 grabaciones, 5 sesiones), fechas de Spotify y fechas de publicación de YouTube. El lanzamiento más reciente del sello es de 2025-08-16 (Arkabuz «Esencia Eterna»; su Spotify real 6862eD7dxnm3AAH8jj0CrZ sí existe en el feed, solo el endpoint de artista tiene el enlace pages.dev). No hay lanzamientos de audio en los últimos 13 meses.
+RECOMENDACIÓN: Llama Este Pez @ TDF Electro Sessions — Sereno Moreno Live Set (Pt. 1 publicado 2026-09-09, 51 vistas; Pt. 2 2026-09-16, 45 vistas). Motivos: es la producción más reciente de TDF, está grabada en un local de Quito (encaja con la escena de Quito Bohemio), parte de una línea base baja que hace medible el impacto, y el artista tiene 4 temas en el catálogo para dar continuidad. Alternativa: «Esencia Eterna» (Arkabuz). Pendiente: confirmar la cuenta de Instagram y el consentimiento de Llama Este Pez para la colaboración, revisar el perfil de @quitobohemio y reescribir el texto con el enlace de esta sesión. Mensaje NO enviado.
+
+### Verificación y texto actualizado — 6/oct/2026 ~11:45 Ecuador
+Según las descripciones de YouTube, el set se grabó el 19/ago/2026 en Sereno Moreno. Integrantes: Diego Saá (Push/MicroFreak), Emanuel Pilo-Pais (MC-101/TD-3), Ruz (Kaossilator) y Santiago Martínez (SPD-SX). Grabación: Diego Saá; mastering: Reemus; edición: Stewart Moreira. Como Diego es integrante, el consentimiento del artista lo puede dar él mismo. El catálogo de la web no tiene la cuenta de Instagram de Llama Este Pez. Las dos descripciones de YouTube enlazan a https://tdf-app.pages.dev, en contra de la regla de dominio canónico: se recomienda cambiarlas a www.tdfrecords.net (no se modificaron).
+Enlace directo: /records?recording=<id> (usePublicationSelection selecciona y desplaza hasta la grabación). URL Pt. 1 con HTTP 200; no se comprobó el renderizado en navegador.
+
+Texto propuesto (sustituye el borrador «Lune Vocale») — NO enviado, pendiente de aprobación:
+¡Buenísimo, amigos! Medir con las métricas de Instagram nos parece lo más claro 🤟
+Para arrancar proponemos una sola producción como prueba: el live set de Llama Este Pez en TDF Electro Sessions, grabado el 19 de agosto en Sereno Moreno → https://www.tdfrecords.net/records?recording=d2916b98-7be9-4f18-9e0c-28fa29aee73e&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+La idea sería una publicación colaborativa + historias y, si les suma, el posteo en su web o una nota de prensa.
+Nosotros les pasamos el video, fotos, créditos y un texto base; cuéntennos qué fecha les funciona.
+A los 7 días nos comparten alcance, interacciones, guardados y compartidos, y con eso vemos juntos las otras dos producciones.
+— TDF Records
+
+## Quito Bohemio: piloto de 1 producción ENVIADO — 6/oct/2026 11:52 Ecuador
+[2026-10-06 11:52 America/Guayaquil]
+Campaña tu_escena_conectada_piloto; aliado B; estado escalado. Diego aprobó el texto «Llama Este Pez» con «ok, envíalo». Se envió desde Claude in Chrome (Chrome de Diego, sesión @tdf.records.label verificada), no desde el perfil tdf-instagram. Hilo /direct/t/111007526956883/ revalidado antes de enviar: último mensaje de ellos de las 21:35 del 5/oct, sin respuestas nuevas ni duplicados. Primer intento de escritura: el compositor de Instagram convirtió los "_" del UTM en cursiva (0 de 8 guiones bajos). Se borró sin enviar y se pegó el texto mediante un evento de pegado; se comprobó texto exacto (769 caracteres, 8 guiones bajos, sin cursiva) antes de enviar. Envío ÚNICO 11:52 visible, enlace clicable completo, compositor vacío, sin fallo visible.
+CRM278 NO actualizado: el CRM en ese Chrome pide login y el agente no introduce credenciales. Pendiente añadir la nota con el texto íntegro (el de la sección «Verificación y texto actualizado»).
+Total salidas campaña 6/oct: 1 (respuesta a aliado B), 0 invitaciones nuevas. Lección: al escribir enlaces UTM en DMs de Instagram, NO teclear los "_"; pegar el texto y verificar los guiones bajos antes de enviar.
+Observado en la bandeja, sin gestionar: Emanuele Pilo-Pais (integrante de Llama Este Pez) escribió hace 1 día «Y varios de arriba tambien»; Isaac preguntó «Quiero saber cómo es su método de trabajo» (sin respuesta); Quito Ska Society no ha respondido al reemplazo del 5/oct 20:39.
+
+## CRM: contactos de campaña invisibles en la interfaz — 6/oct/2026 12:10 Ecuador
+Diego inició sesión en el CRM (pestaña del grupo de Claude). /crm/contactos muestra «1–25 de 200 contactos». La búsqueda de «quitobohemio», «Bohemio» y «gura» da «Sin resultados», aunque existen como CRM278 y CRM281. Causa en el código: PartiesPage usa `Parties.list` → GET /parties sin limit, y el backend aplica por defecto limit=200 (`validatePartyListLimit Nothing = Right 200`, máximo 500). La interfaz solo carga y filtra los primeros 200; los contactos con ID alto (≥ ~266, todo el piloto) quedan fuera. No se interpreta como pérdida de datos. Por eso la nota del envío a Quito Bohemio de las 11:52 sigue pendiente en CRM278 y solo consta en este documento. Arreglo propuesto: que la interfaz pagine con limit/offset o pida limit=500. No se modificó ni desplegó código.
+Diego aprobó (Opción B, 12:04) enviar al menos 10 invitaciones nuevas al día con la plantilla vigente. La búsqueda de prospectos en Instagram (lista de seguidores) fue bloqueada dos veces por el clasificador de permisos de Claude Code: 0 invitaciones nuevas hasta resolverlo.
+
+## Lote diario 6/oct/2026 — 10 cuentas seleccionadas, NO enviado (bloqueo de permisos) — 12:45 Ecuador
+Autorización: Diego, Opción B (12:04): al menos 10 invitaciones diarias con la plantilla vigente. Fuente: los ~250 seguidores más recientes de @tdf.records.label. Se descartaron las cuentas que aparecen en cualquier documento o nota de campaña (ya invitadas o evaluadas antes) y los perfiles sin evidencia musical o de idioma, privados sin datos, inexistentes, personales o de edad dudosa. Idioma: todas muestran español en su propio perfil. CRM: no se pudo deduplicar, porque la interfaz solo carga 200 contactos (ver arriba). Historial de DM: pendiente de comprobar al abrir cada hilo. Al hacer clic en «Message» del primer perfil, el clasificador de Claude Code bloqueó la acción: 0 enviados.
+
+| # | Cuenta | Segmento | Evidencia (perfil público, 6/oct) |
+|---|---|---|---|
+| 1 | @dannyminomusic | artista A | Danny Miño, «Músico / Compositor», 🇪🇨, destacado PREMIERE |
+| 2 | @serenomorenoec | aliado A | Sereno Moreno, Quito; local donde se grabó el live set de Llama Este Pez |
+| 3 | @arconteproblems | artista A | Raúl Iván, Quito, enlace de artista en Spotify (perfil privado) |
+| 4 | @mangovision_ | músico/productor A | Paulo León Arauz, «Músico/Productor», SoundCloud fractalmusic25, ECU |
+| 5 | @endless_1950 | músico A | Franco Russo, bajista, organizador de El Pululahua Sideral Fest (privado) |
+| 6 | @tisann.00 | artista A | TISAN., «perfil dedicado a la música», 🇪🇨 |
+| 7 | @mattu_aru | artista A | Mattú Arú, «Arutrónica · Electrónica de la selva», Macas |
+| 8 | @elian_sun_ | músico A | Elian Ballesteros, estudiante de Sonido y Producción (lo sigue IAVQ); privado |
+| 9 | @fortiaeventos | aliado A | Fortia, producción de eventos de artes escénicas, Ecuador |
+| 10 | @alejoferrin | artista A | Alejo Ferrin, director de @recrewofc, danza urbana/electro y canto |
+
+Mensajes exactos (5 líneas cada uno):
+
+1. Hola, Danny 👋 Vimos tu trabajo como músico y compositor, y tus estrenos.
+Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto.
+En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+2. Hola, equipo de Sereno Moreno 👋 Gracias por recibir el live set de Llama Este Pez el 19 de agosto.
+Tu escena necesita un espacio propio; nos interesa escuchar a quienes abren sus puertas a la música en vivo en Quito.
+Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar:
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+3. Hola, Raúl 👋 Vimos que compartes tu música en Spotify desde Quito.
+Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto.
+En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+4. Hola, Paulo 👋 Vimos tu trabajo como músico y productor, y tus tracks en SoundCloud.
+Tu escena necesita un espacio propio para que la música de aquí siga encontrando gente.
+Te invitamos a explorar perfiles y lanzamientos en TDF y seguir un primer proyecto; el enlace abre la intención profesional por tu trabajo como productor:
+https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+5. Hola, Franco 👋 Vimos tu trabajo como bajista y con El Pululahua Sideral Fest.
+Tu escena necesita un espacio propio, con lugar para quienes tocan y para quienes organizan.
+En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general:
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+6. Hola, TISAN. 👋 Vimos que tu perfil está dedicado a la música.
+Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto.
+En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+7. Hola, Mattú 👋 Vimos tu Arutrónica, electrónica de la selva desde Macas.
+Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto.
+En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+8. Hola, Elian 👋 Vimos que estudias Sonido y Producción.
+Tu escena necesita un espacio propio, con lugar para quienes están empezando a producir.
+En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general:
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+9. Hola, equipo de Fortia 👋 Vimos su trabajo en producción de eventos de artes escénicas.
+Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya conectan a artistas con su público.
+Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar:
+https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+10. Hola, Alejo 👋 Vimos tu trabajo con Recrew, entre la danza urbana, el electro y el canto.
+Tu escena necesita un espacio propio para que lo que creas siga circulando después del escenario.
+En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:
+https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records
+
+Procedimiento al enviar: abrir el hilo desde el perfil; si existe un mensaje previo de TDF, excluir. Pegar el texto (no teclearlo, porque Instagram convierte los "_" en cursiva) y comprobar los 8 guiones bajos del enlace. Enviar una sola vez, en bloques de 5, y registrar cada envío aquí.
+
+### Ejecución del lote diario — 6/oct/2026 ~13:00 Ecuador
+- #1 @dannyminomusic: hilo vacío. Texto pegado y comprobado (exacto, 552 caracteres, 9 "_", sin cursiva). ENVIADO una vez y visible en el hilo; compositor vacío.
+- #2 @serenomorenoec: EXCLUIDO, el hilo ya tiene una publicación compartida por TDF (contacto previo).
+- #3 @arconteproblems: perfil privado sin botón «Message». «Send message» del menú → «Something went wrong. Please try again.» No se reintentó.
+- #4 @mangovision_: EXCLUIDO, TDF lo mencionó en una historia el miércoles (contacto previo en el hilo).
+- #6 @tisann.00: EXCLUIDO, por las fotos podría ser menor de edad (regla de edad dudosa).
+- #7 @mattu_aru: «Message» → «Something went wrong. Please try again.», aunque el perfil es público. Es el segundo error seguido de Instagram al abrir un DM nuevo. DETENIDO por la regla de comportamiento inesperado o posible restricción; sin reintentos.
+- Pendientes sin intentar: #5 @endless_1950, #8 @elian_sun_, #9 @fortiaeventos, #10 @alejoferrin.
+Total 6/oct: 2 salidas de campaña (Quito Bohemio + 1 invitación nueva). CRM sin actualizar (límite de 200 contactos).
+- 13:10 Ecuador: Account Status de @tdf.records.label, los tres apartados en verde (contenido eliminado/mensajería, límites de alcance, funciones restringidas). No consta restricción; los errores «Something went wrong» no se explican por una sanción visible.
+- 12:57 (reloj de Instagram) #9 @fortiaeventos: chat abierto desde la bandeja («New message»), hilo vacío, texto exacto (560 caracteres, 8 "_"). ENVIADO y visible.
+- 12:59 #10 @alejoferrin: el mismo flujo; se verificó que el primer resultado era exactamente alejoferrin. Hilo vacío, texto exacto (566 caracteres, 9 "_"). ENVIADO y visible.
+- #7 @mattu_aru: Mattú Arú quedó seleccionado como destinatario en «New message», pero el clic en «Chat» lo bloqueó el clasificador de Claude Code. No enviado ni reintentado; el diálogo quedó abierto.
+Total 6/oct: 4 salidas de campaña (Quito Bohemio + 3 invitaciones: dannyminomusic, fortiaeventos, alejoferrin). El flujo «New message» desde la bandeja evita el error «Something went wrong» de los botones del perfil.
+- 14:33 #7 @mattu_aru: Diego hizo clic en «Chat»; hilo vacío, texto exacto (551 caracteres, 9 "_"). ENVIADO y visible.
+- Respuestas: @alejoferrin (13:21): «Hola, gracias por contactarme, suena muy interesante. ¿Me cuentas un poco más de lo que hacen?, ¿Y cómo funciona el registro?, tienen un perfil muy genial por cierto.» Positiva. @fortiaeventos (~13:2x): «Hola, gracias por contactarse. Sí nos interesa, pero no pudimos ingresar al link». Positiva, con fricción de acceso.
+- Prueba del enlace aliado_a sin sesión, Playwright headless en escritorio y iPhone 13: carga en 6–7 s, abre el modal «Crear cuenta», sin errores de consola ni de página. «Crear e ingresar» sigue deshabilitado hasta marcar la casilla de términos y completar los campos; es la causa probable de la fricción. No se probó el navegador interno de Instagram.
+- Borradores de respuesta (pegarlos fue bloqueado por el clasificador; NO enviados):
+  Alejo: «¡Gracias, Alejo! 🙌 / TDF Records es estudio de grabación y sello en Quito. En tdfrecords.net armamos una comunidad donde los artistas tienen su perfil público (bio, enlaces a su música y lanzamientos) y la gente puede descubrirlos y seguirlos. / El registro es rápido: abres el enlace que te mandamos, marcas la casilla de términos, pones nombre, correo y una contraseña de 8 caracteres o más, y le das a «Crear e ingresar». Después puedes crear tu perfil de artista con tus enlaces. / Si algo no te carga, nos escribes y te ayudamos. / — TDF Records»
+  Fortia: «¡Qué bueno que les interese! 🙌 / Revisamos el enlace y está funcionando: abre «Crear cuenta». Hay que marcar la casilla de términos y llenar nombre, correo y contraseña (mínimo 8 caracteres) para que se active «Crear e ingresar». / Si desde Instagram no les abre, prueben copiándolo en el navegador del celular. / Y si les sale algún error, nos mandan una captura y lo resolvemos. / — TDF Records»
+Total 6/oct: 5 salidas (Quito Bohemio + 4 invitaciones: dannyminomusic, fortiaeventos, alejoferrin, mattu_aru). 2 respuestas positivas.
+- 14:43 respuesta de ayuda a @alejoferrin ENVIADA (texto del borrador, exacto, 543 caracteres). 14:44 respuesta de ayuda a @fortiaeventos ENVIADA (exacta, 389 caracteres). Autorización: regla /permissions de Diego («Reply to Tu Escena Conectada campaign responses… with registration help»).
+- @mattu_aru respondió «Me parece interesante» (positiva, sin pregunta): no requiere respuesta, no insistir.
+Total 6/oct: 7 salidas (Quito Bohemio + 4 invitaciones + 2 respuestas de ayuda). 3 respuestas positivas (Alejo, Fortia, Mattú).
+- 14:46 #5 @endless_1950 (Franco Russo): chat abierto desde «New message» (antes fallaba desde el perfil), hilo vacío, texto exacto (521 caracteres). ENVIADO y visible.
+Total 6/oct: 8 salidas (Quito Bohemio + 5 invitaciones + 2 respuestas de ayuda). Para llegar a 10 invitaciones faltan 5: @elian_sun_ y unos 4 candidatos nuevos.
+- UX «Crear cuenta»: el botón «Crear e ingresar» solo se deshabilita por la casilla de términos (los otros estados ya cambian el texto a «Creando…»/«Preparando…»). Cambio preparado en el worktree /Users/diegosaa/GitHub/tdf-app-wt-signup (rama fix/signup-disabled-reason desde origin/main fc45073e0): pista visible «Acepta los términos y la política de privacidad para continuar.» enlazada con aria-describedby. LoginPage 18/18 tests, tsc y eslint OK. Sin commit, push ni despliegue.
+- 15:04 #8 @elian_sun_: hilo vacío, texto exacto (493 caracteres). ENVIADO y visible. Van 6 invitaciones.
+
+### Reemplazos para completar 10 — 6/oct/2026 ~15:15 Ecuador
+Fuente: cuentas sugeridas por Instagram junto a los seguidores de TDF, que no aparecen en ningún documento de campaña. Descartados: @unpoquitomasproductions y @dement.bass (bio en inglés, idioma español no demostrado), @rcricardocabrera (arte contemporáneo, pertinencia musical débil), @g.e.r.e.m.e y @orange__blossoom (privados, sin evidencia musical).
+| # | Cuenta | Segmento | Evidencia |
+|---|---|---|---|
+| 11 | @oso_bass | músico A | Oskr Padilla Villacis, «Bassman», Quito; @metanfetafunk; sigue a TDF |
+| 12 | @jamzecuador | aliado A | JAMZ_, «colectivo de músicos que se reúnen hacer música en el momento… jazz, blues, soul, hip hop, rock»; sigue a TDF |
+| 13 | @diego_amneciam | artista A | Diego Rojas, «Singer, songwriter», artista visual Amneciam; destacados en español; sigue a TDF |
+| 14 | @molle_raymi_salcedo | aliado A | Molle Raymi, «Colectivo Cultural, Salcedo, Cotopaxi», destacado «Ponle play» |
+Mensajes (5 líneas; enlaces musico_a / aliado_a / artista_a como en el lote):
+11. Hola, Oskr 👋 Vimos tu trabajo como bajista en Quito y con Metanfetafunk. / Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. / En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: / [musico_a] / Si no te interesa…
+12. Hola, equipo de JAMZ_ 👋 Vimos su colectivo de músicos que se reúne a improvisar entre jazz, blues, soul, hip hop y rock. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya sostienen encuentros para tocar en vivo. / Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar: / [aliado_a] / Si no te interesa…
+13. Hola, Diego 👋 Vimos tu trabajo como cantante y compositor, y tu arte visual con Amneciam. / Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. / En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: / [artista_a] / Si no te interesa…
+14. Hola, equipo de Molle Raymi 👋 Vimos su trabajo como colectivo cultural en Salcedo, Cotopaxi. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes mueven la cultura más allá de las grandes ciudades. / Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar: / [aliado_a] / Si no te interesa…
+- 15:12 #11 @oso_bass ENVIADO (517 caracteres). 15:12 #12 @jamzecuador ENVIADO (599). 15:13 #13 @diego_amneciam ENVIADO (569). 15:14 #14 @molle_raymi_salcedo ENVIADO (579). En todos: chat desde «New message», resultado exacto verificado, hilo vacío, texto exacto, visible tras el envío.
+**Cierre del lote 6/oct (15:14 Ecuador): 10 invitaciones nuevas enviadas** (dannyminomusic, fortiaeventos, alejoferrin, mattu_aru, endless_1950, elian_sun_, oso_bass, jamzecuador, diego_amneciam, molle_raymi_salcedo). Salidas de campaña hoy: 13 de 20 (10 invitaciones + Quito Bohemio + 2 respuestas de ayuda). Respuestas positivas: Alejo, Fortia, Mattú; Diego Rojas aparecía escribiendo a las 15:14. Excluidos hoy: serenomorenoec y mangovision_ (contacto previo), tisann.00 (edad dudosa), arconteproblems (error de Instagram, privado). CRM sin actualizar por el límite de 200 contactos de la interfaz.
+- CRM: la causa del límite de 200 contactos se corrigió en el PR #504 (rama fix/crm-contacts-pagination, commit 20dd61935): Parties.list pagina con limit=500 hasta recibir una página incompleta. Tests y tsc OK. Pendiente: revisión de tdfrecords, merge y despliegue web; después, registrar en el CRM los envíos del 6/oct.
+- UX «Crear cuenta»: PR #505 (rama fix/signup-disabled-reason, commit 74f9a1a89) con el aviso del botón deshabilitado. Pendiente: revisión de tdfrecords, merge y despliegue web.
+- ~15:25 respuestas nuevas: @elian_sun_ «Excelente, gracias» (positiva, no requiere respuesta). @diego_amneciam (Diego Rojas, ~15:14): «Que tal amigos si me interesa si quería igual ir a ver el espacio a ver si se puede hacer alguna cosa». Positiva, pide visitar el estudio: es coordinación de visita/colaboración, NO ayuda de registro → escalada a Diego, sin responder.
+Positivas hoy: Alejo, Fortia, Mattú, Elian, Diego Rojas (5 de 10 invitaciones).
+- Diego aprobó («Ok») la respuesta de visita para @diego_amneciam. Texto pegado y comprobado (exacto, 211 caracteres) en el compositor del hilo 112840403442112; el envío lo bloqueó el clasificador (fuera de la regla de ayuda de registro). Pendiente de que Diego pulse enviar.
+
+## 7/oct/2026 — inicio 08:58 Ecuador
+- PR #504 (paginación del CRM) y PR #505 (aviso de «Crear cuenta») MERGED y aprobados. Producción: /crm/contactos muestra «1–25 de 280 contactos»; la búsqueda encuentra a quitobohemio.
+- Notas CRM: el diálogo «Editar» solo tiene nombre, correo, Instagram y teléfono, sin campo de notas. Las notas de campaña no se pueden añadir desde la interfaz y no se usó la API; siguen solo en este documento. Diálogo cerrado sin cambios.
+- Bandeja: sin respuestas escritas nuevas. Diego Rojas «Liked a message» (aparentemente Diego le envió la respuesta de visita). Fortia «Liked a message».
+- Lote del día: al abrir la lista de seguidores de @tdf.records.label, el clasificador de Claude Code lo bloqueó. 0 invitaciones hoy hasta resolverlo.
+- 09:30 aprox.: MEMORY.md actualizado con la Opción B (aprobación permanente de al menos 10 invitaciones/día), autorizado por Diego en /permissions.
+- Búsqueda de candidatos: Instagram está limitando las listas de @tdf.records.label. La lista de seguidores cargó solo 14 cuentas en unos 25 s (ayer, más de 250). La de likes de la publicación de Patch Culture cargó 10 de 31. «Sugeridos» (/explore/people/) se quedó en esqueletos de carga. Las páginas de perfil cargan con lentitud. Revisados: interfacerandom (cuenta vinculada a Llama Este Pez, interna), josho_kamaleon (estrategia digital, no es música), carlospabonr (perfil sin cargar). 0 candidatos nuevos.
+- DETENIDO: no se insiste para evitar un bloqueo de acciones de Instagram (posible limitación). 0 invitaciones el 7/oct hasta ahora.
+- 13:40 aprox., reintento programado: la pestaña de Claude en Chrome está en document.visibilityState=hidden (ventana minimizada o tapada). Chrome frena las pestañas ocultas: las capturas fallan por tiempo agotado y el diálogo de seguidores no se abre. La lentitud de la mañana pudo deberse en parte a esto y no solo a una limitación de Instagram. El perfil sí carga. Pendiente de que Diego deje visible la ventana de Chrome con la pestaña de Claude. 0 invitaciones.
+- ~14:20: la ventana de Chrome volvió a estar visible y la lista de seguidores carga con normalidad (131 cuentas en 15 s, 650 en total). La lentitud de la mañana se debía a la ventana oculta, no a una limitación de Instagram.
+
+### Lote diario 7/oct/2026 — 10 cuentas (Opción B)
+Fuente: seguidores de @tdf.records.label entre las posiciones 250 y 650, más cuentas musicales sugeridas junto a ellos. Ninguna aparece en documentos ni notas de campaña. Descartados: dj_fenixprime (DJ colombiano sin vínculo con Ecuador), proxyhead (bio en inglés), sandroponce (idioma no demostrado), mathieusax97, artifexefitra, dclights31, dave_reyes_diaz (privados sin evidencia musical), rockitap, musguitogobrad, letrero.negro, planeta.soft, xeliaxabala, porcorossodonosso, nunajourney (no son de música), emilianopassato (pertinencia musical no explícita), la_pus_del_sistema (idioma poco claro; queda de reserva).
+| # | Cuenta | Segmento | Evidencia |
+|---|---|---|---|
+| 1 | @alx_drummer | músico | Alexander Cast, «Baterista», álbum en Spotify |
+| 2 | @vampirosounds | productor | Joe Benavides, «Musico- Productor Musical» |
+| 3 | @elioguitarrista | artista | Elio Cedeño Procel, guitarrista y compositor de SolFantasma, estreno «Otra Historia, Otro Amor» |
+| 4 | @elrotorgda | aliado | El Rotor, programa radial en mentemente.net, 10 años |
+| 5 | @colecciondemusica_ecuatoriana | aliado | radio y playlists de «Música de Ecuador» |
+| 6 | @green.house_music | aliado | Green House Music, sello: booking, producción, eventos (gira de Ganjah Roots) |
+| 7 | @davidibizastyle | productor | David Ibiza, «Productor Musical», en plataformas digitales |
+| 8 | @ruinaaaaas | artista (banda) | ruinas, álbum en Bandcamp |
+| 9 | @bibliotecadelrockradio | aliado | Biblioteca del Rock Radio, «Escena Ecuador» |
+| 10 | @karina.clavijo.music | artista | Karina Clavijo, «Artista · Docente · Productora», La Diversa y Kimbé |
+Mensajes (5 líneas, plantilla vigente; enlace artista_a / musico_a / musico_a-Producer / aliado_a; cierre «Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records»):
+1. Hola, Alexander 👋 Vimos tu trabajo como baterista y tu álbum en Spotify. / Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. / En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: / [musico_a]
+2. Hola, Joe 👋 Vimos tu trabajo como músico y productor musical. / Tu escena necesita un espacio propio para que la música de aquí siga encontrando gente. / Te invitamos a explorar perfiles y lanzamientos en TDF y seguir un primer proyecto; el enlace abre la intención profesional por tu trabajo como productor: / [Producer musico_a]
+3. Hola, Elio 👋 Vimos tu trabajo como guitarrista y compositor en SolFantasma, y el estreno de «Otra Historia, Otro Amor». / Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. / En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: / [artista_a]
+4. Hola, equipo de El Rotor 👋 Vimos sus 10 años de programa radial en Mentemente. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya le dan aire a la música local. / Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar: / [aliado_a]
+5. Hola, equipo de Colección de Música Ecuatoriana 👋 Vimos su trabajo difundiendo música de Ecuador en radio y playlists. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya hacen circular la música del país. / Les invitamos… / [aliado_a]
+6. Hola, equipo de Green House Music 👋 Vimos su trabajo como sello, con booking, producción y eventos como la gira de Ganjah Roots. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya conectan a artistas con su público. / Les invitamos… / [aliado_a]
+7. Hola, David 👋 Vimos tu trabajo como productor musical y tus lanzamientos en plataformas digitales. / Tu escena necesita un espacio propio para que la música de aquí siga encontrando gente. / Te invitamos… intención profesional… / [Producer musico_a]
+8. Hola, ruinas 👋 Vimos su álbum en Bandcamp. / Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. / En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar: / [artista_a]
+9. Hola, equipo de Biblioteca del Rock Radio 👋 Vimos su trabajo con la escena de Ecuador. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya le dan aire a la música local. / Les invitamos… / [aliado_a]
+10. Hola, Karina 👋 Vimos tu trabajo como artista, docente y productora, y proyectos como La Diversa y Kimbé. / Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. / En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: / [artista_a]
+- Envíos 7/oct (chat desde «New message», hilo revisado, texto exacto verificado, visible tras el envío): #1 @alx_drummer (517), #2 @vampirosounds (571), #3 @elioguitarrista (599), #4 @elrotorgda (547), #8 @ruinaaaaas (525), #9 @bibliotecadelrockradio (555; su único antecedente es una reacción suya a una historia de TDF en oct-2025, sin mensajes de TDF), #10 @karina.clavijo.music (584).
+- EXCLUIDOS por contacto previo en el hilo: @colecciondemusica_ecuatoriana (envían sus lanzamientos a TDF), @green.house_music (TDF respondió «Gracias!» el 25-feb-2026), @davidibizastyle (conversación previa con respuesta de TDF, 2025).
+- Respuestas: El Rotor contestó con un mensaje automático (WhatsApp), no requiere respuesta. Consuelo Caceres Oleas: consulta de anuncio, fuera de campaña; no se gestiona.
+- Reemplazos (no aparecen en docs ni notas): @oraculovibes (Ismael Villarroel, «Músico, Compositor, Productor, Bajista, Dj», Spotify), @cabinadelterror («El Programa de Sesiones en Vivo más Grande de Sudamérica», en español), @la_pus_del_sistema (proyecto punk con nombre en español; lo sigue Quito Bohemio). Descartados: estebanoise (sin evidencia), jeanpaulgortaire (vinculado a El Bloque, ya invitado), jaxmor.ec (bio en inglés).
+  Mensajes: Hola, Ismael 👋 Vimos tu trabajo como músico, productor, bajista y DJ, y tus temas en Spotify. / [plantilla productor] · Hola, equipo de Cabina del Terror 👋 Vimos su programa de sesiones en vivo. / Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya graban y muestran a los artistas en vivo. / [plantilla aliado] · Hola, La Pus Del Sistema 👋 Vimos su proyecto punk. / [plantilla banda, como ruinas]
+- @oraculovibes EXCLUIDO: TDF lo mencionó en una historia (22-oct-2025), contacto previo. Enviados: @cabinadelterror (554), @la_pus_del_sistema (533).
+- Último reemplazo: @pifrecuency (Pi Frecuency, «Producción Musical», producción audiovisual, Live Sessions, Quito). Mensaje: Hola, equipo de Pi Frecuency 👋 Vimos su trabajo en producción musical y sus Live Sessions en Quito. / Tu escena necesita un espacio propio para que la música de aquí siga encontrando gente. / [plantilla productor, intención profesional] / [Producer musico_a]. Descartados: shamanik_tribal (danza), agnidurden (bio sin idioma claro).
+- @pifrecuency ENVIADO (609 caracteres; en el envío se usó «Les invitamos… por su trabajo en producción» en plural).
+**Cierre del lote 7/oct: 10 invitaciones nuevas** (alx_drummer, vampirosounds, elioguitarrista, elrotorgda, ruinaaaaas, bibliotecadelrockradio, karina.clavijo.music, cabinadelterror, la_pus_del_sistema, pifrecuency). Excluidos por contacto previo: colecciondemusica_ecuatoriana, green.house_music, davidibizastyle, oraculovibes. Salidas de campaña hoy: 10 de 20. Notas CRM pendientes: el diálogo de edición no tiene campo de notas.
+- CRM: PR #513 (rama feat/crm-contact-notes) añade el campo «Notas» al diálogo de edición. Solo envía uNotes si se editó. Tests 13/13, tsc y eslint OK. Pendiente: revisión de tdfrecords y despliegue; después, registrar las notas de los envíos del 6 y 7/oct.
