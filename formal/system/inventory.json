@@ -7768,13 +7768,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "5eb825653a6125c926f9fc94925ee9aed93fbda0aa25915d4e9985dd38eaac1a",
+      "sha256": "3c98e31f54410408fe3dfd379e7f460e2a0c9485764fadc7539d269131d2b15a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "6b9434ca713ae3fa4e8695bcee00bd420a6f7e7bd88d14acbf20d6aff88705f0",
+      "sha256": "20f75186397ae5da59951a40205816bfb255b467c61a9a1302e793fa3b8cb4e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8200,7 +8200,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "e4271fcd1840f2122fc85c51ea3c8625207bcb5a1642e3d89b4a4feab6755d74",
+      "sha256": "f204edf41a62e0adf3165d13360d77c5b96dbc707db7c78bd67948c3480a4d35",
       "semanticConformance": "not-established-by-discovery"
     },
     {

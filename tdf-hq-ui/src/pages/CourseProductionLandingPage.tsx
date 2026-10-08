@@ -320,7 +320,7 @@ interface RegistrationAttempt {
 export default function CourseProductionLandingPage() {
   const theme = useTheme();
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
-  const { session } = useSession();
+  const { session, loading: sessionLoading } = useSession();
   const heroCtaRef = useRef<HTMLButtonElement | null>(null);
   // Tracked in state too, so the sticky-CTA observer attaches whenever the
   // hero button actually mounts (it can render after the metadata query settles).
@@ -526,25 +526,40 @@ export default function CourseProductionLandingPage() {
 
   // Prefill from the signed-in account without blocking the form on any request.
   // Fields the visitor already typed (or restored from the draft) always win.
-  const sessionDisplayName = session?.displayName.trim() ?? '';
-  const sessionEmail = session && looksLikeEmail(session.username) ? session.username.trim() : '';
+  // A cached session is only trusted after /session verifies it: on a shared
+  // browser an expired cache must never put the previous person's identity
+  // into the form, and values taken from an account that is no longer the
+  // verified one are removed unless the visitor edited them.
+  const verifiedSession = sessionLoading ? null : session;
+  const sessionDisplayName = verifiedSession?.displayName.trim() ?? '';
+  const sessionEmail = verifiedSession && looksLikeEmail(verifiedSession.username) ? verifiedSession.username.trim() : '';
   const prefillKeyRef = useRef<string | null>(null);
+  const prefilledValuesRef = useRef<{ fullName?: string; email?: string }>({});
   useEffect(() => {
-    if (!sessionDisplayName && !sessionEmail) return;
+    if (sessionLoading) return;
     const key = `${sessionDisplayName}\n${sessionEmail}`;
     if (prefillKeyRef.current === key) return;
     prefillKeyRef.current = key;
+    const previous = prefilledValuesRef.current;
+    let nextFullName = previous.fullName !== undefined && fullName === previous.fullName ? '' : fullName;
+    let nextEmail = previous.email !== undefined && email === previous.email ? '' : email;
+    const current: { fullName?: string; email?: string } = {};
     const prefilled: ('fullName' | 'email')[] = [];
-    if (sessionDisplayName && !fullName.trim()) {
-      setFullName(sessionDisplayName);
+    if (sessionDisplayName && !nextFullName.trim()) {
+      nextFullName = sessionDisplayName;
+      current.fullName = sessionDisplayName;
       prefilled.push('fullName');
     }
-    if (sessionEmail && !email.trim()) {
-      setEmail(sessionEmail);
+    if (sessionEmail && !nextEmail.trim()) {
+      nextEmail = sessionEmail;
+      current.email = sessionEmail;
       prefilled.push('email');
     }
+    prefilledValuesRef.current = current;
+    if (nextFullName !== fullName) setFullName(nextFullName);
+    if (nextEmail !== email) setEmail(nextEmail);
     setAccountFields(prefilled);
-  }, [email, fullName, sessionDisplayName, sessionEmail]);
+  }, [email, fullName, sessionDisplayName, sessionEmail, sessionLoading]);
 
   const clearFieldError = (field: CourseRegistrationField) => {
     setFieldErrors((current) => {

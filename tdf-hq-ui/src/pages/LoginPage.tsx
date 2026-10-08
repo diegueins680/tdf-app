@@ -320,16 +320,22 @@ export default function LoginPage() {
   useEffect(() => {
     if (!signupPreset.openSignup) return;
     if (appliedSignupPresetRef.current === location.search) return;
+    // The form starts empty. Only a later preset change (new campaign link in
+    // the same page) clears it; clearing on mount ran after the first paint
+    // and could wipe what someone had already typed on a slow device.
+    const isFirstPreset = appliedSignupPresetRef.current === null;
     appliedSignupPresetRef.current = location.search;
     setSignupDialogOpen(true);
     setSignupFeedback(null);
-    setSignupForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      password: '',
-    });
+    if (!isFirstPreset) {
+      setSignupForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        password: '',
+      });
+    }
     setClaimArtistId(signupPreset.claimArtistId);
     setSignupIntent(signupPreset.intent);
     setSignupFieldErrors({});

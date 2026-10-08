@@ -36,12 +36,12 @@ jest.unstable_mockModule('../components/PublicBrandBar', () => ({
   default: ({ tagline }: { tagline?: string }) => <div>{tagline}</div>,
 }));
 
-const sessionState: { current: SessionUser | null } = { current: null };
+const sessionState: { current: SessionUser | null; loading: boolean } = { current: null, loading: false };
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({
     session: sessionState.current,
-    loading: false,
+    loading: sessionState.loading,
     login: () => undefined,
     logout: () => undefined,
     setApiToken: () => undefined,
@@ -135,24 +135,32 @@ const renderPage = async (container: HTMLElement, initialEntry: string) => {
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
   let root: Root | null = createRoot(container);
+  const tree = () => (
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route path="/curso/:slug" element={<CourseProductionLandingPage />} />
+          <Route path="/curso/:slug/orden/:registrationId" element={<CourseProductionLandingPage />} />
+          <Route path="/login" element={<div>Synthetic login</div>} />
+        </Routes>
+        <LocationProbe />
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
 
   await act(async () => {
-    root?.render(
-      <QueryClientProvider client={qc}>
-        <MemoryRouter initialEntries={[initialEntry]}>
-          <Routes>
-            <Route path="/curso/:slug" element={<CourseProductionLandingPage />} />
-            <Route path="/curso/:slug/orden/:registrationId" element={<CourseProductionLandingPage />} />
-            <Route path="/login" element={<div>Synthetic login</div>} />
-          </Routes>
-          <LocationProbe />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+    root?.render(tree());
     await flushPromises();
   });
 
   return {
+    // Re-render after changing the mocked session state (bootstrap settling).
+    rerender: async () => {
+      await act(async () => {
+        root?.render(tree());
+        await flushPromises();
+      });
+    },
     cleanup: async () => {
       if (!root) return;
       await act(async () => {
@@ -286,6 +294,7 @@ describe('CourseProductionLandingPage', () => {
     getCheckoutMock.mockReset();
     scrollIntoViewMock.mockReset();
     sessionState.current = null;
+    sessionState.loading = false;
     window.sessionStorage.clear();
     getMetadataMock.mockResolvedValue(buildMetadata());
     registerMock.mockResolvedValue(buildLeadResponse());
@@ -689,6 +698,52 @@ describe('CourseProductionLandingPage', () => {
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('never prefills from a cached session that bootstrap has not verified', async () => {
+    // Shared browser: a previous person's expired session is still cached.
+    sessionState.current = { username: 'previa@example.com', displayName: 'Persona Previa', roles: ['customer'] };
+    sessionState.loading = true;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      const dialog = await openEnrollmentFromHero(container);
+      expect(text(dialog)).not.toContain('Persona Previa');
+      expect(text(dialog)).not.toContain('previa@example.com');
+      expect(fieldById('course-enroll-fullname').value).toBe('');
+      expect(fieldById('course-enroll-email').value).toBe('');
+
+      // The server rejects the cached session.
+      sessionState.current = null;
+      sessionState.loading = false;
+      await view.rerender();
+      expect(fieldById('course-enroll-fullname').value).toBe('');
+      expect(fieldById('course-enroll-email').value).toBe('');
+      expect(text(container.ownerDocument.body)).not.toContain('previa@example.com');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('removes account-prefilled values when that account is no longer the verified session', async () => {
+    sessionState.current = { username: 'ana@example.com', displayName: 'Ana Torres', roles: ['customer'] };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      const dialog = await openEnrollmentFromHero(container);
+      expect(text(dialog)).toContain('Ana Torres');
+      sessionState.current = null;
+      await view.rerender();
+      expect(text(container.ownerDocument.body)).not.toContain('ana@example.com');
+      expect(fieldById('course-enroll-fullname').value).toBe('');
+      expect(fieldById('course-enroll-email').value).toBe('');
+    } finally {
+      await view.cleanup();
     }
   });
 
