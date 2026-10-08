@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "810c91c5b5ec293c9e011fbec0f813bb62f8b17a",
+  "mobileRevision": "d62fcfbb951e1f66348e8202d36e9426c3fb97a6",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -412,6 +412,7 @@
       "scripts/test-course-identity.sh",
       "scripts/test-credential-lifecycle.sh",
       "scripts/test-ddex-partner-legacy-compatibility.sh",
+      "scripts/test-directory-artist-listings.sh",
       "scripts/test-directory-event-visibility-migration.sh",
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
@@ -790,6 +791,8 @@
       "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
       "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
       "tdf-hq-ui/src/components/__tests__/TicketTransferDialog.test.tsx",
+      "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
+      "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
       "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
       "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
@@ -1238,6 +1241,7 @@
       "tdf-hq-ui/src/utils/dateTime.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.test.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.ts",
+      "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
       "tdf-hq-ui/src/utils/domoQuoteAccess.ts",
       "tdf-hq-ui/src/utils/env.test.ts",
       "tdf-hq-ui/src/utils/env.ts",
@@ -1732,6 +1736,10 @@
       "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql",
       "tdf-hq/sql/2026-10-07_artist_invitation_links.sql",
       "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql",
+      "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+      "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
+      "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+      "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
       "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
       "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
@@ -2070,6 +2078,8 @@
       "tdf-hq/test/integration/ddex_reference_cutover_negative.sh",
       "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
       "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
+      "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
+      "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
       "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
       "tdf-hq/test/integration/event_moment_reaction_cutover_postgres.sql",
       "tdf-hq/test/integration/event_operations_command_privacy_assertions.sql",
@@ -2193,6 +2203,7 @@
       "tdf-mobile/__tests__/catalogsApi.test.ts",
       "tdf-mobile/__tests__/ddexApi.test.ts",
       "tdf-mobile/__tests__/directoryApi.test.ts",
+      "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
       "tdf-mobile/__tests__/eventMoments.test.ts",
       "tdf-mobile/__tests__/eventMomentsRepository.test.ts",
       "tdf-mobile/__tests__/fanArtists.test.ts",
@@ -2369,6 +2380,7 @@
       "tdf-mobile/src/api/upload.ts",
       "tdf-mobile/src/api/venues.ts",
       "tdf-mobile/src/components/ArtistCard.tsx",
+      "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
       "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
       "tdf-mobile/src/components/ErrorBoundary.tsx",
       "tdf-mobile/src/components/EventCard.tsx",
@@ -2397,6 +2409,7 @@
       "tdf-mobile/src/experiments/useExperimentEvent.ts",
       "tdf-mobile/src/features/directory/classifiedForm.test.ts",
       "tdf-mobile/src/features/directory/classifiedForm.ts",
+      "tdf-mobile/src/features/directory/previewImage.ts",
       "tdf-mobile/src/features/directory/profileForm.test.ts",
       "tdf-mobile/src/features/directory/profileForm.ts",
       "tdf-mobile/src/features/featureRegistry.ts",
@@ -2542,7 +2555,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
+      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2950,7 +2963,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "1e52fb4523cfba328755635c6ae0d016747234f425f4ed2e809951659430905c",
+      "sha256": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4066,7 +4079,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
+      "sha256": "5003e28fef52747f06bd397f3f4047c41407fd9bd0acb28cbfca75a0afa4dbf5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4228,7 +4241,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+      "sha256": "43a5f781eca458438c6f34852ca6e29915f85fd4e26605ff440160a2d60b62a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4859,6 +4872,12 @@
       "id": "SURFACE-a4e14129b2b375a9",
       "path": "scripts/test-ddex-partner-legacy-compatibility.sh",
       "sha256": "6abd53bbd6a3c6762f4f7465f5f2290f2cbd2e813650cd04114ead4d2e18001d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-aa5f33e082489dd1",
+      "path": "scripts/test-directory-artist-listings.sh",
+      "sha256": "d96735307f454afbeaf47bd3871a8d5440ee30b13b2d9bd7c5a171b26ccb7055",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6196,7 +6215,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
+      "sha256": "233a432a846849183afcbd3cc880d454b3657d86f1060efda8ced2c02b4ba8df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7106,6 +7125,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a6e139d776c2f045",
+      "path": "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
+      "sha256": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b9a225105c7c3965",
+      "path": "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
+      "sha256": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-615a78e009691805",
       "path": "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "sha256": "bb66b7c21afaae45254cdd5170537c61aaf8f47477f4e3a80d356fdab207179c",
@@ -7828,13 +7859,13 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "051b4997dc6187323d7fe5bdb68c7dd213c10de5777955fed2b7863c1bafa5e5",
+      "sha256": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "5e3429b0d576872503091a0d2a8c03902f08b0fe23112140ee4acd70f439668e",
+      "sha256": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8266,13 +8297,13 @@
     {
       "id": "SURFACE-ac24f384b7949bc7",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
-      "sha256": "b5f6fb747a1d8b4c0992fc7b191a0b61c19cf33d626267381cb73ae213f1df54",
+      "sha256": "9b58a070da30f0c60032d53c99c569424a7ec321f23f085e39988a897aa72f57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "e5434e53bda9624721e0d90c8d7c239a12c7901839e64e34e72dba9ad4d72d83",
+      "sha256": "acaa1eda39426719c7e7a21cfa4fe3d5f17cef46069dc9a7c22aced40a63da74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8284,19 +8315,19 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "24efabd60b10e1d8ef93b335002bcdb0d61dec08cffc67080d87bdec1e990084",
+      "sha256": "0d5a73e5bf17cb3729df10195bd083b26a1296a71436d7fa4f468a3a5b127d1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
+      "sha256": "691bb14706f89103e88df8e2895c5221feb83261c376e2c4df7b1713e3531412",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "e41ea71f40d7c2270b7027918f4a7c0828303acb5acf300e5b391efb1bc90c62",
+      "sha256": "627af000b5ce8462fbe704525a25f1c77444a85877fac2d92e346cb91c9f3804",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9794,6 +9825,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-bb88b59d02aa9172",
+      "path": "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
+      "sha256": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f410a5c2ecf9598f",
       "path": "tdf-hq-ui/src/utils/domoQuoteAccess.ts",
       "sha256": "ac0290e299a41c5149c191578d4db27cef4744160f4fa14802f3a4b571e4b47b",
@@ -10360,7 +10397,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
+      "sha256": "4f37cbf804d257ad292c6e765bb0093d133a543aeb4d6f163c725ece2a5d004d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12746,6 +12783,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a190940f0cb18e04",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+      "sha256": "0bb1bec6f1041f228a7831ebab6bbfdccb93a385d7e5de799bf1b2d33c392118",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0ca3c1bdd4f9435e",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
+      "sha256": "c741aeb4d6ed85d48911f6acb59a3c96ddc20496ef178b71ab13f3fd36ef5434",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a2857b80564644cb",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+      "sha256": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-93563ebe32e71eba",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
+      "sha256": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c84d5e2371daa21",
       "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
       "sha256": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
@@ -12832,7 +12893,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "414722c5bbe18dec00e1cf9b3db84a2f394a8ac2b297bacd67ff71be0fc9946c",
+      "sha256": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13816,7 +13877,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
+      "sha256": "6e87f83c707231bde0f56bb480af172041523cd78d057462a9cbc188879b004a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14774,6 +14835,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4ff045e7860017f4",
+      "path": "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
+      "sha256": "9b4c304f05a3d8e2a8820a00a48e691c3a283b4e56c24ad106bccf39e08f4562",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f0bd7f5932c37ecd",
+      "path": "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
+      "sha256": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-18f37ce472f3ac70",
       "path": "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
       "sha256": "e028d25de639317fa3787d0e0a1160f3a1a5412f0db3a1d366a728d4ed9391ea",
@@ -15500,6 +15573,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4744ff78391b59cc",
+      "path": "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
+      "sha256": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
       "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
@@ -15730,7 +15809,7 @@
     {
       "id": "SURFACE-f52dfd6e2d77a57f",
       "path": "tdf-mobile/app/(tabs)/directory.tsx",
-      "sha256": "bba3e1e9fd52fa6da3dd9d9db71b67f50c38df51261af26190e7e1e5d61f61cf",
+      "sha256": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15916,7 +15995,7 @@
     {
       "id": "SURFACE-73a1b649f6438e52",
       "path": "tdf-mobile/app/directory/manage.tsx",
-      "sha256": "a3796e16ce55b21c0aa19f558694b71580408fe983a8ceb56673c2da94031715",
+      "sha256": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16204,13 +16283,13 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
+      "sha256": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
+      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16414,7 +16493,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
+      "sha256": "233a432a846849183afcbd3cc880d454b3657d86f1060efda8ced2c02b4ba8df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16556,9 +16635,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f242ee0fc1c8742e",
+      "path": "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
+      "sha256": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7568a6ba01e6268b",
       "path": "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
-      "sha256": "8866bef797bf772d209ef0cf24234b45ab408561505603ee8fd22a1acd0fb014",
+      "sha256": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16721,6 +16806,12 @@
       "id": "SURFACE-12818522512d2c5b",
       "path": "tdf-mobile/src/features/directory/classifiedForm.ts",
       "sha256": "a93030ad3d52801766ca8f6e48869af4c032d6c71c4054ccdf1757f3f51ffca7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-87778cdfd76bc6d8",
+      "path": "tdf-mobile/src/features/directory/previewImage.ts",
+      "sha256": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19313,6 +19404,13 @@
       "sha256": "b86ffbd486213e3681dbaeec04725887d53b17a6304c17fc68e611eed321e06a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/music-directory/artist-derived-listings.md",
+      "sha256": "e49736a293e72bc1fea14dd0f63c1a505cf86fe1f91298c0c9a8f849c34cfbb5",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented 2026-10-07 (`2026-10-07_directory_artist_derived_listings`,",
       "kind": "requirement-candidate"
     },
     {
@@ -23727,7 +23825,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9eb962c20b1fc39e7354adad1ed4ace72e1b7021428d265fd9140552083582fc",
+      "sha256": "5a829dfec04c9f7fd10ae7f61b26724e2a35698f30dbf0d172a81e33415e42e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24049,7 +24147,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
+      "sha256": "4f37cbf804d257ad292c6e765bb0093d133a543aeb4d6f163c725ece2a5d004d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
