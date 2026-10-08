@@ -7533,6 +7533,72 @@
         "classification": "PARTIAL",
         "reason": "Local tests pass; CI migration rehearsal and production verification pending."
       }
+    },
+    {
+      "id": "COURSE-PHONE-001",
+      "title": "Course registration accepts Ecuador national phone numbers as E.164",
+      "statement": "Public course registration must accept international E.164 input and Ecuador national numbers, storing E.164 on both registration paths, while rejecting malformed input.",
+      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "domain": "COURSE",
+      "actors": [
+        "Course visitor",
+        "Public course registration API"
+      ],
+      "preconditions": [
+        "Course slug exists and registration is open."
+      ],
+      "inputs": [
+        "phoneE164 field as typed by the visitor"
+      ],
+      "state": {
+        "boundary": "Course registration request validation",
+        "states": [
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "international or Ecuador national phone -> stored E.164"
+      ],
+      "forbiddenTransitions": [
+        "Ecuador national phone -> 400 phoneE164 inválido",
+        "free text or malformed phone -> stored"
+      ],
+      "effects": [
+        "Registration stores the normalized E.164 phone."
+      ],
+      "authorization": "Public endpoint; no authorization change.",
+      "privacy": "No new personal data; same field normalized.",
+      "concurrency": "No change.",
+      "idempotency": "Checkout request hash keeps the trimmed phone text as before, so retries across the rollout match.",
+      "failure": "Malformed phones keep returning 400.",
+      "recovery": "Visitor corrects the phone and retries.",
+      "observability": "Haskell unit tests; production smoke with an incomplete registration.",
+      "source": "Android user test 2026-10-07; PR #521",
+      "property": "NationalPhoneAccepted and MalformedPhoneRejected",
+      "contract": "formal/system/course-phone.md",
+      "implementation": [
+        "tdf-hq/src/TDF/CoursePhone.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
+      ],
+      "verification": "ServerSpec validateCourseRegistrationPhoneE164 cases for Ecuador formats and rejections.",
+      "evidence": "tdf-hq-test ServerSpec; production smoke after release.",
+      "status": "specified and implemented",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates",
+      "critical": false,
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "Unit tests pass in CI; deployed verification pending.",
+      "ambiguity": [
+        "Course checkout path phone validation is new; previously stored raw text."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unit tests pass; deployed verification pending."
+      }
     }
   ]
 }

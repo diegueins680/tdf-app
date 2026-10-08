@@ -1708,6 +1708,7 @@
       "tdf-hq/src/TDF/Contracts/Server.hs",
       "tdf-hq/src/TDF/Contracts/Types.hs",
       "tdf-hq/src/TDF/Cors.hs",
+      "tdf-hq/src/TDF/CoursePhone.hs",
       "tdf-hq/src/TDF/Courses/Production.hs",
       "tdf-hq/src/TDF/Cron.hs",
       "tdf-hq/src/TDF/DB.hs",
@@ -12450,6 +12451,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7a17991a5f78eecb",
+      "path": "tdf-hq/src/TDF/CoursePhone.hs",
+      "sha256": "0063fb53d4809e823e140009d23bb31a48ab30dea35cd9c9460225db4a5b594c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
       "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -12854,7 +12861,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "ca5b4906941fc1b096e5893fd956029c2d93d7464d3e256caa399b4dd67c2025",
+      "sha256": "c984e615c1f7598108535cce391f927f6e07dbe59529d291b4da609da2285060",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12872,7 +12879,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "15af66fb43c21a80f6e41f4ff67755fc0b8dda6867383496a1c6da3a2ab3e70a",
+      "sha256": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13292,7 +13299,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "22c64130cc46d56416ead4e9ee85cd65870d01e4e82584ba514e67c96dbf5b9c",
+      "sha256": "a19b3945e525a8ced68e3fb90b53b9acd8f8be718f45465e85fc3c83fa99b36c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13604,7 +13611,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "188af92e48e758565e75d2e40863a8923f88b3767de7b3ed4c0f4855d65c5faa",
+      "sha256": "8d6f262134bbc5edf58b0db8acd9386767e74e13d54db8d58983f0db0829000b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22221,6 +22228,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/course-phone.md",
+      "sha256": "49d8eedbfa88788f5901e64fe7927e950d8441cbefdd3c02f557f60e1500e9cf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/ddex-validation.md",
       "sha256": "557a52a933d3db67de345c5558edbd88914b63cc1d907249b5cb226ee9919949",
       "authority": "inferred",
@@ -22439,7 +22453,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "aa7f13491ef047c8081ab8d1c9c2fd9d18535a0e2b68e564e8eba632fbcec4ac",
+      "sha256": "137ddad53bb949b6681d821bccbc654cab5186a2241a541f9f4b65692ddc21f8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
