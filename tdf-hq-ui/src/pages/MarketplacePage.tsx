@@ -60,6 +60,7 @@ import {
   writeCartMeta,
   type MarketplaceCartMeta,
 } from '../features/marketplace/cartSummary';
+import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -2682,7 +2683,8 @@ export default function MarketplacePage() {
           sx={{
             display: { xs: 'flex', md: 'none' },
             position: 'sticky',
-            bottom: 0,
+            // Above the global music player when one is playing.
+            bottom: BOTTOM_DOCK_OFFSET,
             zIndex: (muiTheme) => muiTheme.zIndex.appBar,
             mx: -2,
             px: 2,

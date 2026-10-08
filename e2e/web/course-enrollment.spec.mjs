@@ -236,8 +236,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await page.goto(`/curso/${SLUG}?utm_source=ig&inscribirme=1`, { waitUntil: 'domcontentloaded' });
     const dialog = page.getByRole('dialog', { name: 'Inscríbete en Curso de Batería con Guillermo Díaz' });
     await expectInViewport(page, dialog.getByLabel('Nombre completo'));
+    // The login round-trip resumes enrollment and keeps campaign attribution.
     await expect(dialog.getByRole('link', { name: 'Inicia sesión para autocompletar' }))
-      .toHaveAttribute('href', `/login?redirect=${encodeURIComponent(`/curso/${SLUG}?inscribirme=1`)}`);
+      .toHaveAttribute('href', `/login?redirect=${encodeURIComponent(`/curso/${SLUG}?utm_source=ig&inscribirme=1`)}`);
     await dialog.getByRole('button', { name: 'Cerrar' }).click();
     await expect(dialog).toBeHidden();
     await expect(page).toHaveURL(new RegExp(`/curso/${SLUG}\\?utm_source=ig$`));

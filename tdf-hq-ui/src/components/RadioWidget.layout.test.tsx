@@ -123,7 +123,7 @@ it('publishes the docked bar height as a CSS variable and reserves it at the bot
   const { container, unmount } = await renderWidget();
   try {
     await waitFor(() => expect(document.documentElement.style.getPropertyValue(VAR)).toBe('58px'));
-    expect(document.body.style.paddingBottom).toBe(`var(${VAR}, 0px)`);
+    expect(document.body.style.paddingBottom).toBe('calc(var(--tdf-global-player-height, 0px) + var(--tdf-radio-bar-height, 0px))');
 
     // Hiding the bar releases the reserved space.
     await act(async () => {

@@ -8551,7 +8551,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -8599,13 +8599,16 @@
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
         "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
         "tdf-hq-ui/src/theme/appTheme.ts",
-        "tdf-hq-ui/src/theme/AppThemeProvider.tsx"
+        "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
+        "tdf-hq-ui/src/utils/bottomDock.ts",
+        "tdf-hq-ui/src/player/GlobalPlayer.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
-        "e2e/web/mobile-layout-regressions.spec.mjs"
+        "e2e/web/mobile-layout-regressions.spec.mjs",
+        "tdf-hq-ui/src/utils/bottomDock.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

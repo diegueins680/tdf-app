@@ -8552,7 +8552,7 @@
     {
       "id": "SYS-WEB-LAYOUT-001",
       "title": "Public mobile layouts stay usable at 360px",
-      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width.",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "SYS",
       "actors": [
@@ -8600,13 +8600,16 @@
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
         "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
         "tdf-hq-ui/src/theme/appTheme.ts",
-        "tdf-hq-ui/src/theme/AppThemeProvider.tsx"
+        "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
+        "tdf-hq-ui/src/utils/bottomDock.ts",
+        "tdf-hq-ui/src/player/GlobalPlayer.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
-        "e2e/web/mobile-layout-regressions.spec.mjs"
+        "e2e/web/mobile-layout-regressions.spec.mjs",
+        "tdf-hq-ui/src/utils/bottomDock.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -8637,7 +8640,7 @@
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
-    "e2e/web/course-enrollment.spec.mjs": "c170c10b80feec1d66997f2955f6935c85f48220e3f3ce036a8be584a789ec8a",
+    "e2e/web/course-enrollment.spec.mjs": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/marketplace-cart.spec.mjs": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
@@ -8996,8 +8999,8 @@
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PublicBranding.tsx": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
-    "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "f4472eeb35e04d8604487d65cf813251276cad085a92995d7a2f4cf41240bbc3",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "64fd4687504e5b3d864f16aac1439394f036a498409e386ddeadc087484b0b7e",
+    "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
@@ -9043,7 +9046,7 @@
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "dce127c6cfc3b448c5fa22199f81ff4a1c71ad63dfc66928a2bd874260243b0f",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "bcadf3aa12ad922066231a9115136e14d671c800ebc69db486e35c7a99379c1a",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "d7fbfc076396110f24cfa7cacc218b8eb371077b3ba93fa7b88567cf44a037ed",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -9063,7 +9066,7 @@
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "83752ef12c19868adab088461e0c05863b694b6a31d2246197227467501fb77b",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
-    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "41f6891744481de7fb85a5670753a09c1d1547ded4ab7f16a5edc136cd5cb6f1",
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "88ecc5643818a0637cb9be8bd6c37877a74e8c61b23b630c47f47cb257019923",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "329e773ad263a5409e3a38261da4775858977388cbd55a6f9c9838cf4955e332",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
@@ -9080,7 +9083,7 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
-    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "7c441a89f482cb813ccbbef631fa3a4282a6b9e6bcd25fc2e03a4be475ee7800",
+    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "690bdc8b04c356eb1a7024980834a0a9d50a28e3db2b23c59bf99b3c69bd6fe5",
     "tdf-hq-ui/src/player/PlayerProvider.tsx": "a1a36f6ab3a24a6ba935d358b9904f8fcf83ea193fe5172c9829c2f688fcf9dc",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
@@ -9107,6 +9110,8 @@
     "tdf-hq-ui/src/theme/appTheme.ts": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/accessControl.test.ts": "0b20df0cf04f4e24848269a97376d016e22ee014924dbed2379ab0abf60afb16",
+    "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
+    "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts": "24430baf37b1660622a9d0830fe0066f79a57f0ce7de88381f2854a14c9cdbba",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": "c95f0d906b0cb5dfe754d829bef159aaeca29f3e3ef59b37fb5fb45ab0d0ccd4",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
@@ -14795,6 +14800,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/player/PlayerProvider.tsx": [
@@ -15459,6 +15468,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/utils/bottomDock.ts": [
+      {
+        "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": [
       {
         "requirement": "SYS-WEB-LAYOUT-001",
@@ -15478,6 +15493,12 @@
       }
     ],
     "e2e/web/mobile-layout-regressions.spec.mjs": [
+      {
+        "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/bottomDock.test.tsx": [
       {
         "requirement": "SYS-WEB-LAYOUT-001",
         "relationship": "tests"
@@ -15720,7 +15741,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c170c10b80feec1d66997f2955f6935c85f48220e3f3ce036a8be584a789ec8a",
+      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22549,7 +22570,7 @@
     {
       "id": "SURFACE-d385ed9b2a05df5c",
       "path": "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
-      "sha256": "f4472eeb35e04d8604487d65cf813251276cad085a92995d7a2f4cf41240bbc3",
+      "sha256": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22568,7 +22589,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "64fd4687504e5b3d864f16aac1439394f036a498409e386ddeadc087484b0b7e",
+      "sha256": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24375,7 +24396,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "bcadf3aa12ad922066231a9115136e14d671c800ebc69db486e35c7a99379c1a",
+      "sha256": "d7fbfc076396110f24cfa7cacc218b8eb371077b3ba93fa7b88567cf44a037ed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25053,7 +25074,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "41f6891744481de7fb85a5670753a09c1d1547ded4ab7f16a5edc136cd5cb6f1",
+      "sha256": "88ecc5643818a0637cb9be8bd6c37877a74e8c61b23b630c47f47cb257019923",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25974,11 +25995,15 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "7c441a89f482cb813ccbbef631fa3a4282a6b9e6bcd25fc2e03a4be475ee7800",
+      "sha256": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-WEB-LAYOUT-001",
           "relationship": "implementation"
         }
       ]
@@ -26491,6 +26516,30 @@
       "sha256": "b4e5b9000a68c8ec9169d299246f947c44e160330dc460a20fac799bdbcc7c38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-bd0954e273c5ef94",
+      "path": "tdf-hq-ui/src/utils/bottomDock.test.tsx",
+      "sha256": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-388a675bc4676cab",
+      "path": "tdf-hq-ui/src/utils/bottomDock.ts",
+      "sha256": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0aecc9cc1ba8692b",
@@ -40469,7 +40518,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "756ed5583cf35491cba3b280328655d5271fed0595b65a5677dd8ba2c18a3d1e",
+      "sourceSha256": "9eb962c20b1fc39e7354adad1ed4ace72e1b7021428d265fd9140552083582fc",
       "definition": {
         "states": [
           "absent",

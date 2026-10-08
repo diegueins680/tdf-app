@@ -62,6 +62,7 @@ import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfi
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { normalizePhoneToE164, PHONE_EXAMPLE_HINT } from '../utils/phone';
 import {
   describeCourseRegistrationError,
@@ -1679,9 +1680,9 @@ function StickyEnrollBar({
         position: 'fixed',
         left: 0,
         right: 0,
-        // Sit above the docked radio bar (signed-in visitors) instead of
-        // competing for the same fixed position; 0 when the bar is hidden.
-        bottom: 'var(--tdf-radio-bar-height, 0px)',
+        // Sit above the docked radio bar and global player instead of
+        // competing for the same fixed position; 0 when neither is shown.
+        bottom: BOTTOM_DOCK_OFFSET,
         zIndex: (theme) => theme.zIndex.appBar,
         alignItems: 'center',
         gap: 2,

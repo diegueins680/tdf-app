@@ -1,4 +1,5 @@
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
+import { ABOVE_GLOBAL_PLAYER, RADIO_BAR_HEIGHT_VAR, useDockedBarHeight } from '../utils/bottomDock';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -172,7 +173,6 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 }
 
 /** CSS custom property carrying the docked radio bar's height (px) while it is shown. */
-const RADIO_BAR_HEIGHT_VAR = '--tdf-radio-bar-height';
 
 export default function RadioWidget() {
   const navigate = useNavigate();
@@ -1843,31 +1843,9 @@ export default function RadioWidget() {
   const shouldInlineMiniBar = false; // always docked at bottom, even on login
   const dockedBarVisible = !hideRadioForRoute && !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
 
-  useEffect(() => {
-    if (!dockedBarVisible || typeof document === 'undefined') return undefined;
-    const node = dockedBarRef.current;
-    if (!node) return undefined;
-    const root = document.documentElement;
-    const body = document.body;
-    const previousBodyPadding = body.style.paddingBottom;
-    const publish = () => {
-      const height = Math.ceil(node.getBoundingClientRect().height);
-      root.style.setProperty(RADIO_BAR_HEIGHT_VAR, `${height}px`);
-    };
-    publish();
-    // Reserve the docked bar's height at the bottom of the document so the last
-    // form fields and submit buttons can scroll above it instead of under it.
-    body.style.paddingBottom = `var(${RADIO_BAR_HEIGHT_VAR}, 0px)`;
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
-    observer?.observe(node);
-    window.addEventListener('resize', publish);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener('resize', publish);
-      root.style.removeProperty(RADIO_BAR_HEIGHT_VAR);
-      body.style.paddingBottom = previousBodyPadding;
-    };
-  }, [dockedBarVisible]);
+  // Publish the docked bar's height (and reserve it on <body>) so the last
+  // form fields and submit buttons can scroll above it instead of under it.
+  useDockedBarHeight(RADIO_BAR_HEIGHT_VAR, dockedBarRef, dockedBarVisible);
 
   const miniBarNode = (
     <Box
@@ -1877,7 +1855,7 @@ export default function RadioWidget() {
         position: shouldInlineMiniBar ? 'relative' : 'fixed',
         left: 0,
         right: 0,
-        bottom: shouldInlineMiniBar ? 'auto' : 0,
+        bottom: shouldInlineMiniBar ? 'auto' : ABOVE_GLOBAL_PLAYER,
         // appBar (1100) stays below MUI modals (1300), so enrollment and
         // other dialogs always render above the docked bar.
         zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.appBar,
