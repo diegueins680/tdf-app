@@ -345,6 +345,12 @@ const es = {
       continue: 'Continuar al pago',
       close: 'Cerrar',
     },
+    terms: {
+      title: 'Términos de las entradas',
+      refundTitle: 'Política de reembolso',
+      version: 'Versión de términos: {{version}}',
+      accept: 'Acepto los términos de las entradas (versión {{version}}) y la política de reembolso indicados arriba.',
+    },
     errors: {
       requiredFields: 'Por favor completa todos los campos obligatorios',
       stripeMissing: 'Stripe no se ha inicializado',
@@ -354,6 +360,8 @@ const es = {
       unavailable: 'El pago no está disponible ahora. No se reservó ninguna entrada. Inténtalo de nuevo más tarde.',
       paymentIntent: 'Error al crear la intención de pago',
       unexpected: 'Ocurrió un error inesperado',
+      termsRequired: 'Acepta los términos y la política de reembolso para continuar.',
+      termsChanged: 'Los términos de las entradas se actualizaron. Revisa la nueva versión y vuelve a aceptarla.',
     },
     status: {
       buyer: 'Comprador',

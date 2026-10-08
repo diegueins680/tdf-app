@@ -8,6 +8,7 @@ module TDF.Routes.Courses
   ( CourseSession(..)
   , SyllabusItem(..)
   , CourseMetadata(..)
+  , CourseCheckoutTerms(..)
   , UTMTags(..)
   , CourseRegistrationRequest(..)
   , CourseRegistrationResponse(..)
@@ -86,10 +87,21 @@ data CourseMetadata = CourseMetadata
   , syllabus       :: [SyllabusItem]
   , whatsappCtaUrl :: Text
   , landingUrl     :: Text
+  , checkoutTerms  :: Maybe CourseCheckoutTerms
+  -- ^ Terms of the approved active checkout policy, shown before the buyer accepts them.
   } deriving (Show, Generic)
 
 instance ToJSON CourseMetadata
 instance FromJSON CourseMetadata
+
+data CourseCheckoutTerms = CourseCheckoutTerms
+  { termsVersion       :: Text
+  , termsSummary       :: Text
+  , cancellationPolicy :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON CourseCheckoutTerms
+instance FromJSON CourseCheckoutTerms
 
 data UTMTags = UTMTags
   { source   :: Maybe Text
@@ -112,13 +124,15 @@ data CourseRegistrationRequest = CourseRegistrationRequest
   , howHeard  :: Maybe Text
   , utm       :: Maybe UTMTags
   , termsAccepted :: Maybe Bool
+  , acceptedTermsVersion :: Maybe Text
+  -- ^ The terms version the buyer was shown; checkout rejects a stale version.
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationRequest where
   parseJSON value = do
     rejectNullOptionalFields
       "CourseRegistrationRequest"
-      ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted"]
+      ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted", "acceptedTermsVersion"]
       value
     genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationRequest

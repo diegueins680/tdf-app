@@ -539,16 +539,17 @@ spec = do
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
-                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true}" of
+                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true,\"acceptedTermsVersion\":\"course-terms-v1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course registration payload to decode, got: " <> err)
-                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal) -> do
+                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal acceptedTermsVersionVal) -> do
                     fullNameVal `shouldBe` Just "Ada Lovelace"
                     emailVal `shouldBe` Just "ada@example.com"
                     phoneVal `shouldBe` Just "+593991234567"
                     sourceVal `shouldBe` "landing"
                     howHeardVal `shouldBe` Just "instagram"
                     termsAcceptedVal `shouldBe` Just True
+                    acceptedTermsVersionVal `shouldBe` Just "course-terms-v1"
                     case utmVal of
                         Nothing ->
                             expectationFailure "Expected canonical course registration payload to preserve utm tags"
@@ -2694,7 +2695,8 @@ spec = do
                     , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\""
                     , ",\"ticketPurchasePromoCode\":null"
                     , ",\"ticketPurchaseMobileSdkStripeVersion\":\"2025-04-30.basil\""
-                    , ",\"ticketPurchaseIdempotencyKey\":\"ticket-checkout-123\"}"
+                    , ",\"ticketPurchaseIdempotencyKey\":\"ticket-checkout-123\""
+                    , ",\"ticketPurchaseAcceptedTermsVersion\":\" event-ticket-terms-v1 \"}"
                     ]
                 ) of
                 Left err ->
@@ -2710,6 +2712,8 @@ spec = do
                         `shouldBe` Just "2025-04-30.basil"
                     SocialEvents.tpwpIdempotencyKey payload
                         `shouldBe` Just "ticket-checkout-123"
+                    SocialEvents.tpwpAcceptedTermsVersion payload
+                        `shouldBe` Just "event-ticket-terms-v1"
 
             case decodeTicketOrderStatus "{\"ticketOrderStatus\":\"paid\"}" of
                 Left err ->

@@ -33,12 +33,14 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import type { CourseCheckoutResponse, CourseMetadata, CourseRegistrationRequest } from '../api/courses';
+import type { CourseCheckoutResponse, CourseCheckoutTerms, CourseMetadata, CourseRegistrationRequest } from '../api/courses';
+import { ApiError } from '../api/client';
 import { Courses } from '../api/courses';
 import type { DatafastCheckoutDTO } from '../api/types';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import PublicBrandBar from '../components/PublicBrandBar';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -262,6 +264,7 @@ export default function CourseProductionLandingPage() {
     queryFn: () => Courses.getMetadata(selectedSlug),
     enabled: Boolean(selectedSlug),
   });
+  const checkoutTerms = metaQuery.data?.checkoutTerms ?? null;
   const cohortQueries = useQueries({
     queries:
       availableSlugs.length > 1
@@ -319,6 +322,13 @@ export default function CourseProductionLandingPage() {
         });
       }
     },
+    onError: (error) => {
+      // The approved policy changed after the page loaded: show the new terms and ask again.
+      if (error instanceof ApiError && error.status === 409 && /terms changed/i.test(error.message)) {
+        setTermsAccepted(false);
+        void metaQuery.refetch();
+      }
+    },
   });
   const previousSelectedSlugRef = useRef(selectedSlug);
   useEffect(() => {
@@ -341,7 +351,9 @@ export default function CourseProductionLandingPage() {
       source: 'landing',
       howHeard: howHeard.trim() ? howHeard.trim() : undefined,
       utm: utmParams,
-      termsAccepted,
+      ...(checkoutTerms
+        ? { termsAccepted, acceptedTermsVersion: checkoutTerms.termsVersion }
+        : {}),
     };
     registrationMutation.mutate(payload);
   };
@@ -373,6 +385,9 @@ export default function CourseProductionLandingPage() {
   const submitted = registrationMutation.isSuccess;
   const submitting = registrationMutation.isPending;
   const submitError = registrationMutation.error instanceof Error ? registrationMutation.error.message : null;
+  const termsChanged = registrationMutation.error instanceof ApiError
+    && registrationMutation.error.status === 409
+    && /terms changed/i.test(registrationMutation.error.message);
   useEffect(() => {
     if (submitted) setShowSuccessDialog(true);
   }, [submitted]);
@@ -606,8 +621,10 @@ export default function CourseProductionLandingPage() {
                 onEmailChange={setEmail}
                 onPhoneChange={setPhone}
                 onHowHeardChange={setHowHeard}
+                checkoutTerms={checkoutTerms}
                 termsAccepted={termsAccepted}
                 onTermsAcceptedChange={setTermsAccepted}
+                termsChanged={termsChanged}
                 submitting={submitting}
                 submitted={submitted}
                 submitError={submitError}
@@ -1116,8 +1133,10 @@ function FormCard({
   onEmailChange,
   onPhoneChange,
   onHowHeardChange,
+  checkoutTerms,
   termsAccepted,
   onTermsAcceptedChange,
+  termsChanged,
   submitting,
   submitted,
   submitError,
@@ -1137,8 +1156,10 @@ function FormCard({
   onEmailChange: (val: string) => void;
   onPhoneChange: (val: string) => void;
   onHowHeardChange: (val: string) => void;
+  checkoutTerms: CourseCheckoutTerms | null;
   termsAccepted: boolean;
   onTermsAcceptedChange: (value: boolean) => void;
+  termsChanged: boolean;
   submitting: boolean;
   submitted: boolean;
   submitError: string | null;
@@ -1327,27 +1348,49 @@ function FormCard({
                 }}
                 InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.68)' } }}
               />
-              <FormControlLabel
-                control={(
-                  <Checkbox
-                    checked={termsAccepted}
-                    onChange={(event) => onTermsAcceptedChange(event.target.checked)}
-                    required
-                    disabled={disableInputs}
-                    sx={{ color: 'rgba(226,232,240,0.72)' }}
+              {checkoutTerms && (
+                <>
+                  <Stack spacing={1}>
+                    <LegalDisclosure
+                      id="course-terms"
+                      title="Términos del curso"
+                      summary={`Versión ${checkoutTerms.termsVersion}`}
+                    >
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.termsSummary}</Typography>
+                    </LegalDisclosure>
+                    <LegalDisclosure id="course-cancellation-policy" title="Política de cancelación">
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.cancellationPolicy}</Typography>
+                    </LegalDisclosure>
+                  </Stack>
+                  {termsChanged && (
+                    <Alert severity="warning">
+                      Los términos del curso se actualizaron. Revisa la nueva versión y vuelve a aceptarla para continuar.
+                    </Alert>
+                  )}
+                  <FormControlLabel
+                    control={(
+                      <Checkbox
+                        checked={termsAccepted}
+                        onChange={(event) => onTermsAcceptedChange(event.target.checked)}
+                        required
+                        disabled={disableInputs}
+                        inputProps={{ 'aria-describedby': 'course-terms-button course-cancellation-policy-button' }}
+                        sx={{ color: 'rgba(226,232,240,0.72)' }}
+                      />
+                    )}
+                    label={`Acepto los términos del curso (versión ${checkoutTerms.termsVersion}) y la política de cancelación indicados arriba.`}
+                    sx={{
+                      alignItems: 'flex-start',
+                      color: 'rgba(226,232,240,0.78)',
+                      '& .MuiFormControlLabel-label': { fontSize: '0.82rem', pt: 0.75 },
+                    }}
                   />
-                )}
-                label="Acepto la versión de términos y política de cancelación que el servidor asociará a esta orden."
-                sx={{
-                  alignItems: 'flex-start',
-                  color: 'rgba(226,232,240,0.78)',
-                  '& .MuiFormControlLabel-label': { fontSize: '0.82rem', pt: 0.75 },
-                }}
-              />
+                </>
+              )}
               <Button
                 type="submit"
                 variant="contained"
-                disabled={disableInputs || submitting || !termsAccepted}
+                disabled={disableInputs || submitting || (Boolean(checkoutTerms) && !termsAccepted)}
                 startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <CelebrationIcon />}
                 sx={{ mt: 1 }}
           >
@@ -1355,7 +1398,7 @@ function FormCard({
           </Button>
         </Stack>
       </Box>
-      {submitError && (
+      {submitError && !termsChanged && (
         <Alert severity="error">
           No pudimos registrar tu inscripción. Intenta de nuevo o escríbenos por WhatsApp.
         </Alert>

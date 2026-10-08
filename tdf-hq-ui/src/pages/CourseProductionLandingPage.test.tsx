@@ -40,6 +40,7 @@ jest.unstable_mockModule('../components/EnrollmentSuccessDialog', () => ({
 }));
 
 const { default: CourseProductionLandingPage } = await import('./CourseProductionLandingPage');
+const { ApiError } = await import('../api/client');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -95,6 +96,11 @@ const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata 
   instructorName: 'Guillermo Diaz',
   instructorBio: 'Baterista e instructor.',
   instructorAvatarUrl: 'https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg',
+  checkoutTerms: {
+    termsVersion: 'course-terms-v3',
+    termsSummary: 'El cupo se confirma al verificar el pago.',
+    cancellationPolicy: 'Reembolso total hasta 7 días antes de la primera sesión.',
+  },
   ...overrides,
 } as CourseMetadata);
 
@@ -251,6 +257,7 @@ describe('CourseProductionLandingPage', () => {
             howHeard: 'Instagram',
             utm: { source: 'ig', medium: undefined, campaign: undefined, content: undefined },
             termsAccepted: true,
+            acceptedTermsVersion: 'course-terms-v3',
           },
           expect.stringMatching(/^course-checkout-/),
         );
@@ -353,6 +360,107 @@ describe('CourseProductionLandingPage', () => {
       });
       await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(2));
       expect(registerMock.mock.calls[0]?.[2]).toBe(registerMock.mock.calls[1]?.[2]);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows the approved course terms and cancellation policy collapsed, next to a visible consent checkbox', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('#course-terms-button')).toBeTruthy();
+      });
+      const termsButton = container.querySelector<HTMLButtonElement>('#course-terms-button')!;
+      const cancellationButton = container.querySelector<HTMLButtonElement>('#course-cancellation-policy-button')!;
+      expect(termsButton.getAttribute('aria-expanded')).toBe('false');
+      expect(cancellationButton.getAttribute('aria-expanded')).toBe('false');
+      expect(termsButton.textContent).toContain('Versión course-terms-v3');
+      expect(container.querySelector(`#${cancellationButton.getAttribute('aria-controls')}`)?.textContent)
+        .toBe('Reembolso total hasta 7 días antes de la primera sesión.');
+
+      const consent = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      expect(consent.getAttribute('aria-describedby')).toBe('course-terms-button course-cancellation-policy-button');
+      expect(text(container)).toContain('Acepto los términos del curso (versión course-terms-v3)');
+      const submit = container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      expect(submit.disabled).toBe(true);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not ask to accept unseen terms when the course has no approved checkout policy', async () => {
+    getMetadataMock.mockResolvedValue(buildMetadata({ checkoutTerms: null }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Reserva tu cupo');
+      });
+      expect(container.querySelector('input[type="checkbox"]')).toBeNull();
+
+      const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input'));
+      await setInputValue(inputs[0]!, 'Ana Torres');
+      await setInputValue(inputs[1]!, 'ana@example.com');
+      const form = container.querySelector('form')!;
+      await act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(1));
+      const payload = registerMock.mock.calls[0]?.[1];
+      expect(payload).not.toHaveProperty('termsAccepted');
+      expect(payload).not.toHaveProperty('acceptedTermsVersion');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('asks again when the server reports that the course terms changed', async () => {
+    registerMock.mockRejectedValueOnce(
+      new ApiError('Course terms changed; review the current terms and accept them again', 409),
+    );
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[type="checkbox"]')).toBeTruthy();
+      });
+      const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input'));
+      await setInputValue(inputs[0]!, 'Ana Torres');
+      await setInputValue(inputs[1]!, 'ana@example.com');
+      const consent = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      await act(async () => {
+        consent.click();
+        await flushPromises();
+      });
+      getMetadataMock.mockResolvedValue(buildMetadata({
+        checkoutTerms: {
+          termsVersion: 'course-terms-v4',
+          termsSummary: 'Nuevos términos.',
+          cancellationPolicy: 'Nueva política.',
+        },
+      }));
+      const form = container.querySelector('form')!;
+      await act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Los términos del curso se actualizaron');
+        expect(text(container)).toContain('versión course-terms-v4');
+      });
+      expect(text(container)).not.toContain('No pudimos registrar tu inscripción');
+      expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(false);
     } finally {
       await cleanup();
     }

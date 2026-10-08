@@ -10,6 +10,7 @@ export type CourseMetadata = components['schemas']['CourseMetadata'] & {
   instructorBio?: string | null;
   instructorAvatarUrl?: string | null;
 };
+export type CourseCheckoutTerms = components['schemas']['CourseCheckoutTerms'];
 export type CourseRegistrationRequest = components['schemas']['CourseRegistrationRequest'] & {
   termsAccepted?: boolean | null;
 };

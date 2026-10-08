@@ -486,6 +486,22 @@ validateEventDeletionCheckoutHistory hasTicketOrders
                 }
     | otherwise = Right ()
 
+-- | Terms version of the event's approved, active ticket policy (same predicate as
+-- the public storefront), or Nothing when the event has no such policy.
+loadActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+loadActiveTicketTermsVersion now eventKey = do
+    rows <-
+        rawSql
+            "SELECT terms_version FROM event_ticket_checkout_policy\
+            \ WHERE event_id = ? AND active AND approval_status = 'approved'\
+            \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
+            \ AND (effective_from IS NULL OR effective_from <= ?)\
+            \ AND (effective_until IS NULL OR effective_until > ?)"
+            [toPersistValue eventKey, PersistUTCTime now, PersistUTCTime now]
+    pure $ case rows of
+        [Single version] -> Just version
+        _ -> Nothing
+
 removeSocialEventAssets :: FilePath -> SocialEventId -> IO ()
 removeSocialEventAssets assetsRoot eventKey = do
     let eventAssetsDir =
@@ -4811,6 +4827,17 @@ socialEventsServer user =
         purchaseEnabled <- liftIO $ runSqlPool (eventTicketPurchaseEnabledFor eventVal) envPool
         either throwError pure $
             validateTicketPurchaseEventEligibility (socialEventMetadata eventVal) purchaseEnabled
+        -- Events with an approved ticket policy need the buyer to accept its current terms,
+        -- exactly as the public storefront checkout does.
+        mTermsVersion <- liftIO $ runSqlPool (loadActiveTicketTermsVersion now eventKey) envPool
+        forM_ mTermsVersion $ \termsVersion ->
+            case tpwpAcceptedTermsVersion of
+                Nothing ->
+                    throwError err400{errBody = "Ticket terms must be accepted before seats can be held"}
+                Just accepted
+                    | accepted /= termsVersion ->
+                        throwError err409{errBody = "Ticket terms changed; review the current terms and accept them again"}
+                    | otherwise -> pure ()
         when (ticketPurchaseQuantity <= 0) $ throwError err400{errBody = "Quantity must be > 0"}
         when (not (isTicketTierSaleOpen now tier)) $
             throwError err400{errBody = "Ticket sales are closed for this tier"}

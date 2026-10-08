@@ -344,6 +344,12 @@ const en = {
       continue: 'Continue to Payment',
       close: 'Close',
     },
+    terms: {
+      title: 'Ticket terms',
+      refundTitle: 'Refund policy',
+      version: 'Terms version: {{version}}',
+      accept: 'I accept the ticket terms (version {{version}}) and the refund policy above.',
+    },
     errors: {
       requiredFields: 'Please fill in all required fields',
       stripeMissing: 'Stripe not initialized',
@@ -353,6 +359,8 @@ const en = {
       unavailable: 'Payment is unavailable right now. No tickets were reserved. Please try again later.',
       paymentIntent: 'Failed to create payment intent',
       unexpected: 'An unexpected error occurred',
+      termsRequired: 'Accept the ticket terms and refund policy to continue.',
+      termsChanged: 'The ticket terms were updated. Review the new version and accept it again.',
     },
     status: {
       buyer: 'Buyer',
