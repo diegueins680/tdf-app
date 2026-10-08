@@ -392,6 +392,13 @@ export default function CourseProductionLandingPage() {
     return productionSlugs[0] ?? COURSE_DEFAULTS.slug;
   }, [pathSlug, productionSlugs]);
   const [selectedSlug, setSelectedSlug] = useState(defaultSelectedSlug);
+  // Return here after login with the enrollment step open, keeping the
+  // visitor's campaign parameters (utm_*) so attribution survives the trip.
+  const enrollmentResumePath = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    params.set(ENROLL_QUERY_PARAM, '1');
+    return `/curso/${encodeURIComponent(selectedSlug)}?${params.toString()}`;
+  }, [location.search, selectedSlug]);
   useEffect(() => {
     setSelectedSlug(defaultSelectedSlug);
   }, [defaultSelectedSlug]);
@@ -1085,9 +1092,7 @@ export default function CourseProductionLandingPage() {
           accountFields={editAccountFields ? [] : accountFields}
           onEditAccountFields={() => setEditAccountFields(true)}
           signedIn={Boolean(session)}
-          loginHref={buildLoginRedirectPath(
-            `/curso/${encodeURIComponent(selectedSlug)}?${ENROLL_QUERY_PARAM}=1`,
-          )}
+          loginHref={buildLoginRedirectPath(enrollmentResumePath)}
           onLoginForAutofill={handleLoginForAutofill}
           inputRefs={fieldInputRefs}
           submitButtonRef={submitButtonRef}

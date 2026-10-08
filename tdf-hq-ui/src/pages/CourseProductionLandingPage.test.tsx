@@ -747,6 +747,31 @@ describe('CourseProductionLandingPage', () => {
     }
   });
 
+  it('keeps campaign parameters in the login round-trip so attribution survives', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const view = await renderPage(
+      container,
+      '/curso/bateria-guillermo-diaz-abr-2026?utm_source=instagram&utm_medium=social&utm_campaign=tu_escena',
+    );
+
+    try {
+      const dialog = await openEnrollmentFromHero(container);
+      const login = Array.from(dialog.querySelectorAll<HTMLAnchorElement>('a'))
+        .find((anchor) => text(anchor) === 'Inicia sesión para autocompletar');
+      if (!login) throw new Error('Expected login link');
+      const redirect = new URLSearchParams(login.getAttribute('href')?.split('?')[1] ?? '').get('redirect') ?? '';
+      const target = new URL(redirect, 'https://tdf.local');
+      expect(target.pathname).toBe('/curso/bateria-guillermo-diaz-abr-2026');
+      expect(target.searchParams.get('inscribirme')).toBe('1');
+      expect(target.searchParams.get('utm_source')).toBe('instagram');
+      expect(target.searchParams.get('utm_medium')).toBe('social');
+      expect(target.searchParams.get('utm_campaign')).toBe('tu_escena');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
   it('lets guests sign in to autofill and restores what they typed after the round-trip', async () => {
     const first = document.createElement('div');
     document.body.appendChild(first);
