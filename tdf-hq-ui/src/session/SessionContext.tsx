@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
 import { captureReconciledFirstValue } from '../analytics/onboardingCompletionAnalytics';
 import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import { reportClientError } from '../analytics/errorReporting';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
 
@@ -213,6 +214,7 @@ interface SessionProviderProps {
 }
 
 const initialStoredState = readStoredSession();
+export const SESSION_BOOTSTRAP_TIMEOUT_MS = 12_000;
 
 export function SessionProvider({ children }: SessionProviderProps) {
   const [session, setSession] = useState<SessionUser | null>(initialStoredState.session);
@@ -253,9 +255,16 @@ export function SessionProvider({ children }: SessionProviderProps) {
     let cancelled = false;
     const versionAtStart = sessionVersionRef.current;
 
+    // A stalled request on a flaky mobile network must not keep every
+    // protected route (and /login) on a loading state indefinitely.
+    const controller = typeof AbortController === 'undefined' ? null : new AbortController();
+    const timeout = controller
+      ? setTimeout(() => controller.abort(), SESSION_BOOTSTRAP_TIMEOUT_MS)
+      : null;
+
     void (async () => {
       try {
-        const snapshot = await loadSessionSnapshot();
+        const snapshot = await loadSessionSnapshot(controller ? { signal: controller.signal } : {});
         if (cancelled || versionAtStart !== sessionVersionRef.current) return;
 
         advanceAuthSessionEpoch();
@@ -281,8 +290,15 @@ export function SessionProvider({ children }: SessionProviderProps) {
         });
       } catch (error) {
         if (cancelled || versionAtStart !== sessionVersionRef.current) return;
+        // Keep the stored session; the server stays authoritative on the
+        // next request (401 clears it through AUTH_SESSION_EXPIRED_EVENT).
         logger.warn('Failed to bootstrap session from server', error);
+        reportClientError('session_bootstrap', error, {
+          timed_out: controller?.signal.aborted ?? false,
+          had_stored_session: Boolean(currentSession),
+        });
       } finally {
+        if (timeout) clearTimeout(timeout);
         if (!cancelled && versionAtStart === sessionVersionRef.current) {
           setLoading(false);
         }
@@ -291,6 +307,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
     return () => {
       cancelled = true;
+      if (timeout) clearTimeout(timeout);
     };
   }, [updateSessionState]);
 

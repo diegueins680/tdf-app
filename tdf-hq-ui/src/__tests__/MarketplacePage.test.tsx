@@ -59,6 +59,8 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 const { default: MarketplacePage } = await import('../pages/MarketplacePage');
+const { default: MarketplaceCartButton } = await import('../components/MarketplaceCartButton');
+const { default: i18n } = await import('../i18n');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -628,5 +630,199 @@ describe('MarketplacePage', () => {
 
     await cleanup();
     document.body.removeChild(container);
+  });
+
+  describe('cart discoverability', () => {
+    const renderWithHeaderCart = async (container: HTMLElement, route = '/marketplace') => {
+      const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+      let root: Root | null = createRoot(container);
+      await act(async () => {
+        root?.render(
+          <MemoryRouter initialEntries={[route]}>
+            <QueryClientProvider client={qc}>
+              <header><MarketplaceCartButton /></header>
+              <MarketplacePage />
+            </QueryClientProvider>
+          </MemoryRouter>,
+        );
+        await flushPromises();
+        await flushPromises();
+      });
+      return async () => {
+        await act(async () => {
+          root?.unmount();
+          await flushPromises();
+        });
+        root = null;
+        qc.clear();
+        container.remove();
+      };
+    };
+
+    const headerButton = () =>
+      document.querySelector<HTMLElement>('header [data-testid="marketplace-cart-button"]');
+    const headerBadge = () => {
+      const badge = document.querySelector('header .MuiBadge-badge');
+      return badge && !badge.classList.contains('MuiBadge-invisible') ? badge.textContent : null;
+    };
+    const drawer = () => document.querySelector<HTMLElement>('[data-testid="marketplace-cart-drawer"]');
+
+    beforeAll(async () => {
+      await i18n.changeLanguage('es');
+    });
+
+    it('updates the header badge immediately after adding and offers a "Ver carrito" action', async () => {
+      const emptyCart = buildCart({ mcCartId: 'new-cart', mcItems: [] });
+      const filledCart = buildCart({ mcCartId: 'new-cart' });
+      createCartMock.mockResolvedValue(emptyCart);
+      let serverCart = emptyCart;
+      getCartMock.mockImplementation(async () => serverCart);
+      upsertItemMock.mockImplementation(async (_cartId, payload) => {
+        const quantity = (payload as { mciuQuantity: number }).mciuQuantity;
+        serverCart = quantity > 0 ? filledCart : emptyCart;
+        return serverCart;
+      });
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+
+      await waitForExpectation(() => expect(container.textContent).toContain('Vintage Mic'));
+      expect(headerButton()?.getAttribute('aria-label')).toBe('Carrito, sin productos');
+      expect(headerBadge()).toBeNull();
+
+      await act(async () => {
+        clickButtonByText('Agregar');
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(upsertItemMock).toHaveBeenCalledWith('new-cart', { mciuListingId: 'listing-1', mciuQuantity: 1 });
+        expect(headerBadge()).toBe('1');
+        expect(headerButton()?.getAttribute('aria-label')).toBe('Carrito, 1 producto');
+        expect(document.body.textContent).toContain('Agregado al carrito');
+      });
+      expect(upsertItemMock).toHaveBeenCalledTimes(1);
+      // The visitor stays on the catalog; the listing now advertises it is in the cart.
+      expect(window.location.pathname).toBe('/marketplace');
+      await waitForExpectation(() => {
+        expect(Array.from(container.querySelectorAll('button')).some((b) => b.textContent?.trim() === 'En tu carrito')).toBe(true);
+      });
+
+      await act(async () => {
+        clickButtonByText('Ver carrito');
+        await flushPromises();
+      });
+      await waitForExpectation(() => {
+        expect(drawer()?.textContent).toContain('Vintage Mic');
+        expect(drawer()?.textContent).toContain('Ir al checkout');
+      });
+
+      const removeButton = drawer()?.querySelector<HTMLButtonElement>('button[aria-label="Quitar Vintage Mic del carrito"]');
+      expect(removeButton).toBeTruthy();
+      await act(async () => {
+        removeButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(upsertItemMock).toHaveBeenLastCalledWith('new-cart', { mciuListingId: 'listing-1', mciuQuantity: 0 });
+        expect(headerBadge()).toBeNull();
+        expect(headerButton()).not.toBeNull();
+        expect(drawer()?.textContent).toContain('Tu carrito está vacío.');
+        expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBeNull();
+      });
+
+      await cleanup();
+    });
+
+    it('restores the badge from storage and opens the cart drawer from the header button', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      window.localStorage.setItem(
+        'tdf-marketplace-cart-meta',
+        JSON.stringify({ cartId: 'cart-1', count: 1, updatedAt: Date.now() }),
+      );
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+
+      expect(headerBadge()).toBe('1');
+      expect(drawer()).toBeNull();
+
+      await act(async () => {
+        headerButton()?.click();
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
+
+      await cleanup();
+    });
+
+    it('reflects the server cart after a refetch drops an unavailable item', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      window.localStorage.setItem(
+        'tdf-marketplace-cart-meta',
+        JSON.stringify({ cartId: 'cart-1', count: 2, updatedAt: Date.now() }),
+      );
+      getCartMock.mockResolvedValue(buildCart());
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+
+      await waitForExpectation(() => expect(headerBadge()).toBe('1'));
+
+      await cleanup();
+    });
+
+    it('follows a cart created in another tab so the drawer matches the badge', async () => {
+      getCartMock.mockImplementation(async (cartId: string) => (cartId === 'cart-2'
+        ? buildCart({
+          mcCartId: 'cart-2',
+          mcItems: [{
+            mciListingId: 'listing-2', mciTitle: 'Bajo Fender', mciQuantity: 1,
+            mciSubtotalDisplay: 'USD $300.00', mciUnitPriceDisplay: 'USD $300.00', mciCategory: 'Bajos',
+          }],
+        } as Partial<MarketplaceCartDTO>)
+        : buildCart()));
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container);
+      expect(getCartMock).not.toHaveBeenCalledWith('cart-2');
+
+      // Another tab creates a cart and writes it to shared storage.
+      await act(async () => {
+        window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-2');
+        window.localStorage.setItem(
+          'tdf-marketplace-cart-meta',
+          JSON.stringify({ cartId: 'cart-2', count: 1, updatedAt: Date.now() }),
+        );
+        window.dispatchEvent(new StorageEvent('storage', { key: 'tdf-marketplace-cart-id' }));
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(headerBadge()).toBe('1'));
+      await act(async () => {
+        headerButton()?.click();
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(drawer()?.textContent).toContain('Bajo Fender'));
+      expect(getCartMock).toHaveBeenCalledWith('cart-2');
+
+      await cleanup();
+    });
+
+    it('opens the cart drawer when arriving at /marketplace#carrito', async () => {
+      window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const cleanup = await renderWithHeaderCart(container, '/marketplace#carrito');
+
+      await waitForExpectation(() => expect(drawer()?.textContent).toContain('Vintage Mic'));
+
+      await cleanup();
+    });
   });
 });

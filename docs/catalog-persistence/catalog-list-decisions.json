@@ -58785,6 +58785,56 @@
       },
       "reviewBatch": "artist-invitation-links-2026-10-07",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0025fed7ccc021d1a134",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a kind would split client_error telemetry series and break dashboards that diagnose blank-screen and boot failures.",
+      "justification": "Closed set of client failure categories emitted by the web runtime's error reporter; telemetry taxonomy, not selectable or reportable business values.",
+      "reviewed": true
+    },
+    {
+      "id": "718f9788cc42c4bc2035",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "None beyond layout: removing keys would let dialog actions sit under the mobile browser's bottom safe area.",
+      "justification": "MUI sx style object (padding keys px/pt/pb with safe-area insets) misdetected as a registry; presentation code with no business meaning.",
+      "reviewed": true
+    },
+    {
+      "id": "28e677d73be27f8595a7",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a key could detach a server validation error from its input, hiding why an enrollment failed.",
+      "justification": "Names of the course registration form inputs used to place validation errors next to the right field; they mirror the public registration request DTO fields, not a selectable business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "ee71cefaff1543a724c4",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
+      "justification": "Test-only mock of the useSession() return shape (session, loading); React hook state, not a selectable or reportable business list.",
+      "reviewed": true
+    },
+    {
+      "id": "17d2f7d3ddab07b8debd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
+      "justification": "Test-only mutable mock of the useSession() result (current session, loading flag); hook state, not a selectable or reportable business list.",
+      "reviewed": true
     }
   ]
 }

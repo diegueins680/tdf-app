@@ -280,8 +280,10 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
   await page.getByRole('button', { name: 'Crear cuenta general' }).click();
   const signupDialog = page.getByRole('dialog', { name: /crear cuenta/i });
   await expect(signupDialog).toBeVisible();
-  await signupDialog.getByLabel('Nombre').fill('Elena');
-  await signupDialog.getByLabel('Apellido').fill('Paredes');
+  // Signup asks only for email and password; terms are acknowledged next to the CTA.
+  await expect(signupDialog.getByLabel('Nombre')).toHaveCount(0);
+  await expect(signupDialog.getByRole('checkbox')).toHaveCount(0);
+  await expect(signupDialog.locator('#signup-consent-notice')).toContainText('Al crear tu cuenta aceptas');
   const signupEmail = signupDialog.locator('input[name="email"]');
   const signupPassword = signupDialog.locator('input[name="newPassword"]');
   await expect(signupEmail).toHaveAttribute('autocomplete', 'email');
@@ -289,12 +291,12 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
   await expectNoSeriousAxeViolations(page, testInfo);
   await signupEmail.fill('per-01.elena@persona.test');
   await signupPassword.fill('fictional-password-not-a-secret');
-  await page.getByLabel('Acepto los términos y la política de privacidad').check();
   await signupPassword.press('Enter');
 
   await expect(page).toHaveURL(/\/fans$/);
   expect(signupPayload).toMatchObject({
-    firstName: 'Elena', lastName: 'Paredes', email: 'per-01.elena@persona.test',
+    firstName: 'Per 01 elena', lastName: '', email: 'per-01.elena@persona.test',
+    termsAccepted: true, termsVersion: 'tdf-account-terms-v1',
     password: 'fictional-password-not-a-secret',
     marketingOptIn: false,
   });
@@ -698,10 +700,12 @@ for (const locale of ['es', 'en']) {
     await expect(signup).toBeVisible();
     await expect(signup.getByText(en ? /continue to “follow artists”/ : /continuarás con “seguir artistas”/)).toBeVisible();
     await expect(signup.getByRole('link', { name: en ? 'account terms' : 'términos de la cuenta', exact: true })).toHaveAttribute('href', en ? '/account/terms.html' : '/account/terms-es.html');
-    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeDisabled();
-    await signup.getByLabel(en ? 'First name' : 'Nombre').fill('Synthetic');
-    await signup.getByLabel(en ? 'I accept the terms and privacy policy' : 'Acepto los términos y la política de privacidad', { exact: true }).check();
-    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeEnabled();
+    // Clickwrap: no consent checkbox gates the CTA; the notice is tied to it.
+    await expect(signup.getByRole('checkbox')).toHaveCount(0);
+    const create = signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true });
+    await expect(create).toBeEnabled();
+    await expect(create).toHaveAttribute('aria-describedby', 'signup-consent-notice');
+    await expect(signup.locator('#signup-consent-notice')).toContainText(en ? 'By creating your account you accept' : 'Al crear tu cuenta aceptas');
     await expectNoSeriousAxeViolations(page, testInfo);
     await page.goto('/reset?redirect=%2Ffans');
     await expect(page.getByRole('heading', { name: en ? 'Incomplete link' : 'Enlace incompleto' })).toBeVisible();
