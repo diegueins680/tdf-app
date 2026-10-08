@@ -122,6 +122,7 @@ export default {
   "backLogin": "Volver a login",
   "search": "Buscar",
   "services": "Servicios",
+  "events": "Eventos",
   "community": "Comunidad",
   "shop": "Tienda",
   "book": "Reservar",

@@ -30,6 +30,11 @@ jest.unstable_mockModule('./BrandLogo', () => ({
   default: () => <span>TDF Records</span>,
 }));
 
+jest.unstable_mockModule('./events/UpcomingEventsCarousel', () => ({
+  EVENTS_PATH: '/social/eventos',
+  default: () => null,
+}));
+
 const { default: PublicBranding } = await import('./PublicBranding');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -131,6 +136,21 @@ describe('PublicBranding', () => {
     try {
       expect(container.textContent).not.toContain('TDF desde Instagram');
       expect(container.textContent).not.toContain('Reservar servicios');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('offers exactly one events entry in the main navigation', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/buscar');
+
+    try {
+      const nav = container.querySelector('nav');
+      const eventLinks = Array.from(nav?.querySelectorAll<HTMLAnchorElement>('a[href="/social/eventos"]') ?? []);
+      expect(eventLinks).toHaveLength(1);
+      expect(Array.from(nav?.querySelectorAll('a') ?? []).filter((link) => /event/i.test(link.textContent ?? ''))).toHaveLength(1);
     } finally {
       await cleanup();
     }

@@ -1742,14 +1742,30 @@
       "reviewed": true
     },
     {
-      "id": "daaade88abcc60232974",
+      "id": "9fca63dce34f8900c6a4",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "line": 163
+      },
+      "reviewBatch": "events-nav-carousel-2026-10-08",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "daaade88abcc60232974",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "ef8764c4421158cb1be7",
@@ -15171,24 +15187,40 @@
       "reviewBatch": "mobile-program-2026-10-04"
     },
     {
-      "id": "d24fc428c18f60568996",
+      "id": "7804604c0af849751309",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item",
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+      "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
       "reviewed": true,
       "previousDecision": {
-        "id": "f9819fa4b81bdd8f3f21",
+        "id": "d24fc428c18f60568996",
         "classification": "dynamic-business-catalog",
         "disposition": "retain-in-code",
         "specializedModel": "navigation_item",
         "priority": "P3-retain",
         "risk": "Changing UI constants could break rendering or user experience.",
-        "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
-        "reviewed": true
-      }
+        "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+        "reviewed": true,
+        "previousDecision": {
+          "id": "f9819fa4b81bdd8f3f21",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+          "reviewed": true
+        }
+      },
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "line": 23
+      },
+      "reviewBatch": "events-nav-carousel-2026-10-08",
+      "reviewMethod": "successor-of-reviewed-decision"
     },
     {
       "id": "b04463685b6b720b3ca9",

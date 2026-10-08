@@ -13,6 +13,11 @@ jest.unstable_mockModule('./BrandLogo', () => ({
   default: () => <span>TDF Records</span>,
 }));
 
+jest.unstable_mockModule('./events/UpcomingEventsCarousel', () => ({
+  EVENTS_PATH: '/social/eventos',
+  default: () => null,
+}));
+
 const { default: PublicBranding } = await import('./PublicBranding');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
