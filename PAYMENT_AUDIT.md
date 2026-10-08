@@ -229,10 +229,17 @@ pending_payment → paid → in_progress → v1_delivered → revisions → appr
 ### Environment Variables Needed
 
 ```bash
-# Datafast (Ecuador card processing)
-DATAFAST_MERCHANT_ID=<from Datafast>
-DATAFAST_API_KEY=<from Datafast>
-DATAFAST_ENVIRONMENT=prod  # or test
+# Datafast (Ecuador card processing, OPPWA). Names read by tdf-hq loadDatafastEnv.
+DATAFAST_ENV=production            # must equal COMMERCE_CHECKOUT_ENV; sandbox for testing
+DATAFAST_BASE_URL=<production oppwa.com origin from Datafast>   # sandbox: https://test.oppwa.com
+DATAFAST_ENTITY_ID=<Entity ID>
+DATAFAST_BEARER_TOKEN=<Access Token>
+DATAFAST_MID=<MID>
+DATAFAST_TID=<TID>
+DATAFAST_PSERV=<service provider code>
+DATAFAST_USER_DATA2=<risk parameter value>
+# DATAFAST_VERSIONDF defaults to 2; DATAFAST_TEST_MODE must be unset in production.
+# Presence is not activation: the provider account must also be validated (ADR-0115).
 
 # PayPal (International)
 PAYPAL_CLIENT_ID=<from PayPal Developer>
