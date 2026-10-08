@@ -12,7 +12,19 @@ jest.unstable_mockModule('../hooks/useChatUnreadCount', () => ({
 const { NAV_GROUPS } = await import('./SidebarNav');
 const { COURSE_REGISTRATIONS_NAV_LABEL, formatFriendlyPath } = await import('../utils/navigationLabels');
 
-describe('course registration navigation labels', () => {
+describe('navigation labels', () => {
+  it('exposes the access-request review queue in the admin group', () => {
+    const adminGroup = NAV_GROUPS.find((group) => group.title === 'ADMIN');
+
+    expect(adminGroup?.items).toContainEqual({
+      label: 'Solicitudes de acceso',
+      path: '/solicitudes-acceso/revision',
+    });
+    expect(formatFriendlyPath('/solicitudes-acceso/revision')).toBe(
+      'Solicitudes de acceso / Revisión',
+    );
+  });
+
   it('uses the same clear course-registration label in navigation and breadcrumbs', () => {
     const courseRegistrationItem = NAV_GROUPS
       .flatMap((group) => group.items)

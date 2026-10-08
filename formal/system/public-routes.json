@@ -560,6 +560,26 @@
   },
   {
    "method": "GET",
+   "path": "/music/assets/{assetId}/access",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/music/playback-events",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/music/releases",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/music/releases/{slug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
    "path": "/openapi.yaml",
    "boundary": "public-diagnostic"
   },
@@ -874,6 +894,11 @@
   {
    "method": "GET",
    "path": "/session",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/artist-invitation",
    "boundary": "handler-session"
   },
   {

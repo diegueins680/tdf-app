@@ -148,5 +148,6 @@ export default {
   "whatsappConsent": "WhatsApp consent",
   "whatsappConfirmation": "WhatsApp confirmation",
   "continueIntent": "After creating your account, you will continue to “{{intent}}”. If the task needs special access, you can submit a request for review.",
+  "continueIntentInvitation": "After creating your account, we will continue to “{{intent}}” and activate your Artist access without an additional review.",
   "consentText": "I accept the <terms>account terms</terms> and the <privacy>account privacy policy</privacy>."
 } as const;

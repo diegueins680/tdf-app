@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-09-18T17:10:45.767614+00:00",
+  "source": "/private/tmp/tdf-ux-private-testers/invitation-ledger.json",
+  "sha256": "7343b4e823b12afcbea01aad1b48cb582748b3d4f7172dbe37e48a265398ae3b",
+  "uniqueLedgerEntries": 82,
+  "uniqueMessageIds": 82,
+  "smtpAccepted": 80,
+  "rejected": 2,
+  "uncertain": 0,
+  "firstAt": "2026-09-18T07:23:08.754122+00:00",
+  "lastAt": "2026-09-18T07:37:35.177498+00:00",
+  "limits": "Prior separate mobile recruitment operation; acceptance is not delivery, reading, installation or testing. No recipient identifiers copied."
+}

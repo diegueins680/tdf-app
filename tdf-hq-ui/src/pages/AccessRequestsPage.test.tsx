@@ -29,17 +29,22 @@ jest.unstable_mockModule('../api/accessRequests', () => ({
   },
 }));
 
+const readonlySession = {
+  username: 'readonly',
+  displayName: 'Read only',
+  roles: ['readonly'],
+  modules: ['crm', 'catalog'],
+  partyId: 42,
+};
+let mockSession: { username: string; displayName: string; roles: string[]; modules: string[]; partyId: number } = readonlySession;
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
   getActiveSession: () => null,
-  useSession: () => ({
-    session: {
-      username: 'readonly',
-      displayName: 'Read only',
-      roles: ['readonly'],
-      modules: ['crm', 'catalog'],
-      partyId: 42,
-    },
-  }),
+  useSession: () => ({ session: mockSession }),
+}));
+
+jest.unstable_mockModule('../components/ArtistInvitationLinksPanel', () => ({
+  default: () => <div data-testid="artist-invitation-panel" />,
 }));
 
 jest.unstable_mockModule('../analytics/posthog', () => ({
@@ -147,6 +152,29 @@ describe('internal access request flow', () => {
     createMock.mockReset();
     listReviewMock.mockReset();
     captureMock.mockReset();
+    mockSession = readonlySession;
+  });
+
+  it('offers personal artist invitation links only to admins', async () => {
+    listReviewMock.mockResolvedValue([]);
+    const reviewerView = await renderReviewPage();
+    try {
+      expect(reviewerView.container.querySelector('[data-testid="artist-invitation-panel"]')).toBeNull();
+    } finally {
+      await reviewerView.cleanup();
+    }
+
+    mockSession = { ...readonlySession, username: 'admin', roles: ['Admin'], modules: ['admin'] };
+    const adminView = await renderReviewPage();
+    try {
+      await act(async () => {
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(adminView.container.querySelector('[data-testid="artist-invitation-panel"]')).not.toBeNull();
+    } finally {
+      await adminView.cleanup();
+    }
   });
 
   it('submits the exact locked feature action without broad role data in telemetry', async () => {
@@ -193,6 +221,26 @@ describe('internal access request flow', () => {
       expect(createMock).not.toHaveBeenCalled();
     } finally {
       await technicalView.cleanup();
+    }
+  });
+
+  it('discloses the exact Artist role grant before an admin approves it', async () => {
+    listReviewMock.mockResolvedValue([
+      {
+        ...buildRequest(),
+        featureId: 'artist.onboarding',
+        action: 'create',
+      },
+    ]);
+    const view = await renderReviewPage();
+    try {
+      expect(listReviewMock).toHaveBeenCalledWith('pending');
+      expect(view.container.textContent).toContain(
+        'La aprobación asigna el rol Artista mediante una revisión auditable.',
+      );
+      expect(view.container.textContent).toContain('Aprobar solicitud');
+    } finally {
+      await view.cleanup();
     }
   });
 

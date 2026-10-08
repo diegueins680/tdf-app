@@ -76,6 +76,9 @@ const hasBackendAiToolingAccess = (roles: readonly string[]) =>
 const hasBackendStrictAdminAccess = (roles: readonly string[]) =>
   roles.includes('Admin') && roles.every((role) => ['Admin', 'Fan', 'Customer'].includes(role));
 
+const hasBackendFeatureAccessReviewAccess = (roles: readonly string[]) =>
+  roles.some((role) => ['Admin', 'Manager', 'Studio Manager'].includes(role));
+
 describe('buildAccessibleModuleSet', () => {
   it('only trusts modules that the backend explicitly published', () => {
     const modules = buildAccessibleModuleSet(['TourManager', 'LabelRep', 'StageManager'], []);
@@ -154,6 +157,10 @@ describe('canAccessPath', () => {
     expect(canAccessPath('/configuracion/roles-permisos', ['Webmaster'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/usuarios-admin', ['Studio Manager'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/usuarios-admin', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/solicitudes-acceso/revision', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/solicitudes-acceso/revision', ['Manager'], ['ops'])).toBe(true);
+    expect(canAccessPath('/solicitudes-acceso/revision', ['Artist'], ['packages'])).toBe(false);
+    expect(canAccessPath('/solicitudes-acceso', ['Artist'], ['packages'])).toBe(true);
     expect(canAccessPath('/admin/artistas-enriquecimiento', ['Admin'], ['admin'])).toBe(true);
     expect(canAccessPath('/admin/commerce/provider-events', ['Admin'], ['admin'])).toBe(true);
     expect(canAccessPath('/admin/commerce/provider-events', ['Studio Manager'], ['admin'])).toBe(false);
@@ -274,6 +281,10 @@ describe('canAccessPath', () => {
       {
         path: '/configuracion/usuarios-admin',
         expected: (roles: readonly string[]) => hasBackendStrictAdminAccess(roles),
+      },
+      {
+        path: '/solicitudes-acceso/revision',
+        expected: (roles: readonly string[]) => hasBackendFeatureAccessReviewAccess(roles),
       },
       {
         path: '/configuracion/whatsapp-consentimiento',

@@ -1,0 +1,36 @@
+# Plataforma de lanzamientos musicales
+
+Estado documentado: 2026-09-16. Esta carpeta describe el nuevo dominio canónico de audio, su operación y las puertas que todavía deben cerrarse antes de producción.
+
+- [Auditoría inicial](initial-audit-2026-09-12.md)
+- [Arquitectura, modelo y ADR](architecture-and-data-model.md)
+- [API y configuración](api-and-configuration.md)
+- [Identidad, reintentos y atomicidad de analítica](playback-identity.md)
+- [Matriz DDEX](ddex-compatibility-matrix-2026-09-12.md)
+- [Matriz de infraestructura y costos](infrastructure-cost-matrix-2026-09-12.md)
+- [Modelo de amenazas](threat-model.md)
+- [Runbook operativo](operations-runbook.md)
+- [Despliegue, rollback y evidencia](deployment-and-verification.md)
+- [Pruebas S3 locales por HTTPS](local-s3-integration.md)
+- [Previews configurables y migración](preview-ranges.md)
+- [Multipart del worker y recuperación](worker-multipart.md)
+- [Diagnóstico de regresión y limpieza de pruebas](worker-regression-diagnostics.md)
+- [Verificación de la imagen Linux del worker](linux-worker-image.md)
+- [Integración del worker Linux con PostgreSQL y S3 locales](linux-worker-integration.md)
+- [Reproducción nativa, repetición y carreras del player](native-player-verification.md)
+- [Controles compactos, foco y teclado del player](compact-player-controls.md)
+- [Navegador conectado a API, PostgreSQL y S3 locales](real-browser-integration.md)
+- [Persistencia segura del editor y creación de borradores](studio-persistence.md)
+- [Conservación de colaboradores y migración de pertenencia por versión](version-party-membership.md)
+- [Nombres, identificadores y evidencia de colaboradores por versión](versioned-party-details.md)
+- [Créditos versionados y validación ERN](ddex-versioned-credits.md)
+- [Correcciones encadenadas y migración del grafo de recursos](chained-corrections.md)
+- [Correcciones concurrentes, idempotencia y errores accionables](correction-concurrency.md)
+- [Validación editorial del grafo y diagnóstico de saneamiento](resource-graph-validation.md)
+- [Revalidación y recuperación de exportaciones DDEX encoladas](ddex-queued-validation.md)
+- [Paquete DDEX privado y reproducible; alcance comercial y límites de entrega](ddex-offline-bundle.md)
+- [Nombres DDEX vinculados al mensaje y compatibilidad de paquetes](ddex-file-naming.md)
+- [Operaciones DDEX, identidad estable y retiro desde suspensión](ddex-operation-lifecycle.md)
+- [Encolado DDEX atómico, concurrencia y recuperación de huérfanos](ddex-atomic-enqueue.md)
+
+Las banderas `music_releases.authoring`, `music_releases.processing`, `music_releases.public`, `music_releases.commerce` y `music_releases.ddex_export` se crean apagadas en sandbox y producción. No habilitarlas todas a la vez.
