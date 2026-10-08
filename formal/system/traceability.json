@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "d801d39815c443690c99c4e58f2fb325b4f15ec6",
+  "mobileRevision": "810c91c5b5ec293c9e011fbec0f813bb62f8b17a",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -8632,7 +8632,7 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "63ee4e6727911f1692e4271e04b879cb15a704ad9d61bd578e787ede0e6279ed",
+    "docs/catalog-persistence/catalog-list-decisions.json": "18f1d6690d6b271170ea1a518223458418293c0596fe721917ddd7fbfd813e3d",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9401,7 +9401,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "49898779bea5d2ce19e518e6d5c80e75925f5013414123b0913111fed1572eac",
+    "tdf-mobile/src/api/generated/types.ts": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -9420,7 +9420,7 @@
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "34d64d70c9479dfaa72acfd1e46daf793ecbd77563401c51d921efabaf6d0e78",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
@@ -36279,7 +36279,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "49898779bea5d2ce19e518e6d5c80e75925f5013414123b0913111fed1572eac",
+      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37239,7 +37239,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "34d64d70c9479dfaa72acfd1e46daf793ecbd77563401c51d921efabaf6d0e78",
+      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
