@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "a551de1c7598777d7cd829bf0fd2c4154cd1a999",
+  "mobileRevision": "e00c58703cc9391489b93af0b95b33810f251204",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -8236,7 +8236,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "afc365f56b986b04cb6c8cc9e910ef64b11b1b551579a32a4171aab896291648",
+    "tdf-mobile/src/api/generated/types.ts": "476f22fc90fa8a8462d4302d28b4b700ba61b2495945adba3c56ccba10b7cbde",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -32090,7 +32090,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "afc365f56b986b04cb6c8cc9e910ef64b11b1b551579a32a4171aab896291648",
+      "sha256": "476f22fc90fa8a8462d4302d28b4b700ba61b2495945adba3c56ccba10b7cbde",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
