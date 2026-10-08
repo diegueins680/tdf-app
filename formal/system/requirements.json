@@ -8523,19 +8523,23 @@
       "implementation": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/utils/phone.ts",
-        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts"
+        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
+        "tdf-hq/src/TDF/CoursePhone.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/utils/phone.test.ts",
         "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
-        "e2e/web/course-enrollment.spec.mjs"
+        "e2e/web/course-enrollment.spec.mjs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
       "ambiguity": [
-        "Backend legacy path should also accept local EC formats; course terms URL not yet exposed by metadata."
+        "Course terms URL not yet exposed by course metadata."
       ],
       "conformance": {
         "classification": "PARTIAL",

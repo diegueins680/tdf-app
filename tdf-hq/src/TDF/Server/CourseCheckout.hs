@@ -40,6 +40,7 @@ import           Servant
 import           System.Environment (lookupEnv)
 
 import qualified TDF.API.Types as APITypes
+import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.CourseCheckout as CourseDomain
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
@@ -149,6 +150,12 @@ normalizeRequiredText fieldName maxLength raw =
       | T.any unsafeTextCharacter clean ->
           Left (badRequestError (fieldName <> " contains unsupported characters"))
       | otherwise -> Right clean
+
+-- | Store the same E.164 form as the legacy lead path, accepting Ecuador
+-- national numbers (0988384849) as typed by local visitors.
+normalizeBuyerPhone :: Text -> Either ServerError Text
+normalizeBuyerPhone raw =
+  maybe (Left (badRequestError "phoneE164 is invalid")) Right (CoursePhone.normalizeCoursePhone raw)
 
 normalizeOptionalText :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 normalizeOptionalText fieldName maxLength raw = case T.strip <$> raw of
@@ -320,6 +327,7 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
       buyerEmail <- either throwError pure (normalizeEmail (Courses.email request))
       buyerPhone <- either throwError pure $
         normalizeOptionalText "phoneE164" 24 (Courses.phoneE164 request)
+          >>= traverse normalizeBuyerPhone
       sourceClean <- either throwError pure (normalizeSource registrationSource)
       howHeardClean <- either throwError pure $
         normalizeOptionalText "howHeard" 256 (Courses.howHeard request)

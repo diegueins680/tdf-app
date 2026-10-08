@@ -8524,19 +8524,23 @@
       "implementation": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/utils/phone.ts",
-        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts"
+        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
+        "tdf-hq/src/TDF/CoursePhone.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/utils/phone.test.ts",
         "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
-        "e2e/web/course-enrollment.spec.mjs"
+        "e2e/web/course-enrollment.spec.mjs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
       "ambiguity": [
-        "Backend legacy path should also accept local EC formats; course terms URL not yet exposed by metadata."
+        "Course terms URL not yet exposed by course metadata."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9240,6 +9244,7 @@
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
+    "tdf-hq/src/TDF/CoursePhone.hs": "0063fb53d4809e823e140009d23bb31a48ab30dea35cd9c9460225db4a5b594c",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
@@ -9270,8 +9275,9 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
+    "tdf-hq/src/TDF/Server.hs": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
+    "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6907947f52ca325bda4325e2ba8fbc7fafb372371867d1360d6cc567518cf9b1",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
@@ -9309,7 +9315,7 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "9585cec9b32ff6f56e1126b999b5ad83bd1859ea15502599b68a1a4b2e12b1ef",
+    "tdf-hq/tdf-hq.cabal": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
@@ -9341,7 +9347,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
-    "tdf-hq/test/TDF/ServerSpec.hs": "6bfd2025a76eb43f08a2665d54a736d6caea6449fdaf3307230cc0f28b136890",
+    "tdf-hq/test/TDF/ServerSpec.hs": "bceb05fac520c03406bdb7b7d6aa3b60297bc26d994d75ece5e1e4c7448268cc",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -9738,6 +9744,10 @@
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -9815,6 +9825,10 @@
       },
       {
         "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-ENROLL-001",
         "relationship": "tests"
       }
     ],
@@ -15409,6 +15423,18 @@
       }
     ],
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": [
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/CoursePhone.hs": [
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/CourseCheckout.hs": [
       {
         "requirement": "COURSE-ENROLL-001",
         "relationship": "implementation"
@@ -31597,6 +31623,18 @@
       ]
     },
     {
+      "id": "SURFACE-7a17991a5f78eecb",
+      "path": "tdf-hq/src/TDF/CoursePhone.hs",
+      "sha256": "0063fb53d4809e823e140009d23bb31a48ab30dea35cd9c9460225db4a5b594c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
       "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -32306,7 +32344,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
+      "sha256": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32360,6 +32398,10 @@
         {
           "requirement": "PRIV-WHATSAPP-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -32385,9 +32427,14 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "15af66fb43c21a80f6e41f4ff67755fc0b8dda6867383496a1c6da3a2ab3e70a",
+      "sha256": "6907947f52ca325bda4325e2ba8fbc7fafb372371867d1360d6cc567518cf9b1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-988d54f382594f88",
@@ -33190,7 +33237,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9585cec9b32ff6f56e1126b999b5ad83bd1859ea15502599b68a1a4b2e12b1ef",
+      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33870,7 +33917,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "6bfd2025a76eb43f08a2665d54a736d6caea6449fdaf3307230cc0f28b136890",
+      "sha256": "bceb05fac520c03406bdb7b7d6aa3b60297bc26d994d75ece5e1e4c7448268cc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33899,6 +33946,10 @@
         },
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-ENROLL-001",
           "relationship": "tests"
         }
       ]
@@ -38906,7 +38957,6 @@
     "SURFACE-21573408c23f618c",
     "SURFACE-6076c182710c4ad6",
     "SURFACE-5cbf72ef8bf21ded",
-    "SURFACE-2834bdf776fa3c23",
     "SURFACE-436c77cb88490332",
     "SURFACE-06aae7ecd0fab607",
     "SURFACE-576775b1139a1557",
@@ -40518,7 +40568,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9eb962c20b1fc39e7354adad1ed4ace72e1b7021428d265fd9140552083582fc",
+      "sourceSha256": "bfe510c8fdaf46de7105372d81d4743d3fa2d0ffa1c9a0eb91b51b2872481c02",
       "definition": {
         "states": [
           "absent",
