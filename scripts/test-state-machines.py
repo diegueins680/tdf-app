@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Negative controls for scripts/check-state-machines.py.
 
-Requires a database with the production migration manifest applied:
+Backend validator controls need no database:
+  test-state-machines.py --static
+Database controls require the production migration manifest applied:
   test-state-machines.py --database-url URL
 A disposable table is created and dropped to exercise database-side drift.
 """
@@ -11,6 +13,7 @@ import copy
 import importlib.util
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -21,6 +24,7 @@ spec.loader.exec_module(gate)
 QUOTE = "docs/revenue-platform/formal-model.yaml#quote"
 CLAIM = "docs/music-directory/formal-model.yaml#claim"
 DISTRIBUTION = "docs/revenue-platform/formal-model.yaml#distribution"
+RENTAL = "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment"
 
 
 def expect(name, errors, fragment):
@@ -28,14 +32,61 @@ def expect(name, errors, fragment):
         raise AssertionError(f"{name}: expected an error containing {fragment!r}, got {errors}")
 
 
+def code_controls(bindings, machines):
+    assert gate.check_code(bindings, machines) == []
+    spec = bindings["machines"][RENTAL]["code"]
+
+    rental = copy.deepcopy(machines[RENTAL])
+    rental["transitions"]["deposit_refund_due"] = ["closed"]
+    expect("validator edge absent from model", gate.compare_code(RENTAL, spec, rental),
+           "code transitionsOnlyImplemented is [['deposit_refund_due', 'disputed']]")
+
+    rental = copy.deepcopy(machines[RENTAL])
+    rental["transitions"]["closed"] = ["on_hold"]
+    expect("model edge absent from validator", gate.compare_code(RENTAL, spec, rental),
+           "code transitionsOnlyDeclared is [['closed', 'on_hold']]")
+
+    repaired = dict(spec, deviation={"transitionsOnlyImplemented": [["lost", "closed"]]})
+    expect("stale code deviation", gate.compare_code(RENTAL, repaired, machines[RENTAL]),
+           "code transitionsOnlyImplemented is []")
+
+    partial = copy.deepcopy(bindings)
+    del partial["machines"][RENTAL]["code"]["renderer"]
+    expect("incomplete code binding", gate.check_code(partial, machines), "code binding requires renderer")
+
+    renamed = copy.deepcopy(bindings)
+    renamed["machines"][RENTAL]["code"]["validator"] = "validateRetiredRentalTransition"
+    expect("validator not found", gate.check_code(renamed, machines), "validator validateRetiredRentalTransition")
+
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch)
+        target = root / spec["file"]
+        target.parent.mkdir(parents=True)
+        source = (gate.ROOT / spec["file"]).read_text()
+        target.write_text(source.replace("(RentalLost, RentalDisputed)", "(RentalLost, RentalWrittenOff)", 1))
+        expect("constructor without stored name", gate.check_code(bindings, machines, root),
+               "RentalWrittenOff has no stored name")
+        target.write_text(source.replace("      , (RentalLost, RentalDisputed)\n", "", 1))
+        expect("edge removed from validator source", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['lost', 'disputed']]")
+    return 7
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--database-url", required=True)
-    url = parser.parse_args().database_url
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--database-url")
+    mode.add_argument("--static", action="store_true")
+    args = parser.parse_args()
     bindings = json.loads(gate.BINDINGS.read_text())
     machines = gate.declared_machines()
 
     assert gate.check_static(bindings, machines) == []
+    code_negative = code_controls(bindings, machines)
+    if args.static:
+        print(f"Backend validator controls passed ({code_negative} negative)")
+        return 0
+    url = args.database_url
     for machine_id, binding in bindings["machines"].items():
         assert gate.compare(machine_id, binding, machines[machine_id], url) == [], machine_id
 
@@ -102,7 +153,7 @@ def main():
     finally:
         gate.query(url, "DROP TABLE IF EXISTS public.state_machine_negative_control")
 
-    print("State machine correspondence controls passed (17 positive, 12 negative)")
+    print(f"State machine correspondence controls passed (17 positive, {12 + code_negative} negative)")
     return 0
 
 

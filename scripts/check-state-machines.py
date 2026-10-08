@@ -10,6 +10,12 @@ constraint and, where a trigger function encodes the transition relation with
 trigger's. Any difference must equal the reviewed deviation recorded for that
 machine exactly, so new drift and silently repaired drift both fail.
 
+A machine may also bind the backend validator that enforces its transitions
+(`code`: Haskell file, validator and the renderer that maps constructors to
+stored state names). Both modes compare the validator's `allowedTransitions`
+list with the declared transitions under the same exact-deviation rule
+(`code.deviation`).
+
 Usage:
   check-state-machines.py --database-url URL   # compare with a migrated database
   check-state-machines.py --static             # validate bindings and sources only
@@ -92,6 +98,66 @@ def check_static(bindings, machines):
     return errors
 
 
+def code_transitions(spec, root=ROOT):
+    """Pairs in the validator's allowedTransitions list, as stored state names."""
+    source = (root / spec["file"]).read_text()
+    renderer = re.search(
+        rf"^{re.escape(spec['renderer'])} (\w+) = case \1 of\n(.*?)(?:\n\n|\Z)", source, re.M | re.S)
+    if not renderer:
+        raise RuntimeError(f"renderer {spec['renderer']} not found in {spec['file']}")
+    names = dict(re.findall(r'^\s+([A-Z]\w*)\s*->\s*"(\w+)"', renderer.group(2), re.M))
+    definition = re.search(rf"^{re.escape(spec['validator'])} (?![^\n]*::)\w", source, re.M)
+    if not definition:
+        raise RuntimeError(f"validator {spec['validator']} not found in {spec['file']}")
+    table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", source[definition.end():], re.S)
+    if not table:
+        raise RuntimeError(f"{spec['validator']} has no allowedTransitions list")
+    pairs = set()
+    for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", table.group(1)):
+        for constructor in (source_state, target):
+            if constructor not in names:
+                raise RuntimeError(f"{constructor} has no stored name in {spec['renderer']}")
+        pairs.add((names[source_state], names[target]))
+    if not pairs:
+        raise RuntimeError(f"{spec['validator']} allowedTransitions is empty")
+    return pairs
+
+
+def compare_code(machine_id, spec, definition, root=ROOT):
+    errors = []
+    _, pairs = states_and_transitions(definition)
+    implemented = code_transitions(spec, root)
+    expected = spec.get("deviation", {})
+    observed = {
+        "transitionsOnlyDeclared": as_sorted(pairs - implemented),
+        "transitionsOnlyImplemented": as_sorted(implemented - pairs),
+    }
+    for key, value in observed.items():
+        if value != as_sorted(tuple(v) for v in expected.get(key, [])):
+            errors.append(f"{machine_id}: code {key} is {value}, reviewed deviation is {expected.get(key, [])}")
+    for key in expected:
+        if key != "classification" and key not in observed:
+            errors.append(f"{machine_id}: reviewed code deviation {key} has no corresponding check")
+    return errors
+
+
+def check_code(bindings, machines, root=ROOT):
+    errors = []
+    for machine_id, binding in bindings["machines"].items():
+        spec = binding.get("code")
+        if spec is None or machine_id not in machines:
+            continue
+        missing = [f for f in ("file", "validator", "renderer") if not spec.get(f)]
+        if missing:
+            errors.append(f"{machine_id}: code binding requires {', '.join(missing)}")
+            continue
+        try:
+            errors += compare_code(machine_id, spec, machines[machine_id], root)
+        except (OSError, RuntimeError) as failure:
+            errors.append(f"{machine_id}: {failure}")
+    return errors
+
+
 def query(url, sql):
     result = subprocess.run(["psql", url, "-X", "-At", "-v", "ON_ERROR_STOP=1", "-c", sql],
                             capture_output=True, text=True, check=False)
@@ -162,6 +228,8 @@ def main():
     bindings = json.loads(BINDINGS.read_text())
     machines = declared_machines()
     errors = check_static(bindings, machines)
+    errors += check_code(bindings, machines)
+    coded = sum(1 for binding in bindings["machines"].values() if binding.get("code"))
     checked = 0
     if args.database_url and not errors:
         for machine_id, binding in bindings["machines"].items():
@@ -175,9 +243,10 @@ def main():
             print(error, file=sys.stderr)
         return 1
     if args.database_url:
-        print(f"State machine correspondence checked for {checked} machines")
+        print(f"State machine correspondence checked for {checked} machines"
+              f" ({coded} also against backend validators)")
     else:
-        print("State machine bindings checked")
+        print(f"State machine bindings checked; {coded} backend validators match their models")
     return 0
 
 
