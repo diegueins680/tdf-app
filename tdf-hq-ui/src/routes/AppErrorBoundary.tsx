@@ -1,17 +1,16 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { reportClientError } from '../analytics/errorReporting';
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
+  /** Changing this (e.g. the route path) clears a previous failure. */
+  resetKey?: string;
 }
 
 interface AppErrorBoundaryState {
   error: Error | null;
-}
-
-interface PostHogErrorReporter {
-  captureException: (error: Error, properties: Record<string, unknown>) => void;
 }
 
 export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundaryState> {
@@ -22,22 +21,16 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Unhandled route render failure', error, info.componentStack);
+    reportClientError('app_render', error, {
+      component_stack: (info.componentStack ?? '').split('\n').slice(0, 6).join(' | ').slice(0, 300),
+    });
+  }
 
-    // Report to error tracking service
-    try {
-      // PostHog error capture (already integrated in the app)
-      const posthog = typeof window === 'undefined'
-        ? undefined
-        : (window as Window & { posthog?: PostHogErrorReporter }).posthog;
-      if (posthog) {
-        posthog.captureException(error, {
-          componentStack: info.componentStack,
-          url: window.location.href,
-        });
-      }
-    } catch {
-      // Silently fail — don't let error reporting crash the error handler
+  override componentDidUpdate(previous: AppErrorBoundaryProps) {
+    // Navigating away from a failed view (back button, nav link) must render
+    // the new route instead of keeping the error screen forever.
+    if (this.state.error && previous.resetKey !== this.props.resetKey) {
+      this.setState({ error: null });
     }
   }
 

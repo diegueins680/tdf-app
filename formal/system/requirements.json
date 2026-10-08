@@ -8218,6 +8218,416 @@
       }
     },
     {
+      "id": "SYS-WEB-SHELL-001",
+      "title": "Never leave a valid navigation on a blank web app shell",
+      "statement": "Any valid navigation, including auth hand-offs, must end in rendered content or a recoverable error state with actions; boot, provider, chunk and session-bootstrap failures must be reported without exposing internals.",
+      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "domain": "SYS",
+      "actors": [
+        "Web visitor",
+        "Authenticated user",
+        "Browser runtime"
+      ],
+      "preconditions": [
+        "index.html, the entry bundle and API base are served by the deployed web build."
+      ],
+      "inputs": [
+        "Route navigation",
+        "Bundle/chunk load results",
+        "/session bootstrap response or stall",
+        "Render and async errors"
+      ],
+      "state": {
+        "boundary": "Document #root and the React provider tree",
+        "states": [
+          "booting",
+          "rendered",
+          "loading-only",
+          "blank",
+          "recovery shown"
+        ]
+      },
+      "allowedTransitions": [
+        "booting -> rendered",
+        "booting -> recovery shown after grace period",
+        "render failure -> boundary recovery UI",
+        "stale chunk -> single reload",
+        "stalled session bootstrap -> loading cleared after timeout"
+      ],
+      "forbiddenTransitions": [
+        "provider or bundle failure -> empty #root without recovery",
+        "stale chunk -> reload loop",
+        "session bootstrap stall -> indefinite loading",
+        "raw stack trace -> user"
+      ],
+      "effects": [
+        "Recovery offers reload, Comunidad and sign-in; client_error telemetry captures kind, redacted message and route path."
+      ],
+      "authorization": "Recovery actions navigate only to same-origin public routes; no authorization is granted by recovery.",
+      "privacy": "Telemetry redacts emails, tokens, JWTs and long identifiers and sends route paths without query/hash.",
+      "concurrency": "Watchdog removes its overlay as soon as content renders; boundary resets on route change.",
+      "idempotency": "Chunk reload happens at most once per deployed commit; duplicate error reports are deduplicated per page.",
+      "failure": "Unrecoverable failures show plain-HTML recovery independent of theme/providers.",
+      "recovery": "Reload, return to Comunidad or sign in again.",
+      "observability": "client_error events (kinds app_render, boot_render, window_error, unhandled_rejection, chunk_preload, blank_screen, session_bootstrap, auth_flow).",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "implementation": [
+        "tdf-hq-ui/index.html",
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/bootSafety.tsx",
+        "tdf-hq-ui/src/analytics/errorReporting.ts",
+        "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
+        "tdf-hq-ui/src/utils/lazyWithReload.ts",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/session/SessionContext.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
+        "tdf-hq-ui/src/analytics/errorReporting.test.ts",
+        "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx",
+        "e2e/web/auth-landing.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
+      "ambiguity": [
+        "The original Android white screen was not reproduced on a physical device; telemetry is the confirmation path."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural guards and tests pass; production telemetry review after deployment pending."
+      },
+      "critical": true,
+      "property": "NoBlankShell and RecoverableFailure",
+      "contract": "formal/system/mobile-entry-ux.md",
+      "verification": "Boundary/watchdog jest tests plus a browser run where the entry bundle is aborted and recovery appears, and a healthy page never shows it.",
+      "evidence": "bootSafety, errorReporting, bootstrap-timeout tests; e2e auth-landing on android-chrome-small, webkit-iphone and desktop projects.",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "AUTH-ENTRY-002",
+      "title": "Low-friction account entry that lands on Comunidad or the interrupted intent",
+      "statement": "Email signup requires only email and password with clickwrap terms; first-time Google users create an account without another form or popup; successful entry lands on Comunidad unless a validated same-origin return path or explicit intent applies.",
+      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "domain": "AUTH",
+      "actors": [
+        "Visitor",
+        "New account",
+        "Returning user",
+        "Google identity"
+      ],
+      "preconditions": [
+        "Backend signup/Google endpoints accept termsAccepted with the supported terms version."
+      ],
+      "inputs": [
+        "Email, password",
+        "Google ID token",
+        "redirect/returnTo query",
+        "onboarding intent"
+      ],
+      "state": {
+        "boundary": "Login page and post-auth navigation",
+        "states": [
+          "anonymous",
+          "signing up",
+          "choosing Google creation",
+          "authenticated"
+        ]
+      },
+      "allowedTransitions": [
+        "signup(email,password) -> authenticated -> Comunidad or safe return path",
+        "Google unknown identity -> explicit create choice -> authenticated",
+        "returning session at / -> Comunidad"
+      ],
+      "forbiddenTransitions": [
+        "required name/phone/profile at signup",
+        "external, protocol-relative or backslash redirect target",
+        "account linking by email alone"
+      ],
+      "effects": [
+        "Server records accepted terms version; display name starts from the email local part and is editable later."
+      ],
+      "authorization": "Return paths are honored only when same-origin and accessible to the returned roles; Google linking still requires existing credentials.",
+      "privacy": "No marketing consent implied; no credentials in URLs or telemetry.",
+      "concurrency": "Late Google callbacks reuse the stored handler; creation reuses the single credential.",
+      "idempotency": "Signup submit is disabled while pending.",
+      "failure": "Inline field errors and friendly server messages; no raw errors.",
+      "recovery": "Retry, switch to email/password, or link an existing account.",
+      "observability": "signup_completed/login_completed/signup_failed analytics and auth_flow client errors.",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "implementation": [
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/utils/signupFields.ts",
+        "tdf-hq-ui/src/utils/loginRouting.ts",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/utils/signupFields.test.ts",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        "e2e/web/auth-landing.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/event-rsvp-sharing.spec.mjs",
+        "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
+      "ambiguity": [
+        "Clickwrap sufficiency for account terms under LOPDP awaits counsel confirmation.",
+        "Backend still requires a name part; the client derives it until SignupRequest makes names optional."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Component and browser tests pass; deployed smoke and legal confirmation pending."
+      },
+      "critical": true,
+      "property": "MinimalSignup, NoSecondGoogleForm and SafeReturnPath",
+      "contract": "formal/system/mobile-entry-ux.md",
+      "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys.",
+      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing.",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "MKT-CART-001",
+      "title": "Marketplace cart is always discoverable and reflects its contents",
+      "statement": "On every Marketplace page width the header shows a cart control with an item-count badge that updates immediately on add/update/remove and opens the cart in one interaction; adds keep the visitor on the product.",
+      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "domain": "MKT",
+      "actors": [
+        "Visitor",
+        "Authenticated buyer"
+      ],
+      "preconditions": [
+        "Anonymous server cart id persisted in browser storage."
+      ],
+      "inputs": [
+        "Add/update/remove item",
+        "Cart refetch",
+        "Cross-tab storage events"
+      ],
+      "state": {
+        "boundary": "Browser cart summary and server cart",
+        "states": [
+          "empty",
+          "has items",
+          "drawer open",
+          "checkout"
+        ]
+      },
+      "allowedTransitions": [
+        "add -> badge+1 and confirmation",
+        "remove/quantity 0 -> badge updated",
+        "header control -> cart drawer",
+        "refetch dropping unavailable items -> corrected count"
+      ],
+      "forbiddenTransitions": [
+        "cart reachable only by scrolling past listings",
+        "badge stale after a cart change",
+        "login/logout clearing the cart"
+      ],
+      "effects": [
+        "Shared summary store drives header badge, drawer and sticky mobile bar."
+      ],
+      "authorization": "Cart ids are anonymous capabilities; no new authority.",
+      "privacy": "Only cart id, count and preview are stored locally.",
+      "concurrency": "Repeat taps are ignored while an add is pending; server upsert sets quantity.",
+      "idempotency": "Server sets, not increments, quantities.",
+      "failure": "Failed cart reads keep the last known count until a successful fetch.",
+      "recovery": "Restore saved cart or browse catalog from the empty state.",
+      "observability": "Existing marketplace analytics; jest and browser evidence.",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "implementation": [
+        "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
+        "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
+        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "e2e/web/marketplace-cart.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
+      "ambiguity": [
+        "Cross-device carts for signed-in users need a cart.party_id backend migration."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web behavior verified synthetically; server-side per-user persistence not implemented."
+      },
+      "critical": false,
+      "property": "CartAlwaysReachable and BadgeMatchesCart",
+      "contract": "formal/system/mobile-entry-ux.md",
+      "verification": "Cart summary store tests, header button tests at 360px, MarketplacePage add/remove tests and a browser cart journey with reload.",
+      "evidence": "cartSummary, MarketplaceCartButton and MarketplacePage tests; e2e marketplace-cart.",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "COURSE-ENROLL-001",
+      "title": "Course enrollment opens immediately and accepts local phone formats",
+      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164.",
+      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "domain": "COURSE",
+      "actors": [
+        "Visitor",
+        "Authenticated student"
+      ],
+      "preconditions": [
+        "Public course registration endpoint available for the slug."
+      ],
+      "inputs": [
+        "Name, email, phone, how-heard, terms",
+        "?inscribirme=1 resume",
+        "Server validation errors"
+      ],
+      "state": {
+        "boundary": "Course page enrollment dialog",
+        "states": [
+          "closed",
+          "open",
+          "submitting",
+          "received",
+          "checkout"
+        ]
+      },
+      "allowedTransitions": [
+        "CTA/sticky CTA/deep link -> dialog focused on first missing field",
+        "valid submit -> received or order checkout",
+        "server field error -> message beside field"
+      ],
+      "forbiddenTransitions": [
+        "form discovered only by scrolling",
+        "raw local phone sent as E.164",
+        "raw server text shown"
+      ],
+      "effects": [
+        "Draft preserved across login round-trip and cleared on success."
+      ],
+      "authorization": "Public endpoint; login is optional and only pre-fills.",
+      "privacy": "Draft kept in sessionStorage per slug, excluding consent.",
+      "concurrency": "Submit disabled while pending; focus applied after inputs re-enable.",
+      "idempotency": "Idempotency key reused for identical retries and renewed after definitive rejection with changed payload.",
+      "failure": "Friendly field or form messages with WhatsApp fallback.",
+      "recovery": "Correct the field and retry, or contact via WhatsApp.",
+      "observability": "Course registration analytics; jest and browser evidence.",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "implementation": [
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/utils/phone.ts",
+        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/utils/phone.test.ts",
+        "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
+        "e2e/web/course-enrollment.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
+      "ambiguity": [
+        "Backend legacy path should also accept local EC formats; course terms URL not yet exposed by metadata."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web behavior verified synthetically; backend normalization pending."
+      },
+      "critical": false,
+      "property": "EnrollmentInView and E164Phone",
+      "contract": "formal/system/mobile-entry-ux.md",
+      "verification": "Phone normalization and error mapping unit tests, page tests for dialog focus/prefill/resume/idempotency, and a browser enrollment journey at 360px.",
+      "evidence": "phone, courseRegistrationErrors and CourseProductionLandingPage tests; e2e course-enrollment.",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "SYS-WEB-LAYOUT-001",
+      "title": "Public mobile layouts stay usable at 360px",
+      "statement": "Booking, Live Sessions and pages with the docked radio bar must not squeeze columns, overflow horizontally, hide content behind fixed bars, or render low-contrast controls at 360px width; docked bars (global player, radio bar, page CTAs) stack instead of overlapping.",
+      "authority": "product owner request after real-user mobile test (2026-10-07)",
+      "domain": "SYS",
+      "actors": [
+        "Mobile visitor"
+      ],
+      "preconditions": [
+        "Viewport 360-430 CSS px; light or dark app theme."
+      ],
+      "inputs": [
+        "Viewport width",
+        "Selected service",
+        "Radio bar visibility"
+      ],
+      "state": {
+        "boundary": "Public page layout",
+        "states": [
+          "narrow",
+          "wide"
+        ]
+      },
+      "allowedTransitions": [
+        "narrow -> stacked single column",
+        "docked radio bar -> page bottom padding reserved"
+      ],
+      "forbiddenTransitions": [
+        "side-by-side squeeze with per-letter wrapping",
+        "inputs wider than their card",
+        "fixed bar covering submit controls",
+        "icon contrast below 3:1"
+      ],
+      "effects": [
+        "Column wrappers, flex-gap stacks, nested dark theme and measured bar height."
+      ],
+      "authorization": "Not applicable: presentation only.",
+      "privacy": "No data change.",
+      "concurrency": "Bar height observer updates the reserved padding.",
+      "idempotency": "Not applicable.",
+      "failure": "Layout degrades by wrapping rather than overflow.",
+      "recovery": "Not applicable.",
+      "observability": "Browser layout assertions in mobile-flow projects.",
+      "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/theme/appTheme.ts",
+        "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
+        "tdf-hq-ui/src/utils/bottomDock.ts",
+        "tdf-hq-ui/src/player/GlobalPlayer.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
+        "e2e/web/mobile-layout-regressions.spec.mjs",
+        "tdf-hq-ui/src/utils/bottomDock.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
+      "ambiguity": [
+        "Physical Redmi verification pending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Synthetic 360px evidence passes; physical-device check pending."
+      },
+      "critical": false,
+      "property": "NoSqueezeNoOverflow and LegibleControls",
+      "contract": "formal/system/mobile-entry-ux.md",
+      "verification": "Layout jest tests and browser geometry/contrast assertions at 360px.",
+      "evidence": "PublicBookingPage, RadioWidget layout and LiveSessionPublicPage tests; e2e mobile-layout-regressions.",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
       "id": "MKT-ARTIST-LISTING-001",
       "title": "Canonical directory preview images and one synchronized listing per public artist profile",
       "domain": "MKT",

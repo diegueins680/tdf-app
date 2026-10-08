@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react';
+import { GLOBAL_PLAYER_HEIGHT_VAR, useDockedBarHeight } from '../utils/bottomDock';
 import {
   Box,
   Button,
@@ -65,6 +66,9 @@ export default function GlobalPlayer() {
   const closeOptionsRef = useRef<HTMLButtonElement>(null);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const track = player.currentTrack;
+  const barRef = useRef<HTMLElement | null>(null);
+  // Other docked bars and page CTAs stack above the player instead of under it.
+  useDockedBarHeight(GLOBAL_PLAYER_HEIGHT_VAR, barRef, Boolean(track));
   if (!track) return null;
 
   const statusMessage = player.error
@@ -76,6 +80,7 @@ export default function GlobalPlayer() {
   return (
     <>
       <Box
+        ref={barRef}
         component="section"
         aria-label="Reproductor global"
         sx={{

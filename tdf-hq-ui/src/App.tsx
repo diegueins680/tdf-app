@@ -25,8 +25,9 @@ function RoutedRadioWidget() {
 }
 
 export default function App() {
+  const location = useLocation();
   return (
-    <AppErrorBoundary>
+    <AppErrorBoundary resetKey={location.pathname}>
       {/* Playback outlives route transitions, so the provider wraps the routes. */}
       <PlayerProvider>
         <OnboardingRecovery />

@@ -17,6 +17,14 @@ const PUBLIC_EVENT_RETURN_ROUTE = /^\/eventos\/[1-9]\d{0,18}$/;
 const ARTIST_INVITATION_TOKEN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 
+/**
+ * Comunidad (artist discovery) is the default authenticated landing for every
+ * account when no stronger intent exists: no safe accessible return path and
+ * no explicit onboarding intent. Role workspaces stay one click away in the
+ * navigation; see pickLandingPath for the role-priority workspace.
+ */
+export const COMMUNITY_LANDING_PATH = '/fans';
+
 export type OnboardingIntent =
   | 'events'
   | 'follow_artists'
@@ -122,7 +130,7 @@ export function resolvePostAuthPath(
     case 'professional_tools':
       return '/herramientas/creador-musical';
     default:
-      return pickLandingPath(roles, modules);
+      return COMMUNITY_LANDING_PATH;
   }
 }
 
@@ -184,7 +192,9 @@ export function sanitizeRedirectPath(value: string | null | undefined): string |
 
 export function readSafeRedirectPath(search: string): string | null {
   const params = new URLSearchParams(search);
-  return sanitizeRedirectPath(params.get('redirect'));
+  // `returnTo` is accepted as an alias so links built by other surfaces keep
+  // their intent; both go through the same same-origin validation.
+  return sanitizeRedirectPath(params.get('redirect') ?? params.get('returnTo'));
 }
 
 export function buildLoginRedirectPath(targetPath: string | null | undefined): string {
