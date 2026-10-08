@@ -253,6 +253,7 @@ WhatsAppConsent
     note         Text Maybe
     consentedAt  UTCTime Maybe
     revokedAt    UTCTime Maybe
+    confirmationRequestedAt UTCTime Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
     UniqueWhatsAppConsent phoneE164

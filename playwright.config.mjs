@@ -4,6 +4,14 @@ const artifactRoot = process.env.PLAYWRIGHT_ARTIFACT_DIR || 'artifacts/persona-p
 
 export default defineConfig({
   testDir: './e2e/web',
+  // These suites require their own synthetic-media or API/S3 lifecycle and
+  // run from playwright.music-native/-integration.config.mjs instead.
+  testIgnore: [/music-player-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/],
+  // Playwright's git-info plugin buffers the whole `git diff <prBase> HEAD`
+  // into one string before truncating it. This repository's merge commits span
+  // tens of thousands of files, which exceeds V8's maximum string length and
+  // crashes the run. Commit metadata is still captured.
+  captureGitInfo: { diff: false },
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,

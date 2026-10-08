@@ -9,37 +9,23 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import {
-  WhatsAppConsentPublicAPI,
-} from '../api/whatsappConsentPublic';
-import type {
-  WhatsAppConsentResponse,
-  WhatsAppConsentStatus,
-} from '../api/whatsappConsent';
+import { useNavigate } from 'react-router-dom';
+import { WhatsAppConsentPublicAPI } from '../api/whatsappConsentPublic';
 
-const formatTimestamp = (value?: string | null) => {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleString();
-};
-
+// Public consent is a double opt-in request: the number itself confirms by
+// replying SI. Responses intentionally never reveal a number's consent state.
 export default function PublicWhatsAppConsentPage() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [consentChecked, setConsentChecked] = useState(false);
-  const [sendMessage, setSendMessage] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [response, setResponse] = useState<WhatsAppConsentResponse | null>(null);
-  const [status, setStatus] = useState<WhatsAppConsentStatus | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const resetFeedback = () => {
     setError(null);
-    setResponse(null);
-    setStatus(null);
+    setNotice(null);
   };
 
   const handleConsent = async () => {
@@ -55,18 +41,13 @@ export default function PublicWhatsAppConsentPage() {
     setLoading(true);
     try {
       const trimmedName = name.trim();
-      const res = await WhatsAppConsentPublicAPI.createConsent({
+      await WhatsAppConsentPublicAPI.createConsent({
         phone: phone.trim(),
         name: trimmedName === '' ? null : trimmedName,
         consent: true,
         source: 'public-review',
-        sendMessage,
       });
-      setResponse(res);
-      setStatus(res.status);
-      window.setTimeout(() => {
-        navigate('/whatsapp/ok');
-      }, 700);
+      navigate('/whatsapp/ok');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado');
     } finally {
@@ -85,27 +66,8 @@ export default function PublicWhatsAppConsentPage() {
       const res = await WhatsAppConsentPublicAPI.optOut({
         phone: phone.trim(),
         reason: 'Solicitud desde página pública',
-        sendMessage,
       });
-      setResponse(res);
-      setStatus(res.status);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error inesperado');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLookup = async () => {
-    resetFeedback();
-    if (!phone.trim()) {
-      setError('Ingresa un número para consultar estado.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await WhatsAppConsentPublicAPI.fetchStatus(phone.trim());
-      setStatus(res);
+      setNotice(res.message ?? 'Solicitud de baja registrada.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error inesperado');
     } finally {
@@ -120,7 +82,8 @@ export default function PublicWhatsAppConsentPage() {
           Consentimiento de WhatsApp
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Esta página se usa para obtener y registrar el consentimiento explícito antes de enviar mensajes.
+          Solicita recibir mensajes de TDF Records por WhatsApp. Te enviaremos un mensaje y tu suscripción
+          se activa solo cuando respondes SI desde ese número.
         </Typography>
       </Stack>
 
@@ -149,21 +112,12 @@ export default function PublicWhatsAppConsentPage() {
             }
             label="Confirmo que deseo recibir mensajes por WhatsApp de TDF Records."
           />
-          <FormControlLabel
-            control={
-              <Checkbox checked={sendMessage} onChange={(e) => setSendMessage(e.target.checked)} />
-            }
-            label="Enviar mensaje de confirmación"
-          />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <Button variant="contained" onClick={() => void handleConsent()} disabled={loading}>
-              Aceptar y registrar
+              Solicitar suscripción
             </Button>
             <Button variant="outlined" onClick={() => void handleOptOut()} disabled={loading}>
               Dar de baja
-            </Button>
-            <Button variant="text" onClick={() => void handleLookup()} disabled={loading}>
-              Consultar estado
             </Button>
           </Stack>
           <Typography variant="caption" color="text.secondary">
@@ -173,41 +127,7 @@ export default function PublicWhatsAppConsentPage() {
       </Paper>
 
       {error && <Alert severity="error">{error}</Alert>}
-
-      {response && (
-        <Alert severity={response.messageSent ? 'success' : 'warning'}>
-          {response.messageSent
-            ? 'Mensaje enviado correctamente.'
-            : 'Consentimiento guardado. El mensaje no fue enviado.'}
-          {response.message && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {response.message}
-            </Typography>
-          )}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2 }}>
-            <Button size="small" variant="outlined" component={RouterLink} to="/whatsapp/ok">
-              Ver pagina de confirmacion
-            </Button>
-          </Stack>
-        </Alert>
-      )}
-
-      {status && (
-        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-          <Stack spacing={1}>
-            <Typography variant="h6">Estado actual</Typography>
-            <Typography variant="body2">Teléfono: {status.phone}</Typography>
-            <Typography variant="body2">
-              Consentimiento: {status.consent ? 'Activo' : 'Inactivo'}
-            </Typography>
-            <Typography variant="body2">
-              Nombre: {status.displayName && status.displayName.trim() !== '' ? status.displayName : '—'}
-            </Typography>
-            <Typography variant="body2">Consentido en: {formatTimestamp(status.consentedAt)}</Typography>
-            <Typography variant="body2">Revocado en: {formatTimestamp(status.revokedAt)}</Typography>
-          </Stack>
-        </Paper>
-      )}
+      {notice && <Alert severity="info">{notice}</Alert>}
     </Stack>
   );
 }

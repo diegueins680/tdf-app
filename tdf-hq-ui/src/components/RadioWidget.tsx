@@ -65,6 +65,7 @@ import {
   type TorrentPlaybackProgress,
 } from '../utils/torrentAudio';
 import LazyPaginatedList from './LazyPaginatedList';
+import { PLAYER_TAKEOVER_EVENT, RADIO_TAKEOVER_EVENT } from '../player/types';
 
 interface Prompt {
   text: string;
@@ -1012,6 +1013,7 @@ export default function RadioWidget() {
       return;
     }
     if (isActiveTorrent && torrentStatus !== 'ready') return;
+    window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
     void audio.play().catch(() => {
       setIsPlaying(false);
       setPlaybackWarning(
@@ -1178,6 +1180,7 @@ export default function RadioWidget() {
         setIsPlaying(true);
         return;
       }
+      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
       void audio
         .play()
         .then(() => {
@@ -1375,6 +1378,11 @@ export default function RadioWidget() {
     setPlaybackWarning(null);
   }, [stopBrowserBroadcast, stopInputTest]);
 
+  useEffect(() => {
+    window.addEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
+    return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
+  }, [stopAllAudio]);
+
   const startInputTest = useCallback(async () => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {
       setBrowserBroadcastError('Tu navegador no permite capturar audio.');
@@ -1570,6 +1578,7 @@ export default function RadioWidget() {
         setPreviewStatus('error');
         setPreviewError('No pudimos reproducir el stream.');
       };
+      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
       await audio.play();
       setPreviewStatus('live');
     } catch (err) {
@@ -1768,6 +1777,7 @@ export default function RadioWidget() {
       audio.crossOrigin = 'anonymous';
       audio.src = url;
       customPreviewAudioRef.current = audio;
+      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
       await audio.play();
       setCustomPreviewStatus('playing');
     } catch (err) {

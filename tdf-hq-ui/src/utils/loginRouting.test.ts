@@ -3,6 +3,8 @@ import {
   COMMUNITY_LANDING_PATH,
   normalizeOnboardingIntent,
   pickLandingPath,
+  buildArtistInvitationLink,
+  readArtistInvitation,
   readSafeRedirectPath,
   readOnboardingIntent,
   resolvePostAuthPath,
@@ -133,6 +135,27 @@ describe('onboarding intent routing', () => {
     expect(readOnboardingIntent('?roles=Fan')).toBe('follow_artists');
     expect(normalizeOnboardingIntent('Intern')).toBe('internships');
     expect(normalizeOnboardingIntent('Admin')).toBeNull();
+  });
+
+  it('reads only a personal invitation token, never a public campaign name', () => {
+    const token = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    expect(readArtistInvitation(`?intent=artist&invite=${token.toUpperCase()}`)).toBe(token);
+    expect(readArtistInvitation(
+      '?intent=artist&roles=Artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto',
+    )).toBeNull();
+    expect(readArtistInvitation('?intent=artist&invite=tu_escena_conectada_piloto')).toBeNull();
+    expect(readArtistInvitation('?invite=00000000-0000-0000-0000-000000000000')).toBeNull();
+    expect(readArtistInvitation('?invite=')).toBeNull();
+  });
+
+  it('builds a personal invitation link that round-trips its token', () => {
+    const token = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    const link = buildArtistInvitationLink('https://www.tdfrecords.net', token, 'tu_escena_conectada_piloto');
+    const url = new URL(link);
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('intent')).toBe('artist');
+    expect(url.searchParams.get('utm_campaign')).toBe('tu_escena_conectada_piloto');
+    expect(readArtistInvitation(url.search)).toBe(token);
   });
 
   it('honors a redirect only when the returned session can access it', () => {

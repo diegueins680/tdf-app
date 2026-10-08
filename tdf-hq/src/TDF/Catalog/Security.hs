@@ -16,9 +16,13 @@ module TDF.Catalog.Security
   , hasCanonicalPartyRole
   , ensureBootstrapSecurityRole
   , applySecurityRoleAssignmentPolicy
+  , provisionReviewedSecurityRole
   ) where
 
+import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Except (runExceptT, throwE)
 import Data.List (sortOn)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -27,12 +31,28 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, insert_, selectList, toPersistValue, (==.), (<-.))
-import Database.Persist.Sql (Single (..), SqlPersistT, fromSqlKey, rawSql)
+import Database.Persist
+  ( Entity (..)
+  , SelectOpt (Asc)
+  , count
+  , get
+  , getBy
+  , insert
+  , insert_
+  , selectList
+  , toPersistValue
+  , update
+  , (+=.)
+  , (=.)
+  , (==.)
+  , (<-.)
+  )
+import Database.Persist.Sql (Single (..), SqlPersistT, fromSqlKey, rawExecute, rawSql)
 
 import TDF.Auth (moduleRegistryCode)
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Models (PartyId, RoleEnum, roleFromRegistryCode, roleRegistryCode)
+import qualified TDF.Models as Core
 
 -- These identifiers are an explicit technical-constant allowlist for backend
 -- enforcement. User-facing labels, ordering, role assignments and permission
@@ -72,6 +92,7 @@ expectedSecurityRoleAssignmentPolicyBindings = Set.fromList
   , ("account.google.customer", "google-account-create", "customer", True)
   , ("artist.self-service.artist", "artist-self-service-activated", "artist", False)
   , ("artist.verified-claim.artist", "verified-artist-claim", "artist", True)
+  , ("artist.invitation.artist", "artist-invitation-redeemed", "artist", False)
   , ("account.generated.customer", "generated-account-create", "customer", False)
   , ("course.registration.student", "course-registration", "student", False)
   , ("trial.inquiry.student", "trial-inquiry", "student", False)
@@ -379,6 +400,159 @@ applySecurityRoleAssignmentPolicy policyCode partyKey verifiedEmail actorId sour
                     , Catalog.securityAuditEventResult = "success"
                     }
                   pure (Right roleCode)
+
+-- Publishes the security revision represented by a user-created access
+-- request and applies its role grant atomically. The requester is the change
+-- author and the reviewer is the distinct approver, preserving the same
+-- provenance required by the administrative security workflow.
+provisionReviewedSecurityRole
+  :: PartyId
+  -> PartyId
+  -> RoleEnum
+  -> UTCTime
+  -> UTCTime
+  -> Text
+  -> Text
+  -> Text
+  -> SqlPersistT IO (Either Text Bool)
+provisionReviewedSecurityRole
+  requesterPartyId
+  reviewerPartyId
+  roleCode
+  requestedAt
+  approvedAt
+  reviewerNotes
+  reason
+  correlationId
+  = runExceptT $ do
+      when (requesterPartyId == reviewerPartyId) $
+        throwE "Access request authors cannot approve their own role grant"
+      credentialCount <- lift $ count
+        [ Core.UserCredentialPartyId ==. requesterPartyId
+        , Core.UserCredentialActive ==. True
+        ]
+      when (credentialCount /= 1) $
+        throwE "Access request role grants require exactly one active user credential"
+      roleEntity <- lift $
+        getBy (Catalog.UniqueSecurityRoleCode (roleRegistryCode roleCode))
+      roleRecord <- maybe
+        (throwE ("Persisted access-request role is missing: " <> roleRegistryCode roleCode))
+        pure
+        roleEntity
+      let Entity roleKey roleValue = roleRecord
+      when (not (Catalog.securityRoleActive roleValue)) $
+        throwE ("Persisted access-request role is inactive: " <> roleRegistryCode roleCode)
+      when (Catalog.securityRoleEmergencyAdministrator roleValue) $
+        throwE "Access requests cannot provision the emergency administrator role"
+      workflowEntity <- lift $
+        getBy (Catalog.UniqueWorkflowDefinitionCode "sensitive-publication")
+      workflowRecord <- maybe
+        (throwE "Sensitive security workflow is missing")
+        pure
+        workflowEntity
+      let Entity workflowKey workflowValue = workflowRecord
+      when (not (Catalog.workflowDefinitionActive workflowValue)) $
+        throwE "Sensitive security workflow is inactive"
+      publishedEntity <- lift $
+        getBy (Catalog.UniqueWorkflowStateCode workflowKey "published")
+      publishedRecord <- maybe
+        (throwE "Published security workflow state is missing")
+        pure
+        publishedEntity
+      let Entity publishedKey publishedValue = publishedRecord
+      when (not (Catalog.workflowStateActive publishedValue)) $
+        throwE "Published security workflow state is inactive"
+      lift $ rawExecute
+        ( "DO $$ BEGIN PERFORM pg_advisory_xact_lock("
+            <> "hashtextextended('tdf-security-grants-v1', 0)); END $$"
+        )
+        []
+      current <- lift $
+        getBy (Catalog.UniquePartySecurityRole requesterPartyId roleKey)
+      if maybe False (Catalog.partySecurityRoleActive . entityVal) current
+        then pure False
+        else do
+          duplicate <- lift $ getBy
+            (Catalog.UniqueSecurityGrantCorrelation correlationId)
+          when (maybe False (const True) duplicate) $
+            throwE "Access request security correlation already exists"
+          let currentVersion = maybe 0
+                (Catalog.partySecurityRoleVersion . entityVal)
+                current
+              revision = Catalog.SecurityGrantRevision
+                { Catalog.securityGrantRevisionChangeKind = "party-role"
+                , Catalog.securityGrantRevisionPartyId = Just requesterPartyId
+                , Catalog.securityGrantRevisionRoleId = roleKey
+                , Catalog.securityGrantRevisionPermissionId = Nothing
+                , Catalog.securityGrantRevisionDesiredActive = True
+                , Catalog.securityGrantRevisionExpectedVersion = currentVersion
+                , Catalog.securityGrantRevisionWorkflowStateId = publishedKey
+                , Catalog.securityGrantRevisionCreatedBy = requesterPartyId
+                , Catalog.securityGrantRevisionCreatedAt = requestedAt
+                , Catalog.securityGrantRevisionSubmittedAt = Just requestedAt
+                , Catalog.securityGrantRevisionReviewedBy = Just reviewerPartyId
+                , Catalog.securityGrantRevisionReviewedAt = Just approvedAt
+                , Catalog.securityGrantRevisionApprovedBy = Just reviewerPartyId
+                , Catalog.securityGrantRevisionApprovedAt = Just approvedAt
+                , Catalog.securityGrantRevisionReviewerNotes = Just reviewerNotes
+                , Catalog.securityGrantRevisionRejectionReason = Nothing
+                , Catalog.securityGrantRevisionApprovalMode = "normal"
+                , Catalog.securityGrantRevisionEmergencyReason = Nothing
+                , Catalog.securityGrantRevisionSourcePlatform = "feature-access-request"
+                , Catalog.securityGrantRevisionCorrelationId = correlationId
+                , Catalog.securityGrantRevisionReason = reason
+                , Catalog.securityGrantRevisionResult =
+                    Just "published-from-access-request"
+                , Catalog.securityGrantRevisionVersion = 1
+                }
+          revisionKey <- lift (insert revision)
+          lift $ case current of
+            Nothing -> insert_ Catalog.PartySecurityRole
+              { Catalog.partySecurityRolePartyId = requesterPartyId
+              , Catalog.partySecurityRoleRoleId = roleKey
+              , Catalog.partySecurityRoleGrantedBy = Just requesterPartyId
+              , Catalog.partySecurityRoleApprovedBy = Just reviewerPartyId
+              , Catalog.partySecurityRoleApprovalMode = "normal"
+              , Catalog.partySecurityRoleEmergencyReason = Nothing
+              , Catalog.partySecurityRoleSourceRevisionId = Just revisionKey
+              , Catalog.partySecurityRoleSourcePolicyId = Nothing
+              , Catalog.partySecurityRoleActive = True
+              , Catalog.partySecurityRoleCreatedAt = approvedAt
+              , Catalog.partySecurityRoleRevokedAt = Nothing
+              , Catalog.partySecurityRoleVersion = 1
+              }
+            Just (Entity assignmentKey _) -> update assignmentKey
+              [ Catalog.PartySecurityRoleGrantedBy =. Just requesterPartyId
+              , Catalog.PartySecurityRoleApprovedBy =. Just reviewerPartyId
+              , Catalog.PartySecurityRoleApprovalMode =. "normal"
+              , Catalog.PartySecurityRoleEmergencyReason =. Nothing
+              , Catalog.PartySecurityRoleSourceRevisionId =. Just revisionKey
+              , Catalog.PartySecurityRoleSourcePolicyId =. Nothing
+              , Catalog.PartySecurityRoleActive =. True
+              , Catalog.PartySecurityRoleRevokedAt =. Nothing
+              , Catalog.PartySecurityRoleVersion +=. 1
+              ]
+          lift $ insert_ Catalog.SecurityAuditEvent
+            { Catalog.securityAuditEventRevisionId = Just revisionKey
+            , Catalog.securityAuditEventSourcePolicyId = Nothing
+            , Catalog.securityAuditEventEntityKind = "party-role"
+            , Catalog.securityAuditEventPartyId = Just requesterPartyId
+            , Catalog.securityAuditEventRoleId = roleKey
+            , Catalog.securityAuditEventPermissionId = Nothing
+            , Catalog.securityAuditEventOperation = "published"
+            , Catalog.securityAuditEventPreviousActive = Just False
+            , Catalog.securityAuditEventNewActive = Just True
+            , Catalog.securityAuditEventActorId = Just requesterPartyId
+            , Catalog.securityAuditEventReviewerId = Just reviewerPartyId
+            , Catalog.securityAuditEventApproverId = Just reviewerPartyId
+            , Catalog.securityAuditEventOccurredAt = approvedAt
+            , Catalog.securityAuditEventSourcePlatform = "feature-access-request"
+            , Catalog.securityAuditEventReason = Just reason
+            , Catalog.securityAuditEventCorrelationId = correlationId
+            , Catalog.securityAuditEventApprovalMode = "normal"
+            , Catalog.securityAuditEventResult = "success"
+            }
+          pure True
 
 catalogActionCodes :: [Text]
 catalogActionCodes =

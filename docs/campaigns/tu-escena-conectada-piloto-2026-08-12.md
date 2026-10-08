@@ -1,5 +1,7 @@
 # Tu escena, conectada — primera entrega del piloto
 
+> **Historial, no plantilla de envío vigente.** Los veinte destinatarios del piloto ya fueron contactados. Para continuar, consultar el [checkpoint del 18 de septiembre](tu-escena-conectada-continuacion-2026-09-18.md). Los mensajes y enlaces antiguos de este documento son evidencia de lo ocurrido: no copiarlos, reenviarlos ni usar sus identificadores personales en UTM. Las plantillas actuales usan exclusivamente `https://www.tdfrecords.net`. El video aprobado como base creativa sigue sin autorización de publicación y su cierre antiguo debe sustituirse antes de usarlo.
+
 Fecha de verificación: 2026-08-12, zona horaria America/Guayaquil.
 
 Regla operativa vigente desde el 2026-09-07 por instrucción expresa del usuario: **iniciar los bloques a partir de las 09:00 y cerrar a las 18:00 de `America/Guayaquil`**. Esta regla reemplaza para ejecuciones futuras las referencias anteriores a un inicio a las 10:00; esas referencias se conservan únicamente como historial de los días en que aplicaron.

@@ -1,0 +1,41 @@
+{
+  "authorization": "Explicit user exception for exactly these two responses in this conversation; no other outreach authorized by the exception",
+  "newInvitations": 0,
+  "messagesSent": 2,
+  "publicPosts": 0,
+  "scheduledMessages": 0,
+  "receipts": [
+    {
+      "recipientReference": "Músico invitado 27-ago; recordatorio 17-sep 15:45",
+      "status": "sent_visible_confirmed",
+      "sendClickedAt": "2026-09-18T18:44:14.444Z",
+      "verifiedAt": "2026-09-18T18:44:21.360Z",
+      "verifiedEcuador": "2026-09-18 13:44:21",
+      "text": "¡Gracias por darte una vuelta! Si algo no queda claro o falla al probar la web, cuéntanos por aquí qué intentabas hacer. — TDF Records",
+      "occurrencesInThread": 1,
+      "composerEmpty": true,
+      "sending": false,
+      "visibleError": false,
+      "privateReceipt": "/private/tmp/tdf-campaign-two-replies-20260918/1-verify-receipt.json",
+      "receiptSha256": "ab654681ecdb860a0013333a80504e9b91702c44b42edadca781b2437fdcfa6c",
+      "messageIdAvailable": false,
+      "threadReferencePreservedPrivately": true
+    },
+    {
+      "recipientReference": "Prospecto agosto K",
+      "status": "sent_visible_confirmed",
+      "sendClickedAt": "2026-09-18T18:46:01.649Z",
+      "verifiedAt": "2026-09-18T18:46:06.440Z",
+      "verifiedEcuador": "2026-09-18 13:46:06",
+      "text": "¡Gracias por responder y por tomarte el tiempo! Revísalo con calma; si algo te confunde o falla, cuéntanos por aquí. — TDF Records",
+      "occurrencesInThread": 1,
+      "composerEmpty": true,
+      "sending": false,
+      "visibleError": false,
+      "privateReceipt": "/private/tmp/tdf-campaign-two-replies-20260918/2-verify-receipt.json",
+      "receiptSha256": "dc23c3c69a0b8c4501337b49119fa8b5f07b8bd339a6a23498f8ac8d1c028a30",
+      "messageIdAvailable": false,
+      "threadReferencePreservedPrivately": true
+    }
+  ]
+}

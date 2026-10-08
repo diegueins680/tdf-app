@@ -49,6 +49,11 @@ module TDF.ServerAuth
   , validateSignupFanArtistTargets
   , validateOnboardingIntent
   , validateOnboardingFirstValue
+  , validateArtistInvitation
+  , artistInvitationTokenHash
+  , validateArtistInvitationLinkCreate
+  , artistInvitationStatus
+  , artistInvitationsServer
   , isOnboardingEligible
   ) where
 
@@ -58,6 +63,7 @@ import TDF.App.FailureBoundary (bestEffortActivity)
 import Control.Monad (forM, forM_, guard, join, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, asks)
+import qualified Crypto.Hash as CryptoHash
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
 import Data.Aeson (FromJSON (..), Value (..), eitherDecode, object, withObject, (.:), (.:?), (.=))
 import qualified Data.ByteString.Char8 as BS8
@@ -99,6 +105,9 @@ import System.IO (hPutStrLn, stderr)
 import qualified TDF.API as Api
 import TDF.Auth (
     AuthedUser (..),
+    ModuleAccess (ModuleAdmin),
+    hasStrictAdminAccess,
+    validateModuleAccess,
     clearSessionCookieHeader,
     extractTokenFromHeaders,
     loadAuthedUser,
@@ -460,6 +469,7 @@ sessionServer =
   :<|> updateOnboardingIntent
   :<|> completeOnboarding
   :<|> reconcileOnboarding
+  :<|> redeemArtistInvitation
   :<|> currentExperimentAssignment
   :<|> recordExperimentExposure
 
@@ -472,6 +482,15 @@ onboardingIntentValues = Set.fromList
   , "learning"
   , "professional_tools"
   ]
+
+defaultArtistInvitationCampaign :: Text
+defaultArtistInvitationCampaign = "tu_escena_conectada_piloto"
+
+defaultArtistInvitationExpiryDays :: Int
+defaultArtistInvitationExpiryDays = 30
+
+maxArtistInvitationExpiryDays :: Int
+maxArtistInvitationExpiryDays = 90
 
 onboardingFirstValueValues :: Set.Set Text
 onboardingFirstValueValues = Set.fromList onboardingFirstValuePriority
@@ -494,6 +513,50 @@ validateOnboardingIntent raw =
 validateOnboardingFirstValue :: Text -> Either ServerError Text
 validateOnboardingFirstValue raw =
   validateOnboardingValue "firstValue" onboardingFirstValueValues raw
+
+-- An invitation is a personal, staff-issued link token (a random UUID). Public
+-- campaign names are never accepted: anyone can read them from a shared URL.
+validateArtistInvitation :: Text -> Either ServerError Text
+validateArtistInvitation raw =
+  case fromText (T.strip raw) of
+    Just parsed
+      | toText parsed /= "00000000-0000-0000-0000-000000000000" -> Right (toText parsed)
+    _ ->
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "artistInvitation must be a personal invitation link token")
+        }
+
+-- Only this digest is stored, so a database read cannot recover a usable link.
+artistInvitationTokenHash :: Text -> Text
+artistInvitationTokenHash token =
+  T.pack (show (CryptoHash.hash (TE.encodeUtf8 token) :: CryptoHash.Digest CryptoHash.SHA256))
+
+validateArtistInvitationLinkCreate
+  :: ArtistInvitationLinkCreate
+  -> Either ServerError (Text, Text, Int)
+validateArtistInvitationLinkCreate ArtistInvitationLinkCreate{..} = do
+  let label = T.strip ailcInviteeLabel
+      campaign = maybe defaultArtistInvitationCampaign (T.toLower . T.strip) ailcCampaign
+      days = fromMaybe defaultArtistInvitationExpiryDays ailcExpiresInDays
+      reject message = Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+  when (T.null label || T.length label > 120 || T.any isControl label) $
+    reject "inviteeLabel must be 1 to 120 characters without control characters"
+  when (T.null campaign || T.length campaign > 80 || T.any (not . campaignChar) campaign) $
+    reject "campaign must be 1 to 80 lowercase letters, digits or underscores"
+  when (days < 1 || days > maxArtistInvitationExpiryDays) $
+    reject "expiresInDays must be between 1 and 90"
+  pure (label, campaign, days)
+  where
+    campaignChar c = isAsciiLower c || isDigit c || c == '_'
+
+artistInvitationStatus :: UTCTime -> UTCTime -> Maybe UTCTime -> Maybe UTCTime -> Text
+artistInvitationStatus now expiresAt redeemedAt revokedAt
+  | isJust redeemedAt = "redeemed"
+  | isJust revokedAt = "revoked"
+  | expiresAt <= now = "expired"
+  | otherwise = "active"
 
 validateOnboardingValue :: Text -> Set.Set Text -> Text -> Either ServerError Text
 validateOnboardingValue fieldName allowed raw =
@@ -788,6 +851,168 @@ updateOnboardingIntent mAuthorizationHeader mCookieHeader OnboardingIntentUpdate
   progressEntity <- liftIO $ flip runSqlPool pool $
     storeOnboardingIntent (auPartyId user) intentValue now
   pure (onboardingProgressToDTO now (Just progressEntity))
+
+redeemArtistInvitation
+  :: Maybe Text
+  -> Maybe Text
+  -> ArtistInvitationRedeemRequest
+  -> AppM SessionResponse
+redeemArtistInvitation
+  mAuthorizationHeader
+  mCookieHeader
+  ArtistInvitationRedeemRequest{artistInvitation = rawInvitation}
+  = do
+      invitationToken <- either throwError pure (validateArtistInvitation rawInvitation)
+      Env pool cfg <- ask
+      user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+      token <-
+        either
+          (\message -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 message) })
+          pure
+          (extractTokenFromHeaders cfg mAuthorizationHeader mCookieHeader)
+      now <- liftIO getCurrentTime
+      let partyKey = fromSqlKey (auPartyId user)
+      result <- liftIO $ flip runSqlPool pool $ do
+        -- Claim atomically: a link binds to the first account that redeems it.
+        -- Re-redeeming by that same account is idempotent; anyone else is refused.
+        claimed <- rawSql
+          "UPDATE artist_invitation_link \
+          \SET redeemed_by_party_id = ?, redeemed_at = COALESCE(redeemed_at, ?) \
+          \WHERE token_sha256 = ? AND revoked_at IS NULL AND expires_at > ? \
+          \AND (redeemed_by_party_id IS NULL OR redeemed_by_party_id = ?) \
+          \RETURNING id"
+          [ toPersistValue partyKey
+          , toPersistValue now
+          , PersistText (artistInvitationTokenHash invitationToken)
+          , toPersistValue now
+          , toPersistValue partyKey
+          ]
+        case claimed of
+          [] -> pure (Left err404
+            { errBody = "This invitation link is invalid, expired, revoked or already used" })
+          (Single (invitationId :: Int64) : _) -> do
+            roleResult <- applySecurityRoleAssignmentPolicy
+              "artist.invitation.artist"
+              (auPartyId user)
+              False
+              (Just (auPartyId user))
+              "artist-invitation-link"
+              ( "artist-invitation:"
+                  <> T.pack (show invitationId)
+                  <> ":"
+                  <> T.pack (show partyKey)
+              )
+              now
+            case roleResult of
+              Left policyError -> do
+                transactionUndo
+                pure (Left err503 { errBody = BL.fromStrict (TE.encodeUtf8 policyError) })
+              Right _ -> do
+                void (storeOnboardingIntent (auPartyId user) "artist_profile" now)
+                mRefreshedUser <- loadAuthedUser token
+                case mRefreshedUser of
+                  Nothing -> do
+                    transactionUndo
+                    pure (Left err503 { errBody = "Failed to reload the invited artist session" })
+                  Just refreshedUser -> do
+                    mUsername <- lookupUsernameFromToken token
+                    Right <$> buildSessionResponse cfg mUsername refreshedUser
+      either throwError pure result
+
+artistInvitationsServer :: AuthedUser -> ServerT Api.ArtistInvitationsAPI AppM
+artistInvitationsServer user =
+       listInvitations
+  :<|> createInvitation
+  :<|> revokeInvitation
+  where
+    -- Strict admins only: ModuleAdmin alone is also granted to Studio Manager
+    -- and Webmaster roles, and a redeemed link assigns the Artist role.
+    requireIssuer = do
+      either throwError pure (validateModuleAccess ModuleAdmin user)
+      unless (hasStrictAdminAccess user) $
+        throwError err403 { errBody = "Only administrators can manage artist invitation links" }
+
+    listInvitations = do
+      requireIssuer
+      Env pool _ <- ask
+      now <- liftIO getCurrentTime
+      liftIO $ flip runSqlPool pool $ loadArtistInvitationLinks now Nothing
+
+    createInvitation payload = do
+      requireIssuer
+      (label, campaign, days) <- either throwError pure (validateArtistInvitationLinkCreate payload)
+      Env pool _ <- ask
+      now <- liftIO getCurrentTime
+      invitationToken <- liftIO (toText <$> nextRandom)
+      let expiresAt = addUTCTime (fromIntegral (days * 86400)) now
+      rows <- liftIO $ flip runSqlPool pool $ do
+        inserted <- rawSql
+          "INSERT INTO artist_invitation_link \
+          \(token_sha256, campaign, invitee_label, created_by_party_id, created_at, expires_at) \
+          \VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
+          [ PersistText (artistInvitationTokenHash invitationToken)
+          , PersistText campaign
+          , PersistText label
+          , toPersistValue (fromSqlKey (auPartyId user))
+          , toPersistValue now
+          , toPersistValue expiresAt
+          ]
+        case inserted of
+          (Single (invitationId :: Int64) : _) -> loadArtistInvitationLinks now (Just invitationId)
+          [] -> pure []
+      case rows of
+        (invitation : _) -> pure ArtistInvitationLinkIssued
+          { ailiInvitation = invitation
+          , ailiToken = invitationToken
+          }
+        [] -> throwError err503 { errBody = "Failed to issue the invitation link" }
+
+    revokeInvitation invitationId = do
+      requireIssuer
+      Env pool _ <- ask
+      now <- liftIO getCurrentTime
+      rows <- liftIO $ flip runSqlPool pool $ do
+        _ <- rawExecute
+          "UPDATE artist_invitation_link SET revoked_at = COALESCE(revoked_at, ?) \
+          \WHERE id = ? AND redeemed_at IS NULL"
+          [toPersistValue now, toPersistValue invitationId]
+        loadArtistInvitationLinks now (Just invitationId)
+      case rows of
+        (invitation : _)
+          | ailStatus invitation == "redeemed" ->
+              throwError err409 { errBody = "A redeemed invitation link cannot be revoked" }
+          | otherwise -> pure invitation
+        [] -> throwError err404 { errBody = "Invitation link not found" }
+
+loadArtistInvitationLinks :: UTCTime -> Maybe Int64 -> SqlPersistT IO [ArtistInvitationLinkDTO]
+loadArtistInvitationLinks now mInvitationId = do
+  rows <- rawSql
+    ( "SELECT l.id, l.invitee_label, l.campaign, l.created_at, l.expires_at, \
+      \l.redeemed_at, l.redeemed_by_party_id, p.display_name, l.revoked_at \
+      \FROM artist_invitation_link l \
+      \LEFT JOIN party p ON p.id = l.redeemed_by_party_id "
+        <> maybe "ORDER BY l.created_at DESC, l.id DESC LIMIT 200" (const "WHERE l.id = ?") mInvitationId
+    )
+    (maybe [] (\invitationId -> [toPersistValue invitationId]) mInvitationId)
+  pure (map toDTO rows)
+  where
+    toDTO
+      ( (Single invitationId, Single label, Single campaign)
+      , (Single createdAt, Single expiresAt, Single redeemedAt)
+      , (Single redeemedBy, Single redeemedByName, Single revokedAt)
+      ) =
+        ArtistInvitationLinkDTO
+          { ailId = invitationId
+          , ailInviteeLabel = label
+          , ailCampaign = campaign
+          , ailStatus = artistInvitationStatus now expiresAt redeemedAt revokedAt
+          , ailCreatedAt = createdAt
+          , ailExpiresAt = expiresAt
+          , ailRedeemedAt = redeemedAt
+          , ailRedeemedByPartyId = redeemedBy
+          , ailRedeemedByName = redeemedByName
+          , ailRevokedAt = revokedAt
+          }
 
 completeOnboarding
   :: Maybe Text

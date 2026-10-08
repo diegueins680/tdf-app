@@ -162,5 +162,6 @@ export default {
   "googleNewAccountBody": "Todavía no hay una cuenta TDF conectada a este Google. Puedes crearla ahora con un toque.",
   "googleCreateWithGoogle": "Crear mi cuenta con Google",
   "googleLinkInstead": "¿Ya tienes una cuenta TDF con contraseña? Conéctala con Google:",
-  "googleCreating": "Creando tu cuenta…"
+  "googleCreating": "Creando tu cuenta…",
+  "continueIntentInvitation": "Al terminar, continuaremos con “{{intent}}” y activaremos tu acceso de Artista sin una revisión adicional."
 } as const;
