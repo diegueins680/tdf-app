@@ -4018,7 +4018,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
+      "sha256": "420f4d7073369310a42ad89789e5f7541a79c5afefdcdbbdf9cbeedcad8cf53a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4180,7 +4180,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+      "sha256": "96dabeefb5a9fff73737f210df9c67653a918ac662c8b163a95df2e1dd032fa1",
       "semanticConformance": "not-established-by-discovery"
     },
     {

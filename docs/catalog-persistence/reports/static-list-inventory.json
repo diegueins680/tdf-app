@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-07T23:55:31.166Z",
+  "generatedAt": "2026-10-08T01:03:40.479Z",
   "repositoryRoot": ".",
   "filesScanned": 2200,
   "candidateCount": 1310,
@@ -12108,7 +12108,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 2655,
+      "line": 2689,
       "values": [
         "{id=local-preflight, mutating=false}",
         "{id=remote-preflight, mutating=false}",
@@ -12121,7 +12121,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2655
+        2689
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -12645,7 +12645,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "7b3d355ec7c91ec29b07",
+      "id": "32ece075904ed9b20ffd",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -12841,9 +12841,20 @@
         "{id=2026-10-06_ticket_manual_bank_transfer}",
         "{id=2026-10-06_ticket_tax_invoices}",
         "{id=2026-10-06_ticket_tax_credit_notes}",
-        "{id=2026-10-07_whatsapp_consent_confirmation}"
+        "{id=2026-10-07_whatsapp_consent_confirmation}",
+        "{id=2026-09-11_music_release_platform}",
+        "{id=2026-09-14_artist_invitation_auto_approval}",
+        "{id=2026-09-15_music_party_details}",
+        "{id=2026-09-15_music_preview_ranges}",
+        "{id=2026-09-15_music_version_parties}",
+        "{id=2026-09-16_music_correction_asset_graph}",
+        "{id=2026-09-16_music_correction_concurrency}",
+        "{id=2026-09-16_music_ddex_operations}",
+        "{id=2026-09-16_music_playback_identity}",
+        "{id=2026-09-16_music_resource_graph_validation}",
+        "{id=2026-10-07_artist_invitation_links}"
       ],
-      "valueCount": 188,
+      "valueCount": 199,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -12932,7 +12943,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 188-entry manifest keeps the reviewed 187 entries unchanged and appends the additive WhatsApp consent confirmation migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 199-entry manifest keeps the reviewed 188 entries unchanged and appends the eleven migrations merged in #510 (music release platform, its 2026-09-15/16 follow-ups, the additive artist invitation policy and personal artist invitation links), each with the commit that introduced its released content. Schema verification fails closed without them. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -36325,7 +36336,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 326,
+      "consumerCount": 327,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -36605,7 +36616,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 332,
+      "consumerCount": 333,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -79546,7 +79557,7 @@
       "lines": [
         15167
       ],
-      "consumerCount": 217,
+      "consumerCount": 218,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -79678,6 +79689,7 @@
         "scripts/inspect-compiled-api.mjs",
         "scripts/interactions/test-concurrency.py",
         "scripts/lib/compiled-api-surface.mjs",
+        "scripts/lib/production-release.mjs",
         "scripts/lib/readiness_conformance.py",
         "scripts/production-migrations.json",
         "scripts/quality-repo.sh",
