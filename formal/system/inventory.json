@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "d801d39815c443690c99c4e58f2fb325b4f15ec6",
+  "mobileRevision": "5f202382d91f4061a2f6f8cdae8d3148c3b872a5",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -735,6 +735,8 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+      "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+      "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
       "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
       "tdf-hq-ui/src/components/merch/MerchReputationSummary.tsx",
       "tdf-hq-ui/src/components/merch/MerchReviewForm.test.tsx",
@@ -2014,6 +2016,7 @@
       "tdf-mobile/__tests__/ExperimentProvider.test.tsx",
       "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
       "tdf-mobile/__tests__/IndexRoute.test.tsx",
+      "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
       "tdf-mobile/__tests__/MerchOrderReviewScreen.test.tsx",
       "tdf-mobile/__tests__/MerchStoreReputation.test.tsx",
       "tdf-mobile/__tests__/MobileTabAccessibility.test.tsx",
@@ -2226,6 +2229,7 @@
       "tdf-mobile/src/components/EventMomentCard.tsx",
       "tdf-mobile/src/components/FeatureAccessNotice.tsx",
       "tdf-mobile/src/components/FormField.tsx",
+      "tdf-mobile/src/components/LegalDisclosure.tsx",
       "tdf-mobile/src/components/PartySelector.tsx",
       "tdf-mobile/src/components/PublicLinksSection.tsx",
       "tdf-mobile/src/components/ScreenErrorBoundary.tsx",
@@ -2478,7 +2482,7 @@
     {
       "id": "SURFACE-7f4616a1f534ab50",
       "path": "e2e/web/artist-merch.spec.mjs",
-      "sha256": "fbac0ca1361f0176ed45fa1c95da4b47f003494b8ef8ccabc49f5f2f7e1fe320",
+      "sha256": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2562,7 +2566,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+      "sha256": "723d14d17f7d25a2374aa0b852f8199404d926f4a0829a980083f17ee1691d29",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5310,7 +5314,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "5cbdc0c477e949097b12399d02a0927f3c3e85d51386812caa5efa0193e8c057",
+      "sha256": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6622,6 +6626,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-88fbc73f4e77632c",
+      "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+      "sha256": "91676c519b0243344af73e96c82f85f58e9b41a9e97880dacf075b14f3862c06",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6f546685e4a6eb40",
+      "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+      "sha256": "5e364604c8ff8dfb2088ee8a7af1a31586ac69b9517edc634f7fff9b12010699",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6c08dcce1c9676c9",
       "path": "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
       "sha256": "131f86764444918e241b94055abd5e359cad6e1fbc3ee2c17851449666bee6e0",
@@ -7254,13 +7270,13 @@
     {
       "id": "SURFACE-c97910a5593293cd",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
-      "sha256": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
+      "sha256": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5e55534c6210f093",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-      "sha256": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
+      "sha256": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7422,7 +7438,7 @@
     {
       "id": "SURFACE-c46fe8f1aff9a4d8",
       "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
-      "sha256": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
+      "sha256": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7986,7 +8002,7 @@
     {
       "id": "SURFACE-4ad37d87d7a1bb3e",
       "path": "tdf-hq-ui/src/pages/InventoryPage.tsx",
-      "sha256": "eaa306f5d4822020e51d3cccb3f91a1fa054b6377e746525865b898b05ae692a",
+      "sha256": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8076,7 +8092,7 @@
     {
       "id": "SURFACE-517e48428bed4a91",
       "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-      "sha256": "0060e2be9c980072021098c62bef8d341a1a6f6ec7b52b5c81b70c26b604785e",
+      "sha256": "fd126fe0c90f82a2e4225c8d1f6dd05e4a93e38d7f0880cd2067349cd72c1e89",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8142,7 +8158,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "d4f14d90a03be1ce0edb84e3d646775def21d0cdec1345a398f09247eb9f650a",
+      "sha256": "d1ab7afb6deb0805afbf8b6f35a38739e9d219223955bfa09e9fc0b33298db95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8220,7 +8236,7 @@
     {
       "id": "SURFACE-c223f9f65297d13a",
       "path": "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
-      "sha256": "55f4c907bb1e1834cb3a5d29851c1ce268f5f9a0360e722c1ed927bf5b85d769",
+      "sha256": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8346,7 +8362,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "5a689514081aae0e98de08db9d4377696fa832b05d1b2b37a02accbddfe2bcd0",
+      "sha256": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8478,7 +8494,7 @@
     {
       "id": "SURFACE-1e8f6a752f2cf8a5",
       "path": "tdf-hq-ui/src/pages/SecurityPage.tsx",
-      "sha256": "fba0ddf7c6e1bf8fc2bfe47532919139c055aa9e6116891200d5e0d767e6ad4d",
+      "sha256": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14272,6 +14288,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-10425a8a6d1f81b5",
+      "path": "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
+      "sha256": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-99b5cd25c1db6135",
       "path": "tdf-mobile/__tests__/MerchOrderReviewScreen.test.tsx",
       "sha256": "3a385579b1b151cc12eca0c360a916a23764aee57c7030a9461615476b499acf",
@@ -14952,7 +14974,7 @@
     {
       "id": "SURFACE-4bc6c0b3d036cf61",
       "path": "tdf-mobile/app/reputation/consents.tsx",
-      "sha256": "62b40fedf586e730e2a0c5e9d4e9ee6b88be26eec02f707ed209941083838739",
+      "sha256": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15541,6 +15563,12 @@
       "id": "SURFACE-9513e7cf46c08071",
       "path": "tdf-mobile/src/components/FormField.tsx",
       "sha256": "41a408f7a71b58ae681e939764f1e3cb647d202f94f15e9656f6060647f9293d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1e306217e1e27195",
+      "path": "tdf-mobile/src/components/LegalDisclosure.tsx",
+      "sha256": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
       "semanticConformance": "not-established-by-discovery"
     },
     {

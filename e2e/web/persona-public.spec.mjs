@@ -367,8 +367,15 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await expect(page.locator('main#main-content')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Festival Sintético TDF');
   await expect(page.getByText(/General.*25[,.]00/)).toBeVisible();
+  // Terms and refund policy start collapsed; the buyer can open each before accepting.
+  const ticketTerms = page.getByRole('button', { name: /Términos de las entradas/ });
+  const refundPolicy = page.getByRole('button', { name: /Política de reembolso/ });
+  await expect(ticketTerms).toHaveAttribute('aria-expanded', 'false');
+  await expect(refundPolicy).toHaveAttribute('aria-expanded', 'false');
+  await ticketTerms.click();
   await expect(page.getByText('Aceptas el precio, las tarifas y las condiciones mostradas.')).toBeVisible();
-  await expect(page.getByText('Política de reembolso: Reembolso total.')).toBeVisible();
+  await refundPolicy.click();
+  await expect(page.getByText('Reembolso total.')).toBeVisible();
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
   await page.getByLabel('Email').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();
