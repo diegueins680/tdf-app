@@ -1772,22 +1772,38 @@
       "reviewed": true
     },
     {
-      "id": "2223179c95a61ccff02d",
+      "id": "3ebf5907a1b7715014a3",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-retain",
       "risk": "Changing navigation or UI constants could break rendering or user experience.",
-      "justification": "The administration navigation adds the protected video-source screen. This array maps client routes to labels; source approval and publication authority remain server-enforced.",
+      "justification": "The administration navigation adds the access-request review screen. This array maps client routes to labels; access-request approval authority remains server-enforced.",
       "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "records-ingestion-2026-09-28",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
       "evidence": {
         "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "line": 210,
-        "kind": "array",
-        "name": "items",
-        "valueCount": 19
+        "line": 210
+      },
+      "previousDecision": {
+        "id": "2223179c95a61ccff02d",
+        "classification": "security-system-registry",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-retain",
+        "risk": "Changing navigation or UI constants could break rendering or user experience.",
+        "justification": "The administration navigation adds the protected video-source screen. This array maps client routes to labels; source approval and publication authority remain server-enforced.",
+        "reviewed": true,
+        "reviewMethod": "manual-source-review",
+        "reviewBatch": "records-ingestion-2026-09-28",
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+          "line": 210,
+          "kind": "array",
+          "name": "items",
+          "valueCount": 19
+        }
       }
     },
     {
@@ -13957,14 +13973,30 @@
       "reviewed": true
     },
     {
-      "id": "0886e6835c7f5c533d9c",
+      "id": "ff4edc0f8d2debecf71c",
       "classification": "security-system-registry",
       "disposition": "persisted-registry-with-deny-by-default-code-mirror",
       "specializedModel": "security_role, party_security_role, role_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Only recognized technical policy bindings are retained in code. The persisted artist self-service policy grants only Artist for the authenticated owner, with an immutable audit and without reactivating revoked assignments.",
-      "reviewed": true
+      "justification": "Only recognized technical policy bindings are retained in code. Adds artist.invitation.artist (artist-invitation-redeemed, no verified email required), persisted by 2026-09-14_artist_invitation_auto_approval.sql; grants only Artist to the redeeming party with an immutable audit.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Catalog/Security.hs",
+        "line": 90
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "0886e6835c7f5c533d9c",
+        "classification": "security-system-registry",
+        "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+        "specializedModel": "security_role, party_security_role, role_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Only recognized technical policy bindings are retained in code. The persisted artist self-service policy grants only Artist for the authenticated owner, with an immutable audit and without reactivating revoked assignments.",
+        "reviewed": true
+      }
     },
     {
       "id": "12abca4fa517da75ad03",
@@ -14469,19 +14501,35 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "d8058e9fe53556cbf690",
+      "id": "1a20aae8bb74a6df248f",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+      "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
         "line": 14
       },
-      "reviewBatch": "universal-interactions-2026-09-28"
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "d8058e9fe53556cbf690",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+          "line": 14
+        },
+        "reviewBatch": "universal-interactions-2026-09-28"
+      }
     },
     {
       "id": "e2d91c3b81ac18393c38",
@@ -14664,19 +14712,35 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "2c23d0fa2bac40b01a98",
+      "id": "9de842d0529aa06faf6b",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+      "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "universal-interactions-2026-09-28"
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "2c23d0fa2bac40b01a98",
+        "classification": "security-system-registry",
+        "disposition": "canonical-contract",
+        "specializedModel": "notification_destination_registry",
+        "priority": "P1-integrity",
+        "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+        "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+          "line": 15
+        },
+        "reviewBatch": "universal-interactions-2026-09-28"
+      }
     },
     {
       "id": "108f31d1bc07c62d8551",
@@ -57377,6 +57441,1350 @@
         "line": 437
       },
       "reviewBatch": "ticket-credit-notes-2026-10-06"
+    },
+    {
+      "id": "447117c2ec21bcd1c84f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Synthetic test fixture or probe protocol values; they exercise the API and worker contracts and are not a production source of selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/lib/music-playback-identity-probe.mjs",
+        "line": 36
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "2dcb6ac8488c50099d84",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Synthetic test fixture or probe protocol values; they exercise the API and worker contracts and are not a production source of selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/test-music-correction-concurrency.mjs",
+        "line": 23
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "220a184edc10a7166168",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Synthetic test fixture or probe protocol values; they exercise the API and worker contracts and are not a production source of selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/test-music-release-api-e2e.mjs",
+        "line": 221
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "cdeee6a1d59035ae5f4b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Synthetic test fixture or probe protocol values; they exercise the API and worker contracts and are not a production source of selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/test-music-release-api-e2e.mjs",
+        "line": 590
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "1518b5c4a22317d9e1df",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Synthetic test fixture or probe protocol values; they exercise the API and worker contracts and are not a production source of selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/test-music-release-api-e2e.mjs",
+        "line": 645
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "faf42ccc0ca2a317fdec",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Docker CLI arguments used by the music worker/S3 integration harness to read container state; execution mechanics of repository automation.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/test-music-s3-local.mjs",
+        "line": 172
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9888148726ff7124ec2d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Docker CLI arguments used by the music worker/S3 integration harness to read container state; execution mechanics of repository automation.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/test-music-worker-image.mjs",
+        "line": 107
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "ffa29563c8b9f354971b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server catalog offers values the API rejects.",
+      "justification": "Web client mirror of music release schema codes (asset roles, release kind, visibility, rights-report reasons, studio selects); the API validates every submitted value against the persisted constraints.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 5
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "e4a450a65c364846c7b4",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server catalog offers values the API rejects.",
+      "justification": "Web client mirror of music release schema codes (asset roles, release kind, visibility, rights-report reasons, studio selects); the API validates every submitted value against the persisted constraints.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 6
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "5d1ead27ed71806106de",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server state machine shows wrong actions or hides releases.",
+      "justification": "Server/client mirror of the music release state CHECK used for filtering and display; the database constraint and server transitions remain authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 7
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "56e2b5d3ce52bde290e8",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Typed API-client method names for the music release endpoints are implementation mechanics; they are not selectable or reportable domain values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 504
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "6c09847d52c099763024",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Synthetic test fixture or probe protocol values; they exercise the API and worker contracts and are not a production source of selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "line": 13
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0fcb046ecd22403d559d",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test data is retained only as a consumer/negative fixture for session refresh and login routing and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/session.test.ts",
+        "line": 177
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b4b329b8f1bf9f1258b8",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test data is retained only as a consumer/negative fixture for session refresh and login routing and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/session.test.ts",
+        "line": 180
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "c99d4f4273269e4ffcb5",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test data is retained only as a consumer/negative fixture for session refresh and login routing and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/session.test.ts",
+        "line": 181
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "fc9f1413160cca112f78",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test data is retained only as a consumer/negative fixture for session refresh and login routing and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "line": 342
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "7e1a9f5538a04524b153",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test data is retained only as a consumer/negative fixture for session refresh and login routing and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "line": 343
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "5f6121ec577c7f085591",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test data is retained only as a consumer/negative fixture for session refresh and login routing and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "line": 388
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "466bc208eb4fdfa1d8c2",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server catalog offers values the API rejects.",
+      "justification": "Web client mirror of music release schema codes (asset roles, release kind, visibility, rights-report reasons, studio selects); the API validates every submitted value against the persisted constraints.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
+        "line": 164
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "e3e573fede31ff0411ee",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server catalog offers values the API rejects.",
+      "justification": "Web client mirror of music release schema codes (asset roles, release kind, visibility, rights-report reasons, studio selects); the API validates every submitted value against the persisted constraints.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "line": 347
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "6c0250eb3c6506782f5e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server catalog offers values the API rejects.",
+      "justification": "Web client mirror of music release schema codes (asset roles, release kind, visibility, rights-report reasons, studio selects); the API validates every submitted value against the persisted constraints.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "line": 258
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "f6d3ec788d2ac4d5b836",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
+        "line": 218
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "dfec3f046ad1157e0f0c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/queue.ts",
+        "line": 33
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "d94623ae7e8da8f014f5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/types.ts",
+        "line": 1
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "d32f43ebebd86b90b7a6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/types.ts",
+        "line": 27
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "11fe4f961cebec185666",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/types.ts",
+        "line": 28
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "3a882331cfaa90ecd223",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Finite sanitized error protocol of the music correction API (error code and offending field path) used by generated clients; typed failures, not selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 18049
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "41cd2b43926be84eb2e2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Finite sanitized error protocol of the music correction API (error code and offending field path) used by generated clients; typed failures, not selectable data.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 18052
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "7b3fc8c8caa30690ee6b",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 62
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "ae609e9072efe4c79829",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation or lockout if delegated release roles diverge from the authorization checks.",
+      "justification": "Delegated per-release member roles (owner, admin, editor, uploader, reviewer, analyst) grant edit, upload and review capabilities on a release. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 75
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "7f0fd33aef8b0f8ea246",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 97
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "8a04e6c421ef056d175a",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 110
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "6e667d7bf40eb43c661b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 141
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "488f4fe3828f1b57a26f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 142
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "31156abc22d1fb302a38",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 166
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9559683dee9d94bc0055",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 177
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "2b7c0c96cdb6a59c5592",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 179
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "4ae6db52df413daf3b76",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 180
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0ef128200d1ac0d0fa80",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 222
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "cbd5745fd7f08d14a8d8",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 235
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "e52b59d8900055af1441",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 257
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0d7d0630c376212cbc96",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 290
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "e7e59f3e81361caf92f7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 294
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "fe669092dbe39b690627",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 295
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "a4315131a9f07faae37a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 303
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "1ca051c152d46d4a547b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 312
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "aa8838582f20f836e5a1",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 329
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b808e8b61be67f8b0667",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 338
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b530bd1e36809f92bfe2",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 366
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "26b700d905165df9fd63",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 372
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "1bf1d4508aac279f085b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 394
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "563cf8e9a22a74c22f2e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 398
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "cd8f5579714931cc7fe6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 399
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9ec62f0b9806a37aec6f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 419
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "4d8ae0a2132d9358d042",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-integrity",
+      "risk": "Visibility values gate who can read a release or review note; drift could expose private material.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. Visibility is authorization-sensitive and is enforced server-side for every read.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 433
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "6c996ea1bb91dbf1b588",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 434
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "895c87bab17cbc84f573",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 464
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "d3144cadfeeb11e82044",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 472
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "7792cb925c735ff77ef9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 486
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "dc71d27bab5d2448f4e0",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 490
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "54f931fbc7af8d7f1b98",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 497
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "5fc7c1d7abcec2c99283",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 506
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "7d92c1a3de5d26b6d37d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 528
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "f7592e3e8b1b9449be5c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 530
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "5e8dd7565a3d5c85da6c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-integrity",
+      "risk": "Visibility values gate who can read a release or review note; drift could expose private material.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. Visibility is authorization-sensitive and is enforced server-side for every read.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 562
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "6132a434733c0a3bc0a1",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 597
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b8f96077cf266cf7b0a4",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 795
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "a8300baa6ba8060d79f1",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P1-cross-platform",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Release type, parental-warning, contributor role, sound-recording/release identifier, party identifier and DDEX message party/operation codes map to the DDEX ERN vocabulary and must come from the versioned DDEX reference tables. New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 807
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "86f80e4129b16072b81b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-domain",
+      "risk": "Divergent state lists across schema, API and clients can strand releases, orders or jobs in states another layer cannot interpret.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code. These are lifecycle states/transitions of releases, assets, uploads, jobs, notes, legacy backfill, rights reports, orders, entitlements or DDEX packages.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "line": 822
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "705aca6f9e3f99a8d0ee",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Hard-coded selectable values drift from the persisted catalog and cannot be governed without a deploy.",
+      "justification": "New music release platform schema constraint (2026-09-11). The values are business data owned by the release domain; until a forward migration introduces a catalog table they remain a reviewed CHECK and must be migrated, not extended in code.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-09-15_music_party_details.sql",
+        "line": 21
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9ea51d341792db7c3517",
+      "classification": "governed-reference-data",
+      "disposition": "consumer-update",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P3-consumer",
+      "risk": "Values that diverge from the versioned DDEX vocabulary produce messages partners reject.",
+      "justification": "Backend validation mirror of the contributor role CHECK; must follow the DDEX reference tables when the schema constraint is migrated.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
+        "line": 154
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b8638ad6dc9e179119ad",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed constructor/attribute set of the ERN 4.3.2 XML renderer; serialization mechanics bound to the DDEX schema version, with vocabulary authority in the DDEX reference tables.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "line": 93
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "0a05ce064f397052d0ad",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed constructor/attribute set of the ERN 4.3.2 XML renderer; serialization mechanics bound to the DDEX schema version, with vocabulary authority in the DDEX reference tables.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "line": 98
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "65e520cddc6f3cf4d748",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed constructor/attribute set of the ERN 4.3.2 XML renderer; serialization mechanics bound to the DDEX schema version, with vocabulary authority in the DDEX reference tables.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "line": 526
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "29c048d2354d9d60df33",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed Haskell sum types / guard sets used for exhaustive dispatch in the release domain; they parse the persisted codes and grant nothing on their own.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Domain.hs",
+        "line": 138
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "f17c64bbea994de4dc6c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed Haskell sum types / guard sets used for exhaustive dispatch in the release domain; they parse the persisted codes and grant nothing on their own.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Domain.hs",
+        "line": 175
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "a965f56899f52f3914ab",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed Haskell sum types / guard sets used for exhaustive dispatch in the release domain; they parse the persisted codes and grant nothing on their own.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Domain.hs",
+        "line": 279
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "6ad9a48317ffc9261d81",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Closed Haskell sum types / guard sets used for exhaustive dispatch in the release domain; they parse the persisted codes and grant nothing on their own.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Domain.hs",
+        "line": 282
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "d133c200664f1957ab08",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P3-consumer",
+      "risk": "A client mirror that drifts from the server state machine shows wrong actions or hides releases.",
+      "justification": "Server/client mirror of the music release state CHECK used for filtering and display; the database constraint and server transitions remain authoritative.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "line": 906
+      },
+      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "8c80d98c11e7d2dca074",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. Web type for the API status union.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/artistInvitations.ts",
+        "line": 3
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "25bef0a2b44ce140e985",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. Display labels for the staff panel.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+        "line": 25
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "4e84ef6ee94c1086c764",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. Chip colors for the staff panel.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+        "line": 32
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "239051ed5dff81995c92",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Derived link status computed by artistInvitationStatus from expires_at, redeemed_at and revoked_at; it is not stored or selectable, so it stays a code constant mirrored by the API contract. OpenAPI enum for ArtistInvitationLink.status.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 18159
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "a86872972efe04fbd789",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "A stale fixture could mask a regression in role-based routing.",
+      "justification": "Test session fixture for the access-request review page; it exercises admin-only visibility of invitation links and must follow the canonical persisted role/module contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "line": 32
+      },
+      "reviewBatch": "artist-invitation-links-2026-10-07",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

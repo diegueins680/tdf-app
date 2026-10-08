@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardContent,
   CardMedia,
   Chip,
@@ -72,6 +73,7 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
+import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import { useTranslation } from 'react-i18next';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
@@ -95,6 +97,22 @@ function StatPill({ label, value }: { label: string; value: number }) {
       <Typography variant="h6" fontWeight={800}>
         {value}
       </Typography>
+    </Box>
+  );
+}
+
+function CanonicalMusicReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
+  return (
+    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+      <CardActionArea component={RouterLink} to={`/musica/${release.slug}`} sx={{ p: 1.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography fontWeight={800} noWrap>{release.title}</Typography>
+            <Typography variant="body2" color="text.secondary" noWrap>{release.displayArtist}</Typography>
+          </Box>
+          <Chip label={release.kind.toUpperCase()} size="small" />
+        </Stack>
+      </CardActionArea>
     </Box>
   );
 }
@@ -451,6 +469,25 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
+  const targetArtistIds = useMemo(
+    () => targetArtists.map((artist) => artist.id).sort((left, right) => left - right),
+    [targetArtists],
+  );
+  const canonicalReleaseFeedQuery = useQuery({
+    queryKey: ['canonical-music-release-feed', targetArtistIds],
+    enabled: canSeeReleaseFeed && targetArtistIds.length > 0,
+    retry: false,
+    queryFn: async () => {
+      const releases = (await Promise.all(
+        targetArtistIds.map((artistId) => musicReleases.listPublic('', artistId)),
+      )).flat();
+      const unique = new Map<string, MusicPublicReleaseSummary>();
+      releases.forEach((release) => unique.set(release.id, release));
+      return [...unique.values()].sort(
+        (left, right) => Date.parse(right.publishedAt) - Date.parse(left.publishedAt),
+      );
+    },
+  });
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -1181,38 +1218,60 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <ReleaseFeed
-              audioFileInputRef={audioFileInputRef}
-              canManageReleases={canManageReleases}
-              canSeeReleaseFeed={canSeeReleaseFeed}
-              enableFanRolePending={enableFanRoleMutation.isPending}
-              feedLimit={feedLimit}
-              hasAuthToken={hasAuthToken}
-              hasFollows={hasFollows}
-              hasReleaseTargets={hasReleaseTargets}
-              isAuthenticated={isAuthenticated}
-              isFan={isFan}
-              isHomeManagerView={isHomeManagerView}
-              loading={releaseFeedQuery.isLoading}
-              loginPath={loginPath}
-              pendingUploadRelease={pendingUploadRelease}
-              releaseAudioMap={releaseAudioMap}
-              releaseFeed={releaseFeed}
-              releaseLinkDraft={releaseLinkDraft}
-              streamingFallbacks={streamingFallbacks}
-              uploadError={uploadError}
-              uploadingReleaseId={uploadingReleaseId}
-              visibleFeed={visibleFeed}
-              onCancelUpload={handleCancelReleaseUpload}
-              onDriveUploadComplete={handleDriveReleaseUploadComplete}
-              onEnableFanRole={() => enableFanRoleMutation.mutate()}
-              onPlayRelease={handlePlayRelease}
-              onReleaseLinkDraftChange={setReleaseLinkDraft}
-              onSaveReleaseLink={handleSaveReleaseLink}
-              onShowLess={() => setFeedLimit(4)}
-              onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
-              onUploadTrigger={handleUploadTrigger}
-            />
+            <Stack spacing={2}>
+              {canSeeReleaseFeed && canonicalReleaseFeedQuery.data && canonicalReleaseFeedQuery.data.length > 0 && (
+                <Card sx={{ p: 3 }} component="section" aria-labelledby="canonical-music-feed-title">
+                  <Stack spacing={1.5}>
+                    <Box>
+                      <Typography id="canonical-music-feed-title" component="h2" variant="h6">
+                        Lanzamientos publicados en TDF
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Música disponible ahora de los artistas de este feed.
+                      </Typography>
+                    </Box>
+                    {canonicalReleaseFeedQuery.data.slice(0, 8).map((release) => (
+                      <CanonicalMusicReleaseCard key={release.id} release={release} />
+                    ))}
+                    <Button component={RouterLink} to="/musica" sx={{ alignSelf: 'flex-start' }}>
+                      Ver catálogo musical
+                    </Button>
+                  </Stack>
+                </Card>
+              )}
+              <ReleaseFeed
+                audioFileInputRef={audioFileInputRef}
+                canManageReleases={canManageReleases}
+                canSeeReleaseFeed={canSeeReleaseFeed}
+                enableFanRolePending={enableFanRoleMutation.isPending}
+                feedLimit={feedLimit}
+                hasAuthToken={hasAuthToken}
+                hasFollows={hasFollows}
+                hasReleaseTargets={hasReleaseTargets}
+                isAuthenticated={isAuthenticated}
+                isFan={isFan}
+                isHomeManagerView={isHomeManagerView}
+                loading={releaseFeedQuery.isLoading}
+                loginPath={loginPath}
+                pendingUploadRelease={pendingUploadRelease}
+                releaseAudioMap={releaseAudioMap}
+                releaseFeed={releaseFeed}
+                releaseLinkDraft={releaseLinkDraft}
+                streamingFallbacks={streamingFallbacks}
+                uploadError={uploadError}
+                uploadingReleaseId={uploadingReleaseId}
+                visibleFeed={visibleFeed}
+                onCancelUpload={handleCancelReleaseUpload}
+                onDriveUploadComplete={handleDriveReleaseUploadComplete}
+                onEnableFanRole={() => enableFanRoleMutation.mutate()}
+                onPlayRelease={handlePlayRelease}
+                onReleaseLinkDraftChange={setReleaseLinkDraft}
+                onSaveReleaseLink={handleSaveReleaseLink}
+                onShowLess={() => setFeedLimit(4)}
+                onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
+                onUploadTrigger={handleUploadTrigger}
+              />
+            </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={2} height="100%">

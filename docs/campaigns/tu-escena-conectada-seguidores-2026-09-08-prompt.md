@@ -1,5 +1,7 @@
 # Ejecución autónoma: seguidores de Instagram — 2026-09-08
 
+> **Archivado; no ejecutar de nuevo.** Sus destinatarios y eventos son históricos. Desde el 18-sep, las plantillas reutilizables solo usan el dominio canónico y variantes UTM sin datos personales. Consultar el [checkpoint vigente](tu-escena-conectada-continuacion-2026-09-18.md); este archivo no autoriza un nuevo lote.
+
 Trabaja en `/Users/diegosaa/GitHub/tdf-app` y cumple primero las instrucciones de `AGENTS.md`: lee `SOUL.md`, `USER.md`, `memory/2026-09-08.md` si existe, `memory/2026-09-07.md` y `MEMORY.md`. Lee completos estos informes antes de actuar:
 
 - `docs/campaigns/tu-escena-conectada-piloto-2026-08-12.md`
@@ -17,7 +19,7 @@ Envía como máximo cinco DMs nuevos a seguidores reales de `@tdf.records.label`
 2. invite a Entre Panas en el Domo con Llama Este Pez, sábado 12 de septiembre de 15:00 a 18:00 en el Domo del Pululahua, entrada USD 5 y reservas 0984755301;
 3. invite a probar TDF creando su perfil público de artista, reuniendo su música y compartiendo errores o sugerencias sin enviar contraseñas, códigos ni información sensible;
 4. incluya este enlace individual, sustituyendo `<handle>` por el usuario exacto normalizado:
-   `https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=<handle>`;
+   `https://www.tdfrecords.net/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_prueba_web` (plantilla migrada el 18-sep; nunca sustituir el contenido por un handle);
 5. deje claro que es un solo contacto y que, si no interesa, no se volverá a escribir.
 
 Redacta un texto natural, breve y personalizado en español. No dividas la invitación en varios mensajes y no superes el límite visible del compositor.

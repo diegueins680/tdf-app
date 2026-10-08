@@ -41,12 +41,13 @@ import { type SessionUser, useSession } from '../session/SessionContext';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
 import { Meta } from '../api/meta';
-import { loadSessionSnapshot } from '../api/session';
+import { loadSessionSnapshot, redeemArtistInvitation } from '../api/session';
 import { Fans } from '../api/fans';
 import { buildSignupPayload, deriveEffectiveRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { parseGoogleIdToken } from '../utils/googleIdToken';
 import {
+  readArtistInvitation,
   readOnboardingIntent,
   readSafeRedirectPath,
   resolvePostAuthPath,
@@ -56,6 +57,7 @@ import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
 import { isValidAuthPassword } from '../utils/passwordPolicy';
 import { env } from '../utils/env';
+import { persistOnboardingIntentWithRetry } from '../session/onboardingIntentRecovery';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
 const GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR =
@@ -178,6 +180,7 @@ export default function LoginPage() {
   const { session, loading, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
+  const artistInvitation = useMemo(() => readArtistInvitation(location.search), [location.search]);
   const analytics = useAnalytics();
   const passwordHint = t('authEntry.passwordHint');
   const googleClientId = env.read('VITE_GOOGLE_CLIENT_ID') ?? '';
@@ -238,6 +241,18 @@ export default function LoginPage() {
       return fallback;
     }
   }, []);
+  const resolveAuthenticatedSession = useCallback(async (fallback: SessionUser): Promise<SessionUser> => {
+    if (!artistInvitation) return buildResolvedSession(fallback);
+    const snapshot = await redeemArtistInvitation(artistInvitation, fallback.apiToken);
+    return {
+      username: snapshot.username,
+      displayName: snapshot.displayName,
+      roles: Array.from(new Set((snapshot.roles ?? []).map((role) => role.toLowerCase()))),
+      modules: snapshot.modules,
+      partyId: snapshot.partyId,
+      apiToken: fallback.apiToken,
+    };
+  }, [artistInvitation, buildResolvedSession]);
   const dialogFieldSx = useMemo(
     () => ({
       '& .MuiInputLabel-root': {
@@ -390,7 +405,7 @@ export default function LoginPage() {
         username: normalizedIdentifier,
         password: normalizedPassword,
       });
-      const nextSession = await buildResolvedSession({
+      const nextSession = await resolveAuthenticatedSession({
         username: normalizedIdentifier,
         displayName,
         roles: Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase()))),
@@ -401,6 +416,13 @@ export default function LoginPage() {
       const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
 
       login(nextSession, { remember: rememberDevice });
+      if (requestedIntent) {
+        void persistOnboardingIntentWithRetry(
+          nextSession.partyId,
+          requestedIntent,
+          response.token,
+        );
+      }
       captureGrowthEvent(analytics, 'login_completed', { route: '/login', method: 'password' });
       navigate(targetPath, { replace: true });
     } catch (error) {
@@ -495,11 +517,12 @@ export default function LoginPage() {
             marketingOptIn: false,
             termsAccepted: true,
             termsVersion: ACCOUNT_TERMS_VERSION,
+            ...(signupIntent ? { onboardingIntent: signupIntent } : {}),
           } : {}),
         });
         setGoogleLinkToken(null);
         setGoogleLinkAccount({ username: '', password: '' });
-        const nextSession = await buildResolvedSession({
+        const nextSession = await resolveAuthenticatedSession({
           username: fallbackUsername,
           displayName: fallbackName,
           roles: Array.from(new Set((response.roles ?? []).map((role) => role.toLowerCase()))),
@@ -510,6 +533,13 @@ export default function LoginPage() {
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
+        if (activeIntent && !signupDialogOpen) {
+          void persistOnboardingIntentWithRetry(
+            nextSession.partyId,
+            activeIntent,
+            response.token,
+          );
+        }
         const googleCreatedAccount = response.accountCreated === true;
         captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
           route: '/login',
@@ -541,7 +571,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
+    [analytics, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, resolveAuthenticatedSession, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, termsAccepted, t],
   );
 
   useEffect(() => {
@@ -730,6 +760,7 @@ export default function LoginPage() {
       marketingOptIn: false,
       termsAccepted: true as const,
       termsVersion: ACCOUNT_TERMS_VERSION,
+      ...(signupIntent ? { onboardingIntent: signupIntent } : {}),
     };
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
@@ -754,7 +785,7 @@ export default function LoginPage() {
     try {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles);
-      const nextSession = await buildResolvedSession({
+      const nextSession = await resolveAuthenticatedSession({
         username: payload.email,
         displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
         roles: effectiveRoles,
@@ -782,6 +813,39 @@ export default function LoginPage() {
     }
   };
 
+  const sessionHasArtistAccess = (session?.roles ?? []).some((role) => {
+    const normalized = role.trim().toLowerCase();
+    return normalized === 'artist' || normalized === 'artista' || normalized === 'admin';
+  });
+  const invitationRedemptionKey = session && artistInvitation
+    ? `${session.partyId}:${artistInvitation}`
+    : null;
+  const invitationRedemptionAttemptRef = useRef<string | null>(null);
+  const [invitationRedemptionError, setInvitationRedemptionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session || !artistInvitation || sessionHasArtistAccess || !invitationRedemptionKey) return;
+    if (invitationRedemptionAttemptRef.current === invitationRedemptionKey) return;
+    invitationRedemptionAttemptRef.current = invitationRedemptionKey;
+    setInvitationRedemptionError(null);
+    void redeemArtistInvitation(artistInvitation, session.apiToken)
+      .then((snapshot) => {
+        login({
+          username: snapshot.username,
+          displayName: snapshot.displayName,
+          roles: Array.from(new Set((snapshot.roles ?? []).map((role) => role.toLowerCase()))),
+          modules: snapshot.modules,
+          partyId: snapshot.partyId,
+          apiToken: session.apiToken,
+        }, { remember: rememberDevice });
+      })
+      .catch((error: unknown) => {
+        setInvitationRedemptionError(
+          error instanceof Error ? error.message : 'No pudimos activar tu invitación de artista.',
+        );
+      });
+  }, [artistInvitation, invitationRedemptionKey, login, rememberDevice, session, sessionHasArtistAccess]);
+
   if (loading && !session) {
     return (
       <Box
@@ -794,6 +858,23 @@ export default function LoginPage() {
         }}
       >
         <CircularProgress color="inherit" />
+      </Box>
+    );
+  }
+
+  if (session && artistInvitation && !sessionHasArtistAccess) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 3 }}>
+        {invitationRedemptionError ? (
+          <Alert severity="error">
+            No pudimos activar automáticamente tu invitación de artista: {invitationRedemptionError}
+          </Alert>
+        ) : (
+          <Stack spacing={2} alignItems="center">
+            <CircularProgress />
+            <Typography>Activando tu acceso de artista…</Typography>
+          </Stack>
+        )}
       </Box>
     );
   }
@@ -1366,7 +1447,7 @@ export default function LoginPage() {
             <Stack spacing={2} sx={{ pt: 1 }}>
             {signupIntent && (
               <Alert severity="info">
-                {t('authEntry.continueIntent', { intent: t(ONBOARDING_INTENT_LABELS[signupIntent]) })}
+                {t(artistInvitation ? 'authEntry.continueIntentInvitation' : 'authEntry.continueIntent', { intent: t(ONBOARDING_INTENT_LABELS[signupIntent]) })}
               </Alert>
             )}
             {signupFeedback?.type === 'info' && (

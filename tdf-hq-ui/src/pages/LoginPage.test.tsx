@@ -14,6 +14,9 @@ const GOOGLE_CONSENT_ERROR =
 const googleLoginRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const loginMock = jest.fn();
 const signupResetMock = jest.fn();
+const redeemArtistInvitationMock = jest.fn<
+  (invitation: string, apiToken?: string | null) => Promise<Record<string, unknown>>
+>();
 const signupRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const analyticsCaptureMock = jest.fn();
 
@@ -34,6 +37,7 @@ jest.unstable_mockModule('../api/fans', () => ({
 
 jest.unstable_mockModule('../api/session', () => ({
   loadSessionSnapshot: () => Promise.resolve(null),
+  redeemArtistInvitation: redeemArtistInvitationMock,
   completeOnboardingProgress: jest.fn(),
 }));
 
@@ -47,6 +51,10 @@ jest.unstable_mockModule('../theme/AppThemeProvider', () => ({
 
 jest.unstable_mockModule('../analytics/useAnalytics', () => ({
   useAnalytics: () => ({ capture: analyticsCaptureMock }),
+}));
+
+jest.unstable_mockModule('../session/onboardingIntentRecovery', () => ({
+  persistOnboardingIntentWithRetry: jest.fn(async () => true),
 }));
 
 jest.unstable_mockModule('../utils/env', () => ({
@@ -121,6 +129,7 @@ describe('LoginPage Google signup consent flow', () => {
     await i18n.changeLanguage('es');
     googleCallback = null;
     googleLoginRequestMock.mockReset();
+    redeemArtistInvitationMock.mockReset();
     signupRequestMock.mockReset();
     analyticsCaptureMock.mockReset();
     loginMock.mockReset();
@@ -313,6 +322,72 @@ describe('LoginPage Google signup consent flow', () => {
       expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'google' }));
       expect(document.querySelector('[data-testid="route-state"]')?.textContent).toContain('"mobileInvitation":true');
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());
+    } finally {
+      await cleanup();
+    }
+  }, 15_000);
+
+  it('redeems a personal artist invitation link before entering the artist profile', async () => {
+    googleLoginRequestMock.mockResolvedValueOnce({
+      token: 'invited-session-token',
+      partyId: 405,
+      roles: ['Customer'],
+      modules: ['Packages'],
+      accountCreated: true,
+    });
+    redeemArtistInvitationMock.mockResolvedValueOnce({
+      username: 'andrea@example.com',
+      displayName: 'Andrea',
+      partyId: 405,
+      roles: ['Customer', 'Artist'],
+      modules: ['Packages', 'Scheduling'],
+      featureFlags: [],
+      preferences: {},
+    });
+    const cleanup = await renderLoginPage(
+      '/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&invite=3f2504e0-4f89-41d3-9a0c-0305e82c3301&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=invited_artist',
+    );
+
+    try {
+      const signupDialog = await waitFor(() => {
+        const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        return dialog;
+      });
+      expect(signupDialog.textContent).toContain('sin una revisión adicional');
+
+      const termsCheckbox = signupDialog.querySelector<HTMLInputElement>(
+        'input[aria-label="Acepto los términos y la política de privacidad"]',
+      );
+      await act(async () => {
+        termsCheckbox?.click();
+        await flushPromises();
+      });
+      await waitFor(() => {
+        expect(findButton('Google signup test button')).not.toBeNull();
+      });
+      await act(async () => {
+        findButton('Google signup test button')?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(googleLoginRequestMock).toHaveBeenCalledWith({
+        idToken: GOOGLE_CREDENTIAL,
+        createNewAccount: true,
+        marketingOptIn: false,
+        termsAccepted: true,
+        termsVersion: 'tdf-account-terms-v1',
+        onboardingIntent: 'artist_profile',
+      });
+      expect(redeemArtistInvitationMock).toHaveBeenCalledWith(
+        '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
+        'invited-session-token',
+      );
+      expect(loginMock).toHaveBeenCalledWith(
+        expect.objectContaining({ partyId: 405, roles: ['customer', 'artist'] }),
+        { remember: true },
+      );
     } finally {
       await cleanup();
     }

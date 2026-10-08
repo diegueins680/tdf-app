@@ -7533,6 +7533,689 @@
         "classification": "PARTIAL",
         "reason": "Local tests pass; CI migration rehearsal and production verification pending."
       }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "MEDIA-MUSIC-RELEASE-001",
+      "title": "Canonical music releases with immutable approved versions",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions and only a published, in-embargo-window, territory-allowed version is public.",
+      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
+      "contract": "docs/music-releases/architecture-and-data-model.md",
+      "property": "No public projection exists for a version that is not published, approved by snapshot hash and allowed in the trusted territory.",
+      "actors": [
+        "Verified artist",
+        "Artist team administrator",
+        "Strict administrator",
+        "Public listener"
+      ],
+      "preconditions": [
+        "music_releases.authoring flag enabled for authoring endpoints",
+        "music_releases.public flag enabled for public catalog",
+        "Music release migrations applied in order"
+      ],
+      "inputs": [
+        "Release and version drafts",
+        "Tracks, recordings, credits, parties, rights, splits, availability rules",
+        "Editorial transition requests"
+      ],
+      "state": {
+        "version": [
+          "draft",
+          "ready_for_review",
+          "approved",
+          "scheduled",
+          "published",
+          "withdrawn",
+          "superseded"
+        ],
+        "authority": "PostgreSQL triggers and music_valid_transition"
+      },
+      "allowedTransitions": [
+        "draft -> ready_for_review -> approved -> published/scheduled",
+        "published -> correction version (new draft linked by correction_of_version_id)",
+        "published -> withdrawn by locked withdraw function"
+      ],
+      "forbiddenTransitions": [
+        "Editing an approved snapshot in place",
+        "Two simultaneously public versions of one release",
+        "Public exposure before embargo or outside allowed territory"
+      ],
+      "effects": [
+        "Single public version per release",
+        "Editorial notifications to authorized artist team and administrators"
+      ],
+      "authorization": "music_can(actor, artist, permission) re-checked by backend for every mutation; public reads require the public flag and territory rule.",
+      "privacy": "Masters and quarantined uploads are never public; collaborator identifiers are only shown to authorized editors.",
+      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md).",
+      "idempotency": "Correction creation and publication are idempotent per request key and locked rows.",
+      "failure": "Invalid transitions raise database errors surfaced as actionable API errors.",
+      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history.",
+      "observability": "Editorial notifications and audit rows per transition.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/Domain.hs",
+        "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "scripts/scan-music-legacy-releases.sh",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/sql/2026-09-11_music_release_platform_rollback.sql",
+        "tdf-hq/sql/2026-09-15_music_party_details.sql",
+        "tdf-hq/sql/2026-09-15_music_party_details_rollback.sql",
+        "tdf-hq/sql/2026-09-15_music_preview_ranges.sql",
+        "tdf-hq/sql/2026-09-15_music_preview_ranges_rollback.sql",
+        "tdf-hq/sql/2026-09-15_music_version_parties.sql",
+        "tdf-hq/sql/2026-09-15_music_version_parties_rollback.sql",
+        "tdf-hq/sql/2026-09-16_music_correction_asset_graph.sql",
+        "tdf-hq/sql/2026-09-16_music_correction_asset_graph_rollback.sql",
+        "tdf-hq/sql/2026-09-16_music_correction_concurrency.sql",
+        "tdf-hq/sql/2026-09-16_music_correction_concurrency_rollback.sql",
+        "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
+        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
+        "tdf-hq/test/MusicReleaseSpecMain.hs",
+        "tdf-hq/test/MusicCorsProbeMain.hs",
+        "tdf-hq/test/sql/music_correction_asset_graph.sql",
+        "tdf-hq/test/sql/music_resource_graph_validation.sql",
+        "scripts/test-music-release-platform-migration.sh",
+        "scripts/test-music-correction-concurrency.mjs",
+        "scripts/test-music-release-api-e2e.mjs",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/__tests__/music-test-database.test.mjs",
+        "scripts/lib/music-test-database.mjs",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+      ],
+      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script",
+      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); no CI or production evidence on current main",
+      "confidence": "Medium: extensive local evidence on a 2026-09-10 base; not re-verified against current main.",
+      "ambiguity": [
+        "Migrations are not registered in scripts/production-migrations.json; deployment order is only documented in prose.",
+        "Feature flags are created disabled; production enablement has no approved decision."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Recovered implementation and tests exist; CI on current main and deployment are pending."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "MEDIA-MUSIC-ASSET-001",
+      "title": "Quarantined uploads, reproducible processing and signed asset access",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
+      "contract": "docs/music-releases/api-and-configuration.md",
+      "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
+      "actors": [
+        "Verified artist",
+        "Music worker",
+        "Public listener"
+      ],
+      "preconditions": [
+        "music_releases.processing enabled",
+        "S3-compatible buckets and worker credentials configured"
+      ],
+      "inputs": [
+        "Multipart upload parts",
+        "Worker jobs",
+        "Public asset access requests with trusted territory"
+      ],
+      "state": {
+        "asset": [
+          "quarantined",
+          "processing",
+          "promoted",
+          "failed"
+        ],
+        "authority": "Database job rows and worker"
+      },
+      "allowedTransitions": [
+        "uploaded -> quarantined -> processing -> promoted",
+        "processing -> failed -> retried"
+      ],
+      "forbiddenTransitions": [
+        "Promotion without matching recomputed SHA-256",
+        "Public signature for a master asset",
+        "Mutation of promoted bytes"
+      ],
+      "effects": [
+        "Immutable original location and checksum",
+        "Derivatives and manifest per version"
+      ],
+      "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
+      "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
+      "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
+      "failure": "Type, size or checksum mismatch fails the job without promotion.",
+      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/Dockerfile.music-worker",
+        "tdf-hq/music-worker/stack.yaml",
+        "tdf-hq/music-worker/tdf-music-worker.cabal",
+        "scripts/process-music-release-audio.sh",
+        "scripts/process-music-release-artwork.sh",
+        "scripts/process-music-release-preview.sh",
+        "scripts/run-music-release-worker.sh",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq-ui/src/api/musicStorageResponse.ts",
+        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
+        "tdf-hq/test/MusicS3ProbeMain.hs",
+        "scripts/test-music-s3-local.mjs",
+        "scripts/test-music-worker-image.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/test-music-release-audio-pipeline.sh",
+        "scripts/test-music-release-artwork-pipeline.sh",
+        "scripts/__tests__/music-worker-build.test.mjs",
+        "scripts/__tests__/music-worker-timing.test.mjs",
+        "scripts/__tests__/music-worker-upload.test.mjs",
+        "scripts/__tests__/music-s3-test-xml.test.mjs",
+        "scripts/__tests__/music-linux-integration.test.mjs",
+        "scripts/__tests__/music-preview-pipeline.test.mjs",
+        "scripts/lib/music-api-s3-probe.mjs",
+        "scripts/lib/music-worker-s3-probe.mjs",
+        "scripts/lib/music-s3-test-xml.mjs",
+        "scripts/lib/music-linux-integration.mjs",
+        "scripts/lib/music-worker-image-smoke.sh",
+        "test/fixtures/music-worker/curl.mjs",
+        "test/fixtures/music-worker/upload-curl.mjs",
+        "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
+      ],
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
+      "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
+      "ambiguity": [
+        "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local integration evidence only; no deployment."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "MEDIA-MUSIC-DDEX-001",
+      "title": "Private reproducible DDEX ERN 4.3.2 export of approved versions",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "A DDEX ERN 4.3.2 message is a projection of one approved version snapshot hash. The API commits export and job atomically, serializes per actor/key and version, revalidates queued exports against the same rules used by API, renderer and worker, and produces a private, reproducible package with message-bound file names. No delivery to partners is performed.",
+      "authority": "Unreviewed recovered local implementation; docs/music-releases/ddex-*.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/ddex-operation-lifecycle.md",
+      "contract": "docs/music-releases/ddex-offline-bundle.md",
+      "property": "Every exported package is reproducible from, and bound to, exactly one approved snapshot hash.",
+      "actors": [
+        "Strict administrator",
+        "Artist team administrator",
+        "Music worker"
+      ],
+      "preconditions": [
+        "music_releases.ddex_export enabled",
+        "Version approved with immutable snapshot"
+      ],
+      "inputs": [
+        "Export request",
+        "Approved snapshot",
+        "ERN 4.3.2 schema"
+      ],
+      "state": {
+        "export": [
+          "queued",
+          "rendering",
+          "validated",
+          "failed",
+          "retired"
+        ],
+        "authority": "ddex export/job rows"
+      },
+      "allowedTransitions": [
+        "queued -> rendering -> validated",
+        "queued -> failed on revalidation",
+        "suspended -> retired"
+      ],
+      "forbiddenTransitions": [
+        "Export of a non-approved version",
+        "Export job committed without its export row",
+        "Partner delivery"
+      ],
+      "effects": [
+        "Private package with credits, parties and identifiers of that version"
+      ],
+      "authorization": "Export requires DDEX export permission re-checked by backend.",
+      "privacy": "Packages are private and contain collaborator identifiers; never public.",
+      "concurrency": "Per actor/key/version serialization; orphaned queued exports recovered by replay.",
+      "idempotency": "Replaying an export request returns the existing operation.",
+      "failure": "Validation errors fail the export with actionable messages.",
+      "recovery": "Queued revalidation and replay per ddex-queued-validation.md and ddex-atomic-enqueue.md.",
+      "observability": "Export and job status rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
+        "tdf-hq/app/MusicDdexRenderMain.hs",
+        "scripts/build-ddex-ern432-package.sh",
+        "scripts/fetch-ddex-ern432-schema.sh",
+        "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/sql/2026-09-16_music_ddex_operations_rollback.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/MusicDdexCreditsFixtureMain.hs",
+        "tdf-hq/test/sql/music_ddex_operations.sql",
+        "scripts/test-music-ddex-package.mjs",
+        "scripts/test-music-ddex-credits.sh",
+        "scripts/lib/music-ddex-enqueue-probe.mjs",
+        "test/fixtures/music-worker/ddex-package.mjs",
+        "test/fixtures/music-worker/ddex-render.mjs"
+      ],
+      "verification": "ERN spec against fixture and schema, package builder tests, enqueue fault-injection probe",
+      "evidence": "Local results in docs/music-releases/ddex-atomic-enqueue.md (2026-09-16)",
+      "confidence": "Medium for schema conformance; partner acceptance unknown.",
+      "ambiguity": [
+        "Partner-specific profiles and delivery are out of scope; compatibility matrix is a 2026-09-12 snapshot."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local evidence only; not deployed."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "PAY-MUSIC-DOWNLOAD-001",
+      "title": "Music downloads only through verified purchase entitlements",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A music purchase order references one rule, version and asset in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence marks it paid; triggers create exactly one entitlement and revoke it on refund. Both free-grant and entitled download handlers use the same downloadable-asset predicate, bounded per-request UUID limits, audit rows and short-lived URLs.",
+      "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
+      "contract": "docs/music-releases/architecture-and-data-model.md",
+      "property": "A non-free download URL is issued only for an active entitlement whose order is provider-verified paid and not refunded.",
+      "actors": [
+        "Buyer",
+        "Payment provider"
+      ],
+      "preconditions": [
+        "music_releases.commerce enabled for the environment (revenue_feature_flag)"
+      ],
+      "inputs": [
+        "Purchase order",
+        "Provider evidence",
+        "Download request UUID"
+      ],
+      "state": {
+        "order": [
+          "open",
+          "paid",
+          "refunded"
+        ],
+        "entitlement": [
+          "active",
+          "revoked"
+        ]
+      },
+      "allowedTransitions": [
+        "open -> paid by verified provider evidence -> entitlement active",
+        "paid -> refunded -> entitlement revoked"
+      ],
+      "forbiddenTransitions": [
+        "Client-asserted payment -> paid",
+        "Download of master or unavailable asset",
+        "Duplicate entitlements per order"
+      ],
+      "effects": [
+        "One entitlement per paid order",
+        "Audited, limited download URLs"
+      ],
+      "authorization": "Entitlement owner only; free grants follow the release rule.",
+      "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
+      "concurrency": "Entitlement creation is trigger-enforced unique.",
+      "idempotency": "Repeated provider evidence and download request UUIDs are idempotent.",
+      "failure": "Unverified or failed payment leaves no entitlement.",
+      "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
+      "observability": "Download audit rows and checkout session events.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs"
+      ],
+      "tests": [
+        "scripts/test-music-download-predicate.mjs"
+      ],
+      "verification": "Read-only SQL contract of the shared predicate; handler E2E not covered by this test",
+      "evidence": "Local execution only",
+      "confidence": "Low-medium: predicate contract only; no provider round-trip evidence.",
+      "ambiguity": [
+        "No live payment provider wiring for music_download has been verified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Predicate contract only; commerce disabled by default."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "MEDIA-MUSIC-PLAYER-001",
+      "title": "Single persistent web player and public music pages",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. The legacy radio widget is hidden on /musica routes; playback analytics use a stable identity with retry-safe ingestion.",
+      "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md",
+      "contract": "docs/music-releases/native-player-verification.md",
+      "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
+      "actors": [
+        "Public listener",
+        "Signed-in fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "music_releases.public enabled for public pages"
+      ],
+      "inputs": [
+        "Queue actions",
+        "Route changes",
+        "Playback analytics events"
+      ],
+      "state": {
+        "player": [
+          "idle",
+          "loading",
+          "playing",
+          "paused",
+          "error"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> loading -> playing <-> paused",
+        "playing -> error -> retry -> loading"
+      ],
+      "forbiddenTransitions": [
+        "Two concurrently playing audio elements",
+        "Reusing an expired signed URL from the persisted queue"
+      ],
+      "effects": [
+        "Persisted bounded queue and preferences",
+        "Playback analytics events"
+      ],
+      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing.",
+      "privacy": "Analytics identity rotates with the session; favorites/history are per account.",
+      "concurrency": "Selection and retry races resolved in favor of the latest request (native-player-verification.md).",
+      "idempotency": "Analytics ingestion deduplicates by playback identity.",
+      "failure": "Network failures surface accessible error and retry.",
+      "recovery": "Re-authorize and resume from persisted position.",
+      "observability": "Playback analytics events.",
+      "implementation": [
+        "tdf-hq-ui/src/player/GlobalPlayer.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/PlayerShell.tsx",
+        "tdf-hq-ui/src/player/analytics.ts",
+        "tdf-hq-ui/src/player/assetAccess.ts",
+        "tdf-hq-ui/src/player/queue.ts",
+        "tdf-hq-ui/src/player/sourceMetadata.ts",
+        "tdf-hq-ui/src/player/types.ts",
+        "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.tsx",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/utils/musicPreviewRange.ts",
+        "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
+        "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/player/analytics.test.ts",
+        "tdf-hq-ui/src/player/queue.test.ts",
+        "tdf-hq-ui/src/player/sourceMetadata.test.ts",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/utils/musicPreviewRange.test.ts",
+        "tdf-hq/test/sql/music_playback_identity.sql",
+        "scripts/test-music-playback-identity.mjs",
+        "scripts/lib/music-playback-identity-probe.mjs",
+        "scripts/lib/music-browser-probe.mjs",
+        "scripts/__tests__/music-browser-config.test.mjs",
+        "scripts/__tests__/music-browser-probe.test.mjs",
+        "e2e/web/music-player.spec.mjs",
+        "e2e/web/music-player-native.spec.mjs",
+        "e2e/web/music-player-integration.spec.mjs",
+        "e2e/web/fixtures/native-music-setup.mjs"
+      ],
+      "verification": "Vitest unit tests, Playwright native and integration specs against local API/PostgreSQL/S3",
+      "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md",
+      "confidence": "Medium: browser evidence local only.",
+      "ambiguity": [
+        "Legacy radio consumers are kept behind compatibility until all are validated."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local browser evidence only; not deployed."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "AUTH-ARTIST-INVITE-001",
+      "title": "Personal single-use artist invitation links grant the Artist role by automatic policy",
+      "domain": "AUTH",
+      "critical": true,
+      "statement": "An admin issues a personal invitation link for one named artist. The link carries a random token whose SHA-256 digest alone is stored; it expires after 30 days by default (at most 90) and can be revoked while unused. A signed-in user who opens the link redeems it: the backend atomically binds the link to the first redeeming account and applies the artist.invitation.artist automatic assignment policy (trigger artist-invitation-redeemed) to grant only the non-administrative Artist role, records the onboarding intent and returns a refreshed session. Public campaign names are never accepted as invitations.",
+      "authority": "User decision 2026-10-07: replace the public campaign-string invitation with personal one-time links (Tu Escena Conectada campaign).",
+      "source": "PR #510; tdf-hq/sql/2026-10-07_artist_invitation_links.sql; tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
+      "contract": "tdf-hq/src/TDF/ServerAuth.hs",
+      "property": "A link grants at most one account, only before expiry and revocation, and only the active, automatic, non-emergency Artist role via a valid policy row.",
+      "actors": [
+        "Admin staff",
+        "Invited artist",
+        "Automatic security policy"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "Policy artist.invitation.artist active",
+        "Strict administrator for issuance and revocation"
+      ],
+      "inputs": [
+        "POST /artist-invitations {inviteeLabel, campaign?, expiresInDays?}",
+        "GET /artist-invitations",
+        "POST /artist-invitations/{id}/revoke",
+        "POST /session/artist-invitation {artistInvitation}"
+      ],
+      "state": {
+        "link": [
+          "active",
+          "redeemed",
+          "expired",
+          "revoked"
+        ],
+        "grant": [
+          "absent",
+          "granted by system-policy"
+        ]
+      },
+      "allowedTransitions": [
+        "active -> redeemed (first redeeming account)",
+        "active -> revoked (admin)",
+        "active -> expired (time)",
+        "No Artist role -> Artist role via system-policy grant"
+      ],
+      "forbiddenTransitions": [
+        "Public campaign value -> any grant",
+        "redeemed link -> grant to a different account",
+        "revoked or expired link -> any grant",
+        "redeemed -> revoked",
+        "Invitation -> administrative or emergency role"
+      ],
+      "effects": [
+        "Artist role grant with policy provenance",
+        "Link bound to the redeeming party",
+        "Stored onboarding intent artist_profile"
+      ],
+      "authorization": "Issuance, listing and revocation require a strict administrator (Admin role with only admin/fan/customer roles, plus the Admin module); Studio Manager and Webmaster holders of the Admin module are refused. Redemption requires a valid session; grant validated by security_validate_assignment_policy and party-role approval triggers.",
+      "privacy": "Stores the invitee label typed by staff and the redeeming party; never stores the raw token.",
+      "concurrency": "Redemption claims the link with a single conditional UPDATE; concurrent redemptions by different accounts cannot both succeed.",
+      "idempotency": "Re-redemption by the bound account is idempotent; revocation of an unused link is idempotent.",
+      "failure": "Invalid, expired, revoked or foreign-bound links return 404; policy or session errors return 503 and roll back the claim.",
+      "recovery": "Revoke unused links; deactivate the policy row to stop all grants; the links rollback refuses to drop redemption evidence.",
+      "observability": "Security audit events from policy application with correlation artist-invitation:<link id>:<party>; link rows record issuer and redeemer.",
+      "implementation": [
+        "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql",
+        "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval_rollback.sql",
+        "tdf-hq/src/TDF/Catalog/Integrity.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/utils/loginRouting.ts",
+        "tdf-hq/sql/2026-10-07_artist_invitation_links.sql",
+        "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq-ui/src/api/artistInvitations.ts",
+        "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "tdf-hq-ui/src/api/session.test.ts",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        "scripts/test-artist-invitation-auto-approval-migration.sh",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
+      ],
+      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement",
+      "evidence": "Local execution only",
+      "confidence": "Medium: claim SQL and validation exercised locally; end-to-end redemption not yet run against a deployed backend.",
+      "ambiguity": [
+        "tdf-hq/src/TDF/Profiles/Artist.hs change is only an unused import removal.",
+        "artist.self-service.artist (on main since 2026-09-16) already lets any signed-in user activate Artist without approval; invitation links add attribution, not a stronger boundary."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit and local SQL evidence; not deployed and no end-to-end redemption evidence."
+      }
+    },
+    {
+      "historicalStatus": null,
+      "formalModels": [],
+      "status": "specified and implemented",
+      "id": "AUTH-ACCESS-PROVISION-001",
+      "title": "Approved artist onboarding access requests provision the Artist role",
+      "domain": "AUTH",
+      "critical": true,
+      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Only an administrator distinct from the requester may approve it; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
+      "authority": "Unreviewed recovered local implementation",
+      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs",
+      "contract": "tdf-hq/src/TDF/FeatureRegistry.hs",
+      "property": "A role is provisioned from an access request only for artist.onboarding/create, by a distinct administrator, with a published revision.",
+      "actors": [
+        "Requester",
+        "Strict administrator",
+        "Manager",
+        "Studio manager"
+      ],
+      "preconditions": [
+        "Requester has exactly one active credential",
+        "Artist role active and not emergency",
+        "sensitive-publication workflow active"
+      ],
+      "inputs": [
+        "Access request review decision and notes"
+      ],
+      "state": {
+        "request": [
+          "pending",
+          "approved",
+          "rejected",
+          "cancelled"
+        ]
+      },
+      "allowedTransitions": [
+        "pending -> approved (grant for artist.onboarding/create) ",
+        "pending -> approved (manual provisioning otherwise)",
+        "pending -> rejected with note"
+      ],
+      "forbiddenTransitions": [
+        "Requester approving own grant",
+        "Non-admin approving a grant-bearing request",
+        "Provisioning the emergency administrator role"
+      ],
+      "effects": [
+        "Published security revision and party role grant"
+      ],
+      "authorization": "registryReviewerCanDecide requires Admin for grant-bearing requests.",
+      "privacy": "Reviewer notes stay internal.",
+      "concurrency": "Revision and grant written in one transaction.",
+      "idempotency": "Re-approval of an already granted role reports no change.",
+      "failure": "Any precondition failure aborts without a grant.",
+      "recovery": "Revoke through Roles and permissions.",
+      "observability": "Security revision and audit rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/utils/navigationLabels.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/utils/accessControl.test.ts",
+        "tdf-hq-ui/src/components/navigationLabels.test.ts"
+      ],
+      "verification": "Security spec and web unit tests",
+      "evidence": "Local execution only",
+      "confidence": "Medium.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unit evidence only; CI on current main pending."
+      }
     }
   ]
 }

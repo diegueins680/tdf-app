@@ -148,5 +148,6 @@ export default {
   "whatsappConsent": "Consentimiento WhatsApp",
   "whatsappConfirmation": "Confirmación WhatsApp",
   "continueIntent": "Al terminar, continuarás con “{{intent}}”. Si la tarea requiere acceso especial, podrás solicitarlo para revisión.",
+  "continueIntentInvitation": "Al terminar, continuaremos con “{{intent}}” y activaremos tu acceso de Artista sin una revisión adicional.",
   "consentText": "Acepto los <terms>términos de la cuenta</terms> y la <privacy>política de privacidad de la cuenta</privacy>."
 } as const;

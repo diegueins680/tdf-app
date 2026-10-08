@@ -1,6 +1,15 @@
 import { shouldHideRadioForRoute, shouldRenderRadioWidget } from './radioRouteVisibility';
 
 describe('shouldHideRadioForRoute', () => {
+  it.each(['/musica', '/musica/single-propio', '/musica/biblioteca'])(
+    'keeps the legacy radio unmounted on canonical audio route %s, even with #radio', (path) => {
+      expect(shouldRenderRadioWidget(path, '', true, false)).toBe(false);
+      expect(shouldRenderRadioWidget(path, '#radio', true, false)).toBe(false);
+    },
+  );
+  it('does not hide unrelated route prefixes', () => {
+    expect(shouldRenderRadioWidget('/musical-tools', '', true, false)).toBe(true);
+  });
   it('keeps the radio widget off the dense course registrations admin page', () => {
     expect(shouldHideRadioForRoute('/configuracion/inscripciones-curso')).toBe(true);
     expect(shouldHideRadioForRoute('/configuracion/inscripciones-curso?status=paid')).toBe(true);
