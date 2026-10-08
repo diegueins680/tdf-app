@@ -5083,8 +5083,7 @@
       "formalModels": [],
       "ambiguity": [
         "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix.",
-        "DEBT-PRIV-WHATSAPP-001 awaits the approved double opt-in repair."
+        "Raw mounts may serve paths beyond their prefix."
       ]
     },
     {
@@ -7448,6 +7447,91 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Client tests pass; deployed web verification pending."
+      }
+    },
+    {
+      "id": "PRIV-WHATSAPP-001",
+      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
+      "authority": "reconciled",
+      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052)",
+      "property": "Consent is active only after a timely reply from the same number or admin capture",
+      "contract": "formal/system/public-route-admission.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs",
+        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
+        "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx",
+        "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
+        "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
+        "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
+        "tdf-hq-ui/src/config/appConfig.ts",
+        "tdf-hq-ui/src/vite-env.d.ts"
+      ],
+      "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
+      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": true,
+      "title": "WhatsApp marketing consent requires confirmation from the number",
+      "domain": "PRIV",
+      "actors": [
+        "Anonymous visitor",
+        "WhatsApp number holder",
+        "Admin staff",
+        "Meta webhook"
+      ],
+      "preconditions": [
+        "whats_app_consent has confirmation_requested_at (migration 2026-10-07_whatsapp_consent_confirmation)."
+      ],
+      "inputs": [
+        "POST /public/whatsapp/consent",
+        "POST /public/whatsapp/opt-out",
+        "Signed inbound WhatsApp text messages"
+      ],
+      "state": {
+        "consent": [
+          "none",
+          "pending",
+          "active",
+          "withdrawn"
+        ]
+      },
+      "allowedTransitions": [
+        "none/withdrawn -> pending (public request)",
+        "pending -> active (affirmative reply within 7 days)",
+        "any -> withdrawn (opt-out or STOP)",
+        "admin capture -> active"
+      ],
+      "forbiddenTransitions": [
+        "public request -> active",
+        "pending older than 7 days -> active",
+        "withdrawn -> active without a new request and reply"
+      ],
+      "effects": [
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+      ],
+      "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
+      "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
+      "concurrency": "Claim and confirmation are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits.",
+      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
+      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
+      "recovery": "A number can request again after 24 hours or after a request expires.",
+      "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "confidence": "High for the tested transitions; WhatsApp delivery and Meta webhook timing are external.",
+      "ambiguity": [
+        "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
+        "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
+        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
       }
     },
     {
