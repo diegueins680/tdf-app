@@ -42,12 +42,12 @@ Deploy the existing public web app so these routes are reachable without authent
 - `/mobile-app/terms.html`
 - `/mobile-app/data-deletion.html`
 
-The current repo-documented public host is `https://tdf-app.pages.dev`, so the store-facing URLs are:
+The current repo-documented public host is `https://www.tdfrecords.net`, so the store-facing URLs are:
 
-- `https://tdf-app.pages.dev/mobile-app/support.html`
-- `https://tdf-app.pages.dev/mobile-app/privacy.html`
-- `https://tdf-app.pages.dev/mobile-app/terms.html`
-- `https://tdf-app.pages.dev/mobile-app/data-deletion.html`
+- `https://www.tdfrecords.net/mobile-app/support.html`
+- `https://www.tdfrecords.net/mobile-app/privacy.html`
+- `https://www.tdfrecords.net/mobile-app/terms.html`
+- `https://www.tdfrecords.net/mobile-app/data-deletion.html`
 
 ## App Store Connect
 

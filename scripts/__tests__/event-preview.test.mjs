@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { injectEventPreview, isSafeEventId, renderEventMetadata, safeAbsoluteImage } from '../../functions/_shared/event-preview.mjs';
 import { onRequest } from '../../functions/eventos/[eventId].js';
+import { canonicalRedirectLocation, onRequest as middleware } from '../../functions/_middleware.js';
 
 const publicEvent = {
   id: '42',
@@ -23,7 +24,7 @@ test('renders real crawler metadata and JSON-LD without executable event content
   assert.match(html, /Festival &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.match(html, /property="og:image" content="https:\/\/cdn\.example\.test\/poster\.jpg"/);
   assert.match(html, /"@type":"Event"/);
-  assert.match(html, /rel="canonical" href="https:\/\/tdf-app\.pages\.dev\/eventos\/42"/);
+  assert.match(html, /rel="canonical" href="https:\/\/www\.tdfrecords\.net\/eventos\/42"/);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
 });
 
@@ -63,7 +64,9 @@ test('serves real values in the initial HTML response to a crawler request', asy
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.match(html, /property="og:title" content="Festival &lt;script&gt;alert\(1\)&lt;\/script&gt;"/);
-    assert.match(html, /rel="canonical" href="https:\/\/preview\.example\.test\/eventos\/42"/);
+    // Previews always point at the canonical site, whatever host served them.
+    assert.match(html, /rel="canonical" href="https:\/\/www\.tdfrecords\.net\/eventos\/42"/);
+    assert.doesNotMatch(html, /preview\.example\.test|pages\.dev/);
     assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
   } finally {
     globalThis.fetch = originalFetch;
@@ -77,4 +80,31 @@ test('uses the preview image fallback when no image is published', () => {
     const preview = renderEventMetadata({ ...publicEvent, imageUrl }, '42', 'https://www.tdfrecords.net');
     assert.equal(preview.image, 'https://www.tdfrecords.net/tdf-app-icon-1024.png');
   }
+});
+
+test('redirects the legacy production Pages host to the canonical site', async () => {
+  assert.equal(
+    canonicalRedirectLocation('https://tdf-app.pages.dev/eventos/141?utm_source=tdf_mobile&utm_campaign=event_rsvp'),
+    'https://www.tdfrecords.net/eventos/141?utm_source=tdf_mobile&utm_campaign=event_rsvp',
+  );
+  assert.equal(
+    canonicalRedirectLocation('https://tdf-app.pages.dev/oauth/google-drive/callback?code=abc&state=xyz'),
+    'https://www.tdfrecords.net/oauth/google-drive/callback?code=abc&state=xyz',
+  );
+  const response = await middleware({ request: new Request('https://tdf-app.pages.dev/'), next: async () => new Response('page') });
+  assert.equal(response.status, 301);
+  assert.equal(response.headers.get('location'), 'https://www.tdfrecords.net/');
+});
+
+test('leaves the canonical site, branch previews and app-link files alone', async () => {
+  for (const url of [
+    'https://www.tdfrecords.net/eventos/141',
+    'https://feature-x.tdf-app.pages.dev/eventos/141',
+    'https://tdf-app.pages.dev/.well-known/apple-app-site-association',
+    'https://tdf-app.pages.dev.evil.example/',
+  ]) {
+    assert.equal(canonicalRedirectLocation(url), null, url);
+  }
+  const response = await middleware({ request: new Request('https://www.tdfrecords.net/eventos/141'), next: async () => new Response('page') });
+  assert.equal(await response.text(), 'page');
 });

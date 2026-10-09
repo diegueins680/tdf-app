@@ -142,7 +142,7 @@ Uses existing tables, no schema changes required:
 
 **Example Request**:
 ```bash
-curl 'https://tdf-app.pages.dev/fans/artists/123/fans?page=1&pageSize=5'
+curl 'https://www.tdfrecords.net/fans/artists/123/fans?page=1&pageSize=5'
 ```
 
 **Example Response**:
