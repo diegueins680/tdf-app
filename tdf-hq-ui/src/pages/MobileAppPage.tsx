@@ -6,6 +6,15 @@ import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, v
 import MobileFeedbackForm from '../mobile/MobileFeedbackForm';
 import { useMobileTelemetry } from '../mobile/telemetry';
 
+// Official store artwork (public/badges). Apple's badge is only for App Store listings, so TestFlight keeps a text button.
+const storeBadge = (platform: MobilePlatform, url: string, beta: boolean): { src: string; height: number } | null => {
+  let host = '';
+  try { host = new URL(url).hostname; } catch { return null; }
+  if (platform === 'android' && host === 'play.google.com') return { src: '/badges/google-play-badge-es.png', height: 60 };
+  if (platform === 'ios' && !beta && host === 'apps.apple.com') return { src: '/badges/app-store-badge.svg', height: 44 };
+  return null;
+};
+
 export default function MobileAppPage() {
   const { t, i18n } = useTranslation();
   const detected = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
@@ -31,6 +40,11 @@ export default function MobileAppPage() {
   const channel = distribution.data?.[platform];
   const active = channel && availableChannel(channel, now);
   const beta = channel?.status !== 'public' && channel?.status !== 'store_preorder';
+  const badge = channel?.url ? storeBadge(platform, channel.url, beta) : null;
+  const badgeContent = (label: string) => badge
+    ? <img src={badge.src} alt={label} height={badge.height} style={{ display: 'block', height: badge.height, width: 'auto' }} />
+    : label;
+  const badgeSx = badge ? { alignSelf: 'flex-start', p: 0, minWidth: 0, bgcolor: 'transparent', boxShadow: 'none', '&:hover': { bgcolor: 'transparent', boxShadow: 'none' } } : undefined;
   return <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', '& .MuiButtonBase-root': { minHeight: 44 }, '& .Mui-focusVisible': { outline: '3px solid currentColor', outlineOffset: 3 } }}>
     <Stack direction="row" spacing={1} justifyContent="flex-end" aria-label={t('app.language')}>
       <Button aria-pressed={i18n.language === 'es'} onClick={() => void i18n.changeLanguage('es')}>Español</Button>
@@ -55,15 +69,16 @@ export default function MobileAppPage() {
         {channel.status === 'closed_testing' && channel.admission === 'approval_required' && !channel.enrollmentUrl
           ? <>
             <Button variant="contained" onClick={() => { setForm('request'); track('mobile_testing_interest_clicked', { platform, distribution_status: channel.status }); }}>{t('app.request')}</Button>
-            <Button component="a" variant="outlined" href={channel.url} referrerPolicy="no-referrer" onClick={event => {
+            {badge && <Typography variant="body2">{t('app.alreadyAdmitted')}</Typography>}
+            <Button component="a" variant={badge ? 'text' : 'outlined'} sx={badgeSx} href={channel.url} referrerPolicy="no-referrer" onClick={event => {
               if (!availableChannel(channel)) { event.preventDefault(); setForm('request'); return; }
               track('mobile_testing_join_clicked', { platform, distribution_status: channel.status, destination: 'testing' });
-            }}>{t('app.alreadyAdmitted')}</Button>
+            }}>{badgeContent(t('app.alreadyAdmitted'))}</Button>
           </>
-          : <Button component="a" variant="contained" href={channel.url} referrerPolicy="no-referrer" onClick={event => {
+          : <Button component="a" variant={badge ? 'text' : 'contained'} sx={badgeSx} href={channel.url} referrerPolicy="no-referrer" onClick={event => {
             if (!availableChannel(channel)) { event.preventDefault(); setForm('request'); return; }
             track(beta ? 'mobile_testing_join_clicked' : 'mobile_store_clicked', { platform, distribution_status: channel.status, destination: beta ? 'testing' : 'store' });
-          }}>{t(channelLabel(channel, platform))}</Button>}
+          }}>{badgeContent(t(channelLabel(channel, platform)))}</Button>}
       </> : <>
         <Alert severity="info">{t(channel?.capacity === 'full' ? 'app.full' : 'app.unavailable')}</Alert>
         <Button variant="contained" onClick={() => { setForm('request'); track('mobile_testing_interest_clicked', { platform, distribution_status: channel?.status ?? 'unavailable' }); }}>{t('app.request')}</Button>

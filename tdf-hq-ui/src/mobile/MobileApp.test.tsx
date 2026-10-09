@@ -122,6 +122,23 @@ it('lets admitted Android testers open Play without another request, in both lan
   expect(await screen.findByRole('link', { name: 'I already have access: open Google Play' })).toBeTruthy();
   await expectNoSeriousAccessibilityViolations(view.container);
 });
+
+it('uses the official store badges only where the store allows them', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig() } as Response);
+  mount(<Page />);
+  const play = await screen.findByRole('link', { name: 'Ya tengo acceso: abrir Google Play' });
+  expect(play.querySelector('img')?.getAttribute('src')).toBe('/badges/google-play-badge-es.png');
+  fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
+  const testflight = await screen.findByRole('link', { name: 'Probar beta en TestFlight' });
+  expect(testflight.querySelector('img')).toBeNull();
+});
+
+it('shows the App Store badge once iOS is a public App Store listing', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ...config, ios: { ...config.ios, status: 'public', url: 'https://apps.apple.com/app/id6779786470' } }) } as Response);
+  mount(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
+  await waitFor(() => expect(document.querySelector('a[href="https://apps.apple.com/app/id6779786470"] img')?.getAttribute('src')).toBe('/badges/app-store-badge.svg'));
+});
 it.each([
   { capacity: 'full' }, { capacity: 'unknown' }, { validUntil: new Date(Date.now() - 1).toISOString() },
 ])('hides admitted tester links when access is not verified: %j', async overrides => {
