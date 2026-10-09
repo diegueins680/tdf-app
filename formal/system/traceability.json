@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "9bf1a0081b8757ed83136cec61d99195ed320b1d",
+  "mobileRevision": "3cdf1c09a063432d04cd31b0351ce5fd2a51d820",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -9513,7 +9513,7 @@
     "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "c8cf3bae3f3d364fec41f4cbc35ca5583fb34e0b872b7a417a63f96bda286cbd",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "460792dea75d8cc715ed00a25bd10711ff1a5ccb4a3ad3f0df2a88244fdba08c",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
@@ -37087,7 +37087,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "c8cf3bae3f3d364fec41f4cbc35ca5583fb34e0b872b7a417a63f96bda286cbd",
+      "sha256": "460792dea75d8cc715ed00a25bd10711ff1a5ccb4a3ad3f0df2a88244fdba08c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
