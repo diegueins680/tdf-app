@@ -8638,13 +8638,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "83752ef12c19868adab088461e0c05863b694b6a31d2246197227467501fb77b",
+      "sha256": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
+      "sha256": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -68,6 +68,19 @@ const GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR =
 export const isGoogleSignupConsentRequiredError = (error: unknown): boolean =>
   error instanceof Error && error.message.trim() === GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR;
 
+// The open transition can finish after the user has already moved into a
+// field (slow phones). Focusing email then would route typed passwords into it.
+export const focusSignupEmailUnlessFieldActive = (
+  dialogNode: HTMLElement,
+  emailInput: HTMLInputElement | null,
+): void => {
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && dialogNode.contains(active) && active.matches('input, textarea, select')) {
+    return;
+  }
+  emailInput?.focus();
+};
+
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
   events: 'authEntry.intentEvents',
   follow_artists: 'authEntry.intentFollow',
@@ -1480,7 +1493,9 @@ export default function LoginPage() {
         fullWidth
         maxWidth="sm"
         fullScreen={isMobile}
-        TransitionProps={{ onEntered: () => signupEmailInputRef.current?.focus() }}
+        TransitionProps={{
+          onEntered: (node: HTMLElement) => focusSignupEmailUnlessFieldActive(node, signupEmailInputRef.current),
+        }}
         aria-labelledby="login-signup-dialog-title"
       >
         <DialogTitle id="login-signup-dialog-title">{t('login.signupDialog.title')}</DialogTitle>
