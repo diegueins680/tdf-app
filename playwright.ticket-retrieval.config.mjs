@@ -7,7 +7,8 @@ export default defineConfig({
   workers: 1, retries: 0, timeout: 120_000,
   expect: { timeout: 20_000 },
   projects: [{ name: 'chromium-phone', use: { browserName: 'chromium', viewport: { width: 360, height: 800 } } }],
-  use: { baseURL: origin, serviceWorkers: 'block', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  use: { baseURL: origin, locale: 'es-EC', timezoneId: 'America/Guayaquil',
+    serviceWorkers: 'block', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   outputDir: 'artifacts/ticket-retrieval/test-results',
   reporter: [['line'], ['json', { outputFile: 'artifacts/ticket-retrieval/results.json' }]],
 });

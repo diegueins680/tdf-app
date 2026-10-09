@@ -17,7 +17,8 @@ test('bank transfer buyer retrieves the same issued ticket after sales close', a
   const staffToken = `synthetic-ticket-staff-${suffix}`;
   const staffId = Number(sql(`INSERT INTO party(display_name,is_org,primary_email,created_at)
     VALUES ('Personal sintético',false,'staff-${suffix}@persona.test',now()) RETURNING id`));
-  sql(`INSERT INTO party_role(party_id,role,active) VALUES (${staffId},'Admin',true);
+  sql(`INSERT INTO party_security_role(party_id,role_id)
+    SELECT ${staffId},id FROM security_role WHERE code='admin';
     INSERT INTO api_token(token,party_id,label,active) VALUES ('${staffToken}',${staffId},'synthetic-ticket-test',true);
     INSERT INTO commerce_provider_account(provider,environment,merchant_account_ref,status,contract_status,
       credential_status,feature_flag_key,enabled,verified_at,verified_by)
@@ -112,7 +113,7 @@ test('bank transfer buyer retrieves the same issued ticket after sales close', a
   expect(state()).toBe('paid:issued:1:1');
   expect(sql(`SELECT quantity_sold FROM event_ticket_tier WHERE id=${tierId}`)).toBe('1');
   // A different browser/account has no order capability and must not see this receipt.
-  const otherContext = await browser.newContext({ baseURL, viewport: { width: 360, height: 800 } });
+  const otherContext = await browser.newContext({ baseURL, locale: 'es-EC', viewport: { width: 360, height: 800 } });
   try {
     await otherContext.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1'
       ? route.continue() : route.abort('blockedbyclient'));

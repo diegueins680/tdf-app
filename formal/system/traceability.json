@@ -8640,7 +8640,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "18f1d6690d6b271170ea1a518223458418293c0596fe721917ddd7fbfd813e3d",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
-    "e2e/integration/ticket-retrieval.spec.mjs": "a04bce5898756c231544b39dec885605403511d796be292961fee5ef50b03482",
+    "e2e/integration/ticket-retrieval.spec.mjs": "c8b8102a7e0e8d3320c4df83a726200e9eb16d95d90fc25232453f52b548228e",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
@@ -8765,7 +8765,7 @@
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "1e52fb4523cfba328755635c6ae0d016747234f425f4ed2e809951659430905c",
     "playwright.config.mjs": "a5c8481d89b2dabcb1b8f64766c8ab17a26b00877f8c27a4f06b52f24fc99779",
-    "playwright.ticket-retrieval.config.mjs": "d16694935aacdfeed7b4a7783a8c77f48573431d4b40601c3cb8aeac2ff03bed",
+    "playwright.ticket-retrieval.config.mjs": "610cb08dd1adc8a7c08b79dd63b9953c911581e43f13f9dcc5f7951dfe474f8d",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
@@ -15690,7 +15690,7 @@
     {
       "id": "SURFACE-e48b174d71244c56",
       "path": "e2e/integration/ticket-retrieval.spec.mjs",
-      "sha256": "a04bce5898756c231544b39dec885605403511d796be292961fee5ef50b03482",
+      "sha256": "c8b8102a7e0e8d3320c4df83a726200e9eb16d95d90fc25232453f52b548228e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
