@@ -202,6 +202,11 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
       onClose();
     },
   });
+  const resetMutation = mutation.reset;
+
+  useEffect(() => {
+    resetMutation();
+  }, [party, open, resetMutation]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -226,21 +231,31 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
             minRows={3}
             helperText="Historial de seguimiento del contacto. Agrega nuevas entradas sin borrar las anteriores."
           />
+          {mutation.isError && (
+            <Alert severity="error">
+              No se guardaron los cambios: {mutation.error.message}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
         <Button
-          onClick={() =>
-            mutation.mutate({
-              uDisplayName: displayName,
-              uInstagram: instagram,
-              uPrimaryPhone: phone,
-              uPrimaryEmail: email.trim() || null,
-              // Only send notes when edited so saving other fields never overwrites notes changed elsewhere.
-              ...(notes !== (party?.notes ?? '') ? { uNotes: notes } : {}),
-            })
-          }
+          onClick={() => {
+            // Send only the fields edited in this dialog: the backend keeps any omitted
+            // field, so a save never restores stale values another editor changed meanwhile.
+            const changes: PartyUpdate = {};
+            if (displayName !== (party?.displayName ?? '')) changes.uDisplayName = displayName;
+            if (email !== (party?.primaryEmail ?? '')) changes.uPrimaryEmail = email.trim() || null;
+            if (instagram !== (party?.instagram ?? '')) changes.uInstagram = instagram;
+            if (phone !== (party?.primaryPhone ?? '')) changes.uPrimaryPhone = phone;
+            if (notes !== (party?.notes ?? '')) changes.uNotes = notes;
+            if (Object.keys(changes).length === 0) {
+              onClose();
+              return;
+            }
+            mutation.mutate(changes);
+          }}
           variant="contained"
           disabled={mutation.isPending}
         >

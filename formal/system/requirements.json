@@ -7451,7 +7451,7 @@
     },
     {
       "id": "DATA-CRM-002",
-      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and must send notes in the update only when they differ from the value loaded into the dialog, so saving other fields never overwrites notes changed elsewhere. The backend remains authoritative for CRM module access and the update itself.",
+      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and its update must contain only the fields edited in the dialog (display name, email, Instagram, phone, notes) relative to the values loaded into it; an unedited save sends no request. Because the backend keeps every omitted field, saving one field never restores stale values of fields changed elsewhere. A rejected update is shown in the dialog, which stays open with the unsaved input. The backend remains authoritative for CRM module access and the update itself.",
       "authority": "reconciled",
       "source": "PR #513 (CRM contact notes)",
       "property": "An update omits uNotes unless the edited notes differ from the loaded notes",
@@ -7504,9 +7504,9 @@
       ],
       "authorization": "Backend updateParty requires ModuleCRM; the dialog grants nothing.",
       "privacy": "Notes are internal CRM data shown only to CRM-authorized staff.",
-      "concurrency": "Notes are sent only when edited, so other-field saves do not overwrite notes; when two editors both change notes the later save wins (no version check).",
+      "concurrency": "Only edited fields are sent, so a save never overwrites fields it did not edit; when two editors change the same field the later save wins (no version check on party).",
       "idempotency": "Repeating the same update stores the same notes.",
-      "failure": "An archived contact returns 409 and other database failures return 500; the dialog reports the error and stored notes are unchanged.",
+      "failure": "An archived contact returns 409 and other database failures return 500; the dialog shows the error, stays open with the unsaved input, and stored values are unchanged.",
       "recovery": "Reopen the contact's current record and edit again.",
       "observability": "The update request body shows whether uNotes was sent.",
       "tests": [
@@ -7520,7 +7520,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Client test passes; deployed web verification pending. Last-write-wins still applies when two editors both change notes."
+        "reason": "Client tests cover field-level payloads, the no-op save and the rejected-update message; deployed web verification pending. Same-field concurrent edits remain last-write-wins."
       }
     },
     {

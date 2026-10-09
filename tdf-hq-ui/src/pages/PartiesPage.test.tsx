@@ -798,7 +798,7 @@ describe('PartiesPage', () => {
     }
   });
 
-  it('edits contact notes and only sends them when they changed', async () => {
+  it('edits contact notes and sends only the fields changed in the dialog', async () => {
     listPartiesMock.mockResolvedValue([
       {
         partyId: 7,
@@ -851,10 +851,8 @@ describe('PartiesPage', () => {
         expect(notesField().value).toBe('Nota previa');
       });
       await save();
-      await waitForExpectation(() => {
-        expect(updatePartyMock).toHaveBeenCalledTimes(1);
-      });
-      expect(updatePartyMock.mock.calls[0]?.[1]).not.toHaveProperty('uNotes');
+      // Nothing was edited: no request, so no cached field can overwrite a newer stored value.
+      expect(updatePartyMock).not.toHaveBeenCalled();
 
       await openEditor();
       await act(async () => {
@@ -867,10 +865,31 @@ describe('PartiesPage', () => {
       });
       await save();
       await waitForExpectation(() => {
-        expect(updatePartyMock).toHaveBeenLastCalledWith(7, expect.objectContaining({
-          uNotes: 'Nota previa\n2026-10-07 invitación enviada',
-        }));
+        expect(updatePartyMock).toHaveBeenCalledTimes(1);
       });
+      // Only the edited field is sent; display name, email, phone and Instagram are omitted.
+      expect(updatePartyMock).toHaveBeenLastCalledWith(7, {
+        uNotes: 'Nota previa\n2026-10-07 invitación enviada',
+      });
+
+      updatePartyMock.mockRejectedValueOnce(new Error('This contact was archived. Open its current record before editing.'));
+      await openEditor();
+      await act(async () => {
+        const field = notesField();
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(
+          field,
+          'Nota previa\nseguimiento rechazado',
+        );
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await save();
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'No se guardaron los cambios: This contact was archived. Open its current record before editing.',
+        );
+      });
+      // The dialog stays open with the unsaved note so it is not lost.
+      expect(notesField().value).toBe('Nota previa\nseguimiento rechazado');
     } finally {
       await cleanup();
     }
