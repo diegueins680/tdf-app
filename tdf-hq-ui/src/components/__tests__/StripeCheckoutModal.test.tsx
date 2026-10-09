@@ -35,7 +35,7 @@ jest.unstable_mockModule('../../api/socialEvents', () => ({
 
 // Stripe.js cannot load in jsdom; stub the SDK so the payment step renders
 // without reaching out to the network or hanging on the loader.
-jest.unstable_mockModule('@stripe/stripe-js', () => ({
+jest.unstable_mockModule('@stripe/stripe-js/pure', () => ({
   loadStripe: () => Promise.resolve(null),
 }));
 
