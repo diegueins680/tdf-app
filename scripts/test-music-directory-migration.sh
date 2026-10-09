@@ -944,5 +944,14 @@ expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id
 test "$expired_state" = "expired"
 stop_api
 
+# Events and venues stay searchable as they are created and edited
+# (2026-10-09): apply twice, verify, roll back, reapply and verify again.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+
 psql_file "$TDF_DIRECTORY_ROOT/scripts/__tests__/fixtures/artist-management-claim.sql"
-echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
+echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, event search sync, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."

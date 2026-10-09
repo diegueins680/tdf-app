@@ -1,0 +1,16 @@
+# Event and venue search sync
+
+`/buscar` reads `directory_public_search_document`. Until 2026-10-09, event and venue documents were written only by the one-off August backfill (`directory_refresh_legacy_event_search`), so events created later never appeared.
+
+Migration `2026-10-09_directory_event_search_sync` makes the documents follow their sources:
+
+- **Triggers.** Inserting, updating or deleting a `social_event`, updating or deleting a `venue`, and changing an `external_event_ref` (provider suppression) upsert the affected event and venue documents. Deleting the source removes its document. An event that becomes private or suppressed keeps its cached document, and the public search view filters it out at read time, as required by the event privacy composition contract.
+- **Same projection.** The documents come from the privacy-reviewed `directory_public_event` and `directory_public_venue` views. The manual full refresh reuses the same functions, so a rebuild can never disagree with the incremental path. Search still re-checks those views when reading, so a stale row cannot expose a private event.
+- **Upcoming events.** For events, `effective_at` holds the start time, which date filters use. The public search view previously hid documents whose `effective_at` was in the future, so upcoming events were invisible. Events are now exempt from that check, and their visibility stays governed by `directory_public_event`.
+- **City.** A venue whose city is only free text gets the `city_reference` id when exactly one city matches by normalized name. This applies on insert and update, plus a one-time backfill, so city filters such as "Quito" match.
+- **Kind words.** Event documents include "evento eventos" and venue documents include "venue venues local locales". A search for "Eventos" therefore returns events.
+- **Images.** Only HTTPS `imageUrl` values from valid event metadata become the result image.
+
+The rollback removes the triggers and helpers and restores the previous view and refresh. Derived documents and resolved city ids are kept.
+
+Verification: `tdf-hq/test/integration/directory_event_search_sync.sql`, which runs from `scripts/test-music-directory-migration.sh` (apply twice, verify, roll back, reapply, verify).

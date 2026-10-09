@@ -960,6 +960,11 @@
       "id": "2026-10-07_whatsapp_consent_confirmation",
       "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
       "introducedBy": "f8807c07ddbfacda5cae1c268a05cd8666f56406"
+    },
+    {
+      "id": "2026-10-09_directory_event_search_sync",
+      "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
+      "introducedBy": "2b5e6157a9cb1f88e264fc821667f9eefa6360fa"
     }
   ]
 }
