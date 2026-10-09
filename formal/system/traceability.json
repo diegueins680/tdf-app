@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "3cdf1c09a063432d04cd31b0351ce5fd2a51d820",
+  "mobileRevision": "a36dc4415ce3e461d1f383bb02552d9799ba539e",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -9495,8 +9495,8 @@
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
-    "tdf-mobile/package-lock.json": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
-    "tdf-mobile/package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+    "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
+    "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
     "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
     "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
@@ -9506,7 +9506,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "233a432a846849183afcbd3cc880d454b3657d86f1060efda8ced2c02b4ba8df",
+    "tdf-mobile/src/api/generated/types.ts": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -35426,13 +35426,6 @@
       ]
     },
     {
-      "id": "SURFACE-4744ff78391b59cc",
-      "path": "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
-      "sha256": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
       "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
@@ -35751,7 +35744,7 @@
     {
       "id": "SURFACE-f52dfd6e2d77a57f",
       "path": "tdf-mobile/app/(tabs)/directory.tsx",
-      "sha256": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
+      "sha256": "bba3e1e9fd52fa6da3dd9d9db71b67f50c38df51261af26190e7e1e5d61f61cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -36003,7 +35996,7 @@
     {
       "id": "SURFACE-73a1b649f6438e52",
       "path": "tdf-mobile/app/directory/manage.tsx",
-      "sha256": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
+      "sha256": "a3796e16ce55b21c0aa19f558694b71580408fe983a8ceb56673c2da94031715",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -36349,7 +36342,7 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
+      "sha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36361,7 +36354,7 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36649,7 +36642,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "233a432a846849183afcbd3cc880d454b3657d86f1060efda8ced2c02b4ba8df",
+      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36834,16 +36827,9 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-f242ee0fc1c8742e",
-      "path": "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
-      "sha256": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-7568a6ba01e6268b",
       "path": "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
-      "sha256": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
+      "sha256": "8866bef797bf772d209ef0cf24234b45ab408561505603ee8fd22a1acd0fb014",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -37048,13 +37034,6 @@
       "id": "SURFACE-12818522512d2c5b",
       "path": "tdf-mobile/src/features/directory/classifiedForm.ts",
       "sha256": "a93030ad3d52801766ca8f6e48869af4c032d6c71c4054ccdf1757f3f51ffca7",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-87778cdfd76bc6d8",
-      "path": "tdf-mobile/src/features/directory/previewImage.ts",
-      "sha256": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -39420,7 +39399,6 @@
     "SURFACE-1a9c6b490ed4d09a",
     "SURFACE-a0436207cb7f5fda",
     "SURFACE-2947edfcf470d479",
-    "SURFACE-4744ff78391b59cc",
     "SURFACE-293e026d753996ba",
     "SURFACE-38f4ba1a427a2577",
     "SURFACE-a44fa1219b230d2b",
@@ -39564,7 +39542,6 @@
     "SURFACE-ceac2e6abbe05738",
     "SURFACE-44f0271f8adb8837",
     "SURFACE-88103f1d6fb89685",
-    "SURFACE-f242ee0fc1c8742e",
     "SURFACE-7568a6ba01e6268b",
     "SURFACE-8fa816d092471420",
     "SURFACE-8ce4ad416c6e61d1",
@@ -39590,7 +39567,6 @@
     "SURFACE-fe02da061556f4fc",
     "SURFACE-482557ebc534dc5c",
     "SURFACE-12818522512d2c5b",
-    "SURFACE-87778cdfd76bc6d8",
     "SURFACE-f3000e7c8217ce74",
     "SURFACE-013a4a97d6ed52f9",
     "SURFACE-58dc9c7e3bda7226",

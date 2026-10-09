@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "3cdf1c09a063432d04cd31b0351ce5fd2a51d820",
+  "mobileRevision": "a36dc4415ce3e461d1f383bb02552d9799ba539e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2194,7 +2194,6 @@
       "tdf-mobile/__tests__/catalogsApi.test.ts",
       "tdf-mobile/__tests__/ddexApi.test.ts",
       "tdf-mobile/__tests__/directoryApi.test.ts",
-      "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
       "tdf-mobile/__tests__/eventMoments.test.ts",
       "tdf-mobile/__tests__/eventMomentsRepository.test.ts",
       "tdf-mobile/__tests__/fanArtists.test.ts",
@@ -2371,7 +2370,6 @@
       "tdf-mobile/src/api/upload.ts",
       "tdf-mobile/src/api/venues.ts",
       "tdf-mobile/src/components/ArtistCard.tsx",
-      "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
       "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
       "tdf-mobile/src/components/ErrorBoundary.tsx",
       "tdf-mobile/src/components/EventCard.tsx",
@@ -2400,7 +2398,6 @@
       "tdf-mobile/src/experiments/useExperimentEvent.ts",
       "tdf-mobile/src/features/directory/classifiedForm.test.ts",
       "tdf-mobile/src/features/directory/classifiedForm.ts",
-      "tdf-mobile/src/features/directory/previewImage.ts",
       "tdf-mobile/src/features/directory/profileForm.test.ts",
       "tdf-mobile/src/features/directory/profileForm.ts",
       "tdf-mobile/src/features/featureRegistry.ts",
@@ -15510,12 +15507,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-4744ff78391b59cc",
-      "path": "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
-      "sha256": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
       "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
@@ -15746,7 +15737,7 @@
     {
       "id": "SURFACE-f52dfd6e2d77a57f",
       "path": "tdf-mobile/app/(tabs)/directory.tsx",
-      "sha256": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
+      "sha256": "bba3e1e9fd52fa6da3dd9d9db71b67f50c38df51261af26190e7e1e5d61f61cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15932,7 +15923,7 @@
     {
       "id": "SURFACE-73a1b649f6438e52",
       "path": "tdf-mobile/app/directory/manage.tsx",
-      "sha256": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
+      "sha256": "a3796e16ce55b21c0aa19f558694b71580408fe983a8ceb56673c2da94031715",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16220,13 +16211,13 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
+      "sha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16430,7 +16421,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "233a432a846849183afcbd3cc880d454b3657d86f1060efda8ced2c02b4ba8df",
+      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16572,15 +16563,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-f242ee0fc1c8742e",
-      "path": "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
-      "sha256": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-7568a6ba01e6268b",
       "path": "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
-      "sha256": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
+      "sha256": "8866bef797bf772d209ef0cf24234b45ab408561505603ee8fd22a1acd0fb014",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16743,12 +16728,6 @@
       "id": "SURFACE-12818522512d2c5b",
       "path": "tdf-mobile/src/features/directory/classifiedForm.ts",
       "sha256": "a93030ad3d52801766ca8f6e48869af4c032d6c71c4054ccdf1757f3f51ffca7",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-87778cdfd76bc6d8",
-      "path": "tdf-mobile/src/features/directory/previewImage.ts",
-      "sha256": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
       "semanticConformance": "not-established-by-discovery"
     },
     {
