@@ -1,12 +1,21 @@
 import { createServer } from 'vite';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createServer as createPortProbe } from 'node:net';
 import { disposablePostgresUrl } from './lib/disposable-postgres-url.mjs';
 
 const target = process.env.TDF_TICKET_JOURNEY_API_ORIGIN ?? '';
 if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(target)) throw new Error('Owned loopback API required');
 disposablePostgresUrl(process.env.TDF_TICKET_JOURNEY_DSN);
 const root = fileURLToPath(new URL('../', import.meta.url));
+// Vite treats port 0 as its default 5173. Reserve an ephemeral port explicitly.
+const probe = createPortProbe();
+await new Promise((resolve, reject) => {
+  probe.once('error', reject);
+  probe.listen(0, '127.0.0.1', resolve);
+});
+const port = probe.address().port;
+await new Promise((resolve, reject) => probe.close(error => error ? reject(error) : resolve()));
 // No .env or deployment keys. Every API response comes from the real Haskell server.
 const server = await createServer({
   root: `${root}tdf-hq-ui`, configFile: `${root}tdf-hq-ui/vite.config.ts`, envFile: false, envPrefix: [],
@@ -15,7 +24,7 @@ const server = await createServer({
     'import.meta.env.VITE_POSTHOG_KEY': JSON.stringify(''),
     'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(''),
   },
-  server: { host: '127.0.0.1', port: 0, strictPort: true, proxy: {
+  server: { host: '127.0.0.1', port, strictPort: true, proxy: {
     '^/(public|social-events|catalogs|session|login|logout|fans|directory|exchange-rates)(/|$)': { target },
   } },
 });

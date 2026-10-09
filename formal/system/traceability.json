@@ -8640,7 +8640,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "18f1d6690d6b271170ea1a518223458418293c0596fe721917ddd7fbfd813e3d",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
-    "e2e/integration/ticket-retrieval.spec.mjs": "c8b8102a7e0e8d3320c4df83a726200e9eb16d95d90fc25232453f52b548228e",
+    "e2e/integration/ticket-retrieval.spec.mjs": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
@@ -8874,7 +8874,7 @@
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
-    "scripts/run-ticket-retrieval-browser.mjs": "78d9d15f4ddd3704118a3271a511433c777b05606389fbdb3edc268a28229227",
+    "scripts/run-ticket-retrieval-browser.mjs": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -15690,7 +15690,7 @@
     {
       "id": "SURFACE-e48b174d71244c56",
       "path": "e2e/integration/ticket-retrieval.spec.mjs",
-      "sha256": "c8b8102a7e0e8d3320c4df83a726200e9eb16d95d90fc25232453f52b548228e",
+      "sha256": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18725,7 +18725,7 @@
     {
       "id": "SURFACE-b2a8d03352f6e0c4",
       "path": "scripts/run-ticket-retrieval-browser.mjs",
-      "sha256": "78d9d15f4ddd3704118a3271a511433c777b05606389fbdb3edc268a28229227",
+      "sha256": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -23,14 +23,17 @@ test('bank transfer buyer retrieves the same issued ticket after sales close', a
     INSERT INTO commerce_provider_account(provider,environment,merchant_account_ref,status,contract_status,
       credential_status,feature_flag_key,enabled,verified_at,verified_by)
     VALUES ('bank_transfer','sandbox','tdf-manual-settlement','ready','approved','validated','synthetic-ticket-test',true,now(),${staffId})
-    ON CONFLICT(provider,environment) DO NOTHING;
+    ON CONFLICT(provider,environment) DO UPDATE SET merchant_account_ref=EXCLUDED.merchant_account_ref,
+      status=EXCLUDED.status,contract_status=EXCLUDED.contract_status,credential_status=EXCLUDED.credential_status,
+      enabled=EXCLUDED.enabled,verified_at=EXCLUDED.verified_at,verified_by=EXCLUDED.verified_by;
     INSERT INTO commerce_provider_capability(provider_account_id,payment_method,capability,verification_status,source_reference,verified_at)
     SELECT id,'manual_bank_transfer','one_time','sandbox_verified','synthetic-local-staff',now()
     FROM commerce_provider_account WHERE provider='bank_transfer' AND environment='sandbox'
-    ON CONFLICT(provider_account_id,payment_method,capability) DO NOTHING;`);
-  const eventId = Number(sql(`INSERT INTO social_event(organizer_party_id,title,description,start_time,end_time,timezone,metadata,workflow_state_id)
+    ON CONFLICT(provider_account_id,payment_method,capability) DO UPDATE
+      SET verification_status=EXCLUDED.verification_status,source_reference=EXCLUDED.source_reference,verified_at=EXCLUDED.verified_at;`);
+  const eventId = Number(sql(`INSERT INTO social_event(organizer_party_id,title,description,start_time,end_time,timezone,metadata,workflow_state_id,event_type_id)
     SELECT '${staffId}','Concierto sintético de recuperación','Evento local de prueba',now()+interval '7 days',now()+interval '7 days 2 hours',
-      'America/Guayaquil','{"isPublic":true}',s.id
+      'America/Guayaquil','{"isPublic":true}',s.id,(SELECT id FROM event_type WHERE code='concert')
     FROM workflow_state s JOIN workflow_definition w ON w.id=s.workflow_id
     WHERE w.code='social-event-lifecycle' AND s.code='on_sale' RETURNING social_event.id`));
   const tierId = Number(sql(`INSERT INTO event_ticket_tier(event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active)
@@ -49,15 +52,21 @@ test('bank transfer buyer retrieves the same issued ticket after sales close', a
   await page.goto(`/eventos/${eventId}`);
   await page.getByRole('link', { name: 'Ver entradas', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/eventos/${eventId}/entradas`));
-  await page.getByLabel('Nombre completo', { exact: true }).fill('Compradora Sintética');
-  await page.getByLabel('Email', { exact: true }).fill(`buyer-${suffix}@persona.test`);
+  await page.getByRole('textbox', { name: 'Nombre completo', exact: true }).fill('Compradora Sintética');
+  await page.getByRole('textbox', { name: 'Email', exact: true }).fill(`buyer-${suffix}@persona.test`);
   await page.getByRole('checkbox').check();
   const created = page.waitForResponse(response => response.request().method() === 'POST'
     && new URL(response.url()).pathname === `/public/events/${eventId}/ticket-orders`);
   await page.getByRole('button', { name: 'Retener entradas y revisar total', exact: true }).click();
   const response = await created;
-  expect(response.status(), await response.text()).toBe(200);
+  expect(response.status(), await response.text()).toBe(201);
   const order = await response.json();
+  const replay = await request.post(`/public/events/${eventId}/ticket-orders`, {
+    headers: { 'Idempotency-Key': response.request().headers()['idempotency-key'] },
+    data: response.request().postDataJSON(),
+  });
+  expect(replay.status(), await replay.text()).toBe(201);
+  expect((await replay.json()).orderId).toBe(order.orderId);
   const orderPath = `/eventos/${eventId}/orden/${order.orderId}`;
   await expect(page).toHaveURL(new RegExp(`${orderPath}$`));
   await page.getByRole('button', { name: 'Transferencia bancaria', exact: true }).click();
@@ -110,7 +119,16 @@ test('bank transfer buyer retrieves the same issued ticket after sales close', a
   await expect(reopened.getByRole('img', { name: 'Código QR privado de acceso' })).toBeVisible();
   expect(await reopened.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await reopened.screenshot({ path: testInfo.outputPath('reopened-ticket.png'), fullPage: true });
+  // Drop one read locally; retry must recover from the real API without buying again.
+  await reopened.route(url => url.pathname === `/public/events/${eventId}/ticket-orders/${order.orderId}`,
+    route => route.abort('connectionfailed'), { times: 1 });
+  await reopened.getByRole('button', { name: 'Actualizar estado de la orden', exact: true }).click();
+  await expect(reopened.getByText(/No pudimos cargar tu orden/)).toBeVisible();
+  await expect(reopened.getByRole('button', { name: 'Retener entradas y revisar total', exact: true })).toHaveCount(0);
+  await reopened.getByRole('button', { name: 'Intentar de nuevo', exact: true }).click();
+  await expect(reopened.getByText(code, { exact: true })).toBeVisible();
   expect(state()).toBe('paid:issued:1:1');
+  expect(sql(`SELECT count(*) FROM event_ticket_order WHERE event_id=${eventId}`)).toBe('1');
   expect(sql(`SELECT quantity_sold FROM event_ticket_tier WHERE id=${tierId}`)).toBe('1');
   // A different browser/account has no order capability and must not see this receipt.
   const otherContext = await browser.newContext({ baseURL, locale: 'es-EC', viewport: { width: 360, height: 800 } });
@@ -123,5 +141,7 @@ test('bank transfer buyer retrieves the same issued ticket after sales close', a
     await expect(otherPage.getByText(code, { exact: true })).toHaveCount(0);
     await expect(otherPage.getByRole('button', { name: 'Retener entradas y revisar total', exact: true })).toHaveCount(0);
   } finally { await otherContext.close(); }
-  expect(external).toEqual([]);
+  // The currency context attempts its read-only rate feed; it remains blocked.
+  // No payment, analytics, or delivery service may even be requested.
+  expect([...new Set(external)].filter(origin => origin !== 'https://api.frankfurter.dev')).toEqual([]);
 });

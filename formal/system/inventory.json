@@ -2610,7 +2610,7 @@
     {
       "id": "SURFACE-e48b174d71244c56",
       "path": "e2e/integration/ticket-retrieval.spec.mjs",
-      "sha256": "c8b8102a7e0e8d3320c4df83a726200e9eb16d95d90fc25232453f52b548228e",
+      "sha256": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4356,7 +4356,7 @@
     {
       "id": "SURFACE-b2a8d03352f6e0c4",
       "path": "scripts/run-ticket-retrieval-browser.mjs",
-      "sha256": "78d9d15f4ddd3704118a3271a511433c777b05606389fbdb3edc268a28229227",
+      "sha256": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
