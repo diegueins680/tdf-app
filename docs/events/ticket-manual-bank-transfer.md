@@ -48,6 +48,12 @@ America/Guayaquil cutoff.
 
 `tdf-hq/test/integration/ticket_manual_bank_transfer.sql` exercises the
 database bounds, expiry with and without extension, settlement after the
-original hold passed and rollback refusal. Web tests cover the buyer flow and
-that a reported transfer is never shown as paid. Bank deposits are verified by
-people against the account statement; no bank API is integrated.
+original hold passed and rollback refusal. `scripts/test-ticket-manual-review.sh`
+runs the actual staff review transaction on the production schema: reviewer
+authority and independence, single settlement and replay, refusal after expiry,
+rejection and re-report, and concurrent reviews. Web tests cover the buyer flow
+and that a reported transfer is never shown as paid. The bounded model, its
+mutation controls and the exclusions are in
+[formal/system/manual-bank-transfer.md](../../formal/system/manual-bank-transfer.md).
+Bank deposits are verified by people against the account statement; no bank API
+is integrated.

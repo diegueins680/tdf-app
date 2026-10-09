@@ -7237,7 +7237,7 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows; the hold guard and expiry run in the database.",
+      "concurrency": "Review locks checkout, attempt and evidence rows FOR UPDATE and keeps the locks through the decision (savepoint, not commit); a concurrent reviewer waits and then sees the decided state. The hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
       "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
@@ -7268,20 +7268,26 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/api/eventTickets.test.ts"
+        "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq/test/TicketManualReviewMain.hs",
+        "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
-      "formalModels": [],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests.",
-      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence.",
+      "formalModels": [
+        "formal/event-operations/ManualBankTransfer.tla"
+      ],
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors. Bounded ManualBankTransfer model with seven mutation controls. React buyer flow and API contract tests.",
+      "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Hosted CI and a production transfer remain separate evidence.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants are exercised directly; the Haskell review transaction is exercised end to end only through deployed HTTP verification.",
+      "confidence": "Database invariants and the Haskell review transaction are exercised on the production schema; HTTP admission (requireRefundManagedEvent), ticket issuance after approval and a real verified transfer are separate evidence.",
       "ambiguity": [
-        "No bank API confirms deposits; staff verification against the statement is the authority."
+        "No bank API confirms deposits; staff verification against the statement is the authority.",
+        "Ticket issuance runs after the approval commit; recovery from a crash in between relies on a repeated approval, not an automatic worker."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented and tested at database and browser boundaries; production configuration and a real verified transfer are pending."
+        "reason": "Review transaction conforms on the production schema after the 2026-10-09 lock-scope fix; production deployment of the fix, configuration and a real verified transfer are pending."
       }
     },
     {
