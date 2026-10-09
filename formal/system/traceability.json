@@ -7451,6 +7451,70 @@
       }
     },
     {
+      "id": "DATA-CRM-002",
+      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and must send notes in the update only when they differ from the value loaded into the dialog, so saving other fields never overwrites notes changed elsewhere. The backend remains authoritative for CRM module access and the update itself.",
+      "authority": "reconciled",
+      "source": "PR #513 (CRM contact notes)",
+      "property": "An update omits uNotes unless the edited notes differ from the loaded notes",
+      "contract": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+      ],
+      "verification": "Client unit test; no backend change",
+      "evidence": "Unit test that edits notes and asserts notes are sent only when changed",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact notes are editable without overwriting concurrent edits",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/pages/PartiesPage.test.tsx"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client test passes; deployed web verification pending. Last-write-wins still applies when two editors both change notes."
+      }
+    },
+    {
       "id": "PRIV-WHATSAPP-001",
       "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
@@ -9074,6 +9138,8 @@
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "71e131b56818ba186b6670b6eeb21e219fbd773d08010985ee4b0e526de99086",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "3f09b1e6cefe7125024fd6933e5ec46c54d41f78c8df9cb5768b3febdb0443f0",
+    "tdf-hq-ui/src/pages/PartiesPage.test.tsx": "b917bb40a2844c82c5cdfd47b1d58f653019ac2fdbcdb066db8d80196d515719",
+    "tdf-hq-ui/src/pages/PartiesPage.tsx": "26f0bf9be571974bdfa7f73bacdf6eecfe7d310a47fb6dfc16936db64b11e4bf",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
@@ -14201,6 +14267,18 @@
     "tdf-hq-ui/src/api/parties.test.ts": [
       {
         "requirement": "DATA-CRM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/PartiesPage.tsx": [
+      {
+        "requirement": "DATA-CRM-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/PartiesPage.test.tsx": [
+      {
+        "requirement": "DATA-CRM-002",
         "relationship": "tests"
       }
     ],
@@ -25340,14 +25418,24 @@
       "path": "tdf-hq-ui/src/pages/PartiesPage.test.tsx",
       "sha256": "b917bb40a2844c82c5cdfd47b1d58f653019ac2fdbcdb066db8d80196d515719",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-41171391066d3a7e",
       "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
       "sha256": "26f0bf9be571974bdfa7f73bacdf6eecfe7d310a47fb6dfc16936db64b11e4bf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-72cc8805ad02bfe2",
@@ -38281,8 +38369,6 @@
     "SURFACE-8f163fb9673ec539",
     "SURFACE-fc080c7e7b9e5e76",
     "SURFACE-554106b9be846d52",
-    "SURFACE-ca6a42a035d60724",
-    "SURFACE-41171391066d3a7e",
     "SURFACE-72cc8805ad02bfe2",
     "SURFACE-0e999cb8927f4583",
     "SURFACE-4a78e6b0e0157ec4",
@@ -40518,7 +40604,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9eb962c20b1fc39e7354adad1ed4ace72e1b7021428d265fd9140552083582fc",
+      "sourceSha256": "8fba72a8618b594f3b5ecc3e45d67df3642e3aaf0672f17f555b42168ba51892",
       "definition": {
         "states": [
           "absent",
@@ -62715,7 +62801,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 108,
+    "PARTIAL": 109,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

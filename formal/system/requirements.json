@@ -7450,6 +7450,70 @@
       }
     },
     {
+      "id": "DATA-CRM-002",
+      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and must send notes in the update only when they differ from the value loaded into the dialog, so saving other fields never overwrites notes changed elsewhere. The backend remains authoritative for CRM module access and the update itself.",
+      "authority": "reconciled",
+      "source": "PR #513 (CRM contact notes)",
+      "property": "An update omits uNotes unless the edited notes differ from the loaded notes",
+      "contract": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+      ],
+      "verification": "Client unit test; no backend change",
+      "evidence": "Unit test that edits notes and asserts notes are sent only when changed",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact notes are editable without overwriting concurrent edits",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access."
+      ],
+      "inputs": [
+        "GET /parties?limit&offset"
+      ],
+      "state": {
+        "listing": [
+          "loading",
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Full page -> request next offset",
+        "Short page -> complete"
+      ],
+      "forbiddenTransitions": [
+        "Implicit default page treated as the complete contact list"
+      ],
+      "effects": [
+        "All non-archived contacts within the client's offset bound are listed."
+      ],
+      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
+      "privacy": "Contacts are shown only to CRM-authorized staff.",
+      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
+      "idempotency": "Read-only.",
+      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
+      "recovery": "Retry the listing.",
+      "observability": "Client request URLs show limit and offset.",
+      "tests": [
+        "tdf-hq-ui/src/pages/PartiesPage.test.tsx"
+      ],
+      "formalModels": [],
+      "confidence": "High for client paging under stable ordering.",
+      "ambiguity": [
+        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
+        "Offset paging can skip or repeat rows under concurrent inserts."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client test passes; deployed web verification pending. Last-write-wins still applies when two editors both change notes."
+      }
+    },
+    {
       "id": "PRIV-WHATSAPP-001",
       "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
