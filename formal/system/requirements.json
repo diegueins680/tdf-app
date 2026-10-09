@@ -7459,7 +7459,7 @@
       "implementation": [
         "tdf-hq-ui/src/pages/PartiesPage.tsx"
       ],
-      "verification": "Client unit test; no backend change",
+      "verification": "Client unit test; backend updateParty unchanged",
       "evidence": "Unit test that edits notes and asserts notes are sent only when changed",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -7470,43 +7470,53 @@
         "CRM staff"
       ],
       "preconditions": [
-        "Authenticated session with CRM module access."
+        "Authenticated session with CRM module access.",
+        "The contact is loaded into the edit dialog."
       ],
       "inputs": [
-        "GET /parties?limit&offset"
+        "Party notes loaded into the dialog",
+        "Edited notes text",
+        "PUT /parties/{partyId} PartyUpdate (uNotes optional)"
       ],
       "state": {
-        "listing": [
-          "loading",
-          "complete",
+        "notes": [
+          "loaded",
+          "edited",
+          "saving",
+          "saved",
           "failed"
         ]
       },
       "allowedTransitions": [
-        "Full page -> request next offset",
-        "Short page -> complete"
+        "loaded -> edited when the text changes",
+        "edited -> loaded when the text returns to the loaded value",
+        "loaded or edited -> saving on save",
+        "saving -> saved when the backend returns the updated party",
+        "saving -> failed when the update is rejected"
       ],
       "forbiddenTransitions": [
-        "Implicit default page treated as the complete contact list"
+        "Saving unchanged notes sends uNotes",
+        "Saving other fields replaces notes changed elsewhere"
       ],
       "effects": [
-        "All non-archived contacts within the client's offset bound are listed."
+        "When notes changed, updateParty stores uNotes as the contact's notes.",
+        "When uNotes is absent, updateParty keeps the stored notes."
       ],
-      "authorization": "Backend listParties requires ModuleCRM; client paging grants nothing.",
-      "privacy": "Contacts are shown only to CRM-authorized staff.",
-      "concurrency": "Pages are read independently; concurrent inserts may shift offsets between pages.",
-      "idempotency": "Read-only.",
-      "failure": "A failed page request fails the listing rather than returning a partial list as complete.",
-      "recovery": "Retry the listing.",
-      "observability": "Client request URLs show limit and offset.",
+      "authorization": "Backend updateParty requires ModuleCRM; the dialog grants nothing.",
+      "privacy": "Notes are internal CRM data shown only to CRM-authorized staff.",
+      "concurrency": "Notes are sent only when edited, so other-field saves do not overwrite notes; when two editors both change notes the later save wins (no version check).",
+      "idempotency": "Repeating the same update stores the same notes.",
+      "failure": "An archived contact returns 409 and other database failures return 500; the dialog reports the error and stored notes are unchanged.",
+      "recovery": "Reopen the contact's current record and edit again.",
+      "observability": "The update request body shows whether uNotes was sent.",
       "tests": [
         "tdf-hq-ui/src/pages/PartiesPage.test.tsx"
       ],
       "formalModels": [],
-      "confidence": "High for client paging under stable ordering.",
+      "confidence": "High for client send-only-when-changed behaviour; backend semantics read from updateParty, not newly tested.",
       "ambiguity": [
-        "The client stops at offset 10000 (about 10,500 contacts); larger CRMs need server-side search or cursor paging.",
-        "Offset paging can skip or repeat rows under concurrent inserts."
+        "No optimistic concurrency control for simultaneous note edits.",
+        "Notes are free text with no backend length limit in updateParty."
       ],
       "conformance": {
         "classification": "PARTIAL",
