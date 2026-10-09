@@ -23,6 +23,8 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
     case 'directory_invitation': return key ? `/mis-clasificados?invitation=${key}` : null;
     case 'directory_review': return key ? `/mis-clasificados?review=${key}` : null;
     case 'directory_alert': return key ? `/mis-clasificados?alert=${key}` : null;
+    // Editorial release notifications open the shared workspace, not a row.
+    case 'music_release': return '/label/releases';
     // Old artist_liked rows point at the recipient, so they must not be used.
     default: return null;
   }

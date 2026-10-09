@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardContent,
   CardMedia,
   Chip,
@@ -72,6 +73,7 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
+import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import { useTranslation } from 'react-i18next';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
@@ -95,6 +97,22 @@ function StatPill({ label, value }: { label: string; value: number }) {
       <Typography variant="h6" fontWeight={800}>
         {value}
       </Typography>
+    </Box>
+  );
+}
+
+function CanonicalMusicReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
+  return (
+    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+      <CardActionArea component={RouterLink} to={`/musica/${release.slug}`} sx={{ p: 1.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography fontWeight={800} noWrap>{release.title}</Typography>
+            <Typography variant="body2" color="text.secondary" noWrap>{release.displayArtist}</Typography>
+          </Box>
+          <Chip label={release.kind.toUpperCase()} size="small" />
+        </Stack>
+      </CardActionArea>
     </Box>
   );
 }
@@ -451,6 +469,25 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
+  const targetArtistIds = useMemo(
+    () => targetArtists.map((artist) => artist.id).sort((left, right) => left - right),
+    [targetArtists],
+  );
+  const canonicalReleaseFeedQuery = useQuery({
+    queryKey: ['canonical-music-release-feed', targetArtistIds],
+    enabled: canSeeReleaseFeed && targetArtistIds.length > 0,
+    retry: false,
+    queryFn: async () => {
+      const releases = (await Promise.all(
+        targetArtistIds.map((artistId) => musicReleases.listPublic('', artistId)),
+      )).flat();
+      const unique = new Map<string, MusicPublicReleaseSummary>();
+      releases.forEach((release) => unique.set(release.id, release));
+      return [...unique.values()].sort(
+        (left, right) => Date.parse(right.publishedAt) - Date.parse(left.publishedAt),
+      );
+    },
+  });
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -758,172 +795,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     ? `No encontramos artistas en "${selectedGenreFilterName ?? 'el género seleccionado'}". Prueba otro género o limpia el filtro.`
     : 'Pronto encontrarás artistas disponibles para seguir.';
 
-  return (
+  // Comunidad is artist-first: on the fan/guest view these shortcut sections render
+  // after the artist catalog (in DOM order, so focus order matches what is seen).
+  // The manager hub keeps them at the top as its control panel.
+  const hubShortcutSections = (
     <>
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
-      <input
-        ref={audioFileInputRef}
-        type="file"
-        accept="audio/*"
-        hidden
-        onChange={(event) => {
-          void handleAudioFileChange(event);
-        }}
-      />
-      <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
-        <Stack spacing={1}>
-          <Typography variant="h3" fontWeight={700} color="text.primary">
-            {isHomeManagerView ? 'Inicio — Gestión del hub' : cmsPayload?.heroTitle ?? 'Comunidad — Conecta con tus artistas'}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {isHomeManagerView
-              ? 'Prioriza lanzamientos, artistas, CMS y perfil público desde un solo lugar sin entrar a cada módulo por separado.'
-              : cmsPayload?.heroSubtitle ?? 'Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.'}
-          </Typography>
-          {!isAuthenticated && (
-            <Typography variant="body2">
-              ¿Quieres guardar tus artistas?{' '}
-              <Link component={RouterLink} to={loginPath} underline="always">
-                Inicia sesión o crea una cuenta
-              </Link>
-              .
-            </Typography>
-          )}
-          {isHomeManagerView && (
-            <Typography variant="body2" color="text.secondary">
-              Usa este inicio como panel de mando y abre el editor completo sólo cuando necesites cambiar contenido.
-            </Typography>
-          )}
-        </Stack>
-        {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
-        {onboarding.loadError && (
-          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
-            {t('fanHubOnboarding.loadError')}
-          </Alert>
-        )}
-        {onboarding.saveError && (
-          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.dismiss}>{t('fanHubOnboarding.retry')}</Button>}>
-            {t('fanHubOnboarding.saveError')}
-          </Alert>
-        )}
-        {onboarding.saving && <Alert severity="info" role="status">{t('fanHubOnboarding.saving')}</Alert>}
-        {onboarding.visible && (
-          <Alert
-            severity="info"
-            onClose={onboarding.saving ? undefined : onboarding.dismiss}
-            closeText={t('fanHubOnboarding.close')}
-            sx={{ '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' } }}
-            icon={<VisibilityIcon />}
-          >
-            <AlertTitle>{t(isHomeManagerView ? 'fanHubOnboarding.managerTitle' : 'fanHubOnboarding.title')}</AlertTitle>
-            {isHomeManagerView ? (
-              <Stack spacing={1}>
-                <Typography variant="body2">Atajos rápidos para operar el hub desde este inicio:</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip label="Gestionar lanzamientos" component={RouterLink} to="/label/releases" clickable />
-                  <Chip label="Editar artistas" component={RouterLink} to="/label/artistas" clickable />
-                  <Chip label="Editar CMS" component={RouterLink} to="/configuracion/cms" clickable variant="outlined" />
-                  <Chip
-                    label={artistEditorOpen ? 'Ocultar editor' : 'Abrir editor'}
-                    clickable
-                    color={artistEditorOpen ? 'secondary' : 'default'}
-                    onClick={() => {
-                      setArtistEditorOpen((prev) => !prev);
-                      if (!artistEditorOpen) {
-                        artistSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }}
-                  />
-                  {artistPublicPath && (
-                    <Chip label="Ver perfil público" component={RouterLink} to={artistPublicPath} clickable variant="outlined" />
-                  )}
-                </Stack>
-              </Stack>
-            ) : (
-              <Stack spacing={1}>
-                <Typography variant="body2">Sigue estos pasos rápidos para sacar provecho:</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip
-                    label={hasFollows ? '✔ Ya sigues artistas' : 'Seguir artistas'}
-                    color={hasFollows ? 'success' : 'default'}
-                    onClick={() => {
-                      const el = document.getElementById('artist-list');
-                      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                  />
-                  <Chip
-                    label={releaseFeed.length > 0 ? '✔ Lanzamientos vistos' : 'Ver lanzamientos'}
-                    color={releaseFeed.length > 0 ? 'success' : 'default'}
-                    onClick={() => setFeedLimit((prev) => Math.max(prev, 6))}
-                  />
-                  <Chip
-                    label="Reservar estudio"
-                    component={RouterLink}
-                    to="/reservar"
-                    clickable
-                  />
-                  <Chip
-                    label="DJ Booth"
-                    component={RouterLink}
-                    to="/dj-booth"
-                    clickable
-                    variant="outlined"
-                  />
-                  {canManageReleases && (
-                    <Chip
-                      label="Editar CMS"
-                      component={RouterLink}
-                      to="/configuracion/cms"
-                      clickable
-                      variant="outlined"
-                    />
-                  )}
-                </Stack>
-              </Stack>
-            )}
-          </Alert>
-        )}
-        {showHubDataAlert && (
-          <Alert
-            severity={hasArtistCatalogError ? 'info' : 'warning'}
-            action={
-              <Stack direction="row" spacing={1}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    void artistsQuery.refetch();
-                    if (!isHomeManagerView) {
-                      void profileQuery.refetch();
-                      void followsQuery.refetch();
-                    }
-                    if (canEditArtist) {
-                      void artistProfileQuery.refetch();
-                    }
-                  }}
-                >
-                  Reintentar
-                </Button>
-                {isHomeManagerView ? (
-                  <Button size="small" component={RouterLink} to="/label/artistas">
-                    Abrir artistas
-                  </Button>
-                ) : hasArtistCatalogError ? (
-                  <Button size="small" component={RouterLink} to="/records">
-                    Ver lanzamientos
-                  </Button>
-                ) : null}
-              </Stack>
-            }
-          >
-            {isHomeManagerView
-              ? 'No pudimos refrescar el catálogo del hub. Sigue trabajando desde Lanzamientos, Artistas o CMS mientras vuelve la conexión.'
-              : hasArtistCatalogError
-                ? 'No pudimos cargar el catálogo completo ahora mismo. Mientras vuelve, aún puedes explorar lanzamientos, sesiones y reservas.'
-                : 'Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.'}
-          </Alert>
-        )}
-
         <Grid container spacing={2}>
           {isHomeManagerView ? (
             <>
@@ -1181,38 +1057,60 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <ReleaseFeed
-              audioFileInputRef={audioFileInputRef}
-              canManageReleases={canManageReleases}
-              canSeeReleaseFeed={canSeeReleaseFeed}
-              enableFanRolePending={enableFanRoleMutation.isPending}
-              feedLimit={feedLimit}
-              hasAuthToken={hasAuthToken}
-              hasFollows={hasFollows}
-              hasReleaseTargets={hasReleaseTargets}
-              isAuthenticated={isAuthenticated}
-              isFan={isFan}
-              isHomeManagerView={isHomeManagerView}
-              loading={releaseFeedQuery.isLoading}
-              loginPath={loginPath}
-              pendingUploadRelease={pendingUploadRelease}
-              releaseAudioMap={releaseAudioMap}
-              releaseFeed={releaseFeed}
-              releaseLinkDraft={releaseLinkDraft}
-              streamingFallbacks={streamingFallbacks}
-              uploadError={uploadError}
-              uploadingReleaseId={uploadingReleaseId}
-              visibleFeed={visibleFeed}
-              onCancelUpload={handleCancelReleaseUpload}
-              onDriveUploadComplete={handleDriveReleaseUploadComplete}
-              onEnableFanRole={() => enableFanRoleMutation.mutate()}
-              onPlayRelease={handlePlayRelease}
-              onReleaseLinkDraftChange={setReleaseLinkDraft}
-              onSaveReleaseLink={handleSaveReleaseLink}
-              onShowLess={() => setFeedLimit(4)}
-              onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
-              onUploadTrigger={handleUploadTrigger}
-            />
+            <Stack spacing={2}>
+              {canSeeReleaseFeed && canonicalReleaseFeedQuery.data && canonicalReleaseFeedQuery.data.length > 0 && (
+                <Card sx={{ p: 3 }} component="section" aria-labelledby="canonical-music-feed-title">
+                  <Stack spacing={1.5}>
+                    <Box>
+                      <Typography id="canonical-music-feed-title" component="h2" variant="h6">
+                        Lanzamientos publicados en TDF
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Música disponible ahora de los artistas de este feed.
+                      </Typography>
+                    </Box>
+                    {canonicalReleaseFeedQuery.data.slice(0, 8).map((release) => (
+                      <CanonicalMusicReleaseCard key={release.id} release={release} />
+                    ))}
+                    <Button component={RouterLink} to="/musica" sx={{ alignSelf: 'flex-start' }}>
+                      Ver catálogo musical
+                    </Button>
+                  </Stack>
+                </Card>
+              )}
+              <ReleaseFeed
+                audioFileInputRef={audioFileInputRef}
+                canManageReleases={canManageReleases}
+                canSeeReleaseFeed={canSeeReleaseFeed}
+                enableFanRolePending={enableFanRoleMutation.isPending}
+                feedLimit={feedLimit}
+                hasAuthToken={hasAuthToken}
+                hasFollows={hasFollows}
+                hasReleaseTargets={hasReleaseTargets}
+                isAuthenticated={isAuthenticated}
+                isFan={isFan}
+                isHomeManagerView={isHomeManagerView}
+                loading={releaseFeedQuery.isLoading}
+                loginPath={loginPath}
+                pendingUploadRelease={pendingUploadRelease}
+                releaseAudioMap={releaseAudioMap}
+                releaseFeed={releaseFeed}
+                releaseLinkDraft={releaseLinkDraft}
+                streamingFallbacks={streamingFallbacks}
+                uploadError={uploadError}
+                uploadingReleaseId={uploadingReleaseId}
+                visibleFeed={visibleFeed}
+                onCancelUpload={handleCancelReleaseUpload}
+                onDriveUploadComplete={handleDriveReleaseUploadComplete}
+                onEnableFanRole={() => enableFanRoleMutation.mutate()}
+                onPlayRelease={handlePlayRelease}
+                onReleaseLinkDraftChange={setReleaseLinkDraft}
+                onSaveReleaseLink={handleSaveReleaseLink}
+                onShowLess={() => setFeedLimit(4)}
+                onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
+                onUploadTrigger={handleUploadTrigger}
+              />
+            </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={2} height="100%">
@@ -1370,6 +1268,176 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Stack>
           </Grid>
         </Grid>
+    </>
+  );
+
+  return (
+    <>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6, px: { xs: 2, md: 6 } }}>
+      <input
+        ref={audioFileInputRef}
+        type="file"
+        accept="audio/*"
+        hidden
+        onChange={(event) => {
+          void handleAudioFileChange(event);
+        }}
+      />
+      <Stack spacing={3} maxWidth="lg" sx={{ mx: 'auto' }}>
+        <Stack spacing={1}>
+          <Typography variant="h3" fontWeight={700} color="text.primary">
+            {isHomeManagerView ? 'Inicio — Gestión del hub' : cmsPayload?.heroTitle ?? 'Comunidad — Conecta con tus artistas'}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {isHomeManagerView
+              ? 'Prioriza lanzamientos, artistas, CMS y perfil público desde un solo lugar sin entrar a cada módulo por separado.'
+              : cmsPayload?.heroSubtitle ?? 'Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.'}
+          </Typography>
+          {!isAuthenticated && (
+            <Typography variant="body2">
+              ¿Quieres guardar tus artistas?{' '}
+              <Link component={RouterLink} to={loginPath} underline="always">
+                Inicia sesión o crea una cuenta
+              </Link>
+              .
+            </Typography>
+          )}
+          {isHomeManagerView && (
+            <Typography variant="body2" color="text.secondary">
+              Usa este inicio como panel de mando y abre el editor completo sólo cuando necesites cambiar contenido.
+            </Typography>
+          )}
+        </Stack>
+        {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
+        {onboarding.loadError && (
+          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
+            {t('fanHubOnboarding.loadError')}
+          </Alert>
+        )}
+        {onboarding.saveError && (
+          <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.dismiss}>{t('fanHubOnboarding.retry')}</Button>}>
+            {t('fanHubOnboarding.saveError')}
+          </Alert>
+        )}
+        {onboarding.saving && <Alert severity="info" role="status">{t('fanHubOnboarding.saving')}</Alert>}
+        {onboarding.visible && (
+          <Alert
+            severity="info"
+            onClose={onboarding.saving ? undefined : onboarding.dismiss}
+            closeText={t('fanHubOnboarding.close')}
+            sx={{ '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' } }}
+            icon={<VisibilityIcon />}
+          >
+            <AlertTitle>{t(isHomeManagerView ? 'fanHubOnboarding.managerTitle' : 'fanHubOnboarding.title')}</AlertTitle>
+            {isHomeManagerView ? (
+              <Stack spacing={1}>
+                <Typography variant="body2">Atajos rápidos para operar el hub desde este inicio:</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Chip label="Gestionar lanzamientos" component={RouterLink} to="/label/releases" clickable />
+                  <Chip label="Editar artistas" component={RouterLink} to="/label/artistas" clickable />
+                  <Chip label="Editar CMS" component={RouterLink} to="/configuracion/cms" clickable variant="outlined" />
+                  <Chip
+                    label={artistEditorOpen ? 'Ocultar editor' : 'Abrir editor'}
+                    clickable
+                    color={artistEditorOpen ? 'secondary' : 'default'}
+                    onClick={() => {
+                      setArtistEditorOpen((prev) => !prev);
+                      if (!artistEditorOpen) {
+                        artistSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                  />
+                  {artistPublicPath && (
+                    <Chip label="Ver perfil público" component={RouterLink} to={artistPublicPath} clickable variant="outlined" />
+                  )}
+                </Stack>
+              </Stack>
+            ) : (
+              <Stack spacing={1}>
+                <Typography variant="body2">Sigue estos pasos rápidos para sacar provecho:</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Chip
+                    label={hasFollows ? '✔ Ya sigues artistas' : 'Seguir artistas'}
+                    color={hasFollows ? 'success' : 'default'}
+                    onClick={() => {
+                      const el = document.getElementById('artist-list');
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  />
+                  <Chip
+                    label={releaseFeed.length > 0 ? '✔ Lanzamientos vistos' : 'Ver lanzamientos'}
+                    color={releaseFeed.length > 0 ? 'success' : 'default'}
+                    onClick={() => setFeedLimit((prev) => Math.max(prev, 6))}
+                  />
+                  <Chip
+                    label="Reservar estudio"
+                    component={RouterLink}
+                    to="/reservar"
+                    clickable
+                  />
+                  <Chip
+                    label="DJ Booth"
+                    component={RouterLink}
+                    to="/dj-booth"
+                    clickable
+                    variant="outlined"
+                  />
+                  {canManageReleases && (
+                    <Chip
+                      label="Editar CMS"
+                      component={RouterLink}
+                      to="/configuracion/cms"
+                      clickable
+                      variant="outlined"
+                    />
+                  )}
+                </Stack>
+              </Stack>
+            )}
+          </Alert>
+        )}
+        {showHubDataAlert && (
+          <Alert
+            severity={hasArtistCatalogError ? 'info' : 'warning'}
+            action={
+              <Stack direction="row" spacing={1}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    void artistsQuery.refetch();
+                    if (!isHomeManagerView) {
+                      void profileQuery.refetch();
+                      void followsQuery.refetch();
+                    }
+                    if (canEditArtist) {
+                      void artistProfileQuery.refetch();
+                    }
+                  }}
+                >
+                  Reintentar
+                </Button>
+                {isHomeManagerView ? (
+                  <Button size="small" component={RouterLink} to="/label/artistas">
+                    Abrir artistas
+                  </Button>
+                ) : hasArtistCatalogError ? (
+                  <Button size="small" component={RouterLink} to="/records">
+                    Ver lanzamientos
+                  </Button>
+                ) : null}
+              </Stack>
+            }
+          >
+            {isHomeManagerView
+              ? 'No pudimos refrescar el catálogo del hub. Sigue trabajando desde Lanzamientos, Artistas o CMS mientras vuelve la conexión.'
+              : hasArtistCatalogError
+                ? 'No pudimos cargar el catálogo completo ahora mismo. Mientras vuelve, aún puedes explorar lanzamientos, sesiones y reservas.'
+                : 'Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.'}
+          </Alert>
+        )}
+
+        {isHomeManagerView && hubShortcutSections}
 
         {!isFan && !canManageReleases && session && (
           <Alert
@@ -2122,6 +2190,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             )}
           />
         )}
+
+        {!isHomeManagerView && hubShortcutSections}
       </Stack>
       </Box>
       <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>

@@ -1,83 +1,47 @@
-# Mobile Internal Testers Campaign - 2026-06-18
+# Mobile Internal Testers Campaign — registro original y plantilla vigente
 
-Campaign record: `1` (`TDF App Mobile Internal Testers - Jun 2026`)
-Status: `draft`
+> **Revalidación 20-sep — Drafted / Blocked:** [checkpoint actual](../campaigns/tu-escena-conectada-continuacion-2026-09-20.md). La web canónica y el registro se volvieron a comprobar; guía móvil y disponibilidad actual siguen sin acreditarse. El ledger privado original no está disponible en su ruta anterior: conservar el resumen histórico de 80 aceptaciones SMTP y dos rechazos, sin reenviar ni deducir elegibilidad nueva. La plantilla conjunta permanece pendiente; no hay programación.
 
-## Audience
+Registro original: campaña `1`, `TDF App Mobile Internal Testers - Jun 2026`.
 
-- Existing parties with email in the local system: 10
-- Existing parties with WhatsApp in the local system: 5
-- Active registered users with email: 10
-- Active registered users with WhatsApp or phone: 3
+**Actualización documental 18-sep-2026: Drafted / Blocked para nuevos envíos.** No se modificó el estado de la campaña en la aplicación. Continuidad y evidencia en [Tu Escena Conectada, 18-sep](../campaigns/tu-escena-conectada-continuacion-2026-09-18.md).
 
-Do not send to the full audience until Diego approves the test messages.
+La preparación de junio tenía estado `draft` y exigía una prueba a Diego antes de aprobar la audiencia completa. Los conteos de junio (10 correos y 5 WhatsApp en contactos; 10 usuarios activos con correo y 3 con teléfono) eran una instantánea local, no una audiencia elegible actual. La autorización posterior de septiembre para invitar a todos los usuarios y su ejecución se documentaron en el flujo privado existente: 82 destinatarios preparados, 80 aceptados por SMTP y 2 rechazados. No repetirlos ni reinterpretar este documento como un lote pendiente.
 
-## Link
+Los enlaces directos a Google Play/TestFlight de la plantilla antigua se retiran de los materiales de envío. No se validó que el enlace iOS de junio siga disponible. No se usa un enlace de tienda, beta, acortador o feedback externo como sustituto de la entrada canónica.
 
-Google Play internal testing opt-in URL for Android:
+## Entrada y estado de acceso
 
-```text
-https://play.google.com/apps/testing/com.tdf.records
-```
+Entrada web comprobada: https://www.tdfrecords.net/fans
 
-iPhone / TestFlight URL:
+El sitio carga en escritorio y móvil emulado. Se debe añadir y verificar una guía de acceso móvil dentro del mismo dominio antes de usar la invitación conjunta. No afirmar que `/fans` ya contiene esa guía.
 
-```text
-https://testflight.apple.com/join/7k3VE2JJ
-```
+Android: prueba cerrada, cuenta Google elegible; build 10 disponible según la lectura de consola del 18, build 15 enviado a revisión pero acceso efectivo sin confirmar. iOS: builds internos y revisión externa pendiente; no presentar acceso público. Ver fechas y evidencia en el checkpoint, y refrescar antes de enviar. Abrir la web en un teléfono no equivale a probar la app nativa.
 
-Confirm the Android opt-in link against the Play Console tester opt-in link before the full send.
-Confirm the iPhone TestFlight public link before the full send.
+## Correo — borrador conjunto, bloqueado por guía móvil
 
-## Email
+Asunto: **Tu Escena Conectada: ayúdanos a probar TDF**
 
-Subject:
+> Hola, [nombre]. Te invitamos a volver a TDF y ayudarnos a probar la web y, cuando tengas acceso habilitado, la app móvil. Entra aquí: https://www.tdfrecords.net/fans. Puedes probar solo una y contarnos qué te resultó claro o difícil. Participar es voluntario; si prefieres no recibir estas invitaciones, dínoslo. — TDF Records
 
-```text
-Ayúdanos a probar la app de TDF Records
-```
+Respuestas al mismo correo como alternativa para problemas de acceso. No reutilizar para quienes ya recibieron una invitación reciente. No crear el borrador dentro del buzón ni enviarlo desde una cuenta ajena por el solo hecho de que esté conectada.
 
-Body lines:
+## WhatsApp — adaptación preparada, pendiente de autorización
 
-```text
-Estamos abriendo la prueba interna de la app móvil de TDF Records y nos gustaría que nos ayudes probándola.
+> Hola, [nombre]. En Tu Escena Conectada nos gustaría que nos ayudes a probar la web de TDF y, si tienes acceso habilitado, la app móvil. Empieza aquí: https://www.tdfrecords.net/fans. Puedes probar solo una y responder con tus dudas. Es voluntario; si prefieres no recibir mensajes, dínoslo. — TDF Records
 
-Si tienes Android, abre este enlace con el mismo correo de Google Play donde recibiste este mensaje:
+Tener un número no demuestra consentimiento ni autorización del lote/canal. No programado ni enviado.
 
-https://play.google.com/apps/testing/com.tdf.records
+## Seguimiento opcional, cuando el participante acepte
 
-Toca "Become a tester" / "Convertirse en tester" y luego instala o actualiza TDF Records desde Google Play.
+Ofrecer un recorrido breve y pertinente: entrar o registrarse, revisar el perfil cuando corresponda, descubrir un artista/recurso, realizar una interacción disponible y contar qué funcionó, confundió o falló. Nunca pedir pagos reales, datos privados, reclamación de perfiles ajenos o contacto con desconocidos. La lista móvil debe corresponder al build accesible, no a funciones presentes solo en la web.
 
-Si tienes iPhone, abre este enlace desde tu iPhone, instala TestFlight si te lo pide, y luego instala TDF Records:
+Para feedback pedir pasos, esperado/obtenido, web o app, dispositivo/SO/navegador o versión, y captura opcional sin datos sensibles. Nunca contraseñas, códigos ni datos de pago. El formulario web carga en https://www.tdfrecords.net/feedback; recepción final pendiente de verificación. La respuesta al mensaje sigue siendo fallback incluso si no se logra iniciar sesión.
 
-https://testflight.apple.com/join/7k3VE2JJ
+## Condiciones de un próximo envío
 
-Cuando la pruebes, respóndenos con cualquier error, captura de pantalla o comentario. También ayuda mucho si nos dices tu modelo de teléfono y si usas Android o iPhone.
-
-Gracias por apoyar a TDF Records.
-```
-
-## WhatsApp
-
-```text
-Hola {{name}}, estamos abriendo la prueba interna de la app móvil de TDF Records y nos gustaría que nos ayudes probándola.
-
-Si tienes Android, abre este enlace con tu cuenta de Google Play:
-https://play.google.com/apps/testing/com.tdf.records
-
-Toca "Become a tester" / "Convertirse en tester" y luego instala o actualiza TDF Records desde Google Play.
-
-Si tienes iPhone, abre este enlace desde tu iPhone, instala TestFlight si te lo pide, y luego instala TDF Records:
-https://testflight.apple.com/join/7k3VE2JJ
-
-Cuando la pruebes, respóndenos con cualquier error, captura o comentario. También ayuda mucho si nos dices tu modelo de teléfono y si usas Android o iPhone.
-
-Gracias por apoyar a TDF Records.
-```
-
-## Approval Gate
-
-1. Send the email copy only to Diego's stored email first.
-2. Send the WhatsApp copy only to Diego after a test WhatsApp number is provided or added to Diego's party record.
-3. After Diego approves, run the full email broadcast against active registered users.
-4. For WhatsApp, send only to records with an existing WhatsApp or primary phone value and keep the message source tied to this draft campaign in the operator notes/logs.
+1. Destinatarios y canal aprobados; deduplicar contra el ledger existente, historial, bajas y respuestas.
+2. Cupo/ventana conciliados entre canales; no asumir que el broadcast previo permite otro bloque.
+3. Guía móvil canónica y disponibilidad de cada plataforma verificadas, o usar una variante exclusivamente web claramente identificada.
+4. Confirmación de herramienta antes de marcar enviado; conservar Message-ID/timestamp/estado en el registro existente. Aceptación SMTP no acredita entrega ni lectura.
+5. Publicaciones, nuevas audiencias, ampliación a WhatsApp y cambios de distribución requieren su autorización aplicable. Esta actualización documental no los ejecuta.

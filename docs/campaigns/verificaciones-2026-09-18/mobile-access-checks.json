@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-09-18T17:08:09.991Z",
+  "apple": {
+    "source": "Authenticated read-only App Store Connect API",
+    "storeVersion": "1.0.1",
+    "storeState": "WAITING_FOR_REVIEW",
+    "releaseType": "MANUAL",
+    "storeObservedAt": "2026-09-18T17:04:58.859Z",
+    "builds": [
+      {
+        "build": 21,
+        "processing": "VALID",
+        "internal": "IN_BETA_TESTING",
+        "external": "READY_FOR_BETA_SUBMISSION"
+      },
+      {
+        "build": 20,
+        "processing": "VALID",
+        "internal": "IN_BETA_TESTING",
+        "external": "READY_FOR_BETA_SUBMISSION"
+      },
+      {
+        "build": 19,
+        "processing": "VALID",
+        "internal": "IN_BETA_TESTING",
+        "external": "WAITING_FOR_BETA_REVIEW"
+      },
+      {
+        "build": 18,
+        "processing": "VALID",
+        "internal": "IN_BETA_TESTING",
+        "external": "READY_FOR_BETA_SUBMISSION"
+      },
+      {
+        "build": 17,
+        "processing": "VALID",
+        "internal": "EXPIRED",
+        "external": "EXPIRED"
+      }
+    ]
+  },
+  "android": {
+    "source": "Existing release operator receipts; not a new store mutation",
+    "alpha10ObservedAt": "2026-09-18T13:44:58.103Z",
+    "alpha10AvailableToSelectedTesters": true,
+    "observedOptedIn": 1,
+    "alpha15ObservedAt": "2026-09-18T16:47:09.602Z",
+    "alpha15SubmittedForReview": true,
+    "alpha15ApprovalVerified": false,
+    "alpha15TesterAvailabilityVerified": false,
+    "alpha15Source": "90cae070446df6c740e9e8f25a034f3deb12c5c7",
+    "alpha15Sha256": "628f0d835ac6632956df0a405356f84d000b38aaf67499511dbbb49446f9c530",
+    "alpha15EmbeddedProductionAPI": true
+  },
+  "limits": [
+    "Build readiness is not installation availability.",
+    "Enrollment is not completed testing.",
+    "No verified canonical mobile instructions found in inspected public navigation or project routes.",
+    "Current installed platform minimums not verified."
+  ]
+}
