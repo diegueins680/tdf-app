@@ -251,9 +251,10 @@ export default function LabelReleasesPage() {
     <SessionGate message="Inicia sesión como admin para gestionar releases.">
     <Stack spacing={3}>
       <Stack spacing={0.5}>
-        <Typography variant="h4" fontWeight={700}>
-          Label / Releases
-        </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+          <Typography variant="h4" fontWeight={700} flex={1}>Label / Releases</Typography>
+          <Button href="/label/releases/nuevo" variant="contained" startIcon={<AddIcon />}>Crear lanzamiento canónico</Button>
+        </Stack>
         <Typography variant="body1" color="text.secondary">
           Gestiona lanzamientos del catálogo, vincúlalos a artistas y agrega links de streaming para el hub de fans.
         </Typography>

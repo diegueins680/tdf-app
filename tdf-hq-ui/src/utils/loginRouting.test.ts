@@ -1,7 +1,10 @@
 import {
   buildLoginRedirectPath,
+  COMMUNITY_LANDING_PATH,
   normalizeOnboardingIntent,
   pickLandingPath,
+  buildArtistInvitationLink,
+  readArtistInvitation,
   readSafeRedirectPath,
   readOnboardingIntent,
   resolvePostAuthPath,
@@ -89,12 +92,70 @@ describe('pickLandingPath', () => {
   });
 });
 
+describe('Comunidad default landing and return-path intent', () => {
+  it.each([
+    [['customer'], []],
+    [['fan'], []],
+    [['Admin'], ['admin']],
+    [['artist'], []],
+    [[], []],
+  ])('lands %j on Comunidad when there is no intent or return path', (roles, modules) => {
+    expect(resolvePostAuthPath(null, roles, modules, null)).toBe(COMMUNITY_LANDING_PATH);
+    expect(COMMUNITY_LANDING_PATH).toBe('/fans');
+  });
+
+  it('returns to the interrupted public action instead of Comunidad', () => {
+    expect(resolvePostAuthPath(null, ['customer'], [], '/curso/produccion-musical?inscribirme=1'))
+      .toBe('/curso/produccion-musical?inscribirme=1');
+    expect(resolvePostAuthPath(null, ['customer'], [], '/marketplace?listing=12')).toBe('/marketplace?listing=12');
+    expect(resolvePostAuthPath(null, ['customer'], [], '/eventos/141')).toBe('/eventos/141');
+  });
+
+  it.each([
+    'https://evil.example/phish',
+    '//evil.example/phish',
+    '/\\evil.example',
+    'javascript:alert(1)',
+    '/login?redirect=/fans',
+    ' ',
+  ])('rejects unsafe return path %j and falls back to Comunidad', (target) => {
+    expect(resolvePostAuthPath(null, ['customer'], [], target)).toBe(COMMUNITY_LANDING_PATH);
+  });
+
+  it('reads returnTo as an alias of redirect with the same validation', () => {
+    expect(readSafeRedirectPath('?returnTo=%2Fcurso%2Fx%3Finscribirme%3D1')).toBe('/curso/x?inscribirme=1');
+    expect(readSafeRedirectPath('?returnTo=https%3A%2F%2Fevil.example')).toBeNull();
+    expect(readSafeRedirectPath('?redirect=%2Ffans&returnTo=%2Fmarketplace')).toBe('/fans');
+  });
+});
+
 describe('onboarding intent routing', () => {
   it('accepts explicit intents and legacy role campaign links without treating them as permissions', () => {
     expect(readOnboardingIntent('?intent=artist_profile')).toBe('artist_profile');
     expect(readOnboardingIntent('?roles=Fan')).toBe('follow_artists');
     expect(normalizeOnboardingIntent('Intern')).toBe('internships');
     expect(normalizeOnboardingIntent('Admin')).toBeNull();
+  });
+
+  it('reads only a personal invitation token, never a public campaign name', () => {
+    const token = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    expect(readArtistInvitation(`?intent=artist&invite=${token.toUpperCase()}`)).toBe(token);
+    expect(readArtistInvitation(
+      '?intent=artist&roles=Artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto',
+    )).toBeNull();
+    expect(readArtistInvitation('?intent=artist&invite=tu_escena_conectada_piloto')).toBeNull();
+    expect(readArtistInvitation('?invite=00000000-0000-0000-0000-000000000000')).toBeNull();
+    expect(readArtistInvitation('?invite=')).toBeNull();
+  });
+
+  it('builds a personal invitation link that round-trips its token', () => {
+    const token = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
+    const link = buildArtistInvitationLink('https://www.tdfrecords.net', token, 'tu_escena_conectada_piloto');
+    const url = new URL(link);
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('intent')).toBe('artist');
+    expect(url.searchParams.get('utm_campaign')).toBe('tu_escena_conectada_piloto');
+    expect(readArtistInvitation(url.search)).toBe(token);
   });
 
   it('honors a redirect only when the returned session can access it', () => {

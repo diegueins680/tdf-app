@@ -1,4 +1,5 @@
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
+import { ABOVE_GLOBAL_PLAYER, RADIO_BAR_HEIGHT_VAR, useDockedBarHeight } from '../utils/bottomDock';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -20,7 +21,9 @@ import {
   Switch,
   FormControlLabel,
   MenuItem,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -63,6 +66,7 @@ import {
   type TorrentPlaybackProgress,
 } from '../utils/torrentAudio';
 import LazyPaginatedList from './LazyPaginatedList';
+import { PLAYER_TAKEOVER_EVENT, RADIO_TAKEOVER_EVENT } from '../player/types';
 
 interface Prompt {
   text: string;
@@ -168,6 +172,8 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
   );
 }
 
+/** CSS custom property carrying the docked radio bar's height (px) while it is shown. */
+
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -184,6 +190,11 @@ export default function RadioWidget() {
   });
   const dragMovedRef = useRef(false);
   const miniContainerRef = useRef<HTMLDivElement | null>(null);
+  const dockedBarRef = useRef<HTMLDivElement | null>(null);
+  const muiTheme = useTheme();
+  // Phones (~360px) cannot fit six 44px controls plus the status text, so the
+  // docked bar drops prev/next there; both remain in the expanded panel.
+  const compactMiniBar = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountryId, setNewStationCountryId] = useState('');
@@ -1002,6 +1013,7 @@ export default function RadioWidget() {
       return;
     }
     if (isActiveTorrent && torrentStatus !== 'ready') return;
+    window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
     void audio.play().catch(() => {
       setIsPlaying(false);
       setPlaybackWarning(
@@ -1168,6 +1180,7 @@ export default function RadioWidget() {
         setIsPlaying(true);
         return;
       }
+      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
       void audio
         .play()
         .then(() => {
@@ -1365,6 +1378,11 @@ export default function RadioWidget() {
     setPlaybackWarning(null);
   }, [stopBrowserBroadcast, stopInputTest]);
 
+  useEffect(() => {
+    window.addEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
+    return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
+  }, [stopAllAudio]);
+
   const startInputTest = useCallback(async () => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {
       setBrowserBroadcastError('Tu navegador no permite capturar audio.');
@@ -1560,6 +1578,7 @@ export default function RadioWidget() {
         setPreviewStatus('error');
         setPreviewError('No pudimos reproducir el stream.');
       };
+      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
       await audio.play();
       setPreviewStatus('live');
     } catch (err) {
@@ -1758,6 +1777,7 @@ export default function RadioWidget() {
       audio.crossOrigin = 'anonymous';
       audio.src = url;
       customPreviewAudioRef.current = audio;
+      window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT));
       await audio.play();
       setCustomPreviewStatus('playing');
     } catch (err) {
@@ -1821,17 +1841,29 @@ export default function RadioWidget() {
   );
 
   const shouldInlineMiniBar = false; // always docked at bottom, even on login
+  const dockedBarVisible = !hideRadioForRoute && !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
+
+  // Publish the docked bar's height (and reserve it on <body>) so the last
+  // form fields and submit buttons can scroll above it instead of under it.
+  useDockedBarHeight(RADIO_BAR_HEIGHT_VAR, dockedBarRef, dockedBarVisible);
+
   const miniBarNode = (
     <Box
+      ref={dockedBarRef}
+      data-testid="radio-docked-bar"
       sx={{
         position: shouldInlineMiniBar ? 'relative' : 'fixed',
         left: 0,
         right: 0,
-        bottom: shouldInlineMiniBar ? 'auto' : 0,
+        bottom: shouldInlineMiniBar ? 'auto' : ABOVE_GLOBAL_PLAYER,
+        // appBar (1100) stays below MUI modals (1300), so enrollment and
+        // other dialogs always render above the docked bar.
         zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.appBar,
         display: 'flex',
         justifyContent: 'center',
         px: 0,
+        maxWidth: '100vw',
+        boxSizing: 'border-box',
         pb: shouldInlineMiniBar ? 0 : 'env(safe-area-inset-bottom, 0px)',
         pointerEvents: shouldInlineMiniBar ? 'auto' : 'none',
         outline: 'none',
@@ -1849,10 +1881,12 @@ export default function RadioWidget() {
           py: shouldInlineMiniBar ? 1 : { xs: 0.75, sm: 1 },
           display: 'flex',
           alignItems: 'center',
-          gap: shouldInlineMiniBar ? 1 : 1.25,
+          gap: shouldInlineMiniBar ? 1 : { xs: 0.5, sm: 1.25 },
+          boxSizing: 'border-box',
+          minWidth: 0,
+          overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
-          minWidth: shouldInlineMiniBar ? '100%' : undefined,
           width: '100%',
           maxWidth: shouldInlineMiniBar ? 520 : '100%',
           mx: 0,
@@ -1871,32 +1905,36 @@ export default function RadioWidget() {
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title="Saltar al anterior">
-          <span>
-            <IconButton
-              sx={{ minWidth: 44, minHeight: 44 }}
-              onClick={jumpToPreviousStation}
-              data-no-drag
-              aria-label="Saltar a la estación anterior"
-              disabled={!canSkipStations}
-            >
-              <SkipPreviousIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title="Saltar al siguiente">
-          <span>
-            <IconButton
-              sx={{ minWidth: 44, minHeight: 44 }}
-              onClick={jumpToNextStation}
-              data-no-drag
-              aria-label="Saltar a la siguiente estación"
-              disabled={!canSkipStations}
-            >
-              <SkipNextIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
+        {!compactMiniBar && (
+          <>
+            <Tooltip title="Saltar al anterior">
+              <span>
+                <IconButton
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                  onClick={jumpToPreviousStation}
+                  data-no-drag
+                  aria-label="Saltar a la estación anterior"
+                  disabled={!canSkipStations}
+                >
+                  <SkipPreviousIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Saltar al siguiente">
+              <span>
+                <IconButton
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                  onClick={jumpToNextStation}
+                  data-no-drag
+                  aria-label="Saltar a la siguiente estación"
+                  disabled={!canSkipStations}
+                >
+                  <SkipNextIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </>
+        )}
         <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
           <IconButton
             sx={{ minWidth: 44, minHeight: 44 }}
@@ -1933,11 +1971,14 @@ export default function RadioWidget() {
             <OpenInFullIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Box sx={{ minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : 220 }}>
-          <Typography variant="caption" fontWeight={700} noWrap>
+        <Box
+          data-testid="radio-docked-status"
+          sx={{ flex: '1 1 auto', minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : { xs: 'none', sm: 220 } }}
+        >
+          <Typography variant="caption" fontWeight={700} noWrap component="p" sx={{ display: 'block' }}>
             {nowPlayingStatus}: {nowPlayingLabel}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" color="text.secondary" noWrap component="p" sx={{ display: 'block' }}>
             {nowPlayingSubtitle}
           </Typography>
         </Box>

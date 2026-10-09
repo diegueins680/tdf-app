@@ -67,6 +67,8 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   acerca: 'Acerca de',
   manual: 'Manual',
   seguridad: 'Seguridad',
+  'solicitudes-acceso': 'Solicitudes de acceso',
+  revision: 'Revisión',
   feedback: 'Sugerencias',
   herramientas: 'Herramientas',
   'tidal-agent': 'Agente Tidal',

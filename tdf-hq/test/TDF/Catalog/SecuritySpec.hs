@@ -7,6 +7,7 @@ import qualified Data.ByteString.Char8 as BS
 import Data.Either (isLeft)
 import qualified Data.Set as Set
 import qualified Data.Text as T
+import Database.Persist.Sql (toSqlKey)
 import Test.Hspec
 
 import TDF.API.Catalog
@@ -23,6 +24,13 @@ import TDF.Catalog.Security
   , expectedSecurityRoleCodes
   , validateSecurityRegistrySnapshot
   )
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.FeatureRegistry
+  ( findRegistryFeature
+  , registryFeatureAccessGrantRole
+  , registryReviewerCanDecide
+  )
+import TDF.Models (RoleEnum (Admin, Artist, Manager))
 
 spec :: Spec
 spec = do
@@ -136,6 +144,33 @@ spec = do
             :: Either String SelfFanRoleRequest
       injectedRoleId `shouldSatisfy` isLeft
       injectedRoleCode `shouldSatisfy` isLeft
+
+  describe "feature access request provisioning" $ do
+    it "maps artist onboarding creation to the canonical Artist role only" $ do
+      let artistOnboarding = findRegistryFeature "artist.onboarding"
+          merchSeller = findRegistryFeature "merch.seller"
+      fmap (`registryFeatureAccessGrantRole` "create") artistOnboarding
+        `shouldBe` Just (Just Artist)
+      fmap (`registryFeatureAccessGrantRole` "view") artistOnboarding
+        `shouldBe` Just Nothing
+      fmap (`registryFeatureAccessGrantRole` "create") merchSeller
+        `shouldBe` Just Nothing
+
+    it "requires an Admin reviewer for requests that publish a role grant" $ do
+      let artistOnboarding = findRegistryFeature "artist.onboarding"
+          reviewer roles = AuthedUser
+            { auPartyId = toSqlKey 2
+            , auRoles = roles
+            , auModules = modulesForRoles roles
+            }
+      fmap
+        (\feature -> registryReviewerCanDecide (reviewer [Admin]) feature "create")
+        artistOnboarding
+        `shouldBe` Just True
+      fmap
+        (\feature -> registryReviewerCanDecide (reviewer [Manager, Artist]) feature "create")
+        artistOnboarding
+        `shouldBe` Just False
 
 validSnapshot :: SecurityRegistrySnapshot
 validSnapshot =

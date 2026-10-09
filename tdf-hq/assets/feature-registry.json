@@ -3470,6 +3470,37 @@
       "favoriteEligible": false,
       "pinEligible": false,
       "recentBehavior": "none"
+    },
+    {
+      "id": "music.public.catalog",
+      "parentId": null,
+      "webRoute": "/musica",
+      "aliases": ["/musica/:slug"],
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Música", "en": "Music" },
+      "synonyms": { "es": ["catálogo", "lanzamientos"], "en": ["catalog", "releases"] },
+      "keywords": ["music", "release", "catalog"],
+      "navigationGroup": "people",
+      "icon": "album",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "mobilePresentation": { "kind": "external-web", "destination": null, "documentedException": "The native app exposes releases through artist profiles." },
+      "accessRequestEligible": false
+    },
+    {
+      "id": "music.library",
+      "parentId": null,
+      "webRoute": "/musica/biblioteca",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Biblioteca musical", "en": "Music library" },
+      "synonyms": { "es": ["favoritos", "playlists", "historial"], "en": ["favorites", "playlists", "history"] },
+      "keywords": ["music", "library", "playlist"],
+      "navigationGroup": "people",
+      "icon": "album",
+      "breadcrumb": [],
+      "accessRequestEligible": false
     }
   ]
 }

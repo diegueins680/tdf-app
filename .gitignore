@@ -109,3 +109,6 @@ artifacts/releases/
 
 # Python verification imports are generated runtime artifacts.
 __pycache__/
+
+# Local Playwright MCP session output (screenshots, exports).
+.playwright-mcp/

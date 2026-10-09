@@ -1,0 +1,173 @@
+{
+  "localDate": "2026-09-20",
+  "timezone": "America/Guayaquil",
+  "source": "Summary of live read-only browser and shell tool results, plus explicitly dated historical campaign receipts; not a delivery receipt",
+  "outreach": {
+    "newInvitations": 0,
+    "repliesSent": 0,
+    "postsPublished": 0,
+    "messagesScheduled": 0,
+    "ambiguousSends": 0
+  },
+  "instagram": {
+    "accountVerified": "tdf.records.label",
+    "scope": "Primary summaries from recent activity to Sep 17 conversations",
+    "newActionableCampaignRepliesIdentified": 0,
+    "fullThreadRefreshCompleted": false,
+    "individualThreadOpenTimeouts": 3,
+    "noComposerOrSendAction": true
+  },
+  "crm": {
+    "method": "Authenticated GET using existing browser session; no credentials exported",
+    "path": "/parties?limit=500&offset=0",
+    "httpStatus": 200,
+    "rows": 239,
+    "requestedLimit": 500,
+    "needsAnotherPage": false,
+    "uiRows": 200,
+    "identityCautions": [
+      "Iraiz Instagram contact and same-name account are separate records; association unverified",
+      "Nacaza Instagram contact and related-name account remain separate; association unverified"
+    ],
+    "mutations": 0
+  },
+  "web": {
+    "canonicalOrigin": "https://www.tdfrecords.net",
+    "tlsVerifyResultFans": 0,
+    "fansHttpStatus": 200,
+    "fansHttpRedirects": 0,
+    "anonymousViewportChecks": {
+      "browser": "Chromium",
+      "widths": [
+        1440,
+        390
+      ],
+      "pageLoads": 10,
+      "allHttp200": true,
+      "horizontalOverflowObserved": false
+    },
+    "additionalMobileEmulation": {
+      "width": 390,
+      "touch": true,
+      "artistSignupDialog": true,
+      "generalSignupDialog": true,
+      "publicArtistLinksLoaded": 10,
+      "feedbackFormVisible": true
+    },
+    "routes": [
+      "/",
+      "/fans",
+      "/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_prueba_web",
+      "/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=comunidad_prueba_web",
+      "/feedback"
+    ],
+    "rootClientRedirect": "/buscar",
+    "noNativeMobileTest": true,
+    "noSignupLoginOrFeedbackSubmission": true,
+    "mobileGuideLocated": false
+  },
+  "feedback": {
+    "internalTrackerReadable": true,
+    "internalReportsShown": 0,
+    "legacyPublicReportsShown": 1,
+    "legacyReportYear": 2025,
+    "currentSubmissionDeliveryVerified": false
+  },
+  "mobile": {
+    "latestVerifiedDistributionEvidenceDate": "2026-09-18",
+    "currentPlayConsoleResult": "Developer signup; available account has no verified access to intended developer console",
+    "currentAppStoreConnectResult": "Login redirect authResult=FAILED",
+    "currentTesterAvailabilityVerified": false,
+    "minimumOsVerified": false,
+    "installedBuildEnvironmentVerified": false,
+    "mutations": 0
+  },
+  "historicalMail": {
+    "source": "../verificaciones-2026-09-18/mobile-mail-reconciliation.json",
+    "uniqueRecipients": 82,
+    "smtpAccepted": 80,
+    "rejected": 2,
+    "uncertain": 0,
+    "originalPrivateLedgerPresentAtReferencedPath": false,
+    "currentSenderMailboxReviewed": false,
+    "deliveryOrTestingInferred": false
+  },
+  "scheduling": {
+    "applicationAutomationCards": 4,
+    "allShownAsNotCreated": true,
+    "localCronRegistryFoundAtInspectedPath": false,
+    "metaScheduleAudited": false,
+    "newJobs": 0
+  },
+  "newTechnicalObservation": {
+    "category": "usability_onboarding",
+    "trigger": "Open canonical signup link with Instagram UTM and continue to /feedback in same session",
+    "observed": "Instagram block promotes Produccion musical Jun 2026 and courses/reservations instead of tester journey",
+    "participantReported": false,
+    "productionChangeMade": false
+  },
+  "unavailableMetrics": [
+    "attributed registrations",
+    "unique web testers",
+    "unique native mobile testers",
+    "unique testers of both",
+    "global response rate",
+    "campaign clicks and conversion"
+  ],
+  "limits": [
+    "Browser viewport emulation is not physical-device testing",
+    "No complete inbox or private mailbox audit",
+    "No current mobile distribution-console authorization",
+    "No new nominal approved batch verified",
+    "No background work or future outreach scheduled"
+  ],
+  "authorizedWindow": {
+    "timezone": "America/Guayaquil",
+    "start": "09:00",
+    "end": "22:00",
+    "dailyMessageLimitAllChannels": 20,
+    "authorization": "Explicit user instruction on 2026-09-20: Extiende el horario hasta las 22:00 y continúa",
+    "supersedesEnd": "21:00"
+  },
+  "eveningContinuation": {
+    "clockChecksUtc": [
+      "2026-09-21T02:38:25Z",
+      "2026-09-21T02:45:48Z"
+    ],
+    "verifiedThreadBodies": [
+      "Nacaza",
+      "Iraiz"
+    ],
+    "bothLastMessagesArePriorTdfReplies": true,
+    "bothMarkedSeen": true,
+    "bothComposersEmpty": true,
+    "newIncomingCampaignReplyInCompletedReads": false,
+    "klausRefreshCompleted": false,
+    "remainingFoldersRefreshCompleted": false,
+    "browserReadWaitsTerminatedWithoutSend": true,
+    "messagesSent": 0,
+    "postsPublished": 0,
+    "scheduledActions": 0,
+    "newBatchApproved": false,
+    "mobileBlockersRemain": true
+  },
+  "lateContinuation": {
+    "startUtc": "2026-09-21T02:54:14Z",
+    "cutoffCheckUtc": "2026-09-21T03:06:10Z",
+    "withinWindowAtStart": true,
+    "withinWindowAtCutoffCheck": false,
+    "playwrightTabEnumerationCompleted": false,
+    "multipleConnectorProcessesObserved": true,
+    "concurrencyRootCauseConfirmed": false,
+    "localCdp18800Reachable": false,
+    "nativeChromeReadResult": "JavaScript through Apple Events disabled; no message text recovered",
+    "browserPermissionsChanged": false,
+    "processesStoppedOrRestarted": false,
+    "messagesAttempted": 0,
+    "messagesSent": 0,
+    "postsPublished": 0,
+    "scheduledActions": 0,
+    "nextOrdinaryWindowLocal": "2026-09-21 09:00 America/Guayaquil",
+    "nextWindowIsNotScheduledJob": true
+  }
+}

@@ -1,5 +1,7 @@
 # Ejecución autónoma: seguidores de Instagram — 2026-09-09
 
+> **Archivado; no ejecutar de nuevo.** El bloque está completado. Las referencias a fechas, cupos y candidatos son históricas. Consultar el [checkpoint vigente](tu-escena-conectada-continuacion-2026-09-18.md). La plantilla de enlace se migró sin modificar mensajes ya enviados.
+
 Trabaja en `/Users/diegosaa/GitHub/tdf-app`. Antes de actuar, cumple `AGENTS.md`: lee completos `SOUL.md`, `USER.md`, `memory/2026-09-09.md` si existe, `memory/2026-09-08.md` y `MEMORY.md`. Lee también completos:
 
 - `docs/campaigns/tu-escena-conectada-seguidores-2026-09-08-prompt.md`
@@ -24,7 +26,7 @@ Cada destinatario recibe un único DM breve y natural en español que combine:
 1. Listening Party de Labii y Llama Este Pez — jueves 10 de septiembre, 20:00, TDF Records - Studio Legends, Quito.
 2. Entre Panas en el Domo con Llama Este Pez — sábado 12 de septiembre, 15:00–18:00, Domo del Pululahua, entrada USD 5, reservas 0984755301.
 3. Invitación a probar TDF: crear su perfil público de artista, reunir su música y compartir errores o sugerencias; nunca pedir contraseñas, códigos ni información sensible.
-4. Enlace individual exacto, sustituyendo `<handle>` por el usuario normalizado: `https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=<handle>`.
+4. Plantilla migrada el 18-sep, con destino verificado y contenido de variante sin identificadores personales: `https://www.tdfrecords.net/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_prueba_web`. No sustituir por handles.
 5. Aclaración de que es un solo contacto y que, si no interesa, no se volverá a escribir.
 
 No dividas el texto en varios mensajes ni excedas el límite visible del compositor.

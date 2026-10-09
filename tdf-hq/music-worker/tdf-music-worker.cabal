@@ -1,0 +1,23 @@
+cabal-version: 2.4
+name: tdf-music-worker
+version: 0.1.0.0
+build-type: Simple
+
+-- Same source and component contract as tdf-hq.cabal, without the unrelated
+-- web library dependency closure. Guarded by music-worker-build.test.mjs.
+executable tdf-ddex-render
+  main-is:          MusicDdexRenderMain.hs
+  hs-source-dirs:   ../app, ../src
+  other-modules:
+    TDF.MusicRelease.Domain
+    TDF.MusicRelease.DDEX.ERN432
+  default-language: Haskell2010
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
+  build-depends:
+      base                 >=4.14 && <5
+    , aeson
+    , bytestring
+    , postgresql-simple
+    , text
+    , time
+    , xml
