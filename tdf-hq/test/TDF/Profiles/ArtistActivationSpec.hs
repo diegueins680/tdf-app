@@ -18,7 +18,9 @@ import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, run
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.DTO (ArtistProfileDTO(..))
+import qualified TDF.ModelsExtra as ME
 import TDF.Profiles.Artist (activateOwnArtistProfile)
+import TDF.Server (transitionPendingAccessRequest)
 
 spec :: Spec
 spec = describe "artist-self-service-postgresql" $ do
@@ -83,6 +85,20 @@ spec = describe "artist-self-service-postgresql" $ do
         counts pool 9 `shouldReturn` [1,1,0]
         roles <- runSqlPool (rawSql "SELECT r.code FROM party_security_role p JOIN security_role r ON r.id=p.role_id WHERE p.party_id=9 AND p.active" []) pool
         roles `shouldBe` [Single ("admin" :: Text)]
+      it "settles expiry before deciding or cancelling a pending access request" $ \pool -> do
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'studio.bookings','view','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day'),(2,'studio.bookings','edit','[]','[]','pending','admin',now(),now(),now()+interval '30 days') RETURNING id" []) pool :: IO [Single Int64]
+        (lapsed, open) <- case inserted of
+          [Single first, Single second] -> pure (first, second)
+          _ -> fail "Expected two access requests"
+        now <- getCurrentTime
+        let decide key = runSqlPool (transitionPendingAccessRequest now (toSqlKey key) [ME.FeatureAccessRequestStatus =. "approved"]) pool
+        decide lapsed `shouldReturn` (0 :: Int64)
+        decide open `shouldReturn` 1
+        decide open `shouldReturn` 0
+        statuses <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id IN (?,?) ORDER BY id" [PersistInt64 lapsed, PersistInt64 open]) pool
+        statuses `shouldBe` [Single ("expired" :: Text), Single "approved"]
+        history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 lapsed]) pool
+        history `shouldBe` [Single (1 :: Int64)]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do
         runSqlPool (rawExecute "CREATE FUNCTION fail_test_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artist_party_id=7 THEN RAISE EXCEPTION 'injected profile write failure'; END IF; RETURN NEW; END $$" []) pool
         runSqlPool (rawExecute "CREATE TRIGGER fail_profile BEFORE INSERT ON artist_profile FOR EACH ROW EXECUTE FUNCTION fail_test_profile()" []) pool

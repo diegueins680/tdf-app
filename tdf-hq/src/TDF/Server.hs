@@ -4052,10 +4052,7 @@ accessRequestsServer user =
           provisioningCorrelation = "feature-access-request:" <> requestNumber
       Env{envPool} <- ask
       transactionResult <- liftIO $ try $ flip runSqlPool envPool $ do
-        changed <- updateWhereCount
-          [ ME.FeatureAccessRequestId ==. requestKey
-          , ME.FeatureAccessRequestStatus ==. "pending"
-          ]
+        changed <- transitionPendingAccessRequest now requestKey
           [ ME.FeatureAccessRequestStatus =. decisionValue
           , ME.FeatureAccessRequestReviewerPartyId =. Just (auPartyId user)
           , ME.FeatureAccessRequestReviewerNotes =. notesValue
@@ -4137,10 +4134,7 @@ accessRequestsServer user =
       unless (ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user) $
         throwError err404
       now <- liftIO getCurrentTime
-      changed <- runDB $ updateWhereCount
-        [ ME.FeatureAccessRequestId ==. requestKey
-        , ME.FeatureAccessRequestStatus ==. "pending"
-        ]
+      changed <- runDB $ transitionPendingAccessRequest now requestKey
         [ ME.FeatureAccessRequestStatus =. "cancelled"
         , ME.FeatureAccessRequestUpdatedAt =. now
         , ME.FeatureAccessRequestCancelledAt =. Just now
@@ -4279,6 +4273,23 @@ encodeAccessContext = TE.decodeUtf8 . BL.toStrict . encode
 
 decodeAccessContext :: Text -> [Text]
 decodeAccessContext = fromMaybe [] . decodeStrict' . TE.encodeUtf8
+
+-- | Apply a decision or cancellation to a request that is still pending.
+-- Expiry is materialized lazily, so it is settled first in the same
+-- transaction: a request past its deadline becomes terminal ("expired") and
+-- the conditional update then changes no row. Returns the rows changed.
+transitionPendingAccessRequest
+  :: UTCTime
+  -> ME.FeatureAccessRequestId
+  -> [Update ME.FeatureAccessRequest]
+  -> SqlPersistT IO Int64
+transitionPendingAccessRequest now requestKey changes = do
+  expireFeatureAccessRequests now
+  updateWhereCount
+    [ ME.FeatureAccessRequestId ==. requestKey
+    , ME.FeatureAccessRequestStatus ==. "pending"
+    ]
+    changes
 
 expireFeatureAccessRequests :: UTCTime -> SqlPersistT IO ()
 expireFeatureAccessRequests now = do

@@ -5482,7 +5482,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "13c9ddb90527f2a6274455278b7bdcb093326ba5efffb4c1463e8ab4fd6d55b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13786,7 +13786,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
+      "sha256": "3fdebdced79373e61770dae88594e6a83eef95b725452479500d85202d017e33",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14542,7 +14542,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "8e0b0c17880e71fc8aa6c5ba84df8d4f990f5196a42e697b491c789961ed4fc6",
+      "sha256": "3c8762618f80cc7448196d4c45368b38c3f3f99eb7fb10eaf7a205347f7dc1c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20674,6 +20674,69 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/AccessGrant.cfg",
+      "sha256": "1b38d0362e3516b309cbaa8d796456baff5287a39bf90cb650c4883fa5bd35ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrant.tla",
+      "sha256": "523f02170b4afa0db08aa6931d053009ef92e9a5cfd16e8dce5a33c4e05fb1c8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantAdminInvite.cfg",
+      "sha256": "a08fc869213bddb73f25ff3b897e0daf07ed777a664cfca67c4abb2fa5951932",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantExpired.cfg",
+      "sha256": "c07cf9544bc853703a09fa6c946d28721bce3d0d9d0c6a57a88bda28af87efd3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantNonAdmin.cfg",
+      "sha256": "b5b89e97c6ec94dcb03c0eb17dfd6c831e961fdaa81ed652d3f899c3e72ce0af",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantReactivate.cfg",
+      "sha256": "797cb8f41caa3fc6d604cb20d2511ec7fb70d05647032d7125b51af10d7bd5d3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantRebind.cfg",
+      "sha256": "8fa3bdf36fe6b52f93f160e6ed97aa92fc450e6da1817b0d30e63f4c5176efd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantRevokedLink.cfg",
+      "sha256": "6e11c34a966547e97ec91f5cebefa2c741ea2b6e3b0e8e15613e77a004a59061",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantSelfApproval.cfg",
+      "sha256": "72e7cb3287d62b7f229fdb3f48eba6e445bf1ad14ab691a22391900d545e4304",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/AccountDeletionAuthority.cfg",
       "sha256": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
       "authority": "inferred",
@@ -22075,7 +22138,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "7fdf171c115cefef925fc52be01eea3cc86925fa20673c3f7f4042ce45aa355a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23447,14 +23510,21 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
+      "sha256": "7fb9e65a29ba2041bd1bcc37a2dd97d5a9b37253213f37c68396c198fb92d535",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/access-grant.md",
+      "sha256": "e1535ec11ab196a267446e90e38d82d844cfa0be5b5185e774e21349b62d6559",
+      "authority": "inferred",
+      "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ef4ece82253282e415886a6ffec698665fa1705f3ff0a393943634d6c69f17b5",
+      "sha256": "e5d688bffd012f4a0241cf744b2a05972ea0a36243306473ead569bb05d19154",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23727,7 +23797,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9eb962c20b1fc39e7354adad1ed4ace72e1b7021428d265fd9140552083582fc",
+      "sha256": "6705d3a5df36c7fe427fc65d0d6a46e204465aa83b178e58e1884f9bfdd87055",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -30886,6 +30956,150 @@
         "CONSTANTS FenceGeneration = TRUE CheckAccount = FALSE",
         "INVARIANTS CurrentCredential VerifiedAccount",
         "PROPERTY Terminates",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrant.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantAdminInvite.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Admin\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantExpired.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = FALSE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantNonAdmin.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = FALSE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantReactivate.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = FALSE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantRebind.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = FALSE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantRevokedLink.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = FALSE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantSelfApproval.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = FALSE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
