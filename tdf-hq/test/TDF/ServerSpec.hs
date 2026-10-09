@@ -24,8 +24,9 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getJust, insert, insert_, insertKey
+    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -751,7 +752,7 @@ spec = describe "TDF.Server helpers" $ do
                     (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
                         `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
     describe "served authorization boundary (AUTH-PUBLIC-001)" $ do
-        it "denies staff ads assistance to anonymous and non-inbox callers and no longer serves legacy course Stripe routes" $
+        it "denies staff ads assistance and foreign academy writes, and no longer serves legacy course Stripe routes" $
             withNotificationFixture $ \env _ _ _ _ ->
                 testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
                     manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
@@ -777,6 +778,78 @@ spec = describe "TDF.Server helpers" $ do
                     checkoutSession <- post "/public/courses/beatmaking/registrations/1/checkout-session"
                         "{\"successUrl\":\"https://example.com/ok\",\"cancelUrl\":\"https://example.com/no\"}" False
                     status checkoutSession `shouldBe` 404
+                    let enrollBody email = BL8.pack ("{\"email\":\"" <> email <> "\",\"role\":\"artist\"}")
+                    anonymousEnroll <- post "/academy/enroll" (enrollBody "victim@example.com") False
+                    status anonymousEnroll `shouldBe` 401
+                    anonymousProgress <- post "/academy/progress"
+                        "{\"email\":\"victim@example.com\",\"slug\":\"intro\",\"day\":1}" False
+                    status anonymousProgress `shouldBe` 401
+                    anonymousReferral <- post "/referrals/claim"
+                        "{\"email\":\"victim@example.com\",\"code\":\"ABC123\"}" False
+                    status anonymousReferral `shouldBe` 401
+                    runSqlPool (rawExecute "UPDATE party SET primary_email='owner@example.com' WHERE id IN (SELECT party_id FROM api_token WHERE token='google-token')" []) (envPool env)
+                    foreignEnroll <- post "/academy/enroll" (enrollBody "victim@example.com") True
+                    status foreignEnroll `shouldBe` 403
+    describe "WhatsApp double opt-in (PRIV-WHATSAPP-001)" $ do
+        it "treats only an exact affirmative reply as confirmation" $ do
+            map NotificationServer.isWhatsAppConsentConfirmationMessage ["SI", " Sí! ", "yes", "Acepto"]
+                `shouldBe` [True, True, True, True]
+            map NotificationServer.isWhatsAppConsentConfirmationMessage ["si quiero", "no", "STOP", ""]
+                `shouldBe` [False, False, False, False]
+        it "confirms only a pending request inside the window and only by a later reply" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                now <- getCurrentTime
+                runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
+                let hourAgo = addUTCTime (-3600) now
+                    row phone requested consent =
+                        ME.WhatsAppConsent phone Nothing consent (Just "public") Nothing
+                            (if consent then Just now else Nothing) Nothing requested now now
+                runSqlPool (do
+                    _ <- insert (row "+593990000001" (Just hourAgo) False)
+                    _ <- insert (row "+593990000002" (Just (addUTCTime (-8 * 86400) now)) False)
+                    _ <- insert (row "+593990000003" Nothing False)
+                    _ <- insert (row "+593990000004" (Just hourAgo) False)
+                    pure ()) pool
+                let confirm sentAt phone =
+                        runSqlPool (NotificationServer.applyWhatsAppConsentConfirmation now sentAt phone) pool
+                -- A reply sent before the request (delayed or replayed) cannot confirm it.
+                confirm (Just (addUTCTime (-7200) now)) "+593990000004" `shouldReturn` False
+                confirm Nothing "+593990000004" `shouldReturn` False
+                confirm (Just now) "+593990000001" `shouldReturn` True
+                confirm (Just now) "+593990000001" `shouldReturn` False
+                confirm (Just now) "+593990000002" `shouldReturn` False
+                confirm (Just now) "+593990000003" `shouldReturn` False
+                confirm (Just now) "+593990000099" `shouldReturn` False
+                confirmed <- runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000001")) pool
+                fmap (ME.whatsAppConsentConsent . entityVal) confirmed `shouldBe` Just True
+                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) confirmed `shouldBe` Just Nothing
+        it "claims one confirmation request per interval and releases a failed claim" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                now <- getCurrentTime
+                runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
+                let claim at = runSqlPool
+                        (NotificationServer.claimWhatsAppConfirmationRequest at "+593990000010" Nothing (Just "public")) pool
+                claim now `shouldReturn` True
+                claim (addUTCTime 60 now) `shouldReturn` False
+                runSqlPool (NotificationServer.releaseWhatsAppConfirmationClaim now "+593990000010") pool
+                claim (addUTCTime 120 now) `shouldReturn` True
+                claim (addUTCTime (25 * 3600) now) `shouldReturn` True
+                runSqlPool (rawExecute "UPDATE whats_app_consent SET consent=1, consented_at=? WHERE phone_e164='+593990000010'" [PersistUTCTime now]) pool
+                claim (addUTCTime (50 * 3600) now) `shouldReturn` False
+        it "reads Meta message timestamps as POSIX seconds" $ do
+            NotificationServer.parseWhatsAppMessageTimestamp (Just "1791300000")
+                `shouldBe` Just (posixSecondsToUTCTime 1791300000)
+            map NotificationServer.parseWhatsAppMessageTimestamp [Nothing, Just "", Just "12a", Just "9999999999999"]
+                `shouldBe` [Nothing, Nothing, Nothing, Nothing]
+        it "serves no public consent lookup" $
+            withNotificationFixture $ \env _ _ _ _ ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    request <- NotificationHTTP.parseRequest
+                        ("http://127.0.0.1:" <> show port <> "/public/whatsapp/consent?phone=%2B593990000001")
+                    response <- NotificationHTTP.httpLbs request manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 410
+                    BL8.unpack (NotificationHTTP.responseBody response) `shouldNotContain` "consent\":true"
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
@@ -4999,7 +5072,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -5038,7 +5111,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5110,7 +5183,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         runSessionAction action =
                             liftIO $ runHandler $ runReaderT action env
                     current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
@@ -5230,7 +5303,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeWith tokenValue request =
                             liftIO $ runHandler $ runReaderT
                                 (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
@@ -5328,7 +5401,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         reconcileWith mToken =
                             liftIO $ runHandler $ runReaderT
                                 (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
@@ -5462,7 +5535,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeAccessRequest =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5574,7 +5647,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeEventSave =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5688,7 +5761,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _getExperiment :<|> _recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> _getExperiment :<|> _recordExposure = sessionServer
                         completeMomentReaction =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5899,7 +5972,7 @@ spec = describe "TDF.Server helpers" $ do
                                     }
                         pausedEnv = Env pool (marketplaceTestConfig False)
                         enabledEnv = Env pool ((marketplaceTestConfig False) {singleFeatureOnboardingExperimentEnabled = True})
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> _completeProgress :<|> _reconcileOnboarding :<|> getExperiment :<|> recordExposure = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> _completeProgress :<|> _reconcileOnboarding :<|> _redeemArtistInvitation :<|> getExperiment :<|> recordExposure = sessionServer
                         runExperiment env tokenValue action =
                             liftIO $ runHandler $ runReaderT
                                 (action (Just ("Bearer " <> tokenValue)) Nothing "single-feature-onboarding-v1")
@@ -11678,6 +11751,7 @@ spec = describe "TDF.Server helpers" $ do
                         , ME.whatsAppConsentNote = Just "consent"
                         , ME.whatsAppConsentConsentedAt = Just now
                         , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentConfirmationRequestedAt = Nothing
                         , ME.whatsAppConsentCreatedAt = now
                         , ME.whatsAppConsentUpdatedAt = now
                         }
@@ -11700,6 +11774,7 @@ spec = describe "TDF.Server helpers" $ do
                         , ME.whatsAppConsentNote = Just "consent"
                         , ME.whatsAppConsentConsentedAt = Just now
                         , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentConfirmationRequestedAt = Nothing
                         , ME.whatsAppConsentCreatedAt = now
                         , ME.whatsAppConsentUpdatedAt = now
                         }
@@ -15596,6 +15671,7 @@ marketplaceTestConfig seedFlag =
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
         , contextualReputationEnabled = False
+        , publicReputationProjectionEnabled = False
         , singleFeatureOnboardingExperimentEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False

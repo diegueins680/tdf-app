@@ -208,6 +208,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'ADMIN',
     icon: <AdminPanelSettingsOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
     items: [
+      { label: 'Solicitudes de acceso', path: '/solicitudes-acceso/revision' },
       { label: COURSE_REGISTRATIONS_NAV_LABEL, path: '/configuracion/inscripciones-curso' },
       { label: 'Cursos', path: '/configuracion/cursos' },
       { label: 'Actividad', path: '/configuracion/actividad' },

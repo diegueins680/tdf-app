@@ -73,13 +73,13 @@ it('opens one request with current details and available review actions without 
   list.mockResolvedValue([{ ...row, nType: 'access_request_review', nTargetType: 'feature_access_request', nTargetId: 17 }]);
   await render(); await clickLink(); expect(getDetail).toHaveBeenCalledWith(17);
   expect(container.textContent).toContain('Solicitud #17'); expect(container.textContent).toContain('Please review this request');
-  expect(container.textContent).toContain('Aprobar para provisión'); expect(decide).not.toHaveBeenCalled();
+  expect(container.textContent).toContain('Aprobar solicitud'); expect(decide).not.toHaveBeenCalled();
 });
 it('keeps an already-handled request visible with its status and no review action', async () => {
   const detail = await getDetail(); getDetail.mockResolvedValue({ ...detail, request: { ...detail.request, status: 'approved', reviewerNotes: 'Already reviewed' } });
   list.mockResolvedValue([{ ...row, nTargetType: 'feature_access_request', nTargetId: 17 }]);
   await render(); await clickLink(); expect(container.textContent).toContain('Aprobada');
-  expect(container.textContent).toContain('Already reviewed'); expect(container.textContent).not.toContain('Aprobar para provisión'); expect(decide).not.toHaveBeenCalled();
+  expect(container.textContent).toContain('Already reviewed'); expect(container.textContent).not.toContain('Aprobar solicitud'); expect(decide).not.toHaveBeenCalled();
 });
 it('withdraws request details after denial and offers an authorized fallback', async () => {
   getDetail.mockRejectedValue(new Error('404'));

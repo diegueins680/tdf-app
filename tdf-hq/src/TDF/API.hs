@@ -56,7 +56,7 @@ import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
-import           TDF.Routes.Academy (AcademyAPI)
+import           TDF.Routes.Academy (AcademyAPI, AcademyAccountAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppHooksAPI, WhatsAppWebhookAPI)
 import           TDF.Routes.EventTickets (PublicEventTicketsAPI)
 import           TDF.Routes.DomoQuotes (PublicDomoQuotesAPI)
@@ -65,6 +65,7 @@ import           TDF.API.Feedback    (FeedbackAPI, InternalFeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Merch (MerchPublicAPI, MerchProtectedAPI)
+import           TDF.API.MusicRelease (MusicReleasePublicAPI, MusicReleaseProtectedAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
@@ -260,6 +261,9 @@ type WhatsAppConsentRoutes =
 type WhatsAppConsentAPI =
        "whatsapp" :> WhatsAppConsentRoutes
 
+-- | Public consent is a double opt-in request and never discloses whether a
+-- number has consented. The public status lookup keeps its declared shape for
+-- client compatibility but is retired (410); the lookup is staff-only.
 type WhatsAppConsentPublicAPI =
        "public" :> "whatsapp" :> WhatsAppConsentRoutes
 
@@ -556,6 +560,7 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "intent" :> ReqBody '[JSON] OnboardingIntentUpdate :> Put '[JSON] OnboardingProgressDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "complete" :> ReqBody '[JSON] OnboardingCompletionRequest :> Post '[JSON] OnboardingCompletionResult
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "reconcile" :> Post '[JSON] OnboardingCompletionResult
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "artist-invitation" :> ReqBody '[JSON] ArtistInvitationRedeemRequest :> Post '[JSON] SessionResponse
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "assignment" :> Get '[JSON] ExperimentAssignmentDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "exposure" :> Post '[JSON] ExperimentExposureResult
 
@@ -570,6 +575,11 @@ type AccessRequestsAPI =
   :<|> Capture "requestId" Int64 :> "cancel"
          :> ReqBody '[JSON] FeatureAccessRequestCancel
          :> Patch '[JSON] FeatureAccessRequestDTO
+
+type ArtistInvitationsAPI =
+       Get '[JSON] [ArtistInvitationLinkDTO]
+  :<|> ReqBody '[JSON] ArtistInvitationLinkCreate :> Post '[JSON] ArtistInvitationLinkIssued
+  :<|> Capture "invitationId" Int64 :> "revoke" :> Post '[JSON] ArtistInvitationLinkDTO
 
 type NavigationPreferencesAPI =
        Get '[JSON] [NavigationPreferenceDTO]
@@ -625,6 +635,7 @@ type ProtectedAPI =
   :<|> InternshipsAPI
   :<|> "feedback" :> "internal" :> InternalFeedbackAPI
   :<|> AdsAdminAPI
+  :<|> AcademyAccountAPI
   :<|> "admin" :> CoursesAdminAPI
   :<|> "label" :> LabelAPI
   :<|> "calendar" :> CalendarAPI
@@ -636,6 +647,7 @@ type ProtectedAPI =
   :<|> "catalog" :> CatalogAPI
   :<|> ServiceStorefrontAdminAPI
   :<|> "access-requests" :> AccessRequestsAPI
+  :<|> "artist-invitations" :> ArtistInvitationsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
   :<|> MerchProtectedAPI
@@ -643,6 +655,7 @@ type ProtectedAPI =
   :<|> EventOperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
+  :<|> MusicReleaseProtectedAPI
   :<|> InteractionsAPI
 
 type API =
@@ -680,6 +693,7 @@ type API =
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI
   :<|> PaymentCapabilitiesAPI
+  :<|> MusicReleasePublicAPI
   :<|> ProviderExecutionAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
