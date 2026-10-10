@@ -8230,10 +8230,11 @@
       "authority": "Unreviewed recovered local implementation",
       "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs; formal/system/access-grant.md (AUTHORITY-053)",
       "contract": "formal/system/access-grant.md",
-      "property": "A role is provisioned from an access request only for artist.onboarding/create, by a distinct administrator, with a published revision.",
+      "property": "A role is provisioned from an access request only for artist.onboarding/create, and only by one of two paths: (a) self-service, where createRequest activates the requester's own Artist profile through the artist.self-service.artist policy and records the request approved by system-policy with no reviewer; (b) a reviewed decision on a request that is still pending and not past expiry, made by an administrator distinct from the requester, with a published revision. No path grants an administrative or emergency role or reactivates a revoked assignment.",
       "actors": [
-        "Requester",
-        "Strict administrator",
+        "Requester (self-service activation and cancellation)",
+        "system-policy (artist.self-service.artist automatic assignment)",
+        "Strict administrator (grant-bearing review)",
         "Manager",
         "Studio manager"
       ],
@@ -8243,20 +8244,27 @@
         "sensitive-publication workflow active"
       ],
       "inputs": [
-        "Access request review decision and notes"
+        "Self-service request for artist.onboarding/create",
+        "Access request review decision and notes",
+        "Requester cancellation note",
+        "Current time (expiry is settled lazily in the same transaction)"
       ],
       "state": {
         "request": [
           "pending",
           "approved",
           "rejected",
-          "cancelled"
+          "cancelled",
+          "expired"
         ]
       },
       "allowedTransitions": [
-        "pending -> approved (grant for artist.onboarding/create) ",
-        "pending -> approved (manual provisioning otherwise)",
-        "pending -> rejected with note"
+        "(new) -> approved by system-policy (artist.onboarding/create self-service; Artist granted by policy)",
+        "pending -> approved by a distinct administrator before expiry (grant for artist.onboarding/create)",
+        "pending -> approved before expiry (manual provisioning otherwise)",
+        "pending -> rejected with note before expiry",
+        "pending -> cancelled by the requester before expiry",
+        "pending -> expired once past expires_at (list, review, decide or cancel paths)"
       ],
       "forbiddenTransitions": [
         "Non-admin approving a grant-bearing request",
@@ -8266,7 +8274,9 @@
         "revoked Artist assignment -> active through any automatic policy"
       ],
       "effects": [
-        "Published security revision and party role grant"
+        "Self-service: owned Artist profile, policy-applied Artist grant, approved request with history and audit rows",
+        "Reviewed approval: published security revision and party role grant (grant-bearing pair) or manual-provisioning notification",
+        "Expiry: request marked expired with history and audit rows; a decision or cancellation on it returns 409 with no grant"
       ],
       "authorization": "registryReviewerCanDecide requires Admin for grant-bearing requests.",
       "privacy": "Reviewer notes stay internal.",
