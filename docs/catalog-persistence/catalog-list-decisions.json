@@ -12876,7 +12876,7 @@
       "reviewed": true
     },
     {
-      "id": "068d6f3f0c164631ab35",
+      "id": "a7561a719beb23884345",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -12888,10 +12888,10 @@
       "reviewBatch": "ci-recovery-2026-09-12",
       "evidence": {
         "file": "tdf-mobile/src/api/events.ts",
-        "line": 432,
+        "line": 435,
         "kind": "object-registry",
         "name": "Events",
-        "valueCount": 29,
+        "valueCount": 30,
         "consumerCount": 151,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
@@ -15609,19 +15609,19 @@
       }
     },
     {
-      "id": "7b3d355ec7c91ec29b07",
+      "id": "7ada75c638366c356dce",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 188-entry manifest keeps the reviewed 187 entries unchanged and appends the additive WhatsApp consent confirmation migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 199-entry manifest keeps the reviewed 188 entries unchanged and appends the eleven migrations merged in #510 (music release platform, its 2026-09-15/16 follow-ups, the additive artist invitation policy and personal artist invitation links), each with the commit that introduced its released content. Schema verification fails closed without them. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "whatsapp-consent-confirmation-2026-10-07",
+      "reviewBatch": "music-invitation-migration-registration-2026-10-07",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -32521,85 +32521,20 @@
         }
       ],
       "previousDecision": {
-        "id": "e69bb0b8d1949d201d8a",
+        "id": "7b3d355ec7c91ec29b07",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 182-entry manifest preserves consolidated main3a2ab395c complete181-entry prefix and appends invoice receipt snapshot. Every original SQL byte and introduction commit is unchanged. Fresh combined migration application and replay are required; no pending migration is represented as applied.",
+        "justification": "Ordered 188-entry manifest keeps the reviewed 187 entries unchanged and appends the additive WhatsApp consent confirmation migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "consolidated-tax-conformance-20261006",
-        "reviewMethod": "source-comparison-pending-independent-review",
-        "mergedDecision": {
-          "id": "d8e73943d72078a492ae",
-          "classification": "genuine-technical-constant",
-          "disposition": "explicit-allowlist",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P1-integrity",
-          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Ordered 168-entry production migration registry. All 167 prior entries and introduction SHAs are preserved. One additive nullable transfer deadline and immutable-after-approval guard extends the existing versioned checkout policy; rollback refuses to discard configured deadlines. Deployment ancestry and checksums remain required. This registry is release authority, not editable event catalog data.",
-          "reviewed": true,
-          "evidence": {
-            "file": "scripts/production-migrations.json",
-            "line": 3
-          },
-          "reviewBatch": "ticket-transfer-2026-10-05",
-          "previousDecision": {
-            "id": "c66b265a7ea297c37542",
-            "classification": "genuine-technical-constant",
-            "disposition": "explicit-allowlist",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P1-integrity",
-            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Ordered 167-entry production migration registry. All previous entries and introduction SHAs remain byte-for-byte unchanged; one additive ticket admission audit table is appended. Deployment ancestry, checksums and evidence-preserving rollback remain required. This is release execution authority, not administrator-selectable event data.",
-            "reviewed": true,
-            "evidence": {
-              "file": "scripts/production-migrations.json",
-              "line": 3
-            },
-            "reviewBatch": "ticket-admission-2026-10-05",
-            "previousDecision": {
-              "id": "c6915506d0f7b802519d",
-              "classification": "genuine-technical-constant",
-              "disposition": "explicit-allowlist",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P1-integrity",
-              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-              "justification": "The ordered production migration protocol preserves all 160 current-main entries with their original introduction SHAs and appends six payment migrations in source order. SQL checksums, deployment ancestry and release approval remain mandatory. This immutable registry is not administrator-selectable product data.",
-              "reviewed": true,
-              "evidence": {
-                "file": "scripts/production-migrations.json",
-                "line": 3
-              },
-              "reviewBatch": "event-editorial-ownership-2026-10-03",
-              "previousDecision": {
-                "id": "dc6d60d733c6eb69ebbf",
-                "classification": "genuine-technical-constant",
-                "disposition": "explicit-allowlist",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P1-integrity",
-                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-                "justification": "Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.",
-                "reviewed": true,
-                "evidence": {
-                  "file": "scripts/production-migrations.json",
-                  "line": 3
-                },
-                "reviewBatch": "event-editorial-ownership-2026-10-03",
-                "previousDecision": {
-                  "id": "7bf93825f1431a6d52d6",
-                  "justification": "Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.",
-                  "reviewBatch": "universal-interactions-2026-09-28"
-                }
-              }
-            }
-          }
-        },
+        "reviewBatch": "whatsapp-consent-confirmation-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision",
         "consolidatedMainDecision": {
           "id": "a6f94215147ae155b3c9",
           "classification": "genuine-technical-constant",
@@ -49496,7 +49431,23 @@
               }
             }
           }
-        ]
+        ],
+        "mergedDecision": {
+          "id": "7cf054414f50446f625b",
+          "classification": "genuine-technical-constant",
+          "disposition": "explicit-allowlist",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P1-integrity",
+          "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+          "justification": "Ordered 187-entry manifest keeps the reviewed 186 entries unchanged and appends the additive ticket credit note migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+          "reviewed": true,
+          "evidence": {
+            "file": "scripts/production-migrations.json",
+            "line": 3
+          },
+          "reviewBatch": "ticket-credit-notes-2026-10-06",
+          "reviewMethod": "successor-of-reviewed-decision"
+        }
       },
       "mergedRefundDecision": {
         "id": "c1644da6a914a88a2f1d",

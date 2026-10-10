@@ -17,6 +17,8 @@ export interface CourseRegistrationErrorView {
    * (network, timeout, 5xx) keep the key so an identical retry is deduplicated.
    */
   definitiveRejection: boolean;
+  /** The approved terms were replaced after the buyer saw them; reload and ask again. */
+  termsChanged?: boolean;
 }
 
 export const GENERIC_REGISTRATION_ERROR =
@@ -120,6 +122,15 @@ export function describeCourseRegistrationError(error: unknown): CourseRegistrat
   }
 
   if (status === 409) {
+    if (/terms changed/i.test(message)) {
+      return {
+        ...view(
+          'Los términos del curso se actualizaron. Revisa la nueva versión y vuelve a aceptarla para continuar.',
+          { field: 'terms', definitiveRejection: true },
+        ),
+        termsChanged: true,
+      };
+    }
     if (/seat|cupo/i.test(message)) {
       return view(
         'Ya no quedan cupos para esta fecha. Escríbenos por WhatsApp y te avisamos si se libera uno.',

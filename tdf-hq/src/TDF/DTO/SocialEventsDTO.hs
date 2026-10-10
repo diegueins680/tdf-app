@@ -1301,6 +1301,8 @@ data TicketPurchaseWithPromoDTO = TicketPurchaseWithPromoDTO
     -- ^ When present, signals the request originates from a mobile PaymentSheet
     -- and carries the Stripe-Version the mobile SDK was built against. The server
     -- creates an attached Customer + ephemeral key and returns 'spiPaymentSheet'.
+    , tpwpAcceptedTermsVersion :: Maybe Text
+    -- ^ Terms version of the event's approved ticket policy that the buyer accepted.
     }
     deriving (Show, Eq, Generic)
 
@@ -1315,6 +1317,7 @@ instance ToJSON TicketPurchaseWithPromoDTO where
             , "ticketPurchasePromoCode" .= tpwpPromoCode
             , "ticketPurchaseMobileSdkStripeVersion" .= tpwpMobileSdkStripeVersion
             , "ticketPurchaseIdempotencyKey" .= tpwpIdempotencyKey
+            , "ticketPurchaseAcceptedTermsVersion" .= tpwpAcceptedTermsVersion
             ]
 
 instance FromJSON TicketPurchaseWithPromoDTO where
@@ -1328,7 +1331,10 @@ instance FromJSON TicketPurchaseWithPromoDTO where
         idempotencyKey <-
             o .:? "ticketPurchaseIdempotencyKey"
                 >>= traverse validateTicketPurchaseIdempotencyKey
-        pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer idempotencyKey
+        acceptedTermsVersion <-
+            o .:? "ticketPurchaseAcceptedTermsVersion"
+                >>= traverse validateTicketPurchaseAcceptedTermsVersion
+        pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer idempotencyKey acceptedTermsVersion
     parseJSON _ = fail "TicketPurchaseWithPromoDTO must be an object"
 
 ticketPurchaseWithPromoKeys :: [Text]
@@ -1341,7 +1347,15 @@ ticketPurchaseWithPromoKeys =
     , "ticketPurchasePromoCode"
     , "ticketPurchaseMobileSdkStripeVersion"
     , "ticketPurchaseIdempotencyKey"
+    , "ticketPurchaseAcceptedTermsVersion"
     ]
+
+validateTicketPurchaseAcceptedTermsVersion :: Text -> Parser Text
+validateTicketPurchaseAcceptedTermsVersion rawVersion =
+    let version = T.strip rawVersion
+     in if T.null version || T.length version > 80
+            then fail "ticketPurchaseAcceptedTermsVersion must be between 1 and 80 characters"
+            else pure version
 
 validateTicketPurchaseIdempotencyKey :: Text -> Parser Text
 validateTicketPurchaseIdempotencyKey rawKey =

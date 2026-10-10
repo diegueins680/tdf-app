@@ -13906,6 +13906,13 @@ export interface components {
             whatsappCtaUrl?: string;
             /** Format: uri */
             landingUrl?: string;
+            /** @description Terms of the approved active checkout policy, shown before the buyer accepts them. Null when the course has no approved policy. */
+            checkoutTerms?: components["schemas"]["CourseCheckoutTerms"] | null;
+        };
+        CourseCheckoutTerms: {
+            termsVersion: string;
+            termsSummary: string;
+            cancellationPolicy: string;
         };
         UTMTags: {
             source?: string | null;
@@ -13925,6 +13932,8 @@ export interface components {
             utm?: components["schemas"]["UTMTags"];
             /** @description Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads. */
             termsAccepted?: boolean | null;
+            /** @description The CourseMetadata.checkoutTerms.termsVersion the buyer was shown. When present, checkout returns 409 if the active policy now has a different terms version. */
+            acceptedTermsVersion?: string | null;
         };
         CourseRegistrationResponse: {
             /** Format: int64 */
