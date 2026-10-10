@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 import {
@@ -10,6 +10,7 @@ import {
   runtimeEnvBlockers,
 } from '../production-release.mjs';
 import {
+  MUSIC_RUNTIME_FUNCTION_SIGNATURES,
   buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMachineDeployArgs,
@@ -1391,5 +1392,43 @@ test('release planning preserves captured discovery gates for canary, remaining 
   for (const command of commands) {
     assert.ok(command.includes('EVENT_DISCOVERY_ENABLED=true'));
     assert.ok(command.includes('EVENT_DISCOVERY_AUTO_PUBLISH=true'));
+  }
+});
+
+test('schema verification covers every music SQL function called at runtime', () => {
+  const sqlDirectory = new URL('../../tdf-hq/sql/', import.meta.url);
+  const defined = new Set();
+  for (const name of readdirSync(sqlDirectory)) {
+    if (!name.endsWith('.sql') || name.includes('rollback')) continue;
+    const source = readFileSync(new URL(name, sqlDirectory), 'utf8');
+    for (const match of source.matchAll(/CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?(music_[a-z0-9_]+)/gi)) {
+      defined.add(match[1].toLowerCase());
+    }
+  }
+  const sourceRoots = [
+    ['../../tdf-hq/src/', /\.hs$/],
+    ['../', /\.(?:sh|mjs)$/],
+  ];
+  const called = new Set();
+  for (const [root, pattern] of sourceRoots) {
+    const directory = new URL(root, import.meta.url);
+    for (const entry of readdirSync(directory, { recursive: true })) {
+      const relative = String(entry);
+      if (!pattern.test(relative) || relative.includes('__tests__') || relative.includes('node_modules')) continue;
+      const source = readFileSync(new URL(relative, directory), 'utf8');
+      for (const match of source.matchAll(/\b(music_[a-z0-9_]+)\s*\(/g)) {
+        if (defined.has(match[1])) called.add(match[1]);
+      }
+    }
+  }
+  const verified = new Set(MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => signature.slice(0, signature.indexOf('('))));
+  assert.ok(called.size > 0, 'expected to find music function calls in source');
+  assert.deepEqual([...called].filter((name) => !verified.has(name)).sort(), [],
+    'music functions called at runtime but not verified by the release schema gate');
+  assert.deepEqual([...verified].filter((name) => !defined.has(name)).sort(), [],
+    'verified music functions that no forward migration defines');
+  const sql = buildSchemaVerificationSql();
+  for (const signature of MUSIC_RUNTIME_FUNCTION_SIGNATURES) {
+    assert.ok(sql.includes(`'${signature}'`), `schema verification omits ${signature}`);
   }
 });
