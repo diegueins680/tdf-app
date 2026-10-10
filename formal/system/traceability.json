@@ -8785,6 +8785,74 @@
         "classification": "PARTIAL",
         "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
       }
+    },
+    {
+      "id": "DIR-SEARCH-SYNC-001",
+      "title": "Public events and venues are searchable as soon as they are published",
+      "domain": "DIR",
+      "statement": "Creating, editing, publishing, unpublishing, suppressing or deleting an event, and editing or deleting a venue, updates the directory search documents in the same transaction (hidden events keep their cached document, filtered from public search at read time; deleted sources lose it), projected only from directory_public_event and directory_public_venue. Upcoming public events are listed; free-text venue cities resolve to the unambiguous city reference; searching for the entity kind word (eventos, venues) matches documents of that kind.",
+      "authority": "User report of 2026-10-09: newly created events (141, 143) did not appear in /buscar for Quito; when an event is created it must appear in search results",
+      "source": "docs/directory/event-search-sync.md",
+      "contract": "docs/directory/event-search-sync.md",
+      "actors": [
+        "Visitor searching the directory",
+        "Event organizer",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Music directory schema present"
+      ],
+      "inputs": [
+        "social_event, venue and external_event_ref row changes"
+      ],
+      "state": {
+        "boundary": "directory_search_document rows of kind event and venue",
+        "authority": "PostgreSQL triggers over directory_public_event and directory_public_venue"
+      },
+      "allowedTransitions": [
+        "Public event created or edited -> document upserted",
+        "Event becomes private or suppressed -> hidden from public search, cached document kept",
+        "Event or venue deleted -> document removed"
+      ],
+      "forbiddenTransitions": [
+        "Private or suppressed event visible in public search",
+        "Upcoming public event hidden only because it has not started",
+        "Non-HTTPS image projected into search results"
+      ],
+      "effects": [
+        "Search document upsert/delete",
+        "Venue city_id resolution"
+      ],
+      "authorization": "Derived data only; written by database triggers on source changes.",
+      "privacy": "Projection from the privacy-reviewed public views; reads still re-check the views.",
+      "concurrency": "Runs inside the source transaction; upserts keyed by (entity_kind, entity_id).",
+      "idempotency": "Re-running a sync or the full refresh converges to the same rows.",
+      "failure": "A sync failure aborts the source write, so documents never diverge silently.",
+      "recovery": "directory_refresh_legacy_event_search() rebuilds all event and venue documents from the same projection.",
+      "observability": "Saved-search alerts fire for newly inserted documents through the existing trigger.",
+      "property": "For every event, a publicly searchable document exists if and only if the event is in directory_public_event.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
+        "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/integration/directory_event_search_sync.sql",
+        "scripts/test-music-directory-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, private, republish, suppression, venue rename, delete, city resolution, kind words and full-refresh agreement; rollback and reapply.",
+      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Exercised directly in the database; production effect verified after release.",
+      "ambiguity": [
+        "Workflow capability changes (public-listable toggled on a state) are re-checked at read time but do not trigger a resync; run the full refresh after such catalog changes."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and tested in the database; production release pending."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -8793,7 +8861,7 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "041c016df231b1bdd71359530aaadbabd89d0f8296234a7d01330cdeddbec552",
+    "docs/catalog-persistence/catalog-list-decisions.json": "960cd7a71c261a30f28e2dd005a5a3ad3f393b1a224b0f5d7b33e2ed9c66e2b2",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9018,7 +9086,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "fd390d10a818028cb9246e524eece2615abdb25a0b77cd7d875fa66a844bc8fd",
+    "scripts/production-migrations.json": "6216f18e761840dd2035d3e85c500c574b9bd6a6ea38caa179c07aaeaa3a194a",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9052,6 +9120,7 @@
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
+    "scripts/test-music-directory-migration.sh": "625883dcd57d9e6a10f3ee3560b5e1518b6cf76da20121f3e2fbca1ba88c4ff7",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-release-api-e2e.mjs": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
@@ -9373,6 +9442,8 @@
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "d98cca31c934a8da7d9a20e47dd74fe8c7f55507aa22aaa999967b93fba109f9",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "ab721a0712aefb03ae47d12ebed3ccdd2b7386d560a15a0e42b2ba6829bbc77e",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
@@ -9515,6 +9586,7 @@
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
+    "tdf-hq/test/integration/directory_event_search_sync.sql": "f3fa1b64b6740c79b19b393e8e34a9259a1c2c6182d59ec3d087b27a0561a636",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
@@ -10557,6 +10629,10 @@
       },
       {
         "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
         "relationship": "implementation"
       }
     ],
@@ -15777,6 +15853,30 @@
         "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": [
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": [
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/integration/directory_event_search_sync.sql": [
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-music-directory-migration.sh": [
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -18706,7 +18806,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "fd390d10a818028cb9246e524eece2615abdb25a0b77cd7d875fa66a844bc8fd",
+      "sha256": "6216f18e761840dd2035d3e85c500c574b9bd6a6ea38caa179c07aaeaa3a194a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18719,6 +18819,10 @@
         },
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
           "relationship": "implementation"
         }
       ]
@@ -20079,9 +20183,14 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "5c19d11bb7e1017c1691eca7104aa0bf564efd66c6fbef567862a9484080e8db",
+      "sha256": "625883dcd57d9e6a10f3ee3560b5e1518b6cf76da20121f3e2fbca1ba88c4ff7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4602e813a21d4054",
@@ -30991,6 +31100,30 @@
       ]
     },
     {
+      "id": "SURFACE-4414e78c99a632da",
+      "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
+      "sha256": "d98cca31c934a8da7d9a20e47dd74fe8c7f55507aa22aaa999967b93fba109f9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-48d8c4fab6aef615",
+      "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+      "sha256": "ab721a0712aefb03ae47d12ebed3ccdd2b7386d560a15a0e42b2ba6829bbc77e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -34494,6 +34627,18 @@
       "sha256": "e028d25de639317fa3787d0e0a1160f3a1a5412f0db3a1d366a728d4ed9391ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-4b9b7fcb2555c26b",
+      "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
+      "sha256": "f3fa1b64b6740c79b19b393e8e34a9259a1c2c6182d59ec3d087b27a0561a636",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f4221f60cdc9eace",
@@ -38231,7 +38376,6 @@
     "SURFACE-dec65d6a251d2e85",
     "SURFACE-0d819d7ab7b8cf76",
     "SURFACE-4af46ac98c4298f1",
-    "SURFACE-6cb409b4ac8481c5",
     "SURFACE-b918df4f6cacddc2",
     "SURFACE-78afe29632a7411b",
     "SURFACE-9649a5eac5beddfa",
@@ -40912,7 +41056,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sourceSha256": "b5941c86cc33ef76207290ca5e79b10c8dfc7c4e7b23ced41885e00b5432d9fa",
       "definition": {
         "states": [
           "absent",
@@ -63109,7 +63253,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 110,
+    "PARTIAL": 111,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
