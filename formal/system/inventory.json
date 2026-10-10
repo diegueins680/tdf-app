@@ -508,6 +508,7 @@
       "scripts/test-user-onboarding-progress-migration.sh",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
+      "scripts/test-whatsapp-consent.sh",
       "scripts/test_mail_deliverability_monitor.py",
       "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
@@ -2058,6 +2059,7 @@
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
+      "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
       "tdf-hq/test/TicketAdmissionMain.hs",
       "tdf-hq/test/TicketConfirmationMain.hs",
       "tdf-hq/test/TicketConfirmationSmtpMain.hs",
@@ -2547,7 +2549,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
+      "sha256": "9816a67fcfea7a1c7d2f6c3d91543af7829f0d89a741591f05d2216ccb582a77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5443,6 +5445,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-da68a6be269c4e94",
+      "path": "scripts/test-whatsapp-consent.sh",
+      "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -5487,7 +5495,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "d8ce7a698906bb98d723235ff0cbb7160cfddbe3c1f6fcb2a58d625759da8cb3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13137,7 +13145,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
+      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13809,7 +13817,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
+      "sha256": "0fc12ca61745a842ec4362a1d066036ef315f1c92c7c8d8fbe080d550d3035ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14283,7 +14291,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9585cec9b32ff6f56e1126b999b5ad83bd1859ea15502599b68a1a4b2e12b1ef",
+      "sha256": "a06dfe8eded0c069a3df811cc0db9421902afd7269a5c0cfad58fd9687e3c78e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14349,7 +14357,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "930f532856b6ede3ab6863e70d575d7a6c264b17f996085248f308c4f6f8bd40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14643,7 +14651,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "6bfd2025a76eb43f08a2665d54a736d6caea6449fdaf3307230cc0f28b136890",
+      "sha256": "4045baca7164b03f14db860136d8cfdbfddc13f0a8fc2e135cc74317b0e127fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14704,6 +14712,12 @@
       "id": "SURFACE-60c6485e90430e4b",
       "path": "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "sha256": "a641f1c2e97c98891f2a295fb3ac96eb38a8790150dff92719929c6fedbd3d5a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a7aa6fe1e1854ab6",
+      "path": "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
+      "sha256": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22110,7 +22124,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "9771ce046c08b77aed3b0f1febbfa16185552da35cda93ca698cc11e990c2177",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23026,6 +23040,76 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/WhatsAppConsent.cfg",
+      "sha256": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsent.tla",
+      "sha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+      "sha256": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
+      "sha256": "96c5a3a384f45f1e9a6e28a19c6d1e24d6f07dce9a9ed91ec365ce9d149a03d1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg",
+      "sha256": "7a80288380d6091257f5075a9b36c3edbbfc462b15f3fd903016e935e1ea3b34",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentStaleReply.cfg",
+      "sha256": "3562ab6ee72465ea40c5dca690c1ca00ca3108f733ccc273ce605fbc2f207de7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
+      "sha256": "730b2c17cbd520071cb7eeb845b2ed2cfb43c388c6792f9ff850a8f3bbdd1ee8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
+      "sha256": "30f022a9bff35ad3e6760f3c45994fea034eb178b517b2ee4ea8e6d183422d87",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
+      "sha256": "34cc1751977ea8443e1573c240b29bdb22c2e87d89fd9e7345863af857709690",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+      "sha256": "b96a20e18c648021f6794527b13d50fefaaf40f310ffab2e5147ef7bdd80201c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WorkerCompletionEvidence.cfg",
       "sha256": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
       "authority": "inferred",
@@ -23482,14 +23566,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
+      "sha256": "f246d39be3c85079002d22b31290ec0f14446408791505ad888b23df0db36d85",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ef4ece82253282e415886a6ffec698665fa1705f3ff0a393943634d6c69f17b5",
+      "sha256": "37e4427285505649b7af9c9e2fcbef823280efca7a3cfcf52f548edf31d8abc8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23762,7 +23846,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sha256": "feb25b46ef6be8fb8ab5b86249e09908eaadcf9bc0316de5d15afc2396595fa8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -23819,6 +23903,13 @@
     {
       "path": "formal/system/webhook-log-privacy.md",
       "sha256": "f4aad0ca7b00b52f4602aa60522282b7ada730d566b95ef9cfb14c33b67ffb17",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/whatsapp-consent.md",
+      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34612,6 +34703,267 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK CurrentSessionOnly",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsent.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = FALSE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = FALSE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentStaleReply.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = FALSE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = FALSE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = FALSE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = FALSE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = FALSE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
