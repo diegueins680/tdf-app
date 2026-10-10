@@ -99,7 +99,24 @@ def code_controls(bindings, machines):
                           "  where\n    allowedTransitions = [(RentalOnHold, RentalConfirmed)]\n")
         expect("table taken from a later declaration", gate.check_code(bindings, machines, root),
                "has no allowedTransitions list")
-    return 13
+        target.write_text(source.replace(
+            "      , (RentalLost, RentalDisputed)\n",
+            "      {- outer {- inner -} , (RentalLost, RentalDisputed)\n      -}\n", 1))
+        expect("edge inside a nested block comment", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['lost', 'disputed']]")
+        extended = source.replace("      , (RentalDisputed, RentalClosed)\n      ]",
+                                  "      , (RentalDisputed, RentalClosed)\n      ] ++ additionalTransitions", 1)
+        assert extended != source
+        target.write_text(extended)
+        expect("list extended by another expression", gate.check_code(bindings, machines, root),
+               "is not a single literal list")
+    assert gate.without_haskell_comments('x = "-- {- text" -- gone\ny') == 'x = "-- {- text" \ny'
+
+    unbound = copy.deepcopy(bindings)
+    del unbound["machines"][RENTAL]["code"]
+    expect("required validator binding removed", gate.check_code(unbound, machines),
+           "required backend validator binding is missing")
+    return 16
 
 
 def main():

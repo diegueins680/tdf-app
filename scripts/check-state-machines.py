@@ -99,8 +99,35 @@ def check_static(bindings, machines):
 
 
 def without_haskell_comments(text):
-    """Commented-out code is not implemented: drop block and line comments."""
-    return re.sub(r"--[^\n]*", "", re.sub(r"\{-.*?-\}", "", text, flags=re.S))
+    """Commented-out code is not implemented: drop line comments and nested block comments.
+
+    String literals are copied through so that comment markers inside them stay text.
+    """
+    kept, depth, index = [], 0, 0
+    while index < len(text):
+        pair = text[index:index + 2]
+        if pair == "{-":
+            depth, index = depth + 1, index + 2
+        elif depth and pair == "-}":
+            depth, index = depth - 1, index + 2
+        elif depth:
+            if text[index] == "\n":
+                kept.append("\n")
+            index += 1
+        elif pair == "--":
+            index = text.find("\n", index) if "\n" in text[index:] else len(text)
+        elif text[index] == '"':
+            end = index + 1
+            while end < len(text) and text[end] not in '"\n':
+                end += 2 if text[end] == "\\" else 1
+            kept.append(text[index:end + 1])
+            index = end + 1
+        else:
+            kept.append(text[index])
+            index += 1
+    if depth:
+        raise RuntimeError("unterminated Haskell block comment")
+    return "".join(kept)
 
 
 def declaration_body(source, start):
@@ -125,9 +152,14 @@ def code_transitions(spec, root=ROOT):
     if not definition:
         raise RuntimeError(f"validator {spec['validator']} not found in {spec['file']}")
     # Only this validator's own clause: a later function's table must not be read instead.
-    table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", declaration_body(source, definition.start()), re.S)
+    body = declaration_body(source, definition.start())
+    table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", body, re.S)
     if not table:
         raise RuntimeError(f"{spec['validator']} has no allowedTransitions list")
+    # The whole right-hand side must be the literal list: `[...] ++ more` would hide edges.
+    following = body[table.end():].lstrip()
+    if following and not re.match(r"[A-Za-z_]\w*'*(\s+[\w']+)*\s*(=|::|\|)", following):
+        raise RuntimeError(f"{spec['validator']} allowedTransitions is not a single literal list")
     listed = table.group(1)
     pairs = set()
     for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", listed):
@@ -158,8 +190,21 @@ def compare_code(machine_id, spec, definition, root=ROOT):
     return errors
 
 
+# Validators reviewed under AUTHORITY-053. A binding that loses its `code` object must fail,
+# not quietly reduce the number of validators compared.
+REQUIRED_CODE_BINDINGS = (
+    "docs/revenue-platform/formal-model.yaml#event_ticket_fulfillment",
+    "docs/revenue-platform/formal-model.yaml#quote",
+    "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment",
+    "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment",
+)
+
+
 def check_code(bindings, machines, root=ROOT):
     errors = []
+    for machine_id in REQUIRED_CODE_BINDINGS:
+        if not bindings["machines"].get(machine_id, {}).get("code"):
+            errors.append(f"{machine_id}: required backend validator binding is missing")
     for machine_id, binding in bindings["machines"].items():
         spec = binding.get("code")
         if spec is None or machine_id not in machines:
