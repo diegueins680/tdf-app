@@ -5482,7 +5482,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "13c9ddb90527f2a6274455278b7bdcb093326ba5efffb4c1463e8ab4fd6d55b4",
+      "sha256": "5ffe45c7dc2bc6d89d78317f6252a6230065de2a034a63df46af13591c6a1695",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20675,63 +20675,63 @@
     },
     {
       "path": "formal/event-operations/AccessGrant.cfg",
-      "sha256": "1b38d0362e3516b309cbaa8d796456baff5287a39bf90cb650c4883fa5bd35ac",
+      "sha256": "04d65f603d31f2a3ea6db6303ad2210452894b2629e4b1fc01a808dc6a393c17",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrant.tla",
-      "sha256": "523f02170b4afa0db08aa6931d053009ef92e9a5cfd16e8dce5a33c4e05fb1c8",
+      "sha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/AccessGrantAdminInvite.cfg",
-      "sha256": "a08fc869213bddb73f25ff3b897e0daf07ed777a664cfca67c4abb2fa5951932",
+      "sha256": "46c90de738c4270344fd79a72c6d0dabce9d2c86b37fe342005642c368ad07b5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrantExpired.cfg",
-      "sha256": "c07cf9544bc853703a09fa6c946d28721bce3d0d9d0c6a57a88bda28af87efd3",
+      "sha256": "cf8f6142f0a630e51f80e22f67273369c2b561718c906846fd1979a8c5560f5b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrantNonAdmin.cfg",
-      "sha256": "b5b89e97c6ec94dcb03c0eb17dfd6c831e961fdaa81ed652d3f899c3e72ce0af",
+      "sha256": "a8163ae24167a2fe00adcaffeb2e03dd8bc76358449e6bea908e4ae3114397e8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrantReactivate.cfg",
-      "sha256": "797cb8f41caa3fc6d604cb20d2511ec7fb70d05647032d7125b51af10d7bd5d3",
+      "sha256": "5662cd2dcabfb00eeadfe18fa9c509406ded9ac88d33e7a624f37ae1e7031d05",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrantRebind.cfg",
-      "sha256": "8fa3bdf36fe6b52f93f160e6ed97aa92fc450e6da1817b0d30e63f4c5176efd5",
+      "sha256": "bc209ff661f1afc357a7eb5be88ce641b0a5153051ca30d6b0f3cf3b96929957",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrantRevokedLink.cfg",
-      "sha256": "6e11c34a966547e97ec91f5cebefa2c741ea2b6e3b0e8e15613e77a004a59061",
+      "sha256": "1b4719ff202d40627b6988bac812335dedcb70dfa9ab279644b8e52c006b8bbc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/AccessGrantSelfApproval.cfg",
-      "sha256": "72e7cb3287d62b7f229fdb3f48eba6e445bf1ad14ab691a22391900d545e4304",
+      "sha256": "443e87952adacf3c30c6adeb01fb17c57d62e77b48bbf71fc140f1088a345aab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23517,7 +23517,7 @@
     },
     {
       "path": "formal/system/access-grant.md",
-      "sha256": "4d59e00299b8b71adf537091ce83d89e29e816b07f4ab429c6d2c420883276cc",
+      "sha256": "0fec957eba1b703f8a4bab83d2eb5ffe63a4aafc0e80535d9a0e869ef70ed0ef",
       "authority": "inferred",
       "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
       "kind": "requirement-candidate"
@@ -23797,7 +23797,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "48344b35e9b301510aaa3f2b9d1df764a8841d2aa0a77d66d3acb0b68419e109",
+      "sha256": "7e54984c3c4d4c15cb1820fdbb2d305cc1200744075a071d8ced862fe2772348",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -30973,7 +30973,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -30991,7 +30991,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Admin\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -31009,7 +31009,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -31027,7 +31027,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -31045,7 +31045,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = FALSE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -31063,7 +31063,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -31081,7 +31081,7 @@
         "  CheckLinkRevoked = FALSE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -31099,7 +31099,7 @@
         "  CheckLinkRevoked = TRUE",
         "  CheckNoReactivation = TRUE",
         "  InvitationRole = \"Artist\"",
-        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative RevokedStaysRevoked",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

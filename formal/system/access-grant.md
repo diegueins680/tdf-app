@@ -19,6 +19,12 @@ The code-owned paths that grant the `Artist` security role:
 
 All automatic paths go through `applySecurityRoleAssignmentPolicy`, which refuses
 to reactivate a revoked assignment.
+Reviewed approval is different. `provisionReviewedSecurityRole` restores an
+existing revoked assignment: it sets `active` and clears `revoked_at`. That is
+the deliberate restoration route: a distinct administrator decides, and the
+change is published as a security revision with an audit event. The model
+separates the two paths. It checks that no *automatic* path reactivates a
+revoked assignment, and it allows reviewed restoration (review finding on #529).
 
 ## Authority correction (AUTHORITY-053)
 
@@ -69,7 +75,7 @@ states are intended).
 | `SingleRedeemer` | claim `WHERE redeemed_by_party_id IS NULL OR = p` | `AccessGrantRebind.cfg` |
 | `RedeemedNeverRevoked` | claim `revoked_at IS NULL`; revoke `redeemed_at IS NULL`; CHECK `artist_invitation_link_redeemed_or_revoked` | `AccessGrantRevokedLink.cfg` |
 | `InvitationNeverAdministrative` | `artist.invitation.artist` binds the Artist role only | `AccessGrantAdminInvite.cfg` |
-| `RevokedStaysRevoked` | `applySecurityRoleAssignmentPolicy` refuses reactivation | `AccessGrantReactivate.cfg` |
+| `NoAutomaticReactivation` | `applySecurityRoleAssignmentPolicy` refuses reactivation (automatic paths only) | `AccessGrantReactivate.cfg` |
 
 Each mutation disables exactly one guard, and `scripts/verify-event-operations-formal.sh`
 requires its named invariant violation.
@@ -86,6 +92,6 @@ requires its named invariant violation.
   requests, the self-service path and invitation attribution is not modeled.
 - Re-redemption by the bound account within the link's validity re-runs the
   policy. That is idempotent while the assignment is active and refused once
-  it is revoked (`RevokedStaysRevoked`).
+  it is revoked (`NoAutomaticReactivation`).
 - This is bounded model checking under these assumptions, not a proof of the
   Haskell implementation.

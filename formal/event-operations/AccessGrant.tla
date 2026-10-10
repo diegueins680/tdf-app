@@ -28,7 +28,7 @@ VARIABLES
   inviteGrants,   \* parties granted a role through the link, with the role
   roleActive,     \* party -> Artist assignment active
   roleRevoked,    \* party -> Artist assignment was revoked by staff
-  reactivated     \* a revoked assignment became active again
+  reactivated     \* an automatic policy made a revoked assignment active again
 
 vars == <<reqStatus, reqPastDeadline, reqApprover, reqApprovedLate, linkBoundTo,
           linkRevoked, linkPastDeadline, inviteGrants, roleActive, roleRevoked, reactivated>>
@@ -42,12 +42,20 @@ Init ==
   /\ roleRevoked = [p \in Parties |-> FALSE]
   /\ reactivated = FALSE
 
-\* Assigning Artist: an existing revoked assignment is never reactivated.
+\* Automatic assignment (invitation or self-service policy): applySecurityRoleAssignmentPolicy
+\* never reactivates a revoked assignment.
 Assign(p) ==
   IF roleRevoked[p] /\ CheckNoReactivation
     THEN UNCHANGED <<roleActive, reactivated>>
     ELSE /\ roleActive' = [roleActive EXCEPT ![p] = TRUE]
          /\ reactivated' = (reactivated \/ roleRevoked[p])
+
+\* Reviewed assignment: provisionReviewedSecurityRole may restore a revoked assignment.
+\* That is a distinct administrator's explicit decision, published as a security revision
+\* with an audit event, so it is not an automatic reactivation.
+ReviewedAssign(p) ==
+  /\ roleActive' = [roleActive EXCEPT ![p] = TRUE]
+  /\ UNCHANGED reactivated
 
 AccessDeadlinePasses ==
   /\ ~reqPastDeadline /\ reqPastDeadline' = TRUE
@@ -72,7 +80,7 @@ Approve(r) ==
   /\ reqStatus' = "approved"
   /\ reqApprover' = r
   /\ reqApprovedLate' = reqPastDeadline
-  /\ Assign("requester")
+  /\ ReviewedAssign("requester")
   /\ UNCHANGED <<reqPastDeadline, linkBoundTo, linkRevoked, linkPastDeadline,
                  inviteGrants, roleRevoked>>
 
@@ -138,5 +146,5 @@ NoApprovalAfterExpiry == ~reqApprovedLate
 SingleRedeemer == Cardinality({g[1] : g \in inviteGrants}) <= 1
 RedeemedNeverRevoked == ~(linkRevoked /\ linkBoundTo # None)
 InvitationNeverAdministrative == \A g \in inviteGrants : g[2] = "Artist"
-RevokedStaysRevoked == ~reactivated
+NoAutomaticReactivation == ~reactivated
 ====

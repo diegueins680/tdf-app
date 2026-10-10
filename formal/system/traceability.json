@@ -8206,7 +8206,7 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx"
       ],
-      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement; AccessGrant.tla checks single redeemer, redeemed/revoked exclusion, non-administrative role and no reactivation of revoked assignments, each with a mutation control.",
+      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement; AccessGrant.tla checks single redeemer, redeemed/revoked exclusion, non-administrative role and no automatic reactivation of a revoked assignment by redemption, each with a mutation control.",
       "evidence": "Local execution only",
       "confidence": "Medium: claim SQL and validation exercised locally; end-to-end redemption not yet run against a deployed backend.",
       "ambiguity": [
@@ -8231,7 +8231,7 @@
       "authority": "Unreviewed recovered local implementation",
       "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs; formal/system/access-grant.md (AUTHORITY-053)",
       "contract": "formal/system/access-grant.md",
-      "property": "A role is provisioned from an access request only for artist.onboarding/create, and only by one of two paths: (a) self-service, where createRequest activates the requester's own Artist profile through the artist.self-service.artist policy and records the request approved by system-policy with no reviewer; (b) a reviewed decision on a request that is still pending and not past expiry, made by an administrator distinct from the requester, with a published revision. No path grants an administrative or emergency role or reactivates a revoked assignment.",
+      "property": "A role is provisioned from an access request only for artist.onboarding/create, and only by one of two paths: (a) self-service, where createRequest activates the requester's own Artist profile through the artist.self-service.artist policy and records the request approved by system-policy with no reviewer; (b) a reviewed decision on a request that is still pending and not past expiry, made by an administrator distinct from the requester, with a published revision. No path grants an administrative or emergency role. Automatic paths never reactivate a revoked assignment; a reviewed approval may restore one as an explicit, published and audited administrator decision.",
       "actors": [
         "Requester (self-service activation and cancellation)",
         "system-policy (artist.self-service.artist automatic assignment)",
@@ -8746,7 +8746,7 @@
     "e2e/web/persona-public.spec.mjs": "98698dd8ff798654008941ef9899d5461f9ef1e6da8d26ce599f4056abea2007",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
-    "formal/event-operations/AccessGrant.tla": "523f02170b4afa0db08aa6931d053009ef92e9a5cfd16e8dce5a33c4e05fb1c8",
+    "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
     "formal/event-operations/AccountDeletionAuthority.tla": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
     "formal/event-operations/AccountDeletionAuthorityNoGrantLock.cfg": "20756b6a3bdc85fb904bc8c81a6e0a7c8bcb2c38e06f7bc17c7f52dca93fc8e4",
@@ -9029,7 +9029,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "13c9ddb90527f2a6274455278b7bdcb093326ba5efffb4c1463e8ab4fd6d55b4",
+    "scripts/verify-event-operations-formal.sh": "5ffe45c7dc2bc6d89d78317f6252a6230065de2a034a63df46af13591c6a1695",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -20642,7 +20642,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "13c9ddb90527f2a6274455278b7bdcb093326ba5efffb4c1463e8ab4fd6d55b4",
+      "sha256": "5ffe45c7dc2bc6d89d78317f6252a6230065de2a034a63df46af13591c6a1695",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40682,7 +40682,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "48344b35e9b301510aaa3f2b9d1df764a8841d2aa0a77d66d3acb0b68419e109",
+      "sourceSha256": "7e54984c3c4d4c15cb1820fdbb2d305cc1200744075a071d8ced862fe2772348",
       "definition": {
         "states": [
           "absent",

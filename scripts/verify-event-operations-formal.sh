@@ -102,7 +102,7 @@ run_negative_tlc AccessGrantNonAdmin.cfg accessgrantnonadmin 'Invariant AdminApp
 run_negative_tlc AccessGrantExpired.cfg accessgrantexpired 'Invariant NoApprovalAfterExpiry is violated' AccessGrant.tla
 run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeemer is violated' AccessGrant.tla
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
-run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant RevokedStaysRevoked is violated' AccessGrant.tla
+run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
