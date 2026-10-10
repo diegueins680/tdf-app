@@ -106,6 +106,15 @@ spec = describe "artist-self-service-postgresql" $ do
         statuses `shouldBe` [Single ("expired" :: Text), Single "approved"]
         history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 lapsed]) pool
         history `shouldBe` [Single (1 :: Int64)]
+        -- Deciding one request settles only that request, so a rolled-back
+        -- decision can never undo expiry of unrelated requests.
+        other <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'studio.bookings','delete','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day') RETURNING id" []) pool :: IO [Single Int64]
+        otherId <- case other of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        decide open `shouldReturn` 0
+        untouched <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 otherId]) pool
+        untouched `shouldBe` [Single ("pending" :: Text)]
       it "commits expiry when a reviewer decides a lapsed request through the handler" $ \pool -> do
         let reviewer = AuthedUser
               { auPartyId = toSqlKey 9

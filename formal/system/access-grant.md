@@ -51,7 +51,11 @@ audit rows, and the decision or cancellation returns the existing 409.
 The decision transaction reports "no longer pending" as a value, not an
 exception. Throwing inside the transaction rolled back the sweep, leaving the
 lapsed request `pending` (review finding on #529). The 409 is now raised after
-the commit. Cancellation already raised its 409 after `runDB` returned.
+the commit. The sweep inside the decision or cancellation is scoped to the target
+request (`expirePendingAccessRequests` with an id filter). A provisioning failure
+still throws and rolls back, so a global sweep there would also undo the expiry of
+unrelated requests (second review finding). The list endpoints keep the global
+sweep in their own transactions. Cancellation already raised its 409 after `runDB` returned.
 
 `ArtistActivationSpec` runs against disposable PostgreSQL through
 `scripts/test-artist-self-service.sh`. It covers the helper ("settles expiry

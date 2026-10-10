@@ -4287,7 +4287,9 @@ transitionPendingAccessRequest
   -> [Update ME.FeatureAccessRequest]
   -> SqlPersistT IO Int64
 transitionPendingAccessRequest now requestKey changes = do
-  expireFeatureAccessRequests now
+  -- Only the target is settled here: a later provisioning failure rolls this
+  -- transaction back, and must not undo expiry of unrelated requests.
+  expirePendingAccessRequests now [ME.FeatureAccessRequestId ==. requestKey]
   updateWhereCount
     [ ME.FeatureAccessRequestId ==. requestKey
     , ME.FeatureAccessRequestStatus ==. "pending"
@@ -4295,11 +4297,14 @@ transitionPendingAccessRequest now requestKey changes = do
     changes
 
 expireFeatureAccessRequests :: UTCTime -> SqlPersistT IO ()
-expireFeatureAccessRequests now = do
+expireFeatureAccessRequests now = expirePendingAccessRequests now []
+
+expirePendingAccessRequests :: UTCTime -> [Filter ME.FeatureAccessRequest] -> SqlPersistT IO ()
+expirePendingAccessRequests now scope = do
   expired <- selectList
-    [ ME.FeatureAccessRequestStatus ==. "pending"
-    , ME.FeatureAccessRequestExpiresAt <=. Just now
-    ] []
+    ([ ME.FeatureAccessRequestStatus ==. "pending"
+     , ME.FeatureAccessRequestExpiresAt <=. Just now
+     ] <> scope) []
   forM_ expired $ \(Entity requestId requestValue) -> do
     changed <- updateWhereCount
       [ ME.FeatureAccessRequestId ==. requestId
