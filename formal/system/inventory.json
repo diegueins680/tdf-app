@@ -8892,13 +8892,13 @@
     {
       "id": "SURFACE-ca6a42a035d60724",
       "path": "tdf-hq-ui/src/pages/PartiesPage.test.tsx",
-      "sha256": "41e97782d113dddfd7606c5b345139a9b02557b10e55884742bda05aff51d9a2",
+      "sha256": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-41171391066d3a7e",
       "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
-      "sha256": "6a22094b63c120b85d166d6150bd20666f0707c8979532383a652b9293fceb3e",
+      "sha256": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23741,7 +23741,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b8efd18becbcab76411849ad51126a31690304a6024a64f66ef480677def780e",
+      "sha256": "baeb560b9a5eb061ffa8037de39c60345a79dd9690b6c53adaa0ccca163ed480",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
