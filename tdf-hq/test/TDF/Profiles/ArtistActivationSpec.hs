@@ -2,9 +2,10 @@
 
 module TDF.Profiles.ArtistActivationSpec (spec) where
 
-import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, try)
 import Control.Monad (forM, void)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (runReaderT)
 import qualified Data.ByteString.Char8 as BS
@@ -148,6 +149,28 @@ spec = describe "artist-self-service-postgresql" $ do
         counts pool 4 `shouldReturn` [1,1,1]
         status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 lapsedId]) pool
         status `shouldBe` [Single ("pending" :: Text)]
+      it "does not approve an onboarding request that becomes terminal during activation" $ \pool -> do
+        rows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at) VALUES(6,'artist.onboarding','create','[]','[]','pending','admin',now(),now()) RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case rows of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        rejectedLocked <- newEmptyMVar
+        rejectionCommitted <- newEmptyMVar
+        -- A reviewer rejects the request and holds the row lock while activation
+        -- reads it as pending; the activation's UPDATE then waits for the commit.
+        void $ forkIO $ do
+          runSqlPool (do
+            rawExecute "UPDATE feature_access_requests SET status='rejected' WHERE id=?" [PersistInt64 requestId]
+            liftIO (putMVar rejectedLocked ())
+            liftIO (threadDelay 1500000)) pool
+          putMVar rejectionCommitted ()
+        takeMVar rejectedLocked
+        activate pool 6 >>= (`shouldSatisfy` isRight)
+        takeMVar rejectionCommitted
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("rejected" :: Text)]
+        approvals <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='approved'" [PersistInt64 requestId]) pool
+        approvals `shouldBe` [Single (0 :: Int64)]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do
         runSqlPool (rawExecute "CREATE FUNCTION fail_test_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artist_party_id=7 THEN RAISE EXCEPTION 'injected profile write failure'; END IF; RETURN NEW; END $$" []) pool
         runSqlPool (rawExecute "CREATE TRIGGER fail_profile BEFORE INSERT ON artist_profile FOR EACH ROW EXECUTE FUNCTION fail_test_profile()" []) pool

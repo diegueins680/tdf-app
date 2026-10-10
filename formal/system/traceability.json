@@ -9364,7 +9364,7 @@
     "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
-    "tdf-hq/src/TDF/Profiles/Artist.hs": "b1c1931ad3239ea66063ca47b701c9173d534320d9d0ad5922082bd4caf796eb",
+    "tdf-hq/src/TDF/Profiles/Artist.hs": "7ebafb60ac6ff43feba395bd049cb7d4ed68ec3dba064aac9b0b9babc49b11cd",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
@@ -9436,7 +9436,7 @@
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
-    "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "4749b3b994dbc40ebe104cd0ba32bbcce44271b30fe1bb22a066bd6496ec73d9",
+    "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "527de464114af94677e38131551ef0570ec9430e54e2d6f4776db88123a9e64d",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
@@ -32359,7 +32359,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "b1c1931ad3239ea66063ca47b701c9173d534320d9d0ad5922082bd4caf796eb",
+      "sha256": "7ebafb60ac6ff43feba395bd049cb7d4ed68ec3dba064aac9b0b9babc49b11cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33916,7 +33916,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "4749b3b994dbc40ebe104cd0ba32bbcce44271b30fe1bb22a066bd6496ec73d9",
+      "sha256": "527de464114af94677e38131551ef0570ec9430e54e2d6f4776db88123a9e64d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

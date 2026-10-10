@@ -17,7 +17,7 @@ module TDF.Profiles.Artist
   , resolvePublishedGenreSelections
   ) where
 
-import           Control.Monad             (forM, forM_)
+import           Control.Monad             (forM, forM_, when)
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Data.Char                 ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                            , generalCategory
@@ -35,7 +35,7 @@ import           Data.Time                 (UTCTime, getCurrentTime)
 import           Data.UUID                 (UUID)
 import qualified Data.UUID                 as UUID
 import           Database.Persist
-import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql)
+import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql, updateWhereCount)
 
 import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy, hasCanonicalPartyRole)
 import qualified TDF.Catalog.Models        as Catalog
@@ -78,7 +78,13 @@ activateOwnArtistProfile partyId now = do
              ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just now])) []
           forM_ pending $ \(Entity key _) -> do
             let note = Just "Perfil de artista activado por su titular, sin aprobación manual."
-            update key
+            -- Recheck status and deadline in the UPDATE itself: a concurrent
+            -- rejection, cancellation or expiry after the SELECT must win, and no
+            -- approval evidence is written unless this row actually changed.
+            changed <- updateWhereCount
+              ([ ME.FeatureAccessRequestId ==. key
+               , ME.FeatureAccessRequestStatus ==. "pending"
+               ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just now]))
               [ ME.FeatureAccessRequestStatus =. "approved"
               , ME.FeatureAccessRequestReviewerPartyId =. Nothing
               , ME.FeatureAccessRequestReviewerNotes =. note
@@ -86,23 +92,24 @@ activateOwnArtistProfile partyId now = do
               , ME.FeatureAccessRequestDecidedAt =. Just now
               , ME.FeatureAccessRequestExpiresAt =. Nothing
               ]
-            insert_ ME.FeatureAccessRequestHistory
-              { ME.featureAccessRequestHistoryRequestId = key
-              , ME.featureAccessRequestHistoryActorPartyId = Just partyId
-              , ME.featureAccessRequestHistoryTransition = "automatically_approved"
-              , ME.featureAccessRequestHistoryFromStatus = Just "pending"
-              , ME.featureAccessRequestHistoryToStatus = "approved"
-              , ME.featureAccessRequestHistoryNote = note
-              , ME.featureAccessRequestHistoryCreatedAt = now
-              }
-            insert_ AuditLog
-              { auditLogActorId = Just partyId
-              , auditLogEntity = "feature_access_request"
-              , auditLogEntityId = T.pack (show (fromSqlKey key))
-              , auditLogAction = "access_request_automatically_approved"
-              , auditLogDiff = Just "{\"featureId\":\"artist.onboarding\",\"action\":\"create\",\"status\":\"approved\"}"
-              , auditLogCreatedAt = now
-              }
+            when (changed == 1) $ do
+              insert_ ME.FeatureAccessRequestHistory
+                { ME.featureAccessRequestHistoryRequestId = key
+                , ME.featureAccessRequestHistoryActorPartyId = Just partyId
+                , ME.featureAccessRequestHistoryTransition = "automatically_approved"
+                , ME.featureAccessRequestHistoryFromStatus = Just "pending"
+                , ME.featureAccessRequestHistoryToStatus = "approved"
+                , ME.featureAccessRequestHistoryNote = note
+                , ME.featureAccessRequestHistoryCreatedAt = now
+                }
+              insert_ AuditLog
+                { auditLogActorId = Just partyId
+                , auditLogEntity = "feature_access_request"
+                , auditLogEntityId = T.pack (show (fromSqlKey key))
+                , auditLogAction = "access_request_automatically_approved"
+                , auditLogDiff = Just "{\"featureId\":\"artist.onboarding\",\"action\":\"create\",\"status\":\"approved\"}"
+                , auditLogCreatedAt = now
+                }
           pure (Right profile)
 
 cleanOptionalText :: Maybe Text -> Maybe Text

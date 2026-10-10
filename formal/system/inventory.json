@@ -13732,7 +13732,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "b1c1931ad3239ea66063ca47b701c9173d534320d9d0ad5922082bd4caf796eb",
+      "sha256": "7ebafb60ac6ff43feba395bd049cb7d4ed68ec3dba064aac9b0b9babc49b11cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14542,7 +14542,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "4749b3b994dbc40ebe104cd0ba32bbcce44271b30fe1bb22a066bd6496ec73d9",
+      "sha256": "527de464114af94677e38131551ef0570ec9430e54e2d6f4776db88123a9e64d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
