@@ -271,7 +271,10 @@ BEGIN
     WHERE entity_kind = 'venue' AND entity_id = OLD.id::text;
     RETURN NULL;
   END IF;
-  FOR venue_event_id IN SELECT id FROM social_event WHERE venue_id = NEW.id LOOP
+  -- Locked before listing the venue's events, so an event that a concurrent
+  -- transaction just added to this venue is not missed.
+  PERFORM directory_search_sync_lock();
+  FOR venue_event_id IN SELECT id FROM social_event WHERE venue_id = NEW.id ORDER BY id LOOP
     PERFORM directory_sync_event_search(venue_event_id);
   END LOOP;
   PERFORM directory_sync_venue_search(NEW.id);
