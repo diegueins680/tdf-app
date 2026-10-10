@@ -1695,12 +1695,12 @@ publicRequestWhatsAppConsent WhatsAppConsentRequest{..} = do
   sourceClean <- either throwError pure (validateWhatsAppConsentSource "public" wcrSource)
   now <- liftIO getCurrentTime
   claimed <- runDB (claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean)
-  when claimed $ do
+  for_ claimed $ \requestedAt -> do
     result <- sendWhatsAppConfirmationRequest now phoneVal nameClean
-    -- A request that never reached the number must not block a retry, and the
-    -- person can still confirm it by messaging SI themselves.
+    -- A request that never reached the number must not block a prompt retry,
+    -- and the person can still confirm it by messaging SI themselves.
     when (isLeft result) $
-      runDB (markWhatsAppConfirmationRequestUnsent now phoneVal)
+      runDB (markWhatsAppConfirmationRequestUnsent requestedAt phoneVal)
   pure (publicWhatsAppConsentResponse phoneVal
     "Si el número es válido, recibirá un WhatsApp de TDF Records. Responde SI a ese mensaje para confirmar tu suscripción.")
 
@@ -1734,6 +1734,7 @@ publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
       , ME.WhatsAppConsentRevokedAt =. Just now
       , ME.WhatsAppConsentUpdatedAt =. now
       ]
+    CampaignAutomation.settleWhatsAppWithdrawalInstant phoneVal
     pure (maybe False (ME.whatsAppConsentConsent . entityVal) existing)
   when wasActive $
     sendWhatsAppConsentNotice now phoneVal Nothing "opt_out_confirmation"
@@ -1806,9 +1807,9 @@ recordWhatsAppConsentNotice now phoneVal nameClean source message result =
 -- | Claims the right to send one confirmation request: at most once per number
 -- per resend interval unless the previous request was not accepted by the
 -- provider, never for an active consent. One conditional update, so concurrent
--- submissions cannot both claim.
+-- submissions cannot both claim. Returns the request instant the send is bound to.
 claimWhatsAppConfirmationRequest
-  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO Bool
+  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO (Maybe UTCTime)
 claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
   -- Simultaneous first requests for a number must not fail on its unique row.
   rawExecute
@@ -1823,23 +1824,35 @@ claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
     , toPersistValue now
     ]
   -- A withdrawal keeps the request instant, so withdrawing cannot reopen the
-  -- interval; an undelivered request reopens it only while it is not withdrawn.
+  -- interval. An undelivered, unwithdrawn request may be sent again only inside
+  -- its short window and keeps its instant, so retries cannot extend the time
+  -- in which a number that saw no prompt could confirm.
+  let intervalStart = addUTCTime (negate whatsAppConfirmationResendInterval) now
   changed <- rawExecuteCount
     "UPDATE whats_app_consent \
-    \SET confirmation_requested_at = ?, display_name = ?, source = ?, note = ?, updated_at = ? \
+    \SET confirmation_requested_at = CASE \
+    \WHEN confirmation_requested_at IS NULL OR confirmation_requested_at < ? THEN ? \
+    \ELSE confirmation_requested_at END, \
+    \display_name = ?, source = ?, note = ?, updated_at = ? \
     \WHERE phone_e164 = ? AND NOT consent \
     \AND (confirmation_requested_at IS NULL OR confirmation_requested_at < ? \
-    \OR (note = ? AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at)))"
-    [ toPersistValue now
+    \OR (note = ? AND confirmation_requested_at >= ? \
+    \AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at)))"
+    [ toPersistValue intervalStart
+    , toPersistValue now
     , toPersistValue nameClean
     , toPersistValue sourceClean
     , toPersistValue whatsAppSentRequestNote
     , toPersistValue now
     , toPersistValue phoneVal
-    , toPersistValue (addUTCTime (negate whatsAppConfirmationResendInterval) now)
+    , toPersistValue intervalStart
     , toPersistValue whatsAppUnsentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppUnsentConfirmationWindow) now)
     ]
-  pure (changed == 1)
+  if changed /= 1
+    then pure Nothing
+    else fmap (>>= ME.whatsAppConsentConfirmationRequestedAt . entityVal)
+           (getBy (ME.UniqueWhatsAppConsent phoneVal))
 
 -- | Records that the provider did not accept this exact claim's request. The
 -- request stays pending so the number can confirm it by messaging first, but
@@ -1979,7 +1992,6 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
         , ME.WhatsAppConsentNote =. noteClean
         , ME.WhatsAppConsentConsentedAt =. Just now
         , ME.WhatsAppConsentRevokedAt =. Nothing
-        , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
         , ME.WhatsAppConsentUpdatedAt =. now
         ]
       getBy (ME.UniqueWhatsAppConsent phoneVal)
@@ -2005,9 +2017,9 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
         , ME.WhatsAppConsentNote =. reasonClean
         , ME.WhatsAppConsentConsentedAt =. Nothing
         , ME.WhatsAppConsentRevokedAt =. Just now
-        , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
         , ME.WhatsAppConsentUpdatedAt =. now
         ]
+      CampaignAutomation.settleWhatsAppWithdrawalInstant phoneVal
       getBy (ME.UniqueWhatsAppConsent phoneVal)
 
     sendConsentMessage phoneVal nameClean = do

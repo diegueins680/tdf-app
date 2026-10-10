@@ -5,6 +5,7 @@
 module TDF.CampaignAutomation
   ( CampaignTickStats(..)
   , applyWhatsAppCampaignOptOut
+  , settleWhatsAppWithdrawalInstant
   , campaignAutomationTemplatesDTO
   , enrollCampaignParties
   , installCampaignAutomation
@@ -45,6 +46,7 @@ import           Database.Persist
   , insertUnique
   , selectFirst
   , selectList
+  , toPersistValue
   , upsert
   , update
   , (=.)
@@ -56,6 +58,7 @@ import           Database.Persist
   )
 import           Database.Persist.Sql
   ( Single(..)
+  , rawExecute
   , SqlPersistT
   , fromSqlKey
   , rawSql
@@ -565,6 +568,17 @@ activeConsent (Just (Entity _ consent)) =
     && isJust (ME.whatsAppConsentConsentedAt consent)
     && ME.whatsAppConsentRevokedAt consent == Nothing
 
+-- | A withdrawal reads its clock before it locks the row, so a request that
+-- committed first can carry a later instant. Run in the withdrawal's own
+-- transaction: the withdrawal is never earlier than the request it defeats.
+settleWhatsAppWithdrawalInstant :: Text -> SqlPersistT IO ()
+settleWhatsAppWithdrawalInstant phone =
+  rawExecute
+    "UPDATE whats_app_consent SET revoked_at = confirmation_requested_at \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND confirmation_requested_at IS NOT NULL AND revoked_at < confirmation_requested_at"
+    [toPersistValue phone]
+
 isWhatsAppCampaignOptOutMessage :: Text -> Bool
 isWhatsAppCampaignOptOutMessage rawMessage =
   normalized `elem` ["salir", "stop", "cancelar", "baja"]
@@ -604,6 +618,7 @@ applyWhatsAppCampaignOptOut now rawPhone mInboundPartyId =
           , ME.WhatsAppConsentRevokedAt =. Just now
           , ME.WhatsAppConsentUpdatedAt =. now
           ]
+      settleWhatsAppWithdrawalInstant phone
       phoneParties <-
         selectList
           [M.PartyWhatsapp <-. map Just (phoneLookupAliases phone)]

@@ -843,21 +843,26 @@ spec = describe "TDF.Server helpers" $ do
             bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
                 now <- getCurrentTime
                 runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
-                let claim at = runSqlPool
+                let claim at = (/= Nothing) <$> runSqlPool
                         (NotificationServer.claimWhatsAppConfirmationRequest at "+593990000010" Nothing (Just "public")) pool
+                    pendingRow = runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000010")) pool
                 claim now `shouldReturn` True
                 claim (addUTCTime 60 now) `shouldReturn` False
-                -- A failure reported for another claim instant changes nothing.
+                -- A failure reported for another request instant changes nothing.
                 runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent (addUTCTime 1 now) "+593990000010") pool
                 claim (addUTCTime 90 now) `shouldReturn` False
                 runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
-                pending <- runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000010")) pool
-                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) pending `shouldBe` Just (Just now)
-                fmap (ME.whatsAppConsentNote . entityVal) pending `shouldBe` Just (Just "pending_unsent")
+                unsent <- pendingRow
+                fmap (ME.whatsAppConsentNote . entityVal) unsent `shouldBe` Just (Just "pending_unsent")
+                -- A prompt retry is allowed and keeps the original request instant.
                 claim (addUTCTime 120 now) `shouldReturn` True
-                -- The failure of the superseded attempt cannot downgrade the newer request.
-                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
+                retried <- pendingRow
+                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) retried
+                    `shouldBe` fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) unsent
                 claim (addUTCTime 180 now) `shouldReturn` False
+                -- After the short window an undelivered request waits for the interval.
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
+                claim (addUTCTime 3700 now) `shouldReturn` False
                 claim (addUTCTime (25 * 3600) now) `shouldReturn` True
                 runSqlPool (rawExecute "UPDATE whats_app_consent SET consent=1, consented_at=? WHERE phone_e164='+593990000010'" [PersistUTCTime now]) pool
                 claim (addUTCTime (50 * 3600) now) `shouldReturn` False

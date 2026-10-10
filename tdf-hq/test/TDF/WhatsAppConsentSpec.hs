@@ -77,6 +77,9 @@ spec = describe "whatsapp-consent-postgresql" $ do
           let replyAt = addUTCTime 5 now
           withAsync (runSqlPool (do
             applyWhatsAppCampaignOptOut replyAt phone Nothing
+            -- A caller-supplied opt-out reason may equal the pending marker;
+            -- only the withdrawal instant may decide.
+            forgeNote "pending_confirmation" phone
             liftIO (putMVar ready () >> takeMVar release)) pool) $ \withdrawing ->
             (do
               within (takeMVar ready)
@@ -91,48 +94,66 @@ spec = describe "whatsapp-consent-postgresql" $ do
                 ) `finally` void (tryPutMVar release ())
               ) `finally` void (tryPutMVar release ())
 
-        it "keeps an undelivered request confirmable by the number and open to a retry" $ \pool -> do
+        it "treats a withdrawal whose clock was read before the request as later than it" $ \pool -> do
           phone <- freshPhone
           now <- getCurrentTime
+          let replyAt = addUTCTime 60 now
           runSqlPool (claim now phone) pool `shouldReturn` True
-          -- The stored instant is rounded to microseconds; the failure must still match its own claim.
-          runSqlPool (markWhatsAppConfirmationRequestUnsent now phone) pool
+          runSqlPool (applyWhatsAppCampaignOptOut (addUTCTime (-5) now) phone Nothing) pool
+          runSqlPool (forgeNote "pending_confirmation" phone) pool
+          runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just replyAt) phone) pool `shouldReturn` False
+          runSqlPool (forgeNote "pending_unsent" phone) pool
+          runSqlPool (claim (addUTCTime 30 now) phone) pool `shouldReturn` False
+          runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just replyAt) phone) pool `shouldReturn` False
+
+        it "keeps an undelivered request confirmable by the number and briefly open to a retry" $ \pool -> do
+          phone <- freshPhone
+          now <- getCurrentTime
+          Just requestedAt <- runSqlPool (claimWhatsAppConfirmationRequest now phone Nothing (Just "public")) pool
+          -- The stored instant is rounded to microseconds; the failure is bound to it.
+          runSqlPool (markWhatsAppConfirmationRequestUnsent requestedAt phone) pool
           noteOf pool phone `shouldReturn` Just (Just "pending_unsent")
-          runSqlPool (claim (addUTCTime 60 now) phone) pool `shouldReturn` True
-          runSqlPool (markWhatsAppConfirmationRequestUnsent (addUTCTime 60 now) phone) pool
+          -- A retry keeps the request instant, so it cannot extend the window.
+          runSqlPool (claimWhatsAppConfirmationRequest (addUTCTime 60 now) phone Nothing (Just "public")) pool
+            `shouldReturn` Just requestedAt
+          noteOf pool phone `shouldReturn` Just (Just "pending_confirmation")
+          runSqlPool (claim (addUTCTime 90 now) phone) pool `shouldReturn` False
+          runSqlPool (markWhatsAppConfirmationRequestUnsent requestedAt phone) pool
           let replyAt = addUTCTime 120 now
-          -- A reply older than the current request cannot confirm it.
-          runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just (addUTCTime 30 now)) phone) pool
+          -- A reply older than the request cannot confirm it.
+          runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just (addUTCTime (-10) now)) phone) pool
             `shouldReturn` False
           runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just replyAt) phone) pool `shouldReturn` True
           consentOf pool phone `shouldReturn` Just True
 
-        it "ignores an undelivered request once its short window has passed" $ \pool -> do
+        it "closes an undelivered request to replies and retries once its short window has passed" $ \pool -> do
           phone <- freshPhone
           now <- getCurrentTime
           runSqlPool (claim now phone) pool `shouldReturn` True
           runSqlPool (markWhatsAppConfirmationRequestUnsent now phone) pool
           let late = addUTCTime 3700 now
           runSqlPool (applyWhatsAppConsentConfirmation late (Just late) phone) pool `shouldReturn` False
+          runSqlPool (claim late phone) pool `shouldReturn` False
           consentOf pool phone `shouldReturn` Just False
+          runSqlPool (claim (addUTCTime (24 * 3600 + 60) now) phone) pool `shouldReturn` True
 
         it "does not let a superseded attempt's failure change a newer request, a consent or a withdrawal" $ \pool -> do
           phone <- freshPhone
           now <- getCurrentTime
-          let second = addUTCTime 60 now
-              replyAt = addUTCTime 120 now
+          let second = addUTCTime (24 * 3600 + 60) now
+              replyAt = addUTCTime 120 second
+          -- The first attempt's outcome is still unknown when the interval ends.
           runSqlPool (claim now phone) pool `shouldReturn` True
-          runSqlPool (markWhatsAppConfirmationRequestUnsent now phone) pool
           runSqlPool (claim second phone) pool `shouldReturn` True
           runSqlPool (markWhatsAppConfirmationRequestUnsent now phone) pool
           noteOf pool phone `shouldReturn` Just (Just "pending_confirmation")
-          runSqlPool (claim (addUTCTime 90 now) phone) pool `shouldReturn` False
+          runSqlPool (claim (addUTCTime 30 second) phone) pool `shouldReturn` False
           runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just replyAt) phone) pool `shouldReturn` True
           runSqlPool (markWhatsAppConfirmationRequestUnsent second phone) pool
           consentOf pool phone `shouldReturn` Just True
-          runSqlPool (applyWhatsAppCampaignOptOut (addUTCTime 180 now) phone Nothing) pool
+          runSqlPool (applyWhatsAppCampaignOptOut (addUTCTime 180 second) phone Nothing) pool
           runSqlPool (markWhatsAppConfirmationRequestUnsent second phone) pool
-          runSqlPool (applyWhatsAppConsentConfirmation (addUTCTime 200 now) (Just (addUTCTime 200 now)) phone) pool
+          runSqlPool (applyWhatsAppConsentConfirmation (addUTCTime 200 second) (Just (addUTCTime 200 second)) phone) pool
             `shouldReturn` False
           consentOf pool phone `shouldReturn` Just False
 
@@ -146,7 +167,7 @@ spec = describe "whatsapp-consent-postgresql" $ do
           runSqlPool (claim (addUTCTime 60 now) phone) pool `shouldReturn` False
           runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just replyAt) phone) pool `shouldReturn` False
           -- Marking the withdrawn request undelivered must not reopen it either.
-          runSqlPool (rawExecute "UPDATE whats_app_consent SET note='pending_unsent' WHERE phone_e164=?" [toPersistValue phone]) pool
+          runSqlPool (forgeNote "pending_unsent" phone) pool
           runSqlPool (claim (addUTCTime 90 now) phone) pool `shouldReturn` False
           runSqlPool (applyWhatsAppConsentConfirmation replyAt (Just replyAt) phone) pool `shouldReturn` False
           -- After the interval a new request supersedes the withdrawal.
@@ -159,7 +180,11 @@ spec = describe "whatsapp-consent-postgresql" $ do
           runSqlPool (claim (addUTCTime 180 nextDay) phone) pool `shouldReturn` False
 
 claim :: UTCTime -> Text -> SqlPersistT IO Bool
-claim at phone = claimWhatsAppConfirmationRequest at phone Nothing (Just "public")
+claim at phone = (/= Nothing) <$> claimWhatsAppConfirmationRequest at phone Nothing (Just "public")
+
+forgeNote :: Text -> Text -> SqlPersistT IO ()
+forgeNote note phone =
+  rawExecute "UPDATE whats_app_consent SET note=? WHERE phone_e164=?" [toPersistValue note, toPersistValue phone]
 
 consentOf :: ConnectionPool -> Text -> IO (Maybe Bool)
 consentOf pool phone =

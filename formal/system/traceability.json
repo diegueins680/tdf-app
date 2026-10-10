@@ -7526,10 +7526,10 @@
     },
     {
       "id": "PRIV-WHATSAPP-001",
-      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one delivered request per number per 24 hours, and simultaneous first requests for a number do not fail. A request the provider did not accept stays pending as undelivered: it does not block a new request, and the number can still confirm it by messaging first, but only within 1 hour. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request, within 7 days of a delivered request, and the request has not been withdrawn since; a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and invalidates any pending request without resetting the 24-hour interval, so neither withdrawing nor confirming lets anyone request another message early; the public opt-out notifies only a number that was subscribed. The failure of a superseded send attempt changes nothing. Staff consent capture remains admin-only.",
+      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowed only when the number has no request in the last 24 hours, and simultaneous first requests for a number do not fail. A request the provider did not accept stays pending as undelivered: for 1 hour from the request the number can still confirm it by messaging first and a new public request may retry the send without changing the request instant; afterwards it waits for the 24-hour interval. Delivered requests to a number are therefore at least 23 hours apart. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request, within 7 days of a delivered request, and the request has not been withdrawn since; a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form, inbound STOP/SALIR/BAJA/CANCELAR or staff revocation) always withdraws consent and invalidates any pending request without resetting the 24-hour interval, and its stored instant is never earlier than the request it defeats; neither withdrawing, confirming nor staff capture lets anyone request another message early. The public opt-out notifies only a number that was subscribed. The failure of a superseded send attempt changes nothing. Staff consent capture remains admin-only.",
       "authority": "reconciled",
       "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052); request-interval and undelivered-request repair (AUTHORITY-055)",
-      "property": "Consent is active only after a timely reply from the same number to an unwithdrawn request, or admin capture; delivered requests are more than 24 hours apart",
+      "property": "Consent is active only after a timely reply from the same number to an unwithdrawn request, or admin capture; delivered requests are at least 23 hours apart",
       "contract": "formal/system/whatsapp-consent.md",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
@@ -7546,7 +7546,7 @@
         "formal/event-operations/WhatsAppConsent.tla",
         "scripts/test-whatsapp-consent.sh"
       ],
-      "verification": "Bounded TLA+ model with six negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
+      "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
       "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -7578,19 +7578,20 @@
       },
       "allowedTransitions": [
         "none -> pending (public request)",
-        "withdrawn/expired -> pending (public request more than 24 hours after the previous request)",
+        "withdrawn/expired/active-then-withdrawn -> pending (public request more than 24 hours after the previous request instant)",
         "pending (delivered) -> pending (undelivered) (provider did not accept that exact request)",
-        "pending (undelivered) -> pending (new public request, not withdrawn)",
+        "pending (undelivered) -> pending (delivered) (retry within 1 hour, same request instant, not withdrawn)",
         "pending (delivered) -> active (affirmative reply within 7 days)",
-        "pending (undelivered) -> active (affirmative reply within 1 hour)",
-        "any -> withdrawn (opt-out or STOP)",
+        "pending (undelivered) -> active (affirmative reply within 1 hour of the request)",
+        "any -> withdrawn (opt-out, STOP or staff revocation)",
         "admin capture -> active"
       ],
       "forbiddenTransitions": [
         "public request -> active",
         "pending older than its window -> active",
         "withdrawn -> active without a new request and reply",
-        "withdrawn or active -> pending within 24 hours of the previous request",
+        "any -> new request within 24 hours of the previous request instant",
+        "undelivered retry -> later request instant",
         "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
@@ -7598,10 +7599,10 @@
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
-      "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING.",
-      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a delivered request send nothing; a send failure is bound to its own claim instant.",
+      "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
+      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
       "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
-      "recovery": "A number can request again after 24 hours, or immediately while its last request is undelivered and not withdrawn.",
+      "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
       "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -7614,10 +7615,12 @@
         "formal/event-operations/WhatsAppConsent.cfg",
         "formal/event-operations/WhatsAppConsentStaleReply.cfg",
         "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+        "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
         "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
         "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
         "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
-        "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg"
+        "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+        "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg"
       ],
       "confidence": "High for the modeled and tested transitions; WhatsApp delivery, truthful provider outcomes and Meta webhook timing are external.",
       "ambiguity": [
@@ -7625,8 +7628,9 @@
         "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
         "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window.",
         "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
-        "A person who withdraws inside 24 hours of their own request cannot request again until that interval ends; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly.",
-        "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval."
+        "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
+        "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -8909,14 +8913,16 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
-    "formal/event-operations/WhatsAppConsent.cfg": "aeff8113e70c544c4a025790632e3b81fa65fc3bbe75933a4d47557122cfdc24",
-    "formal/event-operations/WhatsAppConsent.tla": "e981f8130116170cfb3ecb9ab689b889248c11e903fb8b3c11bc3763a2d8591d",
-    "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": "d94af630f63cd7f927abbbb43b9333dc0cfc884890f42bb4d960d4e556a621b2",
-    "formal/event-operations/WhatsAppConsentReleasedFailure.cfg": "eae2bd152602d94f05f65fcd7350a9e6e5a906a35721454fcc2fcb3eaeeb9c66",
-    "formal/event-operations/WhatsAppConsentStaleReply.cfg": "d5c86c5c840f4e25854c37f6d280503556c3761a4cba24f8eaebade6eb9a5b1b",
-    "formal/event-operations/WhatsAppConsentUnboundFailure.cfg": "9592e1af3d8c55e005c50abd9aefe7e6be72dddd121da6821aa800ec854419f2",
-    "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg": "03ee0d960ac4889c3ed51ba848e1adf83b8afcb360e3b696e1837f0230ae211d",
-    "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg": "dc76b0442220601202de142fa4bea27667eedef4f8586ae6875cbccc1eb9db4b",
+    "formal/event-operations/WhatsAppConsent.cfg": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
+    "formal/event-operations/WhatsAppConsent.tla": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+    "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
+    "formal/event-operations/WhatsAppConsentReleasedFailure.cfg": "96c5a3a384f45f1e9a6e28a19c6d1e24d6f07dce9a9ed91ec365ce9d149a03d1",
+    "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg": "7a80288380d6091257f5075a9b36c3edbbfc462b15f3fd903016e935e1ea3b34",
+    "formal/event-operations/WhatsAppConsentStaleReply.cfg": "3562ab6ee72465ea40c5dca690c1ca00ca3108f733ccc273ce605fbc2f207de7",
+    "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg": "730b2c17cbd520071cb7eeb845b2ed2cfb43c388c6792f9ff850a8f3bbdd1ee8",
+    "formal/event-operations/WhatsAppConsentUnboundFailure.cfg": "30f022a9bff35ad3e6760f3c45994fea034eb178b517b2ee4ea8e6d183422d87",
+    "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg": "34cc1751977ea8443e1573c240b29bdb22c2e87d89fd9e7345863af857709690",
+    "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg": "b96a20e18c648021f6794527b13d50fefaaf40f310ffab2e5147ef7bdd80201c",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
@@ -9124,7 +9130,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "6b2d8a000ac0324f2af23177da3e343ce862b16ab70210797d0da4b24cc75b7b",
+    "scripts/verify-event-operations-formal.sh": "d8ce7a698906bb98d723235ff0cbb7160cfddbe3c1f6fcb2a58d625759da8cb3",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9421,7 +9427,7 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
-    "tdf-hq/src/TDF/CampaignAutomation.hs": "b2f9a4ae3361d0fe4282f1c1ac5ca1624aeefab338941ed8f43675562df402f5",
+    "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
@@ -9470,7 +9476,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "4ca96c4972695b495c6f63bd40706f6d8838d472b712d04ed002943b7fb18a70",
+    "tdf-hq/src/TDF/Server.hs": "0fc12ca61745a842ec4362a1d066036ef315f1c92c7c8d8fbe080d550d3035ce",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -9541,10 +9547,10 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
-    "tdf-hq/test/TDF/ServerSpec.hs": "c6e2684d6742f6cf082fd986471fc9913d1fb99e99290eb78cda5f2b4c3029a2",
+    "tdf-hq/test/TDF/ServerSpec.hs": "4045baca7164b03f14db860136d8cfdbfddc13f0a8fc2e135cc74317b0e127fb",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
-    "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "b6bc8e5810e29da6c4f23daf3acb9422eb42d31c2112d7ba6d27b213009a78e2",
+    "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -14540,6 +14546,12 @@
         "relationship": "formalModels"
       }
     ],
+    "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg": [
+      {
+        "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "formalModels"
+      }
+    ],
     "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg": [
       {
         "requirement": "PRIV-WHATSAPP-001",
@@ -14559,6 +14571,12 @@
       }
     ],
     "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": [
+      {
+        "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg": [
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "formalModels"
@@ -20900,7 +20918,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "6b2d8a000ac0324f2af23177da3e343ce862b16ab70210797d0da4b24cc75b7b",
+      "sha256": "d8ce7a698906bb98d723235ff0cbb7160cfddbe3c1f6fcb2a58d625759da8cb3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31667,7 +31685,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "b2f9a4ae3361d0fe4282f1c1ac5ca1624aeefab338941ed8f43675562df402f5",
+      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32804,7 +32822,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "4ca96c4972695b495c6f63bd40706f6d8838d472b712d04ed002943b7fb18a70",
+      "sha256": "0fc12ca61745a842ec4362a1d066036ef315f1c92c7c8d8fbe080d550d3035ce",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34368,7 +34386,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "c6e2684d6742f6cf082fd986471fc9913d1fb99e99290eb78cda5f2b4c3029a2",
+      "sha256": "4045baca7164b03f14db860136d8cfdbfddc13f0a8fc2e135cc74317b0e127fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34484,7 +34502,7 @@
     {
       "id": "SURFACE-a7aa6fe1e1854ab6",
       "path": "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
-      "sha256": "b6bc8e5810e29da6c4f23daf3acb9422eb42d31c2112d7ba6d27b213009a78e2",
+      "sha256": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41049,7 +41067,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5d7d4fe554c1682500fbb4ca2fd6ca2d90ba591cd5017599273dbb966eff90e2",
+      "sourceSha256": "feb25b46ef6be8fb8ab5b86249e09908eaadcf9bc0316de5d15afc2396595fa8",
       "definition": {
         "states": [
           "absent",
