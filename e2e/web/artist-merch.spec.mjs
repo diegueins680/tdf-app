@@ -146,6 +146,11 @@ test('PW-MERCH-02 discovers a store and product responsively without promising c
 
   await expect(page).toHaveURL(/\/tienda\/cementerio-sintetico$/);
   await expect(page.getByRole('heading', { name: 'Cementerio Sintético' })).toBeVisible();
+  const shippingPolicy = page.getByRole('button', { name: /Política de envíos/ });
+  await expect(shippingPolicy).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('button', { name: /Política de devoluciones/ })).toHaveAttribute('aria-expanded', 'false');
+  await shippingPolicy.click();
+  await expect(shippingPolicy).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText('Envío nacional de prueba')).toBeVisible();
   await page.getByRole('link', { name: /Camiseta Abriendo Camino/ }).click();
 
