@@ -98,6 +98,11 @@ def check_static(bindings, machines):
     return errors
 
 
+def without_haskell_comments(text):
+    """Commented-out code is not implemented: drop block and line comments."""
+    return re.sub(r"--[^\n]*", "", re.sub(r"\{-.*?-\}", "", text, flags=re.S))
+
+
 def code_transitions(spec, root=ROOT):
     """Pairs in the validator's allowedTransitions list, as stored state names."""
     source = (root / spec["file"]).read_text()
@@ -105,15 +110,17 @@ def code_transitions(spec, root=ROOT):
         rf"^{re.escape(spec['renderer'])} (\w+) = case \1 of\n(.*?)(?:\n\n|\Z)", source, re.M | re.S)
     if not renderer:
         raise RuntimeError(f"renderer {spec['renderer']} not found in {spec['file']}")
-    names = dict(re.findall(r'^\s+([A-Z]\w*)\s*->\s*"(\w+)"', renderer.group(2), re.M))
+    mappings = re.findall(r'^\s+([A-Z]\w*)\s*->\s*"(\w+)"', without_haskell_comments(renderer.group(2)), re.M)
+    names = dict(mappings)
+    if len(names) != len(mappings):
+        raise RuntimeError(f"{spec['renderer']} maps a constructor more than once")
     definition = re.search(rf"^{re.escape(spec['validator'])} (?![^\n]*::)\w", source, re.M)
     if not definition:
         raise RuntimeError(f"validator {spec['validator']} not found in {spec['file']}")
     table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", source[definition.end():], re.S)
     if not table:
         raise RuntimeError(f"{spec['validator']} has no allowedTransitions list")
-    # A commented-out edge is not implemented: drop block and line comments first.
-    listed = re.sub(r"--[^\n]*", "", re.sub(r"\{-.*?-\}", "", table.group(1), flags=re.S))
+    listed = without_haskell_comments(table.group(1))
     pairs = set()
     for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", listed):
         for constructor in (source_state, target):

@@ -77,7 +77,16 @@ def code_controls(bindings, machines):
                                          "      {- , (RentalLost, RentalDisputed)\n      -}\n", 1))
         expect("edge commented out with a block comment", gate.check_code(bindings, machines, root),
                "code transitionsOnlyDeclared is [['lost', 'disputed']]")
-    return 9
+        target.write_text(source.replace(
+            '  RentalLost -> "lost"\n',
+            '  RentalLost -> "renamed"\n  {- previously\n  RentalLost -> "lost"\n  -}\n', 1))
+        expect("renderer mapping kept only in a block comment", gate.check_code(bindings, machines, root),
+               "'renamed'")
+        target.write_text(source.replace(
+            '  RentalLost -> "lost"\n', '  RentalLost -> "renamed"\n  RentalLost -> "lost"\n', 1))
+        expect("renderer maps a constructor twice", gate.check_code(bindings, machines, root),
+               "maps a constructor more than once")
+    return 11
 
 
 def main():

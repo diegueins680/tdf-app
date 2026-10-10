@@ -3627,7 +3627,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "0e34ec2def6e5ebc16cfb152869edd736c9a298225ffb690bba6ddece66273e0",
+      "sha256": "2771736f1cf85f98a200e132c07d6db11e2eed42bf56aad80b51a6ad935d2a39",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5355,7 +5355,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "dd611474ef9b5335f505295f635a97b27e6f6cd127716df0e95cf40449bf7859",
+      "sha256": "ed1ae142a4cb496e04398ea6088d21877ab62ba9f07f4a6b3de145c4b0992db1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
