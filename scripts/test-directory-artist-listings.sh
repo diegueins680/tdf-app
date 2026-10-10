@@ -111,6 +111,10 @@ if [ -n "${server_bin}" ]; then
   test "$(json "${api}/directory/profiles" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>console.log(JSON.parse(s).find(p=>p.slug==="http-test-band").derivedListing.id))')" = "${listing_id}"
   test "$(curl -s -o /dev/null -w '%{http_code}' -H "${auth}" -H 'Content-Type: application/json' -X PATCH "${api}/directory/classifieds/${listing_id}/status" -d '{"status":"paused"}')" = "409"
   test "$(query "SELECT count(*) FROM classified WHERE source_profile_id='${profile_id}';")" = "1"
+  # Autocomplete suggests the artist once (the profile), never its derived listing.
+  test "$(curl -fsS "${api}/directory/suggestions?q=http%20test%20band" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const i=JSON.parse(s);console.log(i.filter(x=>x.suggestionKind==="profile").length+"/"+i.filter(x=>x.suggestionKind==="classified").length)})')" = "1/0"
+  # A cross-origin http cover is refused by the API, not stored and hidden later.
+  test "$(curl -s -o /dev/null -w '%{http_code}' -H "${auth}" -H 'Content-Type: application/json' -X PUT "${api}/directory/profiles/${profile_id}" -d "${body/https:\/\/cdn.example.test\/http-band.jpg/http://cdn.example.test/http-band.jpg}")" = "400"
   kill "${server_pid}" >/dev/null 2>&1 || true
 fi
 

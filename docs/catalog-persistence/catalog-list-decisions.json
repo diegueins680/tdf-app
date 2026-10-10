@@ -15609,19 +15609,19 @@
       }
     },
     {
-      "id": "9ad20c4ad4e435be0c9a",
+      "id": "43cdedd605ee98f43bbc",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 190-entry manifest keeps the reviewed 188 entries unchanged and appends the additive directory artist-derived listings migration and its idempotent backfill, both with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 191-entry manifest keeps the reviewed 189 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "directory-artist-listings-2026-10-07",
+      "reviewBatch": "directory-artist-listings-2026-10-10",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57216,19 +57216,19 @@
         ]
       },
       "mergedDecision": {
-        "id": "7b3d355ec7c91ec29b07",
+        "id": "5f4bfe5bddb581846282",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 188-entry manifest keeps the reviewed 187 entries unchanged and appends the additive WhatsApp consent confirmation migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 189-entry manifest keeps the reviewed 188 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "whatsapp-consent-confirmation-2026-10-07",
+        "reviewBatch": "directory-event-search-sync-2026-10-09",
         "reviewMethod": "successor-of-reviewed-decision"
       }
     },
@@ -58850,6 +58850,74 @@
         "line": 39
       },
       "reviewBatch": "directory-artist-listings-2026-10-07"
+    },
+    {
+      "id": "60303ac3b3772c65d7c6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: the 'es' | 'en' union only selects which UI locale the shared legal disclosure uses for its own expand/collapse label. It mirrors the two UI locales the app ships; it is not a selectable or reportable language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "line": 5,
+        "kind": "type-union",
+        "name": "LegalDisclosureLanguage"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "6b0946b142010154f6ec",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: fixed expand/collapse button labels ('Leer completo' / 'Ocultar', 'Read in full' / 'Hide') for the shared legal disclosure component. This is presentation copy keyed by UI locale, not an action, grant, or permission registry.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "line": 7,
+        "kind": "object-registry",
+        "name": "actionCopy"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "14e0c58547b702cfe5ae",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: the 'es' | 'en' union only selects which UI locale the shared legal disclosure uses for its own expand/collapse label. It mirrors the two UI locales the app ships; it is not a selectable or reportable language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "line": 6,
+        "kind": "type-union",
+        "name": "LegalDisclosureLanguage"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "5b798e0ed2c1629a4de4",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: fixed expand/collapse button labels ('Leer completo' / 'Ocultar', 'Read in full' / 'Hide') for the shared legal disclosure component. This is presentation copy keyed by UI locale, not an action, grant, or permission registry.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "line": 8,
+        "kind": "object-registry",
+        "name": "actionCopy"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
     }
   ]
 }

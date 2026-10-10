@@ -463,8 +463,13 @@ const isHttpUrl = (value: string) => {
   }
 };
 
+// Cover images are rendered on the HTTPS site, which refuses cross-origin
+// http images; the server applies the same rule.
+const isRenderableImageUrl = (value: string) =>
+  isHttpUrl(value) && !value.trim().toLowerCase().startsWith('http:');
+
 export function profileFormError(input: { name: string; cityIds: string[]; primaryCityId: string; hasPreservedPrimaryArea?: boolean; onsite: boolean; remote: boolean; availableToTravel: boolean; rateMin: string; rateMax: string; portfolio: DirectoryPortfolioItem[]; links: DirectoryProfileLink[]; coverImageUrl?: string }): string | null {
-  if (input.coverImageUrl?.trim() && !isHttpUrl(input.coverImageUrl)) return 'La imagen de portada necesita una URL HTTP(S) o ruta interna válida sin credenciales.';
+  if (input.coverImageUrl?.trim() && !isRenderableImageUrl(input.coverImageUrl)) return 'La imagen de portada necesita una URL HTTPS o ruta interna válida sin credenciales.';
   if (!input.name.trim()) return 'Indica un nombre público.';
   if ((!input.cityIds.length || !input.primaryCityId || !input.cityIds.includes(input.primaryCityId)) && !input.hasPreservedPrimaryArea) return 'Selecciona al menos una ciudad y marca la principal.';
   if (!input.onsite && !input.remote && !input.availableToTravel) return 'Selecciona al menos una modalidad de trabajo.';

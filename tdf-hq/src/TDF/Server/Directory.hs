@@ -227,6 +227,8 @@ suggestDirectory mQuery mCityId = do
   rows <- jsonRows
     ( "SELECT jsonb_build_object('label',label,'canonicalQuery',canonical_query,'suggestionKind',kind,'entityId',entity_id) FROM (SELECT alias.term label,alias.normalized_term canonical_query,'taxonomy'::text kind,alias.entity_id::text entity_id,1 priority FROM catalog_search_alias alias JOIN catalog_definition catalog ON catalog.id=alias.catalog_id WHERE catalog.public_read AND alias.normalized_term LIKE directory_normalize_text(?)||'%' UNION ALL SELECT document.title,document.title,document.entity_kind,document.entity_id,2 FROM directory_public_search_document document WHERE NOT document.sponsored "
         <> directoryVisibleEventDocumentClause
+        -- A derived listing repeats its profile's title; suggest the profile only.
+        <> "AND " <> directorySourceProfileSql <> " IS NULL "
         <> "AND (?::uuid IS NULL OR document.city_id=?::uuid) AND document.search_text LIKE directory_normalize_text(?)||'%' ) suggestion ORDER BY priority,label LIMIT 10"
     )
     [ PersistText query
@@ -370,7 +372,7 @@ publicEvent eventId = jsonOne err404
   [PersistInt64 eventId, PersistText Social.externalEventRefSuppressedStatus]
 
 publicVenue venueId = jsonOne err404
-  "SELECT jsonb_build_object('id',id,'name',name,'capacity',capacity,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision','city'),'canonicalUrl','/venues/'||id::text) FROM directory_public_venue WHERE id=?" [PersistInt64 venueId]
+  "SELECT jsonb_build_object('id',id,'name',name,'capacity',capacity,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision','city'),'imageUrl',(SELECT directory_safe_image_url(directory_try_jsonb_object(source.contact)->>'imageUrl') FROM venue source WHERE source.id=directory_public_venue.id),'canonicalUrl','/venues/'||id::text) FROM directory_public_venue WHERE id=?" [PersistInt64 venueId]
 
 directoryProtectedServer :: AuthedUser -> ServerT DirectoryProtectedAPI AppM
 directoryProtectedServer user =
@@ -1373,7 +1375,10 @@ applyModerationTarget (Object values) action = case (KeyMap.lookup "kind" values
     rawExecute "UPDATE directory_profile SET profile_status=CASE WHEN ?='pause' THEN 'paused' ELSE 'suspended' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now(),version=version+1 WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
     rawExecute "DELETE FROM directory_search_document WHERE entity_kind='profile' AND entity_id=?" [PersistText targetId]
   (Just (String "classified"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
-    rawExecute "UPDATE classified SET status=CASE WHEN ?='pause' THEN 'paused' ELSE 'moderated' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
+    -- A derived listing's paused state belongs to its source profile (the next
+    -- profile sync would republish it), so a moderator pause is recorded as the
+    -- durable moderated state instead.
+    rawExecute "UPDATE classified SET status=CASE WHEN ?='pause' AND source_profile_id IS NULL THEN 'paused' ELSE 'moderated' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
     rawExecute "DELETE FROM directory_search_document WHERE entity_kind='classified' AND entity_id=?" [PersistText targetId]
   (Just (String "review"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
     rawExecute "UPDATE directory_review SET status=CASE WHEN ?='pause' THEN 'hidden' ELSE 'removed' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText targetId]

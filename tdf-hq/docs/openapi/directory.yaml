@@ -500,7 +500,7 @@ components:
         languages: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
         verification: { type: array, items: { type: object, additionalProperties: false, required: [type, status], properties: { type: { type: string }, status: { type: string }, verifiedAt: { type: string, format: date-time, nullable: true } } } }
         reputation: { type: object, additionalProperties: false, properties: { completeness: { type: number }, responseRate: { type: number }, medianResponseMinutes: { type: integer }, completed: { type: integer }, reviewAverage: { type: number }, reviewCount: { type: integer } } }
-        previewImageUrl: { type: string, nullable: true, description: Canonical preview image (cover, featured, linked profile media, avatar/logo, first portfolio image); null means no valid media }
+        previewImageUrl: { type: string, nullable: true, description: 'Canonical preview image (cover, featured, linked profile media, avatar/logo, first portfolio image); null means no valid media' }
         derivedListing:
           type: object
           nullable: true
@@ -539,7 +539,7 @@ components:
         compensation: { type: object, nullable: true, additionalProperties: false, properties: { typeId: { type: string, format: uuid }, minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true }, negotiable: { type: boolean } } }
         startsAt: { type: string, format: date-time, nullable: true }
         endsAt: { type: string, format: date-time, nullable: true }
-        expiresAt: { type: string, format: date-time, nullable: true, description: Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring }
+        expiresAt: { type: string, format: date-time, nullable: true, description: 'Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring' }
         imageUrl: { type: string, nullable: true }
         sourceProfile:
           type: object
@@ -576,6 +576,7 @@ components:
         name: { type: string }
         capacity: { type: integer, nullable: true }
         location: { $ref: '#/components/schemas/PublicLocation' }
+        imageUrl: { type: string, nullable: true, description: 'Venue image as shown on its search card; null means no valid media' }
         canonicalUrl: { type: string }
     AgeAssuranceRequest: { type: object, additionalProperties: false, required: [adultAttestation], properties: { adultAttestation: { type: boolean }, guardianPartyId: { type: integer, format: int64 } } }
     DirectoryProfileUpsert:

@@ -330,6 +330,161 @@ BEGIN
 END
 $idempotency$;
 
+-- Review regressions -----------------------------------------------------------
+DO $renderable_images$
+DECLARE
+  profile_id_value UUID := pg_temp.make_profile('renderable-image-artist', 'artist', 'Renderable Image', 910001);
+BEGIN
+  PERFORM pg_temp.expect(directory_safe_image_url('http://cdn.example.test/a.jpg') IS NULL,
+    'cross-origin http images are not renderable and are rejected');
+  PERFORM pg_temp.expect(directory_safe_image_url('https://cdn.example.test/a.jpg') = 'https://cdn.example.test/a.jpg',
+    'https images are accepted');
+  PERFORM pg_temp.expect(directory_safe_image_url('/assets/serve/a.webp') = '/assets/serve/a.webp',
+    'same-origin relative images are accepted');
+  BEGIN
+    UPDATE directory_profile SET cover_image_url = 'http://cdn.example.test/cover.jpg' WHERE id = profile_id_value;
+    RAISE EXCEPTION 'an http cover was stored';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  UPDATE directory_profile SET portfolio = jsonb_build_array(
+    jsonb_build_object('itemType', 'image', 'role', 'cover', 'url', 'http://cdn.example.test/featured.jpg'),
+    jsonb_build_object('itemType', 'image', 'url', 'http://cdn.example.test/first.jpg'),
+    jsonb_build_object('itemType', 'image', 'url', 'https://cdn.example.test/second.jpg'))
+  WHERE id = profile_id_value;
+  PERFORM pg_temp.expect(
+    directory_profile_preview_image_url(profile_id_value) = 'https://cdn.example.test/second.jpg',
+    'an unrenderable higher-priority image does not shadow a renderable one');
+END
+$renderable_images$;
+
+DO $radius$
+DECLARE
+  artist_id UUID := pg_temp.make_profile('radius-artist', 'artist', 'Radius Artist', 910001);
+BEGIN
+  PERFORM pg_temp.publish(artist_id);
+  UPDATE directory_profile_location SET service_radius_km = 25 WHERE profile_id = artist_id;
+  PERFORM directory_refresh_profile_search(artist_id);
+  PERFORM pg_temp.expect(
+    (SELECT service_radius_km FROM classified_location WHERE classified_id = (pg_temp.derived(artist_id)).id) = 25,
+    'service radius propagates when the city is unchanged');
+  UPDATE directory_profile_location SET service_radius_km = NULL WHERE profile_id = artist_id;
+  PERFORM directory_refresh_profile_search(artist_id);
+  PERFORM pg_temp.expect(
+    (SELECT service_radius_km FROM classified_location WHERE classified_id = (pg_temp.derived(artist_id)).id) IS NULL,
+    'clearing the service radius propagates');
+END
+$radius$;
+
+DO $linked_media$
+DECLARE
+  artist_id UUID := pg_temp.make_profile('linked-media-artist', 'artist', 'Linked Media Artist', 910002);
+  store_id UUID;
+  venue_id BIGINT;
+BEGIN
+  PERFORM pg_temp.publish(artist_id);
+  -- Store eligibility (claimed or verified seller) is not what is under test.
+  ALTER TABLE merch_store DISABLE TRIGGER merch_store_eligibility_trigger;
+  INSERT INTO merch_store (directory_profile_id, seller_party_id, primary_owner_party_id, slug, display_name,
+    logo_image_url, application_status, operational_status, application_note, application_idempotency_key,
+    application_request_sha256, reviewed_by, reviewed_at, activated_at)
+  VALUES (artist_id, 910002, 910002, 'linked-media-store', 'Linked Media Store',
+    'https://cdn.example.test/logo-1.png', 'approved', 'active', 'Synthetic store for the media refresh test',
+    'linked-media-store-key', repeat('a', 64), 910002, now(), now())
+  RETURNING id INTO store_id;
+  ALTER TABLE merch_store ENABLE TRIGGER merch_store_eligibility_trigger;
+  PERFORM pg_temp.expect((pg_temp.public_listing(artist_id)).image_url = 'https://cdn.example.test/logo-1.png',
+    'an approved active store logo reaches the listing without a profile edit');
+  UPDATE merch_store SET logo_image_url = 'https://cdn.example.test/logo-2.png' WHERE id = store_id;
+  PERFORM pg_temp.expect((pg_temp.public_listing(artist_id)).image_url = 'https://cdn.example.test/logo-2.png',
+    'a store logo change refreshes the derived listing');
+  PERFORM pg_temp.expect(
+    (SELECT image_url FROM directory_search_document WHERE entity_kind = 'profile' AND entity_id = artist_id::text)
+      = 'https://cdn.example.test/logo-2.png',
+    'a store logo change refreshes the profile document');
+  UPDATE merch_store SET operational_status = 'inactive' WHERE id = store_id;
+  PERFORM pg_temp.expect((pg_temp.public_listing(artist_id)).image_url IS NULL,
+    'a deactivated store stops supplying the image');
+
+  -- Legacy-linked media (venue image) follows its source row too.
+  INSERT INTO venue (name, city, contact, created_at, updated_at)
+  VALUES ('Linked media venue', 'Quito', '{"imageUrl":"https://cdn.example.test/venue-1.jpg"}', now(), now())
+  RETURNING id INTO venue_id;
+  INSERT INTO directory_legacy_link (profile_id, legacy_kind, legacy_id, source_table)
+  VALUES (artist_id, 'venue', venue_id::text, 'venue');
+  UPDATE venue SET contact = '{"imageUrl":"https://cdn.example.test/venue-2.jpg"}' WHERE id = venue_id;
+  PERFORM pg_temp.expect((pg_temp.public_listing(artist_id)).image_url = 'https://cdn.example.test/venue-2.jpg',
+    'a linked venue image change refreshes the derived listing');
+END
+$linked_media$;
+
+DO $venue_search_image$
+DECLARE
+  venue_id BIGINT;
+  event_id BIGINT;
+  version_before BIGINT;
+BEGIN
+  INSERT INTO venue (name, city, contact, created_at, updated_at)
+  VALUES ('Imaged venue', 'Quito', '{"imageUrl":"https://cdn.example.test/venue-card.jpg"}', now(), now())
+  RETURNING id INTO venue_id;
+  INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+    workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+  SELECT NULL, 'Imaged venue night', 'Synthetic lineup', venue_id,
+    (SELECT id FROM event_type ORDER BY sort_order, id LIMIT 1),
+    (SELECT state.id FROM workflow_state state
+       JOIN workflow_state_capability capability ON capability.state_id = state.id
+        AND capability.capability_code = 'public-listable' AND capability.enabled
+      WHERE state.active LIMIT 1),
+    'America/Guayaquil', now() + interval '1 day', now() + interval '2 days',
+    '{"isPublic": true, "imageUrl": "https://cdn.example.test/flyer.jpg"}', now(), now()
+  RETURNING id INTO event_id;
+  PERFORM pg_temp.expect(
+    (SELECT image_url FROM directory_public_search_document WHERE entity_kind = 'venue' AND entity_id = venue_id::text)
+      = 'https://cdn.example.test/venue-card.jpg', 'venue search card carries the venue image');
+  PERFORM pg_temp.expect(
+    (SELECT image_url FROM directory_public_search_document WHERE entity_kind = 'event' AND entity_id = event_id::text)
+      = 'https://cdn.example.test/flyer.jpg', 'event search card keeps the event image');
+  PERFORM pg_temp.expect(
+    (SELECT search_vector @@ plainto_tsquery('simple', 'eventos') FROM directory_search_document
+      WHERE entity_kind = 'event' AND entity_id = event_id::text),
+    'the event projection of the search sync migration is not replaced');
+  SELECT source_version INTO version_before FROM directory_search_document
+   WHERE entity_kind = 'venue' AND entity_id = venue_id::text;
+  PERFORM directory_refresh_legacy_event_search();
+  PERFORM pg_temp.expect(
+    (SELECT source_version FROM directory_search_document WHERE entity_kind = 'venue' AND entity_id = venue_id::text)
+      = version_before, 'rebuilding an unchanged venue keeps its version');
+  UPDATE venue SET contact = '{"imageUrl":"https://cdn.example.test/venue-card-2.jpg"}' WHERE id = venue_id;
+  PERFORM pg_temp.expect(
+    (SELECT image_url FROM directory_search_document WHERE entity_kind = 'venue' AND entity_id = venue_id::text)
+      = 'https://cdn.example.test/venue-card-2.jpg', 'a venue image change updates its search card');
+  DELETE FROM social_event WHERE id = event_id;
+END
+$venue_search_image$;
+
+DO $alerts$
+DECLARE
+  mixed_search UUID;
+  classified_search UUID;
+  artist_id UUID;
+BEGIN
+  INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+  VALUES (910002, 'Mixed alert', '{"q":"alert dedupe artist"}'::jsonb, repeat('b', 64), TRUE, 'instant')
+  RETURNING id INTO mixed_search;
+  INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+  VALUES (910002, 'Classified alert', '{"q":"alert dedupe artist","entityType":"classified"}'::jsonb, repeat('c', 64), TRUE, 'instant')
+  RETURNING id INTO classified_search;
+  artist_id := pg_temp.make_profile('alert-dedupe-artist', 'artist', 'Alert Dedupe Artist', 910001);
+  PERFORM pg_temp.publish(artist_id);
+  PERFORM pg_temp.expect(
+    (SELECT count(DISTINCT (result_kind, result_id)) FROM directory_alert_delivery WHERE saved_search_id = mixed_search) = 1
+    AND NOT EXISTS (SELECT 1 FROM directory_alert_delivery WHERE saved_search_id = mixed_search AND result_kind = 'classified'),
+    'a mixed saved search is notified once, for the profile');
+  PERFORM pg_temp.expect(
+    EXISTS (SELECT 1 FROM directory_alert_delivery WHERE saved_search_id = classified_search AND result_kind = 'classified'),
+    'a saved search for classifieds still matches the derived listing');
+END
+$alerts$;
+
 -- Backfill --------------------------------------------------------------------
 ALTER TABLE directory_profile DISABLE TRIGGER directory_profile_artist_listing_sync_trigger;
 INSERT INTO directory_profile (id, subject_party_id, profile_kind, public_name, slug, bio, profile_status,

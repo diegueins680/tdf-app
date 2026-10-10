@@ -25,6 +25,8 @@ SET LOCAL statement_timeout = '10min';
 
 -- Google Drive viewer links are web pages, not images. Rewrite file links to
 -- the public content endpoint (the same form the web Drive helper produces).
+-- Absolute URLs must be HTTPS: the clients refuse cross-origin http images, so
+-- accepting one here would shadow a usable lower-priority image.
 CREATE OR REPLACE FUNCTION directory_safe_image_url(raw_value TEXT)
 RETURNS TEXT
 LANGUAGE SQL
@@ -52,8 +54,8 @@ AS $$
   WHERE normalized.value IS NOT NULL
     AND strpos(normalized.value, chr(92)) = 0
     AND (
-      normalized.value ~* '^https?://[^/?#[:space:][:cntrl:]@:%\[\]]+(:[0-9]+)?([/?#]|$)'
-      OR normalized.value ~* '^https?://\[[0-9a-f:.]+\](:[0-9]+)?([/?#]|$)'
+      normalized.value ~* '^https://[^/?#[:space:][:cntrl:]@:%\[\]]+(:[0-9]+)?([/?#]|$)'
+      OR normalized.value ~* '^https://\[[0-9a-f:.]+\](:[0-9]+)?([/?#]|$)'
       OR normalized.value ~ '^/[^/[:space:][:cntrl:]][^[:space:][:cntrl:]]*$'
     )
     AND normalized.value !~ '[[:space:][:cntrl:]]';
@@ -100,6 +102,30 @@ AS $$
       lower(coalesce(entry.value->>'role', '')) IN ('cover','featured','primary','preview')
       OR lower(coalesce(entry.value->>'featured', entry.value->>'primary', entry.value->>'cover', 'false')) = 'true'
     )
+    AND candidate.image_url IS NOT NULL
+  ORDER BY entry.ordinality, candidate.priority
+  LIMIT 1;
+$$;
+
+-- First portfolio image a client can render. Unlike the August
+-- directory_profile_primary_image_url, an unusable first entry (http, viewer
+-- page) does not hide a usable later one.
+CREATE OR REPLACE FUNCTION directory_profile_first_image_url(portfolio_value JSONB)
+RETURNS TEXT
+LANGUAGE SQL
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT candidate.image_url
+  FROM jsonb_array_elements(
+    CASE WHEN jsonb_typeof(portfolio_value) = 'array' THEN portfolio_value ELSE '[]'::jsonb END
+  ) WITH ORDINALITY entry(value, ordinality)
+  CROSS JOIN LATERAL (VALUES
+    (directory_safe_image_url(entry.value->>'thumbnailUrl'), 0),
+    (directory_safe_image_url(entry.value->>'url'), 1)
+  ) candidate(image_url, priority)
+  WHERE jsonb_typeof(entry.value) = 'object'
+    AND coalesce(entry.value->>'itemType', entry.value->>'kind') = 'image'
     AND candidate.image_url IS NOT NULL
   ORDER BY entry.ordinality, candidate.priority
   LIMIT 1;
@@ -164,7 +190,7 @@ AS $$
       WHERE store.directory_profile_id = profile.id
         AND store.application_status = 'approved'
         AND store.operational_status = 'active'),
-    directory_safe_image_url(directory_profile_primary_image_url(profile.portfolio))
+    directory_profile_first_image_url(profile.portfolio)
   )
   FROM directory_profile profile
   WHERE profile.id = profile_id_value;
@@ -382,7 +408,9 @@ DECLARE
   primary_location directory_profile_location%ROWTYPE;
   content_changed BOOLEAN;
 BEGIN
-  SELECT * INTO profile FROM directory_profile WHERE id = profile_id_value;
+  -- The row lock serializes this derivation with concurrent profile changes
+  -- (reconciliation and recovery calls run outside the profile's own update).
+  SELECT * INTO profile FROM directory_profile WHERE id = profile_id_value FOR UPDATE;
   IF NOT FOUND THEN
     RETURN NULL;
   END IF;
@@ -497,6 +525,10 @@ BEGIN
       primary_location.service_radius_km
     WHERE NOT EXISTS (SELECT 1 FROM classified_location existing WHERE existing.classified_id = listing.id)
     ON CONFLICT DO NOTHING;
+    UPDATE classified_location item
+       SET service_radius_km = primary_location.service_radius_km
+     WHERE item.classified_id = listing.id
+       AND item.service_radius_km IS DISTINCT FROM primary_location.service_radius_km;
   END IF;
 
   -- Lifecycle: published while the profile is publicly listed, paused
@@ -739,43 +771,135 @@ AS $$
 $$;
 
 -- ---------------------------------------------------------------------------
--- Project preview images onto existing search rows (profiles, events, venues).
+-- Project preview images onto existing search rows (profiles, venues).
+-- Event and venue documents are maintained by
+-- 2026-10-09_directory_event_search_sync, which already projects event
+-- images; this adds the venue image to the same venue projection.
 -- ---------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION directory_refresh_legacy_event_search()
+CREATE OR REPLACE FUNCTION directory_sync_venue_search(target_venue_id BIGINT)
 RETURNS VOID
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  DELETE FROM directory_search_document WHERE entity_kind IN ('event','venue');
+  IF target_venue_id IS NULL THEN
+    RETURN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id = target_venue_id) THEN
+    RETURN;
+  END IF;
   INSERT INTO directory_search_document (
-    entity_kind,entity_id,slug,title,subtitle,summary,image_url,city_id,city_name,country_code,
-    public_latitude,public_longitude,location_precision,search_text,search_vector,
-    source_status,visibility,moderation_status,effective_at,expires_at,
-    source_updated_at,source_version,sponsored
+    entity_kind, entity_id, slug, title, subtitle, image_url, city_id, city_name, country_code,
+    public_latitude, public_longitude, location_precision, search_text, search_vector,
+    source_status, visibility, moderation_status, source_updated_at, source_version, sponsored
   )
-  SELECT 'event',event.id::text,'evento-'||event.id::text,event.title,event.venue_name,
-    event.description,directory_safe_image_url(directory_try_jsonb_object(source_event.metadata)->>'imageUrl'),event.city_id,event.city_name,event.country_code,event.public_latitude,
-    event.public_longitude,'city',directory_normalize_text(concat_ws(' ',event.title,event.description,event.venue_name,event.city_name)),
-    to_tsvector('simple',directory_normalize_text(concat_ws(' ',event.title,event.description,event.venue_name,event.city_name))),
-    'published','public','allowed',event.start_time,event.end_time,event.updated_at,1,FALSE
-  FROM directory_public_event event
-  JOIN social_event source_event ON source_event.id=event.id;
-  INSERT INTO directory_search_document (
-    entity_kind,entity_id,slug,title,subtitle,image_url,city_id,city_name,country_code,
-    public_latitude,public_longitude,location_precision,search_text,search_vector,
-    source_status,visibility,moderation_status,source_updated_at,source_version,sponsored
-  )
-  SELECT 'venue',venue.id::text,'venue-'||venue.id::text,venue.name,venue.city_name,
+  SELECT DISTINCT ON (venue.id)
+    'venue', venue.id::text, 'venue-' || venue.id::text, venue.name, venue.city_name,
     directory_safe_image_url(directory_try_jsonb_object(source_venue.contact)->>'imageUrl'),
-    venue.city_id,venue.city_name,venue.country_code,venue.public_latitude,venue.public_longitude,
-    'city',directory_normalize_text(concat_ws(' ',venue.name,venue.city_name)),
-    to_tsvector('simple',directory_normalize_text(concat_ws(' ',venue.name,venue.city_name))),
-    'published','public','allowed',venue.updated_at,1,FALSE
+    venue.city_id, venue.city_name, venue.country_code, venue.public_latitude, venue.public_longitude,
+    'city',
+    directory_normalize_text(concat_ws(' ', venue.name, venue.city_name, 'venue venues local locales')),
+    to_tsvector('simple', directory_normalize_text(concat_ws(' ', venue.name, venue.city_name, 'venue venues local locales'))),
+    'published', 'public', 'allowed', venue.updated_at, 1, FALSE
   FROM directory_public_venue venue
-  JOIN venue source_venue ON source_venue.id=venue.id;
+  JOIN venue source_venue ON source_venue.id = venue.id
+  WHERE venue.id = target_venue_id
+  ON CONFLICT (entity_kind, entity_id) DO UPDATE SET
+    slug = EXCLUDED.slug, title = EXCLUDED.title, subtitle = EXCLUDED.subtitle,
+    image_url = EXCLUDED.image_url,
+    city_id = EXCLUDED.city_id, city_name = EXCLUDED.city_name, country_code = EXCLUDED.country_code,
+    public_latitude = EXCLUDED.public_latitude, public_longitude = EXCLUDED.public_longitude,
+    location_precision = EXCLUDED.location_precision, search_text = EXCLUDED.search_text,
+    search_vector = EXCLUDED.search_vector, source_status = EXCLUDED.source_status,
+    visibility = EXCLUDED.visibility, moderation_status = EXCLUDED.moderation_status,
+    source_updated_at = EXCLUDED.source_updated_at,
+    source_version = directory_search_document.source_version + 1
+  -- An unchanged projection keeps its version: saved-search alerts fire on
+  -- source_version, so a rebuild must not notify again.
+  WHERE (directory_search_document.slug, directory_search_document.title,
+         directory_search_document.subtitle, directory_search_document.image_url,
+         directory_search_document.city_id,
+         directory_search_document.city_name, directory_search_document.country_code,
+         directory_search_document.public_latitude, directory_search_document.public_longitude,
+         directory_search_document.location_precision, directory_search_document.search_text,
+         directory_search_document.source_status, directory_search_document.visibility,
+         directory_search_document.moderation_status, directory_search_document.source_updated_at)
+    IS DISTINCT FROM
+        (EXCLUDED.slug, EXCLUDED.title, EXCLUDED.subtitle, EXCLUDED.image_url, EXCLUDED.city_id,
+         EXCLUDED.city_name, EXCLUDED.country_code, EXCLUDED.public_latitude,
+         EXCLUDED.public_longitude, EXCLUDED.location_precision, EXCLUDED.search_text,
+         EXCLUDED.source_status, EXCLUDED.visibility, EXCLUDED.moderation_status,
+         EXCLUDED.source_updated_at);
 END;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Media that lives outside the profile row (linked artist hero, band photo,
+-- venue image, social avatar, merch store logo) refreshes the profile's
+-- search document and derived listing when it changes.
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION directory_refresh_linked_profile_media()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target UUID;
+BEGIN
+  FOR target IN
+    SELECT link.profile_id FROM directory_legacy_link link
+    WHERE link.legacy_kind = TG_ARGV[0] AND link.legacy_id = NEW.id::text
+  LOOP
+    PERFORM directory_refresh_profile_search(target);
+  END LOOP;
+  RETURN NULL;
+END
+$$;
+
+DROP TRIGGER IF EXISTS directory_artist_profile_media_trigger ON artist_profile;
+CREATE TRIGGER directory_artist_profile_media_trigger
+AFTER UPDATE OF hero_image_url ON artist_profile
+FOR EACH ROW WHEN (OLD.hero_image_url IS DISTINCT FROM NEW.hero_image_url)
+EXECUTE FUNCTION directory_refresh_linked_profile_media('artist_profile');
+
+DROP TRIGGER IF EXISTS directory_band_media_trigger ON band;
+CREATE TRIGGER directory_band_media_trigger
+AFTER UPDATE OF photo_url ON band
+FOR EACH ROW WHEN (OLD.photo_url IS DISTINCT FROM NEW.photo_url)
+EXECUTE FUNCTION directory_refresh_linked_profile_media('band');
+
+DROP TRIGGER IF EXISTS directory_venue_media_trigger ON venue;
+CREATE TRIGGER directory_venue_media_trigger
+AFTER UPDATE OF contact ON venue
+FOR EACH ROW WHEN (OLD.contact IS DISTINCT FROM NEW.contact)
+EXECUTE FUNCTION directory_refresh_linked_profile_media('venue');
+
+DROP TRIGGER IF EXISTS directory_social_artist_media_trigger ON social_artist_profile;
+CREATE TRIGGER directory_social_artist_media_trigger
+AFTER UPDATE OF avatar_url ON social_artist_profile
+FOR EACH ROW WHEN (OLD.avatar_url IS DISTINCT FROM NEW.avatar_url)
+EXECUTE FUNCTION directory_refresh_linked_profile_media('social_artist_profile');
+
+CREATE OR REPLACE FUNCTION directory_refresh_store_profile_media()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF TG_OP <> 'INSERT' THEN
+    PERFORM directory_refresh_profile_search(OLD.directory_profile_id);
+  END IF;
+  IF TG_OP <> 'DELETE' AND (TG_OP = 'INSERT' OR NEW.directory_profile_id IS DISTINCT FROM OLD.directory_profile_id) THEN
+    PERFORM directory_refresh_profile_search(NEW.directory_profile_id);
+  END IF;
+  RETURN NULL;
+END
+$$;
+
+DROP TRIGGER IF EXISTS directory_merch_store_media_trigger ON merch_store;
+CREATE TRIGGER directory_merch_store_media_trigger
+AFTER INSERT OR DELETE OR UPDATE OF logo_image_url, application_status, operational_status, directory_profile_id
+ON merch_store
+FOR EACH ROW EXECUTE FUNCTION directory_refresh_store_profile_media();
 
 UPDATE directory_search_document document
 SET image_url = directory_profile_preview_image_url(profile.id)
@@ -784,19 +908,57 @@ WHERE document.entity_kind = 'profile'
   AND document.entity_id = profile.id::text
   AND document.image_url IS DISTINCT FROM directory_profile_preview_image_url(profile.id);
 
-UPDATE directory_search_document document
-SET image_url = directory_safe_image_url(directory_try_jsonb_object(event.metadata)->>'imageUrl')
-FROM social_event event
-WHERE document.entity_kind = 'event'
-  AND document.entity_id = event.id::text
-  AND document.image_url IS DISTINCT FROM directory_safe_image_url(directory_try_jsonb_object(event.metadata)->>'imageUrl');
+-- Venue images reach existing venue documents through the shared rebuild
+-- (unchanged documents keep their version).
+SELECT directory_refresh_legacy_event_search();
 
-UPDATE directory_search_document document
-SET image_url = directory_safe_image_url(directory_try_jsonb_object(venue.contact)->>'imageUrl')
-FROM venue
-WHERE document.entity_kind = 'venue'
-  AND document.entity_id = venue.id::text
-  AND document.image_url IS DISTINCT FROM directory_safe_image_url(directory_try_jsonb_object(venue.contact)->>'imageUrl');
+-- ---------------------------------------------------------------------------
+-- Saved-search alerts mirror the mixed-search deduplication.
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION directory_enqueue_saved_search_alerts()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.sponsored OR NEW.source_status<>'published' OR NEW.visibility<>'public'
+     OR NEW.moderation_status<>'allowed' OR (NEW.expires_at IS NOT NULL AND NEW.expires_at<=now()) THEN
+    RETURN NEW;
+  END IF;
+  WITH matches AS (
+    SELECT saved.id,saved.account_party_id
+    FROM directory_saved_search saved
+    WHERE saved.alerts_enabled AND saved.alert_frequency<>'off'
+      AND (saved.canonical_query->>'q' IS NULL OR saved.canonical_query->>'q'='' OR
+        NEW.search_vector @@ plainto_tsquery('simple',directory_normalize_text(saved.canonical_query->>'q')) OR
+        directory_text_similarity(NEW.search_text,saved.canonical_query->>'q')>=.2)
+      AND (saved.canonical_query->>'entityType' IS NULL OR saved.canonical_query->>'entityType'=NEW.entity_kind)
+      -- A derived listing duplicates its profile in mixed results, so it only
+      -- matches searches that ask for classifieds explicitly.
+      AND (NEW.source_profile_id IS NULL OR saved.canonical_query->>'entityType'='classified')
+      AND (saved.canonical_query->>'cityId' IS NULL OR saved.canonical_query->>'cityId'=NEW.city_id::text)
+      AND CASE WHEN saved.canonical_query->>'professionId' IS NULL THEN TRUE WHEN saved.canonical_query->>'professionId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (saved.canonical_query->>'professionId')::uuid=ANY(NEW.profession_ids) ELSE FALSE END
+      AND CASE WHEN saved.canonical_query->>'instrumentId' IS NULL THEN TRUE WHEN saved.canonical_query->>'instrumentId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (saved.canonical_query->>'instrumentId')::uuid=ANY(NEW.instrument_ids) ELSE FALSE END
+      AND CASE WHEN saved.canonical_query->>'genreId' IS NULL THEN TRUE WHEN saved.canonical_query->>'genreId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (saved.canonical_query->>'genreId')::uuid=ANY(NEW.genre_ids) ELSE FALSE END
+  ), inserted AS (
+    INSERT INTO directory_alert_delivery(saved_search_id,result_kind,result_id,result_version,email_status,push_status)
+    SELECT matches.id,NEW.entity_kind,NEW.entity_id,NEW.source_version,'disabled','disabled'
+    FROM matches
+    ON CONFLICT(saved_search_id,result_kind,result_id,result_version) DO NOTHING
+    RETURNING id,saved_search_id
+  )
+  INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at)
+  SELECT saved.account_party_id,'directory.saved-search-match','Nueva coincidencia en tu alerta',
+    'Hay un nuevo resultado para "'||saved.name||'".','directory_alert',inserted.id::text,FALSE,now()
+  FROM inserted JOIN directory_saved_search saved ON saved.id=inserted.saved_search_id;
+  UPDATE directory_alert_delivery delivery SET internal_notification_id=notification.id
+  FROM notification WHERE delivery.id::text=notification.target_key
+    AND notification.target_type='directory_alert' AND delivery.internal_notification_id IS NULL;
+  UPDATE directory_saved_search saved SET last_evaluated_at=now()
+  WHERE EXISTS (SELECT 1 FROM directory_alert_delivery delivery WHERE delivery.saved_search_id=saved.id AND delivery.result_kind=NEW.entity_kind AND delivery.result_id=NEW.entity_id AND delivery.result_version=NEW.source_version);
+  RETURN NEW;
+END;
+$$;
 
 -- The public projection view is deliberately unchanged: older registered
 -- migrations may re-apply its previous definition, and derived listings never

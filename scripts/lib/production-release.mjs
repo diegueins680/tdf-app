@@ -1036,7 +1036,7 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM directory_artist_listing_audit()
-    WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile')
+    WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile','stale_listing_search_document')
   ) THEN
     RAISE EXCEPTION 'Artist-profile derived listings are inconsistent with their profiles';
   END IF;

@@ -18,13 +18,26 @@ Priority:
 2. Primary linked profile media through `directory_legacy_link`: artist
    `hero_image_url`, band `photo_url`, venue `contact.imageUrl`.
 3. Avatar or logo: linked social artist `avatar_url`, active merch store `logo_image_url`.
-4. First valid portfolio image.
+4. First portfolio image a client can render (an unusable earlier entry does
+   not hide a usable later one).
 5. `NULL` → client placeholder.
 
-`directory_safe_image_url` accepts HTTPS/HTTP hosts and same-origin paths only,
+`directory_safe_image_url` accepts HTTPS hosts and same-origin paths only,
 rejects credentials, backslashes and whitespace, and rewrites Google Drive viewer
-links to the public content endpoint. Event and venue search documents now carry
-their own images (event metadata `imageUrl`, venue `contact.imageUrl`).
+links to the public content endpoint. Cross-origin `http://` images are rejected
+at every priority (and in the cover field, client and server) because the HTTPS
+clients refuse to render them. Venue search documents and the public venue
+projection (`imageUrl`) carry the venue's `contact.imageUrl`; event documents
+keep the image projected by `2026-10-09_directory_event_search_sync`, which
+this migration builds on and must follow in the manifest.
+
+Media stored outside the profile row refreshes the profile's search document and
+derived listing when it changes: triggers on `artist_profile.hero_image_url`,
+`band.photo_url`, `venue.contact`, `social_artist_profile.avatar_url` and
+`merch_store` (logo, approval, operational status, owning profile).
+
+Detail pages always mount the shared preview component, so an entity without
+media shows its kind's placeholder there as well.
 
 Root cause of the TDF Records / Domo del Pululahua placeholders: both profiles were
 created by hand on 2026-08-18 with an empty portfolio, and search documents only
@@ -74,6 +87,12 @@ The sync runs inside the same transaction as every profile change:
 | paused, archived, suspended, merged, unlisted, private, blocked, or kind no longer artist | `paused` (hidden from discovery) |
 | public again | same row back to `published` |
 | moderator set listing `moderated`/`withdrawn` | final; never revived by the profile |
+| moderator `pause` on a derived listing | recorded as `moderated` (a paused derived listing would be republished by the next profile sync) |
+
+`directory_sync_profile_listing` locks the profile row, so reconciliation and
+recovery calls serialize with concurrent profile changes. The listing location's
+service radius follows the profile's primary location even when the city is
+unchanged.
 
 Archive no longer withdraws the derived row (manual classifieds are still
 withdrawn), so restoring a profile restores its listing without duplicates.
@@ -89,8 +108,10 @@ centroid.
 
 Mixed `/buscar` results exclude derived listings, because their profile already
 appears; the Classifieds tab and `entityType=classified` include them, with
-`sourceProfile` linking to the canonical profile ("Ver perfil"). Saved-search
-alerts and favorites see the same search documents.
+`sourceProfile` linking to the canonical profile ("Ver perfil"). Autocomplete
+suggestions and saved-search alerts apply the same rule: a derived listing is
+suggested or notified only for searches that ask for classifieds explicitly, so
+a new artist produces one alert, not two.
 
 ## Backfill, audit and recovery
 
@@ -120,4 +141,5 @@ functions and pauses derived rows without deleting them.
 Verification: `scripts/test-directory-artist-listings.sh` (production-shaped
 schema, behavior, two-session concurrency, backfill twice, rollback/re-apply and,
 with a backend binary, the HTTP flow) plus the production schema verification
-gate.
+gate, which also rejects a published derived listing whose search document is
+missing or stale.

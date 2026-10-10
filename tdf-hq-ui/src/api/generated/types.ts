@@ -15453,7 +15453,7 @@ export interface components {
                 reviewAverage?: number;
                 reviewCount?: number;
             };
-            /** @description Canonical preview image (cover */
+            /** @description Canonical preview image (cover, featured, linked profile media, avatar/logo, first portfolio image); null means no valid media */
             previewImageUrl?: string | null;
             /** @description The listing derived automatically from this artist profile, when public. */
             derivedListing?: {
@@ -15535,7 +15535,7 @@ export interface components {
             endsAt?: string | null;
             /**
              * Format: date-time
-             * @description Null for listings derived from artist profiles
+             * @description Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring
              */
             expiresAt: string | null;
             imageUrl?: string | null;
@@ -15581,6 +15581,8 @@ export interface components {
             name: string;
             capacity?: number | null;
             location: components["schemas"]["PublicLocation"];
+            /** @description Venue image as shown on its search card; null means no valid media */
+            imageUrl?: string | null;
             canonicalUrl: string;
         };
         AgeAssuranceRequest: {

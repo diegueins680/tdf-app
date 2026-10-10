@@ -190,24 +190,23 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
-                  {absolutePreviewImage && (
-                    <DirectoryPreviewImage
-                      kind={kind === 'profile' || kind === 'classified' || kind === 'event' ? kind : 'venue'}
-                      imageUrl={absolutePreviewImage}
-                      alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
-                      fallbackAlt={`Imagen de referencia de ${title}`}
-                      width={440}
-                      height={440}
-                      sizes="(min-width: 600px) 220px, 100vw"
-                      eager
-                      sx={{
-                        width: { xs: '100%', sm: 220 },
-                        height: { xs: 300, sm: 220 },
-                        aspectRatio: 'auto',
-                        borderRadius: 3,
-                      }}
-                    />
-                  )}
+                  {/* Always mounted: without media it shows the kind's placeholder. */}
+                  <DirectoryPreviewImage
+                    kind={kind === 'profile' || kind === 'classified' || kind === 'event' ? kind : 'venue'}
+                    imageUrl={absolutePreviewImage}
+                    alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
+                    fallbackAlt={`Imagen de referencia de ${title}`}
+                    width={440}
+                    height={440}
+                    sizes="(min-width: 600px) 220px, 100vw"
+                    eager
+                    sx={{
+                      width: { xs: '100%', sm: 220 },
+                      height: { xs: 300, sm: 220 },
+                      aspectRatio: 'auto',
+                      borderRadius: 3,
+                    }}
+                  />
                   <Box>
                     <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
                       <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />

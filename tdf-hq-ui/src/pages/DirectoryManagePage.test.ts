@@ -81,8 +81,12 @@ describe('directory professional profile form policy', () => {
   it('accepts an empty or safe cover image and rejects unsafe ones', () => {
     expect(profileFormError({ ...validProfile, coverImageUrl: '' })).toBeNull();
     expect(profileFormError({ ...validProfile, coverImageUrl: 'https://cdn.example.test/cover.jpg' })).toBeNull();
+    expect(profileFormError({ ...validProfile, coverImageUrl: '/assets/serve/cover.webp' })).toBeNull();
     expect(profileFormError({ ...validProfile, coverImageUrl: 'javascript:alert(1)' }))
-      .toBe('La imagen de portada necesita una URL HTTP(S) o ruta interna válida sin credenciales.');
+      .toBe('La imagen de portada necesita una URL HTTPS o ruta interna válida sin credenciales.');
+    // The HTTPS site cannot render a cross-origin http image.
+    expect(profileFormError({ ...validProfile, coverImageUrl: 'http://cdn.example.test/cover.jpg' }))
+      .toBe('La imagen de portada necesita una URL HTTPS o ruta interna válida sin credenciales.');
   });
 
   it('rejects invalid ranges and URLs with embedded credentials', () => {

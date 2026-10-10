@@ -10,6 +10,11 @@ SET LOCAL statement_timeout = '10min';
 
 DROP TRIGGER IF EXISTS directory_profile_artist_listing_sync_trigger ON directory_profile;
 DROP TRIGGER IF EXISTS directory_classified_derivation_guard_trigger ON classified;
+DROP TRIGGER IF EXISTS directory_artist_profile_media_trigger ON artist_profile;
+DROP TRIGGER IF EXISTS directory_band_media_trigger ON band;
+DROP TRIGGER IF EXISTS directory_venue_media_trigger ON venue;
+DROP TRIGGER IF EXISTS directory_social_artist_media_trigger ON social_artist_profile;
+DROP TRIGGER IF EXISTS directory_merch_store_media_trigger ON merch_store;
 
 UPDATE classified SET status = 'paused'
 WHERE source_profile_id IS NOT NULL AND status = 'published';
@@ -132,35 +137,98 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION directory_refresh_legacy_event_search()
+-- The venue projection returns to the 2026-10-09 definition (no image).
+CREATE OR REPLACE FUNCTION directory_sync_venue_search(target_venue_id BIGINT)
 RETURNS VOID
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  DELETE FROM directory_search_document WHERE entity_kind IN ('event','venue');
+  IF target_venue_id IS NULL THEN
+    RETURN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id = target_venue_id) THEN
+    RETURN;
+  END IF;
   INSERT INTO directory_search_document (
-    entity_kind,entity_id,slug,title,subtitle,summary,city_id,city_name,country_code,
-    public_latitude,public_longitude,location_precision,search_text,search_vector,
-    source_status,visibility,moderation_status,effective_at,expires_at,
-    source_updated_at,source_version,sponsored
+    entity_kind, entity_id, slug, title, subtitle, city_id, city_name, country_code,
+    public_latitude, public_longitude, location_precision, search_text, search_vector,
+    source_status, visibility, moderation_status, source_updated_at, source_version, sponsored
   )
-  SELECT 'event',event.id::text,'evento-'||event.id::text,event.title,event.venue_name,
-    event.description,event.city_id,event.city_name,event.country_code,event.public_latitude,
-    event.public_longitude,'city',directory_normalize_text(concat_ws(' ',event.title,event.description,event.venue_name,event.city_name)),
-    to_tsvector('simple',directory_normalize_text(concat_ws(' ',event.title,event.description,event.venue_name,event.city_name))),
-    'published','public','allowed',event.start_time,event.end_time,event.updated_at,1,FALSE
-  FROM directory_public_event event;
-  INSERT INTO directory_search_document (
-    entity_kind,entity_id,slug,title,subtitle,city_id,city_name,country_code,
-    public_latitude,public_longitude,location_precision,search_text,search_vector,
-    source_status,visibility,moderation_status,source_updated_at,source_version,sponsored
+  SELECT DISTINCT ON (venue.id)
+    'venue', venue.id::text, 'venue-' || venue.id::text, venue.name, venue.city_name,
+    venue.city_id, venue.city_name, venue.country_code, venue.public_latitude, venue.public_longitude,
+    'city',
+    directory_normalize_text(concat_ws(' ', venue.name, venue.city_name, 'venue venues local locales')),
+    to_tsvector('simple', directory_normalize_text(concat_ws(' ', venue.name, venue.city_name, 'venue venues local locales'))),
+    'published', 'public', 'allowed', venue.updated_at, 1, FALSE
+  FROM directory_public_venue venue
+  WHERE venue.id = target_venue_id
+  ON CONFLICT (entity_kind, entity_id) DO UPDATE SET
+    slug = EXCLUDED.slug, title = EXCLUDED.title, subtitle = EXCLUDED.subtitle,
+    city_id = EXCLUDED.city_id, city_name = EXCLUDED.city_name, country_code = EXCLUDED.country_code,
+    public_latitude = EXCLUDED.public_latitude, public_longitude = EXCLUDED.public_longitude,
+    location_precision = EXCLUDED.location_precision, search_text = EXCLUDED.search_text,
+    search_vector = EXCLUDED.search_vector, source_status = EXCLUDED.source_status,
+    visibility = EXCLUDED.visibility, moderation_status = EXCLUDED.moderation_status,
+    source_updated_at = EXCLUDED.source_updated_at,
+    source_version = directory_search_document.source_version + 1
+  -- An unchanged projection keeps its version: saved-search alerts fire on
+  -- source_version, so a rebuild must not notify again.
+  WHERE (directory_search_document.slug, directory_search_document.title,
+         directory_search_document.subtitle, directory_search_document.city_id,
+         directory_search_document.city_name, directory_search_document.country_code,
+         directory_search_document.public_latitude, directory_search_document.public_longitude,
+         directory_search_document.location_precision, directory_search_document.search_text,
+         directory_search_document.source_status, directory_search_document.visibility,
+         directory_search_document.moderation_status, directory_search_document.source_updated_at)
+    IS DISTINCT FROM
+        (EXCLUDED.slug, EXCLUDED.title, EXCLUDED.subtitle, EXCLUDED.city_id,
+         EXCLUDED.city_name, EXCLUDED.country_code, EXCLUDED.public_latitude,
+         EXCLUDED.public_longitude, EXCLUDED.location_precision, EXCLUDED.search_text,
+         EXCLUDED.source_status, EXCLUDED.visibility, EXCLUDED.moderation_status,
+         EXCLUDED.source_updated_at);
+END;
+$$;
+
+-- Saved-search alerts return to the 2026-09-18 definition.
+CREATE OR REPLACE FUNCTION directory_enqueue_saved_search_alerts()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.sponsored OR NEW.source_status<>'published' OR NEW.visibility<>'public'
+     OR NEW.moderation_status<>'allowed' OR (NEW.expires_at IS NOT NULL AND NEW.expires_at<=now()) THEN
+    RETURN NEW;
+  END IF;
+  WITH matches AS (
+    SELECT saved.id,saved.account_party_id
+    FROM directory_saved_search saved
+    WHERE saved.alerts_enabled AND saved.alert_frequency<>'off'
+      AND (saved.canonical_query->>'q' IS NULL OR saved.canonical_query->>'q'='' OR
+        NEW.search_vector @@ plainto_tsquery('simple',directory_normalize_text(saved.canonical_query->>'q')) OR
+        directory_text_similarity(NEW.search_text,saved.canonical_query->>'q')>=.2)
+      AND (saved.canonical_query->>'entityType' IS NULL OR saved.canonical_query->>'entityType'=NEW.entity_kind)
+      AND (saved.canonical_query->>'cityId' IS NULL OR saved.canonical_query->>'cityId'=NEW.city_id::text)
+      AND CASE WHEN saved.canonical_query->>'professionId' IS NULL THEN TRUE WHEN saved.canonical_query->>'professionId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (saved.canonical_query->>'professionId')::uuid=ANY(NEW.profession_ids) ELSE FALSE END
+      AND CASE WHEN saved.canonical_query->>'instrumentId' IS NULL THEN TRUE WHEN saved.canonical_query->>'instrumentId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (saved.canonical_query->>'instrumentId')::uuid=ANY(NEW.instrument_ids) ELSE FALSE END
+      AND CASE WHEN saved.canonical_query->>'genreId' IS NULL THEN TRUE WHEN saved.canonical_query->>'genreId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (saved.canonical_query->>'genreId')::uuid=ANY(NEW.genre_ids) ELSE FALSE END
+  ), inserted AS (
+    INSERT INTO directory_alert_delivery(saved_search_id,result_kind,result_id,result_version,email_status,push_status)
+    SELECT matches.id,NEW.entity_kind,NEW.entity_id,NEW.source_version,'disabled','disabled'
+    FROM matches
+    ON CONFLICT(saved_search_id,result_kind,result_id,result_version) DO NOTHING
+    RETURNING id,saved_search_id
   )
-  SELECT 'venue',venue.id::text,'venue-'||venue.id::text,venue.name,venue.city_name,
-    venue.city_id,venue.city_name,venue.country_code,venue.public_latitude,venue.public_longitude,
-    'city',directory_normalize_text(concat_ws(' ',venue.name,venue.city_name)),
-    to_tsvector('simple',directory_normalize_text(concat_ws(' ',venue.name,venue.city_name))),
-    'published','public','allowed',venue.updated_at,1,FALSE
-  FROM directory_public_venue venue;
+  INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at)
+  SELECT saved.account_party_id,'directory.saved-search-match','Nueva coincidencia en tu alerta',
+    'Hay un nuevo resultado para "'||saved.name||'".','directory_alert',inserted.id::text,FALSE,now()
+  FROM inserted JOIN directory_saved_search saved ON saved.id=inserted.saved_search_id;
+  UPDATE directory_alert_delivery delivery SET internal_notification_id=notification.id
+  FROM notification WHERE delivery.id::text=notification.target_key
+    AND notification.target_type='directory_alert' AND delivery.internal_notification_id IS NULL;
+  UPDATE directory_saved_search saved SET last_evaluated_at=now()
+  WHERE EXISTS (SELECT 1 FROM directory_alert_delivery delivery WHERE delivery.saved_search_id=saved.id AND delivery.result_kind=NEW.entity_kind AND delivery.result_id=NEW.entity_id AND delivery.result_version=NEW.source_version);
+  RETURN NEW;
 END;
 $$;
 
@@ -168,6 +236,8 @@ $$;
 -- archive during a rollback window cannot strand them in terminal withdrawn.
 
 DROP FUNCTION IF EXISTS directory_profile_listing_sync_trigger();
+DROP FUNCTION IF EXISTS directory_refresh_linked_profile_media();
+DROP FUNCTION IF EXISTS directory_refresh_store_profile_media();
 DROP FUNCTION IF EXISTS directory_guard_classified_derivation();
 DROP FUNCTION IF EXISTS directory_reconcile_artist_listings();
 DROP FUNCTION IF EXISTS directory_artist_listing_audit();
