@@ -6,6 +6,7 @@ import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (SomeException, try)
 import Control.Monad (forM, void)
 import Control.Monad.Logger (runNoLoggingT)
+import Control.Monad.Reader (runReaderT)
 import qualified Data.ByteString.Char8 as BS
 import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
@@ -15,12 +16,18 @@ import Data.Time (getCurrentTime)
 import Database.Persist
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey)
+import Servant (errHTTPCode, runHandler, (:<|>)(..))
 import System.Environment (lookupEnv)
 import Test.Hspec
-import TDF.DTO (ArtistProfileDTO(..))
+import TDF.Auth (AuthedUser(..), modulesForRoles)
+import qualified TDF.Config as Config
+import TDF.DB (Env(..))
+import TDF.DTO (ArtistProfileDTO(..), FeatureAccessRequestDecision(..))
+import TDF.FeatureRegistry (findRegistryFeature, registryReviewerCanDecide)
+import TDF.Models (RoleEnum(Admin))
 import qualified TDF.ModelsExtra as ME
 import TDF.Profiles.Artist (activateOwnArtistProfile)
-import TDF.Server (transitionPendingAccessRequest)
+import TDF.Server (accessRequestsServer, transitionPendingAccessRequest)
 
 spec :: Spec
 spec = describe "artist-self-service-postgresql" $ do
@@ -99,6 +106,30 @@ spec = describe "artist-self-service-postgresql" $ do
         statuses `shouldBe` [Single ("expired" :: Text), Single "approved"]
         history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 lapsed]) pool
         history `shouldBe` [Single (1 :: Int64)]
+      it "commits expiry when a reviewer decides a lapsed request through the handler" $ \pool -> do
+        let reviewer = AuthedUser
+              { auPartyId = toSqlKey 9
+              , auRoles = [Admin]
+              , auModules = modulesForRoles [Admin]
+              , auApiTokenId = Nothing
+              , auSessionWitness = Nothing
+              }
+        -- Guard against a vacuous pass: the reviewer must clear every check before the transaction.
+        fmap (\feature -> registryReviewerCanDecide reviewer feature "create") (findRegistryFeature "artist.onboarding")
+          `shouldBe` Just True
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(3,'artist.onboarding','create','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day') RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case inserted of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        cfg <- Config.loadConfig
+        let _ :<|> _ :<|> _ :<|> _ :<|> decide :<|> _ = accessRequestsServer reviewer
+        result <- runHandler (runReaderT (decide requestId (FeatureAccessRequestDecision "approved" Nothing)) (Env pool cfg))
+        either (Just . errHTTPCode) (const Nothing) result `shouldBe` Just 409
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("expired" :: Text)]
+        history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 requestId]) pool
+        history `shouldBe` [Single (1 :: Int64)]
+        counts pool 3 `shouldReturn` [0,0,0]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do
         runSqlPool (rawExecute "CREATE FUNCTION fail_test_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artist_party_id=7 THEN RAISE EXCEPTION 'injected profile write failure'; END IF; RETURN NEW; END $$" []) pool
         runSqlPool (rawExecute "CREATE TRIGGER fail_profile BEFORE INSERT ON artist_profile FOR EACH ROW EXECUTE FUNCTION fail_test_profile()" []) pool

@@ -13786,7 +13786,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "3fdebdced79373e61770dae88594e6a83eef95b725452479500d85202d017e33",
+      "sha256": "fcbb9a39bad35c60039c29f74db32b375905ac96bfb6de846179c19b03ed9422",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14542,7 +14542,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "3c8762618f80cc7448196d4c45368b38c3f3f99eb7fb10eaf7a205347f7dc1c2",
+      "sha256": "d88809b279dab482dfd15af5585bd762e049ee8496e0f89a3da5df64d37f9e3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23517,7 +23517,7 @@
     },
     {
       "path": "formal/system/access-grant.md",
-      "sha256": "e1535ec11ab196a267446e90e38d82d844cfa0be5b5185e774e21349b62d6559",
+      "sha256": "4d59e00299b8b71adf537091ce83d89e29e816b07f4ab429c6d2c420883276cc",
       "authority": "inferred",
       "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
       "kind": "requirement-candidate"

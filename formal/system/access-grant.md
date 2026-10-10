@@ -42,8 +42,16 @@ request.
 `transitionPendingAccessRequest` now runs the sweep and the conditional UPDATE
 in one transaction. A lapsed request becomes `expired`, with its history and
 audit rows, and the decision or cancellation returns the existing 409.
-`ArtistActivationSpec` ("settles expiry before deciding or cancelling …") runs
-the helper against disposable PostgreSQL through `scripts/test-artist-self-service.sh`.
+The decision transaction reports "no longer pending" as a value, not an
+exception. Throwing inside the transaction rolled back the sweep, leaving the
+lapsed request `pending` (review finding on #529). The 409 is now raised after
+the commit. Cancellation already raised its 409 after `runDB` returned.
+
+`ArtistActivationSpec` runs against disposable PostgreSQL through
+`scripts/test-artist-self-service.sh`. It covers the helper ("settles expiry
+before deciding or cancelling …") and the real `decideRequest` handler
+("commits expiry when a reviewer decides a lapsed request …"), asserting the
+409, the persisted `expired` status, the history row and the absence of any grant.
 
 ## Bounded model
 

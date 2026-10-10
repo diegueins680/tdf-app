@@ -4059,68 +4059,72 @@ accessRequestsServer user =
           , ME.FeatureAccessRequestUpdatedAt =. now
           , ME.FeatureAccessRequestDecidedAt =. Just now
           ]
-        when (changed /= 1) $
-          liftIO (throwIO AccessRequestDecisionConflict)
-        provisionedRole <- case roleToProvision of
-          Nothing -> pure Nothing
-          Just roleCode -> do
-            result <- provisionReviewedSecurityRole
-              (ME.featureAccessRequestRequesterPartyId requestValue)
-              (auPartyId user)
-              roleCode
-              (ME.featureAccessRequestRequestedAt requestValue)
+        -- A request that is no longer pending (including one the sweep just
+        -- expired) is reported as a value, not thrown: throwing would roll the
+        -- expiry back and leave the lapsed request pending.
+        if changed /= 1
+          then pure Nothing
+          else fmap Just $ do
+            provisionedRole <- case roleToProvision of
+              Nothing -> pure Nothing
+              Just roleCode -> do
+                result <- provisionReviewedSecurityRole
+                  (ME.featureAccessRequestRequesterPartyId requestValue)
+                  (auPartyId user)
+                  roleCode
+                  (ME.featureAccessRequestRequestedAt requestValue)
+                  now
+                  generatedReviewNotes
+                  provisioningReason
+                  provisioningCorrelation
+                case result of
+                  Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
+                  Right _ -> pure (Just roleCode)
+            insert_ (featureAccessRequestHistoryRecord
+              requestKey
+              (Just (auPartyId user))
+              decisionValue
+              (Just "pending")
+              decisionValue
+              notesValue
+              now)
+            insert_ Notification
+              { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
+              , notificationNotifType = "access_request_decided"
+              , notificationTitle = if decisionValue == "approved"
+                  then "Solicitud de acceso aprobada"
+                  else "Solicitud de acceso rechazada"
+              , notificationBody = case provisionedRole of
+                  Just roleCode ->
+                    "La solicitud fue aprobada y el rol " <> roleToText roleCode
+                      <> " ya fue otorgado mediante una revisión auditable. "
+                      <> "Recarga tu sesión para verlo en la navegación."
+                  Nothing | decisionValue == "approved" ->
+                    "La solicitud fue aprobada para provisión manual mediante un permiso "
+                      <> "compatible y auditable."
+                  Nothing ->
+                    "La solicitud fue revisada. Consulta las notas del revisor "
+                      <> "para más información."
+              , notificationTargetType = Just "feature_access_request"
+              , notificationTargetId = Just (fromIntegral requestIdValue)
+              , notificationTargetKey = Nothing
+              , notificationIsRead = False
+              , notificationCreatedAt = now
+              }
+            writeFeatureAccessRequestAudit
+              (Just (auPartyId user))
+              requestKey
+              ("access_request_" <> decisionValue)
+              (ME.featureAccessRequestFeatureId requestValue)
+              (ME.featureAccessRequestAction requestValue)
+              decisionValue
               now
-              generatedReviewNotes
-              provisioningReason
-              provisioningCorrelation
-            case result of
-              Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
-              Right _ -> pure (Just roleCode)
-        insert_ (featureAccessRequestHistoryRecord
-          requestKey
-          (Just (auPartyId user))
-          decisionValue
-          (Just "pending")
-          decisionValue
-          notesValue
-          now)
-        insert_ Notification
-          { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
-          , notificationNotifType = "access_request_decided"
-          , notificationTitle = if decisionValue == "approved"
-              then "Solicitud de acceso aprobada"
-              else "Solicitud de acceso rechazada"
-          , notificationBody = case provisionedRole of
-              Just roleCode ->
-                "La solicitud fue aprobada y el rol " <> roleToText roleCode
-                  <> " ya fue otorgado mediante una revisión auditable. "
-                  <> "Recarga tu sesión para verlo en la navegación."
-              Nothing | decisionValue == "approved" ->
-                "La solicitud fue aprobada para provisión manual mediante un permiso "
-                  <> "compatible y auditable."
-              Nothing ->
-                "La solicitud fue revisada. Consulta las notas del revisor "
-                  <> "para más información."
-          , notificationTargetType = Just "feature_access_request"
-          , notificationTargetId = Just (fromIntegral requestIdValue)
-          , notificationTargetKey = Nothing
-          , notificationIsRead = False
-          , notificationCreatedAt = now
-          }
-        writeFeatureAccessRequestAudit
-          (Just (auPartyId user))
-          requestKey
-          ("access_request_" <> decisionValue)
-          (ME.featureAccessRequestFeatureId requestValue)
-          (ME.featureAccessRequestAction requestValue)
-          decisionValue
-          now
-        getJustEntity requestKey
+            getJustEntity requestKey
       updated <- case transactionResult of
-        Right value -> pure value
+        Right (Just value) -> pure value
+        Right Nothing ->
+          throwError err409 { errBody = "Access request is no longer pending" }
         Left exception -> case fromException exception of
-          Just AccessRequestDecisionConflict ->
-            throwError err409 { errBody = "Access request is no longer pending" }
           Just (AccessRequestProvisioningFailure message) ->
             throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
           Nothing -> liftIO (throwIO (exception :: SomeException))
@@ -4246,9 +4250,8 @@ isFeatureAccessReviewer AuthedUser{..} =
   any (`elem` auRoles) [Admin, Manager, StudioManager]
     && auModules == modulesForRoles auRoles
 
-data AccessRequestDecisionFailure
-  = AccessRequestDecisionConflict
-  | AccessRequestProvisioningFailure Text
+newtype AccessRequestDecisionFailure
+  = AccessRequestProvisioningFailure Text
   deriving (Show)
 
 instance Exception AccessRequestDecisionFailure
