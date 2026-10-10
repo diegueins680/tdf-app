@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "e1dada9b4a7440ad1d68f3dff13973cffd62cb48",
+  "mobileRevision": "0c42f9fb45cd1b32d4e85df4736ff7192eb476fb",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -8853,114 +8853,15 @@
         "classification": "PARTIAL",
         "reason": "Implemented and tested in the database; production release pending."
       }
-    },
-    {
-      "id": "MKT-ARTIST-LISTING-001",
-      "title": "Canonical directory preview images and one synchronized listing per public artist profile",
-      "domain": "MKT",
-      "statement": "Every directory preview card uses one database-resolved canonical image (cover, featured, linked profile media, avatar/logo, first portfolio image; placeholder only without valid media). Every publicly listed artist or band profile owns exactly one derived artist-profile listing that is linked to it, derived from it in the same transaction, never independently editable, hidden whenever the profile is not public and restored (not duplicated) when it becomes public again.",
-      "authority": "User request of 2026-10-07 with recommended defaults approved (designated cover column, non-expiring derived listings)",
-      "source": "docs/music-directory/artist-derived-listings.md",
-      "contract": "docs/music-directory/artist-derived-listings.md",
-      "actors": [
-        "Anonymous visitor",
-        "Profile manager",
-        "Directory moderator",
-        "Operator running the backfill"
-      ],
-      "preconditions": [
-        "Directory profile kinds artist or band classify artists",
-        "Publication requires the existing completeness, location, moderation and age-assurance gates"
-      ],
-      "inputs": [
-        "Profile create, update and status changes",
-        "Taxonomy and public location changes",
-        "Moderation and merge decisions"
-      ],
-      "state": {
-        "boundary": "directory_profile, classified.source_profile_id, directory_search_document",
-        "authority": "PostgreSQL triggers, guard trigger and partial unique index"
-      },
-      "allowedTransitions": [
-        "No listing -> published (first public publication)",
-        "published -> paused (profile not public)",
-        "paused -> published (profile public again)",
-        "published|paused -> moderated|withdrawn (moderator)"
-      ],
-      "forbiddenTransitions": [
-        "Second derived listing for a profile",
-        "Derived listing for a non-artist, private or draft profile",
-        "Manual creation or content edit of a derived listing",
-        "Profile change reviving a moderated listing"
-      ],
-      "effects": [
-        "Derived listing content, taxonomy, approximate location and preview image mirror the profile",
-        "Mixed search shows the profile once; classified results link to the canonical profile"
-      ],
-      "authorization": "Only profile managers with edit/publish capabilities change the source profile; derived listings accept no direct author edits; moderators keep moderated/withdrawn transitions.",
-      "privacy": "Only public location rows are read; sector and commercial-exact precision are reduced to the city and private locations are never read.",
-      "concurrency": "Partial unique index plus INSERT ON CONFLICT DO NOTHING; concurrent creators wait and reuse the same row.",
-      "idempotency": "Sync, reconcile and backfill are idempotent; one derived row per profile ever.",
-      "failure": "Sync runs in the profile transaction, so a failure rolls back the profile change; the backfill fails on any hard invariant violation.",
-      "recovery": "directory_reconcile_artist_listings() re-derives every listing; directory_artist_listing_audit() reports remaining divergence.",
-      "observability": "Backfill run counts and persisted audit findings; profile.cover_assigned audit events; production schema verification gate.",
-      "property": "For every profile p: count(derived listings of p) <= 1, and the listing is publicly discoverable iff p is a publicly listed artist profile and the listing is not moderated.",
-      "implementation": [
-        "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-        "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
-        "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-        "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
-        "scripts/production-migrations.json",
-        "scripts/lib/production-release.mjs",
-        "tdf-hq/src/TDF/API/Directory.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/docs/openapi/directory.yaml",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
-        "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        "tdf-mobile/src/api/generated/types.ts",
-        "tdf-mobile/src/features/directory/previewImage.ts",
-        "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
-        "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
-        "tdf-mobile/app/(tabs)/directory.tsx",
-        "tdf-mobile/app/directory/manage.tsx"
-      ],
-      "tests": [
-        "scripts/test-directory-artist-listings.sh",
-        "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
-        "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
-        "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
-        "tdf-mobile/__tests__/directoryPreviewImage.test.tsx"
-      ],
-      "formalModels": [],
-      "verification": "PostgreSQL 16 production-shaped schema: image priority, creation, sync, privacy, lifecycle, idempotency, real two-session race, backfill twice, rollback/re-apply and the HTTP flow through the built API; Jest web and mobile component tests; production schema verification gate.",
-      "evidence": "Local PostgreSQL 16 and built tdf-hq-exe on 2026-10-07; production backfill counts pending deployment.",
-      "status": "specified and implemented",
-      "critical": false,
-      "confidence": "Behavior verified locally end to end; production data distribution (existing manual lookalikes) is reported by the audit, not assumed.",
-      "ambiguity": [
-        "Legacy artist_profile rows without a directory profile are not auto-published; they enter through claim/backfill."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
-      }
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+    ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "5ee8ef85c53e4df4a29625734f9454a80f498ede08090b1f3e20ee0f998d42bb",
+    "docs/catalog-persistence/catalog-list-decisions.json": "960cd7a71c261a30f28e2dd005a5a3ad3f393b1a224b0f5d7b33e2ed9c66e2b2",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9085,7 +8986,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
-    "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+    "package.json": "1e52fb4523cfba328755635c6ae0d016747234f425f4ed2e809951659430905c",
     "playwright.config.mjs": "a5c8481d89b2dabcb1b8f64766c8ab17a26b00877f8c27a4f06b52f24fc99779",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
@@ -9173,7 +9074,7 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+    "scripts/lib/production-release.mjs": "c9339e45aa70277ae90e11d2c3ea511b6ed25d198314269d2f6c2021ae0d74d2",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -9185,7 +9086,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+    "scripts/production-migrations.json": "6216f18e761840dd2035d3e85c500c574b9bd6a6ea38caa179c07aaeaa3a194a",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9210,7 +9111,6 @@
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
-    "scripts/test-directory-artist-listings.sh": "02edf2dbc16ce4e6b5bf8dfbc0d95760df6284071b6fe32c38498252040a96f3",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -9300,7 +9200,7 @@
     "tdf-hq-ui/src/api/eventTickets.ts": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "dfc87c0f30b1a2e633d0de6517fc07625b82d431c6e15c2cfbaaa9f998ba94e4",
+    "tdf-hq-ui/src/api/generated/types.ts": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -9338,8 +9238,6 @@
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
-    "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
-    "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
@@ -9365,8 +9263,6 @@
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "8d01c1c708ed13445fb0b044b8c20e8d6fd5030c6cad7b6b0134674b60d0457d",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "d7b998a8a79bc28b9e83f45b634338fb57c7bafe69e7faceded0213902a8c993",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
-    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
-    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
     "tdf-hq-ui/src/i18n/locales/en.ts": "fb867054fb48979bd7868da2ee778eb7e1e5ba4e09ea46f1ba53e14881c2f4be",
     "tdf-hq-ui/src/i18n/locales/es.ts": "062904ae5ba4cb6c95ddf19507a5003d5f0bc561ac48fbe8f6eeddb8bb6e0c14",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
@@ -9384,12 +9280,9 @@
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
-    "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
-    "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "4faca98825a44ea0db53f41d5cbe0ade76d8762b78b217d72343dc4481f9fa90",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "1ef3395beeb19393557b6de5755e49947c814e8d8c4c6797bff0c6bdcacee3a5",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "6526adc142fd93c8335d76f7cf4bffc4ef7aaeb6e551a7a563db1bec92f9e69b",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "691bb14706f89103e88df8e2895c5221feb83261c376e2c4df7b1713e3531412",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "627af000b5ce8462fbe704525a25f1c77444a85877fac2d92e346cb91c9f3804",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "24efabd60b10e1d8ef93b335002bcdb0d61dec08cffc67080d87bdec1e990084",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "48c13eb38ff9b9f373d8eac478ae3da0c837f42df02ead11a3000bc8ea371c53",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "35f4745492b8e77bc992165523b95452668b1fd206ed1422769db7b3ae3b600a",
@@ -9457,7 +9350,6 @@
     "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts": "24430baf37b1660622a9d0830fe0066f79a57f0ce7de88381f2854a14c9cdbba",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": "c95f0d906b0cb5dfe754d829bef159aaeca29f3e3ef59b37fb5fb45ab0d0ccd4",
-    "tdf-hq-ui/src/utils/directoryPreviewImage.ts": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
     "tdf-hq-ui/src/utils/incrementalSha256.ts": "a7964918e4d6c577458a488a35f6f938b3584857ea40b2169c27b56c3435f899",
     "tdf-hq-ui/src/utils/lazyWithReload.ts": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
@@ -9485,7 +9377,7 @@
     "tdf-hq/assets/feature-registry.json": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
     "tdf-hq/docs/openapi/api.yaml": "4e9f4e21af264c007cfd5e5572c90edb97ad39ddff79d6e10f42e21a0d031ad6",
-    "tdf-hq/docs/openapi/directory.yaml": "03a54c333f2212d5d2d26423a0bb8e9c931c9b956cce281e01080dc06ddf950e",
+    "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/music-worker/stack.yaml": "cd8794225ff4aa9550560653e371d570074d9f6dc261c1dfd138a4aa4fc37df8",
     "tdf-hq/music-worker/tdf-music-worker.cabal": "41abf425586e0213ce6607a8208bc6b99ba46a65bc92d7adacb8b23b116d87d2",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
@@ -9548,17 +9440,12 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_artist_invitation_links.sql": "b0e80b3b2dbb884460e40bef8e9c9a29fe0ef3ef3059fc998bb531fde179c3a2",
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "1050a1df90924ec592438ee36bad08f1e11ea69987f6721317d1f889676f023a",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": "8f081febeeb503466e2882b3580254bfef41d74320dfad61b182e44d656a2857",
-    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
-    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "9fbae88e9bb01be5e2c7588126201698406fc410dffb75f9eeb12d385ca78518",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "8ba63780f864920c60eb1ab658e48bd228855695956ff55c5f3a9663de00935d",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
-    "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
     "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
@@ -9624,7 +9511,7 @@
     "tdf-hq/src/TDF/Server.hs": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
+    "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
@@ -9699,9 +9586,7 @@
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
-    "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql": "94e153abc6b0988aea61c282940760d6901e1bf740fa88b1547766bc30c3960e",
-    "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
-    "tdf-hq/test/integration/directory_event_search_sync.sql": "df6e56242d1705727ad832391dc2571dbb3e9d0b846d352647f5826b279c1d13",
+    "tdf-hq/test/integration/directory_event_search_sync.sql": "9f2dc48c8c02e393015570b9ddf0b89b2eb20e6c122138409f1b371c003c1c79",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
@@ -9734,7 +9619,6 @@
     "tdf-mobile/__tests__/apiClient.test.ts": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
     "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
-    "tdf-mobile/__tests__/directoryPreviewImage.test.tsx": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
     "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
     "tdf-mobile/__tests__/featureRegistry.test.ts": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
@@ -9743,19 +9627,17 @@
     "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
     "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
     "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
-    "tdf-mobile/app/(tabs)/directory.tsx": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
     "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
-    "tdf-mobile/app/directory/manage.tsx": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
     "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
     "tdf-mobile/app/reputation/consents.tsx": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
-    "tdf-mobile/package-lock.json": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
-    "tdf-mobile/package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+    "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
+    "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
     "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
     "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
@@ -9765,16 +9647,13 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "dfc87c0f30b1a2e633d0de6517fc07625b82d431c6e15c2cfbaaa9f998ba94e4",
+    "tdf-mobile/src/api/generated/types.ts": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
-    "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
-    "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
     "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
     "tdf-mobile/src/components/LegalDisclosure.tsx": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
-    "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
@@ -10275,10 +10154,6 @@
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/api/generated/types.ts": [
@@ -10288,10 +10163,6 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "implementation"
       }
     ],
@@ -10533,10 +10404,6 @@
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/roles.ts": [
@@ -10719,10 +10586,6 @@
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Directory/Policy.hs": [
@@ -10770,10 +10633,6 @@
       },
       {
         "requirement": "DIR-SEARCH-SYNC-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "implementation"
       }
     ],
@@ -10954,10 +10813,6 @@
       },
       {
         "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "implementation"
       }
     ],
@@ -13371,10 +13226,6 @@
       {
         "requirement": "EVT-FUNNEL-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/ticket-page-preview.test.mjs": [
@@ -13986,10 +13837,6 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": [
       {
         "requirement": "OPS-CLIENT-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "tests"
       }
     ],
@@ -16030,138 +15877,6 @@
         "requirement": "DIR-SEARCH-SYNC-001",
         "relationship": "tests"
       }
-    ],
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/API/Directory.hs": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/utils/directoryPreviewImage.ts": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-mobile/src/features/directory/previewImage.ts": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-mobile/src/components/DirectoryPreviewImage.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-mobile/app/(tabs)/directory.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-mobile/app/directory/manage.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "scripts/test-directory-artist-listings.sh": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-mobile/__tests__/directoryPreviewImage.test.tsx": [
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "tests"
-      }
     ]
   },
   "surfaces": [
@@ -16213,7 +15928,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16933,7 +16648,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+      "sha256": "1e52fb4523cfba328755635c6ae0d016747234f425f4ed2e809951659430905c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18818,7 +18533,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "c9339e45aa70277ae90e11d2c3ea511b6ed25d198314269d2f6c2021ae0d74d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18843,10 +18558,6 @@
         },
         {
           "requirement": "PAY-INVOICE-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
         }
       ]
@@ -19095,7 +18806,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "6216f18e761840dd2035d3e85c500c574b9bd6a6ea38caa179c07aaeaa3a194a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19112,10 +18823,6 @@
         },
         {
           "requirement": "DIR-SEARCH-SYNC-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
         }
       ]
@@ -20138,18 +19845,6 @@
       "sha256": "6abd53bbd6a3c6762f4f7465f5f2290f2cbd2e813650cd04114ead4d2e18001d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-aa5f33e082489dd1",
-      "path": "scripts/test-directory-artist-listings.sh",
-      "sha256": "02edf2dbc16ce4e6b5bf8dfbc0d95760df6284071b6fe32c38498252040a96f3",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "tests"
-        }
-      ]
     },
     {
       "id": "SURFACE-104e997c0ce14359",
@@ -22300,7 +21995,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "dfc87c0f30b1a2e633d0de6517fc07625b82d431c6e15c2cfbaaa9f998ba94e4",
+      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22317,10 +22012,6 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
         }
       ]
@@ -23592,30 +23283,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-a6e139d776c2f045",
-      "path": "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
-      "sha256": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-b9a225105c7c3965",
-      "path": "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
-      "sha256": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-615a78e009691805",
       "path": "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "sha256": "bb66b7c21afaae45254cdd5170537c61aaf8f47477f4e3a80d356fdab207179c",
@@ -24617,26 +24284,16 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
+      "sha256": "051b4997dc6187323d7fe5bdb68c7dd213c10de5777955fed2b7863c1bafa5e5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
+      "sha256": "5e3429b0d576872503091a0d2a8c03902f08b0fe23112140ee4acd70f439668e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-844ef4d7558a76f8",
@@ -25247,31 +24904,21 @@
     {
       "id": "SURFACE-ac24f384b7949bc7",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts",
-      "sha256": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
+      "sha256": "b5f6fb747a1d8b4c0992fc7b191a0b61c19cf33d626267381cb73ae213f1df54",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "4faca98825a44ea0db53f41d5cbe0ade76d8762b78b217d72343dc4481f9fa90",
+      "sha256": "e5434e53bda9624721e0d90c8d7c239a12c7901839e64e34e72dba9ad4d72d83",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "1ef3395beeb19393557b6de5755e49947c814e8d8c4c6797bff0c6bdcacee3a5",
+      "sha256": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25283,7 +24930,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "6526adc142fd93c8335d76f7cf4bffc4ef7aaeb6e551a7a563db1bec92f9e69b",
+      "sha256": "24efabd60b10e1d8ef93b335002bcdb0d61dec08cffc67080d87bdec1e990084",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25293,25 +24940,17 @@
         {
           "requirement": "EVT-FUNNEL-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "691bb14706f89103e88df8e2895c5221feb83261c376e2c4df7b1713e3531412",
+      "sha256": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "OPS-CLIENT-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "tests"
         }
       ]
@@ -25319,14 +24958,9 @@
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "627af000b5ce8462fbe704525a25f1c77444a85877fac2d92e346cb91c9f3804",
+      "sha256": "e41ea71f40d7c2270b7027918f4a7c0828303acb5acf300e5b391efb1bc90c62",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-857a51643aefc9ce",
@@ -27490,18 +27124,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-bb88b59d02aa9172",
-      "path": "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
-      "sha256": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-f410a5c2ecf9598f",
       "path": "tdf-hq-ui/src/utils/domoQuoteAccess.ts",
       "sha256": "ac0290e299a41c5149c191578d4db27cef4744160f4fa14802f3a4b571e4b47b",
@@ -28343,15 +27965,11 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "03a54c333f2212d5d2d26423a0bb8e9c931c9b956cce281e01080dc06ddf950e",
+      "sha256": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-CLAIM-REVIEW-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
         }
       ]
@@ -31458,54 +31076,6 @@
       ]
     },
     {
-      "id": "SURFACE-a190940f0cb18e04",
-      "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "1050a1df90924ec592438ee36bad08f1e11ea69987f6721317d1f889676f023a",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-0ca3c1bdd4f9435e",
-      "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
-      "sha256": "8f081febeeb503466e2882b3580254bfef41d74320dfad61b182e44d656a2857",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-a2857b80564644cb",
-      "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-      "sha256": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-93563ebe32e71eba",
-      "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
-      "sha256": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-7c84d5e2371daa21",
       "path": "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql",
       "sha256": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
@@ -31532,7 +31102,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "9fbae88e9bb01be5e2c7588126201698406fc410dffb75f9eeb12d385ca78518",
+      "sha256": "8ba63780f864920c60eb1ab658e48bd228855695956ff55c5f3a9663de00935d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31678,14 +31248,9 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
+      "sha256": "414722c5bbe18dec00e1cf9b3db84a2f394a8ac2b297bacd67ff71be0fc9946c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-bb66af5ab40dbff1",
@@ -33344,7 +32909,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
+      "sha256": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33353,10 +32918,6 @@
         },
         {
           "requirement": "ID-CLAIM-REVIEW-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
         }
       ]
@@ -35061,30 +34622,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-4ff045e7860017f4",
-      "path": "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
-      "sha256": "94e153abc6b0988aea61c282940760d6901e1bf740fa88b1547766bc30c3960e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-f0bd7f5932c37ecd",
-      "path": "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
-      "sha256": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-18f37ce472f3ac70",
       "path": "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
       "sha256": "e028d25de639317fa3787d0e0a1160f3a1a5412f0db3a1d366a728d4ed9391ea",
@@ -35094,7 +34631,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "df6e56242d1705727ad832391dc2571dbb3e9d0b846d352647f5826b279c1d13",
+      "sha256": "9f2dc48c8c02e393015570b9ddf0b89b2eb20e6c122138409f1b371c003c1c79",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36119,18 +35656,6 @@
       ]
     },
     {
-      "id": "SURFACE-4744ff78391b59cc",
-      "path": "tdf-mobile/__tests__/directoryPreviewImage.test.tsx",
-      "sha256": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
       "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
@@ -36439,14 +35964,9 @@
     {
       "id": "SURFACE-f52dfd6e2d77a57f",
       "path": "tdf-mobile/app/(tabs)/directory.tsx",
-      "sha256": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
+      "sha256": "bba3e1e9fd52fa6da3dd9d9db71b67f50c38df51261af26190e7e1e5d61f61cf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-da3457d3ae8e7eba",
@@ -36691,14 +36211,9 @@
     {
       "id": "SURFACE-73a1b649f6438e52",
       "path": "tdf-mobile/app/directory/manage.tsx",
-      "sha256": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
+      "sha256": "a3796e16ce55b21c0aa19f558694b71580408fe983a8ceb56673c2da94031715",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-cb8e4fcf471e53e1",
@@ -37047,7 +36562,7 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
+      "sha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37059,7 +36574,7 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37347,7 +36862,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "dfc87c0f30b1a2e633d0de6517fc07625b82d431c6e15c2cfbaaa9f998ba94e4",
+      "sha256": "8664685b50229ac0e4bc819831bbc745359373299c6e252975bf0aec90505a65",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37356,10 +36871,6 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
         }
       ]
@@ -37536,28 +37047,11 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-f242ee0fc1c8742e",
-      "path": "tdf-mobile/src/components/DirectoryPreviewImage.tsx",
-      "sha256": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-7568a6ba01e6268b",
       "path": "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx",
-      "sha256": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
+      "sha256": "8866bef797bf772d209ef0cf24234b45ab408561505603ee8fd22a1acd0fb014",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-8fa816d092471420",
@@ -37774,18 +37268,6 @@
       "sha256": "a93030ad3d52801766ca8f6e48869af4c032d6c71c4054ccdf1757f3f51ffca7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-87778cdfd76bc6d8",
-      "path": "tdf-mobile/src/features/directory/previewImage.ts",
-      "sha256": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MKT-ARTIST-LISTING-001",
-          "relationship": "implementation"
-        }
-      ]
     },
     {
       "id": "SURFACE-f3000e7c8217ce74",
@@ -39209,6 +38691,8 @@
     "SURFACE-51294f78fb44c49b",
     "SURFACE-23c5b7dd2d415a8c",
     "SURFACE-4349420430226168",
+    "SURFACE-7e096967d3a00d3b",
+    "SURFACE-31dfb712c6445325",
     "SURFACE-81e227132420f964",
     "SURFACE-7ffb652987ca6eb6",
     "SURFACE-b354b9104200a96e",
@@ -39263,6 +38747,9 @@
     "SURFACE-b584e0770511a16a",
     "SURFACE-bf79c7904e71c2d9",
     "SURFACE-8bf82e65fbe7190d",
+    "SURFACE-ac24f384b7949bc7",
+    "SURFACE-b1d115adebe79a56",
+    "SURFACE-932153a167d40c81",
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
     "SURFACE-09fec2498cbd88bf",
@@ -39860,6 +39347,7 @@
     "SURFACE-6424d10f986745d0",
     "SURFACE-7e2c68ec2035c554",
     "SURFACE-a4902497bb9c1b53",
+    "SURFACE-9f19f644ef35d148",
     "SURFACE-531b5849276ce165",
     "SURFACE-cb535c211328ca30",
     "SURFACE-afc4cb3bc501dafc",
@@ -40163,6 +39651,7 @@
     "SURFACE-3bd8d92cee7ed241",
     "SURFACE-bba36fc1cc274031",
     "SURFACE-a483d055ed20e769",
+    "SURFACE-f52dfd6e2d77a57f",
     "SURFACE-f4e817382f892226",
     "SURFACE-32b73d45dd36c278",
     "SURFACE-3f2b18d0947c05e7",
@@ -40187,6 +39676,7 @@
     "SURFACE-ad037ff9be7a164f",
     "SURFACE-0024681b2b063dec",
     "SURFACE-9f8cace47a1e130d",
+    "SURFACE-73a1b649f6438e52",
     "SURFACE-cb8e4fcf471e53e1",
     "SURFACE-095e45eb2a4a4ad4",
     "SURFACE-9ba898720027410e",
@@ -40276,6 +39766,7 @@
     "SURFACE-ceac2e6abbe05738",
     "SURFACE-44f0271f8adb8837",
     "SURFACE-88103f1d6fb89685",
+    "SURFACE-7568a6ba01e6268b",
     "SURFACE-8fa816d092471420",
     "SURFACE-8ce4ad416c6e61d1",
     "SURFACE-67484eb36a87ee67",
@@ -41565,7 +41056,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1b4925d8eb0ae5d1aa871fe74c4cbfa44274158634df90a92353da6af8adbdb4",
+      "sourceSha256": "b5941c86cc33ef76207290ca5e79b10c8dfc7c4e7b23ced41885e00b5432d9fa",
       "definition": {
         "states": [
           "absent",
@@ -63762,7 +63253,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 112,
+    "PARTIAL": 111,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
