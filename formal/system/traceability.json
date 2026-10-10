@@ -8111,7 +8111,9 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/AccessGrant.tla"
+      ],
       "status": "specified and implemented",
       "id": "AUTH-ARTIST-INVITE-001",
       "title": "Personal single-use artist invitation links grant the Artist role by automatic policy",
@@ -8204,11 +8206,10 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx"
       ],
-      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement",
+      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement; AccessGrant.tla checks single redeemer, redeemed/revoked exclusion, non-administrative role and no automatic reactivation of a revoked assignment by redemption, each with a mutation control.",
       "evidence": "Local execution only",
       "confidence": "Medium: claim SQL and validation exercised locally; end-to-end redemption not yet run against a deployed backend.",
       "ambiguity": [
-        "tdf-hq/src/TDF/Profiles/Artist.hs change is only an unused import removal.",
         "artist.self-service.artist (on main since 2026-09-16) already lets any signed-in user activate Artist without approval; invitation links add attribution, not a stronger boundary."
       ],
       "conformance": {
@@ -8218,20 +8219,23 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/AccessGrant.tla"
+      ],
       "status": "specified and implemented",
       "id": "AUTH-ACCESS-PROVISION-001",
       "title": "Approved artist onboarding access requests provision the Artist role",
       "domain": "AUTH",
       "critical": true,
-      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Only an administrator distinct from the requester may approve it; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
+      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Since the 2026-09-16 self-service decision, creating that request activates the requester's own Artist profile through the artist.self-service.artist policy and records the request as approved by system-policy; the reviewed path remains only for requests created before that decision. Any reviewed decision requires a reviewer distinct from the requester, Admin for grant-bearing pairs, a request that is still pending and not past its expiry; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
       "authority": "Unreviewed recovered local implementation",
-      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs",
-      "contract": "tdf-hq/src/TDF/FeatureRegistry.hs",
-      "property": "A role is provisioned from an access request only for artist.onboarding/create, by a distinct administrator, with a published revision.",
+      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs; formal/system/access-grant.md (AUTHORITY-054)",
+      "contract": "formal/system/access-grant.md",
+      "property": "A role is provisioned from an access request only for artist.onboarding/create, and only by one of two paths: (a) self-service, where createRequest activates the requester's own artist profile and records the request approved by system-policy with no reviewer; a non-administrator receives Artist through the artist.self-service.artist policy, while an administrator receives no Artist role so the strict Admin scope is preserved; (b) a reviewed decision on a request that is still pending and not past expiry, made by an administrator distinct from the requester, with a published revision. No path grants an administrative or emergency role. Automatic paths never reactivate a revoked assignment; a reviewed approval may restore one as an explicit, published and audited administrator decision.",
       "actors": [
-        "Requester",
-        "Strict administrator",
+        "Requester (self-service activation and cancellation)",
+        "system-policy (artist.self-service.artist automatic assignment)",
+        "Strict administrator (grant-bearing review)",
         "Manager",
         "Studio manager"
       ],
@@ -8241,55 +8245,72 @@
         "sensitive-publication workflow active"
       ],
       "inputs": [
-        "Access request review decision and notes"
+        "Self-service request for artist.onboarding/create",
+        "Access request review decision and notes",
+        "Requester cancellation note",
+        "Current time (expiry is settled lazily in the same transaction)"
       ],
       "state": {
         "request": [
           "pending",
           "approved",
           "rejected",
-          "cancelled"
+          "cancelled",
+          "expired"
         ]
       },
       "allowedTransitions": [
-        "pending -> approved (grant for artist.onboarding/create) ",
-        "pending -> approved (manual provisioning otherwise)",
-        "pending -> rejected with note"
+        "(new) -> approved by system-policy (artist.onboarding/create self-service; a non-administrator receives Artist through the artist.self-service.artist policy, an administrator receives only the owned profile and keeps the strict Admin scope with no Artist role or policy audit; a lapsed pending onboarding request is first settled as expired, never approved)",
+        "pending -> approved by a distinct administrator before expiry (grant for artist.onboarding/create)",
+        "pending -> approved before expiry (manual provisioning otherwise)",
+        "pending -> rejected with note before expiry",
+        "pending -> cancelled by the requester before expiry",
+        "pending -> expired once past expires_at (list, review, decide or cancel paths)"
       ],
       "forbiddenTransitions": [
-        "Requester approving own grant",
         "Non-admin approving a grant-bearing request",
-        "Provisioning the emergency administrator role"
+        "Provisioning the emergency administrator role",
+        "Requester approving own grant",
+        "expired (or past-deadline pending) request -> approved/rejected/cancelled",
+        "revoked Artist assignment -> active through any automatic policy"
       ],
       "effects": [
-        "Published security revision and party role grant"
+        "Self-service: owned artist profile and an approved request with history and audit rows; a non-administrator also receives the policy-applied Artist grant, while an administrator keeps the strict Admin-only scope (no Artist role, no policy audit)",
+        "Reviewed approval: published security revision and party role grant (grant-bearing pair) or manual-provisioning notification",
+        "Expiry: request marked expired with history and audit rows; a decision or cancellation on it returns 409 with no grant"
       ],
       "authorization": "registryReviewerCanDecide requires Admin for grant-bearing requests.",
       "privacy": "Reviewer notes stay internal.",
-      "concurrency": "Revision and grant written in one transaction.",
+      "concurrency": "Revision and grant written in one transaction. transitionPendingAccessRequest settles lazy expiry and then applies a conditional UPDATE WHERE status = 'pending' in the same transaction, so at most one decision or cancellation is admitted.",
       "idempotency": "Re-approval of an already granted role reports no change.",
       "failure": "Any precondition failure aborts without a grant.",
       "recovery": "Revoke through Roles and permissions.",
       "observability": "Security revision and audit rows.",
       "implementation": [
-        "tdf-hq/src/TDF/FeatureRegistry.hs",
-        "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-        "tdf-hq-ui/src/utils/navigationLabels.ts"
+        "tdf-hq-ui/src/utils/navigationLabels.ts",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq/src/TDF/Server.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "scripts/test-artist-self-service.sh",
+        "tdf-hq-ui/src/components/navigationLabels.test.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
-        "tdf-hq-ui/src/components/navigationLabels.test.ts"
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
-      "verification": "Security spec and web unit tests",
-      "evidence": "Local execution only",
-      "confidence": "Medium.",
-      "ambiguity": [],
+      "verification": "Security spec and web unit tests; AccessGrant.tla bounded model (212 states) with seven single-guard mutation controls; PostgreSQL regression in ArtistActivationSpec for expiry before decision/cancellation.",
+      "evidence": "formal/system/access-grant.md",
+      "confidence": "high for the modeled guards and the expiry regression; refinement from model to Haskell is by review",
+      "ambiguity": [
+        "Reviewer authority is read from the authenticated session; freshness relative to concurrent role revocation is governed by the identity lifecycle contract, not this requirement."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unit evidence only; CI on current main pending."
+        "reason": "Expiry defect repaired with PostgreSQL regression and bounded model; deployment of the repair is pending."
       }
     },
     {
@@ -8810,6 +8831,7 @@
     "e2e/web/persona-public.spec.mjs": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+    "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
     "formal/event-operations/AccountDeletionAuthority.tla": "668b1a0256fde05d57c0c12802e6344d5686aff13de031b9561181d24c6dc4e6",
     "formal/event-operations/AccountDeletionAuthorityNoGrantLock.cfg": "20756b6a3bdc85fb904bc8c81a6e0a7c8bcb2c38e06f7bc17c7f52dca93fc8e4",
@@ -9039,6 +9061,7 @@
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
+    "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
@@ -9091,7 +9114,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+    "scripts/verify-event-operations-formal.sh": "5ffe45c7dc2bc6d89d78317f6252a6230065de2a034a63df46af13591c6a1695",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9432,12 +9455,12 @@
     "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
-    "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
+    "tdf-hq/src/TDF/Profiles/Artist.hs": "7ebafb60ac6ff43feba395bd049cb7d4ed68ec3dba064aac9b0b9babc49b11cd",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
+    "tdf-hq/src/TDF/Server.hs": "51dddac257ae1914a70592dda25adcb4b5343dd302c0a7088c860fd14842418e",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -9504,6 +9527,7 @@
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
+    "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "527de464114af94677e38131551ef0570ec9430e54e2d6f4776db88123a9e64d",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
@@ -9907,6 +9931,10 @@
       },
       {
         "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
         "relationship": "implementation"
       }
     ],
@@ -15344,6 +15372,10 @@
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/session.ts": [
@@ -15448,10 +15480,14 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq/src/TDF/FeatureRegistry.hs": [
+    "formal/event-operations/AccessGrant.tla": [
+      {
+        "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "formalModels"
+      },
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
-        "relationship": "implementation"
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/utils/navigationLabels.ts": [
@@ -15460,13 +15496,31 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/utils/accessControl.test.ts": [
+    "tdf-hq/src/TDF/FeatureRegistry.hs": [
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-artist-self-service.sh": [
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
         "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/components/navigationLabels.test.ts": [
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/accessControl.test.ts": [
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": [
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
         "relationship": "tests"
@@ -19559,7 +19613,12 @@
       "path": "scripts/test-artist-self-service.sh",
       "sha256": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2b91f113b39e2bf6",
@@ -20778,7 +20837,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "5ffe45c7dc2bc6d89d78317f6252a6230065de2a034a63df46af13591c6a1695",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32574,11 +32633,15 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
+      "sha256": "7ebafb60ac6ff43feba395bd049cb7d4ed68ec3dba064aac9b0b9babc49b11cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ACCESS-PROVISION-001",
           "relationship": "implementation"
         }
       ]
@@ -32678,7 +32741,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "c0946e7490865ee21fd22a54520493acf7f8f71546a698a6f9d95323906d329c",
+      "sha256": "51dddac257ae1914a70592dda25adcb4b5343dd302c0a7088c860fd14842418e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32731,6 +32794,10 @@
         },
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-ACCESS-PROVISION-001",
           "relationship": "implementation"
         }
       ]
@@ -34123,9 +34190,14 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "8e0b0c17880e71fc8aa6c5ba84df8d4f990f5196a42e697b491c789961ed4fc6",
+      "sha256": "527de464114af94677e38131551ef0570ec9430e54e2d6f4776db88123a9e64d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ccb30943a385e6b2",
@@ -38193,7 +38265,6 @@
     "SURFACE-1a827fd5cf37bfe9",
     "SURFACE-a8dfded8bd6214c5",
     "SURFACE-b646ef7b32ab67a4",
-    "SURFACE-a2d5738156c69d37",
     "SURFACE-d6c33dc1652ba8f2",
     "SURFACE-0f2cda2d581ad0b8",
     "SURFACE-1910077a9107778a",
@@ -39359,7 +39430,6 @@
     "SURFACE-b7c5b68652826d3d",
     "SURFACE-5c7c5fe961161133",
     "SURFACE-14c41dc429bf98d1",
-    "SURFACE-ee92e76c443dc34b",
     "SURFACE-ccb30943a385e6b2",
     "SURFACE-705eb0208602ff31",
     "SURFACE-85348e5ee1e69142",
@@ -39792,8 +39862,6 @@
     "MEDIA-MUSIC-DDEX-001",
     "PAY-MUSIC-DOWNLOAD-001",
     "MEDIA-MUSIC-PLAYER-001",
-    "AUTH-ARTIST-INVITE-001",
-    "AUTH-ACCESS-PROVISION-001",
     "SYS-WEB-SHELL-001",
     "AUTH-ENTRY-002"
   ],
@@ -40912,7 +40980,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sourceSha256": "32274e00359240a7f0861ec3d310b297bc55778864db439b13e3217e4e6efa59",
       "definition": {
         "states": [
           "absent",

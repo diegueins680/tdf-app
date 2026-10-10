@@ -2,10 +2,12 @@
 
 module TDF.Profiles.ArtistActivationSpec (spec) where
 
-import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, try)
 import Control.Monad (forM, void)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
+import Control.Monad.Reader (runReaderT)
 import qualified Data.ByteString.Char8 as BS
 import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
@@ -15,10 +17,18 @@ import Data.Time (getCurrentTime)
 import Database.Persist
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey)
+import Servant (errHTTPCode, runHandler, (:<|>)(..))
 import System.Environment (lookupEnv)
 import Test.Hspec
-import TDF.DTO (ArtistProfileDTO(..))
+import TDF.Auth (AuthedUser(..), modulesForRoles)
+import qualified TDF.Config as Config
+import TDF.DB (Env(..))
+import TDF.DTO (ArtistProfileDTO(..), FeatureAccessRequestDecision(..))
+import TDF.FeatureRegistry (findRegistryFeature, registryReviewerCanDecide)
+import TDF.Models (RoleEnum(Admin))
+import qualified TDF.ModelsExtra as ME
 import TDF.Profiles.Artist (activateOwnArtistProfile)
+import TDF.Server (accessRequestsServer, transitionPendingAccessRequest)
 
 spec :: Spec
 spec = describe "artist-self-service-postgresql" $ do
@@ -83,6 +93,84 @@ spec = describe "artist-self-service-postgresql" $ do
         counts pool 9 `shouldReturn` [1,1,0]
         roles <- runSqlPool (rawSql "SELECT r.code FROM party_security_role p JOIN security_role r ON r.id=p.role_id WHERE p.party_id=9 AND p.active" []) pool
         roles `shouldBe` [Single ("admin" :: Text)]
+      it "settles expiry before deciding or cancelling a pending access request" $ \pool -> do
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'studio.bookings','view','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day'),(2,'studio.bookings','edit','[]','[]','pending','admin',now(),now(),now()+interval '30 days') RETURNING id" []) pool :: IO [Single Int64]
+        (lapsed, open) <- case inserted of
+          [Single first, Single second] -> pure (first, second)
+          _ -> fail "Expected two access requests"
+        now <- getCurrentTime
+        let decide key = runSqlPool (transitionPendingAccessRequest now (toSqlKey key) [ME.FeatureAccessRequestStatus =. "approved"]) pool
+        decide lapsed `shouldReturn` (0 :: Int64)
+        decide open `shouldReturn` 1
+        decide open `shouldReturn` 0
+        statuses <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id IN (?,?) ORDER BY id" [PersistInt64 lapsed, PersistInt64 open]) pool
+        statuses `shouldBe` [Single ("expired" :: Text), Single "approved"]
+        history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 lapsed]) pool
+        history `shouldBe` [Single (1 :: Int64)]
+        -- Deciding one request settles only that request, so a rolled-back
+        -- decision can never undo expiry of unrelated requests.
+        other <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'studio.bookings','delete','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day') RETURNING id" []) pool :: IO [Single Int64]
+        otherId <- case other of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        decide open `shouldReturn` 0
+        untouched <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 otherId]) pool
+        untouched `shouldBe` [Single ("pending" :: Text)]
+      it "commits expiry when a reviewer decides a lapsed request through the handler" $ \pool -> do
+        let reviewer = AuthedUser
+              { auPartyId = toSqlKey 9
+              , auRoles = [Admin]
+              , auModules = modulesForRoles [Admin]
+              , auApiTokenId = Nothing
+              , auSessionWitness = Nothing
+              }
+        -- Guard against a vacuous pass: the reviewer must clear every check before the transaction.
+        fmap (\feature -> registryReviewerCanDecide reviewer feature "create") (findRegistryFeature "artist.onboarding")
+          `shouldBe` Just True
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(3,'artist.onboarding','create','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day') RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case inserted of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        cfg <- Config.loadConfig
+        let _ :<|> _ :<|> _ :<|> _ :<|> decide :<|> _ = accessRequestsServer reviewer
+        result <- runHandler (runReaderT (decide requestId (FeatureAccessRequestDecision "approved" Nothing)) (Env pool cfg))
+        either (Just . errHTTPCode) (const Nothing) result `shouldBe` Just 409
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("expired" :: Text)]
+        history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 requestId]) pool
+        history `shouldBe` [Single (1 :: Int64)]
+        counts pool 3 `shouldReturn` [0,0,0]
+      it "activates without resurrecting an expired onboarding request" $ \pool -> do
+        lapsedRows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(4,'artist.onboarding','create','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day') RETURNING id" []) pool :: IO [Single Int64]
+        lapsedId <- case lapsedRows of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        activate pool 4 >>= (`shouldSatisfy` isRight)
+        counts pool 4 `shouldReturn` [1,1,1]
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 lapsedId]) pool
+        status `shouldBe` [Single ("pending" :: Text)]
+      it "does not approve an onboarding request that becomes terminal during activation" $ \pool -> do
+        rows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at) VALUES(6,'artist.onboarding','create','[]','[]','pending','admin',now(),now()) RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case rows of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        rejectedLocked <- newEmptyMVar
+        rejectionCommitted <- newEmptyMVar
+        -- A reviewer rejects the request and holds the row lock while activation
+        -- reads it as pending; the activation's UPDATE then waits for the commit.
+        void $ forkIO $ do
+          runSqlPool (do
+            rawExecute "UPDATE feature_access_requests SET status='rejected' WHERE id=?" [PersistInt64 requestId]
+            liftIO (putMVar rejectedLocked ())
+            liftIO (threadDelay 1500000)) pool
+          putMVar rejectionCommitted ()
+        takeMVar rejectedLocked
+        activate pool 6 >>= (`shouldSatisfy` isRight)
+        takeMVar rejectionCommitted
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("rejected" :: Text)]
+        approvals <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='approved'" [PersistInt64 requestId]) pool
+        approvals `shouldBe` [Single (0 :: Int64)]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do
         runSqlPool (rawExecute "CREATE FUNCTION fail_test_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artist_party_id=7 THEN RAISE EXCEPTION 'injected profile write failure'; END IF; RETURN NEW; END $$" []) pool
         runSqlPool (rawExecute "CREATE TRIGGER fail_profile BEFORE INSERT ON artist_profile FOR EACH ROW EXECUTE FUNCTION fail_test_profile()" []) pool

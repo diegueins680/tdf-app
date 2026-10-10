@@ -8110,7 +8110,9 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/AccessGrant.tla"
+      ],
       "status": "specified and implemented",
       "id": "AUTH-ARTIST-INVITE-001",
       "title": "Personal single-use artist invitation links grant the Artist role by automatic policy",
@@ -8203,11 +8205,10 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx"
       ],
-      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement",
+      "verification": "Backend validation unit tests, client and panel unit tests, migration test script; local Postgres exercise of the claim statement; AccessGrant.tla checks single redeemer, redeemed/revoked exclusion, non-administrative role and no automatic reactivation of a revoked assignment by redemption, each with a mutation control.",
       "evidence": "Local execution only",
       "confidence": "Medium: claim SQL and validation exercised locally; end-to-end redemption not yet run against a deployed backend.",
       "ambiguity": [
-        "tdf-hq/src/TDF/Profiles/Artist.hs change is only an unused import removal.",
         "artist.self-service.artist (on main since 2026-09-16) already lets any signed-in user activate Artist without approval; invitation links add attribution, not a stronger boundary."
       ],
       "conformance": {
@@ -8217,20 +8218,23 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/AccessGrant.tla"
+      ],
       "status": "specified and implemented",
       "id": "AUTH-ACCESS-PROVISION-001",
       "title": "Approved artist onboarding access requests provision the Artist role",
       "domain": "AUTH",
       "critical": true,
-      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Only an administrator distinct from the requester may approve it; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
+      "statement": "An access request for feature artist.onboarding with action create is the only feature/action pair with a code-owned grant role (Artist). Since the 2026-09-16 self-service decision, creating that request activates the requester's own Artist profile through the artist.self-service.artist policy and records the request as approved by system-policy; the reviewed path remains only for requests created before that decision. Any reviewed decision requires a reviewer distinct from the requester, Admin for grant-bearing pairs, a request that is still pending and not past its expiry; approval publishes a sensitive-publication security revision with the requester as author and reviewer as approver and applies the grant atomically. All other approvals remain manual. The web page explains which outcome applies and shows the review link only to users allowed to review.",
       "authority": "Unreviewed recovered local implementation",
-      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs",
-      "contract": "tdf-hq/src/TDF/FeatureRegistry.hs",
-      "property": "A role is provisioned from an access request only for artist.onboarding/create, by a distinct administrator, with a published revision.",
+      "source": "Recovered local work; tdf-hq/src/TDF/FeatureRegistry.hs; formal/system/access-grant.md (AUTHORITY-054)",
+      "contract": "formal/system/access-grant.md",
+      "property": "A role is provisioned from an access request only for artist.onboarding/create, and only by one of two paths: (a) self-service, where createRequest activates the requester's own artist profile and records the request approved by system-policy with no reviewer; a non-administrator receives Artist through the artist.self-service.artist policy, while an administrator receives no Artist role so the strict Admin scope is preserved; (b) a reviewed decision on a request that is still pending and not past expiry, made by an administrator distinct from the requester, with a published revision. No path grants an administrative or emergency role. Automatic paths never reactivate a revoked assignment; a reviewed approval may restore one as an explicit, published and audited administrator decision.",
       "actors": [
-        "Requester",
-        "Strict administrator",
+        "Requester (self-service activation and cancellation)",
+        "system-policy (artist.self-service.artist automatic assignment)",
+        "Strict administrator (grant-bearing review)",
         "Manager",
         "Studio manager"
       ],
@@ -8240,55 +8244,72 @@
         "sensitive-publication workflow active"
       ],
       "inputs": [
-        "Access request review decision and notes"
+        "Self-service request for artist.onboarding/create",
+        "Access request review decision and notes",
+        "Requester cancellation note",
+        "Current time (expiry is settled lazily in the same transaction)"
       ],
       "state": {
         "request": [
           "pending",
           "approved",
           "rejected",
-          "cancelled"
+          "cancelled",
+          "expired"
         ]
       },
       "allowedTransitions": [
-        "pending -> approved (grant for artist.onboarding/create) ",
-        "pending -> approved (manual provisioning otherwise)",
-        "pending -> rejected with note"
+        "(new) -> approved by system-policy (artist.onboarding/create self-service; a non-administrator receives Artist through the artist.self-service.artist policy, an administrator receives only the owned profile and keeps the strict Admin scope with no Artist role or policy audit; a lapsed pending onboarding request is first settled as expired, never approved)",
+        "pending -> approved by a distinct administrator before expiry (grant for artist.onboarding/create)",
+        "pending -> approved before expiry (manual provisioning otherwise)",
+        "pending -> rejected with note before expiry",
+        "pending -> cancelled by the requester before expiry",
+        "pending -> expired once past expires_at (list, review, decide or cancel paths)"
       ],
       "forbiddenTransitions": [
-        "Requester approving own grant",
         "Non-admin approving a grant-bearing request",
-        "Provisioning the emergency administrator role"
+        "Provisioning the emergency administrator role",
+        "Requester approving own grant",
+        "expired (or past-deadline pending) request -> approved/rejected/cancelled",
+        "revoked Artist assignment -> active through any automatic policy"
       ],
       "effects": [
-        "Published security revision and party role grant"
+        "Self-service: owned artist profile and an approved request with history and audit rows; a non-administrator also receives the policy-applied Artist grant, while an administrator keeps the strict Admin-only scope (no Artist role, no policy audit)",
+        "Reviewed approval: published security revision and party role grant (grant-bearing pair) or manual-provisioning notification",
+        "Expiry: request marked expired with history and audit rows; a decision or cancellation on it returns 409 with no grant"
       ],
       "authorization": "registryReviewerCanDecide requires Admin for grant-bearing requests.",
       "privacy": "Reviewer notes stay internal.",
-      "concurrency": "Revision and grant written in one transaction.",
+      "concurrency": "Revision and grant written in one transaction. transitionPendingAccessRequest settles lazy expiry and then applies a conditional UPDATE WHERE status = 'pending' in the same transaction, so at most one decision or cancellation is admitted.",
       "idempotency": "Re-approval of an already granted role reports no change.",
       "failure": "Any precondition failure aborts without a grant.",
       "recovery": "Revoke through Roles and permissions.",
       "observability": "Security revision and audit rows.",
       "implementation": [
-        "tdf-hq/src/TDF/FeatureRegistry.hs",
-        "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-        "tdf-hq-ui/src/utils/navigationLabels.ts"
+        "tdf-hq-ui/src/utils/navigationLabels.ts",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/FeatureRegistry.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq/src/TDF/Server.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "scripts/test-artist-self-service.sh",
+        "tdf-hq-ui/src/components/navigationLabels.test.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
-        "tdf-hq-ui/src/components/navigationLabels.test.ts"
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
-      "verification": "Security spec and web unit tests",
-      "evidence": "Local execution only",
-      "confidence": "Medium.",
-      "ambiguity": [],
+      "verification": "Security spec and web unit tests; AccessGrant.tla bounded model (212 states) with seven single-guard mutation controls; PostgreSQL regression in ArtistActivationSpec for expiry before decision/cancellation.",
+      "evidence": "formal/system/access-grant.md",
+      "confidence": "high for the modeled guards and the expiry regression; refinement from model to Haskell is by review",
+      "ambiguity": [
+        "Reviewer authority is read from the authenticated session; freshness relative to concurrent role revocation is governed by the identity lifecycle contract, not this requirement."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unit evidence only; CI on current main pending."
+        "reason": "Expiry defect repaired with PostgreSQL regression and bounded model; deployment of the repair is pending."
       }
     },
     {
