@@ -2527,6 +2527,48 @@ BEGIN
        AND data_type='bigint' AND is_nullable='NO') THEN
     RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
   END IF;
+  -- A rolled-back migration keeps its ledger row, and several rollbacks restore an
+  -- older object under the same name. Each registered migration is therefore
+  -- verified by an object or definition only it introduces, oldest first, so the
+  -- first failure names the missing migration.
+  IF NOT EXISTS (SELECT 1 FROM security_role_assignment_policy
+       WHERE code='artist.invitation.artist' AND active)
+     OR position('''artist-invitation-redeemed''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0 THEN
+    RAISE EXCEPTION 'Music migration 2026-09-14_artist_invitation_auto_approval is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_preview_spec' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_preview_ranges is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_copy_version_parties' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_version_parties is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_merge_party_identifiers' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_party_details is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_create_release_correction'
+       AND pronamespace='public'::regnamespace
+       AND position('correction asset graph has a cycle' IN prosrc)>0) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_correction_asset_graph is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_create_release_correction'
+       AND pronamespace='public'::regnamespace
+       AND position('music-correction:' IN prosrc)>0) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_correction_concurrency is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_check_resource_graph' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_resource_graph_validation is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_check_ddex_operation' AND pronamespace='public'::regnamespace)
+     OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_ddex_release_identifier' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_ddex_operations is not applied';
+  END IF;
+  IF to_regprocedure('music_record_playback_event_unbound_v1(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)') IS NULL
+     OR to_regclass('public.music_playback_session_sanitation') IS NULL THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_playback_identity is not applied';
+  END IF;
+  IF to_regclass('public.artist_invitation_link') IS NULL THEN
+    RAISE EXCEPTION 'Music migration 2026-10-07_artist_invitation_links is not applied';
+  END IF;
   FOREACH music_table IN ARRAY ARRAY[
     'music_release', 'music_release_version', 'music_party', 'music_party_identifier',
     'music_recording', 'music_release_track', 'music_credit', 'music_identifier',
@@ -2548,12 +2590,6 @@ BEGIN
      OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_record_playback_event'
        AND pronamespace='public'::regnamespace) THEN
     RAISE EXCEPTION 'Music release access and playback functions are missing';
-  END IF;
-  -- The identity migration renames the unbound implementation and adds the session
-  -- sanitation view; its rollback removes both, so a name-only check cannot tell them apart.
-  IF to_regprocedure('music_record_playback_event_unbound_v1(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)') IS NULL
-     OR to_regclass('public.music_playback_session_sanitation') IS NULL THEN
-    RAISE EXCEPTION 'Music playback identity binding (2026-09-16_music_playback_identity) is missing';
   END IF;
   IF to_regclass('public.artist_invitation_link') IS NULL
      OR NOT EXISTS (

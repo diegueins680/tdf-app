@@ -84,16 +84,31 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
-# A rolled-back playback identity migration keeps its ledger row and restores a
-# function with the same name; the gate must still reject the unbound implementation.
-playback_identity="${repo_root}/tdf-hq/sql/2026-09-16_music_playback_identity"
-psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${playback_identity}_rollback.sql" >/dev/null
-if node "${repo_root}/scripts/render-production-schema-verification.mjs" \
-  | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null 2>&1; then
-  echo "Schema gate accepted a rolled-back music playback identity binding" >&2
-  exit 1
-fi
-psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${playback_identity}.sql" >/dev/null
+# A rolled-back migration keeps its ledger row and may restore an older object
+# under the same name. Roll the registered music/invitation migrations back along
+# their designed path, newest first; after each step the gate must reject the
+# schema and name exactly that migration. Reapplying them must satisfy the gate.
+music_migrations="2026-09-14_artist_invitation_auto_approval 2026-09-15_music_preview_ranges
+2026-09-15_music_version_parties 2026-09-15_music_party_details
+2026-09-16_music_correction_asset_graph 2026-09-16_music_correction_concurrency
+2026-09-16_music_resource_graph_validation 2026-09-16_music_ddex_operations
+2026-09-16_music_playback_identity 2026-10-07_artist_invitation_links"
+for migration in $(printf '%s\n' ${music_migrations} | sed '1!G;h;$!d'); do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${repo_root}/tdf-hq/sql/${migration}_rollback.sql" >/dev/null
+  if gate_output="$(node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+    | psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 >/dev/null)"; then
+    echo "Schema gate accepted rolled-back migration ${migration}" >&2
+    exit 1
+  fi
+  if ! printf '%s' "${gate_output}" | grep -Fq "Music migration ${migration} is not applied"; then
+    printf '%s\n' "${gate_output}" >&2
+    echo "Schema gate did not identify rolled-back migration ${migration}" >&2
+    exit 1
+  fi
+done
+for migration in ${music_migrations}; do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${repo_root}/tdf-hq/sql/${migration}.sql" >/dev/null
+done
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 

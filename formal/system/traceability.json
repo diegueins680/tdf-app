@@ -8847,7 +8847,7 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "1847a1dcaf5a939e8da498b2b7061cd0032e8be526c537601a06efdfdf53c411",
+    "scripts/lib/production-release.mjs": "43a0cd537c64fa0aebfa3fcf1c22b89e26bf7df434659e62af09db63740deddb",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -8881,7 +8881,7 @@
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-automatic-migrations-production-schema.sh": "661474dc48a522320791a01c29553028db488769661d4d62ed55f47358581d38",
+    "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -18150,7 +18150,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "1847a1dcaf5a939e8da498b2b7061cd0032e8be526c537601a06efdfdf53c411",
+      "sha256": "43a0cd537c64fa0aebfa3fcf1c22b89e26bf7df434659e62af09db63740deddb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19297,7 +19297,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "661474dc48a522320791a01c29553028db488769661d4d62ed55f47358581d38",
+      "sha256": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
