@@ -974,6 +974,22 @@ psql_exec -c "UPDATE venue SET name = 'Race venue renamed', updated_at = now() W
 wait "$race_event_session"
 race_projection=$(psql_exec -Atc "SELECT title || ' @ ' || subtitle FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = (SELECT id::text FROM social_event WHERE title LIKE 'Race event%');")
 test "$race_projection" = "Race event edited @ Race venue renamed"
+# A transaction that edits two events must not deadlock with a writer that
+# already holds the second one (the sync lock is only taken at commit).
+psql_exec >/dev/null <<'SQL'
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+  workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Race event second', 'Synthetic lineup', venue_id, event_type_id, workflow_state_id, timezone,
+  start_time, end_time, metadata, now(), now()
+FROM social_event WHERE title = 'Race event edited';
+SQL
+race_second_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event second';")
+psql_exec -c "BEGIN; UPDATE social_event SET description = 'first' WHERE title = 'Race event edited'; SELECT pg_sleep(3); UPDATE social_event SET description = 'both' WHERE id = $race_second_id; COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "BEGIN; SELECT id FROM social_event WHERE id = $race_second_id FOR UPDATE; SELECT pg_sleep(1); UPDATE social_event SET title = 'Race event second edited' WHERE id = $race_second_id; COMMIT;" >/dev/null
+wait "$race_event_session"
+test "$(psql_exec -Atc "SELECT title || ' / ' || summary FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = '$race_second_id';")" = "Race event second edited / both"
 # Same overlap with a deletion: the deleted event's document must stay gone.
 race_event_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event edited';")
 psql_exec -c "BEGIN; DELETE FROM social_event WHERE id = $race_event_id; SELECT pg_sleep(3); COMMIT;" >/dev/null &

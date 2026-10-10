@@ -110,4 +110,5 @@ DROP FUNCTION IF EXISTS directory_sync_event_search(BIGINT);
 DROP FUNCTION IF EXISTS directory_sync_venue_search(BIGINT);
 DROP FUNCTION IF EXISTS directory_social_event_metadata_image(TEXT);
 DROP FUNCTION IF EXISTS directory_resolve_city_reference(TEXT);
+DROP FUNCTION IF EXISTS directory_search_sync_lock();
 COMMIT;

@@ -62,6 +62,24 @@ AS $$
   END;
 $$;
 
+-- Event, venue and suppression writes all rewrite the same search documents
+-- from each other's rows. One transaction-scoped advisory lock serializes the
+-- sync, so a projection computed before a concurrent edit can never overwrite
+-- a newer one (READ COMMITTED reads a fresh snapshot once the lock is granted)
+-- and a deleted source's document cannot be reinserted.
+--
+-- The sync triggers below are deferred constraint triggers: they run at
+-- commit, after the transaction has taken every source row lock it will ever
+-- take. The lock is therefore never held while its holder still has to lock
+-- another event or venue row, which is what would let a multi-event
+-- transaction deadlock with a concurrent single-event writer.
+CREATE OR REPLACE FUNCTION directory_search_sync_lock()
+RETURNS VOID
+LANGUAGE sql
+AS $$
+  SELECT pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
+$$;
+
 CREATE OR REPLACE FUNCTION directory_sync_venue_search(target_venue_id BIGINT)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -70,12 +88,8 @@ BEGIN
   IF target_venue_id IS NULL THEN
     RETURN;
   END IF;
-  -- Event and venue edits both rewrite these documents. Serialize them so the
-  -- statement below reads its sources after any concurrent sync committed
-  -- (READ COMMITTED takes a fresh snapshot once the lock is granted);
-  -- otherwise a projection computed before a concurrent edit could overwrite
-  -- the newer one. No source row is locked, so the two paths cannot deadlock.
-  PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
+  -- The statement below reads its sources after any concurrent sync committed.
+  PERFORM directory_search_sync_lock();
   IF NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id = target_venue_id) THEN
     RETURN;
   END IF;
@@ -128,12 +142,8 @@ BEGIN
   IF target_event_id IS NULL THEN
     RETURN;
   END IF;
-  -- Event and venue edits both rewrite these documents. Serialize them so the
-  -- statement below reads its sources after any concurrent sync committed
-  -- (READ COMMITTED takes a fresh snapshot once the lock is granted);
-  -- otherwise a projection computed before a concurrent edit could overwrite
-  -- the newer one. No source row is locked, so the two paths cannot deadlock.
-  PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
+  -- The statement below reads its sources after any concurrent sync committed.
+  PERFORM directory_search_sync_lock();
   -- A hidden event keeps its cached document: directory_public_search_document
   -- re-checks directory_public_event, so it is not served, and the privacy
   -- projection never destroys cached data. Only source deletion removes it.
@@ -193,9 +203,9 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    -- Same lock as the sync functions: a concurrent sync that already read
-    -- this source must not reinsert its document after the delete.
-    PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
+    -- Serialized with the sync functions, so a concurrent sync that already
+    -- read this source cannot reinsert its document after the delete.
+    PERFORM directory_search_sync_lock();
     DELETE FROM directory_search_document
     WHERE entity_kind = 'event' AND entity_id = OLD.id::text;
     RETURN NULL;
@@ -214,8 +224,9 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_directory_sync_social_event_search ON social_event;
-CREATE TRIGGER trg_directory_sync_social_event_search
+CREATE CONSTRAINT TRIGGER trg_directory_sync_social_event_search
   AFTER INSERT OR UPDATE OR DELETE ON social_event
+  DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_social_event_search_trigger();
 
 CREATE OR REPLACE FUNCTION directory_sync_venue_search_trigger()
@@ -226,9 +237,9 @@ DECLARE
   venue_event_id BIGINT;
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    -- Same lock as the sync functions: a concurrent sync that already read
-    -- this source must not reinsert its document after the delete.
-    PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
+    -- Serialized with the sync functions, so a concurrent sync that already
+    -- read this source cannot reinsert its document after the delete.
+    PERFORM directory_search_sync_lock();
     DELETE FROM directory_search_document
     WHERE entity_kind = 'venue' AND entity_id = OLD.id::text;
     RETURN NULL;
@@ -242,8 +253,9 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_directory_sync_venue_search ON venue;
-CREATE TRIGGER trg_directory_sync_venue_search
+CREATE CONSTRAINT TRIGGER trg_directory_sync_venue_search
   AFTER UPDATE OR DELETE ON venue
+  DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_venue_search_trigger();
 
 -- Provider suppression hides an imported event; resync keeps it hidden and
@@ -264,8 +276,9 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_directory_sync_external_event_search ON external_event_ref;
-CREATE TRIGGER trg_directory_sync_external_event_search
+CREATE CONSTRAINT TRIGGER trg_directory_sync_external_event_search
   AFTER INSERT OR UPDATE OR DELETE ON external_event_ref
+  DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_external_event_search_trigger();
 
 -- The full refresh now reuses the same projection, so a manual rebuild and the

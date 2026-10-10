@@ -2,6 +2,8 @@
 -- (2026-10-09_directory_event_search_sync). Synthetic data only; rolls back.
 \set ON_ERROR_STOP on
 BEGIN;
+-- The sync runs at commit; make it per-statement so each step can be asserted.
+SET CONSTRAINTS ALL IMMEDIATE;
 DO $$
 DECLARE
   quito UUID;
