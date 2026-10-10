@@ -656,7 +656,7 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "5f4bfe5bddb581846282",
+      "replacementId": "f185683a8f6a6532b802",
       "reason": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
