@@ -7450,6 +7450,80 @@
       }
     },
     {
+      "id": "DATA-CRM-002",
+      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and its update must contain only the fields edited in the dialog (display name, email, Instagram, phone, notes) relative to the values loaded into it; an unedited save sends no request. Because the backend keeps every omitted field, saving one field never restores stale values of fields changed elsewhere. A rejected update is shown in the dialog, which stays open with the unsaved input. The backend remains authoritative for CRM module access and the update itself.",
+      "authority": "reconciled",
+      "source": "PR #513 (CRM contact notes)",
+      "property": "An update omits uNotes unless the edited notes differ from the loaded notes",
+      "contract": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+      ],
+      "verification": "Client unit test; backend updateParty unchanged",
+      "evidence": "Unit test that edits notes and asserts notes are sent only when changed",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact notes are editable without overwriting concurrent edits",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access.",
+        "The contact is loaded into the edit dialog."
+      ],
+      "inputs": [
+        "Party notes loaded into the dialog",
+        "Edited notes text",
+        "PUT /parties/{partyId} PartyUpdate (uNotes optional)"
+      ],
+      "state": {
+        "notes": [
+          "loaded",
+          "edited",
+          "saving",
+          "saved",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "loaded -> edited when the text changes",
+        "edited -> loaded when the text returns to the loaded value",
+        "loaded or edited -> saving on save",
+        "saving -> saved when the backend returns the updated party",
+        "saving -> failed when the update is rejected"
+      ],
+      "forbiddenTransitions": [
+        "Saving unchanged notes sends uNotes",
+        "Saving other fields replaces notes changed elsewhere"
+      ],
+      "effects": [
+        "When notes changed, updateParty stores uNotes as the contact's notes.",
+        "When uNotes is absent, updateParty keeps the stored notes."
+      ],
+      "authorization": "Backend updateParty requires ModuleCRM; the dialog grants nothing.",
+      "privacy": "Notes are internal CRM data shown only to CRM-authorized staff.",
+      "concurrency": "Only edited fields are sent, so a save never overwrites fields it did not edit; when two editors change the same field the later save wins (no version check on party).",
+      "idempotency": "Repeating the same update stores the same notes.",
+      "failure": "An archived contact returns 409 and other database failures return 500; the dialog shows the error, stays open with the unsaved input, and stored values are unchanged.",
+      "recovery": "Reopen the contact's current record and edit again.",
+      "observability": "The update request body shows whether uNotes was sent.",
+      "tests": [
+        "tdf-hq-ui/src/pages/PartiesPage.test.tsx"
+      ],
+      "formalModels": [],
+      "confidence": "High for client send-only-when-changed behaviour; backend semantics read from updateParty, not newly tested.",
+      "ambiguity": [
+        "No optimistic concurrency control for simultaneous note edits.",
+        "Notes are free text with no backend length limit in updateParty."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests cover field-level payloads, the no-op save and the rejected-update message; deployed web verification pending. Same-field concurrent edits remain last-write-wins."
+      }
+    },
+    {
       "id": "PRIV-WHATSAPP-001",
       "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
@@ -8626,6 +8700,90 @@
       "verification": "Layout jest tests and browser geometry/contrast assertions at 360px.",
       "evidence": "PublicBookingPage, RadioWidget layout and LiveSessionPublicPage tests; e2e mobile-layout-regressions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "LEGAL-DISCLOSURE-001",
+      "title": "Legal text is collapsed by default without weakening consent",
+      "statement": "Terms, policies, consent texts and disclaimers render inside a shared disclosure that starts collapsed, can be opened to read the complete text before acceptance, and keeps every required acceptance control visible, associated with its documents and enforced exactly as before.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 (collapsible Terms and Conditions UX; each document an independent section)",
+      "source": "tdf-app PR #515; TDF-mobile PR #153",
+      "property": "Collapsing legal text never hides, pre-checks or bypasses a required acceptance control.; Every collapsed document remains readable in full before acceptance.",
+      "contract": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+      "actors": [
+        "Buyer, registrant or account holder",
+        "Screen-reader and keyboard user"
+      ],
+      "preconditions": [
+        "A surface renders long-form legal text next to, or instead of, a consent control."
+      ],
+      "inputs": [
+        "Document title, optional version summary and full legal text",
+        "Viewer locale (es/en)"
+      ],
+      "state": {
+        "initial": "collapsed",
+        "toggled": [
+          "expanded",
+          "collapsed"
+        ],
+        "scope": "per page or step; never persisted"
+      },
+      "allowedTransitions": [
+        "collapsed -> expanded on header activation (click, Enter or Space)",
+        "expanded -> collapsed on header activation",
+        "Deep link to #privacidad or #terminos on /seguridad opens that document expanded"
+      ],
+      "forbiddenTransitions": [
+        "Consent checkbox or switch placed inside a collapsed panel",
+        "Submission gating relaxed because legal text is collapsed",
+        "Expanded state persisted across sessions"
+      ],
+      "effects": [
+        "Header exposes aria-expanded/aria-controls (web) or accessibilityState.expanded (mobile)",
+        "Consent controls reference the disclosure headers through aria-describedby where applicable"
+      ],
+      "authorization": "Not applicable: presentation only; acceptance and its server-side enforcement are unchanged.",
+      "privacy": "No analytics, storage or network calls are added by the disclosure.",
+      "concurrency": "Not applicable: local component state only.",
+      "idempotency": "Toggling is a pure local state change.",
+      "failure": "When a document is unavailable the surrounding surface keeps its existing unavailable-terms behavior.",
+      "recovery": "Reloading the page or step restores the collapsed default.",
+      "observability": "Unit tests, persona e2e journeys and the accessibility (axe) checks cover the control.",
+      "implementation": [
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/pages/SecurityPage.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/InventoryPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "tdf-mobile/app/reputation/consents.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
+        "e2e/web/artist-merch.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "tdf-hq-ui/src/pages/SecurityPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Component unit tests, updated checkout/storefront persona journeys at desktop/phone/tablet, and manual responsive checks at 360/768/1280px.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": false,
+      "confidence": "high for the presentation boundary; legal sufficiency of the texts themselves is out of scope",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
+      }
     }
   ]
 }
