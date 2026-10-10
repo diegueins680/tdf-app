@@ -9226,8 +9226,8 @@
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "83752ef12c19868adab088461e0c05863b694b6a31d2246197227467501fb77b",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
@@ -25316,7 +25316,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "83752ef12c19868adab088461e0c05863b694b6a31d2246197227467501fb77b",
+      "sha256": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25340,7 +25340,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
+      "sha256": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
