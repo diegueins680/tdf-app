@@ -13361,7 +13361,7 @@
     {
       "id": "SURFACE-7a17991a5f78eecb",
       "path": "tdf-hq/src/TDF/CoursePhone.hs",
-      "sha256": "0d6b2f49406cad9ec126a50c586d19cb92f81a52a668d7d0439315f934cc83e3",
+      "sha256": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14627,7 +14627,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "76bb4f5db4da67e78e68888a81df2c53f8a81d66742099dde4e645055af45ded",
+      "sha256": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23734,7 +23734,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e4441051e27a18dfcf5445f22448fdd9ed2d78e6e2cc64cf827fc283152e2690",
+      "sha256": "e78d981c77a513832f075b4452a7484f7219def409782d7562f64572ecc06607",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

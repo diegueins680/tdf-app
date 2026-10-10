@@ -8548,7 +8548,7 @@
     {
       "id": "COURSE-ENROLL-001",
       "title": "Course enrollment opens immediately and accepts local phone formats",
-      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164.",
+      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164. Server intake (legacy lead and checkout) normalizes phones with the same rules as the web normalizer (tdf-hq-ui/src/utils/phone.ts), checked against the same accept/reject table; the server is deliberately stricter in two ways: only the ASCII space separates digit groups (newlines and Unicode separators are rejected), and a 00 prefix needs at least 9 following digits.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "COURSE",
       "actors": [

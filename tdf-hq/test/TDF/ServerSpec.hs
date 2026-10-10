@@ -11071,13 +11071,29 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationPhoneE164 (Just "098-838-4849") `shouldBe` Right (Just "+593988384849")
             validateCourseRegistrationPhoneE164 (Just "(02) 234-5678") `shouldBe` Right (Just "+59322345678")
 
-        it "drops Ecuador's trunk zero after the country code, like the web normalizer" $ do
+        it "normalizes course phones exactly like the web form (tdf-hq-ui/src/utils/phone.test.ts)" $ do
+            -- Same table as the web test, so server and web store the same E.164 value.
+            forM_
+              [ ("0988384849", "+593988384849"), ("098 838 4849", "+593988384849")
+              , ("098-838-4849", "+593988384849"), ("(098) 838.4849", "+593988384849")
+              , ("988384849", "+593988384849"), ("+593988384849", "+593988384849")
+              , ("+593 98 838 4849", "+593988384849"), ("+593 098 838 4849", "+593988384849")
+              , ("00593988384849", "+593988384849"), ("593988384849", "+593988384849")
+              , ("022345678", "+59322345678"), ("(02) 234-5678", "+59322345678")
+              , ("072345678", "+59372345678"), ("+593 2 234 5678", "+59322345678")
+              , ("+44 20 7946 0018", "+442079460018"), ("0044 20 7946 0018", "+442079460018")
+              , ("+1 (415) 555-0100", "+14155550100")
+              ] $ \(input, expected) ->
+                (input, CoursePhone.normalizeCoursePhone input) `shouldBe` (input, Just expected)
+            forM_
+              [ "", "   ", "call me at 099 123 4567", "12345", "0812345678", "012345678"
+              , "+0988384849", "+593 98 838 48", "099+1234567", "++593988384849"
+              , "+1234567890123456", "098838484912"
+              ] $ \input ->
+                (input, CoursePhone.normalizeCoursePhone input) `shouldBe` (input, Nothing)
+            -- Both registration paths use it: the legacy lead path stores the same value.
             validateCourseRegistrationPhoneE164 (Just "+593 098 838 4849") `shouldBe` Right (Just "+593988384849")
-            validateCourseRegistrationPhoneE164 (Just "+593 02 234 5678") `shouldBe` Right (Just "+59322345678")
-            validateCourseRegistrationPhoneE164 (Just "+593 98 838 4849") `shouldBe` Right (Just "+593988384849")
-            -- Checkout and the legacy lead path share this normalizer.
-            CoursePhone.normalizeCoursePhone "+593 098 838 4849" `shouldBe` Just "+593988384849"
-            CoursePhone.normalizeCoursePhone "+5930988384849" `shouldBe` Just "+593988384849"
+            validateCourseRegistrationPhoneE164 (Just "988384849") `shouldBe` Right (Just "+593988384849")
 
         it "keeps rejecting local-looking numbers with the wrong length or prefix" $ do
             let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
