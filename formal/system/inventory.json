@@ -12811,13 +12811,13 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "dff60c416a13ce50e85a2bb16759d1047d7ca316c4a8f5d526a8e8db0c222fed",
+      "sha256": "a85354e626e7174b752274015b6cfec210a47c9685f1b8cf9bc848f307defe46",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0ca3c1bdd4f9435e",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
-      "sha256": "8059616e701325c0a86c674391ef88cc35585a8034dda30dd8f7d458f107f57d",
+      "sha256": "737bdbe85c7f8a1603de5a759a26e915e61a4085a49e0c411104af216c3500ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {

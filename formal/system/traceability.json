@@ -9548,8 +9548,8 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_artist_invitation_links.sql": "b0e80b3b2dbb884460e40bef8e9c9a29fe0ef3ef3059fc998bb531fde179c3a2",
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "dff60c416a13ce50e85a2bb16759d1047d7ca316c4a8f5d526a8e8db0c222fed",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": "8059616e701325c0a86c674391ef88cc35585a8034dda30dd8f7d458f107f57d",
+    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "a85354e626e7174b752274015b6cfec210a47c9685f1b8cf9bc848f307defe46",
+    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": "737bdbe85c7f8a1603de5a759a26e915e61a4085a49e0c411104af216c3500ae",
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
@@ -31460,7 +31460,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "dff60c416a13ce50e85a2bb16759d1047d7ca316c4a8f5d526a8e8db0c222fed",
+      "sha256": "a85354e626e7174b752274015b6cfec210a47c9685f1b8cf9bc848f307defe46",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31472,7 +31472,7 @@
     {
       "id": "SURFACE-0ca3c1bdd4f9435e",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
-      "sha256": "8059616e701325c0a86c674391ef88cc35585a8034dda30dd8f7d458f107f57d",
+      "sha256": "737bdbe85c7f8a1603de5a759a26e915e61a4085a49e0c411104af216c3500ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
