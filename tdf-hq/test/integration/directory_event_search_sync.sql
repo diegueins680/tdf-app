@@ -18,6 +18,8 @@ DECLARE
   late_venue BIGINT;
   late_event_id BIGINT;
   versions_before BIGINT;
+  subscriber BIGINT;
+  late_search UUID;
 BEGIN
   SELECT id INTO quito FROM city_reference
   WHERE directory_normalize_text(name_es) = directory_normalize_text('Quito')
@@ -74,6 +76,13 @@ BEGIN
   -- 3a. An edit to a field search does not show keeps the version (no new
   -- saved-search alert) while the document still records the newer source.
   SELECT * INTO doc FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text;
+  -- A saved search created after the event was indexed has no delivery yet;
+  -- an invisible edit must not produce one.
+  INSERT INTO party (display_name, is_org, created_at) VALUES ('Synthetic sync subscriber', FALSE, now())
+  RETURNING id INTO subscriber;
+  INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+  VALUES (subscriber, 'Synthetic sync alert', '{"entityType":"event"}'::jsonb, repeat('d', 64), TRUE, 'instant')
+  RETURNING id INTO late_search;
   UPDATE social_event SET capacity = 321, updated_at = now() + interval '1 minute' WHERE id = synth_event_id;
   IF (SELECT source_version FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
      IS DISTINCT FROM doc.source_version THEN
@@ -83,10 +92,17 @@ BEGIN
      IS NOT DISTINCT FROM doc.source_updated_at THEN
     RAISE EXCEPTION 'the document did not record the newer source timestamp';
   END IF;
+  IF EXISTS (SELECT 1 FROM directory_alert_delivery WHERE saved_search_id = late_search) THEN
+    RAISE EXCEPTION 'an edit that search does not show notified a saved search';
+  END IF;
   UPDATE social_event SET title = 'Synthetic renamed sync night II', updated_at = now() + interval '2 minutes' WHERE id = synth_event_id;
   IF (SELECT source_version FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
      IS DISTINCT FROM doc.source_version + 1 THEN
     RAISE EXCEPTION 'a visible edit did not advance the version exactly once';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_alert_delivery WHERE saved_search_id = late_search
+                 AND result_kind = 'event' AND result_id = synth_event_id::text) THEN
+    RAISE EXCEPTION 'a visible edit did not notify the matching saved search';
   END IF;
 
   -- 4. Non-HTTPS images are never projected.
