@@ -167,7 +167,7 @@ export default function PublicEventTicketsPage() {
     // A refresh of the same order keeps the receipt already on screen: a failed
     // request must not take an issued ticket away from a buyer at the door.
     setCheckout((current) => (
-      current && current.eventId === eventId && current.orderId === routeOrderId ? current : null));
+      current?.eventId === eventId && current.orderId === routeOrderId ? current : null));
     const live = liveLookup.current;
     const token = live?.eventId === eventId && live.orderId === routeOrderId
       ? live.token : loadLookupToken(eventId, routeOrderId);
