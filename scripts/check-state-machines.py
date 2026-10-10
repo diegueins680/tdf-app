@@ -112,8 +112,10 @@ def code_transitions(spec, root=ROOT):
     table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", source[definition.end():], re.S)
     if not table:
         raise RuntimeError(f"{spec['validator']} has no allowedTransitions list")
+    # A commented-out edge is not implemented: drop block and line comments first.
+    listed = re.sub(r"--[^\n]*", "", re.sub(r"\{-.*?-\}", "", table.group(1), flags=re.S))
     pairs = set()
-    for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", table.group(1)):
+    for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", listed):
         for constructor in (source_state, target):
             if constructor not in names:
                 raise RuntimeError(f"{constructor} has no stored name in {spec['renderer']}")

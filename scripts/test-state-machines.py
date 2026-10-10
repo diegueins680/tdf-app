@@ -69,7 +69,15 @@ def code_controls(bindings, machines):
         target.write_text(source.replace("      , (RentalLost, RentalDisputed)\n", "", 1))
         expect("edge removed from validator source", gate.check_code(bindings, machines, root),
                "code transitionsOnlyDeclared is [['lost', 'disputed']]")
-    return 7
+        target.write_text(source.replace("      , (RentalLost, RentalDisputed)\n",
+                                         "      -- , (RentalLost, RentalDisputed)\n", 1))
+        expect("edge commented out with a line comment", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['lost', 'disputed']]")
+        target.write_text(source.replace("      , (RentalLost, RentalDisputed)\n",
+                                         "      {- , (RentalLost, RentalDisputed)\n      -}\n", 1))
+        expect("edge commented out with a block comment", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['lost', 'disputed']]")
+    return 9
 
 
 def main():
