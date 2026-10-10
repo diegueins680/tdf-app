@@ -77,11 +77,14 @@ withdrawal. Existing consent rows are unchanged by the additive migration.
 
 A static review traced every route registered as `capability-header` to its
 handler. Each handler passes the supplied lookup token to a verifier before
-reading or changing the resource: `requirePublicCourseLookupToken`,
+returning or changing the resource: `requirePublicCourseLookupToken`,
 `requireLookupToken` (Domo quotes, event tickets, merch carts/orders, commerce
 payment sessions), `requireMarketplaceOrderLookupToken`,
 `requirePublicBookingLookupToken`/`requireServiceBookingPaymentContext` and the
 storefront `requireOrderLookupToken`. The only handler that ignores its token is
 `POST /services/storefront/order/{orderId}/stripe/payment-intent`, which returns
-503 unconditionally without reading data. This is a point-in-time review, not a
+503 unconditionally without reading data. The guarantee is about disclosure and
+mutation, not about database reads: verifiers that compare against the stored
+record, such as the storefront one, load the row by its identifier first and
+reject before anything is returned or written. This is a point-in-time review, not a
 mechanical gate; a route-to-handler correspondence check remains future work.
