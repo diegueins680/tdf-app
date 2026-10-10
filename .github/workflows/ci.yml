@@ -24,6 +24,17 @@ on:
         type: string
         default: ''
   workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      FLY_STAGING_API_TOKEN:
+        required: false
+      FLY_STAGING_WEB_TOKEN:
+        required: false
+      KOYEB_API_TOKEN:
+        required: false
     inputs:
       force_backend:
         description: Always build and test the backend, even when path classification would skip it.
@@ -107,6 +118,12 @@ jobs:
     if: needs.changes.outputs.repo == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Authenticate Docker Hub pulls
+        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v7
         env:
@@ -260,10 +277,17 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-    container: haskell:9.10.3-bookworm
+    container:
+      image: haskell:9.10.3-bookworm
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
     services:
       postgres:
         image: pgvector/pgvector:pg17
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_DB: tdf_hq_automatic_migration_test
           POSTGRES_PASSWORD: postgres
@@ -562,6 +586,9 @@ jobs:
     services:
       postgres:
         image: pgvector/pgvector:pg17
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -750,6 +777,9 @@ jobs:
     services:
       postgres:
         image: pgvector/pgvector:pg17
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_DB: tdf_hq_migration_test
           POSTGRES_PASSWORD: postgres
@@ -764,6 +794,12 @@ jobs:
     env:
       PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_hq_migration_test
     steps:
+      - name: Authenticate Docker Hub pulls
+        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v7
         with:
