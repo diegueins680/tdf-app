@@ -3445,7 +3445,7 @@
       ],
       "formalModels": [],
       "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
-      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): GET /radio/presence/1 returned 401 without a token and with an invalid bearer token; no presence was exposed.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
@@ -3454,7 +3454,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+        "reason": "Deployed anonymous and invalid-token denial verified; an inactive-but-well-formed session and whole-domain authorization were not exercised."
       },
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
@@ -5010,9 +5010,9 @@
       "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, controls and sampled deployed denials pass and the debt register is now empty; handler enforcement of each registered capability is not mechanically verified."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "2026-10-09 on main 7831b69: scripts/check-public-routes.py passed (180 routes, debt register empty, no known-debt boundary in use) and scripts/test-public-routes.py passed 1 positive and 14 negative controls. Deployed GETs without credentials on handler-session, capability-header and capability-path routes returned 400/401/404; GET /session returned null, the anonymous result its handler-session boundary allows.",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
       "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
@@ -40614,7 +40614,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b913a379471dbfe91d1eacd2ff9e99d53fb885e712b5752804919ac26b3ccd14",
+      "sourceSha256": "ef073197113f2e3efaf6ff54b49b7fcae3cc469983835db32c301839ec0239df",
       "definition": {
         "states": [
           "absent",
