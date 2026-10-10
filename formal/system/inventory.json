@@ -17504,7 +17504,7 @@
     },
     {
       "path": "PAYMENT_AUDIT.md",
-      "sha256": "86f0150c07958c521cd3d3902b8e5e18df8eceeda8c2eaf3cddda8cf5690b26c",
+      "sha256": "d25a291b2b3ff55faca879d5a72597ac3fb8cfc01852fed61afed1e109a5ba22",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17553,7 +17553,7 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "8f8dc21a893fb215ebb33cbea332884c01f164d5b90740964134e58c3ccf43de",
+      "sha256": "6dc454b2589c5179830a8c99d994502150915f36ca65b4dca8fc8e908a02b07a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

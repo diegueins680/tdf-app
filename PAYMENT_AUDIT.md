@@ -229,8 +229,12 @@ pending_payment → paid → in_progress → v1_delivered → revisions → appr
 ### Environment Variables Needed
 
 ```bash
+# One checkout environment for every enabled provider. Unset defaults to sandbox,
+# and a provider whose own environment differs is rejected.
+COMMERCE_CHECKOUT_ENV=production   # sandbox for testing
+
 # Datafast (Ecuador card processing, OPPWA). Names read by tdf-hq loadDatafastEnv.
-DATAFAST_ENV=production            # must equal COMMERCE_CHECKOUT_ENV; sandbox for testing
+DATAFAST_ENV=production            # must equal COMMERCE_CHECKOUT_ENV
 DATAFAST_BASE_URL=<production oppwa.com origin from Datafast>   # sandbox: https://test.oppwa.com
 DATAFAST_ENTITY_ID=<Entity ID>
 DATAFAST_BEARER_TOKEN=<Access Token>
@@ -245,7 +249,7 @@ DATAFAST_USER_DATA2=<risk parameter value>
 PAYPAL_CLIENT_ID=<from PayPal Developer>
 PAYPAL_CLIENT_SECRET=<from PayPal Developer>
 PAYPAL_WEBHOOK_ID=<from PayPal Dashboard>
-PAYPAL_ENVIRONMENT=live  # or sandbox
+PAYPAL_ENV=production              # must equal COMMERCE_CHECKOUT_ENV
 
 # Stripe (International - NOT for Ecuador)
 STRIPE_SECRET_KEY=sk_live_...

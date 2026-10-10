@@ -48,9 +48,10 @@
   DATAFAST_BASE_URL=...
   DATAFAST_ENTITY_ID=...
   DATAFAST_BEARER_TOKEN=...
-  # The service storefront reads only the four values above. DATAFAST_MID,
-  # DATAFAST_TID, DATAFAST_PSERV and DATAFAST_USER_DATA2 belong to the
-  # marketplace checkout and are not sent for service orders.
+  # Leave DATAFAST_TEST_MODE unset: any value is rejected when
+  # DATAFAST_ENV=production. DATAFAST_MID, DATAFAST_TID, DATAFAST_PSERV and
+  # DATAFAST_USER_DATA2 belong to the marketplace checkout and are not sent
+  # for service orders.
 
   # PayPal
   PAYPAL_CLIENT_ID=...
