@@ -9250,8 +9250,8 @@
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "1526421bd41ffd5b737f5b62e1132aeeb4dc3e176336fc7d41d27d1dbab98bd9",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "b6dd1956a579c6b3e5429e08d33ba5c6b24630dbb03af51f51a1194dd5b2ff8f",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "ee2119fe94447f2b2374b5fece134aa7f24adb22d5dc1b08a836d497f069e9c1",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "f5297310c2ca99b238818ef7bf64e4e813a25dd0aca816f0265f5b2ea9317674",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
@@ -9273,8 +9273,8 @@
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "9b15c9ba80af312bf46c1e272dfdb6b7fa135296eea9c85a44035c7fdb890471",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "5b595aaf2b1c3ab898e716e13c4d8c8f913c989ab6e32af56308208875a3b4a9",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/en.ts": "fb867054fb48979bd7868da2ee778eb7e1e5ba4e09ea46f1ba53e14881c2f4be",
     "tdf-hq-ui/src/i18n/locales/es.ts": "062904ae5ba4cb6c95ddf19507a5003d5f0bc561ac48fbe8f6eeddb8bb6e0c14",
@@ -23410,7 +23410,7 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "1526421bd41ffd5b737f5b62e1132aeeb4dc3e176336fc7d41d27d1dbab98bd9",
+      "sha256": "ee2119fe94447f2b2374b5fece134aa7f24adb22d5dc1b08a836d497f069e9c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23422,7 +23422,7 @@
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "b6dd1956a579c6b3e5429e08d33ba5c6b24630dbb03af51f51a1194dd5b2ff8f",
+      "sha256": "f5297310c2ca99b238818ef7bf64e4e813a25dd0aca816f0265f5b2ea9317674",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24335,7 +24335,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "9b15c9ba80af312bf46c1e272dfdb6b7fa135296eea9c85a44035c7fdb890471",
+      "sha256": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24355,7 +24355,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "5b595aaf2b1c3ab898e716e13c4d8c8f913c989ab6e32af56308208875a3b4a9",
+      "sha256": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
