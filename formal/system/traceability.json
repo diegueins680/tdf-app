@@ -9251,7 +9251,7 @@
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "382f855ac2e12af6ea8d1869d6d58ce52af3f1877d0a7d6d6406dafb23f46977",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "3bd4d3930c7d3438ae303de3c866c85467415bb1a641b293437fe3455737ca0d",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "c4581212ed44f3c33bb327c7b65936458baad501f570e60487c7d89019add234",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
@@ -23422,7 +23422,7 @@
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "3bd4d3930c7d3438ae303de3c866c85467415bb1a641b293437fe3455737ca0d",
+      "sha256": "c4581212ed44f3c33bb327c7b65936458baad501f570e60487c7d89019add234",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
