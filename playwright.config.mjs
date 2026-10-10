@@ -4,6 +4,14 @@ const artifactRoot = process.env.PLAYWRIGHT_ARTIFACT_DIR || 'artifacts/persona-p
 
 export default defineConfig({
   testDir: './e2e/web',
+  // These suites require their own synthetic-media or API/S3 lifecycle and
+  // run from playwright.music-native/-integration.config.mjs instead.
+  testIgnore: [/music-player-native\.spec\.mjs$/, /music-player-integration\.spec\.mjs$/],
+  // Playwright's git-info plugin buffers the whole `git diff <prBase> HEAD`
+  // into one string before truncating it. This repository's merge commits span
+  // tens of thousands of files, which exceeds V8's maximum string length and
+  // crashes the run. Commit metadata is still captured.
+  captureGitInfo: { diff: false },
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
@@ -50,6 +58,22 @@ export default defineConfig({
         isMobile: true,
       },
     },
+    {
+      // Redmi-class Android Chrome (360 CSS px wide), where the white-screen,
+      // squeezed-column and hidden-cart reports were observed (2026-10-07).
+      name: 'android-chrome-small',
+      grep: /@mobile-flow/,
+      use: {
+        browserName: 'chromium',
+        viewport: { width: 360, height: 740 },
+        screen: { width: 360, height: 800 },
+        deviceScaleFactor: 2.75,
+        isMobile: true,
+        hasTouch: true,
+        userAgent: 'Mozilla/5.0 (Linux; Android 13; 22111317G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36',
+      },
+    },
+    { name: 'webkit-iphone', grep: /@mobile-flow/, use: { ...devices['iPhone 13'] } },
     { name: 'firefox-critical', grep: /@critical/, use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit-critical', grep: /@critical/, use: { ...devices['Desktop Safari'] } },
   ],

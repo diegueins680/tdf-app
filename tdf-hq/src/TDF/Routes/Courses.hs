@@ -45,7 +45,6 @@ import           Servant
 
 import           TDF.API.Types (RawJSON, rejectNullOptionalFields)
 import qualified TDF.API.Types as APITypes
-import           TDF.WhatsApp.Types (WAMetaWebhook)
 import qualified TDF.DTO
 
 data CourseSession = CourseSession

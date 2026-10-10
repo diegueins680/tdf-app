@@ -344,6 +344,7 @@ const es = {
       cancel: 'Cancelar',
       continue: 'Continuar al pago',
       close: 'Cerrar',
+      retryTerms: 'Reintentar',
     },
     terms: {
       title: 'Términos de las entradas',
@@ -362,6 +363,7 @@ const es = {
       unexpected: 'Ocurrió un error inesperado',
       termsRequired: 'Acepta los términos y la política de reembolso para continuar.',
       termsChanged: 'Los términos de las entradas se actualizaron. Revisa la nueva versión y vuelve a aceptarla.',
+      termsUnavailable: 'No pudimos cargar los términos de las entradas. No se reservó nada; reintenta para continuar.',
     },
     status: {
       buyer: 'Comprador',

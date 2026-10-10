@@ -17,9 +17,12 @@ const readErrorText = async (response: Response): Promise<string> => {
 
 const sessionUrl = (path: string) => `${API_BASE}${path}`;
 
-export async function loadSessionSnapshot(): Promise<SessionResponseDTO | null> {
+// Accepts an options object so it also works directly as a react-query
+// queryFn (whose context carries an AbortSignal).
+export async function loadSessionSnapshot(options: { signal?: AbortSignal } = {}): Promise<SessionResponseDTO | null> {
   const response = await fetch(sessionUrl('/session'), {
     credentials: 'include',
+    ...(options.signal ? { signal: options.signal } : {}),
   });
 
   if (response.status === 401 || response.status === 403) {
@@ -114,4 +117,25 @@ export async function persistOnboardingIntent(
   }
 
   return response.json() as Promise<OnboardingProgressDTO>;
+}
+
+export async function redeemArtistInvitation(
+  artistInvitation: string,
+  apiToken?: string | null,
+): Promise<SessionResponseDTO> {
+  const response = await fetch(sessionUrl('/session/artist-invitation'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+    },
+    body: JSON.stringify({ artistInvitation }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<SessionResponseDTO>;
 }

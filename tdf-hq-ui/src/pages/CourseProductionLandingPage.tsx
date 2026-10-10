@@ -1,4 +1,16 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement, type RefObject, type SyntheticEvent } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactElement,
+  type Ref,
+  type RefObject,
+  type SyntheticEvent,
+} from 'react';
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -18,13 +30,20 @@ import {
   DialogTitle,
   Divider,
   FormControlLabel,
+  FormHelperText,
   Grid,
+  IconButton,
   Link,
   MenuItem,
+  Slide,
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
+import type { TransitionProps } from '@mui/material/transitions';
+import CloseIcon from '@mui/icons-material/Close';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PlaceIcon from '@mui/icons-material/Place';
@@ -34,16 +53,22 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseCheckoutResponse, CourseCheckoutTerms, CourseMetadata, CourseRegistrationRequest } from '../api/courses';
-import { ApiError } from '../api/client';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { Courses } from '../api/courses';
 import type { DatafastCheckoutDTO } from '../api/types';
-import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import PublicBrandBar from '../components/PublicBrandBar';
-import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useSession } from '../session/SessionContext';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
+import { normalizePhoneToE164, PHONE_EXAMPLE_HINT } from '../utils/phone';
+import {
+  describeCourseRegistrationError,
+  type CourseRegistrationField,
+} from '../utils/courseRegistrationErrors';
 import {
   formatCurrencyForUser,
   formatDateForUser,
@@ -178,6 +203,90 @@ const loadCourseLookupToken = (slug: string, registrationId: number): string | n
   }
 };
 
+const ENROLL_QUERY_PARAM = 'inscribirme';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface EnrollmentDraft {
+  fullName: string;
+  email: string;
+  phone: string;
+  howHeard: string;
+}
+
+type EnrollmentFieldErrors = Partial<Record<CourseRegistrationField, string>>;
+
+const enrollmentDraftStorageKey = (slug: string) => `tdf:course-enroll-draft:${slug}`;
+
+// Only what the visitor typed into this form, kept for the login round-trip of this tab.
+const saveEnrollmentDraft = (slug: string, draft: EnrollmentDraft) => {
+  try {
+    window.sessionStorage.setItem(enrollmentDraftStorageKey(slug), JSON.stringify(draft));
+  } catch {
+    // Storage can be unavailable (private mode, quota); the form still works without it.
+  }
+};
+
+const readEnrollmentDraft = (slug: string): EnrollmentDraft | null => {
+  try {
+    const raw = window.sessionStorage.getItem(enrollmentDraftStorageKey(slug));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Record<keyof EnrollmentDraft, unknown>>;
+    const field = (value: unknown) => (typeof value === 'string' ? value.slice(0, 500) : '');
+    return {
+      fullName: field(parsed.fullName),
+      email: field(parsed.email),
+      phone: field(parsed.phone),
+      howHeard: field(parsed.howHeard),
+    };
+  } catch {
+    return null;
+  }
+};
+
+const clearEnrollmentDraft = (slug: string) => {
+  try {
+    window.sessionStorage.removeItem(enrollmentDraftStorageKey(slug));
+  } catch {
+    // Nothing to clean up when storage is unavailable.
+  }
+};
+
+const looksLikeEmail = (value: string) => EMAIL_PATTERN.test(value.trim());
+
+const resolveTermsUrl = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (/^https:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
+  return null;
+};
+
+const darkFieldInputSx = {
+  color: '#f8fafc',
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.32)' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)' },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
+  '&.Mui-error .MuiOutlinedInput-notchedOutline': { borderColor: '#fca5a5' },
+  '& input, & textarea': {
+    color: '#f8fafc',
+    caretColor: '#f8fafc',
+    '::placeholder': { color: 'rgba(226,232,240,0.6)' },
+  },
+};
+
+const darkFieldProps = {
+  InputProps: { sx: darkFieldInputSx },
+  InputLabelProps: { sx: { color: 'rgba(226,232,240,0.78)', '&.Mui-error': { color: '#fca5a5' } } },
+  FormHelperTextProps: { sx: { color: 'rgba(226,232,240,0.72)', '&.Mui-error': { color: '#fca5a5' } } },
+};
+
+const SlideUpTransition = forwardRef(function SlideUpTransition(
+  props: TransitionProps & { children: ReactElement },
+  ref: Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
   color: '#f8fafc',
@@ -199,22 +308,58 @@ interface CourseCmsPayload {
     badge2?: string;
     badge3?: string;
   };
+  termsUrl?: string | null;
+}
+
+interface RegistrationAttempt {
+  fingerprint: string;
+  /** A definitive rejection: a corrected payload may use a fresh key. */
+  retireOnChange: boolean;
+  /** The server holds different details under this key: always use a fresh key. */
+  retireAlways: boolean;
 }
 
 export default function CourseProductionLandingPage() {
-  const formRef = useRef<HTMLDivElement | null>(null);
+  const theme = useTheme();
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
+  const { session, loading: sessionLoading } = useSession();
+  const heroCtaRef = useRef<HTMLButtonElement | null>(null);
+  // Tracked in state too, so the sticky-CTA observer attaches whenever the
+  // hero button actually mounts (it can render after the metadata query settles).
+  const [heroCtaElement, setHeroCtaElement] = useState<HTMLButtonElement | null>(null);
+  const setHeroCtaRef = useCallback((node: HTMLButtonElement | null) => {
+    heroCtaRef.current = node;
+    setHeroCtaElement(node);
+  }, []);
+  const checkoutCardRef = useRef<HTMLDivElement | null>(null);
+  const fullNameInputRef = useRef<HTMLInputElement | null>(null);
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const howHeardInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const termsInputRef = useRef<HTMLInputElement | null>(null);
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { slug: routeSlug, registrationId: routeRegistrationId } = useParams<{
     slug: string;
     registrationId: string;
   }>();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [howHeard, setHowHeard] = useState('');
+  // What the visitor typed before a login round-trip (see handleLoginForAutofill).
+  const [initialDraft] = useState(() => {
+    const slug = trimToUndefined(routeSlug);
+    return slug ? readEnrollmentDraft(slug) : null;
+  });
+  const [fullName, setFullName] = useState(initialDraft?.fullName ?? '');
+  const [email, setEmail] = useState(initialDraft?.email ?? '');
+  const [phone, setPhone] = useState(initialDraft?.phone ?? '');
+  const [howHeard, setHowHeard] = useState(initialDraft?.howHeard ?? '');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<EnrollmentFieldErrors>({});
+  const [accountFields, setAccountFields] = useState<('fullName' | 'email')[]>([]);
+  const [editAccountFields, setEditAccountFields] = useState(false);
+  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  const [pendingCheckoutFocus, setPendingCheckoutFocus] = useState(false);
   const [checkout, setCheckout] = useState<CourseCheckoutResponse | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
@@ -229,6 +374,7 @@ export default function CourseProductionLandingPage() {
   const paypalButtonRef = useRef<HTMLDivElement | null>(null);
   const paypalClientId = import.meta.env?.VITE_PAYPAL_CLIENT_ID?.trim() ?? '';
   const checkoutIdempotency = useRef<string | null>(null);
+  const lastAttemptRef = useRef<RegistrationAttempt | null>(null);
   const productionSlugs = useMemo(() => {
     const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
@@ -248,6 +394,13 @@ export default function CourseProductionLandingPage() {
     return productionSlugs[0] ?? COURSE_DEFAULTS.slug;
   }, [pathSlug, productionSlugs]);
   const [selectedSlug, setSelectedSlug] = useState(defaultSelectedSlug);
+  // Return here after login with the enrollment step open, keeping the
+  // visitor's campaign parameters (utm_*) so attribution survives the trip.
+  const enrollmentResumePath = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    params.set(ENROLL_QUERY_PARAM, '1');
+    return `/curso/${encodeURIComponent(selectedSlug)}?${params.toString()}`;
+  }, [location.search, selectedSlug]);
   useEffect(() => {
     setSelectedSlug(defaultSelectedSlug);
   }, [defaultSelectedSlug]);
@@ -265,6 +418,11 @@ export default function CourseProductionLandingPage() {
     enabled: Boolean(selectedSlug),
   });
   const checkoutTerms = metaQuery.data?.checkoutTerms ?? null;
+  // Acceptance belongs to the version that was on screen: a different version starts unaccepted.
+  const checkoutTermsVersion = checkoutTerms?.termsVersion ?? null;
+  useEffect(() => {
+    setTermsAccepted(false);
+  }, [checkoutTermsVersion]);
   const cohortQueries = useQueries({
     queries:
       availableSlugs.length > 1
@@ -284,9 +442,11 @@ export default function CourseProductionLandingPage() {
     const payload = cmsQuery.data?.ccdPayload;
     if (payload && typeof payload === 'object') {
       const hero = (payload as { hero?: unknown }).hero;
-      if (hero && typeof hero === 'object') {
-        return { hero: hero as CourseCmsPayload['hero'] };
-      }
+      const termsUrl = resolveTermsUrl((payload as { termsUrl?: unknown }).termsUrl);
+      return {
+        ...(hero && typeof hero === 'object' ? { hero: hero as CourseCmsPayload['hero'] } : {}),
+        termsUrl,
+      };
     }
     return null;
   }, [cmsQuery.data]);
@@ -306,27 +466,61 @@ export default function CourseProductionLandingPage() {
     return undefined;
   }, [location.search]);
 
+  const fieldInputRefs = useMemo(
+    () => ({
+      fullName: fullNameInputRef,
+      email: emailInputRef,
+      phone: phoneInputRef,
+      howHeard: howHeardInputRef,
+      terms: termsInputRef,
+    }),
+    [],
+  );
+  // Inputs are disabled while a submission is pending, and focusing a disabled
+  // input is a no-op. Queue the field and focus it from an effect once the
+  // form has re-rendered enabled (and any collapsed account field is shown).
+  const [pendingFocusField, setPendingFocusField] = useState<CourseRegistrationField | null>(null);
+  const focusField = useCallback((field: CourseRegistrationField) => {
+    setPendingFocusField(field);
+  }, []);
+
   const registrationMutation = useMutation({
-    mutationFn: (payload: CourseRegistrationRequest) => {
-      checkoutIdempotency.current ??= createCourseIdempotencyKey();
-      return Courses.register(selectedSlug, payload, checkoutIdempotency.current);
-    },
+    mutationFn: ({ payload, idempotencyKey }: { payload: CourseRegistrationRequest; idempotencyKey: string }) =>
+      Courses.register(selectedSlug, payload, idempotencyKey),
     onSuccess: (response) => {
       checkoutIdempotency.current = null;
+      lastAttemptRef.current = null;
+      clearEnrollmentDraft(selectedSlug);
       setCheckout(response);
       const token = response.lookupToken?.trim();
       if (token) saveCourseLookupToken(selectedSlug, response.registrationId, token);
       if (response.checkoutAvailable) {
+        // The payment step lives on the order page; close the sheet and bring the order into view.
+        enrollTriggerRef.current = null;
+        setEnrollOpen(false);
+        setPendingCheckoutFocus(true);
         navigate(`/curso/${encodeURIComponent(selectedSlug)}/orden/${response.registrationId}`, {
           replace: true,
         });
       }
     },
     onError: (error) => {
-      // The approved policy changed after the page loaded: show the new terms and ask again.
-      if (error instanceof ApiError && error.status === 409 && /terms changed/i.test(error.message)) {
+      const view = describeCourseRegistrationError(error);
+      if (lastAttemptRef.current) {
+        lastAttemptRef.current = {
+          ...lastAttemptRef.current,
+          retireOnChange: view.definitiveRejection,
+          retireAlways: view.retireIdempotencyKey,
+        };
+      }
+      if (view.termsChanged) {
+        // The approved policy changed after the page loaded: show the new terms and ask again.
         setTermsAccepted(false);
         void metaQuery.refetch();
+      }
+      if (view.field) {
+        if (view.field === 'fullName' || view.field === 'email') setEditAccountFields(true);
+        focusField(view.field);
       }
     },
   });
@@ -335,33 +529,162 @@ export default function CourseProductionLandingPage() {
     if (previousSelectedSlugRef.current === selectedSlug) return;
     previousSelectedSlugRef.current = selectedSlug;
     registrationMutation.reset();
-    setShowSuccessDialog(false);
     setCheckout(null);
     setPaymentError(null);
     setTermsAccepted(false);
+    setFieldErrors({});
     checkoutIdempotency.current = null;
+    lastAttemptRef.current = null;
   }, [registrationMutation, selectedSlug]);
 
-  const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const slug = trimToUndefined(routeSlug);
+    if (initialDraft && slug) clearEnrollmentDraft(slug);
+    // Mount-only: the draft is consumed once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Prefill from the signed-in account without blocking the form on any request.
+  // Fields the visitor already typed (or restored from the draft) always win.
+  // A cached session is only trusted after /session verifies it: on a shared
+  // browser an expired cache must never put the previous person's identity
+  // into the form, and values taken from an account that is no longer the
+  // verified one are removed unless the visitor edited them.
+  const verifiedSession = sessionLoading ? null : session;
+  const sessionDisplayName = verifiedSession?.displayName.trim() ?? '';
+  const sessionEmail = verifiedSession && looksLikeEmail(verifiedSession.username) ? verifiedSession.username.trim() : '';
+  const prefillKeyRef = useRef<string | null>(null);
+  const prefilledValuesRef = useRef<{ fullName?: string; email?: string }>({});
+  useEffect(() => {
+    if (sessionLoading) return;
+    const key = `${sessionDisplayName}\n${sessionEmail}`;
+    if (prefillKeyRef.current === key) return;
+    prefillKeyRef.current = key;
+    const previous = prefilledValuesRef.current;
+    let nextFullName = previous.fullName !== undefined && fullName === previous.fullName ? '' : fullName;
+    let nextEmail = previous.email !== undefined && email === previous.email ? '' : email;
+    const current: { fullName?: string; email?: string } = {};
+    const prefilled: ('fullName' | 'email')[] = [];
+    if (sessionDisplayName && !nextFullName.trim()) {
+      nextFullName = sessionDisplayName;
+      current.fullName = sessionDisplayName;
+      prefilled.push('fullName');
+    }
+    if (sessionEmail && !nextEmail.trim()) {
+      nextEmail = sessionEmail;
+      current.email = sessionEmail;
+      prefilled.push('email');
+    }
+    prefilledValuesRef.current = current;
+    if (nextFullName !== fullName) setFullName(nextFullName);
+    if (nextEmail !== email) setEmail(nextEmail);
+    setAccountFields(prefilled);
+  }, [email, fullName, sessionDisplayName, sessionEmail, sessionLoading]);
+
+  const clearFieldError = (field: CourseRegistrationField) => {
+    setFieldErrors((current) => {
+      if (!(field in current)) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+    if (registrationMutation.isError) registrationMutation.reset();
+  };
+
+  const validatePhone = (value: string): string | undefined => {
+    if (!value.trim()) return undefined;
+    return normalizePhoneToE164(value) ? undefined : `Revisa el número. ${PHONE_EXAMPLE_HINT}.`;
+  };
+
+  const validateEnrollment = (): EnrollmentFieldErrors => {
+    const errors: EnrollmentFieldErrors = {};
+    if (!fullName.trim()) errors.fullName = 'Escribe tu nombre completo.';
+    if (!email.trim()) errors.email = 'Escribe tu correo para enviarte los pasos.';
+    else if (!looksLikeEmail(email)) errors.email = 'Revisa tu correo: debe tener el formato nombre@dominio.com.';
+    const phoneError = validatePhone(phone);
+    if (phoneError) errors.phone = phoneError;
+    if (!termsAccepted) errors.terms = 'Debes aceptar los términos y la política de cancelación para continuar.';
+    return errors;
+  };
+
+  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
+    if (registrationMutation.isPending || registrationMutation.isSuccess) return;
+    // Never bind an acceptance to terms that are still being replaced.
+    if (metaQuery.isFetching) return;
+    const errors = validateEnrollment();
+    setFieldErrors(errors);
+    const fieldOrder: CourseRegistrationField[] = ['fullName', 'email', 'phone', 'howHeard', 'terms'];
+    const firstInvalid = fieldOrder.find((field) => errors[field]);
+    if (firstInvalid) {
+      if (firstInvalid === 'fullName' || firstInvalid === 'email') setEditAccountFields(true);
+      focusField(firstInvalid);
+      return;
+    }
     const payload: CourseRegistrationRequest = {
-      fullName,
-      email,
-      phoneE164: phone.trim() ? phone.trim() : undefined,
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phoneE164: normalizePhoneToE164(phone) ?? undefined,
       source: 'landing',
       howHeard: howHeard.trim() ? howHeard.trim() : undefined,
       utm: utmParams,
-      ...(checkoutTerms
-        ? { termsAccepted, acceptedTermsVersion: checkoutTerms.termsVersion }
-        : {}),
+      termsAccepted,
+      ...(checkoutTerms ? { acceptedTermsVersion: checkoutTerms.termsVersion } : {}),
     };
-    registrationMutation.mutate(payload);
+    const fingerprint = JSON.stringify([selectedSlug, payload]);
+    const previous = lastAttemptRef.current;
+    if (
+      previous
+      && (previous.retireAlways || (previous.retireOnChange && previous.fingerprint !== fingerprint))
+    ) {
+      // A corrected payload after a definitive rejection must not reuse the
+      // key, or the server rejects it as a different request under the same key.
+      checkoutIdempotency.current = null;
+    }
+    checkoutIdempotency.current ??= createCourseIdempotencyKey();
+    lastAttemptRef.current = { fingerprint, retireOnChange: false, retireAlways: false };
+    registrationMutation.mutate({ payload, idempotencyKey: checkoutIdempotency.current });
   };
 
-  const scrollToForm = () => {
-    if (formRef.current) {
-      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const enrollTriggerRef = useRef<HTMLElement | null>(null);
+  const returnFocusOnExitRef = useRef(false);
+  // Return focus explicitly once the dialog has left: Safari does not focus
+  // buttons on click, so the dialog's own restore target can be <body>.
+  const handleEnrollmentExited = () => {
+    if (!returnFocusOnExitRef.current) return;
+    returnFocusOnExitRef.current = false;
+    const target = [enrollTriggerRef.current, heroCtaRef.current].find(
+      (candidate) => candidate?.isConnected && !candidate.hasAttribute('disabled'),
+    );
+    target?.focus();
+  };
+  const openEnrollment = (trigger?: HTMLElement | null) => {
+    enrollTriggerRef.current = trigger ?? null;
+    setEnrollOpen(true);
+  };
+
+  const closeEnrollment = useCallback(() => {
+    setEnrollOpen(false);
+    returnFocusOnExitRef.current = true;
+    const params = new URLSearchParams(location.search);
+    if (params.has(ENROLL_QUERY_PARAM)) {
+      params.delete(ENROLL_QUERY_PARAM);
+      const search = params.toString();
+      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
     }
+  }, [location.pathname, location.search, navigate]);
+
+  // Deep link (?inscribirme=1), e.g. when coming back from login.
+  useEffect(() => {
+    if (routeRegistrationId) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get(ENROLL_QUERY_PARAM) === '1') {
+      setEnrollOpen(true);
+    }
+  }, [location.search, routeRegistrationId]);
+
+  const handleLoginForAutofill = () => {
+    saveEnrollmentDraft(selectedSlug, { fullName, email, phone, howHeard });
   };
 
   const meta: CourseMetadata | undefined = metaQuery.data;
@@ -381,16 +704,83 @@ export default function CourseProductionLandingPage() {
   const brandLabel = meta?.title ?? 'Cursos TDF';
   const brandTagline = startDateLabel ? `${brandLabel} · ${startDateLabel}` : brandLabel;
   const heroImageUrl = resolvePublicImageUrl(meta?.instructorAvatarUrl);
+  const courseTitle = cmsPayload?.hero?.title ?? meta?.title ?? 'el curso';
+  const priceLabel = metaQuery.isLoading
+    ? null
+    : formatCurrencyForUser(meta?.price ?? 150, meta?.currency ?? resolveRuntimeCurrency());
+  const enrollCtaLabel = cmsPayload?.hero?.cta ?? 'Inscribirme';
 
   const submitted = registrationMutation.isSuccess;
   const submitting = registrationMutation.isPending;
-  const submitError = registrationMutation.error instanceof Error ? registrationMutation.error.message : null;
-  const termsChanged = registrationMutation.error instanceof ApiError
-    && registrationMutation.error.status === 409
-    && /terms changed/i.test(registrationMutation.error.message);
   useEffect(() => {
-    if (submitted) setShowSuccessDialog(true);
-  }, [submitted]);
+    if (!pendingFocusField || submitting) return;
+    const element = fieldInputRefs[pendingFocusField].current;
+    if (!element || element.disabled) return;
+    setPendingFocusField(null);
+    element.focus();
+    if (typeof element.scrollIntoView === 'function') {
+      element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [pendingFocusField, submitting, fieldInputRefs, editAccountFields, metaQuery.isFetching]);
+  const serverError = registrationMutation.error
+    ? describeCourseRegistrationError(registrationMutation.error)
+    : null;
+  const visibleFieldErrors: EnrollmentFieldErrors = serverError?.field
+    ? { ...fieldErrors, [serverError.field]: serverError.message }
+    : fieldErrors;
+  const formError = serverError && !serverError.field ? serverError.message : null;
+  const leadReceived = submitted && checkout !== null && !checkout.checkoutAvailable;
+
+  // Focus the first empty required field as soon as the enrollment sheet opens.
+  useEffect(() => {
+    if (!enrollOpen) return;
+    const timer = window.setTimeout(() => {
+      if (registrationMutation.isSuccess) return;
+      // Read the rendered inputs: account-prefilled fields may be collapsed into a summary.
+      const emptyRequired = [fullNameInputRef.current, emailInputRef.current]
+        .find((input) => input && !input.value.trim());
+      const target = emptyRequired
+        ?? (termsInputRef.current && !termsInputRef.current.checked ? termsInputRef.current : null)
+        ?? submitButtonRef.current;
+      target?.focus();
+    }, 0);
+    return () => window.clearTimeout(timer);
+    // Only on open: later edits must not move focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enrollOpen]);
+
+  // Mobile sticky CTA: visible once the hero CTA has scrolled above the
+  // viewport. A scroll check (not IntersectionObserver) so a fast fling that
+  // jumps the button from below the fold to above it is still detected.
+  useEffect(() => {
+    const target = heroCtaElement;
+    if (!target) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      setShowStickyCta(target.getBoundingClientRect().bottom < 0);
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [heroCtaElement]);
+
+  useEffect(() => {
+    if (!pendingCheckoutFocus || !checkout) return;
+    const card = checkoutCardRef.current;
+    if (!card) return;
+    setPendingCheckoutFocus(false);
+    if (typeof card.scrollIntoView === 'function') card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    card.focus({ preventScroll: true });
+  }, [checkout, pendingCheckoutFocus]);
 
   const checkoutLookupToken = useMemo(() => {
     if (!checkout) return null;
@@ -576,15 +966,15 @@ export default function CourseProductionLandingPage() {
         background: 'radial-gradient(circle at 10% 20%, rgba(79,70,229,0.12), transparent 35%), radial-gradient(circle at 80% 0%, rgba(14,165,233,0.12), transparent 35%), linear-gradient(180deg, #0b0f1b, #0e1224)',
       }}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-        <EnrollmentSuccessDialog
-          open={showSuccessDialog}
-          onClose={() => setShowSuccessDialog(false)}
-          title={checkout?.checkoutAvailable ? 'Cupo retenido temporalmente' : 'Solicitud recibida'}
-          message={checkout?.checkoutAvailable
-            ? 'Creamos una retención temporal. Tu inscripción sigue pendiente hasta que el servidor verifique el pago.'
-            : 'Recibimos tus datos, pero el checkout no está habilitado y todavía no se reservó ni pagó un cupo.'}
-        />
+      <Container
+        maxWidth="lg"
+        sx={{
+          pt: { xs: 4, md: 6 },
+          // Leave room for the mobile sticky CTA so it never covers the last card.
+          pb: { xs: 'calc(96px + env(safe-area-inset-bottom, 0px))', md: 6 },
+          // The radio bar's own height is reserved on <body> by RadioWidget.
+        }}
+      >
         <Stack spacing={4}>
           {metaQuery.error && (
             <Alert severity="error">
@@ -596,7 +986,8 @@ export default function CourseProductionLandingPage() {
           </Box>
           <Hero
             meta={meta}
-            onPrimaryClick={scrollToForm}
+            onPrimaryClick={openEnrollment}
+            primaryCtaRef={setHeroCtaRef}
             whatsappHref={whatsappHref}
             imageUrl={heroImageUrl}
             loading={metaQuery.isLoading}
@@ -609,53 +1000,41 @@ export default function CourseProductionLandingPage() {
             <Grid item xs={12} md={7}>
               <Info meta={meta} loading={metaQuery.isLoading} />
             </Grid>
-            <Grid item xs={12} md={5}>
-              <FormCard
-                formRef={formRef}
-                onSubmit={handleSubmit}
-                fullName={fullName}
-                email={email}
-                phone={phone}
-                howHeard={howHeard}
-                onFullNameChange={setFullName}
-                onEmailChange={setEmail}
-                onPhoneChange={setPhone}
-                onHowHeardChange={setHowHeard}
-                checkoutTerms={checkoutTerms}
-                termsAccepted={termsAccepted}
-                onTermsAcceptedChange={setTermsAccepted}
-                termsChanged={termsChanged}
-                submitting={submitting}
+            <Grid item xs={12} md={5} sx={{ order: { xs: checkout ? -1 : 0, md: 0 } }}>
+              <EnrollSummaryCard
+                onEnroll={openEnrollment}
+                ctaLabel={enrollCtaLabel}
                 submitted={submitted}
-                submitError={submitError}
+                checkoutAvailable={Boolean(checkout?.checkoutAvailable)}
                 isFull={isFull}
                 whatsappHref={whatsappHref}
-                cohortOptions={cohortOptions}
-                selectedSlug={selectedSlug}
-                onSlugChange={handleSelectedSlugChange}
+                priceLabel={priceLabel}
+                dateRangeLabel={dateRangeLabel}
               />
               {checkout && (
-                <CourseCheckoutCard
-                  checkout={checkout}
-                  paymentBusy={paymentBusy}
-                  hostedPaymentLocked={hostedPaymentLocked}
-                  hostedPaymentDisabled={datafastDialogOpen || paypalDialogOpen}
-                  paymentError={paymentError}
-                  checkoutLookupToken={checkoutLookupToken}
-                  initialBuyerPhone={phone}
-                  paypalAvailable={Boolean(paypalClientId && paypalReady)}
-                  onDatafast={() => void handleDatafastPayment()}
-                  onPaypal={() => void handlePaypalPayment()}
-                  onHostedSafetyLockChange={setHostedPaymentLocked}
-                  onHostedPaymentConfirmed={async () => {
-                    if (!checkoutLookupToken) return;
-                    setCheckout(await Courses.getCheckout(
-                      checkout.courseSlug,
-                      checkout.registrationId,
-                      checkoutLookupToken,
-                    ));
-                  }}
-                />
+                <Box ref={checkoutCardRef} tabIndex={-1} sx={{ outline: 'none', scrollMarginTop: 16 }}>
+                  <CourseCheckoutCard
+                    checkout={checkout}
+                    paymentBusy={paymentBusy}
+                    hostedPaymentLocked={hostedPaymentLocked}
+                    hostedPaymentDisabled={datafastDialogOpen || paypalDialogOpen}
+                    paymentError={paymentError}
+                    checkoutLookupToken={checkoutLookupToken}
+                    initialBuyerPhone={normalizePhoneToE164(phone) ?? phone}
+                    paypalAvailable={Boolean(paypalClientId && paypalReady)}
+                    onDatafast={() => void handleDatafastPayment()}
+                    onPaypal={() => void handlePaypalPayment()}
+                    onHostedSafetyLockChange={setHostedPaymentLocked}
+                    onHostedPaymentConfirmed={async () => {
+                      if (!checkoutLookupToken) return;
+                      setCheckout(await Courses.getCheckout(
+                        checkout.courseSlug,
+                        checkout.registrationId,
+                        checkoutLookupToken,
+                      ));
+                    }}
+                  />
+                </Box>
               )}
               <InstructorCard meta={meta} />
               {meta?.locationLabel && meta?.locationMapUrl && (
@@ -664,6 +1043,78 @@ export default function CourseProductionLandingPage() {
             </Grid>
           </Grid>
         </Stack>
+        <StickyEnrollBar
+          visible={showStickyCta && !checkout && !routeRegistrationId}
+          onEnroll={openEnrollment}
+          ctaLabel={enrollCtaLabel}
+          isFull={isFull}
+          whatsappHref={whatsappHref}
+          priceLabel={priceLabel}
+          seatsLabel={seatsLabel}
+        />
+        <EnrollmentDialog
+          open={enrollOpen}
+          onClose={closeEnrollment}
+          onExited={handleEnrollmentExited}
+          fullScreen={isPhone}
+          courseTitle={courseTitle}
+          priceLabel={priceLabel}
+          dateRangeLabel={dateRangeLabel}
+          onSubmit={handleSubmit}
+          fullName={fullName}
+          email={email}
+          phone={phone}
+          howHeard={howHeard}
+          onFullNameChange={(value) => {
+            setFullName(value);
+            clearFieldError('fullName');
+          }}
+          onEmailChange={(value) => {
+            setEmail(value);
+            clearFieldError('email');
+          }}
+          onPhoneChange={(value) => {
+            setPhone(value);
+            clearFieldError('phone');
+          }}
+          onPhoneBlur={() => {
+            const phoneError = validatePhone(phone);
+            setFieldErrors((current) => {
+              const next = { ...current };
+              if (phoneError) next.phone = phoneError;
+              else delete next.phone;
+              return next;
+            });
+          }}
+          onHowHeardChange={(value) => {
+            setHowHeard(value);
+            clearFieldError('howHeard');
+          }}
+          termsAccepted={termsAccepted}
+          onTermsAcceptedChange={(value) => {
+            setTermsAccepted(value);
+            clearFieldError('terms');
+          }}
+          termsUrl={cmsPayload?.termsUrl ?? null}
+          checkoutTerms={checkoutTerms}
+          termsRefreshing={metaQuery.isFetching}
+          fieldErrors={visibleFieldErrors}
+          formError={formError}
+          submitting={submitting}
+          leadReceived={leadReceived}
+          isFull={isFull}
+          whatsappHref={whatsappHref}
+          cohortOptions={cohortOptions}
+          selectedSlug={selectedSlug}
+          onSlugChange={handleSelectedSlugChange}
+          accountFields={editAccountFields ? [] : accountFields}
+          onEditAccountFields={() => setEditAccountFields(true)}
+          signedIn={Boolean(session)}
+          loginHref={buildLoginRedirectPath(enrollmentResumePath)}
+          onLoginForAutofill={handleLoginForAutofill}
+          inputRefs={fieldInputRefs}
+          submitButtonRef={submitButtonRef}
+        />
         <Dialog
           open={datafastDialogOpen}
           onClose={() => setDatafastDialogOpen(false)}
@@ -918,6 +1369,7 @@ function Hero({
   meta,
   loading,
   onPrimaryClick,
+  primaryCtaRef,
   whatsappHref,
   imageUrl,
   heroOverride,
@@ -927,7 +1379,8 @@ function Hero({
 }: {
   meta?: CourseMetadata;
   loading: boolean;
-  onPrimaryClick: () => void;
+  onPrimaryClick: (trigger: HTMLElement) => void;
+  primaryCtaRef?: Ref<HTMLButtonElement>;
   whatsappHref: string;
   imageUrl: string;
   heroOverride?: HeroOverrides;
@@ -995,14 +1448,17 @@ function Hero({
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Button
+            ref={primaryCtaRef}
             variant="contained"
             size="large"
-            onClick={onPrimaryClick}
+            onClick={(event) => onPrimaryClick(event.currentTarget)}
             disabled={isFull}
+            aria-haspopup="dialog"
             sx={{
               bgcolor: '#7c3aed',
               color: '#f8fafc',
               px: 3,
+              minHeight: 48,
               boxShadow: '0 14px 30px rgba(124,58,237,0.35)',
             }}
           >
@@ -1018,6 +1474,7 @@ function Hero({
             sx={{
               borderColor: 'rgba(255,255,255,0.3)',
               color: '#e2e8f0',
+              minHeight: 48,
             }}
           >
             {whatsappCta}
@@ -1122,59 +1579,27 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
   );
 }
 
-function FormCard({
-  formRef,
-  onSubmit,
-  fullName,
-  email,
-  phone,
-  howHeard,
-  onFullNameChange,
-  onEmailChange,
-  onPhoneChange,
-  onHowHeardChange,
-  checkoutTerms,
-  termsAccepted,
-  onTermsAcceptedChange,
-  termsChanged,
-  submitting,
+function EnrollSummaryCard({
+  onEnroll,
+  ctaLabel,
   submitted,
-  submitError,
+  checkoutAvailable,
   isFull,
   whatsappHref,
-  cohortOptions,
-  selectedSlug,
-  onSlugChange,
+  priceLabel,
+  dateRangeLabel,
 }: {
-  formRef: RefObject<HTMLDivElement>;
-  onSubmit: (evt: React.FormEvent<HTMLFormElement>) => void;
-  fullName: string;
-  email: string;
-  phone: string;
-  howHeard: string;
-  onFullNameChange: (val: string) => void;
-  onEmailChange: (val: string) => void;
-  onPhoneChange: (val: string) => void;
-  onHowHeardChange: (val: string) => void;
-  checkoutTerms: CourseCheckoutTerms | null;
-  termsAccepted: boolean;
-  onTermsAcceptedChange: (value: boolean) => void;
-  termsChanged: boolean;
-  submitting: boolean;
+  onEnroll: (trigger: HTMLElement) => void;
+  ctaLabel: string;
   submitted: boolean;
-  submitError: string | null;
+  checkoutAvailable: boolean;
   isFull: boolean;
   whatsappHref: string;
-  cohortOptions: { slug: string; label: string }[];
-  selectedSlug: string;
-  onSlugChange: (slug: string) => void;
+  priceLabel: string | null;
+  dateRangeLabel: string;
 }) {
-  const disableInputs = submitted || isFull || submitting;
-  const disableCohortSelect = submitted || submitting;
-  const seatsText = isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : 'Cupos limitados.';
   return (
     <Card
-      ref={formRef}
       sx={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid rgba(255,255,255,0.08)',
@@ -1183,62 +1608,412 @@ function FormCard({
     >
       <CardContent>
         <Stack spacing={2}>
-          <Typography variant="h6" sx={{ color: '#f8fafc', fontWeight: 700 }}>
+          <Typography variant="h6" component="h2" sx={{ color: '#f8fafc', fontWeight: 700 }}>
             Reserva tu cupo
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-            Déjanos tus datos y te enviaremos los pasos para completar el pago. Cupos limitados.
+          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
+            Déjanos tus datos en un solo paso y te enviaremos cómo completar el pago. No necesitas crear una cuenta.
           </Typography>
-          {seatsText && (
-            <Alert
-              severity={isFull ? 'warning' : 'info'}
-              sx={{
-                flexWrap: 'wrap',
-                '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
-                '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
-              }}
-              action={
-                <Button
-                  size="small"
-                  startIcon={<WhatsAppIcon />}
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  variant="outlined"
-                  color={isFull ? 'warning' : 'info'}
-                >
-                  {isFull ? 'Avísame' : 'Escríbenos'}
-                </Button>
-              }
-            >
-              {isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : seatsText}
-            </Alert>
+          {priceLabel && (
+            <Typography variant="body2" sx={{ color: '#cbd5f5', fontWeight: 700 }}>
+              {priceLabel} · {dateRangeLabel}
+            </Typography>
           )}
-          <Box component="form" onSubmit={onSubmit}>
-            <Stack spacing={1.5}>
+          <Alert
+            severity={isFull ? 'warning' : 'info'}
+            sx={{
+              flexWrap: 'wrap',
+              '& .MuiAlert-message': { minWidth: 0, overflow: 'visible' },
+              '& .MuiAlert-action': { ml: { xs: 0, sm: 'auto' }, pl: { xs: 0, sm: 2 }, pb: 0.5 },
+            }}
+            action={
+              <Button
+                size="small"
+                startIcon={<WhatsAppIcon />}
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                variant="outlined"
+                color={isFull ? 'warning' : 'info'}
+                sx={{ minHeight: 44 }}
+              >
+                {isFull ? 'Avísame' : 'Escríbenos'}
+              </Button>
+            }
+          >
+            {isFull ? 'Cupos agotados. Escríbenos y te avisamos si se libera un cupo.' : 'Cupos limitados.'}
+          </Alert>
+          {submitted ? (
+            <Alert severity="success" variant="outlined" icon={<CheckCircleIcon />}>
+              {checkoutAvailable
+                ? 'Inscripción recibida. Completa el pago en tu orden para confirmar el cupo.'
+                : 'Inscripción recibida. Te escribiremos con los siguientes pasos.'}
+            </Alert>
+          ) : (
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={(event) => onEnroll(event.currentTarget)}
+              disabled={isFull}
+              aria-haspopup="dialog"
+              startIcon={<CelebrationIcon />}
+              sx={{ minHeight: 48, bgcolor: '#7c3aed', color: '#f8fafc' }}
+            >
+              {isFull ? 'Cupos agotados' : ctaLabel}
+            </Button>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StickyEnrollBar({
+  visible,
+  onEnroll,
+  ctaLabel,
+  isFull,
+  whatsappHref,
+  priceLabel,
+  seatsLabel,
+}: {
+  visible: boolean;
+  onEnroll: (trigger: HTMLElement) => void;
+  ctaLabel: string;
+  isFull: boolean;
+  whatsappHref: string;
+  priceLabel: string | null;
+  seatsLabel: string;
+}) {
+  return (
+    <Box
+      role="region"
+      aria-label="Inscripción rápida"
+      hidden={!visible}
+      data-testid="course-sticky-enroll"
+      sx={{
+        display: { xs: visible ? 'flex' : 'none', md: 'none' },
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        // Sit above the docked radio bar and global player instead of
+        // competing for the same fixed position; 0 when neither is shown.
+        bottom: BOTTOM_DOCK_OFFSET,
+        zIndex: (theme) => theme.zIndex.appBar,
+        alignItems: 'center',
+        gap: 2,
+        px: 2,
+        pt: 1.5,
+        pb: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+        bgcolor: 'rgba(11,15,27,0.97)',
+        borderTop: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 -12px 30px rgba(0,0,0,0.35)',
+      }}
+    >
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        {priceLabel && (
+          <Typography variant="subtitle1" noWrap sx={{ color: '#f8fafc', fontWeight: 800, lineHeight: 1.2 }}>
+            {priceLabel}
+          </Typography>
+        )}
+        <Typography variant="caption" noWrap sx={{ color: isFull ? '#fcd34d' : '#93c5fd', fontWeight: 700 }}>
+          {seatsLabel}
+        </Typography>
+      </Box>
+      {isFull ? (
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<WhatsAppIcon />}
+          href={whatsappHref}
+          target="_blank"
+          rel="noreferrer"
+          sx={{ minHeight: 48, flexShrink: 0 }}
+        >
+          Avísame
+        </Button>
+      ) : (
+        <Button
+          variant="contained"
+          onClick={(event) => onEnroll(event.currentTarget)}
+          aria-haspopup="dialog"
+          sx={{ minHeight: 48, px: 3, flexShrink: 0, bgcolor: '#7c3aed', color: '#f8fafc' }}
+        >
+          {ctaLabel}
+        </Button>
+      )}
+    </Box>
+  );
+}
+
+interface EnrollmentInputRefs {
+  fullName: RefObject<HTMLInputElement>;
+  email: RefObject<HTMLInputElement>;
+  phone: RefObject<HTMLInputElement>;
+  howHeard: RefObject<HTMLTextAreaElement>;
+  terms: RefObject<HTMLInputElement>;
+}
+
+function EnrollmentDialog({
+  open,
+  onClose,
+  onExited,
+  fullScreen,
+  courseTitle,
+  priceLabel,
+  dateRangeLabel,
+  onSubmit,
+  fullName,
+  email,
+  phone,
+  howHeard,
+  onFullNameChange,
+  onEmailChange,
+  onPhoneChange,
+  onPhoneBlur,
+  onHowHeardChange,
+  termsAccepted,
+  onTermsAcceptedChange,
+  termsUrl,
+  checkoutTerms,
+  termsRefreshing,
+  fieldErrors,
+  formError,
+  submitting,
+  leadReceived,
+  isFull,
+  whatsappHref,
+  cohortOptions,
+  selectedSlug,
+  onSlugChange,
+  accountFields,
+  onEditAccountFields,
+  signedIn,
+  loginHref,
+  onLoginForAutofill,
+  inputRefs,
+  submitButtonRef,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onExited: () => void;
+  fullScreen: boolean;
+  courseTitle: string;
+  priceLabel: string | null;
+  dateRangeLabel: string;
+  onSubmit: (evt: FormEvent<HTMLFormElement>) => void;
+  fullName: string;
+  email: string;
+  phone: string;
+  howHeard: string;
+  onFullNameChange: (val: string) => void;
+  onEmailChange: (val: string) => void;
+  onPhoneChange: (val: string) => void;
+  onPhoneBlur: () => void;
+  onHowHeardChange: (val: string) => void;
+  termsAccepted: boolean;
+  onTermsAcceptedChange: (value: boolean) => void;
+  termsUrl: string | null;
+  checkoutTerms: CourseCheckoutTerms | null;
+  termsRefreshing: boolean;
+  fieldErrors: EnrollmentFieldErrors;
+  formError: string | null;
+  submitting: boolean;
+  leadReceived: boolean;
+  isFull: boolean;
+  whatsappHref: string;
+  cohortOptions: { slug: string; label: string }[];
+  selectedSlug: string;
+  onSlugChange: (slug: string) => void;
+  accountFields: ('fullName' | 'email')[];
+  onEditAccountFields: () => void;
+  signedIn: boolean;
+  loginHref: string;
+  onLoginForAutofill: () => void;
+  inputRefs: EnrollmentInputRefs;
+  submitButtonRef: RefObject<HTMLButtonElement>;
+}) {
+  const titleId = 'course-enroll-title';
+  const termsErrorId = 'course-enroll-terms-error';
+  const disableInputs = isFull || submitting;
+  const normalizedPhone = phone.trim() ? normalizePhoneToE164(phone) : null;
+  const phoneHelper = fieldErrors.phone
+    ?? (normalizedPhone && normalizedPhone !== phone.replace(/[\s\-().]/g, '')
+      ? `Lo enviaremos como ${normalizedPhone}.`
+      : `Opcional. ${PHONE_EXAMPLE_HINT}.`);
+  const showNameField = !accountFields.includes('fullName') || Boolean(fieldErrors.fullName);
+  const showEmailField = !accountFields.includes('email') || Boolean(fieldErrors.email);
+  const summarizedFields = accountFields.filter((field) =>
+    field === 'fullName' ? !showNameField : !showEmailField);
+  const safeAreaActionsSx = {
+    px: 3,
+    pt: 1.5,
+    pb: fullScreen ? 'calc(16px + env(safe-area-inset-bottom, 0px))' : 2,
+  };
+  const termsDescribedBy = [
+    checkoutTerms ? 'course-terms-button course-cancellation-policy-button' : '',
+    fieldErrors.terms ? termsErrorId : '',
+  ].filter(Boolean).join(' ');
+  const termsLabel = checkoutTerms ? (
+    `Acepto los términos del curso (versión ${checkoutTerms.termsVersion}) y la política de cancelación indicados arriba.`
+  ) : termsUrl ? (
+    <>
+      Acepto los{' '}
+      <Link href={termsUrl} target="_blank" rel="noreferrer" sx={{ color: '#93c5fd' }}>
+        términos y la política de cancelación
+      </Link>{' '}
+      del curso.
+    </>
+  ) : (
+    'Acepto los términos y la política de cancelación del curso.'
+  );
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen={fullScreen}
+      fullWidth
+      maxWidth="sm"
+      scroll="paper"
+      disableRestoreFocus
+      TransitionProps={{ onExited }}
+      aria-labelledby={titleId}
+      {...(fullScreen ? { TransitionComponent: SlideUpTransition } : {})}
+      PaperProps={{
+        sx: {
+          bgcolor: '#0f1629',
+          backgroundImage: 'none',
+          color: '#e2e8f0',
+          border: fullScreen ? 'none' : '1px solid rgba(255,255,255,0.12)',
+        },
+      }}
+    >
+      <DialogTitle
+        id={titleId}
+        sx={{
+          pr: 8,
+          color: '#f8fafc',
+          fontWeight: 800,
+          pt: fullScreen ? 'calc(16px + env(safe-area-inset-top, 0px))' : 2,
+        }}
+      >
+        {leadReceived ? 'Solicitud recibida' : `Inscríbete en ${courseTitle}`}
+        <IconButton
+          aria-label="Cerrar"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: fullScreen ? 'calc(8px + env(safe-area-inset-top, 0px))' : 8,
+            width: 48,
+            height: 48,
+            color: 'rgba(226,232,240,0.85)',
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      {leadReceived ? (
+        <>
+          <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.12)' }}>
+            <Stack spacing={2} role="status">
+              <CheckCircleIcon aria-hidden sx={{ fontSize: 48, color: '#86efac' }} />
+              <Typography sx={{ color: '#f8fafc', fontWeight: 700 }}>
+                Recibimos tu solicitud para {courseTitle}.
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.85)' }}>
+                Próximos pasos:
+              </Typography>
+              <Box component="ol" sx={{ m: 0, pl: 3, '& li': { mb: 1 }, color: 'rgba(226,232,240,0.85)' }}>
+                <li>
+                  Te escribiremos a <strong>{email.trim()}</strong>
+                  {phone.trim() ? ' y por WhatsApp' : ''} para confirmar tu cupo.
+                </li>
+                <li>Te enviaremos las opciones de pago.</li>
+                <li>Tu cupo queda confirmado cuando se verifique el pago.</li>
+              </Box>
+              <Alert severity="info" variant="outlined">
+                Solicitud recibida. El checkout no está habilitado y no se reservó ni pagó un cupo todavía.
+              </Alert>
+            </Stack>
+          </DialogContent>
+          <DialogActions disableSpacing sx={{ ...safeAreaActionsSx, gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              startIcon={<WhatsAppIcon />}
+              href={whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              sx={{ minHeight: 48, color: '#93c5fd' }}
+            >
+              Escríbenos por WhatsApp
+            </Button>
+            <Button variant="contained" onClick={onClose} sx={{ minHeight: 48, ml: 'auto' }}>
+              Listo
+            </Button>
+          </DialogActions>
+        </>
+      ) : (
+        <Box
+          component="form"
+          noValidate
+          onSubmit={onSubmit}
+          aria-busy={submitting}
+          aria-labelledby={titleId}
+          sx={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0 }}
+        >
+          <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.12)' }}>
+            <Stack spacing={2}>
+              {priceLabel && (
+                <Typography variant="body2" sx={{ color: '#cbd5f5', fontWeight: 700 }}>
+                  {priceLabel} · {dateRangeLabel}
+                </Typography>
+              )}
+              {isFull && (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button
+                      size="small"
+                      startIcon={<WhatsAppIcon />}
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      color="warning"
+                      sx={{ minHeight: 44 }}
+                    >
+                      Avísame
+                    </Button>
+                  }
+                >
+                  Cupos agotados. Escríbenos y te avisamos si se libera un cupo.
+                </Alert>
+              )}
+              {!signedIn && (
+                <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.8)' }}>
+                  Puedes inscribirte sin cuenta. ¿Ya tienes cuenta?{' '}
+                  <Link
+                    component={RouterLink}
+                    to={loginHref}
+                    onClick={onLoginForAutofill}
+                    sx={{ color: '#93c5fd', fontWeight: 600, display: 'inline-block', py: 1 }}
+                  >
+                    Inicia sesión para autocompletar
+                  </Link>
+                </Typography>
+              )}
               {cohortOptions.length > 1 && (
                 <TextField
                   select
+                  id="course-enroll-cohort"
                   label="Fecha de inicio"
                   value={selectedSlug}
                   onChange={(e) => onSlugChange(e.target.value)}
-                  disabled={disableCohortSelect}
+                  disabled={submitting}
                   helperText="Elige la fecha en la que quieres iniciar."
                   fullWidth
-                  InputProps={{
-                    sx: {
-                      color: '#f8fafc',
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.28)' },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.45)' },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
-                      input: {
-                        color: '#f8fafc',
-                        '::placeholder': { color: 'rgba(226,232,240,0.6)' },
-                        caretColor: '#f8fafc',
-                      },
-                    },
-                  }}
-                  InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
+                  {...darkFieldProps}
                   SelectProps={{
                     MenuProps: {
                       PaperProps: {
@@ -1258,154 +2033,200 @@ function FormCard({
                   ))}
                 </TextField>
               )}
+              {summarizedFields.length > 0 && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
+                    Usaremos los datos de tu cuenta:
+                  </Typography>
+                  {summarizedFields.includes('fullName') && (
+                    <Typography sx={{ color: '#f8fafc', fontWeight: 600, overflowWrap: 'anywhere' }}>
+                      {fullName}
+                    </Typography>
+                  )}
+                  {summarizedFields.includes('email') && (
+                    <Typography sx={{ color: '#f8fafc', overflowWrap: 'anywhere' }}>{email}</Typography>
+                  )}
+                  <Button
+                    size="small"
+                    onClick={onEditAccountFields}
+                    disabled={submitting}
+                    sx={{ mt: 0.5, minHeight: 44, color: '#93c5fd' }}
+                  >
+                    Editar datos
+                  </Button>
+                </Box>
+              )}
+              {showNameField && (
+                <TextField
+                  id="course-enroll-fullname"
+                  label="Nombre completo"
+                  required
+                  value={fullName}
+                  onChange={(e) => onFullNameChange(e.target.value)}
+                  disabled={disableInputs}
+                  error={Boolean(fieldErrors.fullName)}
+                  helperText={fieldErrors.fullName}
+                  inputRef={inputRefs.fullName}
+                  autoComplete="name"
+                  inputProps={{ enterKeyHint: 'next', maxLength: 160 }}
+                  fullWidth
+                  {...darkFieldProps}
+                />
+              )}
+              {showEmailField && (
+                <TextField
+                  id="course-enroll-email"
+                  label="Correo"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => onEmailChange(e.target.value)}
+                  disabled={disableInputs}
+                  error={Boolean(fieldErrors.email)}
+                  helperText={fieldErrors.email}
+                  inputRef={inputRefs.email}
+                  autoComplete="email"
+                  inputProps={{ inputMode: 'email', enterKeyHint: 'next', maxLength: 254 }}
+                  fullWidth
+                  {...darkFieldProps}
+                />
+              )}
               <TextField
-                label="Nombre completo"
-                required
-                value={fullName}
-                onChange={(e) => onFullNameChange(e.target.value)}
-                disabled={disableInputs}
-                fullWidth
-                InputProps={{
-                  sx: {
-                    color: '#f8fafc',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.28)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.45)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
-                    input: {
-                      color: '#f8fafc',
-                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
-                      caretColor: '#f8fafc',
-                    },
-                  },
-                }}
-                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
-              />
-              <TextField
-                label="Correo"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => onEmailChange(e.target.value)}
-                disabled={disableInputs}
-                fullWidth
-                InputProps={{
-                  sx: {
-                    color: '#f8fafc',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.28)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.45)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
-                    input: {
-                      color: '#f8fafc',
-                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
-                      caretColor: '#f8fafc',
-                    },
-                  },
-                }}
-                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
-              />
-              <TextField
+                id="course-enroll-phone"
                 type="tel"
                 label="WhatsApp (opcional)"
+                placeholder="0991234567"
                 value={phone}
                 onChange={(e) => onPhoneChange(e.target.value)}
+                onBlur={onPhoneBlur}
                 disabled={disableInputs}
+                error={Boolean(fieldErrors.phone)}
+                helperText={phoneHelper}
+                inputRef={inputRefs.phone}
+                autoComplete="tel"
+                inputProps={{ inputMode: 'tel', enterKeyHint: 'next', maxLength: 24 }}
                 fullWidth
-                InputProps={{
-                  sx: {
-                    color: '#f8fafc',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.22)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
-                    input: {
-                      color: '#f8fafc',
-                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
-                      caretColor: '#f8fafc',
-                    },
-                  },
-                }}
-                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.68)' } }}
+                {...darkFieldProps}
               />
               <TextField
+                id="course-enroll-how-heard"
                 label="¿Cómo te enteraste del curso? (opcional)"
                 value={howHeard}
                 onChange={(e) => onHowHeardChange(e.target.value)}
                 disabled={disableInputs}
+                error={Boolean(fieldErrors.howHeard)}
+                helperText={fieldErrors.howHeard}
+                inputRef={inputRefs.howHeard}
+                inputProps={{ maxLength: 256 }}
                 fullWidth
                 multiline
                 minRows={2}
-                InputProps={{
-                  sx: {
-                    color: '#f8fafc',
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.22)' },
-                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#93c5fd' },
-                    textarea: {
-                      color: '#f8fafc',
-                      '::placeholder': { color: 'rgba(226,232,240,0.6)' },
-                      caretColor: '#f8fafc',
-                    },
-                  },
-                }}
-                InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.68)' } }}
+                {...darkFieldProps}
               />
               {checkoutTerms && (
-                <>
-                  <Stack spacing={1}>
-                    <LegalDisclosure
-                      id="course-terms"
-                      title="Términos del curso"
-                      summary={`Versión ${checkoutTerms.termsVersion}`}
-                    >
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.termsSummary}</Typography>
-                    </LegalDisclosure>
-                    <LegalDisclosure id="course-cancellation-policy" title="Política de cancelación">
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.cancellationPolicy}</Typography>
-                    </LegalDisclosure>
-                  </Stack>
-                  {termsChanged && (
-                    <Alert severity="warning">
-                      Los términos del curso se actualizaron. Revisa la nueva versión y vuelve a aceptarla para continuar.
-                    </Alert>
-                  )}
-                  <FormControlLabel
-                    control={(
-                      <Checkbox
-                        checked={termsAccepted}
-                        onChange={(event) => onTermsAcceptedChange(event.target.checked)}
-                        required
-                        disabled={disableInputs}
-                        inputProps={{ 'aria-describedby': 'course-terms-button course-cancellation-policy-button' }}
-                        sx={{ color: 'rgba(226,232,240,0.72)' }}
-                      />
-                    )}
-                    label={`Acepto los términos del curso (versión ${checkoutTerms.termsVersion}) y la política de cancelación indicados arriba.`}
-                    sx={{
-                      alignItems: 'flex-start',
-                      color: 'rgba(226,232,240,0.78)',
-                      '& .MuiFormControlLabel-label': { fontSize: '0.82rem', pt: 0.75 },
-                    }}
-                  />
-                </>
+                <Stack spacing={1}>
+                  <LegalDisclosure
+                    id="course-terms"
+                    title="Términos del curso"
+                    summary={`Versión ${checkoutTerms.termsVersion}`}
+                  >
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.termsSummary}</Typography>
+                  </LegalDisclosure>
+                  <LegalDisclosure id="course-cancellation-policy" title="Política de cancelación">
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.cancellationPolicy}</Typography>
+                  </LegalDisclosure>
+                </Stack>
               )}
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={disableInputs || submitting || (Boolean(checkoutTerms) && !termsAccepted)}
-                startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <CelebrationIcon />}
-                sx={{ mt: 1 }}
+              <Box>
+                <FormControlLabel
+                  control={(
+                    <Checkbox
+                      checked={termsAccepted}
+                      onChange={(event) => onTermsAcceptedChange(event.target.checked)}
+                      required
+                      disabled={disableInputs || termsRefreshing}
+                      inputRef={inputRefs.terms}
+                      inputProps={{
+                        'aria-invalid': Boolean(fieldErrors.terms),
+                        ...(termsDescribedBy ? { 'aria-describedby': termsDescribedBy } : {}),
+                      }}
+                      sx={{
+                        p: 1.25,
+                        color: fieldErrors.terms ? '#fca5a5' : 'rgba(226,232,240,0.72)',
+                      }}
+                    />
+                  )}
+                  label={termsLabel}
+                  sx={{
+                    alignItems: 'flex-start',
+                    mr: 0,
+                    color: 'rgba(226,232,240,0.88)',
+                    '& .MuiFormControlLabel-label': { fontSize: '0.9rem', pt: 1.25 },
+                  }}
+                />
+                {fieldErrors.terms && (
+                  <FormHelperText id={termsErrorId} error sx={{ color: '#fca5a5', ml: 1.5 }}>
+                    {fieldErrors.terms}
+                  </FormHelperText>
+                )}
+              </Box>
+            </Stack>
+          </DialogContent>
+          <DialogActions
+            disableSpacing
+            sx={{ ...safeAreaActionsSx, flexDirection: 'column', alignItems: 'stretch', gap: 1 }}
           >
-            {isFull ? 'Cupos agotados' : submitted ? 'Inscripción recibida' : 'Enviar inscripción'}
-          </Button>
-        </Stack>
-      </Box>
-      {submitError && !termsChanged && (
-        <Alert severity="error">
-          No pudimos registrar tu inscripción. Intenta de nuevo o escríbenos por WhatsApp.
-        </Alert>
-          )}
-        </Stack>
-      </CardContent>
-    </Card>
+            {formError && (
+              <Alert
+                severity="error"
+                sx={{
+                  flexWrap: 'wrap',
+                  '& .MuiAlert-message': { minWidth: 0 },
+                  '& .MuiAlert-action': { ml: 0, pl: 0 },
+                }}
+                action={
+                  <Button
+                    size="small"
+                    color="inherit"
+                    startIcon={<WhatsAppIcon />}
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{ minHeight: 44 }}
+                  >
+                    WhatsApp
+                  </Button>
+                }
+              >
+                {formError}
+              </Alert>
+            )}
+            <Button
+              ref={submitButtonRef}
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={isFull || submitting}
+              aria-busy={submitting}
+              startIcon={submitting
+                ? <CircularProgress size={18} color="inherit" aria-hidden />
+                : <CelebrationIcon />}
+              sx={{ minHeight: 48 }}
+            >
+              {isFull ? 'Cupos agotados' : submitting ? 'Enviando inscripción…' : 'Enviar inscripción'}
+            </Button>
+          </DialogActions>
+        </Box>
+      )}
+    </Dialog>
   );
 }
 

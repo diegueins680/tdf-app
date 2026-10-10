@@ -1,4 +1,5 @@
 import type { ArtistReleaseDTO, ArtistReleaseUpsert } from '../../api/types';
+import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../../player/types';
 
 export interface ReleaseFeedItem extends ArtistReleaseDTO {
   artistName: string;
@@ -108,7 +109,7 @@ export function getReleasePlaybackUrls(
  * Contract:
  * - Precondition: `release.arReleaseId` identifies a persisted release and `release.arTitle` is non-empty.
  * - Precondition: `streamUrl` is non-empty after trimming.
- * - Postcondition: dispatches exactly one `tdf-radio-load-stream` event with a stable `release-{id}` station ID.
+ * - Postcondition: dispatches exactly one global-player event with a stable legacy release/track ID.
  */
 export function dispatchReleaseToRadio(
   release: ArtistReleaseDTO,
@@ -119,12 +120,18 @@ export function dispatchReleaseToRadio(
   const normalizedStreamUrl = normalizeNonBlank(streamUrl, 'streamUrl');
 
   target.dispatchEvent(
-    new CustomEvent('tdf-radio-load-stream', {
+    new CustomEvent(PLAYER_LOAD_TRACK_EVENT, {
       detail: {
-        streamUrl: normalizedStreamUrl,
-        stationName: release.arTitle,
-        stationId: `release-${release.arReleaseId}`,
-      },
+        track: {
+          id: `legacy-release-${release.arReleaseId}`,
+          releaseId: `legacy-release-${release.arReleaseId}`,
+          title: release.arTitle,
+          artist: 'Artista TDF',
+          artworkUrl: release.arCoverImageUrl,
+          sources: [{ url: normalizedStreamUrl, quality: 'high', mediaType: 'audio/mpeg' }],
+        },
+        autoplay: true,
+      } satisfies LoadPlayerTrackDetail,
     }),
   );
 }

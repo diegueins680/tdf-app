@@ -5,6 +5,7 @@ import { Marketplace, loadMarketplaceLookupToken } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
 import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 import { clearSessionPersonalData, readSessionPersonalData } from '../utils/sessionPersonalData';
+import { clearStoredCart } from '../features/marketplace/cartSummary';
 
 const MARKETPLACE_BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 
@@ -51,8 +52,8 @@ export default function DatafastReturnPage() {
         if (isPaidOrderStatus(dto.moStatus)) {
           setStatus('success');
           // Limpia el carrito local para evitar dobles compras tras un pago exitoso.
-          localStorage.removeItem('tdf-marketplace-cart-id');
-          localStorage.removeItem('tdf-marketplace-cart-meta');
+          // Also notifies the header cart badge so it drops to zero immediately.
+          clearStoredCart();
           clearSessionPersonalData(MARKETPLACE_BUYER_INFO_KEY);
           setMessage('Pago confirmado. ¡Gracias por tu compra!');
           return;

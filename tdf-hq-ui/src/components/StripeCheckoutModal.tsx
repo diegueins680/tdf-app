@@ -244,7 +244,15 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     retry: false,
   });
   const ticketPolicy = policyQuery.data ?? null;
-  const policyLoading = numericEventId !== null && policyQuery.isLoading;
+  // A refetch keeps the previous policy on screen, so it counts as loading too.
+  const policyLoading = numericEventId !== null && policyQuery.isFetching;
+  // An unknown policy is not "no policy": the server may still require acceptance.
+  const policyUnavailable = numericEventId !== null && policyQuery.isError && !policyQuery.isFetching;
+  // Acceptance belongs to the version that was on screen: a different version starts unaccepted.
+  const ticketPolicyVersion = ticketPolicy?.termsVersion ?? null;
+  useEffect(() => {
+    setTermsAccepted(false);
+  }, [ticketPolicyVersion]);
   const [stripeClient, setStripeClient] = useState<Stripe | null>(null);
   const buyerAttempt = useRef(0);
   const buyerPending = useRef(false);
@@ -324,6 +332,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       window.requestAnimationFrame(() => invalidField.current?.focus());
       return;
     }
+    if (policyLoading || policyUnavailable) return;
     if (ticketPolicy && !termsAccepted) {
       dispatch({ type: 'buyerSubmitFailed', error: t('checkout.errors.termsRequired') });
       return;
@@ -539,6 +548,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
                     <Checkbox
                       checked={termsAccepted}
                       onChange={(event) => setTermsAccepted(event.target.checked)}
+                      disabled={policyLoading}
                       inputProps={{ 'aria-describedby': 'social-ticket-terms-button social-ticket-refund-policy-button' }}
                     />
                   )}
@@ -546,6 +556,20 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
                   sx={{ alignItems: 'flex-start', '& .MuiFormControlLabel-label': { pt: 1 } }}
                 />
               </Stack>
+            )}
+
+            {policyUnavailable && (
+              <Alert
+                severity="warning"
+                sx={{ mt: 2 }}
+                action={(
+                  <Button color="inherit" size="small" onClick={() => { void policyQuery.refetch(); }}>
+                    {t('checkout.actions.retryTerms')}
+                  </Button>
+                )}
+              >
+                {t('checkout.errors.termsUnavailable')}
+              </Alert>
             )}
 
             {state.error && (
@@ -606,7 +630,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               type="submit"
               form={BUYER_FORM_ID}
               variant="contained"
-              disabled={state.loading || policyLoading || (Boolean(ticketPolicy) && !termsAccepted)}
+              disabled={state.loading || policyLoading || policyUnavailable || (Boolean(ticketPolicy) && !termsAccepted)}
             >
               {state.loading ? <CircularProgress size={CHECKOUT_ACTION_SPINNER_SIZE_PX} /> : t('checkout.actions.continue')}
             </Button>

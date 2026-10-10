@@ -68,4 +68,16 @@ describe('LegalDisclosure', () => {
     expect(screen.getByRole('heading', { level: 3, name: /Términos/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Términos/ })).toHaveAttribute('aria-expanded', 'true');
   });
+
+  it('opens when a deep link arrives while mounted, without collapsing a reader-opened document', () => {
+    const { rerender } = render(<LegalDisclosure title="Privacidad" defaultExpanded={false}>texto</LegalDisclosure>);
+    const button = () => screen.getByRole('button', { name: /Privacidad/ });
+    expect(button()).toHaveAttribute('aria-expanded', 'false');
+
+    rerender(<LegalDisclosure title="Privacidad" defaultExpanded>texto</LegalDisclosure>);
+    expect(button()).toHaveAttribute('aria-expanded', 'true');
+
+    rerender(<LegalDisclosure title="Privacidad" defaultExpanded={false}>texto</LegalDisclosure>);
+    expect(button()).toHaveAttribute('aria-expanded', 'true');
+  });
 });

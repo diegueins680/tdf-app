@@ -63,14 +63,13 @@
    "mutating": false,
    "raw": true,
    "rule": "Opaque Raw mount serving static files (GET/HEAD) from the public media root. Private stores must reside outside that root (settlement evidence is refused inside it) or in an excluded path (.internal-feedback). A Raw mount accepts every method, so only raw-capable boundaries may register one."
+  },
+  "public-withdrawal": {
+   "mutating": true,
+   "rule": "Anonymous withdrawal of a permission (for example WhatsApp opt-out). It may only reduce what is permitted, never grant, must not disclose prior state, and may notify only a subject whose permission was actually active."
   }
  },
- "debt": {
-  "DEBT-PRIV-WHATSAPP-001": {
-   "priority": "P2",
-   "summary": "Public WhatsApp consent records consent for any phone number without proof of control and immediately sends a WhatsApp message to it; the public GET discloses consent state and timestamps for any number; anyone can opt any number out."
-  }
- },
+ "debt": {},
  "routes": [
   {
    "method": "POST",
@@ -561,6 +560,26 @@
   },
   {
    "method": "GET",
+   "path": "/music/assets/{assetId}/access",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/music/playback-events",
+   "boundary": "public-intake"
+  },
+  {
+   "method": "GET",
+   "path": "/music/releases",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/music/releases/{slug}",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
    "path": "/openapi.yaml",
    "boundary": "public-diagnostic"
   },
@@ -755,20 +774,17 @@
   {
    "method": "GET",
    "path": "/public/whatsapp/consent",
-   "boundary": "known-debt",
-   "debt": "DEBT-PRIV-WHATSAPP-001"
+   "boundary": "public-read"
   },
   {
    "method": "POST",
    "path": "/public/whatsapp/consent",
-   "boundary": "known-debt",
-   "debt": "DEBT-PRIV-WHATSAPP-001"
+   "boundary": "public-intake"
   },
   {
    "method": "POST",
    "path": "/public/whatsapp/opt-out",
-   "boundary": "known-debt",
-   "debt": "DEBT-PRIV-WHATSAPP-001"
+   "boundary": "public-withdrawal"
   },
   {
    "method": "GET",
@@ -878,6 +894,11 @@
   {
    "method": "GET",
    "path": "/session",
+   "boundary": "handler-session"
+  },
+  {
+   "method": "POST",
+   "path": "/session/artist-invitation",
    "boundary": "handler-session"
   },
   {

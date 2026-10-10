@@ -3,6 +3,7 @@ import { Box, Stack, Typography, Button, Chip } from '@mui/material';
 import type { NormalizedStreamingSource, StreamingSource } from '../utils/media';
 import { normalizeStreamingSource } from '../utils/media';
 import { assertNever } from '../utils/assertNever';
+import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../player/types';
 
 export type StreamingPlayerVariant = 'regular' | 'compact';
 
@@ -14,7 +15,18 @@ interface StreamingPlayerProps {
   variant?: StreamingPlayerVariant;
 }
 
-const renderPrimaryStream = (source: NormalizedStreamingSource, posterUrl?: string | null) => {
+const playerArtistName = (artist?: string): string => {
+  const trimmed = artist?.trim();
+  if (trimmed === '') return 'Artista TDF';
+  return trimmed ?? 'Artista TDF';
+};
+
+const renderPrimaryStream = (
+  source: NormalizedStreamingSource,
+  title: string,
+  artist?: string,
+  posterUrl?: string | null,
+) => {
   if (source.provider === 'youtube') {
     return (
       <Box sx={{ position: 'relative', pt: '56.25%', borderRadius: 1.5, overflow: 'hidden' }}>
@@ -64,9 +76,25 @@ const renderPrimaryStream = (source: NormalizedStreamingSource, posterUrl?: stri
 
   if (source.provider === 'audio') {
     return (
-      <Box component="audio" src={source.url} controls preload="metadata" sx={{ width: '100%' }}>
-        Tu navegador no soporta la reproducción de audio.
-      </Box>
+      <Button
+        variant="contained"
+        startIcon={<span aria-hidden="true">▶</span>}
+        onClick={() => {
+          const detail: LoadPlayerTrackDetail = {
+            track: {
+              id: `legacy-audio:${source.url}`,
+              title,
+              artist: playerArtistName(artist),
+              artworkUrl: posterUrl,
+              sources: [{ url: source.url, quality: 'high', mediaType: 'audio/mpeg' }],
+            },
+            autoplay: true,
+          };
+          window.dispatchEvent(new CustomEvent(PLAYER_LOAD_TRACK_EVENT, { detail }));
+        }}
+      >
+        Reproducir en el player global
+      </Button>
     );
   }
 
@@ -134,7 +162,7 @@ export function StreamingPlayer({
         <Chip size="small" color={getBadgeColor(primary.provider)} label={primary.label} />
       </Stack>
 
-      {renderPrimaryStream(primary, posterUrl)}
+      {renderPrimaryStream(primary, title, artist, posterUrl)}
 
       {fallbacks.length > 0 && (
         <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">

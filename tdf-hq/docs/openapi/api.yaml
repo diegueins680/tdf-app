@@ -8546,6 +8546,71 @@ paths:
               schema: { type: object, additionalProperties: true }
         '401': { description: Authentication required }
         '404': { description: Resource unavailable to this account }
+  /artist-invitations:
+    get:
+      tags: [Access requests]
+      summary: List personal artist invitation links
+      description: Admin only. Returns the 200 most recent links with their status. Link tokens are never returned after issuance.
+      operationId: listArtistInvitationLinks
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Invitation links, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ArtistInvitationLink' }
+        '401': { description: Authentication required }
+        '403': { description: Admin module required }
+    post:
+      tags: [Access requests]
+      summary: Issue a personal single-use artist invitation link
+      description: Admin only. Stores only a SHA-256 digest of a new random token and returns the token once. The link expires after 30 days by default (at most 90).
+      operationId: createArtistInvitationLink
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ArtistInvitationLinkCreate' }
+      responses:
+        '200':
+          description: Issued link and its one-time token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistInvitationLinkIssued' }
+        '400': { description: Invalid invitee label, campaign or expiry }
+        '401': { description: Authentication required }
+        '403': { description: Admin module required }
+  /artist-invitations/{invitationId}/revoke:
+    post:
+      tags: [Access requests]
+      summary: Revoke an unused artist invitation link
+      description: Admin only. Idempotent for unused links; a redeemed link cannot be revoked.
+      operationId: revokeArtistInvitationLink
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: invitationId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: The revoked link
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtistInvitationLink' }
+        '401': { description: Authentication required }
+        '403': { description: Admin module required }
+        '404': { description: Invitation link not found }
+        '409': { description: A redeemed invitation link cannot be revoked }
   /access-requests:
     get:
       tags: [Access requests]
@@ -9565,6 +9630,218 @@ paths:
             application/json:
               schema: { type: object, additionalProperties: true }
         '403': { description: Strict administrator required }
+  /music/playback-events:
+    post:
+      tags: [Music releases]
+      operationId: recordAnonymousMusicPlayback
+      summary: Record anonymous playback telemetry
+      description: Requires anonymousId. Session identity is bound on first insert; exact retries are deduplicated. Client identity is not proof of a real listener. Only published and territorially available recordings are accepted.
+      parameters:
+        - { name: CF-IPCountry, in: header, schema: { type: string }, description: Trusted only when the origin is restricted to the configured edge. }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/MusicPlaybackEventInput' }
+                - { type: object, required: [anonymousId], properties: { anonymousId: { type: string, minLength: 16 } } }
+      responses:
+        '200': { description: Inserted or identical replay; no response body }
+        '400': { description: Invalid telemetry or missing anonymous identifier }
+        '404': { description: Recording unavailable }
+        '409':
+          description: Session owner, sequence or event payload conflicts; no event or history is written
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicPlaybackConflict' }
+        '503': { description: Music playback telemetry disabled }
+  /music/me/playback-events:
+    post:
+      tags: [Music releases]
+      operationId: recordAuthenticatedMusicPlayback
+      summary: Record playback and update the current user's history atomically
+      description: Identity comes exclusively from authentication. Use a new session after login, logout or account change. Late events do not rewind the latest history position. Replays must preserve the original payload.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: CF-IPCountry, in: header, schema: { type: string }, description: Trusted only when the origin is restricted to the configured edge. }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MusicPlaybackEventInput' }
+      responses:
+        '200': { description: Inserted or identical replay; no response body }
+        '400': { description: Invalid telemetry }
+        '401': { description: Authentication required }
+        '404': { description: Recording unavailable }
+        '409':
+          description: Session owner, sequence or event payload conflicts; no event or history is written
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicPlaybackConflict' }
+        '503': { description: Music playback telemetry disabled }
+  /music/releases/{releaseId}/versions/{versionId}/validate:
+    post:
+      tags: [Music releases]
+      summary: Validate release metadata, rights, resources and availability
+      operationId: validateMusicReleaseVersion
+      description: Read-only validation requiring release.edit. Includes resource graph errors with version-local field paths; does not repair approved content.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: releaseId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Current validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [valid, errors]
+                properties:
+                  valid: { type: boolean }
+                  errors:
+                    type: array
+                    items: { $ref: '#/components/schemas/MusicValidationIssue' }
+        '401': { description: Authentication required }
+        '403': { description: Verified artist ownership or team permission required }
+        '404': { description: Release version not found }
+        '503': { description: Authoring disabled }
+  /music/releases/{releaseId}/versions/{versionId}/transition:
+    post:
+      tags: [Music releases]
+      summary: Request an editorial state transition
+      operationId: transitionMusicReleaseVersion
+      description: Submission requires release.submit; review, approval and scheduling require strict TDF administration. Validation is repeated under the version lock before review/approval/scheduling. Invalid content returns 422 without consuming the idempotency key. Publication is scheduler-only.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: releaseId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 200, pattern: '^[!-~]+$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [targetState]
+              properties:
+                targetState: { type: string }
+                reason: { type: string, nullable: true }
+                releaseAtUtc: { type: string, format: date-time, nullable: true }
+                releaseTimezone: { type: string, nullable: true }
+                embargoUntilUtc: { type: string, format: date-time, nullable: true }
+                takedownAtUtc: { type: string, format: date-time, nullable: true }
+                takedownTimezone: { type: string, nullable: true }
+                snapshot: { nullable: true }
+                snapshotSha256: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Resulting version or idempotent prior result
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '400': { description: Invalid request or supplied snapshot hash }
+        '401': { description: Authentication required }
+        '403': { description: Editorial role or team permission required }
+        '404': { description: Release version not found }
+        '422':
+          description: Validation errors; no state change, approval snapshot or transition audit committed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, errors]
+                properties:
+                  message: { type: string }
+                  errors:
+                    type: array
+                    items: { $ref: '#/components/schemas/MusicValidationIssue' }
+        '503': { description: Authoring disabled }
+  /music/releases/{releaseId}/versions/{versionId}/corrections:
+    post:
+      tags: [Music releases]
+      summary: Create an auditable correction of an immutable release version
+      operationId: createMusicReleaseCorrection
+      description: Requires verified artist ownership or release.edit permission and the authoring feature flag. Allocation is serialized per release. Repeating a key for the same source returns its correction; reusing that key for another source returns 409. Resources remain private and reference immutable bytes. Publication terms must be accepted again.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: releaseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: versionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 200, pattern: '^[!-~]+$' }
+      responses:
+        '201':
+          description: Correction version graph, or the current graph of its existing idempotent correction
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [id, versionNumber, state]
+                properties:
+                  id: { type: string, format: uuid }
+                  versionNumber: { type: integer, minimum: 1 }
+                  state: { type: string }
+        '400': { description: Missing or invalid idempotency key }
+        '401': { description: Authentication required }
+        '403': { description: Verified artist ownership or team permission required }
+        '404': { description: Release or version not found }
+        '409':
+          description: Ineligible source, source/key mismatch, or retryable transaction conflict; no new correction committed
+          content:
+            text/plain:
+              schema: { type: string }
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicCorrectionFailure' }
+        '422':
+          description: Source resource graph has invalid parent or recording references; transaction rolled back
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicCorrectionFailure' }
+        '503': { description: Music release authoring is disabled }
+  /session/artist-invitation:
+    post:
+      summary: Redeem a personal artist invitation link
+      description: Activates only the non-administrative Artist role through a persisted automatic security policy. The invitation is a staff-issued, single-use link token; the link binds atomically to the first account that redeems it, re-redemption by that account is idempotent, and public campaign names are never accepted.
+      operationId: redeemArtistInvitation
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistInvitationRedeemRequest'
+      responses:
+        '200':
+          description: Refreshed authenticated session with the Artist role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          description: Invitation is not a personal invitation link token
+        '401':
+          description: Authentication required
+        '404':
+          description: Invitation link is invalid, expired, revoked or already used by another account
+        '503':
+          description: Persisted automatic assignment policy is unavailable or inconsistent
 
 security:
   - bearerAuth: [ ]
@@ -17810,3 +18087,108 @@ components:
         platform: { type: string }
         active: { type: boolean }
         updatedAt: { type: string, format: date-time }
+    MusicPlaybackConflict:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, enum: [playback_identity_conflict] }
+        message: { type: string }
+    MusicPlaybackEventInput:
+      type: object
+      additionalProperties: false
+      required: [eventId, sessionId, sequenceNumber, releaseVersionId, recordingId, eventType, positionMs, listenedDeltaMs, occurredAt, metadata]
+      properties:
+        eventId: { type: string, format: uuid }
+        sessionId: { type: string, format: uuid }
+        sequenceNumber: { type: integer, minimum: 0 }
+        anonymousId: { type: string, nullable: true }
+        releaseVersionId: { type: string, format: uuid }
+        recordingId: { type: string, format: uuid }
+        eventType: { type: string, enum: [play_start, progress, pause, seek, complete, skip, error, buffering, quality_selected] }
+        positionMs: { type: integer, format: int64, minimum: 0 }
+        listenedDeltaMs: { type: integer, format: int64, minimum: 0, maximum: 30000 }
+        quality: { type: string, nullable: true }
+        territoryCode: { type: string, nullable: true, description: Not trusted for access or stored territory; the server uses the configured edge. }
+        occurredAt: { type: string, format: date-time }
+        metadata: { description: JSON metadata limited to 16 KiB when encoded. }
+    MusicValidationIssue:
+      type: object
+      required: [fieldPath, code, message]
+      properties:
+        fieldPath: { type: string }
+        code: { type: string }
+        message: { type: string }
+    MusicCorrectionFailure:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [code, fieldPath, message]
+            properties:
+              code:
+                type: string
+                enum: [correction_resource_graph_invalid, correction_recording_reference_invalid, correction_source_unavailable, correction_retry_required]
+              fieldPath:
+                type: string
+                enum: [assets, assets.recordingId, sourceVersionId]
+              message: { type: string }
+    ArtistInvitationRedeemRequest:
+      type: object
+      additionalProperties: false
+      required: [artistInvitation]
+      properties:
+        artistInvitation:
+          type: string
+          format: uuid
+          description: Personal, staff-issued single-use invitation link token. It grants no administrative role.
+    ArtistInvitationLinkCreate:
+      type: object
+      additionalProperties: false
+      required: [inviteeLabel]
+      properties:
+        inviteeLabel:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Name of the invited artist or band, for staff tracking.
+        campaign:
+          type: string
+          pattern: '^[a-z0-9_]{1,80}$'
+          description: Campaign attribution; defaults to tu_escena_conectada_piloto.
+        expiresInDays:
+          type: integer
+          minimum: 1
+          maximum: 90
+          description: Defaults to 30.
+    ArtistInvitationLink:
+      type: object
+      additionalProperties: false
+      required: [id, inviteeLabel, campaign, status, createdAt, expiresAt, redeemedAt, redeemedByPartyId, redeemedByName, revokedAt]
+      properties:
+        id: { type: integer, format: int64 }
+        inviteeLabel: { type: string }
+        campaign: { type: string }
+        status:
+          type: string
+          enum: [active, redeemed, expired, revoked]
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        redeemedAt: { type: string, format: date-time, nullable: true }
+        redeemedByPartyId: { type: integer, format: int64, nullable: true }
+        redeemedByName: { type: string, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+    ArtistInvitationLinkIssued:
+      type: object
+      additionalProperties: false
+      required: [invitation, token]
+      properties:
+        invitation: { $ref: '#/components/schemas/ArtistInvitationLink' }
+        token:
+          type: string
+          format: uuid
+          description: Returned only at issuance; only its SHA-256 digest is stored.

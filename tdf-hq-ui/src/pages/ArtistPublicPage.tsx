@@ -26,6 +26,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
+import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import type { ArtistReleaseDTO } from '../api/types';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
@@ -156,6 +157,24 @@ function ReleaseCard({ release }: ReleaseCardProps) {
   );
 }
 
+function CanonicalReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
+  const cover = useQuery({
+    queryKey: ['music-release-cover', release.coverAssetId],
+    queryFn: () => musicReleases.getAssetAccess(release.coverAssetId!),
+    enabled: Boolean(release.coverAssetId),
+    retry: false,
+  });
+  return <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
+    {cover.data?.url && <CardMedia component="img" height="180" image={cover.data.url} alt={`Portada de ${release.title}`} loading="lazy" />}
+    <CardContent><Stack spacing={1}>
+      <Chip label={`${release.kind.toUpperCase()} · TDF`} size="small" sx={{ alignSelf: 'flex-start' }} />
+      <Typography component="h3" fontWeight={800}>{release.title}</Typography>
+      <Typography variant="body2" color="text.secondary">{release.displayArtist}</Typography>
+      <Button size="small" component={RouterLink} to={`/musica/${release.slug}`} startIcon={<MusicNoteIcon />}>Escuchar en TDF</Button>
+    </Stack></CardContent>
+  </Card>;
+}
+
 export default function ArtistPublicPage() {
   const { t } = useTranslation();
   const { slugOrId } = useParams();
@@ -206,6 +225,12 @@ export default function ArtistPublicPage() {
   const releasesQuery = useQuery({
     queryKey: ['public-artist-releases', artistId],
     queryFn: () => Fans.getReleases(artistId!),
+    enabled: Boolean(artistId),
+    retry: false,
+  });
+  const canonicalReleasesQuery = useQuery({
+    queryKey: ['public-canonical-music-releases', artistId],
+    queryFn: () => musicReleases.listPublic('', artistId!),
     enabled: Boolean(artistId),
     retry: false,
   });
@@ -274,6 +299,8 @@ export default function ArtistPublicPage() {
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
+  const canonicalReleases = canonicalReleasesQuery.data ?? [];
+
   const releaseSelection = usePublicationSelection('release', releases.map((release) => release.arReleaseId), releasesQuery.isLoading);
 
   useMetaTags({
@@ -655,7 +682,7 @@ export default function ArtistPublicPage() {
               </Stack>
 
               {releaseSelection.notice}
-              {releasesQuery.isLoading && (
+              {(releasesQuery.isLoading || canonicalReleasesQuery.isLoading) && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
                   <CircularProgress size={18} aria-label="Cargando lanzamientos del artista" />
                   <Typography variant="body2" color="text.secondary">
@@ -664,11 +691,15 @@ export default function ArtistPublicPage() {
                 </Box>
               )}
 
-              {!releasesQuery.isLoading && releases.length === 0 && (
+              {!releasesQuery.isLoading && !canonicalReleasesQuery.isLoading && releases.length === 0 && canonicalReleases.length === 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   No hay releases publicados todavía.
                 </Typography>
               )}
+
+              {canonicalReleases.length > 0 && <Grid container spacing={2} sx={{ mt: 0.5, mb: releases.length > 0 ? 2 : 0 }}>
+                {canonicalReleases.map((release) => <Grid key={release.id} item xs={12} sm={6} md={4}><CanonicalReleaseCard release={release} /></Grid>)}
+              </Grid>}
 
               {releases.length > 0 && (
                 <LazyPaginatedList

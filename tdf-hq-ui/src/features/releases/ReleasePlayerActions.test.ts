@@ -120,11 +120,17 @@ describe('dispatchReleaseToRadio', () => {
 
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
     const event = dispatchEvent.mock.calls[0]?.[0] as CustomEvent;
-    expect(event.type).toBe('tdf-radio-load-stream');
+    expect(event.type).toBe('tdf-player-load-track');
     expect(event.detail).toEqual({
-      streamUrl: DIRECT_AUDIO_URL,
-      stationName: FIXTURE_RELEASE_TITLE,
-      stationId: RELEASE_STATION_ID,
+      track: {
+        id: RELEASE_STATION_ID.replace('release-', 'legacy-release-'),
+        releaseId: RELEASE_STATION_ID.replace('release-', 'legacy-release-'),
+        title: FIXTURE_RELEASE_TITLE,
+        artist: 'Artista TDF',
+        artworkUrl: FIXTURE_COVER_IMAGE_URL,
+        sources: [{ url: DIRECT_AUDIO_URL, quality: 'high', mediaType: 'audio/mpeg' }],
+      },
+      autoplay: true,
     });
   });
 

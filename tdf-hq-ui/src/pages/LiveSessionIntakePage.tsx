@@ -348,7 +348,17 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
   const riderLabel = riderFile ? `${riderFile.name} (${Math.round(riderFile.size / 1024)} KB)` : 'Subir rider técnico (PDF, DOCX)';
 
   return (
-    <Stack spacing={3}>
+    <Stack
+      spacing={3}
+      sx={{
+        minWidth: 0,
+        // Native inputs (notably type="date" on Android Chrome) keep an
+        // intrinsic min-content width inside the flex InputBase; let them
+        // shrink to the field so nothing overflows its Paper at 360px.
+        '& .MuiInputBase-root': { maxWidth: '100%' },
+        '& .MuiInputBase-input': { minWidth: 0 },
+      }}
+    >
       <EnrollmentSuccessDialog open={showSuccessDialog && submissionGeneration.current === authority.current.generation} onClose={() => setShowSuccessDialog(false)} />
       <Box>
         <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -366,8 +376,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       )}
 
 
-      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
-        <Stack spacing={2}>
+      <Paper sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 }, minWidth: 0 }}>
+        <Stack spacing={2} useFlexGap>
           <Typography variant="h6">Proyecto</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -423,6 +433,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
                 onChange={(e) => setSessionDate(e.target.value)}
                 fullWidth
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ style: { minWidth: 0, width: '100%' } }}
               />
             </Grid>
             <Grid item xs={12} md={9}>
@@ -451,21 +462,21 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
-        <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Paper sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 }, minWidth: 0 }}>
+        <Stack spacing={2} useFlexGap>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
             <Typography variant="h6">Músicos</Typography>
             <Button startIcon={<AddIcon />} variant="outlined" onClick={handleAddMusician}>
               Agregar músico
             </Button>
           </Stack>
 
-          <Stack spacing={2}>
+          <Stack spacing={2} useFlexGap>
             {musicians.map((musician, idx) => (
               <Paper
                 key={musician.id}
                 variant="outlined"
-                sx={{ p: 2, borderColor: 'divider', bgcolor: 'background.paper' }}
+                sx={{ px: { xs: 1.5, sm: 2 }, py: 2, minWidth: 0, borderColor: 'divider', bgcolor: 'background.paper' }}
               >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                   <Typography variant="subtitle1" fontWeight={600}>
@@ -577,9 +588,9 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
-        <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Paper sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 }, minWidth: 0 }}>
+        <Stack spacing={2} useFlexGap>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
             <Typography variant="h6">Setlist y canciones</Typography>
             <Button startIcon={<AddIcon />} variant="outlined" onClick={handleAddSong}>
               Agregar canción
@@ -589,12 +600,12 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
             Define el setlist con BPM, tonalidad y letra. Los detalles de microfonía y ruteo pueden ir en el rider adjunto.
           </Typography>
 
-          <Stack spacing={2}>
+          <Stack spacing={2} useFlexGap>
             {setlist.map((song, idx) => (
               <Paper
                 key={song.id}
                 variant="outlined"
-                sx={{ p: 2, borderColor: 'divider', bgcolor: 'background.paper' }}
+                sx={{ px: { xs: 1.5, sm: 2 }, py: 2, minWidth: 0, borderColor: 'divider', bgcolor: 'background.paper' }}
               >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                   <Typography variant="subtitle1" fontWeight={600}>
@@ -658,8 +669,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
-        <Stack spacing={2}>
+      <Paper sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 }, minWidth: 0 }}>
+        <Stack spacing={2} useFlexGap>
           <Typography variant="h6">Términos y logística</Typography>
           <LegalDisclosure
             id="live-session-terms"
@@ -698,8 +709,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
-        <Stack spacing={1.5}>
+      <Paper sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 }, minWidth: 0 }}>
+        <Stack spacing={1.5} useFlexGap>
           <Typography variant="h6">Rider técnico</Typography>
           <Button
             component="label"

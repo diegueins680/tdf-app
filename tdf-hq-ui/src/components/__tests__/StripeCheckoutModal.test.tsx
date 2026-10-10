@@ -186,6 +186,64 @@ describe('StripeCheckoutModal', () => {
     await waitFor(() => expect(getStorefront).toHaveBeenCalledTimes(2));
   });
 
+  it('keeps ticket consent cleared and locked until the changed terms arrive', async () => {
+    getStorefront.mockResolvedValueOnce({
+      policy: { termsVersion: 'event-ticket-terms-v2', termsSummary: 'A.', refundPolicy: 'B.' },
+    });
+    let deliverRefreshed!: (value: { policy: Record<string, unknown> }) => void;
+    getStorefront.mockReturnValueOnce(new Promise((resolve) => { deliverRefreshed = resolve; }));
+    createPaymentIntent.mockRejectedValueOnce(new Error('Ticket terms changed; review the current terms and accept them again'));
+    createPaymentIntent.mockResolvedValueOnce({ spiClientSecret: 'secret', spiOrderId: 'order-terms', spiPaymentIntentId: 'intent-terms', spiAmountCents: 5000, spiCurrency: 'USD' });
+    render(
+      <StripeCheckoutModal open onClose={mockOnClose} eventId="141" eventTitle="Launch Party" tier={mockTier} onSuccess={mockOnSuccess} />,
+      { wrapper: createWrapper() },
+    );
+    fireEvent.click(await screen.findByRole('checkbox', { name: /event-ticket-terms-v2/ }));
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.submit(document.getElementById('stripe-checkout-buyer-details-form')!);
+
+    await screen.findByText(/The ticket terms were updated/);
+    // The old version is still on screen while the new one loads: it must not be acceptable.
+    const staleConsent = screen.getByRole('checkbox', { name: /event-ticket-terms-v2/ });
+    expect(staleConsent).not.toBeChecked();
+    expect(staleConsent).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Continue to payment/i })).toBeDisabled();
+    fireEvent.submit(document.getElementById('stripe-checkout-buyer-details-form')!);
+    expect(createPaymentIntent).toHaveBeenCalledTimes(1);
+
+    deliverRefreshed({ policy: { termsVersion: 'event-ticket-terms-v3', termsSummary: 'C.', refundPolicy: 'D.' } });
+    const freshConsent = await screen.findByRole('checkbox', { name: /event-ticket-terms-v3/ });
+    await waitFor(() => expect(freshConsent).toBeEnabled());
+    expect(freshConsent).not.toBeChecked();
+    fireEvent.click(freshConsent);
+    fireEvent.submit(document.getElementById('stripe-checkout-buyer-details-form')!);
+    await waitFor(() => expect(createPaymentIntent).toHaveBeenLastCalledWith(expect.objectContaining({
+      ticketPurchaseAcceptedTermsVersion: 'event-ticket-terms-v3',
+    })));
+  });
+
+  it('blocks checkout and offers a retry when the ticket policy cannot be loaded', async () => {
+    getStorefront.mockRejectedValueOnce(new Error('network down'));
+    getStorefront.mockResolvedValueOnce({
+      policy: { termsVersion: 'event-ticket-terms-v2', termsSummary: 'A.', refundPolicy: 'B.' },
+    });
+    render(
+      <StripeCheckoutModal open onClose={mockOnClose} eventId="141" eventTitle="Launch Party" tier={mockTier} onSuccess={mockOnSuccess} />,
+      { wrapper: createWrapper() },
+    );
+    await screen.findByText(/We could not load the ticket terms/);
+    expect(screen.getByRole('button', { name: /Continue to payment/i })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.submit(document.getElementById('stripe-checkout-buyer-details-form')!);
+    expect(createPaymentIntent).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    await screen.findByRole('checkbox', { name: /event-ticket-terms-v2/ });
+    expect(screen.queryByText(/We could not load the ticket terms/)).not.toBeInTheDocument();
+  });
+
   it('does not ask for consent when the event has no approved ticket policy', async () => {
     getStorefront.mockResolvedValue({ policy: null });
     render(

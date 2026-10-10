@@ -352,6 +352,29 @@ describe('PublicBookingPage', () => {
     ) as unknown as typeof fetch;
   });
 
+  it('stacks the service reviews below the booking card in a column so phones never squeeze the card', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, { route: '/reservar?service=dj-booth-practice' });
+    await act(async () => {
+      await flushPromises();
+    });
+
+    const layout = container.querySelector<HTMLElement>('[data-testid="public-booking-layout"]');
+    const card = container.querySelector<HTMLElement>('[data-testid="public-booking-card"]');
+    const reviews = container.querySelector<HTMLElement>('[data-testid="public-booking-reviews"]');
+    expect(layout).not.toBeNull();
+    expect(card?.parentElement).toBe(layout);
+    expect(reviews?.parentElement).toBe(layout);
+    expect(card!.compareDocumentPosition(reviews!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(window.getComputedStyle(layout!).flexDirection).toBe('column');
+    expect(window.getComputedStyle(card!).minWidth).toBe('0');
+    expect(window.getComputedStyle(reviews!).width).toBe('100%');
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('hides the rooms field from the public form', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

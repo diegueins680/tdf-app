@@ -33,6 +33,9 @@ import {
   TextField,
   Typography,
   Link,
+  Drawer,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -46,7 +49,18 @@ import ShareIcon from '@mui/icons-material/Share';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import {
+  CART_HASH,
+  CART_OPEN_EVENT,
+  CART_META_KEY,
+  CART_STORAGE_KEY,
+  clearStoredCart,
+  readCartMeta,
+  writeCartMeta,
+  type MarketplaceCartMeta,
+} from '../features/marketplace/cartSummary';
+import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -146,9 +160,6 @@ interface Window {
   VITE_PAYPAL_CLIENT_ID?: string;
 }
 }
-const CART_STORAGE_KEY = 'tdf-marketplace-cart-id';
-const CART_META_KEY = 'tdf-marketplace-cart-meta';
-const CART_EVENT = 'tdf-cart-updated';
 const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 const PAYMENT_PREF_KEY = 'tdf-marketplace-payment-pref';
 const FILTERS_KEY = 'tdf-marketplace-filters';
@@ -421,10 +432,21 @@ const normalizePhone = (value: string) => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
-const fireCartMetaEvent = () => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event(CART_EVENT));
-  }
+const countCartItems = (items: MarketplaceCartItemDTO[]) =>
+  items.reduce((acc, it) => acc + it.mciQuantity, 0);
+
+const buildCartMeta = (cart: MarketplaceCartDTO): MarketplaceCartMeta | null => {
+  const count = countCartItems(cart.mcItems);
+  if (count <= 0) return null;
+  return {
+    cartId: cart.mcCartId,
+    count,
+    preview: cart.mcItems.slice(0, 3).map((it) => ({
+      title: it.mciTitle,
+      subtotal: it.mciSubtotalDisplay,
+    })),
+    updatedAt: Date.now(),
+  };
 };
 
 export default function MarketplacePage() {
@@ -469,7 +491,16 @@ export default function MarketplacePage() {
   });
   const [initialListingId] = useState<string | null>(initialViewState.listingId);
   const [search, setSearch] = useState(initialViewState.search);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toastState, setToastState] = useState<{ message: string; cartAction: boolean } | null>(null);
+  const toast = toastState?.message ?? null;
+  const showToast = useCallback((message: string | null, options?: { cartAction?: boolean }) => {
+    setToastState(message ? { message, cartAction: Boolean(options?.cartAction) } : null);
+  }, []);
+  const setToast = useCallback((message: string | null) => showToast(message), [showToast]);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const theme = useTheme();
+  const isCompactViewport = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [photoDialogListing, setPhotoDialogListing] = useState<MarketplaceItemDTO | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -542,7 +573,7 @@ export default function MarketplacePage() {
     },
   });
   const cart = cartQuery.data;
-  const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
+  const cartItems = useMemo<MarketplaceCartItemDTO[]>(() => cart?.mcItems ?? [], [cart]);
   const rentalCartItem = cartItems.find((item) => item.mciPurpose === 'rent') ?? null;
   const isRentalCart = Boolean(rentalCartItem);
   const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() ?? null;
@@ -567,21 +598,25 @@ export default function MarketplacePage() {
   const showDatafastOption = !datafastUnavailable
     && Boolean(marketplacePaymentMethodsQuery.data?.datafast);
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = readOptionalBrowserStorage('local', CART_META_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed?.cartId) return null;
-      return {
-        cartId: String(parsed.cartId),
-        count: typeof parsed.count === 'number' ? parsed.count : 0,
-        updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : null,
-      };
-    } catch {
-      return null;
-    }
+    const meta = readCartMeta();
+    return meta ? { cartId: meta.cartId, count: meta.count, updatedAt: meta.updatedAt } : null;
   });
+  // Another tab can create, replace or change the cart. The header badge
+  // follows storage events; mirror them into this page's cart state so the
+  // drawer and checkout act on the same cart the badge counts.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== CART_STORAGE_KEY && event.key !== CART_META_KEY) return;
+      const nextCartId = readOptionalBrowserStorage('local', CART_STORAGE_KEY);
+      const meta = readCartMeta();
+      setCartId(nextCartId);
+      setSavedCartMeta(meta ? { cartId: meta.cartId, count: meta.count, updatedAt: meta.updatedAt } : null);
+      void qc.invalidateQueries({ queryKey: ['marketplace-cart'] });
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [qc]);
   const datafastReturnUrl = useMemo(() => {
     if (!datafastCheckout || typeof window === 'undefined') return '';
     const url = new URL('/marketplace/pago-datafast', window.location.origin);
@@ -679,32 +714,18 @@ export default function MarketplacePage() {
     };
   }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
 
+  const persistCartMeta = useCallback((data: MarketplaceCartDTO) => {
+    // The server cart is authoritative: every refetch/mutation result rewrites
+    // the shared meta so the header badge reflects removed/unavailable items.
+    const meta = buildCartMeta(data);
+    writeCartMeta(meta);
+    setSavedCartMeta(meta ? { cartId: meta.cartId, count: meta.count, updatedAt: meta.updatedAt } : null);
+  }, []);
+
   useEffect(() => {
     if (!cartQuery.data) return;
-    const count = cartQuery.data.mcItems.reduce(
-      (acc: number, it: MarketplaceCartItemDTO) => acc + it.mciQuantity,
-      0,
-    );
-    if (typeof window === 'undefined') return;
-    if (count <= 0) {
-      removeOptionalBrowserPreference(CART_META_KEY);
-      setSavedCartMeta(null);
-      fireCartMetaEvent();
-      return;
-    }
-
-    const updatedAt = Date.now();
-    const preview = cartQuery.data.mcItems.slice(0, 3).map((it) => ({
-      title: it.mciTitle,
-      subtotal: it.mciSubtotalDisplay,
-    }));
-    writeOptionalBrowserPreference(
-      CART_META_KEY,
-      JSON.stringify({ cartId: cartQuery.data.mcCartId, count, preview, updatedAt }),
-    );
-    setSavedCartMeta({ cartId: cartQuery.data.mcCartId, count, updatedAt });
-    fireCartMetaEvent();
-  }, [cartQuery.data]);
+    persistCartMeta(cartQuery.data);
+  }, [cartQuery.data, persistCartMeta]);
 
   const createCartMutation = useMutation<MarketplaceCartDTO, Error, void>({
     mutationFn: Marketplace.createCart,
@@ -745,28 +766,15 @@ export default function MarketplacePage() {
           : {}),
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
-      const count = data.mcItems.reduce((acc, it) => acc + it.mciQuantity, 0);
-      if (typeof window !== 'undefined') {
-        if (count <= 0) {
-          removeOptionalBrowserPreference(CART_META_KEY);
-          setSavedCartMeta(null);
-        } else {
-          const updatedAt = Date.now();
-          const preview = data.mcItems.slice(0, 3).map((it) => ({
-            title: it.mciTitle,
-            subtotal: it.mciSubtotalDisplay,
-          }));
-          writeOptionalBrowserPreference(
-            CART_META_KEY,
-            JSON.stringify({ cartId: data.mcCartId, count, preview, updatedAt }),
-          );
-          setSavedCartMeta({ cartId: data.mcCartId, count, updatedAt });
-        }
+      persistCartMeta(data);
+      if (variables.quantity > 0) {
+        // Keep the visitor on the product; offer a one-tap way to the cart.
+        showToast('Agregado al carrito', { cartAction: true });
+      } else {
+        setToast('Carrito actualizado');
       }
-      setToast('Carrito actualizado');
-      fireCartMetaEvent();
     },
   });
 
@@ -775,11 +783,7 @@ export default function MarketplacePage() {
     setCartId(null);
     setSavedCartMeta(null);
     setShowRestoreBanner(false);
-    if (typeof window !== 'undefined') {
-      removeOptionalBrowserPreference(CART_STORAGE_KEY);
-      removeOptionalBrowserPreference(CART_META_KEY);
-    }
-    fireCartMetaEvent();
+    clearStoredCart();
   }, [qc]);
 
   const checkoutRequest = useCallback(
@@ -823,16 +827,12 @@ export default function MarketplacePage() {
       setCartId(null);
       setSavedCartMeta(null);
       setShowRestoreBanner(false);
-      if (typeof window !== 'undefined') {
-        removeOptionalBrowserPreference(CART_STORAGE_KEY);
-        removeOptionalBrowserPreference(CART_META_KEY);
-      }
+      clearStoredCart();
       setToast(
         `Pedido creado y pendiente de pago. Te contactaremos por ${
           contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'
         } en menos de 24 h.`,
       );
-      fireCartMetaEvent();
     },
   });
 
@@ -931,12 +931,8 @@ export default function MarketplacePage() {
       setCartId(null);
       setSavedCartMeta(null);
       setShowRestoreBanner(false);
-      if (typeof window !== 'undefined') {
-        removeOptionalBrowserPreference(CART_STORAGE_KEY);
-        removeOptionalBrowserPreference(CART_META_KEY);
-      }
+      clearStoredCart();
       setToast('Pago verificado con PayPal. Gracias por tu compra.');
-      fireCartMetaEvent();
     },
     onError: () => setPaypalError('No pudimos confirmar el pago. Intenta de nuevo.'),
   });
@@ -1066,7 +1062,22 @@ export default function MarketplacePage() {
 
     return assertNever(sort, 'marketplace sort');
   }, [computeRelevanceScore, filteredListings, sort]);
-  const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
+  const cartItemCount = countCartItems(cartItems);
+  const cartListingIds = useMemo(
+    () => new Set(cartItems.filter((it) => it.mciQuantity > 0).map((it) => it.mciListingId)),
+    [cartItems],
+  );
+  const pendingAddListingId = upsertItemMutation.isPending && (upsertItemMutation.variables?.quantity ?? 0) > 0
+    ? upsertItemMutation.variables?.listingId ?? null
+    : null;
+  const addButtonLabel = (listing: MarketplaceItemDTO) => {
+    if (listing.miPurpose === 'rent') {
+      return listing.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión';
+    }
+    if (pendingAddListingId === listing.miListingId) return 'Agregando…';
+    if (cartListingIds.has(listing.miListingId)) return 'En tu carrito';
+    return 'Agregar';
+  };
   const hasCartItems = cartItems.length > 0;
   const cartSubtotal = cart?.mcSubtotalDisplay ?? formatCurrencyForUser(0, paypalCurrency ?? resolveRuntimeCurrency());
   const checkoutDisabledReason = useMemo(() => {
@@ -1233,7 +1244,7 @@ export default function MarketplacePage() {
       if (buttons.close) buttons.close();
       container.innerHTML = '';
     };
-  }, [capturePaypalMutation, paypalDialogOpen, paypalOrder, paypalReady]);
+  }, [capturePaypalMutation, paypalDialogOpen, paypalOrder, paypalReady, setToast]);
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
     if (listing.miPurpose === 'rent') {
@@ -1261,10 +1272,68 @@ export default function MarketplacePage() {
     const currentQty =
       cart?.mcItems.find((item) => item.mciListingId === listing.miListingId)?.mciQuantity ?? 0;
     if (currentQty >= 1) {
-      setToast('Este activo físico ya está en tu carrito.');
+      showToast('Este activo físico ya está en tu carrito.', { cartAction: true });
       return;
     }
+    // Quantity is *set* (not incremented) server-side, so a repeated tap that
+    // slips through is idempotent; the button is also disabled while pending.
+    if (upsertItemMutation.isPending) return;
     upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: 1 });
+  };
+
+  const openCartDrawer = useCallback(() => {
+    setToastState(null);
+    setCartDrawerOpen(true);
+  }, []);
+
+  const closeCartDrawer = useCallback(() => {
+    setCartDrawerOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    window.addEventListener(CART_OPEN_EVENT, openCartDrawer);
+    return () => window.removeEventListener(CART_OPEN_EVENT, openCartDrawer);
+  }, [openCartDrawer]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (location.hash !== `#${CART_HASH}`) return;
+    openCartDrawer();
+    // Drop the hash so the filter URL sync does not keep re-opening the cart
+    // and a later reload lands on the catalog. History state is preserved.
+    try {
+      if (window.location.hash === `#${CART_HASH}`) {
+        window.history.replaceState(
+          window.history.state,
+          '',
+          `${window.location.pathname}${window.location.search}`,
+        );
+      }
+    } catch {
+      // Non-critical: the drawer is already open.
+    }
+  }, [location.hash, location.key, openCartDrawer]);
+
+  const goToCheckoutFromDrawer = () => {
+    setCartDrawerOpen(false);
+    if (typeof window === 'undefined') return;
+    // Wait for the drawer to release focus before moving it to the form.
+    window.setTimeout(() => {
+      const el = document.getElementById('marketplace-checkout');
+      if (!el) return;
+      el.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      el.focus({ preventScroll: true });
+    }, 250);
+  };
+
+  const browseFromDrawer = () => {
+    setCartDrawerOpen(false);
+    if (typeof window === 'undefined') return;
+    window.setTimeout(() => {
+      const el = document.getElementById('marketplace-listings');
+      el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    }, 250);
   };
 
   const confirmRentalDates = () => {
@@ -1662,7 +1731,188 @@ export default function MarketplacePage() {
         </CardContent>
       </Card>
     );
-  }, [lastOrder]);
+  }, [lastOrder, setToast]);
+
+  const renderCartPanel = (variant: 'column' | 'drawer') => (
+    <Card
+      variant="outlined"
+      {...(variant === 'column'
+        ? { id: CART_HASH, sx: { scrollMarginTop: 96 } }
+        : { sx: { border: 0, borderRadius: 0, bgcolor: 'transparent' } })}
+    >
+      <CardHeader
+        title="Carrito"
+        titleTypographyProps={{
+          component: 'h2',
+          variant: 'h6',
+          ...(variant === 'drawer' ? { id: 'marketplace-cart-drawer-title' } : {}),
+        }}
+        subheader={
+          hasCartItems
+            ? `${cartItems.length} productos · ${cartItemCount} en total`
+            : 'Sin productos aún'
+        }
+        action={
+          variant === 'drawer' ? (
+            <IconButton aria-label="Cerrar carrito" onClick={closeCartDrawer} sx={{ minWidth: 44, minHeight: 44 }}>
+              <CloseIcon />
+            </IconButton>
+          ) : (
+            <ShoppingCartIcon aria-hidden />
+          )
+        }
+      />
+      <CardContent>
+        {cartQuery.isLoading && (
+          <Box display="flex" justifyContent="center">
+            <CircularProgress size={20} />
+          </Box>
+        )}
+        {!hasCartItems && !cartQuery.isLoading && (
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              {variant === 'drawer' ? 'Tu carrito está vacío.' : 'Agrega artículos para continuar al checkout.'}
+            </Typography>
+            {(savedCartMeta?.count ?? 0) > 0 && savedCartMeta?.cartId && (
+              <Button size="small" variant="outlined" onClick={handleRestoreCart}>
+                Recuperar carrito guardado ({savedCartMeta.count} productos)
+              </Button>
+            )}
+            {variant === 'drawer' && (
+              <Button variant="contained" onClick={browseFromDrawer} sx={{ alignSelf: 'flex-start', minHeight: 44 }}>
+                Explorar catálogo
+              </Button>
+            )}
+          </Stack>
+        )}
+        <Stack spacing={1.5}>
+          {cartItems.map((item) => (
+            <Box
+              key={item.mciListingId}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1.5,
+                p: 1.25,
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Box>
+                  <Typography fontWeight={700}>{item.mciTitle}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.mciUnitPriceDisplay} · {item.mciCategory}
+                  </Typography>
+                  {item.mciPurpose === 'rent' && (
+                    <Stack spacing={0.25} mt={0.5}>
+                      <Typography variant="caption">
+                        {item.mciRentalStartDate} → {item.mciRentalEndDate} · {item.mciRentalDurationDays} día(s)
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Renta: {item.mciRentalChargeDisplay} · Depósito reembolsable: {item.mciSecurityDepositDisplay}
+                      </Typography>
+                    </Stack>
+                  )}
+                </Box>
+                <IconButton
+                  aria-label={`Quitar ${item.mciTitle} del carrito`}
+                  size="small"
+                  onClick={() => handleUpdateQty(item, 0)}
+                  disabled={upsertItemMutation.isPending}
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+              {item.mciPurpose === 'sale' ? (
+              <Stack direction="row" spacing={1} alignItems="center" mt={1}>
+                <IconButton
+                  aria-label="Disminuir cantidad"
+                  size="small"
+                  onClick={() => handleUpdateQty(item, Math.max(0, item.mciQuantity - 1))}
+                  disabled={upsertItemMutation.isPending}
+                >
+                  <RemoveIcon fontSize="small" />
+                </IconButton>
+                <TextField
+                  type="number"
+                  size="small"
+                  label="Cantidad"
+                  value={item.mciQuantity}
+                  onChange={(e) =>
+                    handleUpdateQty(item, parseCartQuantity(e.target.value ?? '0', item.mciQuantity))
+                  }
+                  inputProps={{ min: 0, max: 1 }}
+                  sx={{ width: 120 }}
+                />
+                <IconButton
+                  aria-label="Incrementar cantidad"
+                  size="small"
+                  onClick={() => handleUpdateQty(item, 1)}
+                  disabled={upsertItemMutation.isPending || item.mciQuantity >= 1}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+                <Typography variant="body2" fontWeight={700} sx={{ ml: 'auto' }}>
+                  {item.mciSubtotalDisplay}
+                </Typography>
+              </Stack>
+              ) : (
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
+                  <Chip size="small" label="1 activo con fechas" />
+                  <Typography variant="body2" fontWeight={700}>
+                    Total retenido al pagar: {item.mciSubtotalDisplay}
+                  </Typography>
+                </Stack>
+              )}
+            </Box>
+          ))}
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
+            <Typography variant="subtitle2">Subtotal</Typography>
+            <Typography variant="h6" fontWeight={800}>
+              {cartSubtotal}
+            </Typography>
+          </Stack>
+          {hasCartItems && (
+            <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <Button
+                variant="text"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  void clearCart();
+                }}
+                disabled={upsertItemMutation.isPending}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Vaciar carrito
+              </Button>
+              {variant === 'drawer' ? (
+                <Button variant="contained" onClick={goToCheckoutFromDrawer} sx={{ minHeight: 44 }}>
+                  Ir al checkout
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    openReview();
+                  }}
+                  disabled={Boolean(checkoutDisabledReason)}
+                >
+                  Continuar al checkout
+                </Button>
+              )}
+            </Stack>
+          )}
+          {formatLastSavedTimestamp(savedCartMeta?.updatedAt) && (
+            <Typography variant="caption" color="text.secondary">
+              {formatLastSavedTimestamp(savedCartMeta?.updatedAt)}
+            </Typography>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4, px: { xs: 2, md: 6 } }}>
@@ -2085,16 +2335,21 @@ export default function MarketplacePage() {
                               variant="contained"
                               size="small"
                               startIcon={<ShoppingCartIcon />}
-                              onClick={() => handleAdd(item)}
+                              onClick={() => {
+                                if (item.miPurpose === 'sale' && cartListingIds.has(item.miListingId)) {
+                                  openCartDrawer();
+                                  return;
+                                }
+                                handleAdd(item);
+                              }}
                               disabled={
                                 upsertItemMutation.isPending
                                 || !isListingAvailable(item.miStatus)
                                 || (item.miPurpose === 'rent' && !item.miRentalTermsVersion)
                               }
+                              aria-label={`${addButtonLabel(item)}: ${item.miTitle}`}
                             >
-                              {item.miPurpose === 'rent'
-                                ? item.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión'
-                                : 'Agregar'}
+                              {addButtonLabel(item)}
                             </Button>
                             {canManagePhotos && item.miPurpose === 'rent' && (
                               <Button
@@ -2140,153 +2395,7 @@ export default function MarketplacePage() {
                     Tienes un carrito guardado con {savedCartMeta.count} productos.
                   </Alert>
                 )}
-                <Card variant="outlined">
-                  <CardHeader
-                    title="Carrito"
-                    subheader={
-                      hasCartItems
-                        ? `${cartItems.length} productos · ${cartItemCount} en total`
-                        : 'Sin productos aún'
-                    }
-                    action={<ShoppingCartIcon />}
-                  />
-                  <CardContent>
-                    {cartQuery.isLoading && (
-                      <Box display="flex" justifyContent="center">
-                        <CircularProgress size={20} />
-                      </Box>
-                    )}
-                    {!hasCartItems && !cartQuery.isLoading && (
-                      <Stack spacing={1}>
-                        <Typography variant="body2" color="text.secondary">
-                          Agrega artículos para continuar al checkout.
-                        </Typography>
-                        {(savedCartMeta?.count ?? 0) > 0 && savedCartMeta?.cartId && (
-                          <Button size="small" variant="outlined" onClick={handleRestoreCart}>
-                            Recuperar carrito guardado ({savedCartMeta.count} productos)
-                          </Button>
-                        )}
-                      </Stack>
-                    )}
-                    <Stack spacing={1.5}>
-                      {cartItems.map((item) => (
-                        <Box
-                          key={item.mciListingId}
-                          sx={{
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 1.5,
-                            p: 1.25,
-                          }}
-                        >
-                          <Stack direction="row" justifyContent="space-between" alignItems="center">
-                            <Box>
-                              <Typography fontWeight={700}>{item.mciTitle}</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {item.mciUnitPriceDisplay} · {item.mciCategory}
-                              </Typography>
-                              {item.mciPurpose === 'rent' && (
-                                <Stack spacing={0.25} mt={0.5}>
-                                  <Typography variant="caption">
-                                    {item.mciRentalStartDate} → {item.mciRentalEndDate} · {item.mciRentalDurationDays} día(s)
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    Renta: {item.mciRentalChargeDisplay} · Depósito reembolsable: {item.mciSecurityDepositDisplay}
-                                  </Typography>
-                                </Stack>
-                              )}
-                            </Box>
-                            <IconButton
-                              aria-label="Quitar"
-                              size="small"
-                              onClick={() => handleUpdateQty(item, 0)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Stack>
-                          {item.mciPurpose === 'sale' ? (
-                          <Stack direction="row" spacing={1} alignItems="center" mt={1}>
-                            <IconButton
-                              aria-label="Disminuir cantidad"
-                              size="small"
-                              onClick={() => handleUpdateQty(item, Math.max(0, item.mciQuantity - 1))}
-                              disabled={upsertItemMutation.isPending}
-                            >
-                              <RemoveIcon fontSize="small" />
-                            </IconButton>
-                            <TextField
-                              type="number"
-                              size="small"
-                              label="Cantidad"
-                              value={item.mciQuantity}
-                              onChange={(e) =>
-                                handleUpdateQty(item, parseCartQuantity(e.target.value ?? '0', item.mciQuantity))
-                              }
-                              inputProps={{ min: 0, max: 1 }}
-                              sx={{ width: 120 }}
-                            />
-                            <IconButton
-                              aria-label="Incrementar cantidad"
-                              size="small"
-                              onClick={() => handleUpdateQty(item, 1)}
-                              disabled={upsertItemMutation.isPending || item.mciQuantity >= 1}
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                            <Typography variant="body2" fontWeight={700} sx={{ ml: 'auto' }}>
-                              {item.mciSubtotalDisplay}
-                            </Typography>
-                          </Stack>
-                          ) : (
-                            <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
-                              <Chip size="small" label="1 activo con fechas" />
-                              <Typography variant="body2" fontWeight={700}>
-                                Total retenido al pagar: {item.mciSubtotalDisplay}
-                              </Typography>
-                            </Stack>
-                          )}
-                        </Box>
-                      ))}
-                      <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
-                        <Typography variant="subtitle2">Subtotal</Typography>
-                        <Typography variant="h6" fontWeight={800}>
-                          {cartSubtotal}
-                        </Typography>
-                      </Stack>
-                      {hasCartItems && (
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            variant="text"
-                            color="inherit"
-                            size="small"
-                            onClick={() => {
-                              void clearCart();
-                            }}
-                            disabled={upsertItemMutation.isPending}
-                            sx={{ alignSelf: 'flex-start' }}
-                          >
-                            Vaciar carrito
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => {
-                              openReview();
-                            }}
-                            disabled={Boolean(checkoutDisabledReason)}
-                          >
-                            Continuar al checkout
-                          </Button>
-                        </Stack>
-                      )}
-                      {formatLastSavedTimestamp(savedCartMeta?.updatedAt) && (
-                        <Typography variant="caption" color="text.secondary">
-                          {formatLastSavedTimestamp(savedCartMeta?.updatedAt)}
-                        </Typography>
-                      )}
-                    </Stack>
-                  </CardContent>
-                </Card>
+                {renderCartPanel('column')}
 
                 {!hasCartItems ? (
                   <Card variant="outlined">
@@ -2303,7 +2412,7 @@ export default function MarketplacePage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card variant="outlined">
+                  <Card variant="outlined" id="marketplace-checkout" tabIndex={-1} sx={{ scrollMarginTop: 96, outline: 'none' }}>
                     <CardHeader title="Checkout" />
                     <CardContent>
                       <Stack spacing={1.5}>
@@ -2565,13 +2674,81 @@ export default function MarketplacePage() {
             </Box>
           </Grid>
         </Grid>
+      {hasCartItems && !cartDrawerOpen && (
+        // Mobile-only shortcut: the cart column stacks below every listing on
+        // small screens, so keep a compact entry point pinned to the bottom.
+        // `sticky` (not `fixed`) keeps it in flow: no overlap with the footer
+        // and no shift of content above it.
+        <Box
+          data-testid="marketplace-mobile-cart-bar"
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            position: 'sticky',
+            // Above the global music player when one is playing.
+            bottom: BOTTOM_DOCK_OFFSET,
+            zIndex: (muiTheme) => muiTheme.zIndex.appBar,
+            mx: -2,
+            px: 2,
+            pt: 1,
+            pb: 'calc(8px + env(safe-area-inset-bottom, 0px))',
+            bgcolor: 'background.paper',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<ShoppingCartIcon />}
+            onClick={openCartDrawer}
+            aria-haspopup="dialog"
+            sx={{ minHeight: 48 }}
+          >
+            {`Ver carrito (${cartItemCount}) · ${cartSubtotal}`}
+          </Button>
+        </Box>
+      )}
+      <Drawer
+        anchor={isCompactViewport ? 'bottom' : 'right'}
+        open={cartDrawerOpen}
+        onClose={closeCartDrawer}
+        PaperProps={{
+          role: 'dialog',
+          'aria-labelledby': 'marketplace-cart-drawer-title',
+          sx: isCompactViewport
+            ? {
+                maxHeight: '85vh',
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+                pb: 'env(safe-area-inset-bottom, 0px)',
+              }
+            : { width: 420, maxWidth: '100vw' },
+        }}
+      >
+        <Box data-testid="marketplace-cart-drawer" sx={{ overflowY: 'auto' }}>
+          {renderCartPanel('drawer')}
+        </Box>
+      </Drawer>
       <Snackbar
         open={Boolean(toast)}
-        autoHideDuration={2200}
-        onClose={() => setToast(null)}
+        autoHideDuration={toastState?.cartAction ? 6000 : 2200}
+        onClose={(_event, reason) => {
+          if (reason === 'clickaway') return;
+          setToast(null);
+        }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={hasCartItems ? { bottom: { xs: 'calc(80px + env(safe-area-inset-bottom, 0px))', md: 24 } } : undefined}
       >
-        <Alert severity="success" onClose={() => setToast(null)} sx={{ width: '100%' }}>
+        <Alert
+          severity="success"
+          onClose={toastState?.cartAction ? undefined : () => setToast(null)}
+          action={toastState?.cartAction ? (
+            <Button color="inherit" size="small" onClick={openCartDrawer} sx={{ fontWeight: 700 }}>
+              Ver carrito
+            </Button>
+          ) : undefined}
+          sx={{ width: '100%', alignItems: 'center' }}
+        >
           {toast}
         </Alert>
       </Snackbar>
@@ -3105,8 +3282,14 @@ export default function MarketplacePage() {
                   size="small"
                   startIcon={<ShoppingCartIcon />}
                   onClick={() => {
-                    handleAdd(selectedListing);
+                    const alreadyInCart = selectedListing.miPurpose === 'sale'
+                      && cartListingIds.has(selectedListing.miListingId);
                     closeDetail();
+                    if (alreadyInCart) {
+                      openCartDrawer();
+                      return;
+                    }
+                    handleAdd(selectedListing);
                   }}
                   disabled={
                     upsertItemMutation.isPending
@@ -3114,9 +3297,7 @@ export default function MarketplacePage() {
                     || (selectedListing.miPurpose === 'rent' && !selectedListing.miRentalTermsVersion)
                   }
                 >
-                  {selectedListing.miPurpose === 'rent'
-                    ? selectedListing.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión'
-                    : 'Agregar'}
+                  {addButtonLabel(selectedListing)}
                 </Button>
                 {canManagePhotos && selectedListing.miPurpose === 'rent' && (
                   <Button size="small" variant="outlined" onClick={() => openRentalTermsDialog(selectedListing)}>

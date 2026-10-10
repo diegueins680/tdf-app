@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { Box, ButtonBase, Collapse, Stack, Typography, useMediaQuery } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
@@ -19,7 +19,8 @@ export interface LegalDisclosureProps {
   language?: LegalDisclosureLanguage;
   /** Wraps the header button in a heading so screen-reader heading navigation finds it. */
   headingLevel?: 2 | 3 | 4 | 5 | 6;
-  /** Legal text is collapsed by default; only open it initially when the user deep-linked to it. */
+  /** Legal text is collapsed by default; open it when the user deep-linked to it, including
+   *  a hash change while mounted. It never forces a document closed. */
   defaultExpanded?: boolean;
   dense?: boolean;
   id?: string;
@@ -46,6 +47,11 @@ export function LegalDisclosure({
   const buttonId = `${baseId}-button`;
   const panelId = `${baseId}-panel`;
   const [expanded, setExpanded] = useState(defaultExpanded);
+  // A deep link that arrives while mounted (an in-app hash change) opens the document;
+  // it never collapses one the reader opened.
+  useEffect(() => {
+    if (defaultExpanded) setExpanded(true);
+  }, [defaultExpanded]);
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
   const action = actionCopy[language];
 
