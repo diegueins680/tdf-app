@@ -9554,7 +9554,7 @@
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "3cee06e4be99c39dbc0993747fcd1229fc2286d062d814858cddf83b9caf1afc",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "e12535c6ad679de61b83e9f19baf235e53495929918cdd8c7f058c1f989adcd2",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -31532,7 +31532,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "3cee06e4be99c39dbc0993747fcd1229fc2286d062d814858cddf83b9caf1afc",
+      "sha256": "e12535c6ad679de61b83e9f19baf235e53495929918cdd8c7f058c1f989adcd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

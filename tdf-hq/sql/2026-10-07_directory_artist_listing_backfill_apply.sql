@@ -45,6 +45,9 @@ CREATE INDEX IF NOT EXISTS directory_artist_listing_audit_finding_open_idx
 
 -- Listings created for artists that were already public are not new results:
 -- saved-search alerts stay off for this transaction.
+-- Sync lock first, the order every concurrent sync uses, so a write that
+-- commits while this runs cannot invert the lock order.
+SELECT directory_search_sync_lock();
 ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
 
 DO $backfill$

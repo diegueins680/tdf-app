@@ -916,6 +916,9 @@ FOR EACH ROW EXECUTE FUNCTION directory_refresh_store_profile_media();
 
 -- Existing entities gaining an image are not new results, so saved-search
 -- alerts stay off while their documents are rewritten (this transaction).
+-- Sync lock first, the order every concurrent sync uses, so a write that
+-- commits while this runs cannot invert the lock order.
+SELECT directory_search_sync_lock();
 ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
 
 UPDATE directory_search_document document
