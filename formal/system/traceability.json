@@ -4441,7 +4441,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4551,7 +4551,10 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
-        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "e2e/integration/ticket-retrieval.spec.mjs",
+        "playwright.ticket-retrieval.config.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -8703,6 +8706,75 @@
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
+      "id": "OPS-CI-REGISTRY-001",
+      "title": "Authenticate Docker Hub pulls in CI",
+      "domain": "OPS",
+      "critical": false,
+      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "authority": "User authorized CI authentication on 2026-10-09",
+      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "contract": ".github/workflows/ci.yml",
+      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "actors": [
+        "GitHub-hosted CI runner",
+        "Repository secret administrator"
+      ],
+      "preconditions": [
+        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+      ],
+      "inputs": [
+        "Repository secret references",
+        "Existing Docker Hub image tags and immutable digests"
+      ],
+      "state": {
+        "registry": [
+          "unauthenticated",
+          "authenticated",
+          "authentication-failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+      ],
+      "forbiddenTransitions": [
+        "Expose secret values in source or logs",
+        "Treat registry login as a passing test or merge approval",
+        "Use pull_request_target to expose secrets to fork code"
+      ],
+      "effects": [
+        "Authenticated test-image downloads in ephemeral CI runners"
+      ],
+      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
+      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
+      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
+      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
+      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
+      "implementation": [
+        ".github/workflows/build.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/event-operations-formal.yml",
+        ".github/workflows/event-raci-browser.yml",
+        ".github/workflows/interaction-verification.yml",
+        ".github/workflows/social-verification.yml"
+      ],
+      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
+      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "tests": [],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "ambiguity": [
+        "Authentication does not guarantee registry availability or unlimited pull quota."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+      }
+    },
+    {
       "id": "LEGAL-DISCLOSURE-001",
       "title": "Legal text is collapsed by default without weakening consent",
       "statement": "Terms, policies, consent texts and disclaimers render inside a shared disclosure that starts collapsed, can be opened to read the complete text before acceptance, and keeps every required acceptance control visible, associated with its documents and enforced exactly as before.",
@@ -8789,12 +8861,17 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
+    ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
-    ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+    ".github/workflows/ci.yml": "2f9df4ae6a308c37f0cd1b624d09678564f1550041998e52a760026ff5cec9ff",
+    ".github/workflows/event-operations-formal.yml": "796ef043d981372163b9fa2ed6eece84f04077432d29458304ecc84b5bf14ef0",
+    ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+    ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
+    ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "docs/catalog-persistence/catalog-list-decisions.json": "041c016df231b1bdd71359530aaadbabd89d0f8296234a7d01330cdeddbec552",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+    "e2e/integration/ticket-retrieval.spec.mjs": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
@@ -8920,6 +8997,7 @@
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "1e52fb4523cfba328755635c6ae0d016747234f425f4ed2e809951659430905c",
     "playwright.config.mjs": "a5c8481d89b2dabcb1b8f64766c8ab17a26b00877f8c27a4f06b52f24fc99779",
+    "playwright.ticket-retrieval.config.mjs": "610cb08dd1adc8a7c08b79dd63b9953c911581e43f13f9dcc5f7951dfe474f8d",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
@@ -9028,6 +9106,7 @@
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
+    "scripts/run-ticket-retrieval-browser.mjs": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -9112,7 +9191,7 @@
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "79778549159960c89c34d389defc0ac651e6503b066ba427c40061864f57816a",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
@@ -9242,7 +9321,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "d3d25733b1ebb539b720222f8242ddb29874fd67830dc5bd966586262f59a4e4",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
@@ -9738,6 +9817,10 @@
       {
         "requirement": "SYS-INVENTORY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/lib/formal-result-summary.mjs": [
@@ -10063,6 +10146,10 @@
       },
       {
         "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
       }
     ],
@@ -12745,6 +12832,24 @@
       }
     ],
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/integration/ticket-retrieval.spec.mjs": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "playwright.ticket-retrieval.config.mjs": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/run-ticket-retrieval-browser.mjs": [
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "tests"
@@ -15718,6 +15823,30 @@
         "relationship": "tests"
       }
     ],
+    ".github/workflows/build.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/event-raci-browser.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/interaction-verification.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/social-verification.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": [
       {
         "requirement": "LEGAL-DISCLOSURE-001",
@@ -15795,9 +15924,14 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0606a73a2d9ce7e753f91c20009d0273bf1ea192f40d735f7c0aff0b4d531962",
+      "sha256": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e322a9d58d6bbd4b",
@@ -15828,7 +15962,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
+      "sha256": "2f9df4ae6a308c37f0cd1b624d09678564f1550041998e52a760026ff5cec9ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15846,6 +15980,10 @@
         {
           "requirement": "DEPLOY-ENVELOPE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -15859,7 +15997,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+      "sha256": "796ef043d981372163b9fa2ed6eece84f04077432d29458304ecc84b5bf14ef0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15873,22 +16011,36 @@
         {
           "requirement": "SYS-INVENTORY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "83cb1fc70d4cd7cbebc540eeee25093b578f463d5dfb892924c6f0683707212a",
+      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "5c812f5a50e54395e87c5ecf2209cc2ec47158cc97849bb16edf394764904513",
+      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-305964459d20ce97",
@@ -15912,9 +16064,14 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "2296b25573ac27eb67fc51dd996a03e816471c0fb30cecd3746d21f0b8d3792d",
+      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bd2372888f0d24a0",
@@ -15936,6 +16093,18 @@
       "sha256": "963cc535ca35453f2c662ff1831a5005d5327b3151bc9ed4a2752d8de9f4ab57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-e48b174d71244c56",
+      "path": "e2e/integration/ticket-retrieval.spec.mjs",
+      "sha256": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b6a53fc19d550b31",
@@ -18970,6 +19139,18 @@
       ]
     },
     {
+      "id": "SURFACE-b2a8d03352f6e0c4",
+      "path": "scripts/run-ticket-retrieval-browser.mjs",
+      "sha256": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e62b469d42a02d7a",
       "path": "scripts/scan-music-legacy-releases.sh",
       "sha256": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -21249,7 +21430,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
+      "sha256": "79778549159960c89c34d389defc0ac651e6503b066ba427c40061864f57816a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25767,7 +25948,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+      "sha256": "d3d25733b1ebb539b720222f8242ddb29874fd67830dc5bd966586262f59a4e4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37971,14 +38152,10 @@
     }
   ],
   "unmappedSurfaces": [
-    "SURFACE-5c3fa597431eda03",
     "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-87abe6b969342c3c",
     "SURFACE-ab96c3ab21cf19fc",
-    "SURFACE-717dbf61c7979518",
-    "SURFACE-e705d7e36f8b46d9",
     "SURFACE-f9eb7b8efd30e406",
-    "SURFACE-40da7c383a8d6b30",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
     "SURFACE-b18780932504c8a1",
@@ -39731,7 +39908,9 @@
     "SURFACE-b7c7359f0a4f26db",
     "SURFACE-21b31fbb27b536c4"
   ],
-  "untestedRequirements": [],
+  "untestedRequirements": [
+    "OPS-CI-REGISTRY-001"
+  ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
     "SYS-VERIFY-002",
@@ -40912,7 +41091,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sourceSha256": "81ff67ec9fe03a1a5fe4ffc64d6a34ecffd607afbf41e0391d47783bcd38a336",
       "definition": {
         "states": [
           "absent",
@@ -63109,7 +63288,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 110,
+    "PARTIAL": 111,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
