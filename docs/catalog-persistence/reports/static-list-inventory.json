@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-10T18:57:17.652Z",
+  "generatedAt": "2026-10-10T19:12:46.980Z",
   "repositoryRoot": ".",
   "filesScanned": 2227,
-  "candidateCount": 1319,
+  "candidateCount": 1320,
   "byClassification": {
-    "dynamic-business-catalog": 848,
+    "dynamic-business-catalog": 849,
     "genuine-technical-constant": 70,
     "governed-reference-data": 139,
     "security-system-registry": 262
@@ -4149,7 +4149,7 @@
       "lines": [
         126
       ],
-      "consumerCount": 291,
+      "consumerCount": 292,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -4229,6 +4229,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
@@ -4251,8 +4252,7 @@
         "tdf-hq-ui/src/pages/ChatPage.tsx",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
-        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx"
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -6377,7 +6377,7 @@
       "lines": [
         167
       ],
-      "consumerCount": 225,
+      "consumerCount": 226,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -6448,6 +6448,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -6472,8 +6473,7 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
         "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx"
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -6898,7 +6898,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -6955,6 +6955,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -6971,8 +6972,7 @@
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
         "tdf-hq-ui/src/pages/ChatPage.tsx",
-        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx"
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -12457,7 +12457,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 190,
+      "consumerCount": 191,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -12509,6 +12509,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -12534,8 +12535,7 @@
         "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
-        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -12983,7 +12983,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 188,
+      "consumerCount": 189,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13031,6 +13031,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -13056,8 +13057,7 @@
         "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
-        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -13200,7 +13200,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 218,
+      "consumerCount": 219,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -13257,6 +13257,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -13273,8 +13274,7 @@
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
         "tdf-hq-ui/src/pages/ChatPage.tsx",
-        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx"
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -18882,7 +18882,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 193,
+      "consumerCount": 194,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -18940,6 +18940,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -18966,8 +18967,7 @@
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
         "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-        "tdf-hq-ui/src/pages/LoginPage.tsx"
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -24590,6 +24590,227 @@
       "similarCandidateIds": [
         "968a306599a80edd36ce"
       ]
+    },
+    {
+      "id": "2daa7c609311e49e7e16",
+      "file": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "sourceKind": "production",
+      "surface": "web",
+      "domain": "events-ticketing",
+      "kind": "object-registry",
+      "name": "options",
+      "line": 37,
+      "values": [
+        "weekday",
+        "day",
+        "month",
+        "hour",
+        "minute",
+        "hourCycle"
+      ],
+      "valueCount": 6,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        37
+      ],
+      "consumerCount": 184,
+      "backendConsumers": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-08-11_feedback_catalog_cutover_dry_run.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+        "tdf-hq/src/TDF/API/Bands.hs",
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/API/Sessions.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Seed.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/ServerFuture.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/test/EventOperationsHttpMain.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/integration/catalog_backfill_postgres.sql",
+        "tdf-hq/test/integration/event_raci_editor_context_assertions.sql"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/bands.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/eventTaskCompletion.transport.test.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/social-v2.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/radio.test.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/components/AssetDialogs.tsx",
+        "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
+        "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/ReactionBar.test.tsx",
+        "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+        "tdf-hq-ui/src/config/apiBase.ts",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
+        "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/hooks/useAutoSave.ts",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/BookingsPage.partySelector.test.ts",
+        "tdf-hq-ui/src/pages/BookingsPage.tsx",
+        "tdf-hq-ui/src/pages/CalendarSyncPage.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/app/(tabs)/_layout.tsx",
+        "tdf-mobile/app/(tabs)/events.tsx",
+        "tdf-mobile/app/access-requests/index.tsx",
+        "tdf-mobile/app/access-requests/new.tsx",
+        "tdf-mobile/app/access-requests/review.tsx",
+        "tdf-mobile/app/catalogEditor.tsx",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/app/eventDetail.tsx",
+        "tdf-mobile/app/merch/preferences.tsx",
+        "tdf-mobile/app/reputation/consents.tsx",
+        "tdf-mobile/app/reputation/preferences.tsx",
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/catalogs.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/partySelector.ts",
+        "tdf-mobile/src/components/PartySelector.tsx",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-mobile/src/lib/eventMomentsRepository.ts",
+        "tdf-mobile/src/lib/formatters.ts",
+        "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
+        "tdf-mobile/src/lib/nativeGoogleSignin.ts",
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/src/theme/ThemeProvider.tsx"
+      ],
+      "automationConsumers": [
+        ".github/workflows/artist-enrichment-daily.yml",
+        ".github/workflows/check-messaging-token.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        ".github/workflows/interaction-verification.yml",
+        ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-operations-pluscal.test.mjs",
+        "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/music-test-database.test.mjs",
+        "scripts/__tests__/payment-staging-inspection.test.mjs",
+        "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/ai-workflow-doctor.mjs",
+        "scripts/artist-enrichment.mjs",
+        "scripts/audit-formal-methods.mjs",
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-list-audit.mjs",
+        "scripts/check-messaging-token.mjs",
+        "scripts/ci-change-scope.mjs",
+        "scripts/continuous-improvement-loop-dirty-worktree.mjs",
+        "scripts/continuous-improvement-loop.mjs",
+        "scripts/discover-improvement-idea.mjs",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/install-flyctl.mjs",
+        "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/lib/discovery.mjs",
+        "scripts/lib/formal-methods-audit.mjs",
+        "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/lib/music-playback-identity-probe.mjs",
+        "scripts/lib/production-release.mjs",
+        "scripts/lib/sri-invoice.mjs",
+        "scripts/operations-load-test.mjs",
+        "scripts/production-catalog-inventory.mjs",
+        "scripts/production-release.mjs",
+        "scripts/refresh-instagram-token.mjs",
+        "scripts/run-music-release-worker-once.sh",
+        "scripts/set-loop-github-polling.mjs",
+        "scripts/specification-conformance.py",
+        "scripts/sync-artist-drive.js",
+        "scripts/sync-country-reference.mjs",
+        "scripts/test-account-deletion-api.mjs",
+        "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-course-identity.sh",
+        "scripts/test-event-raci-editor-context-migration.sh",
+        "scripts/test-hetzner-backup.py",
+        "scripts/test-hetzner-restore.py",
+        "scripts/test-live-intake-identity.sh"
+      ],
+      "apiAndIntegrationConsumers": [
+        ".github/workflows/refresh-instagram-token.yml",
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/lib/instagram-token-lifecycle.mjs",
+        "scripts/refresh-instagram-token.mjs",
+        "tdf-hq-ui/src/api/auth.ts",
+        "tdf-hq-ui/src/api/bands.ts",
+        "tdf-hq-ui/src/api/drive.ts",
+        "tdf-hq-ui/src/api/eventTaskCompletion.transport.test.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/generated/client.ts",
+        "tdf-hq-ui/src/api/generated/social-v2.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/radio.test.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/session.ts",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/src/TDF/API/Bands.hs",
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/API/Sessions.hs",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/partners.tsx",
+        "tdf-mobile/src/api/catalogs.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/api/partySelector.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "unreviewed",
+      "disposition": "",
+      "specializedModel": "",
+      "priority": "",
+      "risk": "",
+      "justification": "",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
     },
     {
       "id": "7a899082fab8eb50cba2",
@@ -63882,7 +64103,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 458,
+      "consumerCount": 459,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -63984,8 +64205,8 @@
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
-        "tdf-hq-ui/src/components/navigationLabels.test.ts",
-        "tdf-hq-ui/src/components/party-selector/PartySelector.tsx"
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/components/navigationLabels.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -73155,7 +73376,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 182,
+      "consumerCount": 183,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -73203,6 +73424,7 @@
         "tdf-hq-ui/src/components/ReactionBar.test.tsx",
         "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/config/apiBase.ts",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
@@ -73228,8 +73450,7 @@
         "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
-        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-        "tdf-hq-ui/src/pages/LoginPage.test.tsx"
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",

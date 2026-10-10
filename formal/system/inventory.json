@@ -7164,13 +7164,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "ee2119fe94447f2b2374b5fece134aa7f24adb22d5dc1b08a836d497f069e9c1",
+      "sha256": "382f855ac2e12af6ea8d1869d6d58ce52af3f1877d0a7d6d6406dafb23f46977",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "f5297310c2ca99b238818ef7bf64e4e813a25dd0aca816f0265f5b2ea9317674",
+      "sha256": "3bd4d3930c7d3438ae303de3c866c85467415bb1a641b293437fe3455737ca0d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
