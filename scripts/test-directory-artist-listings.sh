@@ -60,9 +60,16 @@ wait "${first_session}"
 test "$(query "SELECT count(*) FROM classified WHERE source_profile_id='${race_profile}';")" = "1"
 test "$(query "SELECT id FROM classified WHERE source_profile_id='${race_profile}';")" = "${second_listing}"
 
+# The backfill must not notify saved searches about listings of artists that
+# were already public.
+query "INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+  VALUES (910002, 'Backfill listing alert', '{\"entityType\":\"classified\"}'::jsonb, repeat('f', 64), TRUE, 'instant');" >/dev/null
 run_sql -f "${dry_run}"
 run_sql -f "${backfill}"
 run_sql -f "${backfill}"
+test "$(query "SELECT count(*) FROM classified WHERE source_profile_id IN ('a0000000-0000-4000-8000-000000000001','a0000000-0000-4000-8000-000000000002') AND status='published';")" = "2"
+test "$(query "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id=delivery.saved_search_id WHERE saved.name='Backfill listing alert';")" = "0"
+test "$(query "SELECT tgenabled FROM pg_trigger WHERE tgrelid='directory_search_document'::regclass AND tgname='directory_search_alert_trigger';")" = "O"
 run_sql -f "${test_dir}/directory_artist_listing_backfill_assertions_postgres.sql"
 
 # Rollback is non-destructive and repeatable; forward re-apply resumes listings.

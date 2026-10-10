@@ -121,6 +121,9 @@ a new artist produces one alert, not two.
   `directory_artist_listing_backfill_run` and findings in
   `directory_artist_listing_audit_finding`, and fails if any hard invariant is
   violated.
+- Both migrations write the documents of entities that already existed (images,
+  listings of artists that were already public) with saved-search alerts off for
+  their own transaction, so deploying does not notify subscribers.
 - `directory_artist_listing_audit()` reports missing/duplicate listings, public
   listings of non-public profiles, orphaned non-artist listings, image or content
   divergence, stale search rows and ambiguous manual lookalikes. Manual listings

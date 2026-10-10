@@ -910,6 +910,10 @@ AFTER INSERT OR DELETE OR UPDATE OF logo_image_url, application_status, operatio
 ON merch_store
 FOR EACH ROW EXECUTE FUNCTION directory_refresh_store_profile_media();
 
+-- Existing entities gaining an image are not new results, so saved-search
+-- alerts stay off while their documents are rewritten (this transaction).
+ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
+
 UPDATE directory_search_document document
 SET image_url = directory_profile_preview_image_url(profile.id)
 FROM directory_profile profile
@@ -917,9 +921,10 @@ WHERE document.entity_kind = 'profile'
   AND document.entity_id = profile.id::text
   AND document.image_url IS DISTINCT FROM directory_profile_preview_image_url(profile.id);
 
--- Venue images reach existing venue documents through the shared rebuild
--- (unchanged documents keep their version).
+-- Venue images reach existing venue documents through the shared rebuild.
 SELECT directory_refresh_legacy_event_search();
+
+ALTER TABLE directory_search_document ENABLE TRIGGER directory_search_alert_trigger;
 
 -- ---------------------------------------------------------------------------
 -- Saved-search alerts mirror the mixed-search deduplication.

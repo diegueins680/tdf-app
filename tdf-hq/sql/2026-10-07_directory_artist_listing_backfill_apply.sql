@@ -43,6 +43,10 @@ CREATE INDEX IF NOT EXISTS directory_artist_listing_audit_finding_open_idx
   ON directory_artist_listing_audit_finding (finding_kind, created_at DESC)
   WHERE review_status = 'open';
 
+-- Listings created for artists that were already public are not new results:
+-- saved-search alerts stay off for this transaction.
+ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
+
 DO $backfill$
 DECLARE
   run_id_value UUID := gen_random_uuid();
@@ -120,5 +124,7 @@ BEGIN
     run_id_value, processed, derived_after - derived_before, derived_before, published_count, cover_count, finding_count;
 END
 $backfill$;
+
+ALTER TABLE directory_search_document ENABLE TRIGGER directory_search_alert_trigger;
 
 COMMIT;

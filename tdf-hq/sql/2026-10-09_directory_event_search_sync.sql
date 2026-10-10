@@ -391,10 +391,16 @@ WHERE document.source_status = 'published'
 
 
 -- Backfill: resolve unambiguous free-text cities, then index current events.
+-- Events that already existed are not new results, so saved-search alerts
+-- stay off while their documents are written (until this transaction ends).
+ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
+
 UPDATE venue
 SET city_id = directory_resolve_city_reference(city)
 WHERE city_id IS NULL AND directory_resolve_city_reference(city) IS NOT NULL;
 
 SELECT directory_refresh_legacy_event_search();
+
+ALTER TABLE directory_search_document ENABLE TRIGGER directory_search_alert_trigger;
 
 COMMIT;

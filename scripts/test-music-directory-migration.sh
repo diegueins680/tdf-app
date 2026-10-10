@@ -946,8 +946,21 @@ stop_api
 
 # Events and venues stay searchable as they are created and edited
 # (2026-10-09): apply twice, verify, roll back, reapply and verify again.
+# The backfill must not notify saved searches about events that already
+# existed: drop the event documents, subscribe, then apply the migration.
+psql_exec >/dev/null <<'SQL'
+DELETE FROM directory_search_document WHERE entity_kind IN ('event', 'venue');
+INSERT INTO party (display_name, is_org, created_at) VALUES ('Event backfill subscriber', FALSE, now());
+INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+SELECT id, 'Event backfill alert', '{}'::jsonb, repeat('e', 64), TRUE, 'instant'
+FROM party WHERE display_name = 'Event backfill subscriber';
+SQL
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind = 'event';")" -gt 0
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id = delivery.saved_search_id WHERE saved.name = 'Event backfill alert';")" = "0"
+test "$(psql_exec -Atc "SELECT tgenabled FROM pg_trigger WHERE tgrelid = 'directory_search_document'::regclass AND tgname = 'directory_search_alert_trigger';")" = "O"
+psql_exec -c "DELETE FROM directory_saved_search WHERE name = 'Event backfill alert';" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
