@@ -5614,11 +5614,11 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
+        "reason": "Edge headers verified on the deployed site and in tests; hydrated canonical metadata is verified only in Jest, not in a deployed browser."
       },
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
-      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke.",
+      "evidence": "2026-10-09: deployed responses for https://www.tdfrecords.net/eventos/141/entradas and /eventos/141/orden/<id> returned Cache-Control 'private, no-store', X-Robots-Tag 'noindex, follow' and Referrer-Policy 'no-referrer'; the event page /eventos/141 publishes Event (no Offer) JSON-LD. Edge tests 7/7 and PublicEventTicketsPage/TicketBankTransferPanel Jest 30/30 on 3874e23. Canonical and robots metadata are set after hydration and are covered by the Jest cases, not by the HTTP check.",
       "supersedes": {
         "id": "EVT-PUBLIC-001",
         "sourceRevision": "ce422263309d85ce7001e7dfe0f8c27f35e8c409",
@@ -40646,7 +40646,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b75cc254c68306e4fa688e0177c848530ca015305d09a1163d3e31b92b393bf2",
+      "sourceSha256": "820b732321f461f6581912bf10097385a7a667a698e793e07bf57b1e7c93d86a",
       "definition": {
         "states": [
           "absent",
