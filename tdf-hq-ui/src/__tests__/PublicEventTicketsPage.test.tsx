@@ -259,6 +259,23 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(createCheckoutMock).not.toHaveBeenCalled();
   });
 
+  it('keeps an issued ticket on screen when refreshing the order fails', async () => {
+    getCheckoutMock.mockResolvedValueOnce(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued', holderName: 'Comprador' }],
+    })).mockRejectedValueOnce(new Error('Temporary outage'));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('TICKET-VERIFIED'));
+    const refresh = Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    await act(async () => { fireEvent.click(refresh); });
+    await waitForExpectation(() => expect(getCheckoutMock).toHaveBeenCalledTimes(2));
+    await waitForExpectation(() => expect(container.textContent).toContain('No pudimos cargar tu orden'));
+    expect(container.textContent).toContain('TICKET-VERIFIED');
+    expect(container.textContent).toContain('Entradas emitidas');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
   it('explains missing order access without offering another purchase', async () => {
     window.localStorage.clear();
     await renderTracking('/eventos/41/orden/92');
