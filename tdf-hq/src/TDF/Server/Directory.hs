@@ -157,15 +157,28 @@ directoryVisibleEventDocumentClause :: Text
 directoryVisibleEventDocumentClause =
   "AND (document.entity_kind<>'event' OR NOT EXISTS (SELECT 1 FROM external_event_ref event_ref WHERE event_ref.event_id::text=document.entity_id AND lower(trim(event_ref.source_status))=?)) "
 
+-- A derived artist listing duplicates its profile in mixed results; it is
+-- listed only when classifieds are requested explicitly.
+directoryDerivedListingDedupClause :: Text
+directoryDerivedListingDedupClause =
+  "AND (input.entity_type IS NOT NULL OR " <> directorySourceProfileSql <> " IS NULL) "
+
+-- The derivation link lives on the materialized row (the public view keeps its
+-- historical column list); read it through the primary key.
+directorySourceProfileSql :: Text
+directorySourceProfileSql =
+  "(SELECT raw.source_profile_id FROM directory_search_document raw WHERE raw.entity_kind=document.entity_kind AND raw.entity_id=document.entity_id)"
+
 searchSql :: Bool -> Text
 searchSql sponsoredOnly =
   "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
-  "scored AS (SELECT document.*,directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude) distance_km," <>
+  "scored AS (SELECT document.*," <> directorySourceProfileSql <> " source_profile_id,directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude) distance_km," <>
   "CASE WHEN input.q='' THEN .5 ELSE greatest(ts_rank_cd(document.search_vector,plainto_tsquery('simple',directory_normalize_text(input.q))),directory_text_similarity(document.title,input.q)) END text_score," <>
   "CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%')) THEN 1 ELSE 0 END semantic_score " <>
   "FROM directory_public_search_document document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
   directoryVisibleEventDocumentClause <>
   "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
+  directoryDerivedListingDedupClause <>
   "AND (input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) " <>
   "AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
   "AND (input.q='' OR document.search_vector @@ plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
@@ -175,13 +188,14 @@ searchSql sponsoredOnly =
   "ranked AS (SELECT scored.*,round((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)::numeric,6) organic_score FROM scored), " <>
   "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
   "page AS (SELECT ranked.* FROM ranked WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE ranked.organic_score<b.organic_score OR (ranked.organic_score=b.organic_score AND (ranked.source_updated_at<b.source_updated_at OR (ranked.source_updated_at=b.source_updated_at AND (ranked.entity_kind>b.entity_kind OR (ranked.entity_kind=b.entity_kind AND ranked.entity_id>b.entity_id)))))) ORDER BY organic_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
-  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'cursor',entity_kind||':'||entity_id) FROM page"
+  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'cursor',entity_kind||':'||entity_id) FROM page"
 
 facetsSql :: Text
 facetsSql =
   "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
   "filtered AS (SELECT document.* FROM directory_public_search_document document CROSS JOIN input WHERE NOT document.sponsored " <>
   directoryVisibleEventDocumentClause <>
+  directoryDerivedListingDedupClause <>
   "AND (input.q='' OR document.search_vector@@plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 " <>
   "OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) " <>
   "AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
@@ -213,6 +227,8 @@ suggestDirectory mQuery mCityId = do
   rows <- jsonRows
     ( "SELECT jsonb_build_object('label',label,'canonicalQuery',canonical_query,'suggestionKind',kind,'entityId',entity_id) FROM (SELECT alias.term label,alias.normalized_term canonical_query,'taxonomy'::text kind,alias.entity_id::text entity_id,1 priority FROM catalog_search_alias alias JOIN catalog_definition catalog ON catalog.id=alias.catalog_id WHERE catalog.public_read AND alias.normalized_term LIKE directory_normalize_text(?)||'%' UNION ALL SELECT document.title,document.title,document.entity_kind,document.entity_id,2 FROM directory_public_search_document document WHERE NOT document.sponsored "
         <> directoryVisibleEventDocumentClause
+        -- A derived listing repeats its profile's title; suggest the profile only.
+        <> "AND " <> directorySourceProfileSql <> " IS NULL "
         <> "AND (?::uuid IS NULL OR document.city_id=?::uuid) AND document.search_text LIKE directory_normalize_text(?)||'%' ) suggestion ORDER BY priority,label LIMIT 10"
     )
     [ PersistText query
@@ -242,7 +258,7 @@ directoryTaxonomies mLocale =
    <> "'classifiedCategories',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',item.id,'code',item.code,'slug',item.current_slug,"
    <> "'name',CASE WHEN requested.locale='en' THEN item.name_en ELSE item.name_es END,"
-   <> "'requirements',item.requirements) ORDER BY item.sort_order),'[]'::jsonb) "
+   <> "'requirements',item.requirements,'derived',item.requirements->>'derivation' IS NOT NULL) ORDER BY item.sort_order),'[]'::jsonb) "
    <> "FROM classified_category item WHERE item.active),"
    <> "'compensationTypes',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',item.id,'code',item.code,'slug',item.current_slug,"
@@ -297,6 +313,7 @@ publicProfile slugValue =
    <> "'languages',coalesce((SELECT jsonb_agg(jsonb_build_object('id',term.id,'code',coalesce(term.iso6391,term.iso6392_t),'name',term.name_es,'proficiency',member.proficiency) ORDER BY term.sort_order,term.iso6392_t) FROM directory_profile_language member JOIN language_reference term ON term.id=member.language_id WHERE member.profile_id=profile.id),'[]'::jsonb),"
    <> "'verification',coalesce((SELECT jsonb_agg(jsonb_build_object('type',verification.verification_type,'status',verification.status,'verifiedAt',verification.verified_at)) FROM directory_verification verification WHERE verification.profile_id=profile.id AND verification.status='verified'),'[]'::jsonb),"
    <> "'reputation',jsonb_build_object('completeness',profile.completeness_score,'responseRate',profile.response_rate,'medianResponseMinutes',profile.median_response_minutes,'completed',profile.completed_interactions,'reviewAverage',profile.review_average,'reviewCount',profile.review_count),"
+   <> "'previewImageUrl',directory_profile_preview_image_url(profile.id),'derivedListing',(SELECT jsonb_build_object('id',item.id,'slug',item.slug,'canonicalUrl','/clasificados/'||item.slug) FROM classified item WHERE item.source_profile_id=profile.id AND item.status='published' AND item.moderation_status='allowed'),"
    <> "'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile_resolution profile WHERE profile.requested_slug=?" )
     [PersistText (T.toLower (T.strip slugValue))]
 
@@ -347,7 +364,7 @@ publicProfileReviews slugValue mCursor mLimit = do
 
 publicClassified slugValue =
   jsonOne err404
-    "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL THEN NULL ELSE jsonb_build_object('typeId',classified.compensation_type_id,'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',classified.expires_at,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()"
+    "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL THEN NULL ELSE jsonb_build_object('typeId',classified.compensation_type_id,'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'imageUrl',CASE WHEN classified.source_profile_id IS NOT NULL THEN directory_profile_preview_image_url(classified.source_profile_id) ELSE (SELECT document.image_url FROM directory_search_document document WHERE document.entity_kind='classified' AND document.entity_id=classified.id::text) END,'sourceProfile',CASE WHEN classified.source_profile_id IS NULL THEN NULL ELSE jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind,'canonicalUrl','/directorio/'||profile.slug) END,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()"
     [PersistText (T.toLower (T.strip slugValue))]
 
 publicEvent eventId = jsonOne err404
@@ -355,7 +372,7 @@ publicEvent eventId = jsonOne err404
   [PersistInt64 eventId, PersistText Social.externalEventRefSuppressedStatus]
 
 publicVenue venueId = jsonOne err404
-  "SELECT jsonb_build_object('id',id,'name',name,'capacity',capacity,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision','city'),'canonicalUrl','/venues/'||id::text) FROM directory_public_venue WHERE id=?" [PersistInt64 venueId]
+  "SELECT jsonb_build_object('id',id,'name',name,'capacity',capacity,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision','city'),'imageUrl',(SELECT directory_safe_image_url(directory_try_jsonb_object(source.contact)->>'imageUrl') FROM venue source WHERE source.id=directory_public_venue.id),'canonicalUrl','/venues/'||id::text) FROM directory_public_venue WHERE id=?" [PersistInt64 venueId]
 
 directoryProtectedServer :: AuthedUser -> ServerT DirectoryProtectedAPI AppM
 directoryProtectedServer user =
@@ -438,12 +455,12 @@ listManagedProfiles user = jsonRows managedProfileSql [toPersistValue (auPartyId
 
 managedProfileSql =
   T.replace "'portfolio',profile.portfolio,'links',profile.links" profileRichMediaProjectionSql
-    "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,'slug',profile.slug,'bio',profile.bio,'experienceSummary',profile.experience_summary,'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,'equipmentSummary',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,'availabilityStatus',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'availableToTravel',profile.available_to_travel,'travelRadiusKm',profile.travel_radius_km,'professionIds',coalesce((SELECT jsonb_agg(member.profession_id ORDER BY member.sort_order) FROM directory_profile_profession member WHERE member.profile_id=profile.id),'[]'::jsonb),'professionDetails',coalesce((SELECT jsonb_agg(jsonb_build_object('professionId',member.profession_id,'headline',member.headline,'yearsExperience',member.years_experience,'rateMinMinor',member.rate_min_minor,'rateMaxMinor',member.rate_max_minor,'currencyId',member.currency_id) ORDER BY member.sort_order) FROM directory_profile_profession member WHERE member.profile_id=profile.id),'[]'::jsonb),'instrumentIds',coalesce((SELECT jsonb_agg(member.instrument_id ORDER BY member.sort_order) FROM directory_profile_instrument member WHERE member.profile_id=profile.id),'[]'::jsonb),'instrumentDetails',coalesce((SELECT jsonb_agg(jsonb_build_object('instrumentId',member.instrument_id,'proficiency',member.proficiency) ORDER BY member.sort_order) FROM directory_profile_instrument member WHERE member.profile_id=profile.id),'[]'::jsonb),'genreIds',coalesce((SELECT jsonb_agg(member.genre_id ORDER BY member.sort_order) FROM directory_profile_genre member WHERE member.profile_id=profile.id),'[]'::jsonb),'serviceOfferingIds',coalesce((SELECT jsonb_agg(member.service_offering_id ORDER BY member.sort_order) FROM directory_profile_service member WHERE member.profile_id=profile.id),'[]'::jsonb),'languages',coalesce((SELECT jsonb_agg(jsonb_build_object('languageId',member.language_id,'proficiency',member.proficiency) ORDER BY member.language_id) FROM directory_profile_language member WHERE member.profile_id=profile.id),'[]'::jsonb),'serviceAreas',coalesce((SELECT jsonb_agg(jsonb_build_object('countryId',location.country_id,'subdivisionId',location.subdivision_id,'cityId',location.city_id,'metropolitanAreaId',location.metropolitan_area_id,'sectorLabel',location.sector_label,'serviceRadiusKm',location.service_radius_km,'primaryLocation',location.primary_location,'onsite',location.onsite) ORDER BY location.primary_location DESC,location.created_at,location.id) FROM directory_profile_location location WHERE location.profile_id=profile.id),'[]'::jsonb),'status',profile.profile_status,'visibility',profile.visibility,'moderationStatus',profile.moderation_status,'version',profile.version,'capabilities',jsonb_build_object('viewPrivate',manager.can_view_private,'edit',manager.can_edit,'publish',manager.can_publish,'contact',manager.can_contact,'manage',manager.can_manage)) AS value FROM directory_profile_manager manager JOIN directory_profile profile ON profile.id=manager.profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY profile.updated_at DESC,profile.id"
+    "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,'slug',profile.slug,'coverImageUrl',profile.cover_image_url,'previewImageUrl',directory_profile_preview_image_url(profile.id),'derivedListing',(SELECT jsonb_build_object('id',item.id,'slug',item.slug,'status',item.status,'canonicalUrl','/clasificados/'||item.slug) FROM classified item WHERE item.source_profile_id=profile.id),'bio',profile.bio,'experienceSummary',profile.experience_summary,'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,'equipmentSummary',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,'availabilityStatus',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'availableToTravel',profile.available_to_travel,'travelRadiusKm',profile.travel_radius_km,'professionIds',coalesce((SELECT jsonb_agg(member.profession_id ORDER BY member.sort_order) FROM directory_profile_profession member WHERE member.profile_id=profile.id),'[]'::jsonb),'professionDetails',coalesce((SELECT jsonb_agg(jsonb_build_object('professionId',member.profession_id,'headline',member.headline,'yearsExperience',member.years_experience,'rateMinMinor',member.rate_min_minor,'rateMaxMinor',member.rate_max_minor,'currencyId',member.currency_id) ORDER BY member.sort_order) FROM directory_profile_profession member WHERE member.profile_id=profile.id),'[]'::jsonb),'instrumentIds',coalesce((SELECT jsonb_agg(member.instrument_id ORDER BY member.sort_order) FROM directory_profile_instrument member WHERE member.profile_id=profile.id),'[]'::jsonb),'instrumentDetails',coalesce((SELECT jsonb_agg(jsonb_build_object('instrumentId',member.instrument_id,'proficiency',member.proficiency) ORDER BY member.sort_order) FROM directory_profile_instrument member WHERE member.profile_id=profile.id),'[]'::jsonb),'genreIds',coalesce((SELECT jsonb_agg(member.genre_id ORDER BY member.sort_order) FROM directory_profile_genre member WHERE member.profile_id=profile.id),'[]'::jsonb),'serviceOfferingIds',coalesce((SELECT jsonb_agg(member.service_offering_id ORDER BY member.sort_order) FROM directory_profile_service member WHERE member.profile_id=profile.id),'[]'::jsonb),'languages',coalesce((SELECT jsonb_agg(jsonb_build_object('languageId',member.language_id,'proficiency',member.proficiency) ORDER BY member.language_id) FROM directory_profile_language member WHERE member.profile_id=profile.id),'[]'::jsonb),'serviceAreas',coalesce((SELECT jsonb_agg(jsonb_build_object('countryId',location.country_id,'subdivisionId',location.subdivision_id,'cityId',location.city_id,'metropolitanAreaId',location.metropolitan_area_id,'sectorLabel',location.sector_label,'serviceRadiusKm',location.service_radius_km,'primaryLocation',location.primary_location,'onsite',location.onsite) ORDER BY location.primary_location DESC,location.created_at,location.id) FROM directory_profile_location location WHERE location.profile_id=profile.id),'[]'::jsonb),'status',profile.profile_status,'visibility',profile.visibility,'moderationStatus',profile.moderation_status,'version',profile.version,'capabilities',jsonb_build_object('viewPrivate',manager.can_view_private,'edit',manager.can_edit,'publish',manager.can_publish,'contact',manager.can_contact,'manage',manager.can_manage)) AS value FROM directory_profile_manager manager JOIN directory_profile profile ON profile.id=manager.profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY profile.updated_at DESC,profile.id"
 
 createProfile user idempotency request@DirectoryProfileUpsert
   { profileKind, publicName, slug, bio, experienceSummary, creditsSummary, portfolio, links
   , equipmentSummary, rateMinMinor, rateMaxMinor, currencyId, availabilityStatus
-  , onsite, remote, availableToTravel, travelRadiusKm } = do
+  , onsite, remote, availableToTravel, travelRadiusKm, coverImageUrl } = do
   validateProfileRequest request
   profileId <- reserveIdempotency user "profile.create" idempotency request "profile"
   existing <- jsonRows "SELECT jsonb_build_object('id',id,'slug',slug,'status',profile_status,'version',version) FROM directory_profile WHERE id=?" [toPersistValue profileId]
@@ -464,7 +481,7 @@ createProfile user idempotency request@DirectoryProfileUpsert
               Single newPartyId:_ -> pure newPartyId
               _ -> liftIO (fail "organization Party insert did not return an id")
           else pure (partyNumber user)
-        rawExecute "INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,experience_summary,credits_summary,portfolio,links,equipment_summary,rate_min_minor,rate_max_minor,currency_id,availability_status,onsite,remote,available_to_travel,travel_radius_km,profile_status,visibility,moderation_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?::jsonb,?::jsonb,?,?,?,?,?,?,?,?,?,'draft','public','allowed',?,?)"
+        rawExecute "INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,experience_summary,credits_summary,portfolio,links,equipment_summary,rate_min_minor,rate_max_minor,currency_id,availability_status,onsite,remote,available_to_travel,travel_radius_km,cover_image_url,profile_status,visibility,moderation_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?::jsonb,?::jsonb,?,?,?,?,?,?,?,?,?,NULLIF(trim(?::text),''),'draft','public','allowed',?,?)"
           [ toPersistValue profileId,PersistInt64 subjectPartyId,PersistText profileKind
           , PersistText (T.strip publicName),PersistText (T.toLower (T.strip slug))
           , optionalText (cleanOptionalText bio),optionalText (cleanOptionalText experienceSummary)
@@ -474,7 +491,7 @@ createProfile user idempotency request@DirectoryProfileUpsert
           , optionalText (cleanOptionalText equipmentSummary),optionalInt64 rateMinMinor
           , optionalInt64 rateMaxMinor,optionalUuid currencyId
           , PersistText (fromMaybe "ask" availabilityStatus),PersistBool onsite,PersistBool remote
-          , PersistBool availableToTravel,maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm
+          , PersistBool availableToTravel,maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm,optionalText coverImageUrl
           , toPersistValue now,toPersistValue now]
         rawExecute "INSERT INTO directory_profile_manager(profile_id,account_party_id,can_view_private,can_edit,can_publish,can_contact,can_manage,active,granted_by) VALUES (?,?,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,?)" [toPersistValue profileId,toPersistValue (auPartyId user),toPersistValue (auPartyId user)]
         rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,new_state,correlation_id,metadata) VALUES (?,'profile.created','profile',?,'draft',?,jsonb_build_object('subjectPartyId',?::bigint,'profileKind',?::text))"
@@ -490,7 +507,7 @@ updateProfile user profileId request@DirectoryProfileUpsert
   { profileKind, publicName, slug, bio, experienceSummary, creditsSummary, portfolio, links
   , equipmentSummary, rateMinMinor, rateMaxMinor, currencyId, clearRates, availabilityStatus
   , professionDetails, instrumentDetails, languages, serviceAreas
-  , onsite, remote, availableToTravel, travelRadiusKm } = do
+  , onsite, remote, availableToTravel, travelRadiusKm, coverImageUrl } = do
   requireProfileCapability user profileId "edit"
   validateProfileRequest request
   currentKindValue <- jsonOne err404 "SELECT to_jsonb(profile_kind) FROM directory_profile WHERE id=?" [toPersistValue profileId]
@@ -506,7 +523,7 @@ updateProfile user profileId request@DirectoryProfileUpsert
       normalizedLinks = map normalizeProfileLink (fromMaybe [] links)
   locationId <- liftIO nextRandom
   runDB $ do
-    rawExecute "UPDATE directory_profile SET profile_kind=?,public_name=?,slug=?,bio=?,experience_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE experience_summary END,credits_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE credits_summary END,portfolio=CASE WHEN ? THEN ?::jsonb ELSE portfolio END,links=CASE WHEN ? THEN ?::jsonb ELSE links END,equipment_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE equipment_summary END,rate_min_minor=CASE WHEN ? THEN ?::bigint ELSE rate_min_minor END,rate_max_minor=CASE WHEN ? THEN ?::bigint ELSE rate_max_minor END,currency_id=CASE WHEN ? THEN ?::uuid ELSE currency_id END,availability_status=CASE WHEN ? THEN ?::text ELSE availability_status END,onsite=?,remote=?,available_to_travel=?,travel_radius_km=?,updated_at=now(),version=version+1 WHERE id=?"
+    rawExecute "UPDATE directory_profile SET profile_kind=?,public_name=?,slug=?,bio=?,experience_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE experience_summary END,credits_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE credits_summary END,portfolio=CASE WHEN ? THEN ?::jsonb ELSE portfolio END,links=CASE WHEN ? THEN ?::jsonb ELSE links END,equipment_summary=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE equipment_summary END,rate_min_minor=CASE WHEN ? THEN ?::bigint ELSE rate_min_minor END,rate_max_minor=CASE WHEN ? THEN ?::bigint ELSE rate_max_minor END,currency_id=CASE WHEN ? THEN ?::uuid ELSE currency_id END,availability_status=CASE WHEN ? THEN ?::text ELSE availability_status END,onsite=?,remote=?,available_to_travel=?,travel_radius_km=?,cover_image_url=CASE WHEN ? THEN NULLIF(trim(?::text),'') ELSE cover_image_url END,updated_at=now(),version=version+1 WHERE id=?"
       [ PersistText profileKind,PersistText (T.strip publicName),PersistText (T.toLower (T.strip slug))
       , optionalText (cleanOptionalText bio)
       , PersistBool (isJust experienceSummary),optionalText (cleanOptionalText experienceSummary)
@@ -518,7 +535,8 @@ updateProfile user profileId request@DirectoryProfileUpsert
       , PersistBool ratesRequested,optionalUuid nextCurrency
       , PersistBool (isJust availabilityStatus),PersistText (fromMaybe "ask" availabilityStatus)
       , PersistBool onsite,PersistBool remote,PersistBool availableToTravel
-      , maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm,toPersistValue profileId]
+      , maybe PersistNull (PersistDouble . realToFrac) travelRadiusKm
+      , PersistBool (isJust coverImageUrl),optionalText coverImageUrl,toPersistValue profileId]
     replaceProfileSelectionsDB locationId profileId request
     rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata) VALUES (?,'profile.updated','profile',?, ?,jsonb_build_object('profileKind',?::text,'experienceRequested',?::boolean,'creditsRequested',?::boolean,'portfolioRequested',?::boolean,'linksRequested',?::boolean,'equipmentRequested',?::boolean,'ratesRequested',?::boolean,'availabilityRequested',?::boolean,'professionDetailsRequested',?::boolean,'instrumentDetailsRequested',?::boolean,'languagesRequested',?::boolean,'serviceAreasRequested',?::boolean))"
       [ toPersistValue (auPartyId user),PersistText (UUID.toText profileId),PersistText ("profile-update-"<>UUID.toText locationId)
@@ -606,8 +624,12 @@ validateProfileRequest DirectoryProfileUpsert
   , equipmentSummary, rateMinMinor, rateMaxMinor, currencyId, clearRates, availabilityStatus
   , professionIds, professionDetails, instrumentIds, instrumentDetails, genreIds
   , serviceOfferingIds, languages, serviceAreas, onsite, remote, availableToTravel
-  , countryId, cityId, metropolitanAreaId, travelRadiusKm } = do
+  , countryId, cityId, metropolitanAreaId, travelRadiusKm, coverImageUrl } = do
   validateSlug slug
+  forM_ (cleanOptionalText coverImageUrl) $ \coverValue -> do
+    validateHttpUrl "coverImageUrl" coverValue
+    accepted <- jsonRows "SELECT to_jsonb(directory_safe_image_url(?) IS NOT NULL)" [PersistText coverValue]
+    unless (accepted == [Bool True]) $ throwError err400 {errBody="coverImageUrl must be a public image URL"}
   let nameValue=T.strip publicName
   when (T.length nameValue<1 || T.length nameValue>160 || T.any isControl nameValue) $ throwError err400 {errBody="publicName is invalid"}
   unless (profileKind `Set.member` Set.fromList ["person","artist","band","project","organization","company","venue","studio","agency","label","distributor","school"]) $ throwError err400 {errBody="invalid profileKind"}
@@ -791,7 +813,7 @@ profileSummary user profileId = jsonOne err404
   ("SELECT managed.value FROM (" <> managedProfileSql <> ") managed WHERE managed.value->>'id'=?")
   [toPersistValue (auPartyId user),PersistText (UUID.toText profileId)]
 
-listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',classified.expires_at,'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
+listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
 
 createClassified user idempotency request@ClassifiedCreateRequest
   { authorProfileId, categoryId, title, slug, description, onsite, remote
@@ -828,6 +850,8 @@ validateClassified ClassifiedCreateRequest
   when (case (budgetMinMinor,budgetMaxMinor) of (Just minimumValue,Just maximumValue)->maximumValue<minimumValue; _->False) $ throwError err400 {errBody="budget range is invalid"}
   when ((budgetMinMinor /= Nothing || budgetMaxMinor /= Nothing) && currencyId==Nothing) $ throwError err400 {errBody="currencyId is required with a budget"}
   requirements <- jsonOne err400 "SELECT requirements FROM classified_category WHERE id=? AND active" [toPersistValue categoryId]
+  when (classifiedCategoryIsDerived requirements) $
+    throwError err400 {errBody="this category is generated automatically from artist profiles"}
   let required = classifiedRequiredFields requirements
       supported = Set.fromList
         [ "instrumentIds", "genreIds", "professionIds", "locations", "dateRange"
@@ -849,6 +873,10 @@ validateClassified ClassifiedCreateRequest
   when (case (startsAt,endsAt) of (Just startValue,Just endValue)->endValue<startValue; _->False) $
     throwError err400 {errBody="endsAt must not precede startsAt"}
   validateCompensation compensationTypeId budgetMinMinor budgetMaxMinor
+
+classifiedCategoryIsDerived :: Value -> Bool
+classifiedCategoryIsDerived (Object values) = KeyMap.member "derivation" values
+classifiedCategoryIsDerived _ = False
 
 classifiedRequiredFields :: Value -> Set.Set Text
 classifiedRequiredFields (Object values) = case KeyMap.lookup "required" values of
@@ -885,6 +913,9 @@ replaceClassifiedSelectionsDB classifiedId ClassifiedCreateRequest
 
 changeClassifiedStatus user classifiedId DirectoryStatusRequest{status=newStatus,reason=statusReason} = do
   authorProfile <- requireClassifiedAuthor user classifiedId
+  derived <- jsonRows "SELECT to_jsonb(TRUE) FROM classified WHERE id=? AND source_profile_id IS NOT NULL" [toPersistValue classifiedId]
+  unless (null derived) $
+    throwError err409 {errBody="artist profile listings follow their profile; change the profile publication instead"}
   when (newStatus=="published") (requireAdult user)
   current <- jsonOne err404 "SELECT to_jsonb(status) FROM classified WHERE id=?" [toPersistValue classifiedId]
   oldStatus <- case current of String value -> pure value; _ -> throwError err500
@@ -901,7 +932,7 @@ changeClassifiedStatus user classifiedId DirectoryStatusRequest{status=newStatus
 
 parseClassifiedStatus value = lookup value [("draft",Draft),("pending_moderation",PendingModeration),("published",Published),("paused",Paused),("filled",Filled),("expired",Expired),("withdrawn",Withdrawn),("rejected",Rejected),("moderated",Moderated)]
 
-classifiedSummary classifiedId = jsonOne err404 "SELECT jsonb_build_object('id',id,'authorProfileId',author_profile_id,'title',title,'slug',slug,'status',status,'moderationStatus',moderation_status,'expiresAt',expires_at,'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
+classifiedSummary classifiedId = jsonOne err404 "SELECT jsonb_build_object('id',id,'authorProfileId',author_profile_id,'sourceProfileId',source_profile_id,'title',title,'slug',slug,'status',status,'moderationStatus',moderation_status,'expiresAt',NULLIF(expires_at,'infinity'::timestamptz),'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
 
 listApplications user classifiedId = do
   _ <- requireClassifiedAuthor user classifiedId
@@ -1344,7 +1375,10 @@ applyModerationTarget (Object values) action = case (KeyMap.lookup "kind" values
     rawExecute "UPDATE directory_profile SET profile_status=CASE WHEN ?='pause' THEN 'paused' ELSE 'suspended' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now(),version=version+1 WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
     rawExecute "DELETE FROM directory_search_document WHERE entity_kind='profile' AND entity_id=?" [PersistText targetId]
   (Just (String "classified"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
-    rawExecute "UPDATE classified SET status=CASE WHEN ?='pause' THEN 'paused' ELSE 'moderated' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
+    -- A derived listing's paused state belongs to its source profile (the next
+    -- profile sync would republish it), so a moderator pause is recorded as the
+    -- durable moderated state instead.
+    rawExecute "UPDATE classified SET status=CASE WHEN ?='pause' AND source_profile_id IS NULL THEN 'paused' ELSE 'moderated' END,moderation_status=CASE WHEN ?='pause' THEN moderation_status ELSE 'blocked' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText action,PersistText targetId]
     rawExecute "DELETE FROM directory_search_document WHERE entity_kind='classified' AND entity_id=?" [PersistText targetId]
   (Just (String "review"),Just (String targetId)) | action `elem` ["pause","remove"] -> do
     rawExecute "UPDATE directory_review SET status=CASE WHEN ?='pause' THEN 'hidden' ELSE 'removed' END,updated_at=now() WHERE id::text=?" [PersistText action,PersistText targetId]

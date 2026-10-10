@@ -1015,6 +1015,21 @@
       "id": "2026-10-07_artist_invitation_links",
       "path": "tdf-hq/sql/2026-10-07_artist_invitation_links.sql",
       "introducedBy": "8cefeb61335cf60d7c3c8683a3045d26a749f987"
+    },
+    {
+      "id": "2026-10-09_directory_event_search_sync",
+      "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
+      "introducedBy": "2b5e6157a9cb1f88e264fc821667f9eefa6360fa"
+    },
+    {
+      "id": "2026-10-07_directory_artist_derived_listings",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
+      "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
+    },
+    {
+      "id": "2026-10-07_directory_artist_listing_backfill_apply",
+      "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+      "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
     }
   ]
 }

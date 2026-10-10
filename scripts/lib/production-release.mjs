@@ -1025,6 +1025,46 @@ BEGIN
        NOT ILIKE '%directory_public_venue%' THEN
     RAISE EXCEPTION 'directory_public_search_document does not recheck live event and venue eligibility';
   END IF;
+  IF to_regprocedure('public.directory_profile_preview_image_url(uuid)') IS NULL
+     OR to_regprocedure('public.directory_sync_profile_listing(uuid)') IS NULL
+     OR to_regprocedure('public.directory_reconcile_artist_listings()') IS NULL
+     OR to_regprocedure('public.directory_artist_listing_audit()') IS NULL
+     OR directory_safe_image_url('javascript:alert(1)') IS NOT NULL
+     OR directory_safe_image_url('https://drive.google.com/file/d/abc_123/view')
+        IS DISTINCT FROM 'https://drive.google.com/uc?export=view&id=abc_123' THEN
+    RAISE EXCEPTION 'Canonical directory preview image resolution is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public' AND tablename = 'classified'
+      AND indexname = 'classified_source_profile_uidx'
+      AND indexdef ILIKE '%UNIQUE%(source_profile_id)%WHERE (source_profile_id IS NOT NULL)%'
+  ) THEN
+    RAISE EXCEPTION 'classified_source_profile_uidx must keep one derived listing per profile';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.directory_profile'::regclass
+      AND tgname = 'directory_profile_artist_listing_sync_trigger' AND tgenabled <> 'D'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.classified'::regclass
+      AND tgname = 'directory_classified_derivation_guard_trigger' AND tgenabled <> 'D'
+  ) THEN
+    RAISE EXCEPTION 'Artist-profile listing synchronization triggers are missing or disabled';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM classified_category
+    WHERE code = 'artist-profile' AND active AND requirements->>'derivation' = 'artist-profile'
+  ) THEN
+    RAISE EXCEPTION 'The artist-profile derived classified category is missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM directory_artist_listing_audit()
+    WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile','stale_listing_search_document')
+  ) THEN
+    RAISE EXCEPTION 'Artist-profile derived listings are inconsistent with their profiles';
+  END IF;
   IF EXISTS (
     SELECT 1
     FROM directory_public_event event

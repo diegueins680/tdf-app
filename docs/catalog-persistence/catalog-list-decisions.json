@@ -15609,19 +15609,19 @@
       }
     },
     {
-      "id": "7ada75c638366c356dce",
+      "id": "155c8ba51c7e002c10d0",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 199-entry manifest keeps the reviewed 188 entries unchanged and appends the eleven migrations merged in #510 (music release platform, its 2026-09-15/16 follow-ups, the additive artist invitation policy and personal artist invitation links), each with the commit that introduced its released content. Schema verification fails closed without them. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "music-invitation-migration-registration-2026-10-07",
+      "reviewBatch": "directory-artist-listings-2026-10-10",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57167,19 +57167,19 @@
         ]
       },
       "mergedDecision": {
-        "id": "7cf054414f50446f625b",
+        "id": "f185683a8f6a6532b802",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 187-entry manifest keeps the reviewed 186 entries unchanged and appends the additive ticket credit note migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 200-entry manifest keeps the reviewed 199 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "ticket-credit-notes-2026-10-06",
+        "reviewBatch": "directory-event-search-sync-2026-10-10",
         "reviewMethod": "successor-of-reviewed-decision"
       }
     },
@@ -58786,6 +58786,21 @@
       "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
       "justification": "Test-only mutable mock of the useSession() result (current session, loading flag); hook state, not a selectable or reportable business list.",
       "reviewed": true
+    },
+    {
+      "id": "3f03f8c0763d11d0cd5f",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P2-domain",
+      "risk": "Adding review states without operator semantics could hide unresolved listing inconsistencies.",
+      "justification": "Review lifecycle of artist-listing audit findings (open, resolved, dismissed), enforced by the directory_artist_listing_audit_finding CHECK; an operational review protocol, not an editable business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
+        "line": 39
+      },
+      "reviewBatch": "directory-artist-listings-2026-10-07"
     },
     {
       "id": "60303ac3b3772c65d7c6",

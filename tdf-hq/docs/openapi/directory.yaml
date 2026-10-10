@@ -441,6 +441,12 @@ components:
         sponsorDisclosure: { type: string, nullable: true }
         effectiveAt: { type: string, format: date-time, nullable: true }
         expiresAt: { type: string, format: date-time, nullable: true }
+        sourceProfile:
+          type: object
+          nullable: true
+          description: Present on listings derived automatically from a public artist profile; links back to that canonical profile.
+          required: [id, slug, name, canonicalUrl]
+          properties: { id: { type: string, format: uuid }, slug: { type: string }, name: { type: string }, canonicalUrl: { type: string } }
     DirectoryFacets:
       type: object
       required: [entityTypes, cities, total]
@@ -463,7 +469,7 @@ components:
     TaxonomyItem:
       type: object
       required: [id, code, name]
-      properties: { id: { type: string, format: uuid }, code: { type: string }, slug: { type: string, nullable: true }, name: { type: string }, parentId: { type: string, format: uuid, nullable: true }, requirements: { type: object, additionalProperties: true }, metadata: { type: object, additionalProperties: true }, countryId: { type: string, format: uuid }, currencyId: { type: string, format: uuid }, symbol: { type: string }, minorUnits: { type: integer, minimum: 0, maximum: 6 }, latitude: { type: number, nullable: true }, longitude: { type: number, nullable: true } }
+      properties: { id: { type: string, format: uuid }, code: { type: string }, slug: { type: string, nullable: true }, name: { type: string }, parentId: { type: string, format: uuid, nullable: true }, requirements: { type: object, additionalProperties: true }, derived: { type: boolean, description: 'Classified category generated from profiles; never offered for manual creation' }, metadata: { type: object, additionalProperties: true }, countryId: { type: string, format: uuid }, currencyId: { type: string, format: uuid }, symbol: { type: string }, minorUnits: { type: integer, minimum: 0, maximum: 6 }, latitude: { type: number, nullable: true }, longitude: { type: number, nullable: true } }
     DirectoryTaxonomies:
       type: object
       required: [locale, professions, classifiedCategories, compensationTypes, serviceOfferings, currencies, instruments, genres, languages, cities]
@@ -494,6 +500,13 @@ components:
         languages: { type: array, items: { $ref: '#/components/schemas/PublicTaxonomyMembership' } }
         verification: { type: array, items: { type: object, additionalProperties: false, required: [type, status], properties: { type: { type: string }, status: { type: string }, verifiedAt: { type: string, format: date-time, nullable: true } } } }
         reputation: { type: object, additionalProperties: false, properties: { completeness: { type: number }, responseRate: { type: number }, medianResponseMinutes: { type: integer }, completed: { type: integer }, reviewAverage: { type: number }, reviewCount: { type: integer } } }
+        previewImageUrl: { type: string, nullable: true, description: 'Canonical preview image (cover, featured, linked profile media, avatar/logo, first portfolio image); null means no valid media' }
+        derivedListing:
+          type: object
+          nullable: true
+          description: The listing derived automatically from this artist profile, when public.
+          required: [id, slug, canonicalUrl]
+          properties: { id: { type: string, format: uuid }, slug: { type: string }, canonicalUrl: { type: string } }
         canonicalUrl: { type: string }
     PublicTaxonomyMembership:
       type: object
@@ -526,7 +539,14 @@ components:
         compensation: { type: object, nullable: true, additionalProperties: false, properties: { typeId: { type: string, format: uuid }, minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true }, negotiable: { type: boolean } } }
         startsAt: { type: string, format: date-time, nullable: true }
         endsAt: { type: string, format: date-time, nullable: true }
-        expiresAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time, nullable: true, description: 'Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring' }
+        imageUrl: { type: string, nullable: true }
+        sourceProfile:
+          type: object
+          nullable: true
+          description: Canonical artist profile this listing is derived from; the listing content is read-only and follows it.
+          required: [id, name, slug, kind, canonicalUrl]
+          properties: { id: { type: string, format: uuid }, name: { type: string }, slug: { type: string }, kind: { $ref: '#/components/schemas/DirectoryProfileKind' }, canonicalUrl: { type: string } }
         canonicalUrl: { type: string }
     PublicDirectoryEvent:
       type: object
@@ -556,6 +576,7 @@ components:
         name: { type: string }
         capacity: { type: integer, nullable: true }
         location: { $ref: '#/components/schemas/PublicLocation' }
+        imageUrl: { type: string, nullable: true, description: 'Venue image as shown on its search card; null means no valid media' }
         canonicalUrl: { type: string }
     AgeAssuranceRequest: { type: object, additionalProperties: false, required: [adultAttestation], properties: { adultAttestation: { type: boolean }, guardianPartyId: { type: integer, format: int64 } } }
     DirectoryProfileUpsert:
@@ -592,6 +613,7 @@ components:
         remote: { type: boolean }
         availableToTravel: { type: boolean }
         travelRadiusKm: { type: number, minimum: 0, maximum: 20000 }
+        coverImageUrl: { type: string, nullable: true, maxLength: 2048, description: Designated preview image (HTTPS or same-origin path). An empty string clears it; omit to keep the current cover. }
     DirectoryPortfolioItem:
       type: object
       additionalProperties: false
@@ -672,6 +694,13 @@ components:
         remote: { type: boolean }
         availableToTravel: { type: boolean }
         travelRadiusKm: { type: number, nullable: true }
+        coverImageUrl: { type: string, nullable: true }
+        previewImageUrl: { type: string, nullable: true }
+        derivedListing:
+          type: object
+          nullable: true
+          required: [id, slug, status, canonicalUrl]
+          properties: { id: { type: string, format: uuid }, slug: { type: string }, status: { type: string }, canonicalUrl: { type: string } }
         professionIds: { type: array, items: { type: string, format: uuid } }
         professionDetails: { type: array, items: { $ref: '#/components/schemas/DirectoryProfessionInput' } }
         instrumentIds: { type: array, items: { type: string, format: uuid } }
@@ -716,7 +745,7 @@ components:
         serviceOfferingId: { type: string, format: uuid }
         serviceAdId: { type: integer, format: int64 }
         expiresAt: { type: string, format: date-time }
-    ManagedClassified: { type: object, additionalProperties: false, required: [id, authorProfileId, title, slug, status, moderationStatus, version], properties: { id: { type: string, format: uuid }, authorProfileId: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 } } }
+    ManagedClassified: { type: object, additionalProperties: false, required: [id, authorProfileId, title, slug, status, moderationStatus, version], properties: { id: { type: string, format: uuid }, authorProfileId: { type: string, format: uuid }, sourceProfileId: { type: string, format: uuid, nullable: true, description: Set on listings derived from an artist profile; their content and status follow that profile }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 } } }
     ApplicationCreate: { type: object, required: [applicantProfileId, message, portfolio], properties: { applicantProfileId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 }, portfolio: { type: array, items: { type: object, additionalProperties: true } }, availability: { type: string }, proposedAmountMinor: { type: integer, format: int64, minimum: 0 }, currencyId: { type: string, format: uuid } } }
     ClassifiedApplication: { type: object, description: Private to participants and authorized admins, additionalProperties: true }
     InvitationCreate: { type: object, required: [senderProfileId, targetProfileId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, classifiedId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 } } }
