@@ -23720,7 +23720,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "06cdcb7e113f56b64d544813e6bc7eab472d2683aa2f6b2633f7a0be3965f1e3",
+      "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
