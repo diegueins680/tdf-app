@@ -8,14 +8,14 @@ import type { PublicUpcomingEventDTO, SocialRsvpDTO, SocialRsvpWriteDTO } from '
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const listMock = jest.fn<() => Promise<PublicUpcomingEventDTO[]>>();
+const listMock = jest.fn<(opts?: { startAfter?: string }) => Promise<PublicUpcomingEventDTO[]>>();
 const getRsvpMock = jest.fn<(eventId: string) => Promise<SocialRsvpDTO | null>>();
 const upsertMock = jest.fn<(eventId: string, input: SocialRsvpWriteDTO) => Promise<SocialRsvpDTO>>();
 let mockSession: { partyId: number; preferences?: { showEventRsvpsOnProfile?: boolean } } | null = { partyId: 7 };
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: {
-    listPublicUpcomingEvents: () => listMock(),
+    listPublicUpcomingEvents: (opts?: { startAfter?: string }) => listMock(opts),
     getMyRsvp: (eventId: string) => getRsvpMock(eventId),
     upsertMyRsvp: (eventId: string, input: SocialRsvpWriteDTO) => upsertMock(eventId, input),
   },
@@ -37,12 +37,15 @@ async function waitFor(check: () => boolean) {
   }
 }
 
-const event = (id: string, title: string): PublicUpcomingEventDTO => ({
+// Relative to the run date: the carousel drops events that have already started.
+const inTwoWeeks = new Date(Date.now() + 14 * 86_400_000).toISOString();
+const event = (id: string, title: string, overrides: Partial<PublicUpcomingEventDTO> = {}): PublicUpcomingEventDTO => ({
   publicUpcomingEventId: id,
   publicUpcomingEventTitle: title,
-  publicUpcomingEventStart: '2026-10-24T20:00:00-05:00',
+  publicUpcomingEventStart: inTwoWeeks,
   publicUpcomingEventVenueName: 'Andes Brewing',
   publicUpcomingEventWorkflowStateCode: 'published',
+  ...overrides,
 });
 
 async function render(path = '/buscar') {
@@ -213,6 +216,58 @@ describe('UpcomingEventsCarousel', () => {
     }
   });
 
+  it('shows an explicit decline instead of offering to overwrite it with one tap', async () => {
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockResolvedValue({ rsvpEventId: '143', rsvpStatus: 'declined', rsvpShowOnProfile: false });
+    const view = await render();
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('No vas'));
+      expect(view.container.textContent).toContain('No vas');
+      expect(button(view.container, 'Asistiré')).toBeUndefined();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('asks for events from the current time and leaves out any that already started', async () => {
+    const before = Date.now();
+    listMock.mockResolvedValue([
+      event('140', 'YA EMPEZÓ', { publicUpcomingEventStart: new Date(before - 60_000).toISOString() }),
+      event('143', 'ELECTROETNIA'),
+    ]);
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render();
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('ELECTROETNIA'));
+      expect(view.container.textContent).not.toContain('YA EMPEZÓ');
+      const requested = Date.parse(listMock.mock.calls[0]?.[0]?.startAfter ?? '');
+      expect(requested).toBeGreaterThanOrEqual(before);
+      expect(requested).toBeLessThanOrEqual(Date.now());
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('shows the start in the event\'s own timezone', async () => {
+    // 01:30 UTC is the previous evening in Guayaquil (UTC-5) and the next morning in Tokyo.
+    const start = new Date(Date.now() + 14 * 86_400_000);
+    start.setUTCHours(1, 30, 0, 0);
+    listMock.mockResolvedValue([
+      event('141', 'QUITO', { publicUpcomingEventStart: start.toISOString(), publicUpcomingEventTimezone: 'America/Guayaquil' }),
+      event('142', 'TOKIO', { publicUpcomingEventStart: start.toISOString(), publicUpcomingEventTimezone: 'Asia/Tokyo' }),
+    ]);
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render();
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('TOKIO'));
+      const content = view.container.textContent ?? '';
+      expect(content).toContain('20:30');
+      expect(content).toContain('10:30');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
   it('follows the active language for labels and dates', async () => {
     await i18n.changeLanguage('en');
     listMock.mockResolvedValue([event('141', 'PATCH CULTURE vol.1'), event('143', 'ELECTROETNIA')]);
@@ -225,7 +280,7 @@ describe('UpcomingEventsCarousel', () => {
       const content = view.container.textContent ?? '';
       expect(content).toContain('Upcoming events');
       expect(content).toContain('See all');
-      expect(content).toMatch(/Oct/);
+      expect(content).toContain(new Intl.DateTimeFormat('en', { month: 'short' }).format(new Date(inTwoWeeks)));
       expect(content).not.toMatch(/Próximos|Asistiré|Vas/);
       expect(button(view.container, "I'll go")).toBeDefined();
       expect(view.container.querySelector('button[aria-label="Hide upcoming events"]')).not.toBeNull();

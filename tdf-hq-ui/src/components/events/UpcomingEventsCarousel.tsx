@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Box, Button, Card, CardActionArea, CardMedia, Chip, IconButton, Stack, Typography } from '@mui/material';
@@ -30,16 +30,24 @@ const resolveImageUrl = (value: string | null | undefined): string => {
   try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return EVENT_IMAGE_FALLBACK; }
 };
 
-const formatStart = (value: string, locale: string): string | null => {
+// Shown in the event's own timezone, like the event detail, so the hour and day match it.
+const formatStart = (value: string, locale: string, timeZone?: string | null): string | null => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  };
   try {
-    return new Intl.DateTimeFormat(locale, {
-      weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-    }).format(parsed);
+    return new Intl.DateTimeFormat(locale, timeZone ? { ...options, timeZone } : options).format(parsed);
   } catch {
-    return null;
+    try { return new Intl.DateTimeFormat(locale, options).format(parsed); } catch { return null; }
   }
+};
+
+const REFRESH_MS = 5 * 60_000;
+const notStarted = (event: PublicUpcomingEventDTO, now: number) => {
+  const start = Date.parse(event.publicUpcomingEventStart);
+  return Number.isNaN(start) || start > now;
 };
 
 const readDismissed = () => {
@@ -54,18 +62,23 @@ export default function UpcomingEventsCarousel() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [dismissed, setDismissed] = useState(readDismissed);
-  const startAfter = useMemo(() => new Date().toISOString(), []);
   const onEventsPage = location.pathname === EVENTS_PATH || location.pathname.startsWith(`${EVENTS_PATH}/`);
   const enabled = Boolean(session) && !dismissed && !onEventsPage;
 
   const eventsQuery = useQuery({
-    queryKey: ['upcoming-events-carousel', startAfter],
-    queryFn: ({ signal }) => SocialEventsAPI.listPublicUpcomingEvents({ startAfter, limit: CAROUSEL_LIMIT, signal }),
+    queryKey: ['upcoming-events-carousel'],
+    // The shell can stay mounted for days: every fetch asks from the current time.
+    queryFn: ({ signal }) => SocialEventsAPI.listPublicUpcomingEvents({
+      startAfter: new Date().toISOString(), limit: CAROUSEL_LIMIT, signal,
+    }),
     enabled,
-    staleTime: 5 * 60_000,
+    staleTime: REFRESH_MS,
+    refetchInterval: REFRESH_MS,
   });
   // This sits in both shells: an unexpected response must hide the carousel, never break the page.
-  const events = Array.isArray(eventsQuery.data) ? eventsQuery.data : [];
+  const loadedAt = eventsQuery.dataUpdatedAt;
+  const events = (Array.isArray(eventsQuery.data) ? eventsQuery.data : [])
+    .filter((event) => notStarted(event, loadedAt));
 
   const rsvpQueries = useQueries({
     queries: events.map((event) => ({
@@ -140,13 +153,13 @@ export default function UpcomingEventsCarousel() {
                     {event.publicUpcomingEventTitle}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" component="p" noWrap>
-                    {formatStart(event.publicUpcomingEventStart, i18n.language) ?? t('authEntry.eventsCarousel.dateTbc')}
+                    {formatStart(event.publicUpcomingEventStart, i18n.language, event.publicUpcomingEventTimezone) ?? t('authEntry.eventsCarousel.dateTbc')}
                     {event.publicUpcomingEventVenueName ? ` · ${event.publicUpcomingEventVenueName}` : ''}
                   </Typography>
                 </Box>
               </CardActionArea>
               <Box sx={{ px: 1.25, pb: 1.25 }}>
-                {status && status !== 'declined' ? (
+                {status ? (
                   <Chip size="small" color={status === 'accepted' ? 'success' : 'default'} label={t(rsvpLabelKey[status])} />
                 ) : (
                   <Button
