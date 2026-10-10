@@ -18806,7 +18806,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+      "sha256": "72eb45ac44072cf59dbb65144f74c00357dc7f0a44deb26de5b01f045bfbc116",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20183,7 +20183,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "5c19d11bb7e1017c1691eca7104aa0bf564efd66c6fbef567862a9484080e8db",
+      "sha256": "625883dcd57d9e6a10f3ee3560b5e1518b6cf76da20121f3e2fbca1ba88c4ff7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31100,6 +31100,30 @@
       ]
     },
     {
+      "id": "SURFACE-4414e78c99a632da",
+      "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
+      "sha256": "d98cca31c934a8da7d9a20e47dd74fe8c7f55507aa22aaa999967b93fba109f9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-48d8c4fab6aef615",
+      "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+      "sha256": "ab721a0712aefb03ae47d12ebed3ccdd2b7386d560a15a0e42b2ba6829bbc77e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -34603,6 +34627,18 @@
       "sha256": "e028d25de639317fa3787d0e0a1160f3a1a5412f0db3a1d366a728d4ed9391ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-4b9b7fcb2555c26b",
+      "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
+      "sha256": "f3fa1b64b6740c79b19b393e8e34a9259a1c2c6182d59ec3d087b27a0561a636",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DIR-SEARCH-SYNC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f4221f60cdc9eace",
