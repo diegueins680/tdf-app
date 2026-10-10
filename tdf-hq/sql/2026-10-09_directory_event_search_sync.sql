@@ -416,6 +416,10 @@ WHERE document.source_status = 'published'
 -- Backfill: resolve unambiguous free-text cities, then index current events.
 -- Events that already existed are not new results, so saved-search alerts
 -- stay off while their documents are written (until this transaction ends).
+-- The sync lock comes first, the order every concurrent sync uses (advisory
+-- lock, then the documents), so this cannot deadlock with a write that commits
+-- while the migration runs.
+SELECT directory_search_sync_lock();
 ALTER TABLE directory_search_document DISABLE TRIGGER directory_search_alert_trigger;
 
 UPDATE venue
