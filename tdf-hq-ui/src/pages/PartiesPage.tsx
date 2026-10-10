@@ -246,7 +246,8 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
             // field, so a save never restores stale values another editor changed meanwhile.
             const changes: PartyUpdate = {};
             if (displayName !== (party?.displayName ?? '')) changes.uDisplayName = displayName;
-            if (email !== (party?.primaryEmail ?? '')) changes.uPrimaryEmail = email.trim() || null;
+            // An empty string clears the stored email; null would be stripped from the request.
+            if (email !== (party?.primaryEmail ?? '')) changes.uPrimaryEmail = email.trim();
             if (instagram !== (party?.instagram ?? '')) changes.uInstagram = instagram;
             if (phone !== (party?.primaryPhone ?? '')) changes.uPrimaryPhone = phone;
             if (notes !== (party?.notes ?? '')) changes.uNotes = notes;

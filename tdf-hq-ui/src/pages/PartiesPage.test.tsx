@@ -895,6 +895,65 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('clears a stored email with an empty string instead of an empty update', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 8,
+        displayName: 'Sala Norte',
+        isOrg: false,
+        primaryEmail: 'booking@salanorte.ec',
+        instagram: 'salanorte',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+      {
+        partyId: 9,
+        displayName: 'Sala Sur',
+        isOrg: false,
+        primaryEmail: 'hola@salasur.ec',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+      });
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Abrir acciones para Sala Norte'));
+        await flushPromises();
+        await flushPromises();
+      });
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Editar contacto'));
+        await flushPromises();
+        await flushPromises();
+      });
+      await act(async () => {
+        const label = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label')).find(
+          (element) => buttonText(element).trim() === 'Email',
+        );
+        const field = label ? document.getElementById(label.htmlFor) : null;
+        if (!(field instanceof HTMLInputElement)) throw new Error('Email field not found');
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(field, '');
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Guardar')[0]!);
+        await flushPromises();
+        await flushPromises();
+      });
+      await waitForExpectation(() => {
+        expect(updatePartyMock).toHaveBeenCalledWith(8, { uPrimaryEmail: '' });
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the optional username empty until the admin asks for a custom login', async () => {
     listPartiesMock.mockResolvedValue([
       {
