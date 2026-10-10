@@ -1532,23 +1532,23 @@
       "reviewed": true
     },
     {
-      "id": "79e7466c1f722b842262",
+      "id": "1c608b378ca85918019d",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "React Query key segments are client cache mechanics and do not enumerate business values.",
+      "justification": "React Query key segments are client cache mechanics and do not enumerate business values. Same three keys as reviewed decision 79e7466c1f722b842262, moved unchanged from EventRsvpControls.tsx to a module the shell carousel can share.",
       "reviewed": true,
       "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "ci-recovery-2026-09-12",
+      "reviewBatch": "events-carousel-rsvp-keys-2026-10-10",
       "evidence": {
-        "file": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-        "line": 32,
+        "file": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+        "line": 2,
         "kind": "object-registry",
         "name": "eventRsvpQueryKeys",
         "valueCount": 3,
-        "consumerCount": 14,
+        "consumerCount": 24,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
