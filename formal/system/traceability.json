@@ -9320,7 +9320,7 @@
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
-    "tdf-hq/src/TDF/CoursePhone.hs": "0063fb53d4809e823e140009d23bb31a48ab30dea35cd9c9460225db4a5b594c",
+    "tdf-hq/src/TDF/CoursePhone.hs": "0d6b2f49406cad9ec126a50c586d19cb92f81a52a668d7d0439315f934cc83e3",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
@@ -9423,7 +9423,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
-    "tdf-hq/test/TDF/ServerSpec.hs": "bceb05fac520c03406bdb7b7d6aa3b60297bc26d994d75ece5e1e4c7448268cc",
+    "tdf-hq/test/TDF/ServerSpec.hs": "76bb4f5db4da67e78e68888a81df2c53f8a81d66742099dde4e645055af45ded",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
@@ -31723,7 +31723,7 @@
     {
       "id": "SURFACE-7a17991a5f78eecb",
       "path": "tdf-hq/src/TDF/CoursePhone.hs",
-      "sha256": "0063fb53d4809e823e140009d23bb31a48ab30dea35cd9c9460225db4a5b594c",
+      "sha256": "0d6b2f49406cad9ec126a50c586d19cb92f81a52a668d7d0439315f934cc83e3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34015,7 +34015,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "bceb05fac520c03406bdb7b7d6aa3b60297bc26d994d75ece5e1e4c7448268cc",
+      "sha256": "76bb4f5db4da67e78e68888a81df2c53f8a81d66742099dde4e645055af45ded",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

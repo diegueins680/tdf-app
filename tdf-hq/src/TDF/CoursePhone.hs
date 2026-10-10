@@ -70,4 +70,14 @@ normalizeEcuadorLocalPhone raw
 -- | Course registration phone: international E.164 input or an Ecuador
 -- national number, normalized to E.164.
 normalizeCoursePhone :: Text -> Maybe Text
-normalizeCoursePhone raw = normalizeInternationalPhoneInput raw <|> normalizeEcuadorLocalPhone raw
+normalizeCoursePhone raw =
+  stripEcuadorTrunkZero <$> (normalizeInternationalPhoneInput raw <|> normalizeEcuadorLocalPhone raw)
+
+-- | People often keep Ecuador's national trunk zero after the country code
+-- (@+593 098 838 4849@, @+593 02 234 5678@). E.164 has no trunk prefix, so
+-- drop it, matching the web normalizer in @tdf-hq-ui/src/utils/phone.ts@.
+stripEcuadorTrunkZero :: Text -> Text
+stripEcuadorTrunkZero e164 =
+  case T.stripPrefix "+5930" e164 of
+    Just rest | T.length rest `elem` [8, 9] -> "+593" <> rest
+    _ -> e164

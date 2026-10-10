@@ -3,6 +3,7 @@
 
 module TDF.ServerSpec (spec) where
 
+import qualified TDF.CoursePhone as CoursePhone
 import Control.Monad (forM_)
 import Control.Exception (bracket, toException, try)
 import Control.Monad.IO.Class (liftIO)
@@ -11069,6 +11070,14 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationPhoneE164 (Just " 098 838 4849 ") `shouldBe` Right (Just "+593988384849")
             validateCourseRegistrationPhoneE164 (Just "098-838-4849") `shouldBe` Right (Just "+593988384849")
             validateCourseRegistrationPhoneE164 (Just "(02) 234-5678") `shouldBe` Right (Just "+59322345678")
+
+        it "drops Ecuador's trunk zero after the country code, like the web normalizer" $ do
+            validateCourseRegistrationPhoneE164 (Just "+593 098 838 4849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "+593 02 234 5678") `shouldBe` Right (Just "+59322345678")
+            validateCourseRegistrationPhoneE164 (Just "+593 98 838 4849") `shouldBe` Right (Just "+593988384849")
+            -- Checkout and the legacy lead path share this normalizer.
+            CoursePhone.normalizeCoursePhone "+593 098 838 4849" `shouldBe` Just "+593988384849"
+            CoursePhone.normalizeCoursePhone "+5930988384849" `shouldBe` Just "+593988384849"
 
         it "keeps rejecting local-looking numbers with the wrong length or prefix" $ do
             let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
