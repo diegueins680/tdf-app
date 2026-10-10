@@ -342,6 +342,7 @@ test-suite tdf-hq-test
     TDF.LiveIntakeIdentitySpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
+    TDF.WhatsAppConsentSpec
     TDF.DriveReplaySpec
     TDF.CourseIdentitySpec
     TDF.TrialIdentitySpec

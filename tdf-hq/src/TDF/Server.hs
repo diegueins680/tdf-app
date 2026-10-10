@@ -93,7 +93,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawExecuteCount, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
 import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
@@ -1697,14 +1697,17 @@ publicRequestWhatsAppConsent WhatsAppConsentRequest{..} = do
   claimed <- runDB (claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean)
   when claimed $ do
     result <- sendWhatsAppConfirmationRequest now phoneVal nameClean
-    -- A request that never reached the number must not block a retry.
+    -- A request that never reached the number must not block a retry, and the
+    -- person can still confirm it by messaging SI themselves.
     when (isLeft result) $
-      runDB (releaseWhatsAppConfirmationClaim now phoneVal)
+      runDB (markWhatsAppConfirmationRequestUnsent now phoneVal)
   pure (publicWhatsAppConsentResponse phoneVal
     "Si el número es válido, recibirá un WhatsApp de TDF Records. Responde SI a ese mensaje para confirmar tu suscripción.")
 
 -- | Opting out needs no proof of control; a confirmation message is sent only
 -- to a number that was actually subscribed, so the form cannot message strangers.
+-- The withdrawal instant invalidates a pending request; the request instant is
+-- kept so that withdrawing cannot be used to request another message early.
 publicWhatsAppOptOut :: WhatsAppOptOutRequest -> AppM WhatsAppConsentResponse
 publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
   phoneVal <- either throwError pure (validateWhatsAppPhoneInput worPhone)
@@ -1729,7 +1732,6 @@ publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
       , ME.WhatsAppConsentNote =. reasonClean
       , ME.WhatsAppConsentConsentedAt =. Nothing
       , ME.WhatsAppConsentRevokedAt =. Just now
-      , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
       , ME.WhatsAppConsentUpdatedAt =. now
       ]
     pure (maybe False (ME.whatsAppConsentConsent . entityVal) existing)
@@ -1802,47 +1804,62 @@ recordWhatsAppConsentNotice now phoneVal nameClean source message result =
       result
 
 -- | Claims the right to send one confirmation request: at most once per number
--- per resend interval, never for an active consent. One conditional update, so
--- concurrent submissions cannot both claim.
+-- per resend interval unless the previous request was not accepted by the
+-- provider, never for an active consent. One conditional update, so concurrent
+-- submissions cannot both claim.
 claimWhatsAppConfirmationRequest
   :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO Bool
 claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
-  _ <- insertUnique ME.WhatsAppConsent
-    { ME.whatsAppConsentPhoneE164 = phoneVal
-    , ME.whatsAppConsentDisplayName = nameClean
-    , ME.whatsAppConsentConsent = False
-    , ME.whatsAppConsentSource = sourceClean
-    , ME.whatsAppConsentNote = Just "pending_confirmation"
-    , ME.whatsAppConsentConsentedAt = Nothing
-    , ME.whatsAppConsentRevokedAt = Nothing
-    , ME.whatsAppConsentConfirmationRequestedAt = Nothing
-    , ME.whatsAppConsentCreatedAt = now
-    , ME.whatsAppConsentUpdatedAt = now
-    }
-  changed <- updateWhereCount
-    ( [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
-      , ME.WhatsAppConsentConsent ==. False
-      ]
-      ++ ( [ME.WhatsAppConsentConfirmationRequestedAt ==. Nothing]
-           ||. [ME.WhatsAppConsentConfirmationRequestedAt <. Just (addUTCTime (negate whatsAppConfirmationResendInterval) now)] )
-    )
-    [ ME.WhatsAppConsentConfirmationRequestedAt =. Just now
-    , ME.WhatsAppConsentDisplayName =. nameClean
-    , ME.WhatsAppConsentSource =. sourceClean
-    , ME.WhatsAppConsentNote =. Just "pending_confirmation"
-    , ME.WhatsAppConsentUpdatedAt =. now
+  -- Simultaneous first requests for a number must not fail on its unique row.
+  rawExecute
+    "INSERT INTO whats_app_consent (phone_e164, display_name, consent, source, note, created_at, updated_at) \
+    \VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING"
+    [ toPersistValue phoneVal
+    , toPersistValue nameClean
+    , toPersistValue False
+    , toPersistValue sourceClean
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue now
+    , toPersistValue now
+    ]
+  -- A withdrawal keeps the request instant, so withdrawing cannot reopen the
+  -- interval; an undelivered request reopens it only while it is not withdrawn.
+  changed <- rawExecuteCount
+    "UPDATE whats_app_consent \
+    \SET confirmation_requested_at = ?, display_name = ?, source = ?, note = ?, updated_at = ? \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND (confirmation_requested_at IS NULL OR confirmation_requested_at < ? \
+    \OR (note = ? AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at)))"
+    [ toPersistValue now
+    , toPersistValue nameClean
+    , toPersistValue sourceClean
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue now
+    , toPersistValue phoneVal
+    , toPersistValue (addUTCTime (negate whatsAppConfirmationResendInterval) now)
+    , toPersistValue whatsAppUnsentRequestNote
     ]
   pure (changed == 1)
 
--- | Undoes a claim whose request was not accepted by the provider.
-releaseWhatsAppConfirmationClaim :: UTCTime -> Text -> SqlPersistT IO ()
-releaseWhatsAppConfirmationClaim claimedAt phoneVal =
+-- | Records that the provider did not accept this exact claim's request. The
+-- request stays pending so the number can confirm it by messaging first, but
+-- only briefly, and it no longer blocks a new request. A later claim or a
+-- withdrawal is left untouched.
+markWhatsAppConfirmationRequestUnsent :: UTCTime -> Text -> SqlPersistT IO ()
+markWhatsAppConfirmationRequestUnsent claimedAt phoneVal =
   updateWhere
     [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
     , ME.WhatsAppConsentConsent ==. False
     , ME.WhatsAppConsentConfirmationRequestedAt ==. Just claimedAt
+    , ME.WhatsAppConsentNote ==. Just whatsAppSentRequestNote
     ]
-    [ME.WhatsAppConsentConfirmationRequestedAt =. Nothing]
+    [ME.WhatsAppConsentNote =. Just whatsAppUnsentRequestNote]
+
+whatsAppSentRequestNote :: Text
+whatsAppSentRequestNote = "pending_confirmation"
+
+whatsAppUnsentRequestNote :: Text
+whatsAppUnsentRequestNote = "pending_unsent"
 
 parseWhatsAppMessageTimestamp :: Maybe Text -> Maybe UTCTime
 parseWhatsAppMessageTimestamp rawTimestamp = do
@@ -1863,6 +1880,11 @@ whatsAppConfirmationResendInterval = 24 * 3600
 whatsAppConfirmationWindow :: NominalDiffTime
 whatsAppConfirmationWindow = 7 * 24 * 3600
 
+-- | The number never received a prompt for an unsent request, so only a reply
+-- made while the person is still completing the form may confirm it.
+whatsAppUnsentConfirmationWindow :: NominalDiffTime
+whatsAppUnsentConfirmationWindow = 3600
+
 isWhatsAppConsentConfirmationMessage :: Text -> Bool
 isWhatsAppConsentConfirmationMessage rawMessage =
   normalized `elem` ["si", "sí", "yes", "acepto", "confirmo"]
@@ -1870,24 +1892,31 @@ isWhatsAppConsentConfirmationMessage rawMessage =
     normalized = T.toCaseFold (T.dropAround (not . isAlphaNum) (T.strip rawMessage))
 
 -- | Activates consent only for a pending request on the replying number that is
--- inside the confirmation window and was created no later than the reply itself.
--- One conditional update: a concurrent opt-out that clears the request wins, and
--- a delayed or replayed earlier reply cannot confirm a newer request.
+-- inside its confirmation window (shorter when the request was never delivered),
+-- was created no later than the reply itself and has not been withdrawn since.
+-- One conditional update: a concurrent opt-out wins, and a delayed or replayed
+-- earlier reply cannot confirm a newer request. The request instant is kept so
+-- the per-number interval still applies after a confirmation or a withdrawal.
 applyWhatsAppConsentConfirmation :: UTCTime -> Maybe UTCTime -> Text -> SqlPersistT IO Bool
 applyWhatsAppConsentConfirmation _ Nothing _ = pure False
 applyWhatsAppConsentConfirmation now (Just sentAt) senderPhone = do
-  changed <- updateWhereCount
-    [ ME.WhatsAppConsentPhoneE164 ==. senderPhone
-    , ME.WhatsAppConsentConsent ==. False
-    , ME.WhatsAppConsentConfirmationRequestedAt >=. Just (addUTCTime (negate whatsAppConfirmationWindow) now)
-    , ME.WhatsAppConsentConfirmationRequestedAt <=. Just sentAt
-    ]
-    [ ME.WhatsAppConsentConsent =. True
-    , ME.WhatsAppConsentConsentedAt =. Just now
-    , ME.WhatsAppConsentRevokedAt =. Nothing
-    , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
-    , ME.WhatsAppConsentNote =. Just "confirmed_by_reply"
-    , ME.WhatsAppConsentUpdatedAt =. now
+  changed <- rawExecuteCount
+    "UPDATE whats_app_consent \
+    \SET consent = ?, consented_at = ?, revoked_at = NULL, note = ?, updated_at = ? \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND confirmation_requested_at <= ? \
+    \AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at) \
+    \AND ((note = ? AND confirmation_requested_at >= ?) OR (note = ? AND confirmation_requested_at >= ?))"
+    [ toPersistValue True
+    , toPersistValue now
+    , toPersistValue ("confirmed_by_reply" :: Text)
+    , toPersistValue now
+    , toPersistValue senderPhone
+    , toPersistValue sentAt
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppConfirmationWindow) now)
+    , toPersistValue whatsAppUnsentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppUnsentConfirmationWindow) now)
     ]
   pure (changed == 1)
 

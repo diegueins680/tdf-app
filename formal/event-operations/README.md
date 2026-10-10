@@ -605,3 +605,11 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## WhatsApp consent confirmation
+
+`WhatsAppConsent.tla` and seven configurations check the double opt-in contract in
+[whatsapp-consent.md](../system/whatsapp-consent.md). The positive model and six
+single-guard negative controls are mandatory in the formal runner. Bounds, provider
+assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
+staff capture, delivery and message content are outside the model.

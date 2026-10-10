@@ -602,7 +602,6 @@ applyWhatsAppCampaignOptOut now rawPhone mInboundPartyId =
           , ME.WhatsAppConsentNote =. Just "Inbound WhatsApp opt-out keyword"
           , ME.WhatsAppConsentConsentedAt =. Nothing
           , ME.WhatsAppConsentRevokedAt =. Just now
-          , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
           , ME.WhatsAppConsentUpdatedAt =. now
           ]
       phoneParties <-
