@@ -37,3 +37,16 @@ transitions in Haskell; their transition relations need separate evidence (for
 example `TDF.Directory.Policy` for directory claims). Guards, actors and side effects
 are not checked. A matching CHECK constraint does not prove every writer is legal.
 `PAY-INVOICE-001` is abstract receipt presence and is explicitly unbound.
+
+## Backend validators (AUTHORITY-053)
+
+Machines whose transitions are enforced by a Haskell validator may bind it as
+`code: {file, validator, renderer}`. The checker reads the `allowedTransitions`
+list following the validator definition, maps constructors to stored names
+through the renderer's `case` expression and compares the pairs with the
+declared transitions in both `--static` and `--database-url` modes. Identity
+transitions accepted by the validators are not declared and are not compared.
+A difference must equal `code.deviation` exactly. Bound: event ticket
+fulfillment, Domo quote, service booking fulfillment and marketplace rental
+fulfillment. Course enrollment is enforced in code but has no declared model;
+distribution renders states with `show` and waits on AUTHORITY-048.
