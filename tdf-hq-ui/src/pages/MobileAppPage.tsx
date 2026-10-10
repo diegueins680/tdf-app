@@ -2,9 +2,22 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, validateDistribution, type MobilePlatform } from '../mobile/distribution';
+import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, validateDistribution, type DistributionChannel, type MobilePlatform } from '../mobile/distribution';
 import MobileFeedbackForm from '../mobile/MobileFeedbackForm';
 import { useMobileTelemetry } from '../mobile/telemetry';
+
+// Official store artwork (public/badges), in the page language. Apple's badge is only for App Store listings, so
+// TestFlight keeps a text button; a pre-order keeps its text label because both badges say "download".
+const storeBadge = (platform: MobilePlatform, channel: DistributionChannel, language: string): { src: string; height: number } | null => {
+  if (!channel.url || channel.status === 'store_preorder') return null;
+  let host = '';
+  try { host = new URL(channel.url).hostname; } catch { return null; }
+  // Only es and en translate this page; every other locale falls back to English copy.
+  const locale = language.toLowerCase().startsWith('es') ? 'es' : 'en';
+  if (platform === 'android' && host === 'play.google.com') return { src: `/badges/google-play-badge-${locale}.png`, height: 60 };
+  if (platform === 'ios' && channel.status === 'public' && host === 'apps.apple.com') return { src: `/badges/app-store-badge-${locale}.svg`, height: 44 };
+  return null;
+};
 
 export default function MobileAppPage() {
   const { t, i18n } = useTranslation();
@@ -31,6 +44,11 @@ export default function MobileAppPage() {
   const channel = distribution.data?.[platform];
   const active = channel && availableChannel(channel, now);
   const beta = channel?.status !== 'public' && channel?.status !== 'store_preorder';
+  const badge = channel ? storeBadge(platform, channel, i18n.language) : null;
+  const badgeContent = (label: string) => badge
+    ? <img src={badge.src} alt={label} height={badge.height} style={{ display: 'block', height: badge.height, width: 'auto' }} />
+    : label;
+  const badgeSx = badge ? { alignSelf: 'flex-start', p: 0, minWidth: 0, bgcolor: 'transparent', boxShadow: 'none', '&:hover': { bgcolor: 'transparent', boxShadow: 'none' } } : undefined;
   return <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', '& .MuiButtonBase-root': { minHeight: 44 }, '& .Mui-focusVisible': { outline: '3px solid currentColor', outlineOffset: 3 } }}>
     <Stack direction="row" spacing={1} justifyContent="flex-end" aria-label={t('app.language')}>
       <Button aria-pressed={i18n.language === 'es'} onClick={() => void i18n.changeLanguage('es')}>Español</Button>
@@ -55,15 +73,16 @@ export default function MobileAppPage() {
         {channel.status === 'closed_testing' && channel.admission === 'approval_required' && !channel.enrollmentUrl
           ? <>
             <Button variant="contained" onClick={() => { setForm('request'); track('mobile_testing_interest_clicked', { platform, distribution_status: channel.status }); }}>{t('app.request')}</Button>
-            <Button component="a" variant="outlined" href={channel.url} referrerPolicy="no-referrer" onClick={event => {
+            {badge && <Typography variant="body2">{t('app.alreadyAdmitted')}</Typography>}
+            <Button component="a" variant={badge ? 'text' : 'outlined'} sx={badgeSx} href={channel.url} referrerPolicy="no-referrer" onClick={event => {
               if (!availableChannel(channel)) { event.preventDefault(); setForm('request'); return; }
               track('mobile_testing_join_clicked', { platform, distribution_status: channel.status, destination: 'testing' });
-            }}>{t('app.alreadyAdmitted')}</Button>
+            }}>{badgeContent(t('app.alreadyAdmitted'))}</Button>
           </>
-          : <Button component="a" variant="contained" href={channel.url} referrerPolicy="no-referrer" onClick={event => {
+          : <Button component="a" variant={badge ? 'text' : 'contained'} sx={badgeSx} href={channel.url} referrerPolicy="no-referrer" onClick={event => {
             if (!availableChannel(channel)) { event.preventDefault(); setForm('request'); return; }
             track(beta ? 'mobile_testing_join_clicked' : 'mobile_store_clicked', { platform, distribution_status: channel.status, destination: beta ? 'testing' : 'store' });
-          }}>{t(channelLabel(channel, platform))}</Button>}
+          }}>{badgeContent(t(channelLabel(channel, platform)))}</Button>}
       </> : <>
         <Alert severity="info">{t(channel?.capacity === 'full' ? 'app.full' : 'app.unavailable')}</Alert>
         <Button variant="contained" onClick={() => { setForm('request'); track('mobile_testing_interest_clicked', { platform, distribution_status: channel?.status ?? 'unavailable' }); }}>{t('app.request')}</Button>
