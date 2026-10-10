@@ -8706,7 +8706,7 @@
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
-      "statement": "The public header offers exactly one navigation item for events, pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
       "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
       "source": "tdf-hq-ui navigation and shells",
       "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
@@ -9235,7 +9235,7 @@
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "40d82eb1173fa4a9ebf49c3b27f82d437f1f3330189fe19383818d28345bd7ab",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -9250,8 +9250,8 @@
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "382f855ac2e12af6ea8d1869d6d58ce52af3f1877d0a7d6d6406dafb23f46977",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "c4581212ed44f3c33bb327c7b65936458baad501f570e60487c7d89019add234",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "368619837d5a7f2059fc4cca56e465c4fcac64ca5f5e4644f92796170f15a45c",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "9a754990e7e76303dede9423038aae5cf6a741d1be00f6e21985f57214b12ae9",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
@@ -22996,7 +22996,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "40d82eb1173fa4a9ebf49c3b27f82d437f1f3330189fe19383818d28345bd7ab",
+      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23410,7 +23410,7 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "382f855ac2e12af6ea8d1869d6d58ce52af3f1877d0a7d6d6406dafb23f46977",
+      "sha256": "368619837d5a7f2059fc4cca56e465c4fcac64ca5f5e4644f92796170f15a45c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23422,7 +23422,7 @@
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "c4581212ed44f3c33bb327c7b65936458baad501f570e60487c7d89019add234",
+      "sha256": "9a754990e7e76303dede9423038aae5cf6a741d1be00f6e21985f57214b12ae9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41130,7 +41130,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e215007ad8ea989028a71ba71c7c8d33125ef3ab525e6e1399437b7be7e34803",
+      "sourceSha256": "181630e42a08324509825e475bf4a2e87b67d0b0d1db9a9074bbeacda5222a97",
       "definition": {
         "states": [
           "absent",

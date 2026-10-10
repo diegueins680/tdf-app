@@ -6894,7 +6894,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "40d82eb1173fa4a9ebf49c3b27f82d437f1f3330189fe19383818d28345bd7ab",
+      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7164,13 +7164,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "382f855ac2e12af6ea8d1869d6d58ce52af3f1877d0a7d6d6406dafb23f46977",
+      "sha256": "368619837d5a7f2059fc4cca56e465c4fcac64ca5f5e4644f92796170f15a45c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "c4581212ed44f3c33bb327c7b65936458baad501f570e60487c7d89019add234",
+      "sha256": "9a754990e7e76303dede9423038aae5cf6a741d1be00f6e21985f57214b12ae9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23783,7 +23783,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e215007ad8ea989028a71ba71c7c8d33125ef3ab525e6e1399437b7be7e34803",
+      "sha256": "181630e42a08324509825e475bf4a2e87b67d0b0d1db9a9074bbeacda5222a97",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

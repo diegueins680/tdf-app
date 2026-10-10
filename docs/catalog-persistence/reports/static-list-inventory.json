@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-10T19:23:24.383Z",
+  "generatedAt": "2026-10-10T19:38:14.642Z",
   "repositoryRoot": ".",
   "filesScanned": 2227,
   "candidateCount": 1319,
@@ -13416,7 +13416,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 774,
+      "consumerCount": 775,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14165,7 +14165,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 775,
+      "consumerCount": 776,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14455,7 +14455,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 775,
+      "consumerCount": 776,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -21797,7 +21797,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 827,
+      "consumerCount": 828,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -42573,7 +42573,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -51741,7 +51741,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61182,7 +61182,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61482,7 +61482,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -62878,7 +62878,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -145174,7 +145174,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
