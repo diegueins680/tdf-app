@@ -7451,6 +7451,80 @@
       }
     },
     {
+      "id": "DATA-CRM-002",
+      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and its update must contain only the fields edited in the dialog (display name, email, Instagram, phone, notes) relative to the values loaded into it; an unedited save sends no request. Because the backend keeps every omitted field, saving one field never restores stale values of fields changed elsewhere. A rejected update is shown in the dialog, which stays open with the unsaved input. The backend remains authoritative for CRM module access and the update itself.",
+      "authority": "reconciled",
+      "source": "PR #513 (CRM contact notes)",
+      "property": "An update omits uNotes unless the edited notes differ from the loaded notes",
+      "contract": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+      ],
+      "verification": "Client unit test; backend updateParty unchanged",
+      "evidence": "Unit test that edits notes and asserts notes are sent only when changed",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact notes are editable without overwriting concurrent edits",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access.",
+        "The contact is loaded into the edit dialog."
+      ],
+      "inputs": [
+        "Party notes loaded into the dialog",
+        "Edited notes text",
+        "PUT /parties/{partyId} PartyUpdate (uNotes optional)"
+      ],
+      "state": {
+        "notes": [
+          "loaded",
+          "edited",
+          "saving",
+          "saved",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "loaded -> edited when the text changes",
+        "edited -> loaded when the text returns to the loaded value",
+        "loaded or edited -> saving on save",
+        "saving -> saved when the backend returns the updated party",
+        "saving -> failed when the update is rejected"
+      ],
+      "forbiddenTransitions": [
+        "Saving unchanged notes sends uNotes",
+        "Saving other fields replaces notes changed elsewhere"
+      ],
+      "effects": [
+        "When notes changed, updateParty stores uNotes as the contact's notes.",
+        "When uNotes is absent, updateParty keeps the stored notes."
+      ],
+      "authorization": "Backend updateParty requires ModuleCRM; the dialog grants nothing.",
+      "privacy": "Notes are internal CRM data shown only to CRM-authorized staff.",
+      "concurrency": "Only edited fields are sent, so a save never overwrites fields it did not edit; when two editors change the same field the later save wins (no version check on party).",
+      "idempotency": "Repeating the same update stores the same notes.",
+      "failure": "An archived contact returns 409 and other database failures return 500; the dialog shows the error, stays open with the unsaved input, and stored values are unchanged.",
+      "recovery": "Reopen the contact's current record and edit again.",
+      "observability": "The update request body shows whether uNotes was sent.",
+      "tests": [
+        "tdf-hq-ui/src/pages/PartiesPage.test.tsx"
+      ],
+      "formalModels": [],
+      "confidence": "High for client send-only-when-changed behaviour; backend semantics read from updateParty, not newly tested.",
+      "ambiguity": [
+        "No optimistic concurrency control for simultaneous note edits.",
+        "Notes are free text with no backend length limit in updateParty."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests cover field-level payloads, the no-op save and the rejected-update message; deployed web verification pending. Same-field concurrent edits remain last-write-wins."
+      }
+    },
+    {
       "id": "PRIV-WHATSAPP-001",
       "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
@@ -9162,6 +9236,8 @@
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "71e131b56818ba186b6670b6eeb21e219fbd773d08010985ee4b0e526de99086",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "3f09b1e6cefe7125024fd6933e5ec46c54d41f78c8df9cb5768b3febdb0443f0",
+    "tdf-hq-ui/src/pages/PartiesPage.test.tsx": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
+    "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
@@ -14317,6 +14393,18 @@
     "tdf-hq-ui/src/api/parties.test.ts": [
       {
         "requirement": "DATA-CRM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/PartiesPage.tsx": [
+      {
+        "requirement": "DATA-CRM-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/PartiesPage.test.tsx": [
+      {
+        "requirement": "DATA-CRM-002",
         "relationship": "tests"
       }
     ],
@@ -25583,16 +25671,26 @@
     {
       "id": "SURFACE-ca6a42a035d60724",
       "path": "tdf-hq-ui/src/pages/PartiesPage.test.tsx",
-      "sha256": "41e97782d113dddfd7606c5b345139a9b02557b10e55884742bda05aff51d9a2",
+      "sha256": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-41171391066d3a7e",
       "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
-      "sha256": "6a22094b63c120b85d166d6150bd20666f0707c8979532383a652b9293fceb3e",
+      "sha256": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-72cc8805ad02bfe2",
@@ -38561,8 +38659,6 @@
     "SURFACE-8f163fb9673ec539",
     "SURFACE-fc080c7e7b9e5e76",
     "SURFACE-554106b9be846d52",
-    "SURFACE-ca6a42a035d60724",
-    "SURFACE-41171391066d3a7e",
     "SURFACE-72cc8805ad02bfe2",
     "SURFACE-0e999cb8927f4583",
     "SURFACE-4a78e6b0e0157ec4",
@@ -40796,7 +40892,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "50ae2e2e944a68bc8d0a74204d6fe6f978de33f527a1449de362e0321cd3be88",
+      "sourceSha256": "e01b764e9292ee4ea90fac6d51eccc1d239c41244967b4e292f109b7a6be61bd",
       "definition": {
         "states": [
           "absent",
@@ -62993,7 +63089,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 109,
+    "PARTIAL": 110,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
