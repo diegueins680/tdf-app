@@ -21,7 +21,10 @@ module TDF.Invoice.Datil
   , paymentMedium
   , interpretDatilDocument
   , DatilOutcome(..)
+  , DatilTransport
+  , TransportResult(..)
   , processNextTaxDocument
+  , processNextTaxDocumentWith
   , startTaxInvoiceWorker
   ) where
 
@@ -323,6 +326,9 @@ data TransportResult
   | TransportRejected Int Text   -- ^ provider refused before creating anything
   | TransportUnknown             -- ^ outcome cannot be known
 
+-- | One provider request: method, path and optional JSON body.
+type DatilTransport = BS.ByteString -> String -> Maybe A.Value -> IO TransportResult
+
 datilRequest :: DatilConfig -> BS.ByteString -> String -> Maybe A.Value -> IO TransportResult
 datilRequest DatilConfig{..} httpMethod path body = do
   parsed <- tryAny (parseRequest (datilBaseUrl <> path))
@@ -394,7 +400,13 @@ claimSql =
 
 -- | Process at most one due document. Returns whether one was claimed.
 processNextTaxDocument :: Env -> DatilConfig -> IO Bool
-processNextTaxDocument Env{envPool} config = do
+processNextTaxDocument Env{envPool} config =
+  processNextTaxDocumentWith (datilRequest config) envPool config
+
+-- | The worker step with the provider request supplied by the caller, so the
+-- claim, submission mark and lease fencing can be exercised without a provider.
+processNextTaxDocumentWith :: DatilTransport -> ConnectionPool -> DatilConfig -> IO Bool
+processNextTaxDocumentWith transport envPool config = do
   lease <- UUID.toText <$> UUID.nextRandom
   let checkoutEnvironment = if dcEnvironment config == 1 then "sandbox" else "production" :: Text
   claimed <- runSqlPool (rawSql claimSql [PersistText checkoutEnvironment, PersistText lease]
@@ -402,7 +414,7 @@ processNextTaxDocument Env{envPool} config = do
   case claimed of
     [(Single cdId, Single cdKind, Single cdStatus, Single cdSubmissionStarted, Single cdProviderId)] -> do
       let document = ClaimedDocument{ cdLease = lease, .. }
-      outcome <- tryAny (handleDocument envPool config document)
+      outcome <- tryAny (handleDocument transport envPool config document)
       case outcome of
         Right () -> pure ()
         Left _ -> finish envPool document "pending" Nothing Nothing Nothing
@@ -410,10 +422,10 @@ processNextTaxDocument Env{envPool} config = do
       pure True
     _ -> pure False
 
-handleDocument :: ConnectionPool -> DatilConfig -> ClaimedDocument -> IO ()
-handleDocument pool config document@ClaimedDocument{..}
+handleDocument :: DatilTransport -> ConnectionPool -> DatilConfig -> ClaimedDocument -> IO ()
+handleDocument transport pool config document@ClaimedDocument{..}
   | cdStatus == "submitted", Just providerId <- cdProviderId = do
-      result <- datilRequest config "GET" (resource <> "/" <> T.unpack providerId) Nothing
+      result <- transport "GET" (resource <> "/" <> T.unpack providerId) Nothing
       applyResult pool document result
   | cdStatus == "pending" && cdSubmissionStarted =
       -- A previous submission may have reached Dátil before the worker stopped.
@@ -429,7 +441,7 @@ handleDocument pool config document@ClaimedDocument{..}
         Right payload -> do
           started <- markSubmissionStarted pool document
           when started $ do
-            result <- datilRequest config "POST" (resource <> "/issue") (Just payload)
+            result <- transport "POST" (resource <> "/issue") (Just payload)
             applyResult pool document result
   where
     resource = if cdKind == "credit_note" then "/credit-notes" else "/invoices"

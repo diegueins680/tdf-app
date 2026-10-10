@@ -605,3 +605,11 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Ticket invoice submission
+
+`InvoiceSubmission.tla` and five configurations check the worker rules in
+[ticket-invoice-worker.md](../system/ticket-invoice-worker.md): leased claims, the
+persisted submission mark, lease-fenced results and administrator resend. The positive
+model and four negative controls are mandatory in the formal runner. Bounds, provider
+assumptions and the recovery gaps found are stated there.

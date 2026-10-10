@@ -190,6 +190,11 @@ run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'I
 run_negative_tlc CredentialLifecycleEarlyCommit.cfg credential-early-commit 'Invariant AtomicChallengeConsumption is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleGoogleSession.cfg credential-google-session 'Invariant NoSessionsAfterDisable is violated' CredentialLifecycle.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
+run_tlc InvoiceSubmission.tla InvoiceSubmission.cfg invoice-submission
+run_negative_tlc InvoiceSubmissionUnfencedStart.cfg invoice-submission-unfenced-start 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
+run_negative_tlc InvoiceSubmissionStaleFinish.cfg invoice-submission-stale-finish 'Invariant AuthorizedIsFinal is violated' InvoiceSubmission.tla
+run_negative_tlc InvoiceSubmissionUnknownAsRefused.cfg invoice-submission-unknown-as-refused 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
+run_negative_tlc InvoiceSubmissionRetryUncertain.cfg invoice-submission-retry-uncertain 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
