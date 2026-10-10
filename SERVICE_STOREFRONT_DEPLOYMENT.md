@@ -39,15 +39,24 @@
 - [ ] PayPal business account configured
 - [ ] Environment variables set:
   ```bash
-  # Datafast
-  DATAFAST_MERCHANT_ID=...
-  DATAFAST_API_KEY=...
-  DATAFAST_ENVIRONMENT=prod
-  
+  # One checkout environment for every enabled provider. Unset defaults to
+  # sandbox, and a provider whose own environment differs is rejected (503).
+  COMMERCE_CHECKOUT_ENV=production
+
+  # Datafast (names read by tdf-hq; see PAYMENT_AUDIT.md section 6)
+  DATAFAST_ENV=production          # must equal COMMERCE_CHECKOUT_ENV
+  DATAFAST_BASE_URL=...
+  DATAFAST_ENTITY_ID=...
+  DATAFAST_BEARER_TOKEN=...
+  # Leave DATAFAST_TEST_MODE unset: any value is rejected when
+  # DATAFAST_ENV=production. DATAFAST_MID, DATAFAST_TID, DATAFAST_PSERV and
+  # DATAFAST_USER_DATA2 belong to the marketplace checkout and are not sent
+  # for service orders.
+
   # PayPal
   PAYPAL_CLIENT_ID=...
   PAYPAL_CLIENT_SECRET=...
-  PAYPAL_ENV=sandbox
+  PAYPAL_ENV=production            # must equal COMMERCE_CHECKOUT_ENV
   PAYPAL_MERCHANT_ID=...
   PAYPAL_WEBHOOK_ID=...
   COMMERCE_EVENT_ENCRYPTION_KEY=... # independent 32+ character secret-manager value
