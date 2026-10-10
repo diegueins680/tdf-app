@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "a990d722cdaafa286a2491ec63a5744c11d8f4df",
+  "mobileRevision": "f8f88100e5057c92624ad2bc9c4f6ccd390e66ea",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -6201,7 +6201,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "4e93bbea23f7ec378f9a2ca57a282d1de515beaf574fa5581e1c198f22d356c1",
+      "sha256": "58384adb97991f18625050e281522de0280a353edf3fa4db04026d62dd0a9b1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7023,7 +7023,7 @@
     {
       "id": "SURFACE-336a5f791a58d95b",
       "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
-      "sha256": "acdf4b86b02b06d5ec01766c4fe182fb1b45a53882877ea219e5e545b8abadfc",
+      "sha256": "52245be2a87128343f4ad81495f8c0b14fab63f1189ddea09ffd8759156bf8ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7101,7 +7101,7 @@
     {
       "id": "SURFACE-b09be6a71cc01631",
       "path": "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-      "sha256": "b6e643de619c94ab978915fb9ba31b1216066f8fe1ac681a10823f8540352b8b",
+      "sha256": "014c6ee74e1f687d01c72c0e71b5b220d9bc581b4675e41d460353b4beec828a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9771,13 +9771,13 @@
     {
       "id": "SURFACE-827d822bd4c20ede",
       "path": "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
-      "sha256": "24430baf37b1660622a9d0830fe0066f79a57f0ce7de88381f2854a14c9cdbba",
+      "sha256": "b4a6a6e54eef828d5795ca8ffd8d30db2599429eaf6ecdfafa3bfbff2894763b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b42bb88249b14540",
       "path": "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
-      "sha256": "13830e8daf3241bbea1dbaa12de3265182b694095695d354c9a6db2d8920fb13",
+      "sha256": "e1363bf4bc181a089249899b5ab81cdcaae74ff61fcefa1c9d1b1bcfcc86e7dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10377,7 +10377,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "f3d98a0f0203720d111083d57ef4e73d2465e8ff051fa6d08fe4940886eaf70d",
+      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13827,7 +13827,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "4bfe426531be63361896aaa38b19d6f82fca40b82a60f1aaa1895ee983b32ae8",
+      "sha256": "7e7733da95c77935ee211aec80cabf633b483cbf633d4c2004d48a3b31308494",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16047,7 +16047,7 @@
     {
       "id": "SURFACE-69205bb0d640d69a",
       "path": "tdf-mobile/app/ticketCheckout.tsx",
-      "sha256": "58b30d3036452aec83c57bb6074e310afa1dcd7085dea2569972b66ea6c15635",
+      "sha256": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16443,7 +16443,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "4e93bbea23f7ec378f9a2ca57a282d1de515beaf574fa5581e1c198f22d356c1",
+      "sha256": "58384adb97991f18625050e281522de0280a353edf3fa4db04026d62dd0a9b1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24077,7 +24077,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "f3d98a0f0203720d111083d57ef4e73d2465e8ff051fa6d08fe4940886eaf70d",
+      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
