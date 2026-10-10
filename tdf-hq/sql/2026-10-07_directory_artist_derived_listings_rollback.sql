@@ -149,6 +149,10 @@ BEGIN
   -- The statement below reads its sources after any concurrent sync committed.
   PERFORM directory_search_sync_lock();
   IF NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id = target_venue_id) THEN
+    -- No public event left: the cached document is kept but marked, so the
+    -- venue becoming listable again is a visible change (see the event sync).
+    UPDATE directory_search_document SET source_status = 'paused'
+    WHERE entity_kind = 'venue' AND entity_id = target_venue_id::text AND source_status = 'published';
     RETURN;
   END IF;
   INSERT INTO directory_search_document (

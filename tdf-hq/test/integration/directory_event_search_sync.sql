@@ -20,6 +20,7 @@ DECLARE
   versions_before BIGINT;
   subscriber BIGINT;
   late_search UUID;
+  republish_search UUID;
 BEGIN
   SELECT id INTO quito FROM city_reference
   WHERE directory_normalize_text(name_es) = directory_normalize_text('Quito')
@@ -122,11 +123,27 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text) THEN
     RAISE EXCEPTION 'hiding an event destroyed its cached document';
   END IF;
+  IF (SELECT source_status FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
+     IS DISTINCT FROM 'paused' THEN
+    RAISE EXCEPTION 'a hidden event''s cached document is still marked published';
+  END IF;
+  -- A saved search created while the event is hidden is notified when it
+  -- becomes public again, even though no projected field changed.
+  INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+  VALUES (subscriber, 'Synthetic republish alert', '{"entityType":"event"}'::jsonb, repeat('9', 64), TRUE, 'instant')
+  RETURNING id INTO republish_search;
 
   -- 6. Republishing reindexes it.
   UPDATE social_event SET metadata = '{"isPublic": true}' WHERE id = synth_event_id;
   IF NOT EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text) THEN
     RAISE EXCEPTION 'republished event is not publicly searchable';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_alert_delivery WHERE saved_search_id = republish_search
+                 AND result_kind = 'event' AND result_id = synth_event_id::text) THEN
+    RAISE EXCEPTION 'republishing a cached event did not notify a saved search created meanwhile';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind = 'venue' AND entity_id = free_text_venue::text) THEN
+    RAISE EXCEPTION 'the venue of a republished event is not publicly searchable again';
   END IF;
 
   -- 7. Provider suppression hides the document; lifting it shows it again.

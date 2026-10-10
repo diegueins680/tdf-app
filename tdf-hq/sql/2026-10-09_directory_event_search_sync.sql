@@ -91,6 +91,10 @@ BEGIN
   -- The statement below reads its sources after any concurrent sync committed.
   PERFORM directory_search_sync_lock();
   IF NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id = target_venue_id) THEN
+    -- No public event left: the cached document is kept but marked, so the
+    -- venue becoming listable again is a visible change (see the event sync).
+    UPDATE directory_search_document SET source_status = 'paused'
+    WHERE entity_kind = 'venue' AND entity_id = target_venue_id::text AND source_status = 'published';
     RETURN;
   END IF;
   INSERT INTO directory_search_document (
@@ -151,10 +155,15 @@ BEGIN
   END IF;
   -- The statement below reads its sources after any concurrent sync committed.
   PERFORM directory_search_sync_lock();
-  -- A hidden event keeps its cached document: directory_public_search_document
-  -- re-checks directory_public_event, so it is not served, and the privacy
-  -- projection never destroys cached data. Only source deletion removes it.
+  -- A hidden event keeps its cached document (the privacy projection never
+  -- destroys cached data, and directory_public_search_document re-checks
+  -- directory_public_event when reading). It is marked as not published, so
+  -- that publishing it again is a change to an alert-watched column and
+  -- saved searches created in the meantime are notified. Only source
+  -- deletion removes the document.
   IF NOT EXISTS (SELECT 1 FROM directory_public_event WHERE id = target_event_id) THEN
+    UPDATE directory_search_document SET source_status = 'paused'
+    WHERE entity_kind = 'event' AND entity_id = target_event_id::text AND source_status = 'published';
     RETURN;
   END IF;
   INSERT INTO directory_search_document (
@@ -314,6 +323,14 @@ BEGIN
   DELETE FROM directory_search_document document
   WHERE document.entity_kind = 'venue'
     AND NOT EXISTS (SELECT 1 FROM venue WHERE venue.id::text = document.entity_id);
+  -- Cached documents of sources that are not public are marked, as the
+  -- incremental sync does.
+  UPDATE directory_search_document document SET source_status = 'paused'
+  WHERE document.source_status = 'published'
+    AND ((document.entity_kind = 'event'
+          AND NOT EXISTS (SELECT 1 FROM directory_public_event event WHERE event.id::text = document.entity_id))
+      OR (document.entity_kind = 'venue'
+          AND NOT EXISTS (SELECT 1 FROM directory_public_venue venue WHERE venue.id::text = document.entity_id)));
   FOR target IN SELECT id FROM directory_public_event LOOP
     PERFORM directory_sync_event_search(target);
   END LOOP;
