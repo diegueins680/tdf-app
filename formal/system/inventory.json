@@ -4885,7 +4885,7 @@
     {
       "id": "SURFACE-aa5f33e082489dd1",
       "path": "scripts/test-directory-artist-listings.sh",
-      "sha256": "02edf2dbc16ce4e6b5bf8dfbc0d95760df6284071b6fe32c38498252040a96f3",
+      "sha256": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12811,7 +12811,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "ab654ba3bfa520693f0a48693c27f758e42160a38ee02457bb24b5a0da6b10a4",
+      "sha256": "5957fef2c53e7ca675e19357cc5850549f1fdae45cd29f4a91942b1999981b11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12823,7 +12823,7 @@
     {
       "id": "SURFACE-a2857b80564644cb",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-      "sha256": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
+      "sha256": "586f44c90cac05d8ef1132b8ec9e35543e8df9413aef7a46980a515490fa28e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19471,7 +19471,7 @@
     },
     {
       "path": "docs/music-directory/artist-derived-listings.md",
-      "sha256": "55253e1b841d37360a24e5ca43a1a5e015952759d515f95ad1115b9dfa2452c7",
+      "sha256": "facabde9f40c06e63123c3c66f1b7d379424b058aaa765c06f96e597f804f08e",
       "authority": "inferred",
       "authorityBasis": "Status: implemented 2026-10-07 (`2026-10-07_directory_artist_derived_listings`,",
       "kind": "requirement-candidate"

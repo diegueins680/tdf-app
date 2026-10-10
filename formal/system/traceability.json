@@ -9210,7 +9210,7 @@
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
-    "scripts/test-directory-artist-listings.sh": "02edf2dbc16ce4e6b5bf8dfbc0d95760df6284071b6fe32c38498252040a96f3",
+    "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -9548,9 +9548,9 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_artist_invitation_links.sql": "b0e80b3b2dbb884460e40bef8e9c9a29fe0ef3ef3059fc998bb531fde179c3a2",
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "ab654ba3bfa520693f0a48693c27f758e42160a38ee02457bb24b5a0da6b10a4",
+    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "5957fef2c53e7ca675e19357cc5850549f1fdae45cd29f4a91942b1999981b11",
     "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": "83f947ec179e09c3c70a65714c23c3dbfe090050f95ba91c1dd249427a395876",
-    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
+    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "586f44c90cac05d8ef1132b8ec9e35543e8df9413aef7a46980a515490fa28e2",
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
@@ -20142,7 +20142,7 @@
     {
       "id": "SURFACE-aa5f33e082489dd1",
       "path": "scripts/test-directory-artist-listings.sh",
-      "sha256": "02edf2dbc16ce4e6b5bf8dfbc0d95760df6284071b6fe32c38498252040a96f3",
+      "sha256": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31460,7 +31460,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "ab654ba3bfa520693f0a48693c27f758e42160a38ee02457bb24b5a0da6b10a4",
+      "sha256": "5957fef2c53e7ca675e19357cc5850549f1fdae45cd29f4a91942b1999981b11",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31484,7 +31484,7 @@
     {
       "id": "SURFACE-a2857b80564644cb",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-      "sha256": "717bd5841022686bcdd4b9aed29c056273783b8a06fdf5a69b3e2e9c7744853f",
+      "sha256": "586f44c90cac05d8ef1132b8ec9e35543e8df9413aef7a46980a515490fa28e2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
