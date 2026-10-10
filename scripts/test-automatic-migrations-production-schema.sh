@@ -84,6 +84,19 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
+# A rolled-back playback identity migration keeps its ledger row and restores a
+# function with the same name; the gate must still reject the unbound implementation.
+playback_identity="${repo_root}/tdf-hq/sql/2026-09-16_music_playback_identity"
+psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${playback_identity}_rollback.sql" >/dev/null
+if node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+  | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null 2>&1; then
+  echo "Schema gate accepted a rolled-back music playback identity binding" >&2
+  exit 1
+fi
+psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${playback_identity}.sql" >/dev/null
+node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+  | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
+
 # Both historical orders occurred: late registration can apply an older view
 # after a newer privacy repair is already recorded in the immutable ledger.
 privacy_repair="${repo_root}/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql"

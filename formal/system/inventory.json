@@ -4066,7 +4066,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "420f4d7073369310a42ad89789e5f7541a79c5afefdcdbbdf9cbeedcad8cf53a",
+      "sha256": "1847a1dcaf5a939e8da498b2b7061cd0032e8be526c537601a06efdfdf53c411",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4804,7 +4804,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
+      "sha256": "661474dc48a522320791a01c29553028db488769661d4d62ed55f47358581d38",
       "semanticConformance": "not-established-by-discovery"
     },
     {

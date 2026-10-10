@@ -2535,7 +2535,10 @@ BEGIN
     'music_terms_acceptance', 'music_editorial_comment', 'music_release_audit_event',
     'music_infringement_report', 'music_purchase_order', 'music_entitlement',
     'music_download_event', 'music_playback_event', 'music_ddex_party_registry',
-    'music_ddex_export', 'music_release_version_party'
+    'music_ddex_export', 'music_release_version_party', 'artist_release_team_member',
+    'music_legacy_sanitation_item', 'music_favorite', 'music_playlist', 'music_playlist_item',
+    'music_playback_history', 'music_daily_metric', 'music_public_release',
+    'music_legacy_release_sanitation_queue', 'music_resource_graph_sanitation_queue'
   ] LOOP
     IF to_regclass('public.' || music_table) IS NULL THEN
       RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
@@ -2545,6 +2548,12 @@ BEGIN
      OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_record_playback_event'
        AND pronamespace='public'::regnamespace) THEN
     RAISE EXCEPTION 'Music release access and playback functions are missing';
+  END IF;
+  -- The identity migration renames the unbound implementation and adds the session
+  -- sanitation view; its rollback removes both, so a name-only check cannot tell them apart.
+  IF to_regprocedure('music_record_playback_event_unbound_v1(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)') IS NULL
+     OR to_regclass('public.music_playback_session_sanitation') IS NULL THEN
+    RAISE EXCEPTION 'Music playback identity binding (2026-09-16_music_playback_identity) is missing';
   END IF;
   IF to_regclass('public.artist_invitation_link') IS NULL
      OR NOT EXISTS (
