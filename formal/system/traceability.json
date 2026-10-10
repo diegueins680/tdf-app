@@ -8979,7 +8979,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-state-machines.py": "2771736f1cf85f98a200e132c07d6db11e2eed42bf56aad80b51a6ad935d2a39",
+    "scripts/check-state-machines.py": "ab43ead3b81ee6e10e8e82b3b98d813e98953f141c674e5c22b50a0307f9eee3",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -9082,7 +9082,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "ed1ae142a4cb496e04398ea6088d21877ab62ba9f07f4a6b3de145c4b0992db1",
+    "scripts/test-state-machines.py": "3c8e61537040f1c05c8635abc1e59ecbf6232bc13ec6a454b79b251656e2e13d",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -17739,7 +17739,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "2771736f1cf85f98a200e132c07d6db11e2eed42bf56aad80b51a6ad935d2a39",
+      "sha256": "ab43ead3b81ee6e10e8e82b3b98d813e98953f141c674e5c22b50a0307f9eee3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20566,7 +20566,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "ed1ae142a4cb496e04398ea6088d21877ab62ba9f07f4a6b3de145c4b0992db1",
+      "sha256": "3c8e61537040f1c05c8635abc1e59ecbf6232bc13ec6a454b79b251656e2e13d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

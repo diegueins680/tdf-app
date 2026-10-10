@@ -103,24 +103,32 @@ def without_haskell_comments(text):
     return re.sub(r"--[^\n]*", "", re.sub(r"\{-.*?-\}", "", text, flags=re.S))
 
 
+def declaration_body(source, start):
+    """Text of the top-level declaration that begins at start, up to the next one."""
+    following = re.compile(r"^\S", re.M).search(source, source.index("\n", start) + 1)
+    return source[start:following.start() if following else len(source)]
+
+
 def code_transitions(spec, root=ROOT):
     """Pairs in the validator's allowedTransitions list, as stored state names."""
-    source = (root / spec["file"]).read_text()
-    renderer = re.search(
-        rf"^{re.escape(spec['renderer'])} (\w+) = case \1 of\n(.*?)(?:\n\n|\Z)", source, re.M | re.S)
+    # Comments go first so that neither a commented mapping, a commented edge nor a
+    # bracket inside a comment can stand in for live code.
+    source = without_haskell_comments((root / spec["file"]).read_text())
+    renderer = re.search(rf"^{re.escape(spec['renderer'])} (\w+) = case \1 of\n", source, re.M)
     if not renderer:
         raise RuntimeError(f"renderer {spec['renderer']} not found in {spec['file']}")
-    mappings = re.findall(r'^\s+([A-Z]\w*)\s*->\s*"(\w+)"', without_haskell_comments(renderer.group(2)), re.M)
+    mappings = re.findall(r'^\s+([A-Z]\w*)\s*->\s*"(\w+)"', declaration_body(source, renderer.start()), re.M)
     names = dict(mappings)
     if len(names) != len(mappings):
         raise RuntimeError(f"{spec['renderer']} maps a constructor more than once")
     definition = re.search(rf"^{re.escape(spec['validator'])} (?![^\n]*::)\w", source, re.M)
     if not definition:
         raise RuntimeError(f"validator {spec['validator']} not found in {spec['file']}")
-    table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", source[definition.end():], re.S)
+    # Only this validator's own clause: a later function's table must not be read instead.
+    table = re.search(r"allowedTransitions\s*=\s*\[(.*?)\]", declaration_body(source, definition.start()), re.S)
     if not table:
         raise RuntimeError(f"{spec['validator']} has no allowedTransitions list")
-    listed = without_haskell_comments(table.group(1))
+    listed = table.group(1)
     pairs = set()
     for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", listed):
         for constructor in (source_state, target):

@@ -86,7 +86,20 @@ def code_controls(bindings, machines):
             '  RentalLost -> "lost"\n', '  RentalLost -> "renamed"\n  RentalLost -> "lost"\n', 1))
         expect("renderer maps a constructor twice", gate.check_code(bindings, machines, root),
                "maps a constructor more than once")
-    return 11
+        target.write_text(source.replace(
+            "      , (RentalLost, RentalDisputed)\n",
+            "      -- old table: [(RentalLost, RentalDisputed)]\n      , (RentalLost, RentalDisputed)\n"
+            "      , (RentalClosed, RentalOnHold)\n", 1))
+        expect("edge listed after a bracket inside a comment", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyImplemented is [['closed', 'on_hold']]")
+        renamed_table = source.replace("    allowedTransitions =\n      [ (RentalOnHold, RentalConfirmed)",
+                                       "    retiredTransitions =\n      [ (RentalOnHold, RentalConfirmed)", 1)
+        assert renamed_table != source
+        target.write_text(renamed_table + "\nlaterTable :: [(Int, Int)]\nlaterTable = allowedTransitions\n"
+                          "  where\n    allowedTransitions = [(RentalOnHold, RentalConfirmed)]\n")
+        expect("table taken from a later declaration", gate.check_code(bindings, machines, root),
+               "has no allowedTransitions list")
+    return 13
 
 
 def main():
