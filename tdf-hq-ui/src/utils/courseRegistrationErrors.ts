@@ -74,6 +74,17 @@ export function describeCourseRegistrationError(error: unknown): CourseRegistrat
     return view('Recibimos varios intentos seguidos. Espera un minuto e intenta de nuevo.');
   }
 
+  if (status === 400 && /terms version is required/i.test(message)) {
+    // The page had no terms to show (stale or failed metadata): load them and ask.
+    return {
+      ...view(
+        'Revisa los términos del curso y acéptalos para continuar.',
+        { field: 'terms', definitiveRejection: true },
+      ),
+      termsChanged: true,
+    };
+  }
+
   if (status === 400 || status === 422) {
     if (lower.includes('phone')) {
       return view(`Revisa tu número de WhatsApp. ${PHONE_EXAMPLE_HINT}.`, {

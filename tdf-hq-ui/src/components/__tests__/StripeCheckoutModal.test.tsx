@@ -223,6 +223,27 @@ describe('StripeCheckoutModal', () => {
     })));
   });
 
+  it('loads the terms when the server starts requiring them after the dialog opened', async () => {
+    getStorefront.mockResolvedValueOnce({ policy: null });
+    getStorefront.mockResolvedValueOnce({
+      policy: { termsVersion: 'event-ticket-terms-v1', termsSummary: 'A.', refundPolicy: 'B.' },
+    });
+    createPaymentIntent.mockRejectedValueOnce(new Error('Ticket terms must be accepted before seats can be held'));
+    render(
+      <StripeCheckoutModal open onClose={mockOnClose} eventId="141" eventTitle="Launch Party" tier={mockTier} onSuccess={mockOnSuccess} />,
+      { wrapper: createWrapper() },
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: /Continue to payment/i })).toBeEnabled());
+    fireEvent.change(screen.getByLabelText(/Your Name/i), { target: { value: 'Buyer' } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'buyer@example.test' } });
+    fireEvent.submit(document.getElementById('stripe-checkout-buyer-details-form')!);
+
+    const consent = await screen.findByRole('checkbox', { name: /event-ticket-terms-v1/ });
+    expect(consent).not.toBeChecked();
+    await waitFor(() => expect(screen.getByRole('button', { name: /Continue to payment/i })).toBeDisabled());
+    expect(getStorefront).toHaveBeenCalledTimes(2);
+  });
+
   it('blocks checkout and offers a retry when the ticket policy cannot be loaded', async () => {
     getStorefront.mockRejectedValueOnce(new Error('network down'));
     getStorefront.mockResolvedValueOnce({

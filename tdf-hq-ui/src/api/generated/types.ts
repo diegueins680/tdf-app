@@ -13932,7 +13932,7 @@ export interface components {
             utm?: components["schemas"]["UTMTags"];
             /** @description Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads. */
             termsAccepted?: boolean | null;
-            /** @description The CourseMetadata.checkoutTerms.termsVersion the buyer was shown. When present, checkout returns 409 if the active policy now has a different terms version. */
+            /** @description The CourseMetadata.checkoutTerms.termsVersion the buyer was shown. Required for a canonical checkout (400 when absent); checkout returns 409 if the active policy now has a different terms version. */
             acceptedTermsVersion?: string | null;
         };
         CourseRegistrationResponse: {

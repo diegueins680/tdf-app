@@ -364,10 +364,16 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
       policy <- runDB (loadApprovedCourseCheckoutPolicy now courseKey)
         >>= maybe (throwError (conflictError
               "This course has no approved active checkout price and policy")) pure
-      forM_ (Courses.acceptedTermsVersion request) $ \accepted ->
-        unless (T.strip accepted == accpTermsVersion policy) $
-          throwError (conflictError
-            "Course terms changed; review the current terms and accept them again")
+      -- The order records this policy's terms as accepted, so the buyer must name
+      -- the version they were shown; an absent version is never taken as acceptance.
+      case T.strip <$> Courses.acceptedTermsVersion request of
+        Nothing ->
+          throwError err400
+            { errBody = "Course terms version is required; review the current terms and accept them" }
+        Just accepted ->
+          unless (accepted == accpTermsVersion policy) $
+            throwError (conflictError
+              "Course terms changed; review the current terms and accept them again")
       price <- either (throwError . conflictError) pure $
         CourseDomain.calculateCoursePrice
           (accpPriceMinor policy)

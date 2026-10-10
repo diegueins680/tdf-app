@@ -368,8 +368,9 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       });
     } catch (err) {
       if (attempt !== buyerAttempt.current) return;
-      if (err instanceof Error && /terms changed/i.test(err.message)) {
-        // The approved policy changed while the dialog was open: show the new terms and ask again.
+      if (err instanceof Error && /terms changed|terms must be accepted/i.test(err.message)) {
+        // The approved policy changed, or became required, while the dialog was open:
+        // show the current terms and ask again.
         setTermsAccepted(false);
         void policyQuery.refetch();
         dispatch({ type: 'buyerSubmitFailed', error: t('checkout.errors.termsChanged') });
