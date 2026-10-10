@@ -12847,7 +12847,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "e12535c6ad679de61b83e9f19baf235e53495929918cdd8c7f058c1f989adcd2",
+      "sha256": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
