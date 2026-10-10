@@ -12811,13 +12811,13 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "a85354e626e7174b752274015b6cfec210a47c9685f1b8cf9bc848f307defe46",
+      "sha256": "546a1a3c518a6a31d8ff246b1aff0b74d16baf162eba44721737e272432ca8d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0ca3c1bdd4f9435e",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql",
-      "sha256": "737bdbe85c7f8a1603de5a759a26e915e61a4085a49e0c411104af216c3500ae",
+      "sha256": "b3dd0128a40b778e8d226dcdee4b0e3ddee6fb7848fce3d2c847d0e0d9f9e0f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14875,7 +14875,7 @@
     {
       "id": "SURFACE-4ff045e7860017f4",
       "path": "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
-      "sha256": "b7730fc325b27ec9793012fefbecbb169a16bcc3bb3fa6cd1946f48123d7ff26",
+      "sha256": "94e153abc6b0988aea61c282940760d6901e1bf740fa88b1547766bc30c3960e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
