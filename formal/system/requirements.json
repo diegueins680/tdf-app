@@ -453,7 +453,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -499,7 +499,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -514,7 +514,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -560,7 +560,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -574,7 +574,7 @@
         "scripts/production-release.mjs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -619,7 +619,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
