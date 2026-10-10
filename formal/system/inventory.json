@@ -10294,7 +10294,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+      "sha256": "4ecca90f12aff4a50f8ef55a24acea596ef205f428781f3771cd1049e091326f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23727,7 +23727,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e8f8fe05607656765e8b0440543e3ac1598d0468f390a4d69bedfc23057a4624",
+      "sha256": "7e83f955250fa74c7448516f37141635b64e59253e48e26e897bb35e5f88076e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -1092,13 +1092,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Focused runtime and mutation checks pass on working source; final exact-SHA review, full gates and rollout remain."
+        "reason": "Deployed preflight behavior and local mutation checks agree; CSRF defenses and other deployment environments remain outside this check."
       },
       "authority": "Safety correction authorized by the current audit; explicit origin contract with observed production counterexample",
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
+      "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): preflights from https://www.tdfrecords.net for GET and POST public ticket-order routes with x-order-lookup-token returned 200 with that exact origin and credentials; https://evil.example, a look-alike suffix origin, Origin null and an unlisted request header returned 400 with no Access-Control headers. scripts/verify-cors-boundary.py on main 7831b69: intended 33/33; controls production-classification-bypassed, implicit-preview-credentials and deletion-trailing-slash-bypass each failed (23, 3, 2)."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -1159,17 +1159,18 @@
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
       "ambiguity": [
-        "This correction does not establish authorization conformance for every feature in the registry."
+        "This correction does not establish authorization conformance for every feature in the registry.",
+        "scripts/audit-feature-registry.mjs runs only as npm run audit:features, not in CI, which let registry drift reach main."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Targeted registry tests and route audit pass; full candidate and release correspondence pending."
+        "reason": "Web registry matches served routes; the pinned Mobile generated registry predates the 2026-10-06 music registry entries and needs a TDF-mobile regeneration with the pin bump. The audit is not yet a CI gate."
       },
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
-      "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      "evidence": "2026-10-09 on main 7831b69: scripts/audit-feature-registry.mjs failed with 3 issues: the music release studio web routes /label/releases/nuevo and /label/releases/:releaseId/versions/:versionId were unregistered, and the generated mobile registry was stale. The routes are now aliases of label.releases (same Admin/StudioManager plus Admin-module predicates); the audit then reports only the stale mobile registry. Web featureRegistry tests 136/136."
     },
     {
       "authority": "audit security correction",
@@ -3445,7 +3446,7 @@
       ],
       "formalModels": [],
       "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
-      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): GET /radio/presence/1 returned 401 without a token and with an invalid bearer token; no presence was exposed.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
@@ -3454,7 +3455,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+        "reason": "Deployed anonymous and invalid-token denial verified; an inactive-but-well-formed session and whole-domain authorization were not exercised."
       },
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
@@ -3514,7 +3515,7 @@
       ],
       "formalModels": [],
       "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
-      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "evidence": "2026-10-10 deployed api.tdfrecords.net (backend 7ab3444): GET /trials/v1/subjects returned 200 with 3 subjects, none inactive; GET /trials/v1/subjects/catalog (with and without includeInactive=true) returned 401 anonymously. The booking conformance suite (619 checks, 0 failures, 2026-10-09) covers the per-role catalog cases.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
@@ -3523,7 +3524,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+        "reason": "Deployed public/protected split and runtime role checks pass; authenticated deployed catalog access was not exercised."
       },
       "id": "COURSE-SUBJECT-001",
       "title": "Separate public and managed trial subject catalogs",
@@ -3710,13 +3711,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Executable declaration controls exist; final rebuilt candidate and broader deferred-domain conformance remain outstanding."
+        "reason": "Deferred operations are absent from the deployed API and enumerated in api-availability.json; POST/PUT operations were not probed."
       },
       "contract": "formal/system/compiled-api-boundary.md",
       "authority": "AUTHORITY-026 preserves the existing explicitly local-only domain scope.",
       "property": "Every documented unmounted typed operation is explicitly deferred; no deferred operation is mounted.",
       "verification": "Compiled surface gate, controlled mounting/omission/stale-policy mutations and requirement/provenance checks.",
-      "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
+      "evidence": "2026-10-10 deployed api.tdfrecords.net: all 12 deferred GET merchandise-reputation operations returned 404. compiled-api-surface and ci-pipeline tests 39/39 and scripts/test-specification-conformance.py passed on main 7831b69."
     },
     {
       "id": "REC-DDEX-001",
@@ -4038,13 +4039,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Shared guard, helper properties and HTTP fixtures require final compiled execution and deployment; no universal cryptographic or delivery proof."
+        "reason": "Deployed rejection of unsigned and wrongly signed POSTs on all aliases verified; a validly signed delivery, replay and key rotation are not exercised."
       },
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
       "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
-      "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
+      "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): POST {} to /facebook/webhook, /instagram/webhook, /webhooks/whatsapp and /hooks/whatsapp returned 401 both without X-Hub-Signature-256 and with an all-zero signature, so the secret is configured and enforced on every alias. APITypesSpec ran in the backend Hspec suite (3,918 examples, 0 failures) the same day."
     },
     {
       "id": "MEDIA-DRIVE-001",
@@ -4940,9 +4941,9 @@
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+        "reason": "Runtime read-scope checks pass on the current operations source; no deployed authenticated check and no formal model of the grant union."
       },
-      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "evidence": "2026-10-09: scripts/test-booking-conformance.py on a disposable PG16 database with a backend binary whose TDF/Operations sources are identical to main 7831b69: 619 checks passed, 0 failed, including 188 operations checks (teacher/engineer metrics restricted to visible assigned items, hidden payment detail denied, manager financial totals retained, failure counts and lists scoped by branch and role, version/request races with one winner). Operations ModelSpec ran in the backend Hspec suite (3,918 examples, 0 failures).",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
       "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
@@ -5010,9 +5011,9 @@
       "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, controls and sampled deployed denials pass and the debt register is now empty; handler enforcement of each registered capability is not mechanically verified."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "2026-10-09 on main 7831b69: scripts/check-public-routes.py passed (180 routes, debt register empty, no known-debt boundary in use) and scripts/test-public-routes.py passed 1 positive and 14 negative controls. Deployed GETs without credentials on handler-session, capability-header and capability-path routes returned 400/401/404; GET /session returned null, the anonymous result its handler-session boundary allows.",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
       "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
@@ -7545,7 +7546,7 @@
         "tdf-hq-ui/src/vite-env.d.ts"
       ],
       "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
-      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
+      "evidence": "2026-10-10 deployed api.tdfrecords.net: GET /public/whatsapp/consent returned 410 with and without a phone query, so consent state is not disclosed. ServerSpec consent cases ran in the backend Hspec suite (3,918 examples, 0 failures). Production has no WhatsApp Cloud API configuration, so confirmation messaging is dormant; consent POSTs were not sent.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7606,7 +7607,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
+        "reason": "Retired lookup verified on the deployed API and handler logic tested locally; the pending-request, confirmation and opt-out writes were not exercised in production."
       }
     },
     {
@@ -8458,13 +8459,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Component and browser tests pass; deployed smoke and legal confirmation pending."
+        "reason": "Component, routing and cross-browser journeys pass on the current source; deployed signup and the counsel confirmation of clickwrap remain open."
       },
       "critical": true,
       "property": "MinimalSignup, NoSecondGoogleForm and SafeReturnPath",
       "contract": "formal/system/mobile-entry-ux.md",
       "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys.",
-      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing.",
+      "evidence": "2026-10-10 on main 7831b69: LoginPage, signupFields, loginRouting and RootLandingRedirect Jest 64/64 (including hostile return paths); e2e/web/auth-landing.spec.mjs 29/29 across Chromium, Firefox, WebKit, tablet, Android and iPhone projects with a synthetic API. No deployed signup was performed, to avoid creating real accounts.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
@@ -9214,7 +9215,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+    "tdf-hq/assets/feature-registry.json": "4ecca90f12aff4a50f8ef55a24acea596ef205f428781f3771cd1049e091326f",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
     "tdf-hq/docs/openapi/api.yaml": "4e9f4e21af264c007cfd5e5572c90edb97ad39ddff79d6e10f42e21a0d031ad6",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
@@ -27459,7 +27460,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+      "sha256": "4ecca90f12aff4a50f8ef55a24acea596ef205f428781f3771cd1049e091326f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40614,7 +40615,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e8f8fe05607656765e8b0440543e3ac1598d0468f390a4d69bedfc23057a4624",
+      "sourceSha256": "7e83f955250fa74c7448516f37141635b64e59253e48e26e897bb35e5f88076e",
       "definition": {
         "states": [
           "absent",
