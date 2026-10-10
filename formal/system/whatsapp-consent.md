@@ -93,9 +93,13 @@ keyword, window and public-lookup checks.
 The model is not a verified translation of Haskell or PostgreSQL. It excludes staff
 capture, message content and templates, several numbers, clock skew
 between the server and Meta, webhook signature verification (AUTH-WEBHOOK-001), a
-process crash between claiming and recording the provider outcome (the request then
-stays delivered-pending, which is the conservative side), and a provider failure
-that hides an actual delivery. Because opting out needs no proof of control, a third
+a process crash between claiming and recording the provider outcome (the request then
+stays delivered-pending: conservative for the request interval, but an undelivered
+request would keep the 7-day window), a request whose clock was read before a
+withdrawal that committed first (it is sent but already withdrawn, which fails safe),
+and a provider failure that hides an actual delivery. `WhatsAppConsentRenewedUnsent`
+removes the retry bound and the kept instant together, since they are one rule; the
+other seven controls each remove exactly one guard. Because opting out needs no proof of control, a third
 party can withdraw someone else's pending request; that person must then wait for the
 24-hour interval or ask staff. This is accepted in exchange for closing the repeated
 message path. The 1-hour undelivered window is an engineering

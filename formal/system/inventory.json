@@ -23909,7 +23909,7 @@
     },
     {
       "path": "formal/system/whatsapp-consent.md",
-      "sha256": "b73f14e5314b86a761b1a2e72ee89a519e169c2ec87ba7ad49187743f6937712",
+      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
