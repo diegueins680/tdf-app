@@ -63,6 +63,12 @@ before deciding or cancelling …") and the real `decideRequest` handler
 ("commits expiry when a reviewer decides a lapsed request …"), asserting the
 409, the persisted `expired` status, the history row and the absence of any grant.
 
+Self-service activation follows the same rule (third review finding).
+`activateOwnArtistProfile` completes only pending onboarding requests that have
+not passed `expires_at`. `createArtistAccess` first settles that requester's
+lapsed onboarding request, then records a fresh self-service approval instead of
+resurrecting the expired row. Activation itself still succeeds.
+
 ## Bounded model
 
 `formal/event-operations/AccessGrant.tla` covers one access request and one

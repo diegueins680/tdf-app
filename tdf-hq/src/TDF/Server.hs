@@ -3877,6 +3877,13 @@ accessRequestsServer user =
       Env pool _ <- ask
       now <- liftIO getCurrentTime
       result <- liftIO $ flip runSqlPool pool $ do
+        -- Settle a lapsed onboarding request first, so self-service records a
+        -- fresh approval instead of resurrecting an expired request.
+        expirePendingAccessRequests now
+          [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+          , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+          , ME.FeatureAccessRequestAction ==. "create"
+          ]
         activated <- activateOwnArtistProfile (auPartyId user) now
         case activated of
           Left message -> pure (Left message)

@@ -8260,7 +8260,7 @@
         ]
       },
       "allowedTransitions": [
-        "(new) -> approved by system-policy (artist.onboarding/create self-service; Artist granted by policy)",
+        "(new) -> approved by system-policy (artist.onboarding/create self-service; Artist granted by policy; a lapsed pending onboarding request is first settled as expired, never approved)",
         "pending -> approved by a distinct administrator before expiry (grant for artist.onboarding/create)",
         "pending -> approved before expiry (manual provisioning otherwise)",
         "pending -> rejected with note before expiry",
@@ -9364,12 +9364,12 @@
     "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
-    "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
+    "tdf-hq/src/TDF/Profiles/Artist.hs": "b1c1931ad3239ea66063ca47b701c9173d534320d9d0ad5922082bd4caf796eb",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "ee8f6575610938c7b541d95691c9bbea17cd71b7e9a335c1a41844c56f9e95fb",
+    "tdf-hq/src/TDF/Server.hs": "51dddac257ae1914a70592dda25adcb4b5343dd302c0a7088c860fd14842418e",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -9436,7 +9436,7 @@
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
-    "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "0c42ca7ad1d5a0ad96584ed025c8aabd4b229f434c577466fd591ff349533ed0",
+    "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "4749b3b994dbc40ebe104cd0ba32bbcce44271b30fe1bb22a066bd6496ec73d9",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
@@ -32359,7 +32359,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
+      "sha256": "b1c1931ad3239ea66063ca47b701c9173d534320d9d0ad5922082bd4caf796eb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32467,7 +32467,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "ee8f6575610938c7b541d95691c9bbea17cd71b7e9a335c1a41844c56f9e95fb",
+      "sha256": "51dddac257ae1914a70592dda25adcb4b5343dd302c0a7088c860fd14842418e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33916,7 +33916,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "0c42ca7ad1d5a0ad96584ed025c8aabd4b229f434c577466fd591ff349533ed0",
+      "sha256": "4749b3b994dbc40ebe104cd0ba32bbcce44271b30fe1bb22a066bd6496ec73d9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40682,7 +40682,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7e54984c3c4d4c15cb1820fdbb2d305cc1200744075a071d8ced862fe2772348",
+      "sourceSha256": "6ef2f7d4cef67feb4712753785cc8b5259b3fd4dc147b8ba9a96c0babde1bd6b",
       "definition": {
         "states": [
           "absent",

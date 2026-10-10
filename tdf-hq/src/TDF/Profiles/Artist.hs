@@ -68,12 +68,14 @@ activateOwnArtistProfile partyId now = do
         Left message -> pure (Left message)
         Right _ -> do
           profile <- loadOrCreateArtistProfileDTO partyId
+          -- A request past its deadline is not completed here: approving it would
+          -- resurrect an expired request. Activation itself still succeeds.
           pending <- selectList
-            [ ME.FeatureAccessRequestRequesterPartyId ==. partyId
-            , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
-            , ME.FeatureAccessRequestAction ==. "create"
-            , ME.FeatureAccessRequestStatus ==. "pending"
-            ] []
+            ([ ME.FeatureAccessRequestRequesterPartyId ==. partyId
+             , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+             , ME.FeatureAccessRequestAction ==. "create"
+             , ME.FeatureAccessRequestStatus ==. "pending"
+             ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just now])) []
           forM_ pending $ \(Entity key _) -> do
             let note = Just "Perfil de artista activado por su titular, sin aprobación manual."
             update key

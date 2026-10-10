@@ -139,6 +139,15 @@ spec = describe "artist-self-service-postgresql" $ do
         history <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='expired'" [PersistInt64 requestId]) pool
         history `shouldBe` [Single (1 :: Int64)]
         counts pool 3 `shouldReturn` [0,0,0]
+      it "activates without resurrecting an expired onboarding request" $ \pool -> do
+        lapsedRows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(4,'artist.onboarding','create','[]','[]','pending','admin',now()-interval '31 days',now()-interval '31 days',now()-interval '1 day') RETURNING id" []) pool :: IO [Single Int64]
+        lapsedId <- case lapsedRows of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        activate pool 4 >>= (`shouldSatisfy` isRight)
+        counts pool 4 `shouldReturn` [1,1,1]
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 lapsedId]) pool
+        status `shouldBe` [Single ("pending" :: Text)]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do
         runSqlPool (rawExecute "CREATE FUNCTION fail_test_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.artist_party_id=7 THEN RAISE EXCEPTION 'injected profile write failure'; END IF; RETURN NEW; END $$" []) pool
         runSqlPool (rawExecute "CREATE TRIGGER fail_profile BEFORE INSERT ON artist_profile FOR EACH ROW EXECUTE FUNCTION fail_test_profile()" []) pool

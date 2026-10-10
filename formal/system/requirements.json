@@ -8259,7 +8259,7 @@
         ]
       },
       "allowedTransitions": [
-        "(new) -> approved by system-policy (artist.onboarding/create self-service; Artist granted by policy)",
+        "(new) -> approved by system-policy (artist.onboarding/create self-service; Artist granted by policy; a lapsed pending onboarding request is first settled as expired, never approved)",
         "pending -> approved by a distinct administrator before expiry (grant for artist.onboarding/create)",
         "pending -> approved before expiry (manual provisioning otherwise)",
         "pending -> rejected with note before expiry",
