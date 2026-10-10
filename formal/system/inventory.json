@@ -5106,7 +5106,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "e89e685c8c24da3980d8c8c97e659b0a1648838fa99a1a25270082b3b7054592",
+      "sha256": "f615c29caa3bf38d477c5f6606c3896a83f5eed33dbbf9d5cd3232b286ba2288",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12786,13 +12786,13 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "64d87adbea3d1bdeae6bc0750570a3d08aedd07854fab1d59a051f67b137b98a",
+      "sha256": "491ccaa7d7de7273c7d17485f6e642aa0b17682df82803d07f824e3abd9f1642",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-48d8c4fab6aef615",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-      "sha256": "ab721a0712aefb03ae47d12ebed3ccdd2b7386d560a15a0e42b2ba6829bbc77e",
+      "sha256": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14820,7 +14820,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "f3fa1b64b6740c79b19b393e8e34a9259a1c2c6182d59ec3d087b27a0561a636",
+      "sha256": "540587368272b6209303325dbcfa4e0597e155102f7b97cab42249e761dd5775",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18267,7 +18267,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "993c476ae30e892d4b47a65cc30d17d6b1bc3c0ab5615f6ed6dc9acdd5251944",
+      "sha256": "43ee56ca00114fa0c20893f9fef469d0cb470b759751db1ffa07d8d99d11b688",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
