@@ -71,6 +71,24 @@ BEGIN
     RAISE EXCEPTION 'event edit did not propagate';
   END IF;
 
+  -- 3a. An edit to a field search does not show keeps the version (no new
+  -- saved-search alert) while the document still records the newer source.
+  SELECT * INTO doc FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text;
+  UPDATE social_event SET capacity = 321, updated_at = now() + interval '1 minute' WHERE id = synth_event_id;
+  IF (SELECT source_version FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
+     IS DISTINCT FROM doc.source_version THEN
+    RAISE EXCEPTION 'an edit that search does not show advanced the alert version';
+  END IF;
+  IF (SELECT source_updated_at FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
+     IS NOT DISTINCT FROM doc.source_updated_at THEN
+    RAISE EXCEPTION 'the document did not record the newer source timestamp';
+  END IF;
+  UPDATE social_event SET title = 'Synthetic renamed sync night II', updated_at = now() + interval '2 minutes' WHERE id = synth_event_id;
+  IF (SELECT source_version FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
+     IS DISTINCT FROM doc.source_version + 1 THEN
+    RAISE EXCEPTION 'a visible edit did not advance the version exactly once';
+  END IF;
+
   -- 4. Non-HTTPS images are never projected.
   UPDATE social_event SET metadata = '{"isPublic": true, "imageUrl": "javascript:alert(1)"}' WHERE id = synth_event_id;
   IF (SELECT image_url FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text) IS NOT NULL THEN

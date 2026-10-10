@@ -173,9 +173,23 @@ BEGIN
     search_vector = EXCLUDED.search_vector, source_status = EXCLUDED.source_status,
     visibility = EXCLUDED.visibility, moderation_status = EXCLUDED.moderation_status,
     source_updated_at = EXCLUDED.source_updated_at,
-    source_version = directory_search_document.source_version + 1
-  -- An unchanged projection keeps its version: saved-search alerts fire on
-  -- source_version, so a rebuild must not notify again.
+    -- Saved-search alerts fire on source_version, so it advances only when a
+    -- projected field changes. A rebuild, or an edit to something search
+    -- does not show (capacity, price), keeps it and does not notify again.
+    source_version = directory_search_document.source_version + CASE WHEN (
+      directory_search_document.slug, directory_search_document.title,
+      directory_search_document.subtitle, directory_search_document.city_id,
+      directory_search_document.city_name, directory_search_document.country_code,
+      directory_search_document.public_latitude, directory_search_document.public_longitude,
+      directory_search_document.location_precision, directory_search_document.search_text,
+      directory_search_document.source_status, directory_search_document.visibility,
+      directory_search_document.moderation_status
+    ) IS DISTINCT FROM (
+      EXCLUDED.slug, EXCLUDED.title, EXCLUDED.subtitle, EXCLUDED.city_id,
+      EXCLUDED.city_name, EXCLUDED.country_code, EXCLUDED.public_latitude,
+      EXCLUDED.public_longitude, EXCLUDED.location_precision, EXCLUDED.search_text,
+      EXCLUDED.source_status, EXCLUDED.visibility, EXCLUDED.moderation_status
+    ) THEN 1 ELSE 0 END
   WHERE (directory_search_document.slug, directory_search_document.title,
          directory_search_document.subtitle, directory_search_document.city_id,
          directory_search_document.city_name, directory_search_document.country_code,
