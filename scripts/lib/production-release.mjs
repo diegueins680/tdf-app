@@ -683,6 +683,30 @@ ROLLBACK;
 `.trim();
 }
 
+// Every music SQL function the backend or a release worker calls directly, by exact
+// argument signature. A dropped or mis-signed function would otherwise surface only
+// as undefined_function at request time. The release test derives the called set
+// from source and fails if a newly called function is missing here.
+export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
+  'music_can(bigint,bigint,text)',
+  'music_check_ddex_export(uuid)',
+  'music_check_ddex_operation(uuid,uuid,uuid,text)',
+  'music_check_submission(uuid)',
+  'music_create_release_correction(uuid,uuid,bigint)',
+  'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_preview_matches(uuid)',
+  'music_preview_spec(bigint,bigint,bigint)',
+  'music_public_asset_accessible(uuid,text)',
+  'music_publish_due(integer)',
+  'music_queue_preview_jobs(integer)',
+  'music_rebuild_daily_metrics(date)',
+  'music_record_playback_event(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)',
+  'music_refresh_validation_flags(uuid)',
+  'music_scan_legacy_release_sanitation(bigint,integer)',
+  'music_version_parties(uuid)',
+  'music_withdraw_due(integer)',
+]);
+
 export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
   return `${header}DO $verify$
@@ -697,6 +721,7 @@ DECLARE
   social_table TEXT;
   ticketing_table TEXT;
   enrichment_table TEXT;
+  music_table TEXT;
 BEGIN
   IF to_regclass('public.receipt_number_counter') IS NULL THEN
     RAISE EXCEPTION 'Receipt number allocation counter is missing';
@@ -2525,6 +2550,86 @@ BEGIN
        AND table_name='interaction_notification' AND column_name='last_event_id'
        AND data_type='bigint' AND is_nullable='NO') THEN
     RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
+  -- A rolled-back migration keeps its ledger row, and several rollbacks restore an
+  -- older object under the same name. Each registered migration is therefore
+  -- verified by an object or definition only it introduces, oldest first, so the
+  -- first failure names the missing migration.
+  IF NOT EXISTS (SELECT 1 FROM security_role_assignment_policy
+       WHERE code='artist.invitation.artist' AND active)
+     OR position('''artist-invitation-redeemed''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0 THEN
+    RAISE EXCEPTION 'Music migration 2026-09-14_artist_invitation_auto_approval is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_preview_spec' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_preview_ranges is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_copy_version_parties' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_version_parties is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_merge_party_identifiers' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_party_details is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_create_release_correction'
+       AND pronamespace='public'::regnamespace
+       AND position('correction asset graph has a cycle' IN prosrc)>0) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_correction_asset_graph is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_create_release_correction'
+       AND pronamespace='public'::regnamespace
+       AND position('music-correction:' IN prosrc)>0) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_correction_concurrency is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_check_resource_graph' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_resource_graph_validation is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_check_ddex_operation' AND pronamespace='public'::regnamespace)
+     OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_ddex_release_identifier' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_ddex_operations is not applied';
+  END IF;
+  IF to_regprocedure('music_record_playback_event_unbound_v1(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)') IS NULL
+     OR to_regclass('public.music_playback_session_sanitation') IS NULL THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_playback_identity is not applied';
+  END IF;
+  IF to_regclass('public.artist_invitation_link') IS NULL THEN
+    RAISE EXCEPTION 'Music migration 2026-10-07_artist_invitation_links is not applied';
+  END IF;
+  FOREACH music_table IN ARRAY ARRAY[
+    'music_release', 'music_release_version', 'music_party', 'music_party_identifier',
+    'music_recording', 'music_release_track', 'music_credit', 'music_identifier',
+    'music_rights_declaration', 'music_rights_split', 'music_asset', 'music_upload_session',
+    'music_upload_part', 'music_processing_job', 'music_availability_rule',
+    'music_terms_acceptance', 'music_editorial_comment', 'music_release_audit_event',
+    'music_infringement_report', 'music_purchase_order', 'music_entitlement',
+    'music_download_event', 'music_playback_event', 'music_ddex_party_registry',
+    'music_ddex_export', 'music_release_version_party', 'artist_release_team_member',
+    'music_legacy_sanitation_item', 'music_favorite', 'music_playlist', 'music_playlist_item',
+    'music_playback_history', 'music_daily_metric', 'music_public_release',
+    'music_legacy_release_sanitation_queue', 'music_resource_graph_sanitation_queue'
+  ] LOOP
+    IF to_regclass('public.' || music_table) IS NULL THEN
+      RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
+    END IF;
+  END LOOP;
+  FOREACH music_table IN ARRAY ARRAY[
+    ${MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => `'${signature}'`).join(',\n    ')}
+  ] LOOP
+    IF to_regprocedure(music_table) IS NULL THEN
+      RAISE EXCEPTION 'Music runtime function % is missing', music_table;
+    END IF;
+  END LOOP;
+  IF to_regclass('public.artist_invitation_link') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid='public.artist_invitation_link'::regclass
+         AND conname='artist_invitation_link_redeemed_or_revoked' AND contype='c' AND convalidated
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM security_role_assignment_policy
+       WHERE code='artist.invitation.artist' AND trigger_code='artist-invitation-redeemed'
+     )
+     OR position('''artist-invitation-redeemed''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0
+     OR position('''artist-self-service-activated''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0 THEN
+    RAISE EXCEPTION 'Personal artist invitation links or their assignment policy are missing';
   END IF;
 END
 $verify$;`;

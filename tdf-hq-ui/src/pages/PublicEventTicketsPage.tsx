@@ -34,6 +34,7 @@ import type { DatafastCheckoutDTO } from '../api/types';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import TicketBankTransferPanel from '../components/payments/TicketBankTransferPanel';
 import TicketCredentialQR from '../components/TicketCredentialQR';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -574,10 +575,6 @@ export default function PublicEventTicketsPage() {
                         <Typography variant="subtitle2" fontWeight={800}>
                           {english ? 'Ticket terms and fees' : 'Términos y tarifas de las entradas'}
                         </Typography>
-                        <Typography variant="body2">{storefront.data.policy.termsSummary}</Typography>
-                        <Typography variant="body2">
-                          {english ? 'Refund policy' : 'Política de reembolso'}: {storefront.data.policy.refundPolicy}
-                        </Typography>
                         <Typography variant="body2">
                           {english ? 'Buyer fee' : 'Tarifa al comprador'}: {percentage(storefront.data.policy.buyerFeeBps, locale)} ·{' '}
                           {english ? 'Organizer fee (deducted from payout)' : 'Tarifa al organizador (descontada del pago)'}: {percentage(storefront.data.policy.organizerFeeBps, locale)} ·{' '}
@@ -596,9 +593,6 @@ export default function PublicEventTicketsPage() {
                               : `Transferencia bancaria disponible hasta el ${date(storefront.data.policy.bankTransferAvailableUntil)}; las entradas se emiten al confirmar el depósito.`}
                           </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
-                          {english ? 'Terms version' : 'Versión de términos'}: {storefront.data.policy.termsVersion}
-                        </Typography>
                       </Stack>
                     </Alert>
                   ) : (
@@ -608,9 +602,28 @@ export default function PublicEventTicketsPage() {
                         : 'Los términos de las entradas no están disponibles, por lo que el checkout no puede continuar.'}
                     </Alert>
                   )}
-                  <FormControlLabel control={<Checkbox disabled={!storefront.data.policy} checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />} label={english
-                    ? 'I accept the versioned ticket terms, fees, and refund policy shown above.'
-                    : 'Acepto los términos versionados, las tarifas y la política de reembolso mostrados arriba.'} />
+                  {storefront.data.policy && (
+                    <Stack spacing={1}>
+                      <LegalDisclosure
+                        id="ticket-terms"
+                        language={english ? 'en' : 'es'}
+                        title={english ? 'Ticket terms' : 'Términos de las entradas'}
+                        summary={`${english ? 'Terms version' : 'Versión de términos'}: ${storefront.data.policy.termsVersion}`}
+                      >
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.termsSummary}</Typography>
+                      </LegalDisclosure>
+                      <LegalDisclosure
+                        id="ticket-refund-policy"
+                        language={english ? 'en' : 'es'}
+                        title={english ? 'Refund policy' : 'Política de reembolso'}
+                      >
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.refundPolicy}</Typography>
+                      </LegalDisclosure>
+                    </Stack>
+                  )}
+                  <FormControlLabel control={<Checkbox disabled={!storefront.data.policy} checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} inputProps={{ 'aria-describedby': storefront.data.policy ? 'ticket-terms-button ticket-refund-policy-button' : undefined }} />} label={english
+                    ? 'I accept the versioned ticket terms, fees, and refund policy above.'
+                    : 'Acepto los términos versionados, las tarifas y la política de reembolso indicados arriba.'} />
                   {message && <Alert severity="warning">{message}</Alert>}
                   <Button type="submit" variant="contained" size="large" disabled={!storefront.data.checkoutAvailable || !termsAccepted || submitting || !selectedTier || selectedTier.remaining <= 0}>
                     {submitting ? <CircularProgress size={22} color="inherit" /> : (english ? 'Hold tickets and review total' : 'Retener entradas y revisar total')}

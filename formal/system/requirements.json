@@ -8772,6 +8772,90 @@
         "classification": "PARTIAL",
         "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
       }
+    },
+    {
+      "id": "LEGAL-DISCLOSURE-001",
+      "title": "Legal text is collapsed by default without weakening consent",
+      "statement": "Terms, policies, consent texts and disclaimers render inside a shared disclosure that starts collapsed, can be opened to read the complete text before acceptance, and keeps every required acceptance control visible, associated with its documents and enforced exactly as before.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 (collapsible Terms and Conditions UX; each document an independent section)",
+      "source": "tdf-app PR #515; TDF-mobile PR #153",
+      "property": "Collapsing legal text never hides, pre-checks or bypasses a required acceptance control.; Every collapsed document remains readable in full before acceptance.",
+      "contract": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+      "actors": [
+        "Buyer, registrant or account holder",
+        "Screen-reader and keyboard user"
+      ],
+      "preconditions": [
+        "A surface renders long-form legal text next to, or instead of, a consent control."
+      ],
+      "inputs": [
+        "Document title, optional version summary and full legal text",
+        "Viewer locale (es/en)"
+      ],
+      "state": {
+        "initial": "collapsed",
+        "toggled": [
+          "expanded",
+          "collapsed"
+        ],
+        "scope": "per page or step; never persisted"
+      },
+      "allowedTransitions": [
+        "collapsed -> expanded on header activation (click, Enter or Space)",
+        "expanded -> collapsed on header activation",
+        "Deep link to #privacidad or #terminos on /seguridad opens that document expanded"
+      ],
+      "forbiddenTransitions": [
+        "Consent checkbox or switch placed inside a collapsed panel",
+        "Submission gating relaxed because legal text is collapsed",
+        "Expanded state persisted across sessions"
+      ],
+      "effects": [
+        "Header exposes aria-expanded/aria-controls (web) or accessibilityState.expanded (mobile)",
+        "Consent controls reference the disclosure headers through aria-describedby where applicable"
+      ],
+      "authorization": "Not applicable: presentation only; acceptance and its server-side enforcement are unchanged.",
+      "privacy": "No analytics, storage or network calls are added by the disclosure.",
+      "concurrency": "Not applicable: local component state only.",
+      "idempotency": "Toggling is a pure local state change.",
+      "failure": "When a document is unavailable the surrounding surface keeps its existing unavailable-terms behavior.",
+      "recovery": "Reloading the page or step restores the collapsed default.",
+      "observability": "Unit tests, persona e2e journeys and the accessibility (axe) checks cover the control.",
+      "implementation": [
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/pages/SecurityPage.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/InventoryPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "tdf-mobile/app/reputation/consents.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
+        "e2e/web/artist-merch.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "tdf-hq-ui/src/pages/SecurityPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Component unit tests, updated checkout/storefront persona journeys at desktop/phone/tablet, and manual responsive checks at 360/768/1280px.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": false,
+      "confidence": "high for the presentation boundary; legal sufficiency of the texts themselves is out of scope",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
+      }
     }
   ]
 }

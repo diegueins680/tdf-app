@@ -296,7 +296,17 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(container.textContent).toContain(
       'Aceptas el precio, las tarifas y las condiciones mostradas.',
     ));
-    expect(container.textContent).toContain('Política de reembolso: Reembolso total.');
+    const termsButton = container.querySelector<HTMLButtonElement>('#ticket-terms-button')!;
+    const refundButton = container.querySelector<HTMLButtonElement>('#ticket-refund-policy-button')!;
+    expect(termsButton.getAttribute('aria-expanded')).toBe('false');
+    expect(refundButton.getAttribute('aria-expanded')).toBe('false');
+    expect(refundButton.textContent).toContain('Política de reembolso');
+    const consent = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(consent.getAttribute('aria-describedby')).toBe('ticket-terms-button ticket-refund-policy-button');
+    await act(async () => { fireEvent.click(refundButton); });
+    expect(refundButton.getAttribute('aria-expanded')).toBe('true');
+    expect(termsButton.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector(`#${refundButton.getAttribute('aria-controls')}`)?.textContent).toBe('Reembolso total.');
     expect(container.textContent).toContain('Tarifa al comprador: 2%');
     expect(container.textContent).toContain('Tarifa al organizador (descontada del pago): 2%');
     expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
