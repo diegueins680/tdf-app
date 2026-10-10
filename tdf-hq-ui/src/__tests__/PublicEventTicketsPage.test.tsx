@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
@@ -226,6 +226,86 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     });
     await waitForExpectation(() => expect(getStorefrontMock).toHaveBeenCalledWith(41));
   };
+
+  it('retrieves issued tickets when public ticket sales are closed', async () => {
+    getStorefrontMock.mockRejectedValue(new Error('404: Tickets are not on sale'));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued', holderName: 'Comprador' }],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Entradas emitidas'));
+    expect(getCheckoutMock).toHaveBeenCalledWith(41, 92, 'secure-lookup-token');
+    expect(container.textContent).not.toContain('Elige tus entradas');
+  });
+
+  it('does not wait for a slow storefront before displaying an authorized order', async () => {
+    getStorefrontMock.mockImplementation(() => new Promise(() => {}));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+  });
+
+  it('retries a failed order lookup without creating a second purchase', async () => {
+    getCheckoutMock.mockRejectedValueOnce(new Error('Temporary outage'))
+      .mockResolvedValueOnce(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    const retry = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Intentar de nuevo')!;
+    await act(async () => { fireEvent.click(retry); });
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    expect(getCheckoutMock).toHaveBeenCalledTimes(2);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps an issued ticket on screen when refreshing the order fails', async () => {
+    getCheckoutMock.mockResolvedValueOnce(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued', holderName: 'Comprador' }],
+    })).mockRejectedValueOnce(new Error('Temporary outage'));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('TICKET-VERIFIED'));
+    const refresh = Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    await act(async () => { fireEvent.click(refresh); });
+    await waitForExpectation(() => expect(getCheckoutMock).toHaveBeenCalledTimes(2));
+    await waitForExpectation(() => expect(container.textContent).toContain('No pudimos cargar tu orden'));
+    expect(container.textContent).toContain('TICKET-VERIFIED');
+    expect(container.textContent).toContain('Entradas emitidas');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('explains missing order access without offering another purchase', async () => {
+    window.localStorage.clear();
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('navegador donde compraste'));
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    expect(getCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('ignores a late receipt after navigating to an order without its capability', async () => {
+    let resolveFirst!: (value: unknown) => void;
+    getCheckoutMock.mockImplementation(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/eventos/41/orden/92']}>
+        <QueryClientProvider client={queryClient}>
+          <Link to="/eventos/41/orden/93">Otra orden</Link>
+          <Routes><Route path="/eventos/:eventId/orden/:orderId" element={<PublicEventTicketsPage />} /></Routes>
+        </QueryClientProvider>
+      </MemoryRouter>);
+    });
+    await waitForExpectation(() => expect(getCheckoutMock).toHaveBeenCalledTimes(1));
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    await act(async () => { fireEvent.click(container.querySelector('a')!); });
+    await waitForExpectation(() => expect(container.textContent).toContain('navegador donde compraste'));
+    await act(async () => {
+      resolveFirst(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued',
+        tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued' }] }));
+    });
+    expect(container.textContent).not.toContain('TICKET-VERIFIED');
+    expect(container.textContent).not.toContain('Entradas emitidas');
+  });
 
   it('shows the approved ticket policy before consent and checkout', async () => {
     await renderTracking('/eventos/41/entradas');
@@ -458,7 +538,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await renderTracking('/eventos/41/orden/92?resourcePath=%2Fv1%2Fcheckouts%2Fprovider-1%2Fpayment');
 
     await waitForExpectation(() => expect(container.textContent).toContain(
-      'El servidor no pudo verificar esta orden. No mostramos ningún pago como exitoso.',
+      'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.',
     ));
     expect(container.textContent).not.toContain('El servidor verificó el pago');
     expect(container.textContent).not.toContain('TICKET-');

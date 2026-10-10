@@ -24,6 +24,7 @@
     ],
     "e2e": [
       "e2e/integration/event-raci-browser.spec.mjs",
+      "e2e/integration/ticket-retrieval.spec.mjs",
       "e2e/interactions/interactions.spec.mjs",
       "e2e/web/account-deletion-rollout.spec.mjs",
       "e2e/web/account-deletion.spec.mjs",
@@ -326,6 +327,7 @@
       "scripts/run-instagram-follower-invite-2026-09-09.sh",
       "scripts/run-music-release-worker-once.sh",
       "scripts/run-music-release-worker.sh",
+      "scripts/run-ticket-retrieval-browser.mjs",
       "scripts/scan-music-legacy-releases.sh",
       "scripts/set-loop-github-polling.mjs",
       "scripts/social/ApiContractSpec.hs",
@@ -2523,7 +2525,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0606a73a2d9ce7e753f91c20009d0273bf1ea192f40d735f7c0aff0b4d531962",
+      "sha256": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2547,7 +2549,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
+      "sha256": "2f9df4ae6a308c37f0cd1b624d09678564f1550041998e52a760026ff5cec9ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2559,19 +2561,19 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+      "sha256": "796ef043d981372163b9fa2ed6eece84f04077432d29458304ecc84b5bf14ef0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "83cb1fc70d4cd7cbebc540eeee25093b578f463d5dfb892924c6f0683707212a",
+      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "5c812f5a50e54395e87c5ecf2209cc2ec47158cc97849bb16edf394764904513",
+      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2589,7 +2591,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "2296b25573ac27eb67fc51dd996a03e816471c0fb30cecd3746d21f0b8d3792d",
+      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2608,6 +2610,12 @@
       "id": "SURFACE-b18780932504c8a1",
       "path": "e2e/integration/event-raci-browser.spec.mjs",
       "sha256": "963cc535ca35453f2c662ff1831a5005d5327b3151bc9ed4a2752d8de9f4ab57",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e48b174d71244c56",
+      "path": "e2e/integration/ticket-retrieval.spec.mjs",
+      "sha256": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4351,6 +4359,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b2a8d03352f6e0c4",
+      "path": "scripts/run-ticket-retrieval-browser.mjs",
+      "sha256": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e62b469d42a02d7a",
       "path": "scripts/scan-music-legacy-releases.sh",
       "sha256": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -5757,7 +5771,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
+      "sha256": "79778549159960c89c34d389defc0ac651e6503b066ba427c40061864f57816a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8949,7 +8963,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+      "sha256": "ca76da4763575e18ca057a043e3b76a4795aced603fdae45d65f44e63625baa4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23762,7 +23776,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sha256": "81ff67ec9fe03a1a5fe4ffc64d6a34ecffd607afbf41e0391d47783bcd38a336",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
