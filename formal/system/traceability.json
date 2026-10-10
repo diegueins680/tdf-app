@@ -9220,7 +9220,7 @@
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
-    "scripts/test-music-directory-migration.sh": "a2a7bb3873ab452b2b5dcb3475084b0d2ff27bb43133f0c5af5c4e7f8866e48c",
+    "scripts/test-music-directory-migration.sh": "e89e685c8c24da3980d8c8c97e659b0a1648838fa99a1a25270082b3b7054592",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-release-api-e2e.mjs": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
@@ -9554,7 +9554,7 @@
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "6e0ec3fe762635c5e538848c5f014144ce269e4d1713feb3ed042cf35ba2aca3",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "64d87adbea3d1bdeae6bc0750570a3d08aedd07854fab1d59a051f67b137b98a",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "ab721a0712aefb03ae47d12ebed3ccdd2b7386d560a15a0e42b2ba6829bbc77e",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -20488,7 +20488,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "a2a7bb3873ab452b2b5dcb3475084b0d2ff27bb43133f0c5af5c4e7f8866e48c",
+      "sha256": "e89e685c8c24da3980d8c8c97e659b0a1648838fa99a1a25270082b3b7054592",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31532,7 +31532,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "6e0ec3fe762635c5e538848c5f014144ce269e4d1713feb3ed042cf35ba2aca3",
+      "sha256": "64d87adbea3d1bdeae6bc0750570a3d08aedd07854fab1d59a051f67b137b98a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

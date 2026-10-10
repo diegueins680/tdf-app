@@ -193,6 +193,9 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
+    -- Same lock as the sync functions: a concurrent sync that already read
+    -- this source must not reinsert its document after the delete.
+    PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
     DELETE FROM directory_search_document
     WHERE entity_kind = 'event' AND entity_id = OLD.id::text;
     RETURN NULL;
@@ -223,6 +226,9 @@ DECLARE
   venue_event_id BIGINT;
 BEGIN
   IF TG_OP = 'DELETE' THEN
+    -- Same lock as the sync functions: a concurrent sync that already read
+    -- this source must not reinsert its document after the delete.
+    PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
     DELETE FROM directory_search_document
     WHERE entity_kind = 'venue' AND entity_id = OLD.id::text;
     RETURN NULL;
