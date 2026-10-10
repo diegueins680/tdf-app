@@ -12876,7 +12876,7 @@
       "reviewed": true
     },
     {
-      "id": "068d6f3f0c164631ab35",
+      "id": "a7561a719beb23884345",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -12888,10 +12888,10 @@
       "reviewBatch": "ci-recovery-2026-09-12",
       "evidence": {
         "file": "tdf-mobile/src/api/events.ts",
-        "line": 432,
+        "line": 435,
         "kind": "object-registry",
         "name": "Events",
-        "valueCount": 29,
+        "valueCount": 30,
         "consumerCount": 151,
         "exactDuplicateIds": [],
         "similarCandidateIds": []

@@ -52,7 +52,8 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import type { CourseCheckoutResponse, CourseMetadata, CourseRegistrationRequest } from '../api/courses';
+import type { CourseCheckoutResponse, CourseCheckoutTerms, CourseMetadata, CourseRegistrationRequest } from '../api/courses';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { Courses } from '../api/courses';
 import type { DatafastCheckoutDTO } from '../api/types';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
@@ -416,6 +417,12 @@ export default function CourseProductionLandingPage() {
     queryFn: () => Courses.getMetadata(selectedSlug),
     enabled: Boolean(selectedSlug),
   });
+  const checkoutTerms = metaQuery.data?.checkoutTerms ?? null;
+  // Acceptance belongs to the version that was on screen: a different version starts unaccepted.
+  const checkoutTermsVersion = checkoutTerms?.termsVersion ?? null;
+  useEffect(() => {
+    setTermsAccepted(false);
+  }, [checkoutTermsVersion]);
   const cohortQueries = useQueries({
     queries:
       availableSlugs.length > 1
@@ -505,6 +512,11 @@ export default function CourseProductionLandingPage() {
           retireOnChange: view.definitiveRejection,
           retireAlways: view.retireIdempotencyKey,
         };
+      }
+      if (view.termsChanged) {
+        // The approved policy changed after the page loaded: show the new terms and ask again.
+        setTermsAccepted(false);
+        void metaQuery.refetch();
       }
       if (view.field) {
         if (view.field === 'fullName' || view.field === 'email') setEditAccountFields(true);
@@ -598,6 +610,8 @@ export default function CourseProductionLandingPage() {
   const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     if (registrationMutation.isPending || registrationMutation.isSuccess) return;
+    // Never bind an acceptance to terms that are still being replaced.
+    if (metaQuery.isFetching) return;
     const errors = validateEnrollment();
     setFieldErrors(errors);
     const fieldOrder: CourseRegistrationField[] = ['fullName', 'email', 'phone', 'howHeard', 'terms'];
@@ -615,6 +629,7 @@ export default function CourseProductionLandingPage() {
       howHeard: howHeard.trim() ? howHeard.trim() : undefined,
       utm: utmParams,
       termsAccepted,
+      ...(checkoutTerms ? { acceptedTermsVersion: checkoutTerms.termsVersion } : {}),
     };
     const fingerprint = JSON.stringify([selectedSlug, payload]);
     const previous = lastAttemptRef.current;
@@ -706,7 +721,7 @@ export default function CourseProductionLandingPage() {
     if (typeof element.scrollIntoView === 'function') {
       element.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
-  }, [pendingFocusField, submitting, fieldInputRefs, editAccountFields]);
+  }, [pendingFocusField, submitting, fieldInputRefs, editAccountFields, metaQuery.isFetching]);
   const serverError = registrationMutation.error
     ? describeCourseRegistrationError(registrationMutation.error)
     : null;
@@ -1081,6 +1096,8 @@ export default function CourseProductionLandingPage() {
             clearFieldError('terms');
           }}
           termsUrl={cmsPayload?.termsUrl ?? null}
+          checkoutTerms={checkoutTerms}
+          termsRefreshing={metaQuery.isFetching}
           fieldErrors={visibleFieldErrors}
           formError={formError}
           submitting={submitting}
@@ -1759,6 +1776,8 @@ function EnrollmentDialog({
   termsAccepted,
   onTermsAcceptedChange,
   termsUrl,
+  checkoutTerms,
+  termsRefreshing,
   fieldErrors,
   formError,
   submitting,
@@ -1796,6 +1815,8 @@ function EnrollmentDialog({
   termsAccepted: boolean;
   onTermsAcceptedChange: (value: boolean) => void;
   termsUrl: string | null;
+  checkoutTerms: CourseCheckoutTerms | null;
+  termsRefreshing: boolean;
   fieldErrors: EnrollmentFieldErrors;
   formError: string | null;
   submitting: boolean;
@@ -1830,7 +1851,13 @@ function EnrollmentDialog({
     pt: 1.5,
     pb: fullScreen ? 'calc(16px + env(safe-area-inset-bottom, 0px))' : 2,
   };
-  const termsLabel = termsUrl ? (
+  const termsDescribedBy = [
+    checkoutTerms ? 'course-terms-button course-cancellation-policy-button' : '',
+    fieldErrors.terms ? termsErrorId : '',
+  ].filter(Boolean).join(' ');
+  const termsLabel = checkoutTerms ? (
+    `Acepto los términos del curso (versión ${checkoutTerms.termsVersion}) y la política de cancelación indicados arriba.`
+  ) : termsUrl ? (
     <>
       Acepto los{' '}
       <Link href={termsUrl} target="_blank" rel="noreferrer" sx={{ color: '#93c5fd' }}>
@@ -2103,6 +2130,20 @@ function EnrollmentDialog({
                 minRows={2}
                 {...darkFieldProps}
               />
+              {checkoutTerms && (
+                <Stack spacing={1}>
+                  <LegalDisclosure
+                    id="course-terms"
+                    title="Términos del curso"
+                    summary={`Versión ${checkoutTerms.termsVersion}`}
+                  >
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.termsSummary}</Typography>
+                  </LegalDisclosure>
+                  <LegalDisclosure id="course-cancellation-policy" title="Política de cancelación">
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{checkoutTerms.cancellationPolicy}</Typography>
+                  </LegalDisclosure>
+                </Stack>
+              )}
               <Box>
                 <FormControlLabel
                   control={(
@@ -2110,11 +2151,11 @@ function EnrollmentDialog({
                       checked={termsAccepted}
                       onChange={(event) => onTermsAcceptedChange(event.target.checked)}
                       required
-                      disabled={disableInputs}
+                      disabled={disableInputs || termsRefreshing}
                       inputRef={inputRefs.terms}
                       inputProps={{
                         'aria-invalid': Boolean(fieldErrors.terms),
-                        ...(fieldErrors.terms ? { 'aria-describedby': termsErrorId } : {}),
+                        ...(termsDescribedBy ? { 'aria-describedby': termsDescribedBy } : {}),
                       }}
                       sx={{
                         p: 1.25,

@@ -8784,6 +8784,96 @@
         "classification": "PARTIAL",
         "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
       }
+    },
+    {
+      "id": "LEGAL-CONSENT-001",
+      "title": "Buyers read the exact versioned terms they accept, and the server binds that version",
+      "statement": "Course registration and ticket checkouts that require acceptance show the approved policy's terms and cancellation/refund text before the acceptance control, send the accepted terms version, and the server rejects a missing (tickets) or stale (courses and tickets) version for the policy it is about to bind.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 ('Fix them': course terms never shown; mobile ticket checkout without terms)",
+      "source": "tdf-app PR (fix/terms-consent-gaps); TDF-mobile PR (fix/terms-consent-gaps)",
+      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.",
+      "contract": "tdf-hq/docs/openapi/api.yaml",
+      "actors": [
+        "Course registrant",
+        "Ticket buyer (web modal or mobile app)",
+        "Checkout server"
+      ],
+      "preconditions": [
+        "An approved, active checkout policy exists for the course or event; without one no acceptance is requested."
+      ],
+      "inputs": [
+        "CourseMetadata.checkoutTerms",
+        "CourseRegistrationRequest.acceptedTermsVersion",
+        "TicketPurchaseWithPromoDTO.ticketPurchaseAcceptedTermsVersion",
+        "Public event ticket policy"
+      ],
+      "state": {
+        "display": "terms collapsed with visible version and acceptance control",
+        "binding": [
+          "accepted version equals active policy version",
+          "otherwise 400/409 and re-acceptance"
+        ]
+      },
+      "allowedTransitions": [
+        "Shown version accepted -> checkout/seat hold bound to that policy",
+        "Policy changed after display -> 409 -> new terms shown and acceptance cleared"
+      ],
+      "forbiddenTransitions": [
+        "Acceptance requested for terms that are never displayed",
+        "Legacy ticket hold for an event with an approved policy without the accepted version",
+        "Course checkout bound to a terms version different from the one the buyer accepted"
+      ],
+      "effects": [
+        "Course metadata exposes checkoutTerms from the same approval query checkout uses",
+        "Clients send the accepted version; mismatch returns 409 with a review-again message"
+      ],
+      "authorization": "Unchanged: public course registration and authenticated ticket purchase keep their existing guards.",
+      "privacy": "Terms text is public policy content; no personal data added.",
+      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms.",
+      "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
+      "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
+      "recovery": "Buyer reviews the new terms and accepts again.",
+      "observability": "Haskell decode specs, web/mobile unit tests for display, gating and version binding.",
+      "implementation": [
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/courses.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-mobile/app/ticketCheckout.tsx",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/types/index.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-mobile/__tests__/TicketCheckout.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": false,
+      "confidence": "medium: server-side enforcement is covered by compile and decode tests, not yet by a database-backed handler test",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Display and binding are implemented and unit-tested; a database-backed runtime receipt is still required."
+      }
     }
   ]
 }

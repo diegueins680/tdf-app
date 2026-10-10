@@ -12802,6 +12802,43 @@ main = hspec $ do
                     expectationFailure
                         ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
+    describe "legacy ticket purchase terms acceptance" $ do
+        let recorded version =
+                EventMetadataServer.decodeTicketAcceptedTermsVersion
+                    ( EventMetadataServer.encodeTicketCheckoutMetadata
+                        (Just "key-1")
+                        Nothing
+                        version
+                        (EventMetadataServer.ticketPlatformFeeBreakdown 5000)
+                    )
+            decision active submitted existing =
+                either (Left . errHTTPCode) Right $
+                    EventMetadataServer.ticketTermsAcceptance active submitted existing
+
+        it "stores the accepted version with the order and reads it back" $ do
+            recorded (Just "terms-v2") `shouldBe` Just "terms-v2"
+            recorded Nothing `shouldBe` Nothing
+            EventMetadataServer.decodeTicketAcceptedTermsVersion
+                (Just "{\"checkout_idempotency_key\":\"old\"}")
+                `shouldBe` Nothing
+
+        it "requires the active version for a new order and records exactly that version" $ do
+            decision (Just "terms-v2") (Just "terms-v2") Nothing `shouldBe` Right (Just "terms-v2")
+            decision (Just "terms-v2") Nothing Nothing `shouldBe` Left 400
+            decision (Just "terms-v2") (Just "terms-v1") Nothing `shouldBe` Left 409
+            decision Nothing (Just "terms-v1") Nothing `shouldBe` Right Nothing
+            decision Nothing Nothing Nothing `shouldBe` Right Nothing
+
+        it "keeps a replay bound to the acceptance its order recorded" $ do
+            -- The policy moved on after the order was created: the retry is still that order.
+            decision (Just "terms-v3") (Just "terms-v2") (Just (Just "terms-v2"))
+                `shouldBe` Right (Just "terms-v2")
+            -- A replay cannot swap in a different acceptance, even the currently active one.
+            decision (Just "terms-v3") (Just "terms-v3") (Just (Just "terms-v2")) `shouldBe` Left 409
+            decision (Just "terms-v2") Nothing (Just (Just "terms-v2")) `shouldBe` Left 409
+            -- Orders older than this evidence have nothing to contradict.
+            decision (Just "terms-v2") (Just "terms-v2") (Just Nothing) `shouldBe` Right Nothing
+
     describe "normalizeTicketStatus" $ do
         it "preserves refund holds instead of presenting the ticket as issued" $ do
             normalizeTicketStatus (Just "refund_pending") `shouldBe` "refund_pending"

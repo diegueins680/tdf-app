@@ -158,7 +158,7 @@ spec = describe "course-identity-postgresql" $ do
         scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` before
 
 payload :: C.CourseRegistrationRequest
-payload = C.CourseRegistrationRequest (Just "Synthetic course contact") (Just "course-identity@example.test") (Just "+593990000111") "landing" Nothing Nothing (Just True)
+payload = C.CourseRegistrationRequest (Just "Synthetic course contact") (Just "course-identity@example.test") (Just "+593990000111") "landing" Nothing Nothing (Just True) Nothing
 
 submit :: ConnectionPool -> Text -> Text -> C.CourseRegistrationRequest -> IO (Either Int Int64)
 submit pool scope key body = do

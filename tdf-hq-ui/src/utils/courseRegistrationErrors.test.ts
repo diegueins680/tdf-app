@@ -37,6 +37,17 @@ describe('describeCourseRegistrationError', () => {
       .toContain('ya no está disponible');
   });
 
+  it('asks to reload the terms when they changed or were never shown', () => {
+    const changed = describeCourseRegistrationError(apiError('Course terms changed; review the current terms and accept them again', 409));
+    expect(changed).toMatchObject({ field: 'terms', termsChanged: true, definitiveRejection: true });
+    const missing = describeCourseRegistrationError(apiError('Course terms version is required; review the current terms and accept them', 400));
+    expect(missing).toMatchObject({ field: 'terms', termsChanged: true, definitiveRejection: true });
+    expect(missing.message).not.toMatch(/version is required/i);
+    // Simply not ticking the box is not a terms change.
+    expect(describeCourseRegistrationError(apiError('Course checkout terms must be accepted before a seat can be held', 400)).termsChanged)
+      .toBeUndefined();
+  });
+
   it('retires the idempotency key after a mismatch conflict', () => {
     for (const message of [
       'This registration request was already saved with different details',

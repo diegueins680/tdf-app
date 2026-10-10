@@ -64,11 +64,11 @@
     },
     {
       "historicalReplacementId": "068d6f3f0c164631ab35",
-      "currentId": "068d6f3f0c164631ab35",
+      "currentId": "a7561a719beb23884345",
       "file": "tdf-mobile/src/api/events.ts",
       "kind": "object-registry",
       "name": "Events",
-      "valueCount": 29
+      "valueCount": 30
     },
     {
       "historicalReplacementId": "2a1f5ad58ef7b8fc4bf3",
