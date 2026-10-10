@@ -9321,7 +9321,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "d3d25733b1ebb539b720222f8242ddb29874fd67830dc5bd966586262f59a4e4",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "ca76da4763575e18ca057a043e3b76a4795aced603fdae45d65f44e63625baa4",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
@@ -25948,7 +25948,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "d3d25733b1ebb539b720222f8242ddb29874fd67830dc5bd966586262f59a4e4",
+      "sha256": "ca76da4763575e18ca057a043e3b76a4795aced603fdae45d65f44e63625baa4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
