@@ -7383,8 +7383,10 @@
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
-      "formalModels": [],
-      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "formalModels": [
+        "formal/event-operations/TaxDocumentSubmission.tla"
+      ],
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls.",
       "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
@@ -8738,6 +8740,7 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+    "formal/event-operations/TaxDocumentSubmission.tla": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
@@ -8945,7 +8948,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "fc7478ad84b04d06fa3a1e669102c311ccc07a08e37127147ae3465f3767bef2",
+    "scripts/verify-event-operations-formal.sh": "8989b28af9738f288bfd0e3ccdb8136fd6a7fae3b80c947455c8478036024b1e",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -14255,6 +14258,12 @@
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/TaxDocumentSubmission.tla": [
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/api/parties.ts": [
@@ -20576,7 +20585,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "fc7478ad84b04d06fa3a1e669102c311ccc07a08e37127147ae3465f3767bef2",
+      "sha256": "8989b28af9738f288bfd0e3ccdb8136fd6a7fae3b80c947455c8478036024b1e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39519,7 +39528,6 @@
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
-    "EVT-TICKET-INVOICE-001",
     "PRIV-WHATSAPP-001",
     "MEDIA-MUSIC-RELEASE-001",
     "MEDIA-MUSIC-ASSET-001",
@@ -40646,7 +40654,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "820b732321f461f6581912bf10097385a7a667a698e793e07bf57b1e7c93d86a",
+      "sourceSha256": "a9fe0c8c0802fdbd1689883bf6942a455fa364ca7cab6f1020fbc0b06b9e4a9b",
       "definition": {
         "states": [
           "absent",

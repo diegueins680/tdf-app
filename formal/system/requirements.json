@@ -7382,8 +7382,10 @@
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
-      "formalModels": [],
-      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "formalModels": [
+        "formal/event-operations/TaxDocumentSubmission.tla"
+      ],
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls.",
       "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,

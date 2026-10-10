@@ -5492,7 +5492,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "fc7478ad84b04d06fa3a1e669102c311ccc07a08e37127147ae3465f3767bef2",
+      "sha256": "8989b28af9738f288bfd0e3ccdb8136fd6a7fae3b80c947455c8478036024b1e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18841,7 +18841,7 @@
     },
     {
       "path": "docs/events/ticket-electronic-invoices.md",
-      "sha256": "7d34ec5060aa4b40d0f11fdef77dcae5081b57e0afe628d81a843afa6fff83db",
+      "sha256": "38b73ca47d5418d0b300e186e2890ee57ec54afe1ee12cb91322252411d9935a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23054,6 +23054,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/TaxDocumentSubmission.cfg",
+      "sha256": "90948dc98ed7fcdf59b8197a42b8821d70faa31d7efe921a8a056f5b69c516c2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmission.tla",
+      "sha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionLostAsRejected.cfg",
+      "sha256": "0d319e281d9fb06af6c7fa9ad37015a99df7e5c85cb5608209c002a545152136",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionRetryUncertain.cfg",
+      "sha256": "daf30c9ec55b3903a912d3367705863207297955a58d862f25edb4e7664070ad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionSkipStart.cfg",
+      "sha256": "800600ee6c07703d9cf5f5080b98e4b1d130da5ae50cbcabd8ecae1fd94855ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionUnguardedStart.cfg",
+      "sha256": "55bb957975b7464ec80f104e7ab447a23363c6771add7e1cf6904832f60ebe5e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WebOnboardingRecovery.cfg",
       "sha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca",
       "authority": "inferred",
@@ -23832,7 +23874,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "820b732321f461f6581912bf10097385a7a667a698e793e07bf57b1e7c93d86a",
+      "sha256": "a9fe0c8c0802fdbd1689883bf6942a455fa364ca7cab6f1020fbc0b06b9e4a9b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -34844,6 +34886,91 @@
         "CONSTANTS CheckContext = TRUE ClearOnChange = FALSE RequireValid = TRUE",
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK CurrentView ValidatedView",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmission.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionLostAsRejected.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = TRUE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionRetryUncertain.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = TRUE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionSkipStart.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = TRUE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionUnguardedStart.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = TRUE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
