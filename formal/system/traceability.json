@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "810c91c5b5ec293c9e011fbec0f813bb62f8b17a",
+  "mobileRevision": "0c42f9fb45cd1b32d4e85df4736ff7192eb476fb",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -7451,6 +7451,80 @@
       }
     },
     {
+      "id": "DATA-CRM-002",
+      "statement": "The web CRM contact edit dialog must show and edit the contact's notes, and its update must contain only the fields edited in the dialog (display name, email, Instagram, phone, notes) relative to the values loaded into it; an unedited save sends no request. Because the backend keeps every omitted field, saving one field never restores stale values of fields changed elsewhere. A rejected update is shown in the dialog, which stays open with the unsaved input. The backend remains authoritative for CRM module access and the update itself.",
+      "authority": "reconciled",
+      "source": "PR #513 (CRM contact notes)",
+      "property": "An update omits uNotes unless the edited notes differ from the loaded notes",
+      "contract": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+      ],
+      "verification": "Client unit test; backend updateParty unchanged",
+      "evidence": "Unit test that edits notes and asserts notes are sent only when changed",
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "critical": false,
+      "title": "CRM contact notes are editable without overwriting concurrent edits",
+      "domain": "DATA",
+      "actors": [
+        "CRM staff"
+      ],
+      "preconditions": [
+        "Authenticated session with CRM module access.",
+        "The contact is loaded into the edit dialog."
+      ],
+      "inputs": [
+        "Party notes loaded into the dialog",
+        "Edited notes text",
+        "PUT /parties/{partyId} PartyUpdate (uNotes optional)"
+      ],
+      "state": {
+        "notes": [
+          "loaded",
+          "edited",
+          "saving",
+          "saved",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "loaded -> edited when the text changes",
+        "edited -> loaded when the text returns to the loaded value",
+        "loaded or edited -> saving on save",
+        "saving -> saved when the backend returns the updated party",
+        "saving -> failed when the update is rejected"
+      ],
+      "forbiddenTransitions": [
+        "Saving unchanged notes sends uNotes",
+        "Saving other fields replaces notes changed elsewhere"
+      ],
+      "effects": [
+        "When notes changed, updateParty stores uNotes as the contact's notes.",
+        "When uNotes is absent, updateParty keeps the stored notes."
+      ],
+      "authorization": "Backend updateParty requires ModuleCRM; the dialog grants nothing.",
+      "privacy": "Notes are internal CRM data shown only to CRM-authorized staff.",
+      "concurrency": "Only edited fields are sent, so a save never overwrites fields it did not edit; when two editors change the same field the later save wins (no version check on party).",
+      "idempotency": "Repeating the same update stores the same notes.",
+      "failure": "An archived contact returns 409 and other database failures return 500; the dialog shows the error, stays open with the unsaved input, and stored values are unchanged.",
+      "recovery": "Reopen the contact's current record and edit again.",
+      "observability": "The update request body shows whether uNotes was sent.",
+      "tests": [
+        "tdf-hq-ui/src/pages/PartiesPage.test.tsx"
+      ],
+      "formalModels": [],
+      "confidence": "High for client send-only-when-changed behaviour; backend semantics read from updateParty, not newly tested.",
+      "ambiguity": [
+        "No optimistic concurrency control for simultaneous note edits.",
+        "Notes are free text with no backend length limit in updateParty."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client tests cover field-level payloads, the no-op save and the rejected-update message; deployed web verification pending. Same-field concurrent edits remain last-write-wins."
+      }
+    },
+    {
       "id": "PRIV-WHATSAPP-001",
       "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
@@ -8629,79 +8703,88 @@
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
-      "id": "EVT-DISCOVERY-001",
-      "title": "One events entry in navigation and an upcoming-events carousel after login",
-      "domain": "EVT",
-      "statement": "The public header offers exactly one navigation item for events, pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
-      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
-      "source": "tdf-hq-ui navigation and shells",
-      "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "id": "LEGAL-DISCLOSURE-001",
+      "title": "Legal text is collapsed by default without weakening consent",
+      "statement": "Terms, policies, consent texts and disclaimers render inside a shared disclosure that starts collapsed, can be opened to read the complete text before acceptance, and keeps every required acceptance control visible, associated with its documents and enforced exactly as before.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 (collapsible Terms and Conditions UX; each document an independent section)",
+      "source": "tdf-app PR #515; TDF-mobile PR #153",
+      "property": "Collapsing legal text never hides, pre-checks or bypasses a required acceptance control.; Every collapsed document remains readable in full before acceptance.",
+      "contract": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
       "actors": [
-        "Visitor",
-        "Signed-in user"
+        "Buyer, registrant or account holder",
+        "Screen-reader and keyboard user"
       ],
       "preconditions": [
-        "Signed-in session for the carousel"
+        "A surface renders long-form legal text next to, or instead of, a consent control."
       ],
       "inputs": [
-        "GET /social-events/upcoming",
-        "GET /social-events/events/{id}/rsvp",
-        "PUT /social-events/events/{id}/rsvp"
+        "Document title, optional version summary and full legal text",
+        "Viewer locale (es/en)"
       ],
       "state": {
-        "carousel": [
-          "hidden",
-          "visible",
-          "dismissed for session"
-        ]
+        "initial": "collapsed",
+        "toggled": [
+          "expanded",
+          "collapsed"
+        ],
+        "scope": "per page or step; never persisted"
       },
       "allowedTransitions": [
-        "visible -> dismissed for session",
-        "no RSVP -> accepted via one tap"
+        "collapsed -> expanded on header activation (click, Enter or Space)",
+        "expanded -> collapsed on header activation",
+        "Deep link to #privacidad or #terminos on /seguridad opens that document expanded"
       ],
       "forbiddenTransitions": [
-        "Carousel shown to anonymous visitors",
-        "Second events entry in the public navigation"
+        "Consent checkbox or switch placed inside a collapsed panel",
+        "Submission gating relaxed because legal text is collapsed",
+        "Expanded state persisted across sessions"
       ],
       "effects": [
-        "Viewer's RSVP upserted with their showEventRsvpsOnProfile preference"
+        "Header exposes aria-expanded/aria-controls (web) or accessibilityState.expanded (mobile)",
+        "Consent controls reference the disclosure headers through aria-describedby where applicable"
       ],
-      "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
-      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
-      "concurrency": "RSVP upserts are per viewer and event; the carousel refreshes the cached RSVP from the response.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
-      "failure": "Upcoming-event or RSVP load failures leave the carousel hidden or the RSVP control available; navigation is unaffected.",
-      "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
-      "observability": "None beyond existing RSVP and API telemetry.",
-      "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
+      "authorization": "Not applicable: presentation only; acceptance and its server-side enforcement are unchanged.",
+      "privacy": "No analytics, storage or network calls are added by the disclosure.",
+      "concurrency": "Not applicable: local component state only.",
+      "idempotency": "Toggling is a pure local state change.",
+      "failure": "When a document is unavailable the surrounding surface keeps its existing unavailable-terms behavior.",
+      "recovery": "Reloading the page or step restores the collapsed default.",
+      "observability": "Unit tests, persona e2e journeys and the accessibility (axe) checks cover the control.",
       "implementation": [
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-        "tdf-hq-ui/src/components/PublicBranding.tsx",
-        "tdf-hq-ui/src/routes/AppShell.tsx",
-        "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/pages/SecurityPage.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/InventoryPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "tdf-mobile/app/reputation/consents.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "tdf-hq-ui/src/routes/AppShell.test.tsx",
-        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx"
+        "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
+        "e2e/web/artist-merch.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "tdf-hq-ui/src/pages/SecurityPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "Client unit tests",
-      "evidence": "Local Jest execution",
+      "verification": "Component unit tests, updated checkout/storefront persona journeys at desktop/phone/tablet, and manual responsive checks at 360/768/1280px.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
       "status": "specified and implemented",
+      "historicalStatus": "new",
       "critical": false,
-      "confidence": "Medium: unit tests with mocked APIs; not yet exercised against production data.",
-      "ambiguity": [
-        "\"Eventos descubiertos\" remains a separate staff discovery tool in the sidebar."
-      ],
+      "confidence": "high for the presentation boundary; legal sufficiency of the texts themselves is out of scope",
+      "ambiguity": [],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented with unit evidence; not deployed."
-      },
-      "historicalStatus": null
+        "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -8710,10 +8793,11 @@
     ".github/workflows/ci.yml": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "767bdda93910c8f0b8ede8c6a7cbe8cd0d4727095dc7089ac1827a8b71d1bcea",
+    "docs/catalog-persistence/catalog-list-decisions.json": "041c016df231b1bdd71359530aaadbabd89d0f8296234a7d01330cdeddbec552",
     "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
+    "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
     "e2e/web/course-enrollment.spec.mjs": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
@@ -8723,7 +8807,7 @@
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
-    "e2e/web/persona-public.spec.mjs": "98698dd8ff798654008941ef9899d5461f9ef1e6da8d26ce599f4056abea2007",
+    "e2e/web/persona-public.spec.mjs": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -8876,7 +8960,7 @@
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
-    "scripts/__tests__/production-release.test.mjs": "29c89ae6637f872b56d85928326229bfcfeaa478bf57ef4a542ab4d7a905834e",
+    "scripts/__tests__/production-release.test.mjs": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
@@ -8922,7 +9006,7 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
+    "scripts/lib/production-release.mjs": "c9339e45aa70277ae90e11d2c3ea511b6ed25d198314269d2f6c2021ae0d74d2",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -8934,7 +9018,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+    "scripts/production-migrations.json": "fd390d10a818028cb9246e524eece2615abdb25a0b77cd7d875fa66a844bc8fd",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -8956,7 +9040,7 @@
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-automatic-migrations-production-schema.sh": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
+    "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -9028,7 +9112,7 @@
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "5cbdc0c477e949097b12399d02a0927f3c3e85d51386812caa5efa0193e8c057",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
@@ -9070,11 +9154,10 @@
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx": "bbb0a57dccd78aa63d5380426e0aab0304d7735cfec9758b44c3d873d7f7128d",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
-    "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
+    "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "a07a0f537aded9b0519eb2864340307f65a63bba0334e3293b12c8813cd58de4",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "40d82eb1173fa4a9ebf49c3b27f82d437f1f3330189fe19383818d28345bd7ab",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -9082,14 +9165,14 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
-    "tdf-hq-ui/src/components/SidebarNav.tsx": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
+    "tdf-hq-ui/src/components/SidebarNav.tsx": "2f38dd912bc7c9d4b0272aa782423da292a2379b5379cdc41f3d78eadfe78cf0",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "e3954055ddca53ec53401b2e2a2c1d411ac33036f2e401167aad9d4481949448",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "3666b2ce5992d3d479e7829b75cd0dc0d36d402842cca4c781cface70a6ebf33",
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
     "tdf-hq-ui/src/components/notificationTarget.ts": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
@@ -9106,10 +9189,10 @@
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c8b657565b9202a541c334401dccee0fd2c0a3799b2033ca6ed57234d9c4c16f",
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
-    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
-    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "c14a9be1f3c7add1980a986fcff5dd7debb2fb5041900cbf55ea62f98d9c6f3a",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "b4cda77c18d1c85303a88c99365400de412515e07267a2fe52c51701737749c6",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "8d01c1c708ed13445fb0b044b8c20e8d6fd5030c6cad7b6b0134674b60d0457d",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "d7b998a8a79bc28b9e83f45b634338fb57c7bafe69e7faceded0213902a8c993",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/en.ts": "fb867054fb48979bd7868da2ee778eb7e1e5ba4e09ea46f1ba53e14881c2f4be",
     "tdf-hq-ui/src/i18n/locales/es.ts": "062904ae5ba4cb6c95ddf19507a5003d5f0bc561ac48fbe8f6eeddb8bb6e0c14",
@@ -9120,7 +9203,7 @@
     "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx": "6db6ff370e4f3d207168fdd7be610ac28c6e4a6f9f6da7e3930e9154aba2f2e6",
     "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
-    "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
+    "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "dce127c6cfc3b448c5fa22199f81ff4a1c71ad63dfc66928a2bd874260243b0f",
@@ -9136,15 +9219,17 @@
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "35f4745492b8e77bc992165523b95452668b1fd206ed1422769db7b3ae3b600a",
     "tdf-hq-ui/src/pages/FanHubPage.tsx": "2c028fdc64f8638118d0825876568b3d5cbaa06631f1fd13a4bd814117f9fb1a",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
+    "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
     "tdf-hq-ui/src/pages/LabelReleasesPage.tsx": "c66d3fab58ab7280df6c88a03269a22598bf9c7426e179e2895ac10e8a28d6b0",
-    "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "8101fb3cd04078b5b31df6e1b49110a858f7bef95a9d88924864941ac3a63fb1",
+    "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "83752ef12c19868adab088461e0c05863b694b6a31d2246197227467501fb77b",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
-    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "88ecc5643818a0637cb9be8bd6c37877a74e8c61b23b630c47f47cb257019923",
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
+    "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "329e773ad263a5409e3a38261da4775858977388cbd55a6f9c9838cf4955e332",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
@@ -9152,12 +9237,16 @@
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "71e131b56818ba186b6670b6eeb21e219fbd773d08010985ee4b0e526de99086",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "3f09b1e6cefe7125024fd6933e5ec46c54d41f78c8df9cb5768b3febdb0443f0",
+    "tdf-hq-ui/src/pages/PartiesPage.test.tsx": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
+    "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "5a689514081aae0e98de08db9d4377696fa832b05d1b2b37a02accbddfe2bcd0",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
+    "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
+    "tdf-hq-ui/src/pages/SecurityPage.tsx": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
@@ -9174,8 +9263,6 @@
     "tdf-hq-ui/src/player/sourceMetadata.ts": "2d2f6271f7718eb899b75b8afd5c1e1b73d77bf5db665438e42c5d3eea3dd55a",
     "tdf-hq-ui/src/player/types.ts": "469cc2cbcd256ea4f59b510e82e8d54927ca4081f372575822e0f2c375fd558f",
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
-    "tdf-hq-ui/src/routes/AppShell.test.tsx": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
-    "tdf-hq-ui/src/routes/AppShell.tsx": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "502c2431f244468a68a3fa0f0ac0978649f7d32f4fa082b31cdac4b19987e690",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
@@ -9453,6 +9540,7 @@
     "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
     "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
     "tdf-mobile/__tests__/FirstRunProvider.test.tsx": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
+    "tdf-mobile/__tests__/LegalDisclosure.test.tsx": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
     "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
     "tdf-mobile/__tests__/SocialScreen.test.tsx": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
     "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
@@ -9474,6 +9562,7 @@
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
+    "tdf-mobile/app/reputation/consents.tsx": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
@@ -9491,6 +9580,7 @@
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
     "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
+    "tdf-mobile/src/components/LegalDisclosure.tsx": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -9928,6 +10018,10 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "tests"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": [
@@ -10288,10 +10382,6 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -10301,10 +10391,6 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -12368,6 +12454,10 @@
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Routes/EventTickets.hs": [
@@ -12577,6 +12667,10 @@
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
     ],
@@ -13834,15 +13928,15 @@
       {
         "requirement": "MKT-CART-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": [
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "implementation"
       }
     ],
@@ -13850,11 +13944,19 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": [
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "implementation"
       }
     ],
@@ -14293,6 +14395,18 @@
     "tdf-hq-ui/src/api/parties.test.ts": [
       {
         "requirement": "DATA-CRM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/PartiesPage.tsx": [
+      {
+        "requirement": "DATA-CRM-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/PartiesPage.test.tsx": [
+      {
+        "requirement": "DATA-CRM-002",
         "relationship": "tests"
       }
     ],
@@ -14988,10 +15102,6 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/notificationTarget.ts": [
@@ -15460,6 +15570,10 @@
       {
         "requirement": "MKT-CART-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": [
@@ -15477,10 +15591,6 @@
     "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": [
       {
         "requirement": "MKT-CART-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-001",
         "relationship": "tests"
       }
     ],
@@ -15554,6 +15664,10 @@
       {
         "requirement": "SYS-WEB-LAYOUT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/theme/appTheme.ts": [
@@ -15604,33 +15718,63 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": [
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": [
       {
-        "requirement": "EVT-DISCOVERY-001",
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/routes/AppShell.tsx": [
+    "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": [
       {
-        "requirement": "EVT-DISCOVERY-001",
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": [
+    "tdf-hq-ui/src/pages/SecurityPage.tsx": [
       {
-        "requirement": "EVT-DISCOVERY-001",
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/InventoryPage.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/components/LegalDisclosure.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/reputation/consents.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": [
+    "tdf-mobile/__tests__/LegalDisclosure.test.tsx": [
       {
-        "requirement": "EVT-DISCOVERY-001",
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/routes/AppShell.test.tsx": [
+    "e2e/web/artist-merch.spec.mjs": [
       {
-        "requirement": "EVT-DISCOVERY-001",
+        "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/SecurityPage.test.tsx": [
+      {
+        "requirement": "LEGAL-DISCLOSURE-001",
         "relationship": "tests"
       }
     ]
@@ -15834,9 +15978,14 @@
     {
       "id": "SURFACE-7f4616a1f534ab50",
       "path": "e2e/web/artist-merch.spec.mjs",
-      "sha256": "fbac0ca1361f0176ed45fa1c95da4b47f003494b8ef8ccabc49f5f2f7e1fe320",
+      "sha256": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8096aa6aaf7d328c",
@@ -16037,7 +16186,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "98698dd8ff798654008941ef9899d5461f9ef1e6da8d26ce599f4056abea2007",
+      "sha256": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16050,6 +16199,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "tests"
         }
       ]
@@ -17188,7 +17341,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "29c89ae6637f872b56d85928326229bfcfeaa478bf57ef4a542ab4d7a905834e",
+      "sha256": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18280,7 +18433,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "17770be918a07f403b7dcab30b537e30dcc664c8b7dea2f1d99402ebffddac02",
+      "sha256": "c9339e45aa70277ae90e11d2c3ea511b6ed25d198314269d2f6c2021ae0d74d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18553,7 +18706,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "316499309260cc2782d79bded99dcb801aeb8f5c86203516fdb6e11039b322e0",
+      "sha256": "fd390d10a818028cb9246e524eece2615abdb25a0b77cd7d875fa66a844bc8fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19427,7 +19580,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "35c377736300e95fbfd73a84ffe07fba242e8cbee62c6c994af1f185f4bdfdeb",
+      "sha256": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21096,7 +21249,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "5cbdc0c477e949097b12399d02a0927f3c3e85d51386812caa5efa0193e8c057",
+      "sha256": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21117,6 +21270,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "tests"
         }
       ]
@@ -22550,15 +22707,11 @@
     {
       "id": "SURFACE-de5d7d4bb9406476",
       "path": "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
-      "sha256": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
+      "sha256": "a07a0f537aded9b0519eb2864340307f65a63bba0334e3293b12c8813cd58de4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-CART-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "EVT-DISCOVERY-001",
           "relationship": "tests"
         }
       ]
@@ -22681,19 +22834,14 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
+      "sha256": "8133459f78d91d5e24ff243c61163f5c9bf10703167f7aa4d59e8bc928d04c00",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "EVT-DISCOVERY-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "40d82eb1173fa4a9ebf49c3b27f82d437f1f3330189fe19383818d28345bd7ab",
+      "sha256": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22702,10 +22850,6 @@
         },
         {
           "requirement": "MKT-CART-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -22875,15 +23019,11 @@
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
+      "sha256": "2f38dd912bc7c9d4b0272aa782423da292a2379b5379cdc41f3d78eadfe78cf0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -23100,25 +23240,25 @@
       ]
     },
     {
-      "id": "SURFACE-c608b83dcf4b5559",
-      "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "e3954055ddca53ec53401b2e2a2c1d411ac33036f2e401167aad9d4481949448",
+      "id": "SURFACE-88fbc73f4e77632c",
+      "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
+      "sha256": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-DISCOVERY-001",
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "tests"
         }
       ]
     },
     {
-      "id": "SURFACE-2393bd3c8b025098",
-      "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "3666b2ce5992d3d479e7829b75cd0dc0d36d402842cca4c781cface70a6ebf33",
+      "id": "SURFACE-6f546685e4a6eb40",
+      "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+      "sha256": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-DISCOVERY-001",
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -23959,11 +24099,15 @@
     {
       "id": "SURFACE-c97910a5593293cd",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
-      "sha256": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
+      "sha256": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -23971,11 +24115,15 @@
     {
       "id": "SURFACE-5e55534c6210f093",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-      "sha256": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
+      "sha256": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -23983,7 +24131,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "c14a9be1f3c7add1980a986fcff5dd7debb2fb5041900cbf55ea62f98d9c6f3a",
+      "sha256": "8d01c1c708ed13445fb0b044b8c20e8d6fd5030c6cad7b6b0134674b60d0457d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23992,10 +24140,6 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -24003,7 +24147,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "b4cda77c18d1c85303a88c99365400de412515e07267a2fe52c51701737749c6",
+      "sha256": "d7b998a8a79bc28b9e83f45b634338fb57c7bafe69e7faceded0213902a8c993",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24012,10 +24156,6 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -24261,11 +24401,15 @@
     {
       "id": "SURFACE-c46fe8f1aff9a4d8",
       "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
-      "sha256": "187b08ef1fbbc700c817ae66bba4c4d7dcd0b62ebdaf67c2a47d0d21bdbc74fe",
+      "sha256": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -25007,9 +25151,14 @@
     {
       "id": "SURFACE-4ad37d87d7a1bb3e",
       "path": "tdf-hq-ui/src/pages/InventoryPage.tsx",
-      "sha256": "eaa306f5d4822020e51d3cccb3f91a1fa054b6377e746525865b898b05ae692a",
+      "sha256": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-367ca1e43bc9470d",
@@ -25127,11 +25276,15 @@
     {
       "id": "SURFACE-517e48428bed4a91",
       "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-      "sha256": "8101fb3cd04078b5b31df6e1b49110a858f7bef95a9d88924864941ac3a63fb1",
+      "sha256": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -25253,11 +25406,15 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "88ecc5643818a0637cb9be8bd6c37877a74e8c61b23b630c47f47cb257019923",
+      "sha256": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-CART-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -25349,9 +25506,14 @@
     {
       "id": "SURFACE-c223f9f65297d13a",
       "path": "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
-      "sha256": "55f4c907bb1e1834cb3a5d29851c1ce268f5f9a0360e722c1ed927bf5b85d769",
+      "sha256": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bee40b89d7a09a1d",
@@ -25517,16 +25679,26 @@
     {
       "id": "SURFACE-ca6a42a035d60724",
       "path": "tdf-hq-ui/src/pages/PartiesPage.test.tsx",
-      "sha256": "41e97782d113dddfd7606c5b345139a9b02557b10e55884742bda05aff51d9a2",
+      "sha256": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-41171391066d3a7e",
       "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
-      "sha256": "6a22094b63c120b85d166d6150bd20666f0707c8979532383a652b9293fceb3e",
+      "sha256": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CRM-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-72cc8805ad02bfe2",
@@ -25595,7 +25767,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "5a689514081aae0e98de08db9d4377696fa832b05d1b2b37a02accbddfe2bcd0",
+      "sha256": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25616,6 +25788,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
         }
       ]
@@ -25778,11 +25954,28 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-c3adc6dc170cc53b",
+      "path": "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
+      "sha256": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-1e8f6a752f2cf8a5",
       "path": "tdf-hq-ui/src/pages/SecurityPage.tsx",
-      "sha256": "fba0ddf7c6e1bf8fc2bfe47532919139c055aa9e6116891200d5e0d767e6ad4d",
+      "sha256": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6b44ad06b4487812",
@@ -26348,26 +26541,16 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+      "sha256": "1c92ba33b7073ae1c39ba640848017f697a2792ff4802eba12303b16fc2bf4db",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "EVT-DISCOVERY-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-e21f5f9f9c9cf3d5",
       "path": "tdf-hq-ui/src/routes/AppShell.tsx",
-      "sha256": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
+      "sha256": "24c46f7ebbf128fabf9681e91972f5f41081bf776f8fe15e3486276996aa1cd2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "EVT-DISCOVERY-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-a23a18e5ad13967c",
@@ -35083,6 +35266,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-10425a8a6d1f81b5",
+      "path": "tdf-mobile/__tests__/LegalDisclosure.test.tsx",
+      "sha256": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-99b5cd25c1db6135",
       "path": "tdf-mobile/__tests__/MerchOrderReviewScreen.test.tsx",
       "sha256": "3a385579b1b151cc12eca0c360a916a23764aee57c7030a9461615476b499acf",
@@ -35981,9 +36176,14 @@
     {
       "id": "SURFACE-4bc6c0b3d036cf61",
       "path": "tdf-mobile/app/reputation/consents.tsx",
-      "sha256": "62b40fedf586e730e2a0c5e9d4e9ee6b88be26eec02f707ed209941083838739",
+      "sha256": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cef1fa050e3f9d2c",
@@ -36759,6 +36959,18 @@
       "sha256": "41a408f7a71b58ae681e939764f1e3cb647d202f94f15e9656f6060647f9293d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-1e306217e1e27195",
+      "path": "tdf-mobile/src/components/LegalDisclosure.tsx",
+      "sha256": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6094001768e3e5b7",
@@ -37772,7 +37984,6 @@
     "SURFACE-b18780932504c8a1",
     "SURFACE-b6a53fc19d550b31",
     "SURFACE-21d4d7e18c516e29",
-    "SURFACE-7f4616a1f534ab50",
     "SURFACE-99efca801c54dd18",
     "SURFACE-e442d994f4a6caf5",
     "SURFACE-6826ca2044602fd9",
@@ -38213,6 +38424,7 @@
     "SURFACE-2fd56cddd4894a6a",
     "SURFACE-e3d94a49085bdc41",
     "SURFACE-1ca0b4712a14943f",
+    "SURFACE-6838929c1edd8346",
     "SURFACE-f3829ea86f743f20",
     "SURFACE-e89e4f0a2bd61051",
     "SURFACE-6c3af6d67bd751d6",
@@ -38427,7 +38639,6 @@
     "SURFACE-3b1ca178b6f6ea73",
     "SURFACE-d0e36c97b6f11244",
     "SURFACE-801f1bf8c99af8cd",
-    "SURFACE-4ad37d87d7a1bb3e",
     "SURFACE-367ca1e43bc9470d",
     "SURFACE-640476dec88bc7f2",
     "SURFACE-4fd1798287b449fb",
@@ -38457,7 +38668,6 @@
     "SURFACE-af6b03b0182f5f0b",
     "SURFACE-20d3b5c28f107b7d",
     "SURFACE-689d1c649ef08997",
-    "SURFACE-c223f9f65297d13a",
     "SURFACE-bee40b89d7a09a1d",
     "SURFACE-4a562abbc0b9c284",
     "SURFACE-c6ff06a2e2277d3e",
@@ -38469,8 +38679,6 @@
     "SURFACE-8f163fb9673ec539",
     "SURFACE-fc080c7e7b9e5e76",
     "SURFACE-554106b9be846d52",
-    "SURFACE-ca6a42a035d60724",
-    "SURFACE-41171391066d3a7e",
     "SURFACE-72cc8805ad02bfe2",
     "SURFACE-0e999cb8927f4583",
     "SURFACE-4a78e6b0e0157ec4",
@@ -38494,7 +38702,6 @@
     "SURFACE-0841fa11b4af7d60",
     "SURFACE-e9006bbb523fee68",
     "SURFACE-24d2133b7f15822c",
-    "SURFACE-1e8f6a752f2cf8a5",
     "SURFACE-6b44ad06b4487812",
     "SURFACE-54a41f2ada423353",
     "SURFACE-ca2671adb5443ee0",
@@ -38546,6 +38753,8 @@
     "SURFACE-8d890473e2ac6c09",
     "SURFACE-77460de8941bcdf9",
     "SURFACE-85e8012c6e922277",
+    "SURFACE-65b783cd59e6037b",
+    "SURFACE-e21f5f9f9c9cf3d5",
     "SURFACE-b81f4ee712780e85",
     "SURFACE-dd805fb7a067baea",
     "SURFACE-06ba6461b3eb1e56",
@@ -39337,7 +39546,6 @@
     "SURFACE-f8ab13d8cf59242e",
     "SURFACE-dbce244f2f58632f",
     "SURFACE-7ce895d9ef0ac4a5",
-    "SURFACE-4bc6c0b3d036cf61",
     "SURFACE-cef1fa050e3f9d2c",
     "SURFACE-69205bb0d640d69a",
     "SURFACE-603be2889dcb2b32",
@@ -40704,7 +40912,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0177e478169a618b15b2ff8303dac65a1808a15f5fddb4ab8f4b11ad5a2a7f91",
+      "sourceSha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
       "definition": {
         "states": [
           "absent",
@@ -62901,7 +63109,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 109,
+    "PARTIAL": 110,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
