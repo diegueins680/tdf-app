@@ -31,16 +31,18 @@ const resolveImageUrl = (value: string | null | undefined): string => {
 };
 
 // Shown in the event's own timezone, like the event detail, so the hour and day match it.
+const startFormatter = (locale: string, timeZone?: string) => new Intl.DateTimeFormat(locale, {
+  weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone,
+});
+
 const formatStart = (value: string, locale: string, timeZone?: string | null): string | null => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-  };
   try {
-    return new Intl.DateTimeFormat(locale, timeZone ? { ...options, timeZone } : options).format(parsed);
+    return startFormatter(locale, timeZone ?? undefined).format(parsed);
   } catch {
-    try { return new Intl.DateTimeFormat(locale, options).format(parsed); } catch { return null; }
+    // An unknown timezone name must not hide the date.
+    try { return startFormatter(locale).format(parsed); } catch { return null; }
   }
 };
 
