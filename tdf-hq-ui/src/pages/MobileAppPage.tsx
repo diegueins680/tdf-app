@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, validateDistribution, type MobilePlatform } from '../mobile/distribution';
+import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, validateDistribution, type DistributionChannel, type MobilePlatform } from '../mobile/distribution';
 import MobileFeedbackForm from '../mobile/MobileFeedbackForm';
 import { useMobileTelemetry } from '../mobile/telemetry';
 
-// Official store artwork (public/badges). Apple's badge is only for App Store listings, so TestFlight keeps a text button.
-const storeBadge = (platform: MobilePlatform, url: string, beta: boolean): { src: string; height: number } | null => {
+// Official store artwork (public/badges), in the page language. Apple's badge is only for App Store listings, so
+// TestFlight keeps a text button; a pre-order keeps its text label because both badges say "download".
+const storeBadge = (platform: MobilePlatform, channel: DistributionChannel, language: string): { src: string; height: number } | null => {
+  if (!channel.url || channel.status === 'store_preorder') return null;
   let host = '';
-  try { host = new URL(url).hostname; } catch { return null; }
-  if (platform === 'android' && host === 'play.google.com') return { src: '/badges/google-play-badge-es.png', height: 60 };
-  if (platform === 'ios' && !beta && host === 'apps.apple.com') return { src: '/badges/app-store-badge.svg', height: 44 };
+  try { host = new URL(channel.url).hostname; } catch { return null; }
+  const locale = language.toLowerCase().startsWith('en') ? 'en' : 'es';
+  if (platform === 'android' && host === 'play.google.com') return { src: `/badges/google-play-badge-${locale}.png`, height: 60 };
+  if (platform === 'ios' && channel.status === 'public' && host === 'apps.apple.com') return { src: `/badges/app-store-badge-${locale}.svg`, height: 44 };
   return null;
 };
 
@@ -40,7 +43,7 @@ export default function MobileAppPage() {
   const channel = distribution.data?.[platform];
   const active = channel && availableChannel(channel, now);
   const beta = channel?.status !== 'public' && channel?.status !== 'store_preorder';
-  const badge = channel?.url ? storeBadge(platform, channel.url, beta) : null;
+  const badge = channel ? storeBadge(platform, channel, i18n.language) : null;
   const badgeContent = (label: string) => badge
     ? <img src={badge.src} alt={label} height={badge.height} style={{ display: 'block', height: badge.height, width: 'auto' }} />
     : label;

@@ -133,11 +133,26 @@ it('uses the official store badges only where the store allows them', async () =
   expect(testflight.querySelector('img')).toBeNull();
 });
 
-it('shows the App Store badge once iOS is a public App Store listing', async () => {
-  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ...config, ios: { ...config.ios, status: 'public', url: 'https://apps.apple.com/app/id6779786470' } }) } as Response);
+it('shows the App Store badge once iOS is a public App Store listing, in the page language', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ios: { ...config.ios, status: 'public', url: 'https://apps.apple.com/app/id6779786470' }, android: closedConfig().android }) } as Response);
   mount(<Page />);
   fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
-  await waitFor(() => expect(document.querySelector('a[href="https://apps.apple.com/app/id6779786470"] img')?.getAttribute('src')).toBe('/badges/app-store-badge.svg'));
+  const badgeSrc = (href: string) => document.querySelector(`a[href="${href}"] img`)?.getAttribute('src');
+  await waitFor(() => expect(badgeSrc('https://apps.apple.com/app/id6779786470')).toBe('/badges/app-store-badge-es.svg'));
+  fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  await waitFor(() => expect(badgeSrc('https://apps.apple.com/app/id6779786470')).toBe('/badges/app-store-badge-en.svg'));
+  fireEvent.click(screen.getByRole('button', { name: 'Android' }));
+  await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
+});
+
+it.each(['ios', 'android'] as const)('keeps the %s pre-order link as text instead of a download badge', async platform => {
+  const url = platform === 'ios' ? 'https://apps.apple.com/app/id6779786470' : 'https://play.google.com/store/apps/details?id=com.tdf.records';
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ...config, [platform]: { ...config.ios, status: 'store_preorder', url } }) } as Response);
+  mount(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: platform === 'ios' ? 'iPhone / iOS' : 'Android' }));
+  const link = await waitFor(() => { const found = document.querySelector(`a[href="${url}"]`); if (!found) throw new Error('pre-order link missing'); return found; });
+  expect(link.querySelector('img')).toBeNull();
+  expect(link.textContent).toBe(i18n.t('app.preorder'));
 });
 it.each([
   { capacity: 'full' }, { capacity: 'unknown' }, { validUntil: new Date(Date.now() - 1).toISOString() },
