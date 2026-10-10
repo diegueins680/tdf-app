@@ -5491,7 +5491,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1c04272d01c4ed1c0f8c534565aa3c887c5b37cd09f78978ab769743e5337465",
+      "sha256": "fc7478ad84b04d06fa3a1e669102c311ccc07a08e37127147ae3465f3767bef2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13945,7 +13945,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+      "sha256": "7d8f7fa6268aa6ce98192ca662cbcc27cf68fc9f11017ceb1cc11078d0b2ee44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13957,7 +13957,7 @@
     {
       "id": "SURFACE-4f6a7b230d53af08",
       "path": "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-      "sha256": "52299baac744f19e1fd6de857f88d7ff2f25c8aac358524d0feb5e664b003d22",
+      "sha256": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14719,7 +14719,7 @@
     {
       "id": "SURFACE-22495db6f5498450",
       "path": "tdf-hq/test/TicketManualReviewMain.hs",
-      "sha256": "0293a6b9a11f40b95aa3ae487e7a592859873495d327c77fb658bf64e4863d4d",
+      "sha256": "b6805c746f14039f482189a3ae4aba73e4c17748698d9778924226849bd615b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21606,63 +21606,70 @@
     },
     {
       "path": "formal/event-operations/ManualBankTransfer.cfg",
-      "sha256": "a03921d02a39a9d7f97e9f407065683710db7c44200e4f51933b6914b85c10b1",
+      "sha256": "2a2123006efe1bafa296326d6e21e9a188d6606c6798cf7cd63a7b25e995bfaa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransfer.tla",
-      "sha256": "06d07a9062f4d8c50a5e8368e234d5161fea916bb58b9673b9b7d2b02841cbb1",
+      "sha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/ManualBankTransferExpired.cfg",
-      "sha256": "b23d7060c921a75c7a0bd95c6a22978fbd5af2d9cef6772aa043a6c95cdb8f20",
+      "sha256": "4fa0bdf12b323216307b18db6fe413419bfd94d123c06c20d5e1e7e2ec86d35b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransferOutsider.cfg",
-      "sha256": "92557f001f20eb7a30bba7d7cd7f6892e3d25ebf70c13844cda16cc964d58b6a",
+      "sha256": "470fb0090ce08d410c7641a04eb710a49fa9a7522687427a25ad796f873a85c0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransferReopen.cfg",
-      "sha256": "13e130d633454b99ce49fa9d464fbc02e1ab00adefedefffbe66c1e1e281ad15",
+      "sha256": "f9b82ac97704d11df6cf562d5839b598a95c4bd86a030be03eb2f5d7eb6c766e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransferReplay.cfg",
-      "sha256": "8d8778a553ad542a32c4a1136471f2b6f4d7d726fa0595206aeba7235308e587",
+      "sha256": "1b20311cd381ee60da30f5cf502f6c719f5c567fbf1a9946ac3254438d4f3987",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransferSecondRail.cfg",
-      "sha256": "fff639d23a260378fed3751dc4e36271bc9c0b0f40701bdcad96534b1d134a00",
+      "sha256": "762988bdfa80e3d295ae6d47459130fa3cef171ec42c999b8bbb58a2631ec348",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransferSharedReviewer.cfg",
-      "sha256": "7af4165e5f2838358f09e1bdc7761c00ae53c9ea09524347be46d0036aae56ad",
+      "sha256": "d51f4b99ff25f8ece76809ad892bf80b359cab852e45ed042d57ef924f11c526",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferSplitIssuance.cfg",
+      "sha256": "aa1c53fabac69ff7c060beb32088634e66ef71cee6068679d99cbf2c9e81324b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/ManualBankTransferUnbounded.cfg",
-      "sha256": "44dc127611174835fc4ab49cc0ba8c831cf43e3f2d2fa9f40157621eeef4423e",
+      "sha256": "4497a77c542f18aa12b6a41101a02fad477675cff3fd6c990d7a130427786baf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23531,7 +23538,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "eba75583f123e9f0280ea196f77336b1a390af3bdadea08cd724e3f5205bf6a1",
+      "sha256": "2e4db13bbfc0431ae02eba31ddf5dc1d86b49139b7d8a081cf063178781b11d6",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -23685,7 +23692,7 @@
     },
     {
       "path": "formal/system/manual-bank-transfer.md",
-      "sha256": "9ededa838925d72b2acf63cc3ff69854c1f5f8a77797dce638ccdc7caee10cc8",
+      "sha256": "1a4f886b7e309133b8e3d4137f0e5aab7ee1b10c97ba48b0c193509fbcab43e6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23818,7 +23825,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "facd191db7b79d81b3c0d12f184e92f71f3c36ffc9dd1708c6171874dd515eae",
+      "sha256": "ea8c11a06a30148e58e48ae1f11393abb6678376744df5d92af63a283c6f6e25",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32462,7 +32469,8 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32484,7 +32492,8 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32506,7 +32515,8 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32528,7 +32538,8 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = TRUE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32550,7 +32561,8 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = TRUE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32572,7 +32584,8 @@
         "  IgnoreIntentExclusion = TRUE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32594,7 +32607,31 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferSplitIssuance.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = TRUE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32616,7 +32653,8 @@
         "  IgnoreIntentExclusion = FALSE",
         "  ReplayEffect = FALSE",
         "  RejectReopens = FALSE",
-        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

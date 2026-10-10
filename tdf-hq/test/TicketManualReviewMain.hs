@@ -15,6 +15,7 @@ import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Char8 as BS
 import Data.Either (isRight)
+import Data.IORef (modifyIORef', newIORef, readIORef)
 import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -133,9 +134,14 @@ submitEvidence order = rawExecute
 
 review :: ConnectionPool -> ManualReviewer -> Order -> ManualReviewAction -> UTCTime
        -> IO (Either Text Bool)
-review pool reviewer order action now = runSqlPool
+review pool reviewer order action now = reviewWith pool reviewer order action now (pure ())
+
+-- | The handler passes the canonical issuance; these cases inject its outcome.
+reviewWith :: ConnectionPool -> ManualReviewer -> Order -> ManualReviewAction -> UTCTime
+           -> SqlPersistT IO () -> IO (Either Text Bool)
+reviewWith pool reviewer order action now issueTickets = runSqlPool
   (reviewTicketManualPayment reviewer (toSqlKey 7001) (toSqlKey (oId order)) action
-    "Revisado contra el estado de cuenta" now) pool
+    "Revisado contra el estado de cuenta" now issueTickets) pool
 
 -- | Authoritative rows: evidence status/reviewer, checkout status and paid
 -- amount, attempt and intent status, bindings, approval audits, exceptions.
@@ -281,13 +287,43 @@ main = do
           (settled || declined) `shouldBe` True)
           (zip orders (chunksOf3 outcomes))
 
+      -- Regression: issuance once ran in a second transaction after the
+      -- approval commit. A failure there left a paid order without tickets,
+      -- and the panel offers no review action for approved evidence.
+      it "rolls the approval back when ticket issuance fails, then settles on retry" $ do
+        order <- newOrder pool
+        initial <- snapshot pool order
+        now <- getCurrentTime
+        failed <- try (reviewWith pool organizer order ManualApprove now
+          (liftIO (ioError (userError "synthetic issuance failure"))))
+        either (\(_ :: SomeException) -> pure ()) (const (expectationFailure "issuance failure was swallowed")) failed
+        snapshot pool order `shouldReturn` initial
+        issued <- newIORef (0 :: Int)
+        let issue = liftIO (modifyIORef' issued (+ 1))
+        reviewWith pool organizer order ManualApprove now issue `shouldReturn` Right True
+        reviewWith pool admin order ManualApprove now issue `shouldReturn` Right True
+        reviewWith pool admin order ManualReject now issue
+          >>= (`shouldBeLeftWith` "cannot be changed")
+        readIORef issued `shouldReturn` 2
+        settled <- snapshot pool order
+        (evidenceStatus settled, checkoutStatus settled, approvals settled)
+          `shouldBe` ("approved", "paid", 1)
+
+      it "never issues tickets for a rejection" $ do
+        order <- newOrder pool
+        now <- getCurrentTime
+        issued <- newIORef (0 :: Int)
+        reviewWith pool organizer order ManualReject now (liftIO (modifyIORef' issued (+ 1)))
+          `shouldReturn` Right False
+        readIORef issued `shouldReturn` 0
+
       it "rejects only bank-transfer evidence it can bind unambiguously to the order" $ do
         now <- getCurrentTime
         missing <- runSqlPool (reviewTicketManualPayment admin (toSqlKey 7001)
-          (toSqlKey 999999999) ManualApprove "Revisado contra el estado de cuenta" now) pool
+          (toSqlKey 999999999) ManualApprove "Revisado contra el estado de cuenta" now (pure ())) pool
         missing `shouldBeLeftWith` "No bank transfer evidence"
         order <- newOrder pool
         wrongEvent <- runSqlPool (reviewTicketManualPayment admin (toSqlKey 7999)
-          (toSqlKey (oId order)) ManualApprove "Revisado contra el estado de cuenta" now) pool
+          (toSqlKey (oId order)) ManualApprove "Revisado contra el estado de cuenta" now (pure ())) pool
         wrongEvent `shouldBeLeftWith` "No bank transfer evidence"
         isRight wrongEvent `shouldBe` False

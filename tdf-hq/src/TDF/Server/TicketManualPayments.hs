@@ -104,7 +104,10 @@ listTicketManualPayments eventKey = do
       }
 
 -- | Returns 'True' when this call (or an identical earlier approval) left the
--- checkout paid, so the caller must run the idempotent ticket issuance.
+-- checkout paid. The idempotent ticket issuance then runs in the same
+-- transaction: a manual approval has no external effect to preserve, so an
+-- issuance failure rolls the approval back and the evidence stays reviewable,
+-- instead of leaving a paid order without tickets and no review action left.
 reviewTicketManualPayment
   :: ManualReviewer
   -> SM.SocialEventId
@@ -112,8 +115,22 @@ reviewTicketManualPayment
   -> ManualReviewAction
   -> Text
   -> UTCTime
+  -> SqlPersistT IO ()
   -> SqlPersistT IO (Either Text Bool)
-reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
+reviewTicketManualPayment reviewer eventKey orderKey action notes now issueTickets = do
+  result <- decideTicketManualPayment reviewer eventKey orderKey action notes now
+  when (result == Right True) issueTickets
+  pure result
+
+decideTicketManualPayment
+  :: ManualReviewer
+  -> SM.SocialEventId
+  -> SM.EventTicketOrderId
+  -> ManualReviewAction
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either Text Bool)
+decideTicketManualPayment reviewer eventKey orderKey action notes now = do
   rows <- rawSql
     "SELECT checkout.id::text, checkout.status, checkout.environment,\
     \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at),\

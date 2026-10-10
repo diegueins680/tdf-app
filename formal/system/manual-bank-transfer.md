@@ -19,6 +19,10 @@ rail, and an expired checkout never reopens.
   whose primary email matches the buyer email (trimmed, case-folded).
 - Effective hold: `GREATEST(hold_expires_at, manual_hold_expires_at)`, bounded by
   the database trigger to `now + hold` and `cutoff + hold`.
+- Issuance: the idempotent ticket issuance (`finalizePaidTicketOrder`) commits
+  in the same transaction as the approval. If issuance fails, the approval rolls
+  back, the evidence stays reviewable and staff get a 409 to retry. A paid
+  bank-transfer order without tickets cannot be produced by the review.
 - Replay: approving already-approved evidence of a paid order returns success
   and re-runs only the idempotent ticket issuance.
 - Second rail: the bank-transfer payment intent stays active after selection,
@@ -40,6 +44,19 @@ unlocked decision window. The review now uses a named savepoint
 reviewer waits, then sees the decided state: an identical approval replays,
 other actions get the existing 409 messages. The concurrency case below failed
 3/3 before the change and passes after it.
+
+## Gap closed on 2026-10-09: issuance after approval
+
+Issuance used to run in a second transaction after the approval committed, as
+for provider captures. A failure or restart in between left the order paid,
+the evidence `approved`, and no tickets. The staff panel offers review actions
+only for `submitted`/`under_review` evidence and does not show fulfillment, so
+nothing in the product could recover it. A manual approval has no external
+effect to preserve, so issuance now runs inside the approval transaction. This
+was established by reading the handler and panel; the old signature cannot
+express an injected issuance failure, so there is no failing pre-change run of
+the new cases. Provider captures keep two transactions: their money already
+moved, and buyers can replay capture/confirmation to finish issuance.
 
 ## Executable evidence
 
@@ -63,7 +80,10 @@ reconciliation exception. It covers:
 - rejection, refused approval before a new report, re-report on the same attempt
   and approval through the intent lifecycle;
 - concurrent organizer approval, administrator approval and administrator
-  rejection of four orders, each ending either settled once or declined;
+  rejection of six orders, each ending either settled once or declined;
+- an injected issuance failure rolling the whole approval back, a retry
+  settling once with issuance run on approval and replay only, and no issuance
+  for a rejection;
 - refusal of unknown orders and of an order addressed through another event.
 
 The database bounds, expiry and rollback stay covered by
@@ -80,9 +100,9 @@ capture on another rail. Each action is one committed transaction, matching the
 `FOR UPDATE` locks of the review and the trigger-side hold guard.
 
 Invariants: `IndependentApproval`, `LiveApproval`, `HoldBound`, `SingleCharge`,
-`NoSecondCharge`, `TicketsNeedPayment`, `ExpiryFinal`. The positive configuration
-explores 145 distinct states with no violation. Seven controlled mutations must
-each fail their named invariant:
+`NoSecondCharge`, `TicketsNeedPayment`, `ExpiryFinal`, `PaidHasTickets`. The
+positive configuration finds no violation. Eight controlled mutations must each
+fail their named invariant:
 
 | Configuration | Mutation | Expected violation |
 |---|---|---|
@@ -93,6 +113,7 @@ each fail their named invariant:
 | `ManualBankTransferSecondRail` | card rail allowed after selection | `NoSecondCharge` |
 | `ManualBankTransferReplay` | replayed approval records another payment | `SingleCharge` |
 | `ManualBankTransferReopen` | rejection reopens an expired checkout | `ExpiryFinal` |
+| `ManualBankTransferSplitIssuance` | issuance commits after the approval | `PaidHasTickets` |
 
 No fairness is assumed and no liveness is claimed. The results hold within these
 bounds and this abstraction only. The model is not a refinement proof of the SQL
@@ -104,9 +125,8 @@ trigger or the Haskell handler.
   API exists, and a transfer that is never reported is invisible to the system.
 - Late deposits after expiry are recorded as reconciliation exceptions and
   refunded manually; their resolution is not modeled.
-- Ticket issuance after approval (`finalizePaidTicketOrder`) runs in a second
-  transaction. A crash in between leaves a paid order whose issuance a repeated
-  approval completes; that recovery is covered by replay, not by an automatic worker.
+- The issuance itself is passed in by the handler; the harness injects its
+  success or failure. `finalizePaidTicketOrder` keeps its own coverage.
 - Multi-order capacity, refunds of bank-transfer orders (`completeBankTransferTicketRefund`)
   and electronic invoices (EVT-TICKET-INVOICE-001) are separate requirements.
 - HTTP authentication and `requireRefundManagedEvent` admission are exercised by

@@ -17,7 +17,8 @@ CONSTANTS
   UnboundedExtension,\* hold extension ignores cutoff + hold
   IgnoreIntentExclusion, \* a card rail may start after bank transfer selection
   ReplayEffect,      \* re-approval of approved evidence records another payment
-  RejectReopens      \* rejection reopens an expired checkout
+  RejectReopens,     \* rejection reopens an expired checkout
+  SplitIssuance      \* issuance commits after, not with, the approval
 
 Max(a, b) == IF a >= b THEN a ELSE b
 Min(a, b) == IF a <= b THEN a ELSE b
@@ -93,7 +94,7 @@ Approve(a) ==
         /\ evidence' = "approved" /\ checkout' = "paid"
         /\ bankPayments' = bankPayments + 1
         /\ approver' = a /\ approvedBefore' = Alive
-        /\ issued' = TRUE
+        /\ issued' = ~SplitIssuance
      \* Exact replay of an approval is idempotent issuance only.
      \/ /\ evidence = "approved" /\ checkout = "paid"
         /\ bankPayments' = bankPayments + (IF ReplayEffect THEN 1 ELSE 0)
@@ -118,8 +119,14 @@ CardCapture ==
   /\ UNCHANGED <<now, holdEnd, selected, evidence, bankPayments, approver,
                  approvedBefore, everExpired, fundsSent>>
 
+\* Only under SplitIssuance: the second transaction, which may never commit.
+IssueLater ==
+  /\ SplitIssuance /\ checkout = "paid" /\ ~issued /\ issued' = TRUE
+  /\ UNCHANGED <<now, holdEnd, selected, evidence, checkout, bankPayments,
+                 cardCharged, approver, approvedBefore, everExpired, fundsSent>>
+
 Next ==
-  \/ Tick \/ Expire \/ SelectTransfer \/ SubmitEvidence \/ CardCapture
+  \/ Tick \/ Expire \/ SelectTransfer \/ SubmitEvidence \/ CardCapture \/ IssueLater
   \/ \E a \in Staff : Approve(a) \/ Reject(a)
 
 Spec == Init /\ [][Next]_vars
@@ -143,4 +150,6 @@ SingleCharge == bankPayments + (IF cardCharged THEN 1 ELSE 0) <= 1
 NoSecondCharge == ~(cardCharged /\ fundsSent)
 TicketsNeedPayment == issued => checkout = "paid"
 ExpiryFinal == everExpired => checkout = "expired"
+\* Approval and ticket issuance commit together: no paid order without tickets.
+PaidHasTickets == checkout = "paid" => issued
 =============================================================================
