@@ -1,8 +1,11 @@
 import { Box, Card, CardContent, Divider, Link, Stack, Typography } from '@mui/material';
+import { useLocation } from 'react-router-dom';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function SecurityPage() {
   useDocumentTitle('Configuración / Seguridad');
+  const { hash } = useLocation();
   return (
     <Stack spacing={3}>
       <Stack spacing={0.5}>
@@ -18,12 +21,9 @@ export default function SecurityPage() {
         </Typography>
       </Stack>
 
-      <Card>
-        <CardContent>
-          <Stack spacing={2}>
-            <Typography variant="h6" fontWeight={700} id="privacidad">
-              Política de Privacidad
-            </Typography>
+      <Stack spacing={1.5}>
+        <Box id="privacidad" sx={{ scrollMarginTop: 80 }}>
+          <LegalDisclosure id="security-privacy-policy" headingLevel={2} title="Política de Privacidad" defaultExpanded={hash === '#privacidad'}>
             <Typography>
               Recopilamos datos de contacto, actividad de agenda y contenido necesario para operar TDF HQ.
               No vendemos datos a terceros. Solo compartimos información con proveedores esenciales
@@ -35,16 +35,10 @@ export default function SecurityPage() {
               integraciones (Google, etc.) solo almacenamos lo mínimo para proveer la funcionalidad y puedes
               revocar acceso en cualquier momento.
             </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent>
-          <Stack spacing={2}>
-            <Typography variant="h6" fontWeight={700} id="terminos">
-              Términos del Servicio
-            </Typography>
+          </LegalDisclosure>
+        </Box>
+        <Box id="terminos" sx={{ scrollMarginTop: 80 }}>
+          <LegalDisclosure id="security-terms-of-service" headingLevel={2} title="Términos del Servicio" defaultExpanded={hash === '#terminos'}>
             <Typography>
               El uso de TDF HQ está limitado a personal autorizado de TDF Records y clientes invitados.
               Está prohibido el uso malicioso, el acceso no autorizado y el intento de extraer datos fuera
@@ -55,9 +49,9 @@ export default function SecurityPage() {
               riesgo de seguridad. Las integraciones de terceros (ej. Google Calendar) se rigen también por
               sus propios términos.
             </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
+          </LegalDisclosure>
+        </Box>
+      </Stack>
 
       <Card>
         <CardContent>
