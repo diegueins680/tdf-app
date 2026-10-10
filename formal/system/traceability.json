@@ -8459,13 +8459,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Component and browser tests pass; deployed smoke and legal confirmation pending."
+        "reason": "Component, routing and cross-browser journeys pass on the current source; deployed signup and the counsel confirmation of clickwrap remain open."
       },
       "critical": true,
       "property": "MinimalSignup, NoSecondGoogleForm and SafeReturnPath",
       "contract": "formal/system/mobile-entry-ux.md",
       "verification": "LoginPage component tests with mocked auth APIs, routing unit tests with hostile return paths, and browser signup/login journeys.",
-      "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing.",
+      "evidence": "2026-10-10 on main 7831b69: LoginPage, signupFields, loginRouting and RootLandingRedirect Jest 64/64 (including hostile return paths); e2e/web/auth-landing.spec.mjs 29/29 across Chromium, Firefox, WebKit, tablet, Android and iPhone projects with a synthetic API. No deployed signup was performed, to avoid creating real accounts.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
@@ -40615,7 +40615,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cc83c5b5cc330f179939f79ec0768828f1fd91de1b7f346a543b4b9fac8f161f",
+      "sourceSha256": "06e3a261923eb8e237675e1c867952de343e585cdb4193be6e8a5f92a55fe08d",
       "definition": {
         "states": [
           "absent",
