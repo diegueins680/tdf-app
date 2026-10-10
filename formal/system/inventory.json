@@ -7911,7 +7911,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "cf80af430328e800ab055d47861ebc7433258ae36b538f6110cca28c3ae6e5b7",
+      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8799,7 +8799,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "94dbe8c74716725d142ebc2c4b751a10cc54d8fa73d960d9e5adafff58f52a2a",
+      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {

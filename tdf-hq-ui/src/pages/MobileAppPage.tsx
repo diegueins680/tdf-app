@@ -12,7 +12,8 @@ const storeBadge = (platform: MobilePlatform, channel: DistributionChannel, lang
   if (!channel.url || channel.status === 'store_preorder') return null;
   let host = '';
   try { host = new URL(channel.url).hostname; } catch { return null; }
-  const locale = language.toLowerCase().startsWith('en') ? 'en' : 'es';
+  // Only es and en translate this page; every other locale falls back to English copy.
+  const locale = language.toLowerCase().startsWith('es') ? 'es' : 'en';
   if (platform === 'android' && host === 'play.google.com') return { src: `/badges/google-play-badge-${locale}.png`, height: 60 };
   if (platform === 'ios' && channel.status === 'public' && host === 'apps.apple.com') return { src: `/badges/app-store-badge-${locale}.svg`, height: 44 };
   return null;

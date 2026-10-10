@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import i18n from '../i18n';
@@ -143,6 +143,9 @@ it('shows the App Store badge once iOS is a public App Store listing, in the pag
   await waitFor(() => expect(badgeSrc('https://apps.apple.com/app/id6779786470')).toBe('/badges/app-store-badge-en.svg'));
   fireEvent.click(screen.getByRole('button', { name: 'Android' }));
   await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
+  await act(async () => { await i18n.changeLanguage('fr'); });
+  await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
+  expect(screen.getByRole('link', { name: 'I already have access: open Google Play' })).toBeTruthy();
 });
 
 it.each(['ios', 'android'] as const)('keeps the %s pre-order link as text instead of a download badge', async platform => {
