@@ -17553,7 +17553,7 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "d977baa82b2901a874546199d1722c92ee8852d310b58c0122dcd7d18bc79f99",
+      "sha256": "8f8dc21a893fb215ebb33cbea332884c01f164d5b90740964134e58c3ccf43de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
