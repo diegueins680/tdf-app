@@ -29,6 +29,14 @@ AS $$
 BEGIN
   IF NEW.city_id IS NULL THEN
     NEW.city_id := directory_resolve_city_reference(NEW.city);
+  ELSIF TG_OP = 'UPDATE'
+    AND NEW.city IS DISTINCT FROM OLD.city
+    AND NEW.city_id IS NOT DISTINCT FROM OLD.city_id
+    AND OLD.city_id IS NOT DISTINCT FROM directory_resolve_city_reference(OLD.city) THEN
+    -- The id agreed with the previous city text and the caller changed only
+    -- the text (the venue API never writes city_id), so the id follows the
+    -- text. An id that was chosen independently of the text is kept.
+    NEW.city_id := directory_resolve_city_reference(NEW.city);
   END IF;
   RETURN NEW;
 END;
@@ -87,7 +95,22 @@ BEGIN
     search_vector = EXCLUDED.search_vector, source_status = EXCLUDED.source_status,
     visibility = EXCLUDED.visibility, moderation_status = EXCLUDED.moderation_status,
     source_updated_at = EXCLUDED.source_updated_at,
-    source_version = directory_search_document.source_version + 1;
+    source_version = directory_search_document.source_version + 1
+  -- An unchanged projection keeps its version: saved-search alerts fire on
+  -- source_version, so a rebuild must not notify again.
+  WHERE (directory_search_document.slug, directory_search_document.title,
+         directory_search_document.subtitle, directory_search_document.city_id,
+         directory_search_document.city_name, directory_search_document.country_code,
+         directory_search_document.public_latitude, directory_search_document.public_longitude,
+         directory_search_document.location_precision, directory_search_document.search_text,
+         directory_search_document.source_status, directory_search_document.visibility,
+         directory_search_document.moderation_status, directory_search_document.source_updated_at)
+    IS DISTINCT FROM
+        (EXCLUDED.slug, EXCLUDED.title, EXCLUDED.subtitle, EXCLUDED.city_id,
+         EXCLUDED.city_name, EXCLUDED.country_code, EXCLUDED.public_latitude,
+         EXCLUDED.public_longitude, EXCLUDED.location_precision, EXCLUDED.search_text,
+         EXCLUDED.source_status, EXCLUDED.visibility, EXCLUDED.moderation_status,
+         EXCLUDED.source_updated_at);
 END;
 $$;
 
@@ -132,7 +155,23 @@ BEGIN
     visibility = EXCLUDED.visibility, moderation_status = EXCLUDED.moderation_status,
     effective_at = EXCLUDED.effective_at, expires_at = EXCLUDED.expires_at,
     source_updated_at = EXCLUDED.source_updated_at,
-    source_version = directory_search_document.source_version + 1;
+    source_version = directory_search_document.source_version + 1
+  WHERE (directory_search_document.slug, directory_search_document.title,
+         directory_search_document.subtitle, directory_search_document.summary,
+         directory_search_document.image_url, directory_search_document.city_id,
+         directory_search_document.city_name, directory_search_document.country_code,
+         directory_search_document.public_latitude, directory_search_document.public_longitude,
+         directory_search_document.location_precision, directory_search_document.search_text,
+         directory_search_document.source_status, directory_search_document.visibility,
+         directory_search_document.moderation_status, directory_search_document.effective_at,
+         directory_search_document.expires_at, directory_search_document.source_updated_at)
+    IS DISTINCT FROM
+        (EXCLUDED.slug, EXCLUDED.title, EXCLUDED.subtitle, EXCLUDED.summary,
+         EXCLUDED.image_url, EXCLUDED.city_id, EXCLUDED.city_name, EXCLUDED.country_code,
+         EXCLUDED.public_latitude, EXCLUDED.public_longitude, EXCLUDED.location_precision,
+         EXCLUDED.search_text, EXCLUDED.source_status, EXCLUDED.visibility,
+         EXCLUDED.moderation_status, EXCLUDED.effective_at, EXCLUDED.expires_at,
+         EXCLUDED.source_updated_at);
 END;
 $$;
 
@@ -151,9 +190,9 @@ BEGIN
   END IF;
   IF TG_OP IN ('INSERT', 'UPDATE') THEN
     PERFORM directory_sync_event_search(NEW.id);
-    IF TG_OP = 'INSERT' OR NEW.venue_id IS DISTINCT FROM OLD.venue_id THEN
-      PERFORM directory_sync_venue_search(NEW.venue_id);
-    END IF;
+    -- Any update can make the event public (publishing changes only
+    -- workflow_state_id), which is what makes its venue listable.
+    PERFORM directory_sync_venue_search(NEW.venue_id);
   END IF;
   RETURN NULL;
 END;

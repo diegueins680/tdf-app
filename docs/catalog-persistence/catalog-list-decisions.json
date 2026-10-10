@@ -58835,6 +58835,74 @@
       "risk": "None: renaming the keys would only break the mocked useSession contract in this test.",
       "justification": "Test-only mutable mock of the useSession() result (current session, loading flag); hook state, not a selectable or reportable business list.",
       "reviewed": true
+    },
+    {
+      "id": "60303ac3b3772c65d7c6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: the 'es' | 'en' union only selects which UI locale the shared legal disclosure uses for its own expand/collapse label. It mirrors the two UI locales the app ships; it is not a selectable or reportable language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "line": 5,
+        "kind": "type-union",
+        "name": "LegalDisclosureLanguage"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "6b0946b142010154f6ec",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: fixed expand/collapse button labels ('Leer completo' / 'Ocultar', 'Read in full' / 'Hide') for the shared legal disclosure component. This is presentation copy keyed by UI locale, not an action, grant, or permission registry.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
+        "line": 7,
+        "kind": "object-registry",
+        "name": "actionCopy"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "14e0c58547b702cfe5ae",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: the 'es' | 'en' union only selects which UI locale the shared legal disclosure uses for its own expand/collapse label. It mirrors the two UI locales the app ships; it is not a selectable or reportable language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "line": 6,
+        "kind": "type-union",
+        "name": "LegalDisclosureLanguage"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "5b798e0ed2c1629a4de4",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing these values only alters the disclosure control's visible label language; consent capture and gating live outside the component and grant no permissions.",
+      "justification": "Reviewed 2026-10-07: fixed expand/collapse button labels ('Leer completo' / 'Ocultar', 'Read in full' / 'Hide') for the shared legal disclosure component. This is presentation copy keyed by UI locale, not an action, grant, or permission registry.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/components/LegalDisclosure.tsx",
+        "line": 8,
+        "kind": "object-registry",
+        "name": "actionCopy"
+      },
+      "reviewBatch": "legal-disclosure-2026-10-07"
     }
   ]
 }

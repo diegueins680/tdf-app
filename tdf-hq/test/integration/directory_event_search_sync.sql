@@ -10,6 +10,12 @@ DECLARE
   free_text_venue BIGINT;
   synth_event_id BIGINT;
   doc directory_search_document%ROWTYPE;
+  other_city UUID;
+  other_city_name TEXT;
+  explicit_venue BIGINT;
+  late_venue BIGINT;
+  late_event_id BIGINT;
+  versions_before BIGINT;
 BEGIN
   SELECT id INTO quito FROM city_reference
   WHERE directory_normalize_text(name_es) = directory_normalize_text('Quito')
@@ -102,6 +108,59 @@ BEGIN
     RAISE EXCEPTION 'unsuppressed event is not publicly searchable';
   END IF;
 
+  -- 7a. Moving a venue to another city moves an inferred city id with it,
+  -- so the venue and its events leave the old city's results.
+  other_city_name := 'Ciudad Sintetica De Sincronizacion';
+  INSERT INTO city_reference (country_id, code, name_es, name_en, source_name)
+  SELECT country_id, 'SYNTHETIC-SYNC-CITY', other_city_name, other_city_name, 'synthetic-sync-test'
+  FROM city_reference WHERE id = quito
+  RETURNING id INTO other_city;
+  UPDATE venue SET city = other_city_name WHERE id = free_text_venue;
+  IF (SELECT city_id FROM venue WHERE id = free_text_venue) IS DISTINCT FROM other_city THEN
+    RAISE EXCEPTION 'inferred city id did not follow the venue city';
+  END IF;
+  IF EXISTS (SELECT 1 FROM directory_public_search_document
+             WHERE entity_kind = 'event' AND entity_id = synth_event_id::text AND city_id = quito) THEN
+    RAISE EXCEPTION 'event stayed searchable under the venue''s previous city';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_search_document
+                 WHERE entity_kind = 'event' AND entity_id = synth_event_id::text AND city_id = other_city) THEN
+    RAISE EXCEPTION 'event is not searchable under the venue''s new city';
+  END IF;
+  UPDATE venue SET city = 'Quito' WHERE id = free_text_venue;
+  IF (SELECT city_id FROM venue WHERE id = free_text_venue) IS DISTINCT FROM quito THEN
+    RAISE EXCEPTION 'inferred city id did not follow the venue back';
+  END IF;
+  -- A city id chosen independently of the text is never overwritten.
+  INSERT INTO venue (name, city, city_id, created_at, updated_at)
+  VALUES ('Synthetic explicit-city venue', 'Synthetic unmatched sector', quito, now(), now())
+  RETURNING id INTO explicit_venue;
+  UPDATE venue SET city = other_city_name WHERE id = explicit_venue;
+  IF (SELECT city_id FROM venue WHERE id = explicit_venue) IS DISTINCT FROM quito THEN
+    RAISE EXCEPTION 'explicitly selected city id was overwritten';
+  END IF;
+
+  -- 7b. An event created hidden and published later indexes its venue too.
+  INSERT INTO venue (name, city, created_at, updated_at)
+  VALUES ('Synthetic late venue', 'Quito', now(), now())
+  RETURNING id INTO late_venue;
+  INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+                            workflow_state_id, timezone, start_time, end_time, metadata,
+                            created_at, updated_at)
+  VALUES (NULL, 'Synthetic late publication', 'Synthetic lineup', late_venue, event_type,
+          public_state, 'America/Guayaquil', now() + interval '1 day', now() + interval '2 days',
+          '{"isPublic": false}', now(), now())
+  RETURNING id INTO late_event_id;
+  IF EXISTS (SELECT 1 FROM directory_search_document WHERE entity_kind = 'venue' AND entity_id = late_venue::text) THEN
+    RAISE EXCEPTION 'venue without public events was indexed';
+  END IF;
+  UPDATE social_event SET metadata = '{"isPublic": true}' WHERE id = late_event_id;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_search_document
+                 WHERE entity_kind = 'venue' AND entity_id = late_venue::text AND city_id = quito) THEN
+    RAISE EXCEPTION 'publishing an event did not index its venue';
+  END IF;
+  DELETE FROM social_event WHERE id = late_event_id;
+
   -- 8. Venue rename propagates to its events; event deletion removes the document.
   UPDATE venue SET name = 'Synthetic renamed venue' WHERE id = free_text_venue;
   IF (SELECT subtitle FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text)
@@ -121,6 +180,16 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM directory_search_document document
                       WHERE document.entity_kind = 'event' AND document.entity_id = event.id::text)) THEN
     RAISE EXCEPTION 'full refresh left a public event unindexed';
+  END IF;
+
+  -- 10. A rebuild of unchanged sources keeps every version, so saved-search
+  -- alerts (fired on source_version) are not sent again.
+  SELECT coalesce(sum(source_version), 0) INTO versions_before
+  FROM directory_search_document WHERE entity_kind IN ('event', 'venue');
+  PERFORM directory_refresh_legacy_event_search();
+  IF (SELECT coalesce(sum(source_version), 0) FROM directory_search_document
+      WHERE entity_kind IN ('event', 'venue')) IS DISTINCT FROM versions_before THEN
+    RAISE EXCEPTION 'rebuilding unchanged events or venues bumped their versions';
   END IF;
 END
 $$;
