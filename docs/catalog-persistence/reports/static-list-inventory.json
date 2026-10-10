@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-10T17:45:39.024Z",
+  "generatedAt": "2026-10-10T18:57:17.652Z",
   "repositoryRoot": ".",
   "filesScanned": 2227,
   "candidateCount": 1319,
@@ -17035,7 +17035,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 133,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -17104,6 +17104,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -25562,7 +25564,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 202,
+      "consumerCount": 204,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -25633,6 +25635,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -45010,7 +45014,7 @@
       "lines": [
         37
       ],
-      "consumerCount": 133,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -45080,6 +45084,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -72464,7 +72470,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 364,
+      "consumerCount": 365,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -72544,6 +72550,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/merch/MerchReputationSummary.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
@@ -72566,8 +72573,7 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -74069,7 +74075,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 386,
+      "consumerCount": 388,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -74171,8 +74177,8 @@
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
-        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/auth.ts",
@@ -95455,7 +95461,7 @@
       "lines": [
         151
       ],
-      "consumerCount": 134,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -95525,6 +95531,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -112821,7 +112829,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 130,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -112890,6 +112898,8 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -128850,7 +128860,7 @@
       "lines": [
         372
       ],
-      "consumerCount": 138,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -128918,6 +128928,8 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -132605,7 +132617,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 117,
+      "consumerCount": 119,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -132673,6 +132685,8 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -153423,7 +153437,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 364,
+      "consumerCount": 365,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -153503,6 +153517,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/merch/MerchReputationSummary.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
@@ -153525,8 +153540,7 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
