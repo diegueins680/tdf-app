@@ -467,6 +467,11 @@ jobs:
         run: |
           createdb -h postgres -U postgres tdf_provider_retry_test
           sh scripts/test-provider-retry-runtime.sh
+      - name: Verify invoice worker claim, submission mark and lease fencing
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-invoice-worker.sh
+
       - name: Verify contact HTTP concurrency, authorization, archival and rollback
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

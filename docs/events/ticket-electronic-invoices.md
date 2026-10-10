@@ -12,7 +12,9 @@ CULTURE vol. 1 (event 141).
   invoice.
 - Ready means: Dátil credentials and issuer identity configured, `DATIL_ENVIRONMENT`
   matching the checkout environment (1 pruebas ↔ sandbox, 2 producción ↔
-  production) and an enabled row in `commerce_tax_issuer_point`.
+  production), an enabled row in `commerce_tax_issuer_point` and
+  `TAX_INVOICE_WORKER_ENABLED=true`, so that nothing is sold while no worker
+  would submit its invoice.
 - Buyer identification is captured once at checkout and is immutable.
   Consumidor final is accepted up to USD 50; above that the buyer gives a
   cédula (modulo-10 check), RUC or passport and a name.

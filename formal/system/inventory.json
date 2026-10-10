@@ -439,6 +439,7 @@
       "scripts/test-hetzner-restore.py",
       "scripts/test-identity-reconciliation.sh",
       "scripts/test-invitation-update-concurrency.sh",
+      "scripts/test-invoice-worker.sh",
       "scripts/test-isolated-application-canary.py",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
@@ -2027,6 +2028,7 @@
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
       "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
+      "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
@@ -2547,7 +2549,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "112209d107cbb39c448933d72b4cdf08ae117887729b758ed613a10cd8243e0b",
+      "sha256": "a3cca72b4c01b5bd4e79680d4115e40ea43a19539bb6d0b2816b94116aeeb9e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5029,6 +5031,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-057c027ca8cee02e",
+      "path": "scripts/test-invoice-worker.sh",
+      "sha256": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
       "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
@@ -5487,7 +5495,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "2fbe82ce0409c54ee3b5ad0ef9a9526556e3358106cecd0e7bbf7233eaeacc3d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13641,7 +13649,7 @@
     {
       "id": "SURFACE-93b6cd6234c2c39a",
       "path": "tdf-hq/src/TDF/Invoice/Datil.hs",
-      "sha256": "ff99ae5b699a63b7ebe810d8ff4b545d40317aba4930850d34c52519f8af19da",
+      "sha256": "2da9e160dc57e7d08dddf451c23ffe890acd60868d253b82dcb0c7352a415f4a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14283,7 +14291,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9585cec9b32ff6f56e1126b999b5ad83bd1859ea15502599b68a1a4b2e12b1ef",
+      "sha256": "7532858f4a523340d96fc20b2a8dc0de1b1e3f3a9d683591d26e5a0fafe0ae46",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14349,7 +14357,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "4da8426fd842dd5e2b8c623feabdd20edd84417ef18d8fe3ac067fadd44fb6fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14518,6 +14526,12 @@
       "id": "SURFACE-1bf88093e2bf7bcc",
       "path": "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
       "sha256": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0853d48fb3fc1d84",
+      "path": "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
+      "sha256": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18848,7 +18862,7 @@
     },
     {
       "path": "docs/events/ticket-electronic-invoices.md",
-      "sha256": "7d34ec5060aa4b40d0f11fdef77dcae5081b57e0afe628d81a843afa6fff83db",
+      "sha256": "0b7121e74a63a57f71d84dba81480ea01b2f78476089ee3b61f8cdfc02346970",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21549,6 +21563,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/InvoiceSubmission.cfg",
+      "sha256": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmission.tla",
+      "sha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg",
+      "sha256": "ce0a27a215e1fabc85959522be05163aee7efb927dcebde6eaf063fd0343b393",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionStaleFinish.cfg",
+      "sha256": "0146a45dc8944a564e78422f32368bbe063143c339abb8b0a6b8c1d8a758750d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg",
+      "sha256": "dab915f61d964da7720b82f0197513fd4455b3f2b0b73c34cae627cf35feb2d7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
+      "sha256": "9cea081fe4f68063303cf47bdb2668186e4a65cdda284625a2e7d426b86b63e3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/LiveIntakeAmbient.cfg",
       "sha256": "dac4bd9c0b73b17a37e3b6301058718d10a9bc42b344a57402fc939932dd2d22",
       "authority": "inferred",
@@ -22110,7 +22166,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "31510a4ed0bada9c944fae18f495da8d9bf11fc25e5ee7035a74b22d35cff3e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23482,14 +23538,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
+      "sha256": "662e04e084eef946f44de4fbd6beb7f8b4e05f1f2519cee06747bcbdbee10032",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ef4ece82253282e415886a6ffec698665fa1705f3ff0a393943634d6c69f17b5",
+      "sha256": "b023a5b1006a3d09329c6b2a1e80b7a876b86e5d89b7ca96e95cdec8e45b247e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23762,7 +23818,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sha256": "24f94dfaddb927254881a81c2d498f4cad17f8bd17259d47cffb988edf8b038a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -23805,6 +23861,13 @@
     {
       "path": "formal/system/streaming-admission.md",
       "sha256": "955b038a2ccd5ce7daf9d6c4e0aa8f0d53afd5f2f9d537bb60d10dcb35afb88e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ticket-invoice-worker.md",
+      "sha256": "bb3eb733b9bb1985d4d6691ed73e8762c01689cb0db7cb44756abd453381b0e0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32278,6 +32341,116 @@
         "  IgnoreAuthorization = FALSE",
         "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmission.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionStaleFinish.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = FALSE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = FALSE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = FALSE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
