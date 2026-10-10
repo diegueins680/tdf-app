@@ -4940,9 +4940,9 @@
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+        "reason": "Runtime read-scope checks pass on the current operations source; no deployed authenticated check and no formal model of the grant union."
       },
-      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "evidence": "2026-10-09: scripts/test-booking-conformance.py on a disposable PG16 database with a backend binary whose TDF/Operations sources are identical to main 7831b69: 619 checks passed, 0 failed, including 188 operations checks (teacher/engineer metrics restricted to visible assigned items, hidden payment detail denied, manager financial totals retained, failure counts and lists scoped by branch and role, version/request races with one winner). Operations ModelSpec ran in the backend Hspec suite (3,918 examples, 0 failures).",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
       "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
