@@ -1092,13 +1092,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Focused runtime and mutation checks pass on working source; final exact-SHA review, full gates and rollout remain."
+        "reason": "Deployed preflight behavior and local mutation checks agree; CSRF defenses and other deployment environments remain outside this check."
       },
       "authority": "Safety correction authorized by the current audit; explicit origin contract with observed production counterexample",
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
       "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
-      "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
+      "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): preflights from https://www.tdfrecords.net for GET and POST public ticket-order routes with x-order-lookup-token returned 200 with that exact origin and credentials; https://evil.example, a look-alike suffix origin, Origin null and an unlisted request header returned 400 with no Access-Control headers. scripts/verify-cors-boundary.py on main 7831b69: intended 33/33; controls production-classification-bypassed, implicit-preview-credentials and deletion-trailing-slash-bypass each failed (23, 3, 2)."
     },
     {
       "id": "AUTH-REGISTRY-001",
@@ -4038,13 +4038,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Shared guard, helper properties and HTTP fixtures require final compiled execution and deployment; no universal cryptographic or delivery proof."
+        "reason": "Deployed rejection of unsigned and wrongly signed POSTs on all aliases verified; a validly signed delivery, replay and key rotation are not exercised."
       },
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
       "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
-      "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
+      "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): POST {} to /facebook/webhook, /instagram/webhook, /webhooks/whatsapp and /hooks/whatsapp returned 401 both without X-Hub-Signature-256 and with an all-zero signature, so the secret is configured and enforced on every alias. APITypesSpec ran in the backend Hspec suite (3,918 examples, 0 failures) the same day."
     },
     {
       "id": "MEDIA-DRIVE-001",
@@ -40614,7 +40614,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e8f8fe05607656765e8b0440543e3ac1598d0468f390a4d69bedfc23057a4624",
+      "sourceSha256": "b913a379471dbfe91d1eacd2ff9e99d53fb885e712b5752804919ac26b3ccd14",
       "definition": {
         "states": [
           "absent",
