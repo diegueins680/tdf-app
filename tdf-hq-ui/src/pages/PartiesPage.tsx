@@ -180,12 +180,14 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
   const [phone, setPhone] = useState(party?.primaryPhone ?? '');
   const [displayName, setDisplayName] = useState(party?.displayName ?? '');
   const [email, setEmail] = useState(party?.primaryEmail ?? '');
+  const [notes, setNotes] = useState(party?.notes ?? '');
 
   useEffect(() => {
     setInstagram(party?.instagram ?? '');
     setPhone(party?.primaryPhone ?? '');
     setDisplayName(party?.displayName ?? '');
     setEmail(party?.primaryEmail ?? '');
+    setNotes(party?.notes ?? '');
   }, [party, open]);
 
   const mutation = useMutation<PartyDTO, Error, PartyUpdate>({
@@ -200,6 +202,11 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
       onClose();
     },
   });
+  const resetMutation = mutation.reset;
+
+  useEffect(() => {
+    resetMutation();
+  }, [party, open, resetMutation]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -216,19 +223,40 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
           />
           <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
           <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField
+            label="Notas"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            multiline
+            minRows={3}
+            helperText="Historial de seguimiento del contacto. Agrega nuevas entradas sin borrar las anteriores."
+          />
+          {mutation.isError && (
+            <Alert severity="error">
+              No se guardaron los cambios: {mutation.error.message}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
         <Button
-          onClick={() =>
-            mutation.mutate({
-              uDisplayName: displayName,
-              uInstagram: instagram,
-              uPrimaryPhone: phone,
-              uPrimaryEmail: email.trim() || null,
-            })
-          }
+          onClick={() => {
+            // Send only the fields edited in this dialog: the backend keeps any omitted
+            // field, so a save never restores stale values another editor changed meanwhile.
+            const changes: PartyUpdate = {};
+            if (displayName !== (party?.displayName ?? '')) changes.uDisplayName = displayName;
+            // An empty string clears the stored email; null would be stripped from the request.
+            if (email !== (party?.primaryEmail ?? '')) changes.uPrimaryEmail = email.trim();
+            if (instagram !== (party?.instagram ?? '')) changes.uInstagram = instagram;
+            if (phone !== (party?.primaryPhone ?? '')) changes.uPrimaryPhone = phone;
+            if (notes !== (party?.notes ?? '')) changes.uNotes = notes;
+            if (Object.keys(changes).length === 0) {
+              onClose();
+              return;
+            }
+            mutation.mutate(changes);
+          }}
           variant="contained"
           disabled={mutation.isPending}
         >
