@@ -185,6 +185,34 @@ describe('UpcomingEventsCarousel', () => {
     }
   });
 
+  it('says when a one-tap RSVP was not saved and lets the viewer retry', async () => {
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockResolvedValue(null);
+    upsertMock.mockRejectedValueOnce(new Error('offline'));
+    upsertMock.mockResolvedValueOnce({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true });
+    const view = await render();
+    try {
+      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await act(async () => {
+        button(view.container, 'Asistiré')?.click();
+        for (let i = 0; i < 3; i += 1) await flush();
+      });
+      await waitFor(() => Boolean(view.container.querySelector('[role="alert"]')));
+      expect(view.container.querySelector('[role="alert"]')?.textContent).toContain('No se guardó tu asistencia');
+      expect(view.container.textContent).not.toContain('Vas');
+
+      await act(async () => {
+        button(view.container, 'Reintentar')?.click();
+        for (let i = 0; i < 3; i += 1) await flush();
+      });
+      await waitFor(() => (view.container.textContent ?? '').includes('Vas'));
+      expect(upsertMock).toHaveBeenCalledTimes(2);
+      expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
   it('follows the active language for labels and dates', async () => {
     await i18n.changeLanguage('en');
     listMock.mockResolvedValue([event('141', 'PATCH CULTURE vol.1'), event('143', 'ELECTROETNIA')]);

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Button, Card, CardActionArea, CardMedia, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardActionArea, CardMedia, Chip, IconButton, Stack, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_BASE_URL } from '../../api/client';
@@ -130,6 +130,7 @@ export default function UpcomingEventsCarousel() {
           const rsvpKnown = rsvpQuery?.isSuccess === true && !rsvpQuery.isFetching;
           const status = rsvpQuery?.data?.rsvpStatus;
           const pending = attend.isPending && attend.variables === event.publicUpcomingEventId;
+          const failed = attend.isError && attend.variables === event.publicUpcomingEventId;
           return (
             <Card key={event.publicUpcomingEventId} role="listitem" variant="outlined" sx={{ scrollSnapAlign: 'start' }}>
               <CardActionArea component={RouterLink} to={`/eventos/${encodeURIComponent(event.publicUpcomingEventId)}`}>
@@ -154,8 +155,13 @@ export default function UpcomingEventsCarousel() {
                     disabled={pending || !rsvpKnown}
                     onClick={() => attend.mutate(event.publicUpcomingEventId)}
                   >
-                    {t('authEntry.eventsCarousel.attend')}
+                    {t(failed ? 'authEntry.eventsCarousel.retry' : 'authEntry.eventsCarousel.attend')}
                   </Button>
+                )}
+                {failed && (
+                  <Alert severity="error" sx={{ mt: 1, py: 0, '& .MuiAlert-message': { fontSize: '0.75rem' } }}>
+                    {t('authEntry.eventsCarousel.attendFailed')}
+                  </Alert>
                 )}
               </Box>
             </Card>

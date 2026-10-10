@@ -132,6 +132,8 @@ export default {
     "maybe": "Maybe",
     "notGoing": "Not going",
     "dateTbc": "Date to be confirmed",
+    "retry": "Try again",
+    "attendFailed": "Your RSVP was not saved. Try again.",
   },
   "community": "Community",
   "shop": "Shop",

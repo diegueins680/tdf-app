@@ -132,6 +132,8 @@ export default {
     "maybe": "Quizás",
     "notGoing": "No vas",
     "dateTbc": "Fecha por confirmar",
+    "retry": "Reintentar",
+    "attendFailed": "No se guardó tu asistencia. Inténtalo de nuevo.",
   },
   "community": "Comunidad",
   "shop": "Tienda",
