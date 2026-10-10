@@ -321,10 +321,13 @@
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": [
-        "tdf-hq/src/TDF/Commerce/StateMachine.hs"
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions. No proof of persisted SQL ledger or production use of this helper.",
-      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control.",
+      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -360,16 +363,19 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs"
+        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+        "tdf-hq/test/integration/ledger_posting_balance.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "The database validates balance only on draft -> posted; a transaction inserted as posted, or an entry appended after posting, is not rejected. No live writer does either."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
       }
     },
     {

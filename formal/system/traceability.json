@@ -322,10 +322,13 @@
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": [
-        "tdf-hq/src/TDF/Commerce/StateMachine.hs"
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions. No proof of persisted SQL ledger or production use of this helper.",
-      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control.",
+      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -361,16 +364,19 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs"
+        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+        "tdf-hq/test/integration/ledger_posting_balance.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "The database validates balance only on draft -> posted; a transaction inserted as posted, or an entry appended after posting, is not rejected. No live writer does either."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
       }
     },
     {
@@ -8933,7 +8939,7 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
-    "scripts/test-ticket-manual-review.sh": "875e3f55681ba6e5dd432d564363bf63fd6ab2d5fceb5232b36e511908a61166",
+    "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
@@ -9154,6 +9160,7 @@
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
     "tdf-hq/scripts/create_artists_from_list.sh": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
+    "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
     "tdf-hq/sql/2026-09-11_music_release_platform.sql": "c33f6809232734b64685811d230c3d34d187cbab037b3d509ed58bc3f7e81fc2",
     "tdf-hq/sql/2026-09-11_music_release_platform_rollback.sql": "0edba6b1d000b2d11944a59fe3aaa02b616fef2c9713d7d19abd1192a15d1a95",
     "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql": "0e29380aaba2feaf34103c03c737f4eda6e21c9f0383fd1bb98a6102b467d09d",
@@ -9356,6 +9363,7 @@
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
     "tdf-hq/test/TicketManualReviewMain.hs": "b6805c746f14039f482189a3ae4aba73e4c17748698d9778924226849bd615b9",
+    "tdf-hq/test/integration/ledger_posting_balance.sql": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
@@ -9653,6 +9661,60 @@
       {
         "requirement": "SYS-MONEY-002",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/integration/ledger_posting_balance.sql": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-manual-review.sh": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
       }
     ],
     "scripts/specification-inventory.py": [
@@ -10499,24 +10561,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": [
-      {
-        "requirement": "PAY-CHECKOUT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-FULFILLMENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-RETRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": [
       {
         "requirement": "PAY-CHECKOUT-001",
@@ -10625,12 +10669,6 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
-      }
-    ],
-    "tdf-hq/src/TDF/Commerce/RefundStore.hs": [
-      {
-        "requirement": "REF-RECOVERY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": [
@@ -14142,12 +14180,6 @@
       }
     ],
     "tdf-hq/test/integration/ticket_manual_review_fixture.sql": [
-      {
-        "requirement": "EVT-TICKET-MANUAL-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-ticket-manual-review.sh": [
       {
         "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "tests"
@@ -20404,9 +20436,13 @@
     {
       "id": "SURFACE-4c827aef16e690c3",
       "path": "scripts/test-ticket-manual-review.sh",
-      "sha256": "875e3f55681ba6e5dd432d564363bf63fd6ab2d5fceb5232b36e511908a61166",
+      "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        },
         {
           "requirement": "EVT-TICKET-MANUAL-001",
           "relationship": "tests"
@@ -28426,7 +28462,12 @@
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
       "sha256": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a4bebbd3725e94a7",
@@ -31298,6 +31339,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "PAY-CHECKOUT-001",
           "relationship": "implementation"
         },
@@ -31551,6 +31596,10 @@
       "sha256": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        },
         {
           "requirement": "REF-RECOVERY-001",
           "relationship": "implementation"
@@ -34459,6 +34508,18 @@
       "sha256": "aee1bf42307d56e1ed071f911cb8d00a691806fa9baae07ffdd683fabcd22984",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-6f930c6a7d3e8525",
+      "path": "tdf-hq/test/integration/ledger_posting_balance.sql",
+      "sha256": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-819a82f0c31c3d37",
@@ -38649,7 +38710,6 @@
     "SURFACE-a2921da090dad9fd",
     "SURFACE-1118fecfd75870bf",
     "SURFACE-48269b6d50bc7c5c",
-    "SURFACE-6d69d2d118d7b862",
     "SURFACE-a4bebbd3725e94a7",
     "SURFACE-66b26f38206ee2c5",
     "SURFACE-69667f07127c8d7a",
@@ -40586,7 +40646,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea8c11a06a30148e58e48ae1f11393abb6678376744df5d92af63a283c6f6e25",
+      "sourceSha256": "b75cc254c68306e4fa688e0177c848530ca015305d09a1163d3e31b92b393bf2",
       "definition": {
         "states": [
           "absent",

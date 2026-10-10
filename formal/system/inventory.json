@@ -2113,6 +2113,7 @@
       "tdf-hq/test/integration/interactions/schema-fixture.sql",
       "tdf-hq/test/integration/interactions/schema-properties.sql",
       "tdf-hq/test/integration/label_project_notes_backfill_postgres.sql",
+      "tdf-hq/test/integration/ledger_posting_balance.sql",
       "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "tdf-hq/test/integration/payment_audit_fixture.sql",
       "tdf-hq/test/integration/pipeline_authorization_http.sh",
@@ -5407,7 +5408,7 @@
     {
       "id": "SURFACE-4c827aef16e690c3",
       "path": "scripts/test-ticket-manual-review.sh",
-      "sha256": "875e3f55681ba6e5dd432d564363bf63fd6ab2d5fceb5232b36e511908a61166",
+      "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15035,6 +15036,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6f930c6a7d3e8525",
+      "path": "tdf-hq/test/integration/ledger_posting_balance.sql",
+      "sha256": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-819a82f0c31c3d37",
       "path": "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "sha256": "47a5bebb6e41a34ee49fc03c2ca4cef20965c5d090fe53600806599e7bcc3a91",
@@ -23755,7 +23762,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
+      "sha256": "c43590d32b2a99a4e4c0da0fb480e3ac7cf555a3a8ed99aed666ae1e1890f916",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23825,7 +23832,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ea8c11a06a30148e58e48ae1f11393abb6678376744df5d92af63a283c6f6e25",
+      "sha256": "b75cc254c68306e4fa688e0177c848530ca015305d09a1163d3e31b92b393bf2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

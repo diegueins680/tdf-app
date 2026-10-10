@@ -43,6 +43,9 @@ for sql_file in \
 done
 psql "$TICKET_MANUAL_REVIEW_TEST_DSN" -X -q -v ON_ERROR_STOP=1 \
   -f "$repo_root/tdf-hq/test/integration/ticket_manual_review_fixture.sql" >/dev/null
+# SYS-MONEY-003 on the same production schema (rolled back, no fixture rows).
+psql "$TICKET_MANUAL_REVIEW_TEST_DSN" -X -q -v ON_ERROR_STOP=1 \
+  -f "$repo_root/tdf-hq/test/integration/ledger_posting_balance.sql" >/dev/null
 cd "$repo_root/tdf-hq"
 # Compiled, not runghc: the review module's dependency closure exceeds the
 # bytecode interpreter's breakpoint table in GHC 9.10.
