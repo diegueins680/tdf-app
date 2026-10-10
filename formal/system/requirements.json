@@ -7288,10 +7288,10 @@
       "id": "EVT-TICKET-INVOICE-001",
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
-      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
       "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
-      "contract": "formal/system/ticket-invoice-worker.md",
+      "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
         "Ticket buyer",
         "Event organizer",
@@ -7334,7 +7334,7 @@
       "privacy": "Identification only when required by the SRI USD 50 rule; credentials stay in server configuration and are redacted from stored errors.",
       "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims; a submission starts only through one statement bound to the claimer's lease and an unset submission mark; every result is written under the claimer's lease token.",
       "idempotency": "Unique invoice per order; stable access key per document; paid re-transitions do not enqueue again.",
-      "failure": "Validation refusal -> failed; unknown transport outcome -> uncertain; status query failures retry.",
+      "failure": "Validation refusal -> failed, whatever the length of the provider's message; unknown transport outcome of a submission -> uncertain; a status query that fails, is refused or is unreadable, or an internal error while polling, leaves the document submitted for a later query.",
       "recovery": "Administrators resend failed documents after fixing configuration; uncertain documents are reconciled in the provider.",
       "observability": "Staff invoice list with status, number, access key, authorization and last error.",
       "property": "Every paid order of an invoiced policy has exactly one invoice document whose identity never changes.",
@@ -7384,7 +7384,7 @@
         "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
         "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg"
       ],
-      "verification": "Bounded TLA+ worker model with four negative controls; PostgreSQL worker tests with a substitute transport; PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "verification": "Bounded TLA+ worker model with four negative controls (formal/system/ticket-invoice-worker.md); PostgreSQL worker tests with a substitute transport; PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
@@ -7393,7 +7393,10 @@
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
         "Status transitions other than the finality of authorized are enforced by the worker, not by the database.",
-        "That an HTTP 4xx other than 408/429 means the provider created nothing was observed only with an invalid key on 2026-10-06."
+        "That an HTTP 4xx other than 408/429 means the provider created nothing was observed only with an invalid key on 2026-10-06.",
+        "A paid transition is refused after capture if the issuer point was disabled or its counter lowered by hand after checkout creation; no application path edits the point.",
+        "Whether the SRI accepts a credit note addressed to consumidor final is unverified.",
+        "The selling rule requires the worker flag in each serving process; a separate worker process is not supported."
       ],
       "conformance": {
         "classification": "PARTIAL",

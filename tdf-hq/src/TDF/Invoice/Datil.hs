@@ -25,6 +25,9 @@ module TDF.Invoice.Datil
   , TransportResult(..)
   , processNextTaxDocument
   , processNextTaxDocumentWith
+  , ClaimedDocument(..)
+  , markSubmissionStarted
+  , storableError
   , startTaxInvoiceWorker
   ) where
 
@@ -121,13 +124,15 @@ datilEnvironmentFor "sandbox" = Just 1
 datilEnvironmentFor "production" = Just 2
 datilEnvironmentFor _ = Nothing
 
--- | Ready only with complete credentials matching the checkout environment and
--- an enabled issuer point for it.
+-- | Ready only with complete credentials matching the checkout environment, an
+-- enabled issuer point for it and the submission worker switched on: without
+-- the worker every enqueued invoice would stay pending with no signal.
 invoicingReady :: ConnectionPool -> Text -> IO Bool
 invoicingReady pool checkoutEnvironment = do
   configured <- loadDatilConfig
+  workerEnabled <- taxInvoiceWorkerEnabled
   case configured of
-    Right config | datilEnvironmentFor checkoutEnvironment == Just (dcEnvironment config) -> do
+    Right config | workerEnabled && datilEnvironmentFor checkoutEnvironment == Just (dcEnvironment config) -> do
       rows <- runSqlPool (rawSql
         "SELECT EXISTS (SELECT 1 FROM commerce_tax_issuer_point WHERE environment = ? AND enabled)"
         [PersistText checkoutEnvironment] :: SqlPersistT IO [Single Bool]) pool
@@ -288,7 +293,8 @@ interpretDatilDocument = either (Left . T.pack) Right . A.parseEither (A.withObj
   let validId = T.length providerId <= 80 && T.all (\c -> c == '-' || c == '_' || c `elem` ['a'..'z'] || c `elem` ['A'..'Z'] || isDigit c) providerId
   when (T.null providerId || not validId) $ fail "Invalid provider document id"
   case (T.toUpper (T.strip status) :: Text, number, authorizedAt) of
-    ("AUTORIZADO", Just numberText, at) | T.all isDigit numberText && T.length numberText >= 10 ->
+    ("AUTORIZADO", Just numberText, at)
+      | T.all isDigit numberText && T.length numberText >= 10 && T.length numberText <= 49 ->
       pure (DatilAuthorized providerId numberText (at >>= parseProviderTime))
     ("AUTORIZADO", _, _) -> pure (DatilPending providerId)
     (state, _, _) | state `elem` ["NO AUTORIZADO", "DEVUELTO", "ERROR"] ->
@@ -417,8 +423,9 @@ processNextTaxDocumentWith transport envPool config = do
       outcome <- tryAny (handleDocument transport envPool config document)
       case outcome of
         Right () -> pure ()
-        Left _ -> finish envPool document "pending" Nothing Nothing Nothing
-          (Just "Internal invoicing error; retrying") (Just 300)
+        -- A document the provider already holds keeps being polled.
+        Left _ -> finish envPool document (if cdStatus == "submitted" then "submitted" else "pending")
+          Nothing Nothing Nothing (Just "Internal invoicing error; retrying") (Just 300)
       pure True
     _ -> pure False
 
@@ -470,8 +477,13 @@ applyResult pool document result = case result of
       Nothing Nothing Nothing (Just ("HTTP " <> T.pack (show code) <> ": " <> message))
       (if cdStatus document == "submitted" then Just 600 else Nothing)
   TransportOk value -> case interpretDatilDocument value of
-    Left _ -> finish pool document "uncertain" Nothing Nothing Nothing
-      (Just "Dátil returned an unreadable document; reconcile before resending") Nothing
+    Left _
+      | cdStatus document == "submitted" ->
+          finish pool document "submitted" Nothing Nothing Nothing
+            (Just "Status query returned an unreadable document; retrying") (Just 600)
+      | otherwise ->
+          finish pool document "uncertain" Nothing Nothing Nothing
+            (Just "Dátil returned an unreadable document; reconcile before resending") Nothing
     Right (DatilAuthorized providerId number at) -> do
       now <- getCurrentTime
       finish pool document "authorized" (Just providerId) (Just number) (Just (fromMaybe now at)) Nothing Nothing
@@ -497,8 +509,13 @@ finish pool ClaimedDocument{..} status providerId number authorizedAt problem re
     \ WHERE id = ?::uuid AND lease_token = ?::uuid"
     [ PersistText status, maybe PersistNull PersistText providerId
     , maybe PersistNull PersistText number, maybe PersistNull PersistUTCTime authorizedAt
-    , maybe PersistNull PersistText problem, PersistUTCTime nextAttempt
+    , maybe PersistNull (PersistText . storableError) problem, PersistUTCTime nextAttempt
     , PersistText cdId, PersistText cdLease ]) pool
+
+-- | The stored diagnostic must satisfy the column bound and PostgreSQL text
+-- rules; otherwise recording a clean refusal would itself fail.
+storableError :: Text -> Text
+storableError = T.take 500 . T.filter (/= '\NUL')
 
 ecuadorDay :: UTCTime -> Day
 ecuadorDay = localDay . utcToLocalTime (hoursToTimeZone (-5))
@@ -656,9 +673,12 @@ buyerIdentityFrom (Just "consumidor_final") _ _ = Right ConsumidorFinal
 buyerIdentityFrom Nothing _ _ = Right ConsumidorFinal
 buyerIdentityFrom _ _ _ = Left "Buyer billing identity is incomplete"
 
+taxInvoiceWorkerEnabled :: IO Bool
+taxInvoiceWorkerEnabled = (== Just "true") <$> lookupEnv "TAX_INVOICE_WORKER_ENABLED"
+
 startTaxInvoiceWorker :: Env -> IO ()
 startTaxInvoiceWorker env = do
-  enabled <- (== Just "true") <$> lookupEnv "TAX_INVOICE_WORKER_ENABLED"
+  enabled <- taxInvoiceWorkerEnabled
   when enabled $ do
     configured <- loadDatilConfig
     case configured of

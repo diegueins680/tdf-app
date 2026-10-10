@@ -564,6 +564,18 @@
       "conflict": "Public WhatsApp consent accepted any number without proof of control, recorded consent and messaged the number immediately, and exposed consent state and timestamps through a public lookup.",
       "authority": "Explicit product-owner decision on 2026-10-06: double opt-in.",
       "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
+    },
+    {
+      "id": "AUTHORITY-056",
+      "sources": [
+        "tdf-hq/src/TDF/Invoice/Datil.hs",
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "docs/events/ticket-electronic-invoices.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-INVOICE-001 says a provider refusal becomes failed (resendable), status query failures retry, and an invoiced event cannot sell until invoicing is configured. The worker turned a refusal with a long message, an unreadable status answer or any internal error while polling into uncertain, which has no in-app recovery, and sales opened while the submission worker was switched off.",
+      "authority": "The 2026-10-06 invoicing decision and the requirement's failure rules govern; the worker behavior was a defect.",
+      "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
     }
   ]
 }

@@ -7289,10 +7289,10 @@
       "id": "EVT-TICKET-INVOICE-001",
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
-      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
       "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
-      "contract": "formal/system/ticket-invoice-worker.md",
+      "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
         "Ticket buyer",
         "Event organizer",
@@ -7335,7 +7335,7 @@
       "privacy": "Identification only when required by the SRI USD 50 rule; credentials stay in server configuration and are redacted from stored errors.",
       "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims; a submission starts only through one statement bound to the claimer's lease and an unset submission mark; every result is written under the claimer's lease token.",
       "idempotency": "Unique invoice per order; stable access key per document; paid re-transitions do not enqueue again.",
-      "failure": "Validation refusal -> failed; unknown transport outcome -> uncertain; status query failures retry.",
+      "failure": "Validation refusal -> failed, whatever the length of the provider's message; unknown transport outcome of a submission -> uncertain; a status query that fails, is refused or is unreadable, or an internal error while polling, leaves the document submitted for a later query.",
       "recovery": "Administrators resend failed documents after fixing configuration; uncertain documents are reconciled in the provider.",
       "observability": "Staff invoice list with status, number, access key, authorization and last error.",
       "property": "Every paid order of an invoiced policy has exactly one invoice document whose identity never changes.",
@@ -7385,7 +7385,7 @@
         "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
         "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg"
       ],
-      "verification": "Bounded TLA+ worker model with four negative controls; PostgreSQL worker tests with a substitute transport; PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "verification": "Bounded TLA+ worker model with four negative controls (formal/system/ticket-invoice-worker.md); PostgreSQL worker tests with a substitute transport; PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
@@ -7394,7 +7394,10 @@
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
         "Status transitions other than the finality of authorized are enforced by the worker, not by the database.",
-        "That an HTTP 4xx other than 408/429 means the provider created nothing was observed only with an invalid key on 2026-10-06."
+        "That an HTTP 4xx other than 408/429 means the provider created nothing was observed only with an invalid key on 2026-10-06.",
+        "A paid transition is refused after capture if the issuer point was disabled or its counter lowered by hand after checkout creation; no application path edits the point.",
+        "Whether the SRI accepts a credit note addressed to consumidor final is unverified.",
+        "The selling rule requires the worker flag in each serving process; a separate worker process is not supported."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9440,7 +9443,7 @@
     "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
     "tdf-hq/src/TDF/Invoice/AccessKey.hs": "dd2e63c42a8107b7c5eb12f9d9442da59988969254f58eb0515b790626de4b3f",
     "tdf-hq/src/TDF/Invoice/BuyerIdentity.hs": "6d4f8227ace8821694e85016823f3e66174a9fa36bd74ab7e572f9a2fd2ca2be",
-    "tdf-hq/src/TDF/Invoice/Datil.hs": "7a8109e52349e0b3be452d191035aff0588a51a4e9f573351ffc5145a4f4f146",
+    "tdf-hq/src/TDF/Invoice/Datil.hs": "2da9e160dc57e7d08dddf451c23ffe890acd60868d253b82dcb0c7352a415f4a",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
@@ -9521,7 +9524,7 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
-    "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "275a4bd7019c3d1386fd55b79f86b756a23e5f8e8a9588f4728fa91bc28d8a65",
+    "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -32438,7 +32441,7 @@
     {
       "id": "SURFACE-93b6cd6234c2c39a",
       "path": "tdf-hq/src/TDF/Invoice/Datil.hs",
-      "sha256": "7a8109e52349e0b3be452d191035aff0588a51a4e9f573351ffc5145a4f4f146",
+      "sha256": "2da9e160dc57e7d08dddf451c23ffe890acd60868d253b82dcb0c7352a415f4a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34152,7 +34155,7 @@
     {
       "id": "SURFACE-0853d48fb3fc1d84",
       "path": "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
-      "sha256": "275a4bd7019c3d1386fd55b79f86b756a23e5f8e8a9588f4728fa91bc28d8a65",
+      "sha256": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41026,7 +41029,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "87ea30a1ab94bf98edb211ddd50431a65c350e2b747670f9f631b82a7e535db4",
+      "sourceSha256": "24f94dfaddb927254881a81c2d498f4cad17f8bd17259d47cffb988edf8b038a",
       "definition": {
         "states": [
           "absent",

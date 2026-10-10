@@ -22,7 +22,8 @@ import System.Random (randomRIO)
 import System.Timeout (timeout)
 import Test.Hspec
 import TDF.Invoice.Datil
-  ( DatilConfig(..), DatilTransport, TransportResult(..), processNextTaxDocumentWith )
+  ( ClaimedDocument(..), DatilConfig(..), DatilTransport, TransportResult(..)
+  , markSubmissionStarted, processNextTaxDocumentWith, storableError )
 import TDF.Server.TicketTaxDocuments (retryFailedTicketTaxDocument)
 
 -- EVT-TICKET-INVOICE-001: the worker's claim, submission mark and lease fencing
@@ -133,14 +134,70 @@ spec = describe "invoice-worker-postgresql" $ do
               secondBody `shouldBe` firstBody
             other -> expectationFailure ("Expected exactly two submissions, saw " <> show (length other))
 
-        it "lets only one of several simultaneous workers submit a document" $ \pool -> do
+        it "lets no other worker claim a document while one holds its lease" $ \pool -> do
+          document <- fixture pool
+          holderCalls <- newIORef []
+          otherCalls <- newIORef []
+          entered <- newEmptyMVar
+          release <- newEmptyMVar
+          let holder = recording holderCalls $ const $ do
+                putMVar entered ()
+                takeMVar release
+                pure authorized
+          withAsync (tick pool holder) $ \first ->
+            (do
+              within (takeMVar entered)
+              claims <- within (mapConcurrently
+                (const (tick pool (recording otherCalls (const (pure authorized))))) [(), (), ()])
+              claims `shouldBe` [False, False, False]
+              putMVar release ()
+              within (wait first) `shouldReturn` True
+              stateOf pool document `shouldReturn` ("authorized", True)
+              methods holderCalls `shouldReturn` ["POST"]
+              methods otherCalls `shouldReturn` []
+            ) `finally` void (tryPutMVar release ())
+
+        it "starts a submission only for the current lease and only once" $ \pool -> do
+          document <- fixture pool
+          let claimed lease = ClaimedDocument
+                { cdId = docId document, cdKind = "invoice", cdStatus = "pending"
+                , cdSubmissionStarted = False, cdLease = lease, cdProviderId = Nothing }
+              current = "aaaaaaaa-0000-4000-8000-000000000001"
+              superseded = "aaaaaaaa-0000-4000-8000-000000000002"
+          runSqlPool (rawExecute
+            "UPDATE commerce_tax_document SET lease_token = ?::uuid, \
+            \lease_expires_at = clock_timestamp() + INTERVAL '2 minutes' WHERE id = ?::uuid"
+            [toPersistValue (current :: Text), toPersistValue (docId document)]) pool
+          -- A worker whose lease was replaced before it marked cannot start.
+          markSubmissionStarted pool (claimed superseded) `shouldReturn` False
+          stateOf pool document `shouldReturn` ("pending", False)
+          markSubmissionStarted pool (claimed current) `shouldReturn` True
+          -- The same lease cannot start a second submission.
+          markSubmissionStarted pool (claimed current) `shouldReturn` False
+          stateOf pool document `shouldReturn` ("pending", True)
+
+        it "records a long provider refusal as refused, not as an unknown outcome" $ \pool -> do
           document <- fixture pool
           calls <- newIORef []
-          claims <- within (mapConcurrently
-            (const (tick pool (recording calls (const (pure authorized))))) [(), (), (), ()])
-          length (filter id claims) `shouldBe` 1
+          let refusal = TransportRejected 400 (T.replicate 500 "x" <> "\NUL")
+          tick pool (recording calls (const (pure refusal))) `shouldReturn` True
+          stateOf pool document `shouldReturn` ("failed", True)
+          T.length (storableError ("HTTP 400: " <> T.replicate 500 "x")) `shouldBe` 500
+
+        it "keeps polling a submitted document after an unreadable answer or an internal error" $ \pool -> do
+          document <- fixture pool
+          calls <- newIORef []
+          tick pool (recording calls (const (pure processing))) `shouldReturn` True
+          makeDue pool document
+          tick pool (recording calls (const (pure (TransportOk (object []))))) `shouldReturn` True
+          stateOf pool document `shouldReturn` ("submitted", True)
+          makeDue pool document
+          tick pool (recording calls (const (throwIO (ErrorCall "poll failed")))) `shouldReturn` True
+          stateOf pool document `shouldReturn` ("submitted", True)
+          makeDue pool document
+          tick pool (recording calls (const (pure authorized))) `shouldReturn` True
           stateOf pool document `shouldReturn` ("authorized", True)
-          methods calls `shouldReturn` ["POST"]
+          methods calls `shouldReturn` ["POST", "GET", "GET", "GET"]
 
 data Document = Document { docId :: Text, docEvent :: Int64 }
 
