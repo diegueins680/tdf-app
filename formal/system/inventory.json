@@ -5125,7 +5125,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "625883dcd57d9e6a10f3ee3560b5e1518b6cf76da20121f3e2fbca1ba88c4ff7",
+      "sha256": "a2a7bb3873ab452b2b5dcb3475084b0d2ff27bb43133f0c5af5c4e7f8866e48c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12847,7 +12847,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "d98cca31c934a8da7d9a20e47dd74fe8c7f55507aa22aaa999967b93fba109f9",
+      "sha256": "6e0ec3fe762635c5e538848c5f014144ce269e4d1713feb3ed042cf35ba2aca3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18358,7 +18358,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "fb42ba89f2e84516895482cd3cafba6d5246fb8697beafe5230ca2474d704f57",
+      "sha256": "fe71714a30b72008406ccc203053a9d466c8899620f45b8556e22ec5ccdd6faf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
