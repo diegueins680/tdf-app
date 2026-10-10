@@ -25,7 +25,9 @@ jest.unstable_mockModule('../../session/SessionContext', () => ({
   useSession: () => ({ session: mockSession }),
 }));
 
+const { default: i18n } = await import('../../i18n');
 const { default: UpcomingEventsCarousel } = await import('./UpcomingEventsCarousel');
+const { eventRsvpQueryKeys } = await import('./eventRsvpQueryKeys');
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -60,6 +62,7 @@ async function render(path = '/buscar') {
   });
   return {
     container,
+    queryClient,
     cleanup: async () => {
       await act(async () => { root?.unmount(); await flush(); });
       root = null;
@@ -73,7 +76,8 @@ const button = (container: HTMLElement, label: string) =>
   Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent === label);
 
 describe('UpcomingEventsCarousel', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     listMock.mockReset();
     getRsvpMock.mockReset();
     upsertMock.mockReset();
@@ -106,7 +110,7 @@ describe('UpcomingEventsCarousel', () => {
     upsertMock.mockResolvedValue({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: false });
     const view = await render();
     try {
-      await waitFor(() => Boolean(button(view.container, 'Asistiré')));
+      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
       await act(async () => {
         button(view.container, 'Asistiré')?.click();
         for (let i = 0; i < 3; i += 1) await flush();
@@ -114,6 +118,101 @@ describe('UpcomingEventsCarousel', () => {
       expect(upsertMock).toHaveBeenCalledWith('143', { rsvpStatus: 'accepted', rsvpShowOnProfile: false });
       await waitFor(() => (view.container.textContent ?? '').includes('Vas'));
       expect(view.container.textContent).toContain('Vas');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('keeps one-tap attendance disabled until the viewer\'s RSVP is known, so a "maybe" is never overwritten', async () => {
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    let deliver!: (value: SocialRsvpDTO | null) => void;
+    getRsvpMock.mockReturnValue(new Promise((resolve) => { deliver = resolve; }));
+    const view = await render();
+    try {
+      await waitFor(() => Boolean(button(view.container, 'Asistiré')));
+      expect(button(view.container, 'Asistiré')?.disabled).toBe(true);
+      await act(async () => {
+        button(view.container, 'Asistiré')?.click();
+        await flush();
+      });
+      expect(upsertMock).not.toHaveBeenCalled();
+
+      await act(async () => {
+        deliver({ rsvpEventId: '143', rsvpStatus: 'maybe', rsvpShowOnProfile: true });
+        await flush();
+      });
+      await waitFor(() => (view.container.textContent ?? '').includes('Quizás'));
+      expect(button(view.container, 'Asistiré')).toBeUndefined();
+      expect(upsertMock).not.toHaveBeenCalled();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('does not offer one-tap attendance when the RSVP read fails', async () => {
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockRejectedValue(new Error('offline'));
+    const view = await render();
+    try {
+      await waitFor(() => Boolean(button(view.container, 'Asistiré')));
+      for (let i = 0; i < 4; i += 1) await act(async () => { await flush(); });
+      expect(button(view.container, 'Asistiré')?.disabled).toBe(true);
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('writes the RSVP to the cache entries the event detail controls read', async () => {
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockResolvedValue(null);
+    upsertMock.mockResolvedValue({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true });
+    const view = await render();
+    try {
+      view.queryClient.setQueryData(eventRsvpQueryKeys.summary('143'), { stale: true });
+      view.queryClient.setQueryData(eventRsvpQueryKeys.feed('7'), { stale: true });
+      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await act(async () => {
+        button(view.container, 'Asistiré')?.click();
+        for (let i = 0; i < 3; i += 1) await flush();
+      });
+      await waitFor(() => (view.container.textContent ?? '').includes('Vas'));
+      expect(view.queryClient.getQueryData(eventRsvpQueryKeys.mine('143', 7)))
+        .toEqual({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true });
+      expect(view.queryClient.getQueryState(eventRsvpQueryKeys.summary('143'))?.isInvalidated).toBe(true);
+      expect(view.queryClient.getQueryState(eventRsvpQueryKeys.feed('7'))?.isInvalidated).toBe(true);
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('follows the active language for labels and dates', async () => {
+    await i18n.changeLanguage('en');
+    listMock.mockResolvedValue([event('141', 'PATCH CULTURE vol.1'), event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockImplementation(async (id) => (id === '141'
+      ? { rsvpEventId: '141', rsvpStatus: 'accepted', rsvpShowOnProfile: false }
+      : null));
+    const view = await render();
+    try {
+      await waitFor(() => (view.container.textContent ?? '').includes('Going'));
+      const content = view.container.textContent ?? '';
+      expect(content).toContain('Upcoming events');
+      expect(content).toContain('See all');
+      expect(content).toMatch(/Oct/);
+      expect(content).not.toMatch(/Próximos|Asistiré|Vas/);
+      expect(button(view.container, "I'll go")).toBeDefined();
+      expect(view.container.querySelector('button[aria-label="Hide upcoming events"]')).not.toBeNull();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('renders nothing instead of failing when the events response is not a list', async () => {
+    listMock.mockResolvedValue({ error: 'unexpected' } as unknown as PublicUpcomingEventDTO[]);
+    const view = await render();
+    try {
+      for (let i = 0; i < 4; i += 1) await act(async () => { await flush(); });
+      expect(view.container.textContent).toBe('');
+      expect(getRsvpMock).not.toHaveBeenCalled();
     } finally {
       await view.cleanup();
     }
