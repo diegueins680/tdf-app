@@ -1118,6 +1118,7 @@
       "tdf-hq-ui/src/pages/ReservasEquipoPage.tsx",
       "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
       "tdf-hq-ui/src/pages/RoomsPage.tsx",
+      "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
       "tdf-hq-ui/src/pages/SecurityPage.tsx",
       "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
       "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
@@ -7160,13 +7161,13 @@
     {
       "id": "SURFACE-88fbc73f4e77632c",
       "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
-      "sha256": "91676c519b0243344af73e96c82f85f58e9b41a9e97880dacf075b14f3862c06",
+      "sha256": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6f546685e4a6eb40",
       "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
-      "sha256": "5e364604c8ff8dfb2088ee8a7af1a31586ac69b9517edc634f7fff9b12010699",
+      "sha256": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9075,6 +9076,12 @@
       "id": "SURFACE-24d2133b7f15822c",
       "path": "tdf-hq-ui/src/pages/RoomsPage.tsx",
       "sha256": "f034e82de1bc0578d65c44415fdcb56e742ddd1e8f5021479b83028b11f0e094",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c3adc6dc170cc53b",
+      "path": "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
+      "sha256": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23755,7 +23762,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e01b764e9292ee4ea90fac6d51eccc1d239c41244967b4e292f109b7a6be61bd",
+      "sha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
