@@ -6717,7 +6717,8 @@
         "tdf-hq-ui/public/mobile-app/privacy.html",
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
-        "tdf-hq-ui/public/mobile-distribution.json"
+        "tdf-hq-ui/public/mobile-distribution.json",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
@@ -9230,6 +9231,7 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
+    "tdf-hq-ui/src/pages/MobileAppPage.tsx": "94dbe8c74716725d142ebc2c4b751a10cc54d8fa73d960d9e5adafff58f52a2a",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "329e773ad263a5409e3a38261da4775858977388cbd55a6f9c9838cf4955e332",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
@@ -13813,6 +13815,12 @@
       }
     ],
     "tdf-hq-ui/public/mobile-distribution.json": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MobileAppPage.tsx": [
       {
         "requirement": "MOB-PUBLIC-001",
         "relationship": "implementation"
@@ -25534,7 +25542,12 @@
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
       "sha256": "94dbe8c74716725d142ebc2c4b751a10cc54d8fa73d960d9e5adafff58f52a2a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5f2964f5ab118818",
@@ -38670,7 +38683,6 @@
     "SURFACE-689d1c649ef08997",
     "SURFACE-bee40b89d7a09a1d",
     "SURFACE-4a562abbc0b9c284",
-    "SURFACE-c6ff06a2e2277d3e",
     "SURFACE-a4131610c954eb01",
     "SURFACE-ce5da75bdb773e8c",
     "SURFACE-d3757406b3552635",
@@ -40912,7 +40924,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3d8598b228bb1d183b7ade63887deb9bad36b99f9bc62b33bb6bf2f9a8ac84c1",
+      "sourceSha256": "e7f1f58fb777f68d2397d0b23079af0b50cc7c4dfc2e2dd5e1cdfeb0b2cee2db",
       "definition": {
         "states": [
           "absent",
