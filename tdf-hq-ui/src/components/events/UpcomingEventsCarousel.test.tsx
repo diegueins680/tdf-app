@@ -12,6 +12,7 @@ const listMock = jest.fn<(opts?: { startAfter?: string }) => Promise<PublicUpcom
 const getRsvpMock = jest.fn<(eventId: string) => Promise<SocialRsvpDTO | null>>();
 const upsertMock = jest.fn<(eventId: string, input: SocialRsvpWriteDTO) => Promise<SocialRsvpDTO>>();
 let mockSession: { partyId: number; preferences?: { showEventRsvpsOnProfile?: boolean } } | null = { partyId: 7 };
+let mockSessionLoading = false;
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: {
@@ -22,7 +23,7 @@ jest.unstable_mockModule('../../api/socialEvents', () => ({
 }));
 jest.unstable_mockModule('../../api/client', () => ({ API_BASE_URL: 'https://api.example.test' }));
 jest.unstable_mockModule('../../session/SessionContext', () => ({
-  useSession: () => ({ session: mockSession }),
+  useSession: () => ({ session: mockSession, loading: mockSessionLoading }),
 }));
 
 const { default: i18n } = await import('../../i18n');
@@ -85,6 +86,7 @@ describe('UpcomingEventsCarousel', () => {
     getRsvpMock.mockReset();
     upsertMock.mockReset();
     mockSession = { partyId: 7 };
+    mockSessionLoading = false;
     window.sessionStorage.clear();
   });
 
@@ -265,6 +267,71 @@ describe('UpcomingEventsCarousel', () => {
       expect(content).toContain('10:30');
     } finally {
       await view.cleanup();
+    }
+  });
+
+  it('waits for the server to confirm a stored session before showing or loading anything', async () => {
+    mockSessionLoading = true;
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render();
+    try {
+      for (let i = 0; i < 4; i += 1) await act(async () => { await flush(); });
+      expect(view.container.textContent).toBe('');
+      expect(listMock).not.toHaveBeenCalled();
+      expect(getRsvpMock).not.toHaveBeenCalled();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('keeps each event\'s RSVP result separate when two are tapped in a row', async () => {
+    listMock.mockResolvedValue([event('141', 'PATCH CULTURE vol.1'), event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockResolvedValue(null);
+    let failFirst!: (reason: Error) => void;
+    upsertMock.mockImplementation((eventId) => (eventId === '141'
+      ? new Promise((_resolve, reject) => { failFirst = reject; })
+      : Promise.resolve({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true })));
+    const view = await render();
+    const cards = () => Array.from(view.container.querySelectorAll<HTMLElement>('[role="listitem"]'));
+    const attendIn = (card: HTMLElement) => Array.from(card.querySelectorAll('button')).find((b) => /Asistiré|Reintentar/.test(b.textContent ?? ''));
+    try {
+      await waitFor(() => cards().length === 2 && cards().every((card) => attendIn(card)?.disabled === false));
+      await act(async () => { attendIn(cards()[0]!)?.click(); for (let i = 0; i < 3; i += 1) await flush(); });
+      await act(async () => { attendIn(cards()[1]!)?.click(); for (let i = 0; i < 3; i += 1) await flush(); });
+      await waitFor(() => (cards()[1]?.textContent ?? '').includes('Vas'));
+      // The first write is still pending: its button stays disabled even though another finished.
+      expect(attendIn(cards()[0]!)?.disabled).toBe(true);
+
+      await act(async () => { failFirst(new Error('offline')); for (let i = 0; i < 3; i += 1) await flush(); });
+      await waitFor(() => Boolean(cards()[0]?.querySelector('[role="alert"]')));
+      expect(cards()[0]?.textContent).toContain('No se guardó tu asistencia');
+      expect(cards()[1]?.querySelector('[role="alert"]')).toBeNull();
+      expect(cards()[1]?.textContent).toContain('Vas');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('drops an event once it starts, even without a new fetch', async () => {
+    jest.useFakeTimers({ advanceTimers: true });
+    try {
+      const soon = new Date(Date.now() + 90_000).toISOString();
+      listMock.mockResolvedValue([event('140', 'EMPIEZA PRONTO', { publicUpcomingEventStart: soon }), event('143', 'ELECTROETNIA')]);
+      getRsvpMock.mockResolvedValue(null);
+      const view = await render();
+      try {
+        await waitFor(() => (view.container.textContent ?? '').includes('EMPIEZA PRONTO'));
+        await act(async () => { jest.advanceTimersByTime(3 * 60_000); await flush(); });
+        await waitFor(() => !(view.container.textContent ?? '').includes('EMPIEZA PRONTO'));
+        expect(view.container.textContent).not.toContain('EMPIEZA PRONTO');
+        expect(view.container.textContent).toContain('ELECTROETNIA');
+        expect(listMock).toHaveBeenCalledTimes(1);
+      } finally {
+        await view.cleanup();
+      }
+    } finally {
+      jest.useRealTimers();
     }
   });
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Box, Button, Card, CardActionArea, CardMedia, Chip, IconButton, Stack, Typography } from '@mui/material';
@@ -60,12 +60,27 @@ const readDismissed = () => {
 // the viewer's own RSVP for each, with a one-tap "Asistiré".
 export default function UpcomingEventsCarousel() {
   const { t, i18n } = useTranslation();
-  const { session } = useSession();
+  const { session, loading: sessionLoading } = useSession();
   const location = useLocation();
   const queryClient = useQueryClient();
   const [dismissed, setDismissed] = useState(readDismissed);
   const onEventsPage = location.pathname === EVENTS_PATH || location.pathname.startsWith(`${EVENTS_PATH}/`);
-  const enabled = Boolean(session) && !dismissed && !onEventsPage;
+  // A stored session is only a hint until the server confirms it.
+  const enabled = Boolean(session) && !sessionLoading && !dismissed && !onEventsPage;
+  // Wall-clock time, so a started event leaves even if no refetch succeeds.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [enabled]);
+  // Each card keeps its own write state: a second tap elsewhere must not hide a failure here.
+  const [attendState, setAttendState] = useState<Record<string, 'pending' | 'failed'>>({});
+  const settleAttend = (eventId: string, state?: 'pending' | 'failed') => setAttendState((current) => {
+    const next = { ...current };
+    if (state) next[eventId] = state; else delete next[eventId];
+    return next;
+  });
 
   const eventsQuery = useQuery({
     queryKey: ['upcoming-events-carousel'],
@@ -78,9 +93,8 @@ export default function UpcomingEventsCarousel() {
     refetchInterval: REFRESH_MS,
   });
   // This sits in both shells: an unexpected response must hide the carousel, never break the page.
-  const loadedAt = eventsQuery.dataUpdatedAt;
   const events = (Array.isArray(eventsQuery.data) ? eventsQuery.data : [])
-    .filter((event) => notStarted(event, loadedAt));
+    .filter((event) => notStarted(event, now));
 
   const rsvpQueries = useQueries({
     queries: events.map((event) => ({
@@ -100,7 +114,10 @@ export default function UpcomingEventsCarousel() {
         rsvpShowOnProfile: session?.preferences?.showEventRsvpsOnProfile ?? true,
       });
     },
+    onMutate: (eventId) => settleAttend(eventId, 'pending'),
+    onError: (_error, eventId) => settleAttend(eventId, 'failed'),
     onSuccess: (rsvp, eventId) => {
+      settleAttend(eventId);
       queryClient.setQueryData<SocialRsvpDTO | null>(eventRsvpQueryKeys.mine(eventId, session?.partyId), rsvp);
       void queryClient.invalidateQueries({ queryKey: eventRsvpQueryKeys.summary(eventId) });
       if (session?.partyId) {
@@ -144,8 +161,8 @@ export default function UpcomingEventsCarousel() {
           // Until the viewer's answer is known, one tap could overwrite a "maybe" with "going".
           const rsvpKnown = rsvpQuery?.isSuccess === true && !rsvpQuery.isFetching;
           const status = rsvpQuery?.data?.rsvpStatus;
-          const pending = attend.isPending && attend.variables === event.publicUpcomingEventId;
-          const failed = attend.isError && attend.variables === event.publicUpcomingEventId;
+          const pending = attendState[event.publicUpcomingEventId] === 'pending';
+          const failed = attendState[event.publicUpcomingEventId] === 'failed';
           return (
             <Card key={event.publicUpcomingEventId} role="listitem" variant="outlined" sx={{ scrollSnapAlign: 'start' }}>
               <CardActionArea component={RouterLink} to={`/eventos/${encodeURIComponent(event.publicUpcomingEventId)}`}>

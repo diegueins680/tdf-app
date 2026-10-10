@@ -244,8 +244,15 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
+                  {/* The main navigation already shows these from md up; here they serve phones only. */}
                   {PUBLIC_NAV_ITEMS.map((item) => (
-                    <MenuItem key={item.to} component={RouterLink} to={item.to} onClick={() => setMenuAnchor(null)}>
+                    <MenuItem
+                      key={item.to}
+                      component={RouterLink}
+                      to={item.to}
+                      onClick={() => setMenuAnchor(null)}
+                      sx={{ display: { md: 'none' } }}
+                    >
                       {t(item.label)}
                     </MenuItem>
                   ))}
