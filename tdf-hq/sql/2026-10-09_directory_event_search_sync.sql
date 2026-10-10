@@ -19,6 +19,9 @@ AS $$
   SELECT CASE WHEN count(*) = 1 THEN (array_agg(city.id))[1] END
   FROM city_reference city
   WHERE nullif(btrim(city_text), '') IS NOT NULL
+    -- Only cities users can select: a retired namesake must neither be
+    -- assigned nor make the active city ambiguous.
+    AND city.active
     AND directory_normalize_text(city.name_es) = directory_normalize_text(city_text);
 $$;
 
@@ -324,6 +327,9 @@ AS $$
 DECLARE
   target BIGINT;
 BEGIN
+  -- Taken before the first document write, the order every sync uses, so a
+  -- standalone recovery refresh cannot deadlock with a concurrent sync.
+  PERFORM directory_search_sync_lock();
   -- Documents of events that left the public projection stay cached and are
   -- hidden at read time; documents whose source row is gone are removed.
   DELETE FROM directory_search_document document

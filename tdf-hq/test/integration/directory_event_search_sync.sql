@@ -35,6 +35,11 @@ BEGIN
   WHERE state.active LIMIT 1;
   SELECT id INTO event_type FROM event_type ORDER BY sort_order, id LIMIT 1;
 
+  -- 0. A retired namesake neither wins nor makes the active city ambiguous.
+  INSERT INTO city_reference (country_id, code, name_es, name_en, source_name, active)
+  SELECT country_id, 'SYNTHETIC-RETIRED-QUITO', name_es, name_en, 'synthetic-sync-test', FALSE
+  FROM city_reference WHERE id = quito;
+
   -- 1. A venue created with free-text city gets the unambiguous city id.
   INSERT INTO venue (name, city, created_at, updated_at)
   VALUES ('Synthetic sync venue', 'quito', now(), now())
