@@ -953,5 +953,28 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
 
+# Two real sessions: a venue rename that overlaps an uncommitted event edit
+# must not overwrite the event's newer projection with an older snapshot.
+psql_exec >/dev/null <<'SQL'
+INSERT INTO venue (name, city, created_at, updated_at) VALUES ('Race venue', 'Quito', now(), now());
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+  workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Race event', 'Synthetic lineup', (SELECT id FROM venue WHERE name = 'Race venue'),
+  (SELECT id FROM event_type ORDER BY sort_order, id LIMIT 1),
+  (SELECT state.id FROM workflow_state state
+     JOIN workflow_state_capability capability ON capability.state_id = state.id
+      AND capability.capability_code = 'public-listable' AND capability.enabled
+    WHERE state.active LIMIT 1),
+  'America/Guayaquil', now() + interval '1 day', now() + interval '2 days', '{"isPublic": true}', now(), now();
+SQL
+psql_exec -c "BEGIN; UPDATE social_event SET title = 'Race event edited', updated_at = now() WHERE title = 'Race event'; SELECT pg_sleep(3); COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "UPDATE venue SET name = 'Race venue renamed', updated_at = now() WHERE name = 'Race venue';" >/dev/null
+wait "$race_event_session"
+race_projection=$(psql_exec -Atc "SELECT title || ' @ ' || subtitle FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = (SELECT id::text FROM social_event WHERE title LIKE 'Race event%');")
+test "$race_projection" = "Race event edited @ Race venue renamed"
+psql_exec -c "DELETE FROM social_event WHERE title LIKE 'Race event%'; DELETE FROM venue WHERE name LIKE 'Race venue%';" >/dev/null
+
 psql_file "$TDF_DIRECTORY_ROOT/scripts/__tests__/fixtures/artist-management-claim.sql"
 echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, event search sync, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
