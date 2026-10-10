@@ -7101,7 +7101,7 @@
     {
       "id": "SURFACE-b09be6a71cc01631",
       "path": "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-      "sha256": "d67f9dab1f18dc3adf25cc584f0f79d5382681686782d15542a4d4621e19ac6a",
+      "sha256": "a513b420cea592d3fcbabfbfa95ccb7d7a10ca9cd6ec322ecafc3ec897cf7fa0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7905,7 +7905,7 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "aa5242c86d81fd37529b80f1dd5ec507d58288fe8fc7547f80dd1530c59233e8",
+      "sha256": "9b857c212b2dc05869223845ecd988c7a812e0af0266458bb88f72cad9dc187b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8703,7 +8703,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
+      "sha256": "6b77c1ba4e9236b280e90664ed22590ffa8fef6b2b1e89b2dc224059be44a4ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9765,7 +9765,7 @@
     {
       "id": "SURFACE-3bd1e7eea819bcf8",
       "path": "tdf-hq-ui/src/utils/checkoutStripe.ts",
-      "sha256": "6767472727b065ba0664d9f4c13536708d26cf07da64b9391170d7157c584cdd",
+      "sha256": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
