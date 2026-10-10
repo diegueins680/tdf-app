@@ -1,5 +1,6 @@
 import {
   buildLoginRedirectPath,
+  COMMUNITY_LANDING_PATH,
   normalizeOnboardingIntent,
   pickLandingPath,
   buildArtistInvitationLink,
@@ -88,6 +89,43 @@ describe('pickLandingPath', () => {
     });
 
     expect(failures).toEqual([]);
+  });
+});
+
+describe('Comunidad default landing and return-path intent', () => {
+  it.each([
+    [['customer'], []],
+    [['fan'], []],
+    [['Admin'], ['admin']],
+    [['artist'], []],
+    [[], []],
+  ])('lands %j on Comunidad when there is no intent or return path', (roles, modules) => {
+    expect(resolvePostAuthPath(null, roles, modules, null)).toBe(COMMUNITY_LANDING_PATH);
+    expect(COMMUNITY_LANDING_PATH).toBe('/fans');
+  });
+
+  it('returns to the interrupted public action instead of Comunidad', () => {
+    expect(resolvePostAuthPath(null, ['customer'], [], '/curso/produccion-musical?inscribirme=1'))
+      .toBe('/curso/produccion-musical?inscribirme=1');
+    expect(resolvePostAuthPath(null, ['customer'], [], '/marketplace?listing=12')).toBe('/marketplace?listing=12');
+    expect(resolvePostAuthPath(null, ['customer'], [], '/eventos/141')).toBe('/eventos/141');
+  });
+
+  it.each([
+    'https://evil.example/phish',
+    '//evil.example/phish',
+    '/\\evil.example',
+    'javascript:alert(1)',
+    '/login?redirect=/fans',
+    ' ',
+  ])('rejects unsafe return path %j and falls back to Comunidad', (target) => {
+    expect(resolvePostAuthPath(null, ['customer'], [], target)).toBe(COMMUNITY_LANDING_PATH);
+  });
+
+  it('reads returnTo as an alias of redirect with the same validation', () => {
+    expect(readSafeRedirectPath('?returnTo=%2Fcurso%2Fx%3Finscribirme%3D1')).toBe('/curso/x?inscribirme=1');
+    expect(readSafeRedirectPath('?returnTo=https%3A%2F%2Fevil.example')).toBeNull();
+    expect(readSafeRedirectPath('?redirect=%2Ffans&returnTo=%2Fmarketplace')).toBe('/fans');
   });
 });
 

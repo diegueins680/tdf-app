@@ -47,6 +47,17 @@ const shouldReloadForChunkError = () => {
   }
 };
 
+/**
+ * Reload into the current deploy once per commit after a stale-chunk failure.
+ * Returns false when a reload was already attempted, so callers surface the
+ * error instead of looping.
+ */
+export function reloadOnceForChunkError(): boolean {
+  if (!shouldReloadForChunkError()) return false;
+  window.location.reload();
+  return true;
+}
+
 export function lazyWithReload<T extends LazyComponent>(
   factory: () => Promise<{ default: T }>,
 ) {
