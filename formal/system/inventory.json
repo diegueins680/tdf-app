@@ -12847,7 +12847,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "a144f227f6e85cd7efd6702c57cdc6259797229b30510b27c53e3b8944659ba1",
+      "sha256": "3cee06e4be99c39dbc0993747fcd1229fc2286d062d814858cddf83b9caf1afc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14893,7 +14893,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "9c6c65dd1e760738556445e50b979370764fcff045111d5469408c8200e54c07",
+      "sha256": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
       "semanticConformance": "not-established-by-discovery"
     },
     {

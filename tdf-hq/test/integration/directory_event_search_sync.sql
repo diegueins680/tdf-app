@@ -156,9 +156,16 @@ BEGIN
   IF EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text) THEN
     RAISE EXCEPTION 'suppressed event is publicly searchable';
   END IF;
+  IF (SELECT source_status FROM directory_search_document WHERE entity_kind = 'venue' AND entity_id = free_text_venue::text)
+     IS DISTINCT FROM 'paused' THEN
+    RAISE EXCEPTION 'suppressing a venue''s only public event left the venue document published';
+  END IF;
   DELETE FROM external_event_ref WHERE provider = 'synthetic-sync-provider';
   IF NOT EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text) THEN
     RAISE EXCEPTION 'unsuppressed event is not publicly searchable';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind = 'venue' AND entity_id = free_text_venue::text) THEN
+    RAISE EXCEPTION 'lifting suppression did not restore the venue document';
   END IF;
 
   -- 7a. Moving a venue to another city moves an inferred city id with it,
@@ -224,6 +231,10 @@ BEGIN
   DELETE FROM social_event WHERE id = synth_event_id;
   IF EXISTS (SELECT 1 FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = synth_event_id::text) THEN
     RAISE EXCEPTION 'deleted event stayed indexed';
+  END IF;
+  IF (SELECT source_status FROM directory_search_document WHERE entity_kind = 'venue' AND entity_id = free_text_venue::text)
+     IS DISTINCT FROM 'paused' THEN
+    RAISE EXCEPTION 'deleting a venue''s last public event left the venue document published';
   END IF;
 
   -- 9. The full rebuild agrees with the incremental projection.

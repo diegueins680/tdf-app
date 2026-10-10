@@ -233,6 +233,8 @@ BEGIN
     PERFORM directory_search_sync_lock();
     DELETE FROM directory_search_document
     WHERE entity_kind = 'event' AND entity_id = OLD.id::text;
+    -- Its venue may have lost its last public event.
+    PERFORM directory_sync_venue_search(OLD.venue_id);
     RETURN NULL;
   END IF;
   IF TG_OP = 'UPDATE' AND NEW.venue_id IS DISTINCT FROM OLD.venue_id THEN
@@ -290,11 +292,15 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 BEGIN
+  -- Suppression changes whether the event is public, and with it whether its
+  -- venue is listable, so both documents are synced.
   IF TG_OP IN ('UPDATE', 'DELETE') THEN
     PERFORM directory_sync_event_search(OLD.event_id);
+    PERFORM directory_sync_venue_search((SELECT venue_id FROM social_event WHERE id = OLD.event_id));
   END IF;
   IF TG_OP IN ('INSERT', 'UPDATE') AND NEW.event_id IS DISTINCT FROM OLD.event_id THEN
     PERFORM directory_sync_event_search(NEW.event_id);
+    PERFORM directory_sync_venue_search((SELECT venue_id FROM social_event WHERE id = NEW.event_id));
   END IF;
   RETURN NULL;
 END;
