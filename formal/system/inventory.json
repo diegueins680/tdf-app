@@ -12847,7 +12847,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
+      "sha256": "b6ed8d7629cdc4799c0f6e87c041b77986282e15d046e9906bed03c70a7e162b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14893,7 +14893,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
+      "sha256": "f7fda6bdeba3e9158a24db20718455b3567552397329e2d7e7f51f7462dd5036",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18358,7 +18358,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "f3f513062e1098be6f4a7ff7af4e17a3e309eafc011e74fdae9062bfb2757eaf",
+      "sha256": "d953085a1957a5deae9bebb551593359b8ddf9c649a180b359a0b3c7f6b92838",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

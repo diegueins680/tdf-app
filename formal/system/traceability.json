@@ -9554,7 +9554,7 @@
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b6ed8d7629cdc4799c0f6e87c041b77986282e15d046e9906bed03c70a7e162b",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -9701,7 +9701,7 @@
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
     "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql": "94e153abc6b0988aea61c282940760d6901e1bf740fa88b1547766bc30c3960e",
     "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
-    "tdf-hq/test/integration/directory_event_search_sync.sql": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
+    "tdf-hq/test/integration/directory_event_search_sync.sql": "f7fda6bdeba3e9158a24db20718455b3567552397329e2d7e7f51f7462dd5036",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
@@ -31532,7 +31532,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
+      "sha256": "b6ed8d7629cdc4799c0f6e87c041b77986282e15d046e9906bed03c70a7e162b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35094,7 +35094,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
+      "sha256": "f7fda6bdeba3e9158a24db20718455b3567552397329e2d7e7f51f7462dd5036",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
