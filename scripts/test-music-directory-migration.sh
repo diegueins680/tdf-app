@@ -974,6 +974,14 @@ psql_exec -c "UPDATE venue SET name = 'Race venue renamed', updated_at = now() W
 wait "$race_event_session"
 race_projection=$(psql_exec -Atc "SELECT title || ' @ ' || subtitle FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = (SELECT id::text FROM social_event WHERE title LIKE 'Race event%');")
 test "$race_projection" = "Race event edited @ Race venue renamed"
+# Same overlap with a deletion: the deleted event's document must stay gone.
+race_event_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event edited';")
+psql_exec -c "BEGIN; DELETE FROM social_event WHERE id = $race_event_id; SELECT pg_sleep(3); COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "UPDATE venue SET name = 'Race venue renamed twice', updated_at = now() WHERE name = 'Race venue renamed';" >/dev/null
+wait "$race_event_session"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = '$race_event_id';")" = "0"
 psql_exec -c "DELETE FROM social_event WHERE title LIKE 'Race event%'; DELETE FROM venue WHERE name LIKE 'Race venue%';" >/dev/null
 
 psql_file "$TDF_DIRECTORY_ROOT/scripts/__tests__/fixtures/artist-management-claim.sql"
