@@ -1158,17 +1158,18 @@
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
       "ambiguity": [
-        "This correction does not establish authorization conformance for every feature in the registry."
+        "This correction does not establish authorization conformance for every feature in the registry.",
+        "scripts/audit-feature-registry.mjs runs only as npm run audit:features, not in CI, which let registry drift reach main."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Targeted registry tests and route audit pass; full candidate and release correspondence pending."
+        "reason": "Web registry matches served routes; the pinned Mobile generated registry predates the 2026-10-06 music registry entries and needs a TDF-mobile regeneration with the pin bump. The audit is not yet a CI gate."
       },
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
-      "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      "evidence": "2026-10-09 on main 7831b69: scripts/audit-feature-registry.mjs failed with 3 issues: the music release studio web routes /label/releases/nuevo and /label/releases/:releaseId/versions/:versionId were unregistered, and the generated mobile registry was stale. The routes are now aliases of label.releases (same Admin/StudioManager plus Admin-module predicates); the audit then reports only the stale mobile registry. Web featureRegistry tests 136/136."
     },
     {
       "authority": "audit security correction",

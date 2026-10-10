@@ -1473,6 +1473,7 @@
       "id": "label.releases",
       "parentId": "label.artists",
       "webRoute": "/label/releases",
+      "aliases": ["/label/releases/nuevo", "/label/releases/:releaseId/versions/:versionId"],
       "routeType": "primary",
       "classification": "primary-destination",
       "label": { "es": "Lanzamientos", "en": "Releases" },

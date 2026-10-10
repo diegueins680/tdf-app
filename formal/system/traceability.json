@@ -1159,17 +1159,18 @@
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
       "ambiguity": [
-        "This correction does not establish authorization conformance for every feature in the registry."
+        "This correction does not establish authorization conformance for every feature in the registry.",
+        "scripts/audit-feature-registry.mjs runs only as npm run audit:features, not in CI, which let registry drift reach main."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Targeted registry tests and route audit pass; full candidate and release correspondence pending."
+        "reason": "Web registry matches served routes; the pinned Mobile generated registry predates the 2026-10-06 music registry entries and needs a TDF-mobile regeneration with the pin bump. The audit is not yet a CI gate."
       },
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
-      "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      "evidence": "2026-10-09 on main 7831b69: scripts/audit-feature-registry.mjs failed with 3 issues: the music release studio web routes /label/releases/nuevo and /label/releases/:releaseId/versions/:versionId were unregistered, and the generated mobile registry was stale. The routes are now aliases of label.releases (same Admin/StudioManager plus Admin-module predicates); the audit then reports only the stale mobile registry. Web featureRegistry tests 136/136."
     },
     {
       "authority": "audit security correction",
@@ -9214,7 +9215,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+    "tdf-hq/assets/feature-registry.json": "4ecca90f12aff4a50f8ef55a24acea596ef205f428781f3771cd1049e091326f",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
     "tdf-hq/docs/openapi/api.yaml": "4e9f4e21af264c007cfd5e5572c90edb97ad39ddff79d6e10f42e21a0d031ad6",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
@@ -27459,7 +27460,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+      "sha256": "4ecca90f12aff4a50f8ef55a24acea596ef205f428781f3771cd1049e091326f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40614,7 +40615,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ef073197113f2e3efaf6ff54b49b7fcae3cc469983835db32c301839ec0239df",
+      "sourceSha256": "6331b9abbb3ef84e888451b2ebd9fe82d3c39cbf773918c2d3e957c64cd59e4a",
       "definition": {
         "states": [
           "absent",
