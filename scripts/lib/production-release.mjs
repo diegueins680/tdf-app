@@ -683,6 +683,30 @@ ROLLBACK;
 `.trim();
 }
 
+// Every music SQL function the backend or a release worker calls directly, by exact
+// argument signature. A dropped or mis-signed function would otherwise surface only
+// as undefined_function at request time. The release test derives the called set
+// from source and fails if a newly called function is missing here.
+export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
+  'music_can(bigint,bigint,text)',
+  'music_check_ddex_export(uuid)',
+  'music_check_ddex_operation(uuid,uuid,uuid,text)',
+  'music_check_submission(uuid)',
+  'music_create_release_correction(uuid,uuid,bigint)',
+  'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_preview_matches(uuid)',
+  'music_preview_spec(bigint,bigint,bigint)',
+  'music_public_asset_accessible(uuid,text)',
+  'music_publish_due(integer)',
+  'music_queue_preview_jobs(integer)',
+  'music_rebuild_daily_metrics(date)',
+  'music_record_playback_event(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)',
+  'music_refresh_validation_flags(uuid)',
+  'music_scan_legacy_release_sanitation(bigint,integer)',
+  'music_version_parties(uuid)',
+  'music_withdraw_due(integer)',
+]);
+
 export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
   return `${header}DO $verify$
@@ -2586,11 +2610,13 @@ BEGIN
       RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
     END IF;
   END LOOP;
-  IF to_regprocedure('music_public_asset_accessible(uuid,text)') IS NULL
-     OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_record_playback_event'
-       AND pronamespace='public'::regnamespace) THEN
-    RAISE EXCEPTION 'Music release access and playback functions are missing';
-  END IF;
+  FOREACH music_table IN ARRAY ARRAY[
+    ${MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => `'${signature}'`).join(',\n    ')}
+  ] LOOP
+    IF to_regprocedure(music_table) IS NULL THEN
+      RAISE EXCEPTION 'Music runtime function % is missing', music_table;
+    END IF;
+  END LOOP;
   IF to_regclass('public.artist_invitation_link') IS NULL
      OR NOT EXISTS (
        SELECT 1 FROM pg_constraint
