@@ -566,7 +566,7 @@
       "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
     },
     {
-      "id": "AUTHORITY-053",
+      "id": "AUTHORITY-054",
       "sources": [
         "formal/system/requirements.json#AUTH-ACCESS-PROVISION-001",
         "tdf-hq/src/TDF/Server.hs",

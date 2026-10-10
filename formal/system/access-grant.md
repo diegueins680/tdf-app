@@ -26,7 +26,7 @@ change is published as a security revision with an audit event. The model
 separates the two paths. It checks that no *automatic* path reactivates a
 revoked assignment, and it allows reviewed restoration (review finding on #529).
 
-## Authority correction (AUTHORITY-053)
+## Authority correction (AUTHORITY-054)
 
 The previous statement said only an administrator distinct from the requester
 may approve `artist.onboarding:create`. Since the self-service decision, new
