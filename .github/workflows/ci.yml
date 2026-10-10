@@ -445,6 +445,14 @@ jobs:
           bash scripts/test-ticket-admission.sh
           node --test scripts/__tests__/ticket-admission-model.test.mjs
 
+      - name: Verify staff bank transfer review on the production schema
+        env:
+          PGPASSWORD: postgres
+          TICKET_MANUAL_REVIEW_TEST_DSN: postgresql://postgres:postgres@postgres:5432/tdf_ticket_manual_review_test
+        run: |
+          createdb -h postgres -U postgres tdf_ticket_manual_review_test
+          bash scripts/test-ticket-manual-review.sh
+
       - name: Verify durable ticket confirmations and concurrent workers
         env:
           PGPASSWORD: postgres

@@ -28,7 +28,24 @@ captures/refunds remain accepted. No monetary limit or provider assumption was n
 
 Ledger accumulation now converts each Int64 entry to `Integer` before grouping/summing.
 The old `[M,M,2]` false balance and large valid compensating sums are regressions. This helper
-has no discovered runtime caller; SQL ledger correctness is a separate open obligation.
+has no discovered runtime caller.
+
+The runtime authority is `commerce_validate_ledger_posting`
+(`2026-08-13_unified_checkout_core.sql`): on `draft -> posted` it groups entries by
+currency and rejects any nonzero `SUM(amount_minor)`. PostgreSQL sums `bigint` as
+`numeric`, so the comparison is exact. All three live writers (`CheckoutStore`
+capture posting, `RefundStore` refund posting, the marketplace deposit settlement
+function) insert `draft`, add entries, then post. On 2026-10-09
+`tdf-hq/test/integration/ledger_posting_balance.sql` ran on the production schema
+snapshot plus the migration batch: balanced, unbalanced, cross-currency, the
+`[M,M,2]` modular wrap, extreme compensating values and empty postings behave as
+required. With the trigger disabled the test fails.
+
+Open enforcement gaps, probed on the same schema: a transaction inserted directly
+as `posted` is never validated, and an entry inserted into an already posted
+transaction is accepted (entry immutability covers only `UPDATE`/`DELETE`). No
+current writer does either, so live postings conform; the database alone does not
+yet guarantee it. Closing this needs an additive migration and a manifest entry.
 
 ## Machine-checked claims
 
