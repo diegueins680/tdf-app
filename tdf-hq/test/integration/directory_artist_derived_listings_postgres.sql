@@ -423,6 +423,8 @@ DECLARE
   event_id BIGINT;
   version_before BIGINT;
 BEGIN
+  -- The event/venue sync runs at commit; assert it per statement here.
+  SET CONSTRAINTS ALL IMMEDIATE;
   INSERT INTO venue (name, city, contact, created_at, updated_at)
   VALUES ('Imaged venue', 'Quito', '{"imageUrl":"https://cdn.example.test/venue-card.jpg"}', now(), now())
   RETURNING id INTO venue_id;

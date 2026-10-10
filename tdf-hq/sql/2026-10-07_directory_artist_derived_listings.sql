@@ -785,12 +785,8 @@ BEGIN
   IF target_venue_id IS NULL THEN
     RETURN;
   END IF;
-  -- Event and venue edits both rewrite these documents. Serialize them so the
-  -- statement below reads its sources after any concurrent sync committed
-  -- (READ COMMITTED takes a fresh snapshot once the lock is granted);
-  -- otherwise a projection computed before a concurrent edit could overwrite
-  -- the newer one. No source row is locked, so the two paths cannot deadlock.
-  PERFORM pg_advisory_xact_lock(hashtextextended('directory_event_venue_search_sync', 0));
+  -- The statement below reads its sources after any concurrent sync committed.
+  PERFORM directory_search_sync_lock();
   IF NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id = target_venue_id) THEN
     RETURN;
   END IF;
