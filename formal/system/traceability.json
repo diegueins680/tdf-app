@@ -9548,9 +9548,9 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_artist_invitation_links.sql": "b0e80b3b2dbb884460e40bef8e9c9a29fe0ef3ef3059fc998bb531fde179c3a2",
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "b6f92738179d87445b01ea8fc9bf683d0aa1f651d2acdd1e57d27c29016fd91b",
+    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
     "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": "7ff1ed1508d2084eb2c869919f321fa1da1e9b70b122c583ca3e2a5e9dd92508",
-    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "586f44c90cac05d8ef1132b8ec9e35543e8df9413aef7a46980a515490fa28e2",
+    "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "4c7d6b4e1c25ff363ca9fc2363f1ec5df5d1360c3ec9778e5fedf9f0d96087a0",
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
@@ -31460,7 +31460,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "b6f92738179d87445b01ea8fc9bf683d0aa1f651d2acdd1e57d27c29016fd91b",
+      "sha256": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31484,7 +31484,7 @@
     {
       "id": "SURFACE-a2857b80564644cb",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-      "sha256": "586f44c90cac05d8ef1132b8ec9e35543e8df9413aef7a46980a515490fa28e2",
+      "sha256": "4c7d6b4e1c25ff363ca9fc2363f1ec5df5d1360c3ec9778e5fedf9f0d96087a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -12811,7 +12811,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "b6f92738179d87445b01ea8fc9bf683d0aa1f651d2acdd1e57d27c29016fd91b",
+      "sha256": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12823,7 +12823,7 @@
     {
       "id": "SURFACE-a2857b80564644cb",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
-      "sha256": "586f44c90cac05d8ef1132b8ec9e35543e8df9413aef7a46980a515490fa28e2",
+      "sha256": "4c7d6b4e1c25ff363ca9fc2363f1ec5df5d1360c3ec9778e5fedf9f0d96087a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
