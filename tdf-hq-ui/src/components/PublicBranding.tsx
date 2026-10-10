@@ -11,6 +11,7 @@ import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import InstagramEntryLinks from './InstagramEntryLinks';
 import SessionMenu from './SessionMenu';
+import UpcomingEventsCarousel, { EVENTS_PATH } from './events/UpcomingEventsCarousel';
 import MarketplaceCartButton from './MarketplaceCartButton';
 import { useSession } from '../session/SessionContext';
 import {
@@ -21,6 +22,7 @@ import {
 
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
+  { label: 'authEntry.events', to: EVENTS_PATH },
   { label: 'TDF', to: '/tdf' },
   { label: 'app.title', to: '/app' },
   { label: 'authEntry.services', to: '/comercio' },
@@ -242,8 +244,15 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
+                  {/* The main navigation already shows these from md up; here they serve phones only. */}
                   {PUBLIC_NAV_ITEMS.map((item) => (
-                    <MenuItem key={item.to} component={RouterLink} to={item.to} onClick={() => setMenuAnchor(null)}>
+                    <MenuItem
+                      key={item.to}
+                      component={RouterLink}
+                      to={item.to}
+                      onClick={() => setMenuAnchor(null)}
+                      sx={{ display: { md: 'none' } }}
+                    >
                       {t(item.label)}
                     </MenuItem>
                   ))}
@@ -268,6 +277,7 @@ export default function PublicBranding({
       >
         {location.pathname !== '/cuenta/eliminar' && <SignupMobileInvitation />}
         {showInstagramEntryLinks && <InstagramEntryLinks />}
+        {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && <UpcomingEventsCarousel />}
         {children}
         {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
         {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}

@@ -8702,6 +8702,83 @@
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
+      "id": "EVT-DISCOVERY-001",
+      "title": "One events entry in navigation and an upcoming-events carousel after login",
+      "domain": "EVT",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
+      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
+      "source": "tdf-hq-ui navigation and shells",
+      "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Signed-in session for the carousel"
+      ],
+      "inputs": [
+        "GET /social-events/upcoming",
+        "GET /social-events/events/{id}/rsvp",
+        "PUT /social-events/events/{id}/rsvp"
+      ],
+      "state": {
+        "carousel": [
+          "hidden",
+          "visible",
+          "dismissed for session"
+        ]
+      },
+      "allowedTransitions": [
+        "visible -> dismissed for session",
+        "no RSVP -> accepted via one tap"
+      ],
+      "forbiddenTransitions": [
+        "Carousel shown to anonymous visitors",
+        "Second events entry in the public navigation"
+      ],
+      "effects": [
+        "Viewer's RSVP upserted with their showEventRsvpsOnProfile preference"
+      ],
+      "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
+      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
+      "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
+      "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
+      "observability": "None beyond existing RSVP and API telemetry.",
+      "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests",
+      "evidence": "Local Jest execution",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with mocked APIs; not yet exercised against production data.",
+      "ambiguity": [
+        "\"Eventos descubiertos\" remains a separate staff discovery tool in the sidebar."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "LEGAL-DISCLOSURE-001",
       "title": "Legal text is collapsed by default without weakening consent",
       "statement": "Terms, policies, consent texts and disclaimers render inside a shared disclosure that starts collapsed, can be opened to read the complete text before acceptance, and keeps every required acceptance control visible, associated with its documents and enforced exactly as before.",
