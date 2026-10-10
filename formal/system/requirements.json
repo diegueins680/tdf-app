@@ -3514,7 +3514,7 @@
       ],
       "formalModels": [],
       "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
-      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "evidence": "2026-10-10 deployed api.tdfrecords.net (backend 7ab3444): GET /trials/v1/subjects returned 200 with 3 subjects, none inactive; GET /trials/v1/subjects/catalog (with and without includeInactive=true) returned 401 anonymously. The booking conformance suite (619 checks, 0 failures, 2026-10-09) covers the per-role catalog cases.",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
@@ -3523,7 +3523,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+        "reason": "Deployed public/protected split and runtime role checks pass; authenticated deployed catalog access was not exercised."
       },
       "id": "COURSE-SUBJECT-001",
       "title": "Separate public and managed trial subject catalogs",
@@ -3710,13 +3710,13 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Executable declaration controls exist; final rebuilt candidate and broader deferred-domain conformance remain outstanding."
+        "reason": "Deferred operations are absent from the deployed API and enumerated in api-availability.json; POST/PUT operations were not probed."
       },
       "contract": "formal/system/compiled-api-boundary.md",
       "authority": "AUTHORITY-026 preserves the existing explicitly local-only domain scope.",
       "property": "Every documented unmounted typed operation is explicitly deferred; no deferred operation is mounted.",
       "verification": "Compiled surface gate, controlled mounting/omission/stale-policy mutations and requirement/provenance checks.",
-      "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
+      "evidence": "2026-10-10 deployed api.tdfrecords.net: all 12 deferred GET merchandise-reputation operations returned 404. compiled-api-surface and ci-pipeline tests 39/39 and scripts/test-specification-conformance.py passed on main 7831b69."
     },
     {
       "id": "REC-DDEX-001",
@@ -7545,7 +7545,7 @@
         "tdf-hq-ui/src/vite-env.d.ts"
       ],
       "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
-      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
+      "evidence": "2026-10-10 deployed api.tdfrecords.net: GET /public/whatsapp/consent returned 410 with and without a phone query, so consent state is not disclosed. ServerSpec consent cases ran in the backend Hspec suite (3,918 examples, 0 failures). Production has no WhatsApp Cloud API configuration, so confirmation messaging is dormant; consent POSTs were not sent.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7606,7 +7606,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
+        "reason": "Retired lookup verified on the deployed API and handler logic tested locally; the pending-request, confirmation and opt-out writes were not exercised in production."
       }
     },
     {
