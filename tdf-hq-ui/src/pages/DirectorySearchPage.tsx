@@ -7,7 +7,6 @@ import {
   Card,
   CardActions,
   CardContent,
-  CardMedia,
   Chip,
   CircularProgress,
   Container,
@@ -52,19 +51,7 @@ import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
-import { API_BASE_URL } from '../api/client';
-
-const resolveImageUrl = (value: string | null | undefined): string | undefined => {
-  if (!value) return undefined;
-  try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return undefined; }
-};
-
-const DIRECTORY_IMAGE_FALLBACKS: Record<DirectoryEntityType, string> = {
-  profile: '/artist-fallback.svg',
-  classified: '/directory-fallback.svg',
-  event: '/event-fallback.svg',
-  venue: '/directory-fallback.svg',
-};
+import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
 
 const CITY_STORAGE_KEY = 'tdf.directory.cityId';
 const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
@@ -448,8 +435,7 @@ function ResultCard({
 }) {
   const { t } = useTranslation();
   const path = resultPath(item);
-  const fallbackImageUrl = new URL(DIRECTORY_IMAGE_FALLBACKS[item.type], window.location.origin).toString();
-  const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
+  const sourceProfile = item.sourceProfile ?? null;
   const favorite = useMutation({
     mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
       if (!isActiveParty(ownerPartyId)) throw new Error(t('directorySearch.sessionChanged'));
@@ -506,21 +492,20 @@ function ResultCard({
         overflow: 'hidden',
       }}
     >
-      <CardMedia
-        component="img"
-        image={imageUrl}
-        alt={item.imageUrl ? t('directorySearch.photo', { title: item.title }) : t('directorySearch.fallbackPhoto', { title: item.title })}
-        loading="lazy"
-        onError={(event) => {
-          if (event.currentTarget.src !== fallbackImageUrl) event.currentTarget.src = fallbackImageUrl;
-        }}
+      <DirectoryPreviewImage
+        kind={item.type}
+        imageUrl={item.imageUrl}
+        alt={t('directorySearch.photo', { title: item.title })}
+        fallbackAlt={t('directorySearch.fallbackPhoto', { title: item.title })}
+        width={440}
+        height={440}
+        sizes={layout === 'grid' ? '(min-width: 900px) 33vw, 100vw' : '(min-width: 600px) 220px, 100vw'}
         sx={{
           width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
-          height: layout === 'grid' ? 220 : { xs: 240, sm: 'auto' },
+          height: layout === 'grid' ? 220 : { xs: 240, sm: 220 },
+          aspectRatio: 'auto',
+          alignSelf: layout === 'list' ? { sm: 'stretch' } : undefined,
           minHeight: layout === 'list' ? { sm: 220 } : undefined,
-          objectFit: 'cover',
-          objectPosition: 'center',
-          flexShrink: 0,
         }}
       />
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0 }}>
@@ -549,7 +534,11 @@ function ResultCard({
           </Stack>
         </CardContent>
         <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
-          <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
+          {sourceProfile ? (
+            <Button component={RouterLink} to={sourceProfile.canonicalUrl} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: 'profile', entity_id: sourceProfile.id, sponsored: item.sponsored, via: 'artist_listing' })}>{t('directorySearch.viewProfile')}</Button>
+          ) : (
+            <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
+          )}
           <Button onClick={() => { void share(); }} disabled={shareStatus === 'pending'} aria-busy={shareStatus === 'pending' || undefined} startIcon={<ShareIcon />}>{t(shareStatus === 'pending' ? 'directorySearch.sharePending' : 'directorySearch.share')}</Button>
           {partyId ? (
             <Button
