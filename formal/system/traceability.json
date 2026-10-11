@@ -9655,7 +9655,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "7d8f7fa6268aa6ce98192ca662cbcc27cf68fc9f11017ceb1cc11078d0b2ee44",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "2d7f7fa13a6519c13e96884290fa679ef969b952409fcc38d34be0e8518d603a",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
@@ -33685,7 +33685,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7d8f7fa6268aa6ce98192ca662cbcc27cf68fc9f11017ceb1cc11078d0b2ee44",
+      "sha256": "2d7f7fa13a6519c13e96884290fa679ef969b952409fcc38d34be0e8518d603a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
