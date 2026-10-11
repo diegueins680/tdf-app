@@ -9069,15 +9069,23 @@ requireEventManager currentParty eventRow =
         Nothing -> throwError eventWithoutOrganizerError
 
 -- The one assignment of a missing organizer. The caller has established that
--- the party may be assigned. The update applies only while the field is still
--- empty, so the database decides between simultaneous callers, and the stored
--- row, not an earlier read, decides the outcome.
+-- the party may be assigned. Whether the field is empty is judged here with the
+-- same rule as every other check (cleanMaybeText), and the update applies only
+-- while the field still holds exactly the empty value that was read, so the
+-- database decides between simultaneous callers, and the stored row, not an
+-- earlier read, decides the outcome.
 assignMissingEventOrganizer :: T.Text -> UTCTime -> SocialEventId -> SqlPersistT IO (Either ServerError SocialEvent)
 assignMissingEventOrganizer party now eventKey = do
-    rawExecute
-        "UPDATE social_event SET organizer_party_id = ?, updated_at = ? \
-        \WHERE id = ? AND (organizer_party_id IS NULL OR trim(organizer_party_id) = '')"
-        [toPersistValue party, toPersistValue now, toPersistValue eventKey]
+    before <- get eventKey
+    case before of
+        Just row | isNothing (cleanMaybeText (socialEventOrganizerPartyId row)) ->
+            rawExecute
+                "UPDATE social_event SET organizer_party_id = ?, updated_at = ? \
+                \WHERE id = ? AND organizer_party_id IS NOT DISTINCT FROM ?"
+                [ toPersistValue party, toPersistValue now, toPersistValue eventKey
+                , toPersistValue (socialEventOrganizerPartyId row)
+                ]
+        _ -> pure ()
     stored <- get eventKey
     pure $ case stored of
         Nothing -> Left err404{errBody = "Event not found"}

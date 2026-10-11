@@ -18,8 +18,9 @@ and the event-operations migration of 2026-09-14 records such events as
   refuse with their own messages.
 - A strict administrator whose edit of the event (`PUT /social-events/events/{id}`)
   is accepted becomes its organizer in the same transaction, under the event row
-  lock, through one `UPDATE … WHERE organizer_party_id IS NULL OR
-  trim(organizer_party_id) = ''` followed by a reread; the edit proceeds only if the
+  lock: the row is read, judged empty by the same rule every check uses (absent,
+  or only whitespace of any kind), written through one `UPDATE … WHERE
+  organizer_party_id IS NOT DISTINCT FROM` the empty value just read, and reread; the edit proceeds only if the
   stored organizer is then the caller. A refused edit assigns nobody.
 - Logistics access to such an event follows the recorded logistics team only
   (viewer or editor); nobody holds the owner role.
@@ -57,7 +58,7 @@ removes the behavior.
   be assigned, the write is unconditional, the outcome trusts the earlier read.
 - `tdf-hq/test/TDF/EventOrganizerSpec.hs` (`scripts/test-event-organizer.sh`,
   PostgreSQL, fully migrated schema): the organizer check refuses and leaves the row
-  untouched; a blank organizer counts as missing; eight simultaneous assignments
+  untouched; an organizer of spaces, tabs or line breaks counts as missing; eight simultaneous assignments
   admit exactly one; a late caller waits behind an uncommitted assignment and is
   then refused; an assigned organizer is kept.
 - `tdf-hq/test/TDF/Social/FollowHandlerSpec.hs` (SQLite, real handlers): the edit

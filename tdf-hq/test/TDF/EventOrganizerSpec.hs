@@ -62,6 +62,14 @@ spec = describe "event-organizer-postgresql" $ do
           refusal second `shouldBe` Just (403, "Only the event organizer can manage this event")
           organizerOf pool key `shouldReturn` Just "41"
 
+        it "treats an organizer of tabs and line breaks as missing and assigns it once" $ \pool -> do
+          (key, _) <- ownerless pool (Just "\t\n \r")
+          first <- attempt pool "41" key
+          fmap socialEventOrganizerPartyId (either (const Nothing) Just first) `shouldBe` Just (Just "41")
+          second <- attempt pool "42" key
+          refusal second `shouldBe` Just (403, "Only the event organizer can manage this event")
+          organizerOf pool key `shouldReturn` Just "41"
+
         it "admits exactly one of several simultaneous assignments" $ \pool -> do
           (key, _) <- ownerless pool Nothing
           let callers = map (T.pack . show) [51 .. 58 :: Int]
