@@ -165,7 +165,8 @@ export default function UpcomingEventsCarousel() {
           // a button that can never enable explains nothing, so the card stays a plain link to the event.
           const rsvpUnavailable = rsvpQuery?.isError === true && !rsvpQuery.isFetching;
           const pending = attendState[event.publicUpcomingEventId] === 'pending';
-          const failed = attendState[event.publicUpcomingEventId] === 'failed';
+          // An answer saved since (here or on the event page) supersedes an earlier failed tap.
+          const failed = attendState[event.publicUpcomingEventId] === 'failed' && !status;
           return (
             <Card key={event.publicUpcomingEventId} role="listitem" variant="outlined" sx={{ scrollSnapAlign: 'start' }}>
               <CardActionArea component={RouterLink} to={`/eventos/${encodeURIComponent(event.publicUpcomingEventId)}`}>

@@ -220,6 +220,31 @@ describe('UpcomingEventsCarousel', () => {
     }
   });
 
+  it('drops the failure notice once the RSVP is saved elsewhere', async () => {
+    listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
+    getRsvpMock.mockResolvedValue(null);
+    upsertMock.mockRejectedValueOnce(new Error('offline'));
+    const view = await render();
+    try {
+      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await act(async () => {
+        button(view.container, 'Asistiré')?.click();
+        for (let i = 0; i < 3; i += 1) await flush();
+      });
+      await waitFor(() => Boolean(view.container.querySelector('[role="alert"]')));
+
+      // The event page's controls write the same cache entry.
+      await act(async () => {
+        view.queryClient.setQueryData(eventRsvpQueryKeys.mine('143', 7), { rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true });
+        await flush();
+      });
+      await waitFor(() => (view.container.textContent ?? '').includes('Vas'));
+      expect(view.container.querySelector('[role="alert"]')).toBeNull();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
   it('shows an explicit decline instead of offering to overwrite it with one tap', async () => {
     listMock.mockResolvedValue([event('143', 'ELECTROETNIA')]);
     getRsvpMock.mockResolvedValue({ rsvpEventId: '143', rsvpStatus: 'declined', rsvpShowOnProfile: false });
