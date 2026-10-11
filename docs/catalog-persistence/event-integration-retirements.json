@@ -125,7 +125,7 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "66c48cc059727856b6f1",
+      "replacementId": "49d1c72ba174118670bf",
       "reason": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
       "previousReplacementId": "21babc54d68f0c44d55e",
       "currentResolution": {
