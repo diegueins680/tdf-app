@@ -123,18 +123,18 @@ it('lets admitted Android testers open Play without another request, in both lan
   await expectNoSeriousAccessibilityViolations(view.container);
 });
 
-it('uses the official store badges only where the store allows them', async () => {
+it('keeps beta channels as text links, without store badges', async () => {
   global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig() } as Response);
   mount(<Page />);
   const play = await screen.findByRole('link', { name: 'Ya tengo acceso: abrir Google Play' });
-  expect(play.querySelector('img')?.getAttribute('src')).toBe('/badges/google-play-badge-es.png');
+  expect(play.querySelector('img')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
   const testflight = await screen.findByRole('link', { name: 'Probar beta en TestFlight' });
   expect(testflight.querySelector('img')).toBeNull();
 });
 
 it('shows the App Store badge once iOS is a public App Store listing, in the page language', async () => {
-  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ios: { ...config.ios, status: 'public', url: 'https://apps.apple.com/app/id6779786470' }, android: closedConfig().android }) } as Response);
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ios: { ...config.ios, status: 'public', url: 'https://apps.apple.com/app/id6779786470' }, android: { ...config.ios, status: 'public', url: 'https://play.google.com/store/apps/details?id=com.tdf.records' } }) } as Response);
   mount(<Page />);
   fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
   const badgeSrc = (href: string) => document.querySelector(`a[href="${href}"] img`)?.getAttribute('src');
@@ -145,7 +145,6 @@ it('shows the App Store badge once iOS is a public App Store listing, in the pag
   await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
   await act(async () => { await i18n.changeLanguage('fr'); });
   await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
-  expect(screen.getByRole('link', { name: 'I already have access: open Google Play' })).toBeTruthy();
 });
 
 it.each(['ios', 'android'] as const)('keeps the %s pre-order link as text instead of a download badge', async platform => {

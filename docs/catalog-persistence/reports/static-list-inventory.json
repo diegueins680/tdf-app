@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-11T16:12:28.226Z",
+  "generatedAt": "2026-10-11T16:22:48.765Z",
   "repositoryRoot": ".",
   "filesScanned": 2243,
   "candidateCount": 1320,
@@ -36581,7 +36581,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 331,
+      "consumerCount": 332,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -36680,11 +36680,11 @@
         "tdf-hq-ui/src/pages/ManualPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
         "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
         "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx",
-        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -36861,7 +36861,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 337,
+      "consumerCount": 338,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -36961,10 +36961,10 @@
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
         "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
         "tdf-hq-ui/src/pages/MusicLibraryPage.tsx",
-        "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx",
-        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx"
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
