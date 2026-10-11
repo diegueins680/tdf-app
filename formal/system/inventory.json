@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "e1dada9b4a7440ad1d68f3dff13973cffd62cb48",
+  "mobileRevision": "96bed448bedcfd496b0539f1c8bfef3d8db311d3",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -9203,7 +9203,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
+      "sha256": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9221,7 +9221,7 @@
     {
       "id": "SURFACE-ab3dd253ad980d5f",
       "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
-      "sha256": "c70be0cbc91944f6628ef2920e331a530ead142af487c53fab68b80b591cef93",
+      "sha256": "dd270274ab2ef5d25eb2c39d322c222228e67651af1b1f2bd93215e8b2181568",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9437,13 +9437,13 @@
     {
       "id": "SURFACE-a62565f0bdecb34f",
       "path": "tdf-hq-ui/src/pages/socialEventsPageState.test.ts",
-      "sha256": "7a18a9c5abfbb170aeb6a382cd695eebe5bd347be4bcc9519148e30858824218",
+      "sha256": "29609755dd0c82dfdb52f3d633673e24a84bc4957a4f2783aeb7e3fa6c975333",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b23d788daceb9965",
       "path": "tdf-hq-ui/src/pages/socialEventsPageState.ts",
-      "sha256": "d30d69c93ba731ab8833a89086fee6b0ae464ebaba7465ac2fbe039b0ce81390",
+      "sha256": "7ce8ef600fda63cfe0d0ec67d2484d26836577e78f147dd40c781755a4421580",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10379,7 +10379,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+      "sha256": "47ba537bac577fb79d3ceaf0270db16bf5ec3325c0e92549790ab769df64c385",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16919,7 +16919,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
+      "sha256": "d2a86a6ec3212dd2f6005b52671fb60e717d89f5188189d603c445e7f19e4889",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17826,7 +17826,7 @@
     },
     {
       "path": "docs/Manual_Eventos_Tickets.md",
-      "sha256": "7db9576134171a3b6e5a0d0b54e160dbdd6d115e18d376791afd5ac1ba77087d",
+      "sha256": "db29b2a248f5726a759c10844a591ad4f1c0a68de657380f6b6f2f5a6835312f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
