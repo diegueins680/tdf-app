@@ -105,6 +105,7 @@
     "test:user-onboarding-progress-migration": "sh scripts/test-user-onboarding-progress-migration.sh",
     "test:artist-invitation-migration": "sh scripts/test-artist-invitation-auto-approval-migration.sh",
     "test:directory-event-visibility-migration": "sh scripts/test-directory-event-visibility-migration.sh",
+    "test:directory-artist-listings": "bash scripts/test-directory-artist-listings.sh",
     "test:event-operations-foundation-migration": "sh scripts/test-event-operations-foundation-migration.sh",
     "test:event-operations-api-migration": "sh scripts/test-event-operations-api-migration.sh",
     "test:event-operations-http": "sh scripts/test-event-operations-http.sh",

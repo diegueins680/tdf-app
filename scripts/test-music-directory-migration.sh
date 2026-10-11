@@ -944,5 +944,74 @@ expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id
 test "$expired_state" = "expired"
 stop_api
 
+# Events and venues stay searchable as they are created and edited
+# (2026-10-09): apply twice, verify, roll back, reapply and verify again.
+# The backfill must not notify saved searches about events that already
+# existed: drop the event documents, subscribe, then apply the migration.
+psql_exec >/dev/null <<'SQL'
+DELETE FROM directory_search_document WHERE entity_kind IN ('event', 'venue');
+INSERT INTO party (display_name, is_org, created_at) VALUES ('Event backfill subscriber', FALSE, now());
+INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+SELECT id, 'Event backfill alert', '{}'::jsonb, repeat('e', 64), TRUE, 'instant'
+FROM party WHERE display_name = 'Event backfill subscriber';
+SQL
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind = 'event';")" -gt 0
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id = delivery.saved_search_id WHERE saved.name = 'Event backfill alert';")" = "0"
+test "$(psql_exec -Atc "SELECT tgenabled FROM pg_trigger WHERE tgrelid = 'directory_search_document'::regclass AND tgname = 'directory_search_alert_trigger';")" = "O"
+psql_exec -c "DELETE FROM directory_saved_search WHERE name = 'Event backfill alert';" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+
+# Two real sessions: a venue rename that overlaps an uncommitted event edit
+# must not overwrite the event's newer projection with an older snapshot.
+psql_exec >/dev/null <<'SQL'
+INSERT INTO venue (name, city, created_at, updated_at) VALUES ('Race venue', 'Quito', now(), now());
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+  workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Race event', 'Synthetic lineup', (SELECT id FROM venue WHERE name = 'Race venue'),
+  (SELECT id FROM event_type ORDER BY sort_order, id LIMIT 1),
+  (SELECT state.id FROM workflow_state state
+     JOIN workflow_state_capability capability ON capability.state_id = state.id
+      AND capability.capability_code = 'public-listable' AND capability.enabled
+    WHERE state.active LIMIT 1),
+  'America/Guayaquil', now() + interval '1 day', now() + interval '2 days', '{"isPublic": true}', now(), now();
+SQL
+psql_exec -c "BEGIN; UPDATE social_event SET title = 'Race event edited', updated_at = now() WHERE title = 'Race event'; SELECT pg_sleep(3); COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "UPDATE venue SET name = 'Race venue renamed', updated_at = now() WHERE name = 'Race venue';" >/dev/null
+wait "$race_event_session"
+race_projection=$(psql_exec -Atc "SELECT title || ' @ ' || subtitle FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = (SELECT id::text FROM social_event WHERE title LIKE 'Race event%');")
+test "$race_projection" = "Race event edited @ Race venue renamed"
+# A transaction that edits two events must not deadlock with a writer that
+# already holds the second one (the sync lock is only taken at commit).
+psql_exec >/dev/null <<'SQL'
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+  workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Race event second', 'Synthetic lineup', venue_id, event_type_id, workflow_state_id, timezone,
+  start_time, end_time, metadata, now(), now()
+FROM social_event WHERE title = 'Race event edited';
+SQL
+race_second_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event second';")
+psql_exec -c "BEGIN; UPDATE social_event SET description = 'first' WHERE title = 'Race event edited'; SELECT pg_sleep(3); UPDATE social_event SET description = 'both' WHERE id = $race_second_id; COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "BEGIN; SELECT id FROM social_event WHERE id = $race_second_id FOR UPDATE; SELECT pg_sleep(1); UPDATE social_event SET title = 'Race event second edited' WHERE id = $race_second_id; COMMIT;" >/dev/null
+wait "$race_event_session"
+test "$(psql_exec -Atc "SELECT title || ' / ' || summary FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = '$race_second_id';")" = "Race event second edited / both"
+# Same overlap with a deletion: the deleted event's document must stay gone.
+race_event_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event edited';")
+psql_exec -c "BEGIN; DELETE FROM social_event WHERE id = $race_event_id; SELECT pg_sleep(3); COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "UPDATE venue SET name = 'Race venue renamed twice', updated_at = now() WHERE name = 'Race venue renamed';" >/dev/null
+wait "$race_event_session"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = '$race_event_id';")" = "0"
+psql_exec -c "DELETE FROM social_event WHERE title LIKE 'Race event%'; DELETE FROM venue WHERE name LIKE 'Race venue%';" >/dev/null
+
 psql_file "$TDF_DIRECTORY_ROOT/scripts/__tests__/fixtures/artist-management-claim.sql"
-echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
+echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, event search sync, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
