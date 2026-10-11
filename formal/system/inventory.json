@@ -455,6 +455,7 @@
       "scripts/test-music-directory-migration.sh",
       "scripts/test-music-download-predicate.mjs",
       "scripts/test-music-playback-identity.mjs",
+      "scripts/test-music-purchase.sh",
       "scripts/test-music-release-api-e2e.mjs",
       "scripts/test-music-release-api-e2e.sh",
       "scripts/test-music-release-artwork-pipeline.sh",
@@ -2039,6 +2040,7 @@
       "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
+      "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
       "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
@@ -2563,7 +2565,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+      "sha256": "e0788713150a947504ce2b08af05e201290b54ff8349bb2c83cc9bc1bb287b98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5141,6 +5143,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f20a2491f3dcc4d3",
+      "path": "scripts/test-music-purchase.sh",
+      "sha256": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
       "sha256": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
@@ -5509,7 +5517,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "9958ee0fbfba4bbfff187f7c005be50cd7bd1a54e62fffc01ef62fed47ed4e36",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13957,7 +13965,7 @@
     {
       "id": "SURFACE-bf94f0cb1cbb82d0",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
-      "sha256": "31a47d965f551cfd742c583718cf5227de448d2a322a062c67c8ff5512e22c6f",
+      "sha256": "85dab0f11475d2316d33bc10bf12ddacbd926dea4ddd2a68e77a85e9c1d20144",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13969,7 +13977,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "ea4a7830815ea5d6f35c3c7a631b95bdd13f1b0032ac64c745414f5f888b1470",
+      "sha256": "f36213323c390707749c883910bf282c418f0635eaff035e974643017b4c7ff1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14359,7 +14367,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9585cec9b32ff6f56e1126b999b5ad83bd1859ea15502599b68a1a4b2e12b1ef",
+      "sha256": "acff7ebdb51adc0719e279799a14501adbee28676921d94e3c9e1a93db1fd247",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14425,7 +14433,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "329b85f1cd96fd5d448e94f7faf18683c1d13317de54af8eb525a373ae0f40d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14606,6 +14614,12 @@
       "id": "SURFACE-14c41dc429bf98d1",
       "path": "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "sha256": "0cfaf43ff1207386bf1a360184290a96f8c7159335f51576a5dde376c9e68b2f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7e8c0b5502e595f0",
+      "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+      "sha256": "7c4c39dcb7c33f1d11aee0ba18be515910495106b1c683851eb0ae26c2c1dd8a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21801,6 +21815,55 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MusicEntitlement.cfg",
+      "sha256": "9bb584b870c90e1b8b7a5c6906d16a4c365b265b88dde3a3af4626c3fa1b8755",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlement.tla",
+      "sha256": "cde021a9e4ea3296c3c03bb0e9cff288da5902e4372e2167d5fb57a5de389cbe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+      "sha256": "228b28627884a22c1eb59820df50401b22fa61aacb3b3375910c73b9e76ec1df",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+      "sha256": "826b1c09637b2c925093221a44c217cc2eb759be141d9b8fa3e0588dff3aeb05",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementNoLimit.cfg",
+      "sha256": "cc6459386c6e7b121f0f5fbee0725c08b1e0828ae6fb9ee6d1c7dc1e4eb8ffed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementRefundedDownload.cfg",
+      "sha256": "4a277b1deea712df5ea462cc2eef02f822d4d14c96c1c48e3326c090af6f66bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+      "sha256": "c2f0f7e675a89d96650be577ff8a6587c1657b0b4b16798a4c74b16e7ed585de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/NativeArtistFollow.cfg",
       "sha256": "dfef4ecafcf1daf1a0811e78feebd12644ca0d8561fe81c385380611b0af5c09",
       "authority": "inferred",
@@ -22236,7 +22299,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "ab44c1ae2ef06fef4a25fe48cb7c1c87e3b12637ea538141b30a19cb7ecdf4f0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23608,14 +23671,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
+      "sha256": "99bfb26d99fab8139274487dbef6b8a5dafadad3621cfa0b5ac08ffd7a3e8d14",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ef4ece82253282e415886a6ffec698665fa1705f3ff0a393943634d6c69f17b5",
+      "sha256": "787bef5c9cad1da92754d6205ee84b5ec53c5893de742654b063d6568e8a9c4f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23803,6 +23866,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-purchase-entitlement.md",
+      "sha256": "94406884db2a7f2aed75d32d9a0e442a0434aff5af5cf772fa0aec945f04543a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-command-boundary.md",
       "sha256": "b8b856db3313d417afb450cc04f38f41b7f557f2da6b092b209e25b5d0630663",
       "authority": "inferred",
@@ -23888,7 +23958,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1b4925d8eb0ae5d1aa871fe74c4cbfa44274158634df90a92353da6af8adbdb4",
+      "sha256": "abaf1c0563ff82d9d63439d22d16d077cf0400470b561e1d3dcf26d2a48a97f6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32591,6 +32661,174 @@
         "          RequireDurableKey = FALSE",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT NoDispatchWithoutDurableKey"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlement.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = FALSE",
+        "  ActiveOnly = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = FALSE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementNoLimit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = FALSE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementRefundedDownload.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = FALSE",
+        "  UpsertGrant = FALSE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -564,6 +564,19 @@
       "conflict": "Public WhatsApp consent accepted any number without proof of control, recorded consent and messaged the number immediately, and exposed consent state and timestamps through a public lookup.",
       "authority": "Explicit product-owner decision on 2026-10-06: double opt-in.",
       "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
+    },
+    {
+      "id": "AUTHORITY-058",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "docs/music-releases/architecture-and-data-model.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "PAY-MUSIC-DOWNLOAD-001 says verified provider evidence marks an order paid and grants one entitlement, and that downloads are bounded per entitlement. The music payment record omitted the merchant reference the shared checkout store requires, so every verified payment stopped with an error after the charge; a repeated download request identifier produced fresh signed URLs without limit; and a revoked free grant was reactivated by asking again.",
+      "authority": "The requirement and ADR-005 of the music release architecture govern; the three behaviors were defects in recovered, unreviewed code.",
+      "resolution": "The payment record carries the order identifier as merchant reference; a repeated request identifier is honoured only for the 300-second lifetime of its signed URL and belongs to one entitlement; a repeated free request leaves an existing grant unchanged; the commerce flag must be enabled for the checkout environment as well as the process environment. No schema change. The failure-path defects listed in formal/system/music-purchase-entitlement.md remain open and music_releases.commerce must stay disabled until they are repaired."
     }
   ]
 }

@@ -5,6 +5,9 @@ module TDF.Server.MusicReleaseAssets
   ( getPublicMusicAssetAccess
   , authorizeMusicDownload
   , authorizeFreeMusicDownload
+  , authorizeDownloadDB
+  , AssetReference(..)
+  , downloadUrlLifetimeSeconds
   , loadMusicS3SigningConfig
   , trustedEdgeTerritory
   ) where
@@ -23,7 +26,7 @@ import Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..), toPersistValue)
-import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawExecuteCount, rawSql, runSqlPool)
 import Servant
 import System.Environment (lookupEnv)
 
@@ -54,6 +57,12 @@ currentPartyId = fromSqlKey . auPartyId
 -- The worker keeps inspected/promoted originals in `valid`, while generated
 -- delivery assets use `ready`. This does not make a master publicly streamable:
 -- only the separately authorized download paths may accept an immutable master.
+-- A signed download URL lives this long. A repeated request identifier is
+-- honoured, without counting again, only inside the same period: afterwards
+-- it would hand out a fresh URL for a download that was counted once.
+downloadUrlLifetimeSeconds :: Int
+downloadUrlLifetimeSeconds = 300
+
 downloadableAssetPredicate :: Text
 downloadableAssetPredicate =
   "(asset.processing_state='ready' OR (asset.processing_state='valid' AND asset.asset_role='master_audio' AND asset.immutable=TRUE AND asset.storage_class<>'quarantine'))"
@@ -78,6 +87,7 @@ authorizeMusicDownload user entitlementId MusicDownloadAuthorizeRequest{..} = do
     Left "not_found" -> throwError err404
     Left "request_conflict" -> throwError err409 { errBody = "Download requestId belongs to another entitlement" }
     Left "limit_reached" -> throwError err429 { errBody = "Download limit reached for this entitlement" }
+    Left "request_expired" -> throwError requestExpired
     Left message -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
     Right value -> pure value
   signedAssetResponse asset
@@ -88,10 +98,12 @@ authorizeFreeMusicDownload user edgeCountry MusicFreeDownloadRequest{..} = do
   territory <- trustedEdgeTerritory edgeCountry
   now <- liftIO getCurrentTime
   entitlementRows <- runDB (rawSql
-    ("WITH offer AS (SELECT public.id AS release_id,public.release_version_id,rule.downloadable_asset_id FROM music_availability_rule rule JOIN music_public_release public ON public.release_version_id=rule.release_version_id JOIN music_asset asset ON asset.id=rule.downloadable_asset_id AND asset.release_version_id=public.release_version_id WHERE rule.id=?::uuid AND rule.download_policy='free' AND rule.purchasable=FALSE AND rule.downloadable_asset_id IS NOT NULL AND " <> downloadableAssetPredicate <> " AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))), inserted AS (INSERT INTO music_entitlement(buyer_party_id,release_version_id,asset_id,source_kind,status,max_downloads,granted_by) SELECT ?,release_version_id,downloadable_asset_id,'free_grant','active',5,? FROM offer ON CONFLICT (buyer_party_id,release_version_id,asset_id,source_kind,purchase_order_id) DO UPDATE SET status='active',revoked_at=NULL RETURNING id,release_version_id) SELECT id,release_version_id FROM inserted")
+    ("WITH offer AS (SELECT public.id AS release_id,public.release_version_id,rule.downloadable_asset_id FROM music_availability_rule rule JOIN music_public_release public ON public.release_version_id=rule.release_version_id JOIN music_asset asset ON asset.id=rule.downloadable_asset_id AND asset.release_version_id=public.release_version_id WHERE rule.id=?::uuid AND rule.download_policy='free' AND rule.purchasable=FALSE AND rule.downloadable_asset_id IS NOT NULL AND " <> downloadableAssetPredicate <> " AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW()) AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories))) OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories))))), inserted AS (INSERT INTO music_entitlement(buyer_party_id,release_version_id,asset_id,source_kind,status,max_downloads,granted_by) SELECT ?,release_version_id,downloadable_asset_id,'free_grant','active',5,? FROM offer ON CONFLICT (buyer_party_id,release_version_id,asset_id,source_kind,purchase_order_id) DO UPDATE SET granted_by=music_entitlement.granted_by RETURNING id,release_version_id) SELECT id,release_version_id FROM inserted")
     [ toPersistValue musicFreeAvailabilityRuleId, optionalText territory, optionalText territory
     , optionalText territory, PersistInt64 (currentPartyId user), PersistInt64 (currentPartyId user)
     ] :: SqlPersistT IO [(Single UUID, Single UUID)])
+  -- A repeated free request returns the existing grant unchanged, so a
+  -- revoked or expired grant is not revived by asking again.
   (entitlementId, releaseVersionId) <- case entitlementRows of
     [(Single entitlementId, Single releaseVersionId)] -> pure (entitlementId, releaseVersionId)
     _ -> throwError err404
@@ -99,6 +111,7 @@ authorizeFreeMusicDownload user edgeCountry MusicFreeDownloadRequest{..} = do
   asset <- case result of
     Left "request_conflict" -> throwError err409 { errBody = "Download requestId belongs to another entitlement" }
     Left "limit_reached" -> throwError err429 { errBody = "Download limit reached for this free grant" }
+    Left "request_expired" -> throwError requestExpired
     Left _ -> throwError err404
     Right value -> pure value
   runDB $ rawExecute
@@ -119,11 +132,15 @@ authorizeDownloadDB actor entitlementId requestId now = do
   case locked of
     [(Single provider, Single bucket, Single key, Single mediaType, Single byteSize, Single sha256, Single maxDownloads)] -> do
       conflicts <- rawSql
-        "SELECT entitlement_id=?::uuid FROM music_download_event WHERE request_id=?::uuid"
-        [toPersistValue entitlementId, toPersistValue requestId] :: SqlPersistT IO [Single Bool]
+        "SELECT entitlement_id=?::uuid, authorized_at > ?::timestamptz - make_interval(secs => ?) \
+        \FROM music_download_event WHERE request_id=?::uuid"
+        [ toPersistValue entitlementId, PersistUTCTime now
+        , PersistInt64 (fromIntegral downloadUrlLifetimeSeconds), toPersistValue requestId
+        ] :: SqlPersistT IO [(Single Bool, Single Bool)]
       case conflicts of
-        [Single True] -> pure (Right (AssetReference provider bucket key mediaType byteSize sha256))
-        [Single False] -> pure (Left "request_conflict")
+        [(Single True, Single True)] -> pure (Right (AssetReference provider bucket key mediaType byteSize sha256))
+        [(Single True, Single False)] -> pure (Left "request_expired")
+        [(Single False, _)] -> pure (Left "request_conflict")
         [] -> do
           counts <- rawSql "SELECT count(*) FROM music_download_event WHERE entitlement_id=?::uuid"
             [toPersistValue entitlementId] :: SqlPersistT IO [Single Int64]
@@ -131,13 +148,21 @@ authorizeDownloadDB actor entitlementId requestId now = do
           if maybe False (count >=) (fromIntegral <$> maxDownloads)
             then pure (Left "limit_reached")
             else do
-              rawExecute
-                "INSERT INTO music_download_event(entitlement_id,request_id,authorized_at) VALUES(?::uuid,?::uuid,?)"
+              -- Another entitlement may be recording the same identifier
+              -- right now; the unique identifier decides and the loser is a
+              -- conflict, not an error.
+              inserted <- rawExecuteCount
+                "INSERT INTO music_download_event(entitlement_id,request_id,authorized_at) VALUES(?::uuid,?::uuid,?) ON CONFLICT (request_id) DO NOTHING"
                 [toPersistValue entitlementId, toPersistValue requestId, PersistUTCTime now]
-              pure (Right (AssetReference provider bucket key mediaType byteSize sha256))
+              pure $ if inserted == 1
+                then Right (AssetReference provider bucket key mediaType byteSize sha256)
+                else Left "request_conflict"
         _ -> pure (Left "request_conflict")
     [] -> pure (Left "not_found")
     _ -> pure (Left "ambiguous_entitlement")
+
+requestExpired :: ServerError
+requestExpired = err409 { errBody = "Download requestId has expired; send a new requestId" }
 
 signedAssetResponse :: AssetReference -> AppM Value
 signedAssetResponse AssetReference{..} = do
@@ -146,9 +171,9 @@ signedAssetResponse AssetReference{..} = do
   signingConfig <- loadMusicS3SigningConfig
   now <- liftIO getCurrentTime
   url <- either (const (throwError err500 { errBody = "Object storage signing configuration is invalid" })) pure
-    (presignGetObject signingConfig now 300 assetBucket assetObjectKey)
+    (presignGetObject signingConfig now downloadUrlLifetimeSeconds assetBucket assetObjectKey)
   pure (object
-    [ "url" .= url, "expiresAt" .= addUTCTime 300 now, "mediaType" .= assetMediaType
+    [ "url" .= url, "expiresAt" .= addUTCTime (fromIntegral downloadUrlLifetimeSeconds) now, "mediaType" .= assetMediaType
     , "byteSize" .= assetByteSize, "sha256" .= assetSha256, "acceptRanges" .= True
     ])
 
