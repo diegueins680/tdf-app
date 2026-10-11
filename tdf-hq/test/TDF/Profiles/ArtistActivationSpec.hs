@@ -23,7 +23,7 @@ import Test.Hspec
 import TDF.Auth (AuthedUser(..), modulesForRoles)
 import qualified TDF.Config as Config
 import TDF.DB (Env(..))
-import TDF.DTO (ArtistProfileDTO(..), FeatureAccessRequestDecision(..))
+import TDF.DTO (ArtistProfileDTO(..), FeatureAccessRequestCreate(..), FeatureAccessRequestDTO(..), FeatureAccessRequestDecision(..))
 import TDF.FeatureRegistry (findRegistryFeature, registryReviewerCanDecide)
 import TDF.Models (RoleEnum(Admin))
 import qualified TDF.ModelsExtra as ME
@@ -211,6 +211,63 @@ spec = describe "artist-self-service-postgresql" $ do
         takeMVar rejectionCommitted
         status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
         status `shouldBe` [Single ("rejected" :: Text)]
+        approvals <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='approved'" [PersistInt64 requestId]) pool
+        approvals `shouldBe` [Single (0 :: Int64)]
+      it "locks the onboarding request before the Party, the order a reviewer's decision uses" $ \pool -> do
+        rows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at) VALUES(6,'artist.onboarding','create','[]','[]','pending','admin',now(),now()) RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case rows of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        held <- newEmptyMVar
+        released <- newEmptyMVar
+        activated <- newEmptyMVar
+        -- Stands in for a reviewer's transaction, which owns the request first.
+        void $ forkIO $ do
+          runSqlPool (do
+            _ <- rawSql "SELECT id FROM feature_access_requests WHERE id=? FOR UPDATE" [PersistInt64 requestId] :: SqlPersistT IO [Single Int64]
+            liftIO (putMVar held ())
+            liftIO (threadDelay 1500000)) pool
+          putMVar released ()
+        takeMVar held
+        void $ forkIO (activate pool 6 >>= putMVar activated)
+        threadDelay 500000
+        -- While activation waits for the request it must not already hold the
+        -- Party: that is the half of the cycle that produced the deadlock.
+        partyFree <- try (runSqlPool (rawSql "SELECT id FROM party WHERE id=6 FOR UPDATE NOWAIT" []) pool) :: IO (Either SomeException [Single Int64])
+        partyFree `shouldSatisfy` isRight
+        takeMVar released
+        takeMVar activated >>= (`shouldSatisfy` isRight)
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("approved" :: Text)]
+      it "expires, rather than approves, a request that lapses while the self-service handler waits for it" $ \pool -> do
+        rows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(1,'artist.onboarding','create','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case rows of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        let requester = AuthedUser
+              { auPartyId = toSqlKey 1
+              , auRoles = []
+              , auModules = modulesForRoles []
+              , auApiTokenId = Nothing
+              , auSessionWitness = Nothing
+              }
+        cfg <- Config.loadConfig
+        let _ :<|> create :<|> _ = accessRequestsServer requester
+        held <- newEmptyMVar
+        released <- newEmptyMVar
+        void $ forkIO $ do
+          runSqlPool (do
+            _ <- rawSql "SELECT id FROM feature_access_requests WHERE id=? FOR UPDATE" [PersistInt64 requestId] :: SqlPersistT IO [Single Int64]
+            liftIO (putMVar held ())
+            liftIO (threadDelay 2000000)) pool
+          putMVar released ()
+        takeMVar held
+        result <- runHandler (runReaderT (create (FeatureAccessRequestCreate "artist.onboarding" "create" Nothing)) (Env pool cfg))
+        takeMVar released
+        fmap farStatus result `shouldBe` Right "approved"
+        fmap farId result `shouldNotBe` Right requestId
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("expired" :: Text)]
         approvals <- runSqlPool (rawSql "SELECT count(*) FROM feature_access_request_history WHERE request_id=? AND to_status='approved'" [PersistInt64 requestId]) pool
         approvals `shouldBe` [Single (0 :: Int64)]
       it "rolls back the role and audit if profile creation fails" $ \pool -> do

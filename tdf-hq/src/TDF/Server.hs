@@ -239,6 +239,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , resolvePublishedGenreSelections
                                      , activateOwnArtistProfile
                                      , deadlineClockAfterLock
+                                     , lockPendingOnboardingRequests
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -3878,17 +3879,27 @@ accessRequestsServer user =
       Env pool _ <- ask
       now <- liftIO getCurrentTime
       result <- liftIO $ flip runSqlPool pool $ do
+        let ownOnboardingRequests =
+              [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+              , ME.FeatureAccessRequestAction ==. "create"
+              ]
         -- Settle a lapsed onboarding request first, so self-service records a
-        -- fresh approval instead of resurrecting an expired request.
-        expirePendingAccessRequests now
-          [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
-          , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
-          , ME.FeatureAccessRequestAction ==. "create"
-          ]
+        -- fresh approval instead of resurrecting an expired request. The rows
+        -- are locked before the clock is read, in the same order activation and
+        -- a reviewer's decision use.
+        lockPendingOnboardingRequests (auPartyId user)
+        lockedAt <- deadlineClockAfterLock now
+        expirePendingAccessRequests lockedAt ownOnboardingRequests
         activated <- activateOwnArtistProfile (auPartyId user) now
         case activated of
           Left message -> pure (Left message)
           Right _ -> do
+            -- Activation leaves a request that lapsed while it waited untouched.
+            -- Settle it against the clock as it stands now, so the update below
+            -- can only meet a request that is still open.
+            activatedAt <- deadlineClockAfterLock now
+            expirePendingAccessRequests activatedAt ownOnboardingRequests
             existing <- selectFirst
               [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
               , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"

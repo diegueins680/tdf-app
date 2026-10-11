@@ -4,6 +4,7 @@
 module TDF.Profiles.Artist
   ( activateOwnArtistProfile
   , deadlineClockAfterLock
+  , lockPendingOnboardingRequests
   , upsertArtistProfileRecord
   , validateArtistProfileUpsert
   , loadArtistProfileDTO
@@ -53,6 +54,12 @@ import qualified TDF.Trials.Server         as TrialsServer (isValidHttpUrl)
 -- activation on that Party so role, audit and profile creation are idempotent.
 activateOwnArtistProfile :: PartyId -> UTCTime -> SqlPersistT IO (Either Text ArtistProfileDTO)
 activateOwnArtistProfile partyId now = do
+  -- Requests before the Party: a reviewer's decision locks the request and then
+  -- provisions the same role assignment, so taking the Party first would let the
+  -- two wait on each other. The deadline is read once these rows are owned, not
+  -- when the caller sampled `now` (it may have waited for a connection or a lock).
+  lockPendingOnboardingRequests partyId
+  deadline <- deadlineClockAfterLock now
   _ <- rawSql "SELECT ?? FROM party WHERE id = ? FOR UPDATE" [toPersistValue partyId] :: SqlPersistT IO [Entity Party]
   credentials <- count [UserCredentialPartyId ==. partyId, UserCredentialActive ==. True]
   if credentials /= 1
@@ -72,13 +79,6 @@ activateOwnArtistProfile partyId now = do
           profile <- loadOrCreateArtistProfileDTO partyId
           -- A request past its deadline is not completed here: approving it would
           -- resurrect an expired request. Activation itself still succeeds.
-          -- Lock the candidates before reading the clock: the deadline is judged
-          -- at the moment this transaction owns the rows, not when the caller
-          -- sampled `now` (it may have waited for a connection or a row lock).
-          _ <- rawSql
-            "SELECT id FROM feature_access_requests WHERE requester_party_id = ? AND feature_id = 'artist.onboarding' AND action = 'create' AND status = 'pending' FOR UPDATE"
-            [toPersistValue partyId] :: SqlPersistT IO [Single Int64]
-          deadline <- deadlineClockAfterLock now
           pending <- selectList
             ([ ME.FeatureAccessRequestRequesterPartyId ==. partyId
              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
@@ -120,6 +120,15 @@ activateOwnArtistProfile partyId now = do
                 , auditLogCreatedAt = now
                 }
           pure (Right profile)
+
+-- | Own the Party's pending artist-onboarding requests for the rest of the
+-- transaction. Every path that decides one takes this lock before any other.
+lockPendingOnboardingRequests :: PartyId -> SqlPersistT IO ()
+lockPendingOnboardingRequests partyId = do
+  _ <- rawSql
+    "SELECT id FROM feature_access_requests WHERE requester_party_id = ? AND feature_id = 'artist.onboarding' AND action = 'create' AND status = 'pending' ORDER BY id FOR UPDATE"
+    [toPersistValue partyId] :: SqlPersistT IO [Single Int64]
+  pure ()
 
 -- | The instant against which a request deadline is judged. Call it only after
 -- the request rows are locked: it reads the database clock at that point and

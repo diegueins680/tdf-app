@@ -65,6 +65,15 @@ locks the target row (`FOR UPDATE`) and only then reads the database clock
 uses that instant. Self-service activation locks its pending onboarding requests
 the same way before deciding whether one is still open (third review finding).
 
+Lock order is request first, then Party, on every path. A reviewer's decision
+locks the request and then provisions the role assignment; activation used to
+lock the Party, insert the assignment and only then reach for the request, so
+the two could wait on each other. `lockPendingOnboardingRequests` is now the
+first statement of `activateOwnArtistProfile` and of the self-service handler.
+That handler also settles expiry again after activation returns, against the
+clock at that point, so its final update can only meet a request that is still
+open (fourth and fifth review findings).
+
 `ArtistActivationSpec` runs against disposable PostgreSQL through
 `scripts/test-artist-self-service.sh`. It covers the helper ("settles expiry
 before deciding or cancelling …") and the real `decideRequest` handler
