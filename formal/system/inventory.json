@@ -5693,7 +5693,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
+      "sha256": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19464,7 +19464,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "106dccb80e224db44a396d3608a177fefde7495d71e76ef91d03a375b8ca146a",
+      "sha256": "f44f84563e2e628bcb9844a72f2f9838a132cbd7703d19c145686d4794b3258f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
