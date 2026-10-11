@@ -14063,7 +14063,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+      "sha256": "d4a8d179f49b9303b0f0a0f2078984b0f846917008df31649c37d867abacf296",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14771,7 +14771,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
+      "sha256": "a14c4b3e6e807c783930409ce62c7ba50d027bf94efbbdcbb8285e93f833c48b",
       "semanticConformance": "not-established-by-discovery"
     },
     {

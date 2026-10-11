@@ -9733,7 +9733,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d4a8d179f49b9303b0f0a0f2078984b0f846917008df31649c37d867abacf296",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
@@ -9788,7 +9788,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "a14c4b3e6e807c783930409ce62c7ba50d027bf94efbbdcbb8285e93f833c48b",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
@@ -33875,7 +33875,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+      "sha256": "d4a8d179f49b9303b0f0a0f2078984b0f846917008df31649c37d867abacf296",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35168,7 +35168,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
+      "sha256": "a14c4b3e6e807c783930409ce62c7ba50d027bf94efbbdcbb8285e93f833c48b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -1435,6 +1435,53 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected strict-admin event list to succeed, got: " <> show err)
 
+    it "reports RSVP eligibility in the event list exactly as the event detail does" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 28
+            user = strictAdminSocialEventUser 1
+            env = Env{envPool = pool, envConfig = cfg}
+        runSqlPool
+            ( do
+                rawExecute
+                    "INSERT INTO workflow_state_capability(state_id,capability_code,enabled) VALUES (?, 'public-listable', 1), (?, 'rsvp', 1)"
+                    [toPersistValue socialEventWorkflowStateFixtureId, toPersistValue socialEventWorkflowStateFixtureId]
+                insertKey eventKey
+                    ((seedSocialEvent "1" "Listed RSVP event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        })
+            )
+            pool
+        listed <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        user
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                    )
+                    env
+        detail <- runHandler $ runReaderT (socialEventGetHandlerFor user "28") env
+        case (listed, detail) of
+            (Right [listedEvent], Right detailEvent) -> do
+                eventRsvpEligible detailEvent `shouldBe` Just True
+                eventRsvpEligible listedEvent `shouldBe` Just True
+                eventPublicListable listedEvent `shouldBe` eventPublicListable detailEvent
+            other ->
+                expectationFailure
+                    ("Expected one listed event and its detail, got: " <> show other)
+
     it "turns an imported event deletion into a private tombstone" $ do
         let suppressed =
                 suppressImportedEventMetadata
