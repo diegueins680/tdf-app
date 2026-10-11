@@ -9437,13 +9437,13 @@
     {
       "id": "SURFACE-a62565f0bdecb34f",
       "path": "tdf-hq-ui/src/pages/socialEventsPageState.test.ts",
-      "sha256": "29609755dd0c82dfdb52f3d633673e24a84bc4957a4f2783aeb7e3fa6c975333",
+      "sha256": "7a18a9c5abfbb170aeb6a382cd695eebe5bd347be4bcc9519148e30858824218",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b23d788daceb9965",
       "path": "tdf-hq-ui/src/pages/socialEventsPageState.ts",
-      "sha256": "7ce8ef600fda63cfe0d0ec67d2484d26836577e78f147dd40c781755a4421580",
+      "sha256": "d30d69c93ba731ab8833a89086fee6b0ae464ebaba7465ac2fbe039b0ce81390",
       "semanticConformance": "not-established-by-discovery"
     },
     {
