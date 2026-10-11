@@ -9033,12 +9033,86 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "MSG-WHATSAPP-REDELIVERY-001",
+      "title": "A redelivered WhatsApp message changes nothing and is not answered again",
+      "domain": "MSG",
+      "statement": "The webhook delivery that stores an inbound WhatsApp message applies what it asks for (opt-out keyword, consent confirmation) in the same transaction and sends its automatic reply; a delivery that finds the message already stored applies nothing again. An enrolment message is registered once and answered by the one delivery that claims its reply.",
+      "authority": "AUTHORITY-060; Meta delivers webhooks at least once and a signed body stays valid.",
+      "source": "formal/system/whatsapp-redelivery.md",
+      "contract": "formal/system/whatsapp-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "WhatsApp sender"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001)"
+      ],
+      "inputs": [
+        "Provider message id, sender number, text and sent time"
+      ],
+      "state": {
+        "boundary": "whats_app_message.external_id, whats_app_consent",
+        "authority": "PostgreSQL unique index, advisory lock and one transaction"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored, opt-out or confirmation applied, reply sent once"
+      ],
+      "forbiddenTransitions": [
+        "Stored message delivered again -> consent withdrawn again",
+        "Stored message delivered again -> automatic reply sent again",
+        "Opt-out message stored without its opt-out applied",
+        "Two stored copies of one provider message"
+      ],
+      "effects": [
+        "One whats_app_message row and one received audit entry per provider message",
+        "Consent withdrawn or confirmed at most once per message"
+      ],
+      "authorization": "Unauthenticated route admitted only by the Meta signature; the effect is limited to the sender's own number.",
+      "privacy": "No new data; the stored message and consent rows are unchanged in shape.",
+      "concurrency": "Deliveries of one provider message take a transaction-scoped advisory lock on its id; the unique index on external_id refuses a second copy.",
+      "idempotency": "Keyed by the provider message id, or for a message without one by an id derived from sender, sent time and body. The course registration is keyed by the stored message; the reply by an auto_reply_claimed audit entry.",
+      "failure": "A failed transaction stores nothing and applies nothing, so the next delivery is again the first.",
+      "recovery": "Meta redelivers; a registration that failed is retried by the next delivery. A reply already claimed, or a notice whose confirmation already committed, is not sent later.",
+      "observability": "whats_app_message row, its received audit entry and whats_app_consent.",
+      "property": "What a message asks for is applied at most once however often it is delivered, a stored opt-out has been applied, and an enrolment message is answered at most once.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+        "scripts/test-whatsapp-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/WhatsAppRedelivery.tla",
+        "formal/event-operations/WhatsAppRedelivery.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+        "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the function the webhook calls, including redelivery after a new subscription and simultaneous deliveries.",
+      "evidence": "formal/system/whatsapp-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Handler and storage read; database behaviour run locally against PostgreSQL 16 on 2026-10-11; the handler's use of the reply claim is covered by reading only.",
+      "ambiguity": [
+        "Whether a delayed first delivery of an old STOP should defeat a later subscription is undecided; it currently does."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Database effects repaired and tested; no signed HTTP test, and the reply worker, delivery updates and other Meta channels were not examined."
+      }
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+    ".github/workflows/ci.yml": "f91058872f28a9c0770b855e7bac1cd1752826e239071b427179a3ae9495a6c3",
     ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
@@ -9133,6 +9207,12 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+    "formal/event-operations/WhatsAppRedelivery.cfg": "9db8bd7a24495d762b38f20a92bdb551c9b6129b5ce8928ed678b7dc8ff1c0cb",
+    "formal/event-operations/WhatsAppRedelivery.tla": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+    "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg": "e83c566e96cd54c2515ee5e19d39d88d12eba827090cb8798b5c806956c6456f",
+    "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg": "d6b0afaa05315513388cd6e299e1e88ee8c9f2b85e9523dfac056c0e85f889c7",
+    "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg": "68c1aece036e6d1b5eb2af04a7fa597f8a4fc976781a29efb6ed0522a28bf789",
+    "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg": "898af974ec689664240af4da2d5b54a0a9a7c415ab751d1c78e0131c6b210423",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
@@ -9336,12 +9416,13 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+    "scripts/verify-event-operations-formal.sh": "9e779d32ba23ec59adb9e6003e41ef436a4be7b241afba7ec46367fa9ff83285",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9710,7 +9791,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
+    "tdf-hq/src/TDF/Server.hs": "b1853f7816344188c5c6336a4178cb49a2d755cee1d2c9aad0727d241d2834e0",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -9749,13 +9830,14 @@
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
+    "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
+    "tdf-hq/tdf-hq.cabal": "d66d4e379899764d9b0a1d3adfc7cfab9ed63749c14210bd7137f65db93355fa",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+    "tdf-hq/test/Spec.hs": "aab60acf37f7aa5b12003e21a28b17a31cf77b676776b7588bf1a7f89b6bcb73",
     "tdf-hq/test/TDF/APITypesSpec.hs": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -9785,6 +9867,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "490d719e542af5ad31eae62a0baba6b3b82f015348c051005f84df03b6a56921",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -9989,6 +10072,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -10194,6 +10281,10 @@
       },
       {
         "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -16334,6 +16425,60 @@
         "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/WhatsApp/History.hs": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-whatsapp-redelivery.sh": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/WhatsAppRedelivery.tla": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WhatsAppRedelivery.cfg": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg": [
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -16385,7 +16530,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+      "sha256": "f91058872f28a9c0770b855e7bac1cd1752826e239071b427179a3ae9495a6c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21280,6 +21425,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ee9a013c20ac0030",
+      "path": "scripts/test-whatsapp-redelivery.sh",
+      "sha256": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -21364,7 +21521,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "9e779d32ba23ec59adb9e6003e41ef436a4be7b241afba7ec46367fa9ff83285",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21418,6 +21575,10 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -33506,7 +33667,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
+      "sha256": "b1853f7816344188c5c6336a4178cb49a2d755cee1d2c9aad0727d241d2834e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33563,6 +33724,10 @@
         },
         {
           "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-WHATSAPP-REDELIVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -34363,9 +34528,14 @@
     {
       "id": "SURFACE-9070029de4202bc2",
       "path": "tdf-hq/src/TDF/WhatsApp/History.hs",
-      "sha256": "7088ca90378f4f0da612e0129a1cf0fbbc4c6ae0b8e635d50101b7a657da1a57",
+      "sha256": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6f165e3ac5d9480f",
@@ -34403,7 +34573,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
+      "sha256": "d66d4e379899764d9b0a1d3adfc7cfab9ed63749c14210bd7137f65db93355fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34517,7 +34687,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "aab60acf37f7aa5b12003e21a28b17a31cf77b676776b7588bf1a7f89b6bcb73",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35199,6 +35369,18 @@
       "sha256": "a641f1c2e97c98891f2a295fb3ac96eb38a8790150dff92719929c6fedbd3d5a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-da468ce284927c10",
+      "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+      "sha256": "490d719e542af5ad31eae62a0baba6b3b82f015348c051005f84df03b6a56921",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0096fb04ca9db3fe",
@@ -40260,7 +40442,6 @@
     "SURFACE-41f19892e354f9ef",
     "SURFACE-8e95ce26cbe1127d",
     "SURFACE-5460b30af99d955f",
-    "SURFACE-9070029de4202bc2",
     "SURFACE-6f165e3ac5d9480f",
     "SURFACE-424d590d8771f755",
     "SURFACE-824cc950db597cff",
@@ -41833,7 +42014,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cfc92c71db8c654702704416ca744763dfb2450ba4eeb9cd87ade98d6ce1bc8a",
+      "sourceSha256": "af935b623aa796948998cb8a3eba7d875d2d8a0e26df17f3c06194a946f229f9",
       "definition": {
         "states": [
           "absent",
@@ -64030,7 +64211,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 113,
+    "PARTIAL": 114,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
