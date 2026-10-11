@@ -206,9 +206,9 @@ queryWith user access sql args = do
   where
     writeFailure err
       | sqlState err `elem` ["40001","40P01","55P03"] = err503 {errHeaders=[("Retry-After","1"),("Cache-Control","no-store")]}
-      -- Text PostgreSQL cannot store (a NUL escape in a JSON payload) is the
-      -- caller's fault and is answered as such.
-      | sqlState err `elem` ["22P05","22021"] = err400 {errBody="invalid",errHeaders=[("Cache-Control","no-store")]}
+      -- A NUL escape in a JSON payload, which jsonb refuses, is the caller's
+      -- fault and is answered as such.
+      | sqlState err == "22P05" = err400 {errBody="invalid",errHeaders=[("Cache-Control","no-store")]}
       | otherwise = err500 {errBody="Interaction could not be completed",errHeaders=[("Cache-Control","no-store")]}
     responseError code = (case code of
       "disabled" -> err404

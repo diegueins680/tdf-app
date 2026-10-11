@@ -2,7 +2,7 @@
 module TDF.InteractionWriteBudgetSpec (spec) where
 
 import Control.Concurrent.Async (forConcurrently)
-import Control.Monad (forM, replicateM)
+import Control.Monad (replicateM)
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.Int (Int64)
@@ -83,11 +83,17 @@ spec = describe "interaction-write-budget-postgresql" $ do
           map failureState outcomes `shouldBe` replicate 8 (Just "22P05")
           charged pool actor `shouldReturn` 8
 
-        it "keeps accounts apart" $ \pool -> do
-          actors <- replicateM 2 newActor
-          _ <- forM actors $ \actor ->
-            runSqlPool (chargedInteractionWrite actor unstorable [nulPayload]) pool
-          mapM (charged pool) actors `shouldReturn` [1, 1]
+        it "still admits another account after one account has spent its minute" $ \pool -> do
+          spent <- newActor
+          other <- newActor
+          (refused, admitted) <- runSqlPool (do
+            _ <- replicateM 90 (chargedInteractionWrite spent "SELECT 'ok'::text" [])
+            over <- chargedInteractionWrite spent "SELECT 'ok'::text" []
+            fresh <- chargedInteractionWrite other "SELECT 'ok'::text" []
+            pure (over, fresh)) pool
+          limited refused `shouldBe` True
+          answered admitted `shouldBe` Just ["ok"]
+          charged pool other `shouldReturn` 1
 
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
