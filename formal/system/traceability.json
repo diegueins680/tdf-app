@@ -9078,7 +9078,7 @@
       "privacy": "No new data is stored or exposed.",
       "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
       "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
-      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook fails after the reply has been sent, and the provider delivers it again.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook request fails after the reply has been sent.",
       "recovery": "Rollback file restores the constraints while no stored row violates them.",
       "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
       "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
@@ -9101,7 +9101,7 @@
         "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
         "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
       ],
-      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated schema, with a run against the schema before the migration as control.",
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test against the migrated schema, through the application's storage functions where one exists, with a manual local run against the schema before the migration as control (not repeated in CI).",
       "evidence": "formal/system/index-declarations.md",
       "status": "specified and implemented",
       "historicalStatus": "new",
@@ -9352,7 +9352,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "414bed727d733bbbbb1ae42895c94d6b8625f22ce4928965cebea8761a33623a",
+    "scripts/production-migrations.json": "99fabec6c0a70bd8a617885c045499f5009114a90a1add2be552ed31ad86d466",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9731,8 +9731,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
-    "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": "b821347c2db67cf18235ed9be180ac7dcff3739109a9b6b7979a04d4242af313",
-    "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "441b04ee4b95f41be9fc41fcfd56d8e085ad3b8342c2a316391116e7aaf1862a",
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
+    "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -9861,7 +9861,7 @@
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
-    "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "f688d6538b93497e9aad92e094fc33e8f510557a27336ee9b5a073f32c3aa19c",
+    "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
@@ -19442,7 +19442,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "414bed727d733bbbbb1ae42895c94d6b8625f22ce4928965cebea8761a33623a",
+      "sha256": "99fabec6c0a70bd8a617885c045499f5009114a90a1add2be552ed31ad86d466",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31999,7 +31999,7 @@
     {
       "id": "SURFACE-2ea4fa983f6c4814",
       "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
-      "sha256": "b821347c2db67cf18235ed9be180ac7dcff3739109a9b6b7979a04d4242af313",
+      "sha256": "a45fb398f49dbf49be4fac8ae23bf0a5f0ff4ab5d4d51f748918e3137f0adb39",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32011,7 +32011,7 @@
     {
       "id": "SURFACE-1180f7716e42349e",
       "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
-      "sha256": "441b04ee4b95f41be9fc41fcfd56d8e085ad3b8342c2a316391116e7aaf1862a",
+      "sha256": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35098,7 +35098,7 @@
     {
       "id": "SURFACE-53f917e22cc25447",
       "path": "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
-      "sha256": "f688d6538b93497e9aad92e094fc33e8f510557a27336ee9b5a073f32c3aa19c",
+      "sha256": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42078,7 +42078,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4461ecfd192f345b0c83250f96f02389107d3bdff37d618cad6e1802f9889105",
+      "sourceSha256": "7b0b2a08930b49e53d1d04ecac9afebfff3dde71059b7e41e30817b015f6ce8f",
       "definition": {
         "states": [
           "absent",
