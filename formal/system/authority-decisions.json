@@ -566,18 +566,6 @@
       "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
     },
     {
-<<<<<<< HEAD
-      "id": "AUTHORITY-061",
-      "sources": [
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/WhatsApp/History.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs"
-      ],
-      "conflict": "WhatsApp history states that a duplicate delivery must not rewrite the stored inbound message, while the Instagram and Facebook webhooks and the backfill overwrote the stored text, set the direction to incoming and reset the reply status to pending on every repeat, so a message held for a person or failed was taken up by the reply worker again; a unit test expected a late repeat to replace the text of a deleted message.",
-      "authority": "The WhatsApp history rule governs for every Meta channel: a provider message is one event. The overwrite came from using an upsert, and the unit-test expectation recorded that behaviour, not a decision.",
-      "resolution": "Instagram and Facebook messages are inserted when absent and otherwise left as stored, filling only a missing sender name or attribution, or metadata that lacked the receiving account; a repeated deletion keeps its first time. A backfill no longer returns held or failed messages to the worker; the unhold action remains. The webhooks and the backfill share the function. The unit test now expects the original text. No schema change. Erasing deleted text, handling edits and the inbound capture triggers that never fire remain open."
-=======
       "id": "AUTHORITY-053",
       "sources": [
         "docs/revenue-platform/formal-model.yaml",
@@ -588,7 +576,18 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
->>>>>>> origin/main
+    },
+    {
+      "id": "AUTHORITY-061",
+      "sources": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "conflict": "WhatsApp history states that a duplicate delivery must not rewrite the stored inbound message, while the Instagram and Facebook webhooks and the backfill overwrote the stored text, set the direction to incoming and reset the reply status to pending on every repeat, so a message held for a person or failed was taken up by the reply worker again; a unit test expected a late repeat to replace the text of a deleted message.",
+      "authority": "The WhatsApp history rule governs for every Meta channel: a provider message is one event. The overwrite came from using an upsert, and the unit-test expectation recorded that behaviour, not a decision.",
+      "resolution": "Instagram and Facebook messages are inserted when absent and otherwise left as stored, filling only a missing sender name or attribution, or metadata that lacked the receiving account; a repeated deletion keeps its first time. A backfill no longer returns held or failed messages to the worker; the unhold action remains. The webhooks and the backfill share the function. The unit test now expects the original text. No schema change. Erasing deleted text, handling edits and the inbound capture triggers that never fire remain open."
     }
   ]
 }

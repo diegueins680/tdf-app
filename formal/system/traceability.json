@@ -9369,7 +9369,7 @@
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
-    "scripts/specification-conformance.py": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
+    "scripts/specification-conformance.py": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
@@ -20167,7 +20167,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
+      "sha256": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

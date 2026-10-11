@@ -171,6 +171,12 @@ def validate_response_status(policy, requirements, root=ROOT):
 def generate(root=ROOT):
     inventory = json.loads((root/'formal/system/inventory.json').read_text())
     requirements = json.loads((root/'formal/system/requirements.json').read_text())['requirements']
+    # Nothing else reads this register, so an unparseable or duplicated entry
+    # (for instance an unresolved merge) would otherwise pass every gate.
+    decisions = json.loads((root/'formal/system/authority-decisions.json').read_text())['decisions']
+    decision_ids = [decision['id'] for decision in decisions]
+    if len(decision_ids) != len(set(decision_ids)):
+        raise SystemExit('Authority decisions contain a duplicated id')
     validate_requirements(requirements, root)
     availability = validate_availability(json.loads((root/'formal/system/api-availability.json').read_text()), requirements, root)
     response_status = validate_response_status(json.loads((root/'formal/system/api-response-status.json').read_text()), requirements, root)

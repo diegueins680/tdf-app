@@ -4741,7 +4741,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
+      "sha256": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23692,7 +23692,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "fbef37b1c52f0047b03621989d072a49ce3264f3eaea9cd357931e231673113b",
+      "sha256": "e8f0cc8ee74221efeada7fdb881ad27b2129a3c357e1d10d1777f1a8949e1f44",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
