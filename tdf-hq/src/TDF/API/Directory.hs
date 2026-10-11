@@ -121,6 +121,7 @@ data DirectoryProfileUpsert = DirectoryProfileUpsert
   , remote :: Bool
   , availableToTravel :: Bool
   , travelRadiusKm :: Maybe Double
+  , coverImageUrl :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON DirectoryProfileUpsert
 instance ToJSON DirectoryProfileUpsert
