@@ -4438,6 +4438,88 @@
       }
     },
     {
+      "id": "EVT-OWNER-CLAIM-001",
+      "title": "Never hand an event without an organizer to the first caller",
+      "domain": "EVT",
+      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. Only a strict administrator whose edit of the event is accepted becomes its organizer, in the same transaction, through one conditional update whose stored result decides the outcome.",
+      "authority": "Event-operations foundation migration of 2026-09-14 (events without a resolved owner stay disabled until reviewed) and repository audit of 2026-09-14 (remove organizer-null claiming)",
+      "source": "formal/system/event-organizer-assignment.md",
+      "contract": "formal/system/event-organizer-assignment.md",
+      "actors": [
+        "Event organizer",
+        "Strict administrator",
+        "Authenticated user",
+        "Logistics team member"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "Event visible to the caller, or caller is a strict administrator"
+      ],
+      "inputs": [
+        "Event identifier",
+        "Caller party and roles"
+      ],
+      "state": {
+        "boundary": "social_event.organizer_party_id",
+        "authority": "PostgreSQL conditional update and row lock"
+      },
+      "allowedTransitions": [
+        "No organizer -> strict administrator whose edit of the event is accepted"
+      ],
+      "forbiddenTransitions": [
+        "No organizer -> any caller of a read route",
+        "No organizer -> ordinary user",
+        "No organizer -> administrator whose edit was refused",
+        "Organizer A -> organizer B through any organizer-only route",
+        "Acting as organizer when the stored organizer is another party"
+      ],
+      "effects": [
+        "Organizer assigned once",
+        "updated_at refreshed on assignment"
+      ],
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before.",
+      "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
+      "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
+      "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
+      "failure": "403 for an event without an organizer; 403 for a caller who lost a simultaneous assignment; 404 if the event disappeared.",
+      "recovery": "A strict administrator edits the event through the API to become its organizer, or an owner is assigned by a reviewed database change; no shipped client exposes the administrator edit.",
+      "observability": "The organizer field and updated_at; no audit row is written.",
+      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once and only by a strict administrator.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "formal/event-operations/EventOrganizer.tla",
+        "scripts/test-event-organizer.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventOrganizerSpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "scripts/test-event-organizer.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/EventOrganizer.tla",
+        "formal/event-operations/EventOrganizer.cfg",
+        "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+        "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+        "formal/event-operations/EventOrganizerTrustEarlierRead.cfg"
+      ],
+      "verification": "Bounded TLA+ model with three negative controls; PostgreSQL assignment tests including simultaneous callers and a lock-wait case; SQLite handler tests of the edit and image-upload routes, including a refused administrator edit.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "The helper and its seven call sites were read in full; other organizer checks compare the stored organizer directly and never wrote.",
+      "ambiguity": [
+        "How many production events lack an organizer is unknown; none is created by current code.",
+        "The assignment is not audited and does not update event_operation_relationship.",
+        "The assigning administrator stays organizer; there is no transfer route and no client surface for the assignment.",
+        "Whether a non-administrator should ever be able to request ownership of such an event is a product decision; today the answer is no."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Assignment is modeled within bounds and exercised on PostgreSQL; a successful administrator edit and the remaining organizer-only call sites are covered by reading, not by per-route tests, and production data was not inspected."
+      }
+    },
+    {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
       "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation.",

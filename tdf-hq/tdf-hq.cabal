@@ -355,6 +355,7 @@ test-suite tdf-hq-test
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
+    TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     Paths_tdf_hq
     TDF.API

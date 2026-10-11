@@ -423,6 +423,7 @@
       "scripts/test-event-operations-http-ci.sh",
       "scripts/test-event-operations-http.sh",
       "scripts/test-event-operations-schema-rehearsal.sh",
+      "scripts/test-event-organizer.sh",
       "scripts/test-event-raci-browser.sh",
       "scripts/test-event-raci-editor-context-migration.sh",
       "scripts/test-event-raci-reassignment-migration.sh",
@@ -2034,6 +2035,7 @@
       "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
       "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
+      "tdf-hq/test/TDF/EventOrganizerSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
       "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
@@ -2563,7 +2565,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+      "sha256": "11e26b090220c88efb7ac1139f5dc4f5196f5658b534b54d324150b16893f398",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4949,6 +4951,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5f11b620c3566a19",
+      "path": "scripts/test-event-organizer.sh",
+      "sha256": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-de843c5a9b8c5eed",
       "path": "scripts/test-event-raci-browser.sh",
       "sha256": "09d11b39dfb9ed22f8d8a500d49119e0498fa97996b211b55c61a909d8ab6574",
@@ -5509,7 +5517,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "83f31778b69910ef921ab0babd57b5326b6adbb0d6eaa6a937b5b144693e0e68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14035,7 +14043,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+      "sha256": "b52295fbeaa6fe97207130e43c1a449b22d486152dd1775012b0ad2bafdf15f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14359,7 +14367,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9585cec9b32ff6f56e1126b999b5ad83bd1859ea15502599b68a1a4b2e12b1ef",
+      "sha256": "cd639f18b7bdfed63e92f2167cce00014e2ab62cc6bbddf750b42270ebd60c40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14425,7 +14433,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "5c3d6dbfeace818e915e80bba09b6530f259e8c0dc3c76dfa9a3d228f7b43767",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14576,6 +14584,12 @@
       "id": "SURFACE-b7c5b68652826d3d",
       "path": "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "sha256": "b8ae8271535758e9e40efcd106b9abfd9b3775ed9f55f51a9022039bce8e169a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0b2762494d9e6ae1",
+      "path": "tdf-hq/test/TDF/EventOrganizerSpec.hs",
+      "sha256": "364e0e8fa6fc7be63a859d6edacfe83ee8cf72bef003ebea63ea4e9408dc2925",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14743,7 +14757,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
+      "sha256": "30ae98a17dfd6ec8b6eb4fb4f5e62004977ec7df4fe28db223a923c9252144eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21479,6 +21493,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/EventOrganizer.cfg",
+      "sha256": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizer.tla",
+      "sha256": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+      "sha256": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizerTrustEarlierRead.cfg",
+      "sha256": "55781bffd01b28268c218fe896d026901db6ad84803b38c89359a5e290f2b430",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+      "sha256": "f735a2ec461f4995718cd73d66940e3e81e74cb166498b239100051de506e479",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/EventStructure.als",
       "sha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2",
       "authority": "inferred",
@@ -22236,7 +22285,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "efc6869572d511bda4e40fabce16bd06a8703278dd559972a61104566b500fda",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23608,14 +23657,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
+      "sha256": "7c9783ae8eb2928994b7d4e12a6791e6b2773b14fe21deb6b11df4a20c3781ce",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ef4ece82253282e415886a6ffec698665fa1705f3ff0a393943634d6c69f17b5",
+      "sha256": "be2797079090dd1c04a054a077cdca32940620602064c8ea5e3ce77d6c804e19",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23700,6 +23749,13 @@
     {
       "path": "formal/system/drive-replay.md",
       "sha256": "2d6194a8c331d81e5d1499aeb980cf6e0a5f2457d35e0f8f7d84a8d7f5e6729b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-organizer-assignment.md",
+      "sha256": "d3be7d90dc78f0024e113e6e5db7ccb1d6d240dd30ca512c4c0e71fb61d62a2d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23888,7 +23944,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1b4925d8eb0ae5d1aa871fe74c4cbfa44274158634df90a92353da6af8adbdb4",
+      "sha256": "a55937be0c07f949b4d0635ce8801b364e5c0bde98a2cb8e26956e9e5354bdb9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32099,6 +32155,90 @@
         "",
         "PROPERTIES",
         "  AuditAppendOnly"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizer.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = TRUE",
+        "  ConditionalWrite = TRUE",
+        "  RecheckStored = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = FALSE",
+        "  ConditionalWrite = TRUE",
+        "  RecheckStored = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizerTrustEarlierRead.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = TRUE",
+        "  ConditionalWrite = TRUE",
+        "  RecheckStored = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = TRUE",
+        "  ConditionalWrite = FALSE",
+        "  RecheckStored = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
