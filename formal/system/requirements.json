@@ -9077,7 +9077,7 @@
       "privacy": "No new data is stored or exposed.",
       "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
       "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
-      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook fails after the reply has been sent, and the provider delivers it again.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook request fails after the reply has been sent.",
       "recovery": "Rollback file restores the constraints while no stored row violates them.",
       "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
       "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
@@ -9100,7 +9100,7 @@
         "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
         "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
       ],
-      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated schema, with a run against the schema before the migration as control.",
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test against the migrated schema, through the application's storage functions where one exists, with a manual local run against the schema before the migration as control (not repeated in CI).",
       "evidence": "formal/system/index-declarations.md",
       "status": "specified and implemented",
       "historicalStatus": "new",

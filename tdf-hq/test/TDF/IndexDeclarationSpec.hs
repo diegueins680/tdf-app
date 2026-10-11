@@ -10,7 +10,7 @@ import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime, addUTCTime, getCurrentTime)
-import Database.Persist (Entity(..), insert, insert_)
+import Database.Persist (Entity(..), insert, insert_, toPersistValue)
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql
   ( ConnectionPool, PersistValue(..), Single(..), SqlPersistT, rawSql, runSqlPool, toSqlKey, transactionUndo )
@@ -25,7 +25,9 @@ import TDF.WhatsApp.History
   , recordIncomingWhatsAppMessage, recordOutgoingWhatsAppMessage )
 
 -- Each case writes through the installed schema inside one transaction that
--- is undone at its end, so nothing it creates outlives it.
+-- is undone at its end, so nothing it creates outlives it. WhatsApp rows,
+-- follow-ups and the sent conversation messages go through the functions the
+-- application calls; registrations and receipts are inserted directly.
 spec :: Spec
 spec = describe "index-declaration-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_INDEX_DECLARATION_DATABASE_URL")
@@ -51,6 +53,23 @@ spec = describe "index-declaration-postgresql" $ do
             insert_ (M.ChatMessage thread (toSqlKey a) "tres" (addUTCTime 1 now))
             countOf "SELECT count(*) FROM chat_message WHERE thread_id IN (SELECT id FROM chat_thread WHERE dm_party_a=?)" [PersistInt64 a]
           stored `shouldBe` 3
+
+        it "stores the second message sent through the conversation's send function" $ \pool -> do
+          stored <- undone pool $ do
+            now <- currentTime
+            a <- party
+            b <- party
+            thread <- insert (M.ChatThread (toSqlKey a) (toSqlKey b) now now)
+            -- Two people who follow each other may write to each other.
+            insert_ (M.PartyFollow (toSqlKey a) (toSqlKey b) False now)
+            insert_ (M.PartyFollow (toSqlKey b) (toSqlKey a) False now)
+            let send who body = rawSql "SELECT social_v2_chat_send(?,?,?,false)::text"
+                  [PersistInt64 who, toPersistValue thread, PersistText body] :: SqlPersistT IO [Single Text]
+            first <- send a "uno"
+            second <- send b "dos"
+            n <- countOf "SELECT count(*) FROM chat_message WHERE thread_id=?" [toPersistValue thread]
+            pure (map accepted [first, second], n)
+          stored `shouldBe` ([True, True], 2)
 
         it "stores a WhatsApp reply recorded at the instant of the message it answers" $ \pool -> do
           phone <- newPhone
@@ -82,6 +101,19 @@ spec = describe "index-declaration-postgresql" $ do
             directions phone
           stored `shouldBe` ["incoming", "incoming"]
 
+        it "stores two WhatsApp messages of a known contact that arrive together" $ \pool -> do
+          phone <- newPhone
+          stored <- undone pool $ do
+            now <- currentTime
+            who <- party
+            _ <- rawSql "UPDATE party SET whatsapp=?, primary_phone=? WHERE id=? RETURNING id"
+              [PersistText phone, PersistText phone, PersistInt64 who] :: SqlPersistT IO [Single Int64]
+            _ <- recordIncomingWhatsAppMessage now (inbound phone "index-spec.first")
+            _ <- recordIncomingWhatsAppMessage now (inbound phone "index-spec.second")
+            countOf "SELECT count(*) FROM whats_app_message WHERE party_id=?" [PersistInt64 who]
+          stored `shouldBe` 2
+
+        -- Holds before and after the migration: the provider identity stays unique.
         it "still stores a WhatsApp message delivered twice once" $ \pool -> do
           phone <- newPhone
           stored <- undone pool $ do
@@ -91,21 +123,33 @@ spec = describe "index-declaration-postgresql" $ do
             directions phone
           stored `shouldBe` ["incoming"]
 
-        it "keeps course follow-ups that share a reminder time or are written together" $ \pool -> do
+        it "keeps follow-ups of different people that share a reminder time" $ \pool -> do
+          stored <- undone pool $ do
+            now <- currentTime
+            staff <- party
+            let reminder = Just (addUTCTime 86400 now)
+                followUp at = do
+                  who <- party
+                  reg <- registration who "index-spec-a" at
+                  _ <- insertCourseRegistrationFollowUp (toSqlKey reg) (Just (toSqlKey who))
+                    (Just (toSqlKey staff)) "note" Nothing "Llamar" Nothing Nothing reminder at
+                  pure ()
+            followUp now
+            followUp (addUTCTime 1 now)
+            countOf "SELECT count(*) FROM course_registration_follow_up WHERE created_by=?" [PersistInt64 staff]
+          stored `shouldBe` 2
+
+        it "keeps two follow-ups written together for one registration" $ \pool -> do
           stored <- undone pool $ do
             now <- currentTime
             who <- party
-            staff <- party
-            first <- registration who "index-spec-a" now
-            second <- registration who "index-spec-b" now
-            let reminder = Just (addUTCTime 86400 now)
-                followUp reg = insertCourseRegistrationFollowUp (toSqlKey reg) (Just (toSqlKey who))
-                  (Just (toSqlKey staff)) "note" Nothing "Llamar" Nothing Nothing reminder now
-            _ <- followUp first
-            _ <- followUp first
-            _ <- followUp second
-            countOf "SELECT count(*) FROM course_registration_follow_up WHERE party_id=?" [PersistInt64 who]
-          stored `shouldBe` 3
+            reg <- registration who "index-spec-a" now
+            let followUp = insertCourseRegistrationFollowUp (toSqlKey reg) (Just (toSqlKey who))
+                  Nothing "note" Nothing "Llamar" Nothing Nothing Nothing now
+            _ <- followUp
+            _ <- followUp
+            countOf "SELECT count(*) FROM course_registration_follow_up WHERE registration_id=?" [PersistInt64 reg]
+          stored `shouldBe` 2
 
         it "keeps two receipts uploaded together for one registration" $ \pool -> do
           stored <- undone pool $ do
@@ -142,6 +186,11 @@ spec = describe "index-declaration-postgresql" $ do
           identity <- runSqlPool (countOf
             "SELECT count(*) FROM pg_constraint WHERE contype='u' AND conname='unique_whats_app_message'" []) pool
           (constraints, plain, identity) `shouldBe` (0, 9, 1)
+
+-- Whether the send function answered with a stored message.
+accepted :: [Single Text] -> Bool
+accepted [Single body] = "{\"result\"" `T.isPrefixOf` body
+accepted _ = False
 
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])

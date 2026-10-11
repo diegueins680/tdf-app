@@ -6,6 +6,8 @@
 
 BEGIN;
 
+SET LOCAL lock_timeout = '10s';
+
 ALTER TABLE chat_message DROP CONSTRAINT IF EXISTS index_chat_message_thread;
 CREATE INDEX IF NOT EXISTS index_chat_message_thread ON chat_message (thread_id);
 
@@ -32,5 +34,27 @@ CREATE INDEX IF NOT EXISTS index_whats_app_message_party ON whats_app_message (p
 
 ALTER TABLE whats_app_message DROP CONSTRAINT IF EXISTS index_whats_app_message_phone;
 CREATE INDEX IF NOT EXISTS index_whats_app_message_phone ON whats_app_message (phone_e164, created_at);
+
+-- A unique index of one of these names that is not a constraint would survive
+-- the statements above; stop rather than leave it in place.
+DO $$
+DECLARE remaining text;
+BEGIN
+  SELECT string_agg(c.relname, ', ') INTO remaining
+  FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+  WHERE c.relnamespace = 'public'::regnamespace AND i.indisunique AND c.relname IN (
+    'index_chat_message_thread',
+    'index_course_registration_party',
+    'index_course_registration_follow_up_next',
+    'index_course_registration_follow_up_party',
+    'index_course_registration_follow_up_registration',
+    'index_course_registration_receipt_party',
+    'index_course_registration_receipt_registration',
+    'index_whats_app_message_party',
+    'index_whats_app_message_phone');
+  IF remaining IS NOT NULL THEN
+    RAISE EXCEPTION 'still unique after the index declaration migration: %', remaining;
+  END IF;
+END $$;
 
 COMMIT;
