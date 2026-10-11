@@ -11,13 +11,15 @@ import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime, addUTCTime, getCurrentTime)
-import Database.Persist (PersistValue(..), toPersistValue)
+import Database.Persist (Entity(..), Key, PersistValue(..), toPersistValue)
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
 import System.Environment (lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
 import System.Random (randomRIO)
 import Test.Hspec
-import TDF.Server (WhatsAppReceipt(..), receiveWhatsAppInbound)
+import TDF.Server (WhatsAppReceipt(..), claimWhatsAppAutoReply, receiveWhatsAppInbound)
+import qualified TDF.ModelsExtra as ME
 import TDF.WhatsApp.History (IncomingWhatsAppRecord(..))
 
 -- Deliveries are given to the function the webhook calls after it has checked
@@ -98,6 +100,21 @@ spec = describe "whatsapp-redelivery-postgresql" $ do
           warConfirmed again `shouldBe` False
           consentOf pool phone `shouldReturn` [False]
 
+        it "gives the automatic reply of a message to one caller only" $ \pool -> do
+          phone <- newPhone
+          receipt <- deliver pool phone "m1" "inscribirme"
+          let key = entityKey (warMessage receipt)
+          claim pool key `shouldReturn` True
+          claim pool key `shouldReturn` False
+          other <- deliver pool phone "m2" "inscribirme"
+          claim pool (entityKey (warMessage other)) `shouldReturn` True
+
+        it "gives the automatic reply to exactly one of several simultaneous callers" $ \pool -> do
+          phone <- newPhone
+          receipt <- deliver pool phone "m1" "inscribirme"
+          claims <- forConcurrently [1 .. 8 :: Int] $ \_ -> claim pool (entityKey (warMessage receipt))
+          length (filter id claims) `shouldBe` 1
+
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
   && "_test" `isSuffixOf` value && any (`isPrefixOf` value)
@@ -116,10 +133,13 @@ newPhoneIn used = do
 externalIdFor :: Text -> Text -> Text
 externalIdFor phone label = "wamid.redelivery-spec." <> T.drop 1 phone <> "." <> label
 
+-- A delivery carries the time the message was sent, which a redelivery
+-- repeats. Each label stands for one message sent a fixed time ago.
 deliver :: ConnectionPool -> Text -> Text -> Text -> IO WhatsAppReceipt
 deliver pool phone label body = do
   now <- getCurrentTime
-  runSqlPool (receiveWhatsAppInbound now (Just now) IncomingWhatsAppRecord
+  sentAt <- sentTime phone label now
+  runSqlPool (receiveWhatsAppInbound now (Just sentAt) IncomingWhatsAppRecord
     { iwrExternalId = externalIdFor phone label
     , iwrSenderId = phone
     , iwrSenderName = Nothing
@@ -132,6 +152,23 @@ deliver pool phone label body = do
     , iwrTransportPayload = Nothing
     , iwrSource = Just "whatsapp_webhook"
     }) pool
+
+-- The sent time of a message is the time of its first delivery.
+sentTime :: Text -> Text -> UTCTime -> IO UTCTime
+sentTime phone label now = do
+  known <- lookup (phone, label) <$> readIORef sentTimes
+  case known of
+    Just sentAt -> pure sentAt
+    Nothing -> modifyIORef' sentTimes (((phone, label), now) :) >> pure now
+
+{-# NOINLINE sentTimes #-}
+sentTimes :: IORef [((Text, Text), UTCTime)]
+sentTimes = unsafePerformIO (newIORef [])
+
+claim :: ConnectionPool -> Key ME.WhatsAppMessage -> IO Bool
+claim pool key = do
+  now <- getCurrentTime
+  runSqlPool (claimWhatsAppAutoReply now key) pool
 
 -- Consent as it stands after a completed subscription.
 subscribe :: ConnectionPool -> Text -> IO ()

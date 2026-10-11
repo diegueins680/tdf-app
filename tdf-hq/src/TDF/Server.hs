@@ -20,6 +20,7 @@ import TDF.Social.Server (socialV2Server)
 import qualified TDF.Interactions.Legacy as InteractionLegacy
 import qualified TDF.Interactions.Server as InteractionsServer
 import qualified TDF.Interactions.Notifications as InteractionNotifications
+import qualified Database.Persist.Sql as PersistSql
 import           Control.Applicative ((<|>))
 import           Control.Exception (Exception, SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import qualified Control.Exception.Safe as Safe
@@ -288,7 +289,6 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
                                       , WhatsAppDeliveryUpdate(..)
                                       , applyWhatsAppDeliveryUpdate
                                       , normalizeWhatsAppPhone
-                                      , recordIncomingWhatsAppMessage
                                       , receiveIncomingWhatsAppMessage
                                       , recordOutgoingWhatsAppMessage
                                       )
@@ -1434,6 +1434,22 @@ receiveWhatsAppInbound now sentAt record = do
           else pure False
       pure (WhatsAppReceipt True confirmed message)
 
+-- | Takes the one automatic reply an inbound message may receive. True for the
+-- first caller only; the claim is an audit entry of the message, written
+-- before the reply is sent, so a message is answered at most once.
+claimWhatsAppAutoReply :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+claimWhatsAppAutoReply now messageKey = do
+  let messageId = T.pack (show (fromSqlKey messageKey))
+  _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+    [PersistText ("whatsapp-auto-reply:" <> messageId)] :: SqlPersistT IO [Single Int64]
+  inserted <- PersistSql.rawExecuteCount
+    "INSERT INTO audit_log(entity, entity_id, action, created_at) \
+    \SELECT 'whatsapp_message', ?, 'auto_reply_claimed', ? \
+    \WHERE NOT EXISTS (SELECT 1 FROM audit_log WHERE entity = 'whatsapp_message' \
+    \AND entity_id = ? AND action = 'auto_reply_claimed')"
+    [PersistText messageId, toPersistValue now, PersistText messageId]
+  pure (inserted == 1)
+
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
        verifyHook
@@ -1466,7 +1482,7 @@ whatsappWebhookServer =
             }
           pure ()
       for_ inbound $ \WAInbound{..} -> do
-        WhatsAppReceipt{warFirst, warConfirmed, warMessage = incomingEntity} <-
+        WhatsAppReceipt{warConfirmed, warMessage = incomingEntity} <-
           liftIO $ flip runSqlPool envPool $
             receiveWhatsAppInbound now waInboundSentAt IncomingWhatsAppRecord
               { iwrExternalId = waInboundExternalId
@@ -1485,8 +1501,10 @@ whatsappWebhookServer =
           sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
             "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
         let lowerBody = T.toLower (T.strip waInboundText)
-        -- A redelivered message is not answered again.
-        when (warFirst && "inscribirme" `T.isInfixOf` lowerBody) $ do
+        -- Every delivery reaches the registration, which is keyed by the stored
+        -- message and so is made once; a delivery that follows a failed one
+        -- completes it. The reply is sent by the one delivery that claims it.
+        when ("inscribirme" `T.isInfixOf` lowerBody) $ do
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
@@ -1509,23 +1527,26 @@ whatsappWebhookServer =
                   , termsAccepted = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
-                (replyTxt, replyRes) <- sendWhatsappReply cfg phone
-                liftIO $ flip runSqlPool envPool $ do
-                  _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
-                    { owrRecipientPhone = phone
-                    , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
-                    , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
-                    , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
-                    , owrActorPartyId = Nothing
-                    , owrBody = replyTxt
-                    , owrSource = Just "course_enrollment_auto_reply"
-                    , owrReplyToMessageId = Just (entityKey incomingEntity)
-                    , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
-                    , owrResendOfMessageId = Nothing
-                    , owrMetadata = Nothing
-                    }
-                    replyRes
-                  pure ()
+                claimed <- liftIO $ flip runSqlPool envPool $
+                  claimWhatsAppAutoReply now (entityKey incomingEntity)
+                when claimed $ do
+                  (replyTxt, replyRes) <- sendWhatsappReply cfg phone
+                  liftIO $ flip runSqlPool envPool $ do
+                    _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                      { owrRecipientPhone = phone
+                      , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
+                      , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
+                      , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
+                      , owrActorPartyId = Nothing
+                      , owrBody = replyTxt
+                      , owrSource = Just "course_enrollment_auto_reply"
+                      , owrReplyToMessageId = Just (entityKey incomingEntity)
+                      , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
+                      , owrResendOfMessageId = Nothing
+                      , owrMetadata = Nothing
+                      }
+                      replyRes
+                    pure ()
       pure NoContent
 
 whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM

@@ -9033,7 +9033,7 @@
       "id": "MSG-WHATSAPP-REDELIVERY-001",
       "title": "A redelivered WhatsApp message changes nothing and is not answered again",
       "domain": "MSG",
-      "statement": "The webhook delivery that stores an inbound WhatsApp message applies what it asks for (opt-out keyword, consent confirmation) in the same transaction and sends its automatic reply; a delivery that finds the message already stored changes nothing and sends nothing.",
+      "statement": "The webhook delivery that stores an inbound WhatsApp message applies what it asks for (opt-out keyword, consent confirmation) in the same transaction and sends its automatic reply; a delivery that finds the message already stored applies nothing again. An enrolment message is registered once and answered by the one delivery that claims its reply.",
       "authority": "AUTHORITY-060; Meta delivers webhooks at least once and a signed body stays valid.",
       "source": "formal/system/whatsapp-redelivery.md",
       "contract": "formal/system/whatsapp-redelivery.md",
@@ -9067,9 +9067,9 @@
       "authorization": "Unauthenticated route admitted only by the Meta signature; the effect is limited to the sender's own number.",
       "privacy": "No new data; the stored message and consent rows are unchanged in shape.",
       "concurrency": "Deliveries of one provider message take a transaction-scoped advisory lock on its id; the unique index on external_id refuses a second copy.",
-      "idempotency": "Keyed by the provider message id. A message without one is treated as new on every delivery.",
+      "idempotency": "Keyed by the provider message id, or for a message without one by an id derived from sender, sent time and body. The course registration is keyed by the stored message; the reply by an auto_reply_claimed audit entry.",
       "failure": "A failed transaction stores nothing and applies nothing, so the next delivery is again the first.",
-      "recovery": "Meta redelivers; a reply or notice not sent by the first delivery is not sent later.",
+      "recovery": "Meta redelivers; a registration that failed is retried by the next delivery. A reply already claimed, or a notice whose confirmation already committed, is not sent later.",
       "observability": "whats_app_message row, its received audit entry and whats_app_consent.",
       "property": "What a message asks for is applied at most once however often it is delivered, a stored opt-out has been applied, and an enrolment message is answered at most once.",
       "implementation": [
@@ -9094,7 +9094,7 @@
       "status": "specified and implemented",
       "historicalStatus": "new",
       "critical": true,
-      "confidence": "Handler and storage read; database behaviour run locally against PostgreSQL 16 on 2026-10-11; the automatic-reply gate is covered by reading only.",
+      "confidence": "Handler and storage read; database behaviour run locally against PostgreSQL 16 on 2026-10-11; the handler's use of the reply claim is covered by reading only.",
       "ambiguity": [
         "Whether a delayed first delivery of an old STOP should defeat a later subscription is undecided; it currently does."
       ],
