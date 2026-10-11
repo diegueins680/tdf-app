@@ -347,6 +347,10 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
+run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
+run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
+run_negative_tlc IndexDeclarationIdentityNotUnique.cfg index-declaration-identity-not-unique 'Invariant IdentityStoredOnce is violated' IndexDeclaration.tla
 run_tlc TaskRead.tla TaskRead.cfg task-read
 run_tlc TaskView.tla TaskView.cfg task-view
 expect_counterexample TaskViewLate.cfg CurrentView task-view-late TaskView.tla

@@ -9036,6 +9036,83 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "DATA-INDEX-DECLARATION-001",
+      "title": "A lookup index never refuses a legitimate row",
+      "domain": "DATA",
+      "statement": "A conversation stores every message sent in it; a WhatsApp message and the reply recorded at the same instant, and two messages from one sender received together, are all stored; course registrations, receipts and follow-ups written at the same instant or sharing a reminder time are all stored. A message identity given by the provider is still stored once.",
+      "authority": "AUTHORITY-063; the application's chat, WhatsApp history and course follow-up behaviour.",
+      "source": "formal/system/index-declarations.md",
+      "contract": "formal/system/index-declarations.md",
+      "actors": [
+        "Signed-in person in a conversation",
+        "Meta webhook delivery",
+        "Staff recording course follow-ups",
+        "Person registering for a course"
+      ],
+      "preconditions": [
+        "A row with an identity not yet stored, written through the application"
+      ],
+      "inputs": [
+        "Conversation, contact, telephone number or registration; the row's timestamp; the reminder time"
+      ],
+      "state": {
+        "boundary": "chat_message, whats_app_message, course_registration, course_registration_receipt, course_registration_follow_up",
+        "authority": "PostgreSQL constraints and indexes"
+      },
+      "allowedTransitions": [
+        "New row with a new identity -> stored, whatever key and time it carries"
+      ],
+      "forbiddenTransitions": [
+        "Second message in a conversation -> refused",
+        "Reply recorded at the instant of its message -> refused",
+        "Second follow-up with the same reminder time -> refused",
+        "Provider message identity already stored -> second row"
+      ],
+      "effects": [
+        "Nine plain indexes in place of nine uniqueness constraints; no row changed"
+      ],
+      "authorization": "Unchanged; the existing conversation, staff and webhook checks decide who may write.",
+      "privacy": "No new data is stored or exposed.",
+      "concurrency": "Removing the constraints removes a source of refusals between concurrent writers; identity constraints still serialize repeated deliveries.",
+      "idempotency": "Unchanged: the WhatsApp provider message id and the other identity constraints remain unique.",
+      "failure": "Before the migration the refused write raises a database error and the request fails; a WhatsApp webhook fails after the reply has been sent, and the provider delivers it again.",
+      "recovery": "Rollback file restores the constraints while no stored row violates them.",
+      "observability": "pg_constraint and pg_indexes; the request no longer fails with a unique violation on an index_ name.",
+      "property": "No row with a new identity is refused by a lookup index, and an identity is stored at most once.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
+        "scripts/test-index-declarations.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/IndexDeclaration.tla",
+        "formal/event-operations/IndexDeclaration.cfg",
+        "formal/event-operations/IndexDeclarationKeyUnique.cfg",
+        "formal/event-operations/IndexDeclarationKeyTimeUnique.cfg",
+        "formal/event-operations/IndexDeclarationIdentityNotUnique.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated schema, with a run against the schema before the migration as control.",
+      "evidence": "formal/system/index-declarations.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Models, production schema snapshot and writers read; behaviour run locally against PostgreSQL 16 on 2026-10-11. The production database itself was not queried, and the migration is not applied there.",
+      "ambiguity": [
+        "Whether production still carries the nine constraints of the 2026-08-14 snapshot was not checked against the live database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
+      }
     }
   ]
 }

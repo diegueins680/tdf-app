@@ -605,3 +605,10 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Index declarations
+
+`IndexDeclaration.tla` and four configurations check the rule in
+[index-declarations.md](../system/index-declarations.md): a row with a new identity
+is stored whatever key and time it carries, and an identity is stored once. The
+positive model and three negative controls are mandatory in the formal runner.
