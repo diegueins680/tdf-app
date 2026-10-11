@@ -949,7 +949,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -963,7 +963,8 @@
       "inputs": [
         "Domain formal-model.yaml machines",
         "formal/system/state-machine-bindings.json",
-        "Migrated PostgreSQL catalog"
+        "Migrated PostgreSQL catalog",
+        "Bound Haskell validators and their state renderers"
       ],
       "state": {
         "machine": [
@@ -983,7 +984,8 @@
       ],
       "effects": [
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
-        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048)."
+        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
+        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -999,21 +1001,23 @@
       "implementation": [
         "scripts/check-state-machines.py",
         "formal/system/state-machine-bindings.json",
-        "docs/revenue-platform/formal-model.yaml"
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database and twelve negative controls",
+      "verification": "Catalog comparison, plus static comparison of four bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals); guards and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and seven database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Fourteen machines enforce transitions only in application code."
+        "Ten machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9033,94 +9037,16 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
-    },
-    {
-      "id": "MSG-META-REDELIVERY-001",
-      "title": "A repeated Instagram or Facebook message leaves the stored message as it is",
-      "domain": "MSG",
-      "statement": "A stored inbound Instagram or Facebook message keeps its text, direction, deletion and reply state however often a webhook delivers it again or a backfill reads it again; a repeat may only fill a missing sender name or advertising attribution, and a repeated deletion keeps its first time.",
-      "authority": "AUTHORITY-061; Meta delivers webhooks at least once, and the WhatsApp history rule that a duplicate delivery must not rewrite the stored message.",
-      "source": "formal/system/meta-redelivery.md",
-      "contract": "formal/system/meta-redelivery.md",
-      "actors": [
-        "Meta webhook delivery",
-        "Administrator running a backfill",
-        "Reply worker"
-      ],
-      "preconditions": [
-        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001), or an authorized backfill"
-      ],
-      "inputs": [
-        "Provider message id, sender, text, attribution, deletion event"
-      ],
-      "state": {
-        "boundary": "instagram_message, facebook_message",
-        "authority": "PostgreSQL unique index on external_id; insert when absent"
-      },
-      "allowedTransitions": [
-        "Message absent -> stored as pending",
-        "Stored without sender name or attribution -> filled",
-        "Stored and not deleted -> deleted at the first deletion"
-      ],
-      "forbiddenTransitions": [
-        "On hold or failed -> pending because the message was delivered or backfilled again",
-        "Stored text -> other text",
-        "Outgoing -> incoming",
-        "Deletion time -> later deletion time",
-        "Deleted before stored -> text"
-      ],
-      "effects": [
-        "One row per provider message",
-        "The reply worker takes up a message once"
-      ],
-      "authorization": "Unauthenticated webhook routes admitted only by the Meta signature; the backfill keeps its existing authorization.",
-      "privacy": "A repeat can no longer write new text into a message its sender deleted. Text stored before a deletion is still kept.",
-      "concurrency": "Simultaneous first deliveries are decided by the unique index; the losing transaction fails and is delivered again.",
-      "idempotency": "Keyed by the provider message id.",
-      "failure": "A failed transaction stores nothing.",
-      "recovery": "Meta redelivers; a repeat is harmless.",
-      "observability": "The message row.",
-      "property": "Delivering or backfilling a stored message again changes neither its text nor its direction, deletion or reply state.",
-      "implementation": [
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Server.hs"
-      ],
-      "tests": [
-        "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs",
-        "scripts/test-meta-redelivery.sh",
-        "scripts/verify-event-operations-formal.sh"
-      ],
-      "formalModels": [
-        "formal/event-operations/MetaRedelivery.tla",
-        "formal/event-operations/MetaRedelivery.cfg",
-        "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
-        "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
-        "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg"
-      ],
-      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test of the function both webhooks call.",
-      "evidence": "formal/system/meta-redelivery.md",
-      "status": "specified and implemented",
-      "historicalStatus": "new",
-      "critical": true,
-      "confidence": "Webhook, backfill and reply worker read; storage behaviour run locally against PostgreSQL 16 on 2026-10-11; the backfill path is covered by reading only.",
-      "ambiguity": [
-        "Whether the text of a message deleted by its sender should be erased is undecided; it is kept."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
-      }
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "087f244af9b982282d76c52a25a71c919075c5687c2e1b060106c843a228fc05",
-    ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+    ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+    ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
-    "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+    "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
@@ -9170,11 +9096,6 @@
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
-    "formal/event-operations/MetaRedelivery.cfg": "cf591fb7addfe8447ece3c9ce41981e7d84a8db4efff75dd04c80cf99b8f1277",
-    "formal/event-operations/MetaRedelivery.tla": "fc3a65592d08767a6659246acbd459c8bad4100e93d533bde1b3bbf16e3c81dc",
-    "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg": "4d82b02dd6d3e28d462cecea8ded5df695474aced641ceec87b3eabb63e86ded",
-    "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg": "f287a45782f040f7b03ca47d26f9e08a640cd18fd7465698ab9b90113331a865",
-    "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg": "2aa32978ce8cf5bcf9131559d75f6f9512d2a8a7cafad20ae1d4ef5a5272cfad",
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
@@ -9228,7 +9149,7 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
-    "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
+    "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
@@ -9306,7 +9227,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-state-machines.py": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+    "scripts/check-state-machines.py": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -9381,7 +9302,6 @@
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
-    "scripts/test-meta-redelivery.sh": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
@@ -9412,7 +9332,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
+    "scripts/test-state-machines.py": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -9425,7 +9345,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "4e76cff73880c20f9d2234cf7136df94e875f64b04b9b55ca1d223e9a941717e",
+    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9750,6 +9670,7 @@
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "b330b3fa88c6f63de6bed83991e7f2356934d02fe5f4fc390dde8865dcb341dd",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
+    "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
@@ -9794,7 +9715,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "473dd094275d5862174d4826e7f97e781c02643a910771e14b1e2833243e9fb9",
+    "tdf-hq/src/TDF/Server.hs": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -9818,7 +9739,7 @@
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
-    "tdf-hq/src/TDF/ServerExtra.hs": "f78c8b86ca069a66414f6a0cee1003db3e71cd1bc52cc734e16986160db04861",
+    "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
@@ -9834,12 +9755,12 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "a83f58b011e2e1459e8ff0d6ddb7a12c84a9a9511cb44ff1ae0bd8aea0a09c4e",
+    "tdf-hq/tdf-hq.cabal": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "2d2fbe7c332183e450a7318491f6c354146817b63f212d6d2e252dcb1f5f69db",
+    "tdf-hq/test/Spec.hs": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
     "tdf-hq/test/TDF/APITypesSpec.hs": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -9857,7 +9778,6 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
-    "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "0ca6db09fb9ef11208841b505a93d021b5351959b6eb06a8f780137c28aad711",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -9867,7 +9787,6 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
-    "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -10075,10 +9994,6 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "tests"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -10111,6 +10026,10 @@
       {
         "requirement": "SYS-INVENTORY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/lib/formal-result-summary.mjs": [
@@ -10284,10 +10203,6 @@
       },
       {
         "requirement": "COURSE-ENROLL-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -10584,6 +10499,12 @@
       }
     ],
     "docs/revenue-platform/formal-model.yaml": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": [
       {
         "requirement": "SYS-STATE-001",
         "relationship": "implementation"
@@ -12540,10 +12461,6 @@
       },
       {
         "requirement": "AUTH-WEBHOOK-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -16432,54 +16349,6 @@
         "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "tests"
       }
-    ],
-    "tdf-hq/test/TDF/MetaRedeliverySpec.hs": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq/test/TDF/ServerExtraSpec.hs": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-meta-redelivery.sh": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "tests"
-      }
-    ],
-    "formal/event-operations/MetaRedelivery.tla": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MetaRedelivery.cfg": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg": [
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "formalModels"
-      }
     ]
   },
   "surfaces": [
@@ -16531,7 +16400,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "087f244af9b982282d76c52a25a71c919075c5687c2e1b060106c843a228fc05",
+      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16562,7 +16431,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+      "sha256": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16576,6 +16445,10 @@
         {
           "requirement": "SYS-INVENTORY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -18423,7 +18296,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+      "sha256": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20761,18 +20634,6 @@
       ]
     },
     {
-      "id": "SURFACE-2e227af058b0eed4",
-      "path": "scripts/test-meta-redelivery.sh",
-      "sha256": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-META-REDELIVERY-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-d8aeda8890026d82",
       "path": "scripts/test-music-correction-concurrency.mjs",
       "sha256": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
@@ -21291,7 +21152,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
+      "sha256": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21522,7 +21383,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "4e76cff73880c20f9d2234cf7136df94e875f64b04b9b55ca1d223e9a941717e",
+      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21576,10 +21437,6 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "MSG-META-REDELIVERY-001",
-          "relationship": "tests"
         }
       ]
     },
@@ -32658,7 +32515,12 @@
       "path": "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
       "sha256": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-42d48212b5b3fd40",
@@ -33668,7 +33530,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "473dd094275d5862174d4826e7f97e781c02643a910771e14b1e2833243e9fb9",
+      "sha256": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33725,10 +33587,6 @@
         },
         {
           "requirement": "COURSE-ENROLL-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MSG-META-REDELIVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -34136,7 +33994,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "f78c8b86ca069a66414f6a0cee1003db3e71cd1bc52cc734e16986160db04861",
+      "sha256": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34145,10 +34003,6 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MSG-META-REDELIVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -34573,7 +34427,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a83f58b011e2e1459e8ff0d6ddb7a12c84a9a9511cb44ff1ae0bd8aea0a09c4e",
+      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34687,7 +34541,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2d2fbe7c332183e450a7318491f6c354146817b63f212d6d2e252dcb1f5f69db",
+      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35072,18 +34926,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-1b3fd699697da8c7",
-      "path": "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
-      "sha256": "0ca6db09fb9ef11208841b505a93d021b5351959b6eb06a8f780137c28aad711",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-META-REDELIVERY-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-4571f0b61785302d",
       "path": "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
       "sha256": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
@@ -35244,14 +35086,9 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
+      "sha256": "f30063d0ed9fc0892bcc904b2a8644d7ac6e15e024ca938ee50cee89a619dde2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MSG-META-REDELIVERY-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-fa6329758744ce4e",
@@ -40356,7 +40193,6 @@
     "SURFACE-ee01356d907d3fc2",
     "SURFACE-764d135c920e69a2",
     "SURFACE-6158a3005f97f9a6",
-    "SURFACE-27dffd9db92a2065",
     "SURFACE-42d48212b5b3fd40",
     "SURFACE-64cb8366887e5054",
     "SURFACE-1f329e23e5aba24d",
@@ -40476,6 +40312,7 @@
     "SURFACE-85348e5ee1e69142",
     "SURFACE-c823af87bc95031c",
     "SURFACE-9c08dc84fc4d951b",
+    "SURFACE-fd889b176c72565e",
     "SURFACE-fa6329758744ce4e",
     "SURFACE-c6b62f6ae6aecf86",
     "SURFACE-916f8955abd0c6a2",
@@ -40908,7 +40745,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#marketplace_sale_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "on_hold",
         "method_specific_transitions": {
@@ -40989,7 +40826,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "on_hold",
         "transitions": {
@@ -41021,14 +40858,16 @@
           ],
           "returned_pending_inspection": [
             "deposit_refund_due",
-            "damage_review"
+            "damage_review",
+            "disputed"
           ],
           "damage_review": [
             "deposit_refund_due",
             "disputed"
           ],
           "deposit_refund_due": [
-            "closed"
+            "closed",
+            "disputed"
           ],
           "cancellation_requested": [
             "cancelled"
@@ -41065,7 +40904,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "on_hold",
         "transitions": {
@@ -41139,7 +40978,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#event_ticket_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "seat_held",
         "transitions": {
@@ -41185,7 +41024,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#quote",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -41236,7 +41075,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#distribution",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -41329,7 +41168,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#royalty_statement",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "ingested",
         "transitions": {
@@ -41384,7 +41223,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#refund",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "requested",
         "transitions": {
@@ -41420,7 +41259,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#provider_event",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -42019,7 +41858,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6275d1dcca39e8c2fc0154903a65c61db5afd00a2bfc0376daa5dbb01ab07602",
+      "sourceSha256": "590dca6d55d4d8a44564eb516b332d259339170d80019571ee55c2b044f3d704",
       "definition": {
         "states": [
           "absent",
@@ -64216,7 +64055,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 114,
+    "PARTIAL": 113,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
