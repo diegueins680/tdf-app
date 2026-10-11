@@ -6,16 +6,16 @@ import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, v
 import MobileFeedbackForm from '../mobile/MobileFeedbackForm';
 import { useMobileTelemetry } from '../mobile/telemetry';
 
-// Official store artwork (public/badges), in the page language, only for a released store listing. Beta channels
-// (TestFlight, Play testing) and pre-orders keep their text link: both badges say "download".
+// Official store artwork (public/badges), in the page language. Apple's badge is only for App Store listings, so
+// TestFlight keeps a text button; a pre-order keeps its text label because both badges say "download".
 const storeBadge = (platform: MobilePlatform, channel: DistributionChannel, language: string): { src: string; height: number } | null => {
-  if (!channel.url || channel.status !== 'public') return null;
+  if (!channel.url || channel.status === 'store_preorder') return null;
   let host = '';
   try { host = new URL(channel.url).hostname; } catch { return null; }
   // Only es and en translate this page; every other locale falls back to English copy.
   const locale = language.toLowerCase().startsWith('es') ? 'es' : 'en';
   if (platform === 'android' && host === 'play.google.com') return { src: `/badges/google-play-badge-${locale}.png`, height: 60 };
-  if (platform === 'ios' && host === 'apps.apple.com') return { src: `/badges/app-store-badge-${locale}.svg`, height: 44 };
+  if (platform === 'ios' && channel.status === 'public' && host === 'apps.apple.com') return { src: `/badges/app-store-badge-${locale}.svg`, height: 44 };
   return null;
 };
 

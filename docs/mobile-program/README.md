@@ -98,7 +98,7 @@ Los tests existentes de Expo Router comprueban resolución/allowlist, pero **no 
 
 ## Operación y paso a producción
 
-Antes de modificar `mobile-distribution.json`: comprobar consola y URL como tester elegible; registrar timestamp, build y commit, Beta Review/track, cupos y países. Para iOS public, exigir App Store realmente distribuida y URL id6779786470. Para Android public, exigir production publicado y package correcto; no basta draft/completed upload. Cambiar estado y URL en la misma revisión; las superficies derivan el CTA sin reimplementarse. No usar badges de tienda para beta. Se usan enlaces de texto accesibles; no se reproducen ni alteran insignias oficiales.
+Antes de modificar `mobile-distribution.json`: comprobar consola y URL como tester elegible; registrar timestamp, build y commit, Beta Review/track, cupos y países. Para iOS public, exigir App Store realmente distribuida y URL id6779786470. Para Android public, exigir production publicado y package correcto; no basta draft/completed upload. Cambiar estado y URL en la misma revisión; las superficies derivan el CTA sin reimplementarse. Los enlaces a Google Play (incluido el canal de pruebas) usan la insignia oficial de Google Play; la insignia de App Store se usa solo con una ficha pública de App Store, por lo que TestFlight y las preventas conservan su enlace de texto accesible. Las insignias oficiales no se alteran.
 
 Solicitudes: revisar el feedback recibido, coordinar con el usuario solo con su consentimiento, admitir en el canal autorizado y verificar instalación/primer uso por separado. Retiro: TestFlight/Play Testing y contacto de privacidad para solicitudes. No se enviaron campañas, correos de invitación ni mensajes a terceros durante este trabajo.
 
