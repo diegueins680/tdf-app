@@ -26809,7 +26809,7 @@
     {
       "id": "SURFACE-ab3dd253ad980d5f",
       "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
-      "sha256": "dd270274ab2ef5d25eb2c39d322c222228e67651af1b1f2bd93215e8b2181568",
+      "sha256": "c70be0cbc91944f6628ef2920e331a530ead142af487c53fab68b80b591cef93",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
