@@ -765,6 +765,17 @@ runStripeRequestSafely action = do
 tryAny :: IO a -> IO (Either SomeException a)
 tryAny = try
 
+-- Like tryAny, but cancellation and other asynchronous exceptions propagate.
+trySynchronous :: IO a -> IO (Either SomeException a)
+trySynchronous action = do
+    result <- try action
+    case result of
+        Left err ->
+            case fromException err :: Maybe SomeAsyncException of
+                Just _ -> throwIO err
+                Nothing -> pure (Left err)
+        Right value -> pure (Right value)
+
 isEventTicketCheckoutConflict :: SomeException -> Bool
 isEventTicketCheckoutConflict exception =
     case fromException exception of
@@ -5548,7 +5559,7 @@ socialEventsServer user =
                     }
         -- Approval and the idempotent issuance commit together; a failed
         -- issuance leaves the transfer reviewable instead of paid without tickets.
-        outcome <- liftIO $ tryAny $
+        outcome <- liftIO $ trySynchronous $
             runSqlPool
                 ( ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now
                     (void (finalizePaidTicketOrder now orderKey))
