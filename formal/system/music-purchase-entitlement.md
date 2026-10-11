@@ -70,6 +70,12 @@ environment. The data model and product decisions are in
   repair alone fails the replay case; reverting the free-grant repair fails the
   free-grant case.
 
+## Guard against recurrence
+
+The backend executable is now compiled with `-Werror=missing-fields`, so a record
+built without one of its fields no longer compiles. All 246 backend modules build
+under it; no other module had the fault.
+
 ## Open before the feature is enabled
 
 Independent review of the payment flow found problems this change does not repair.

@@ -14367,7 +14367,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "acff7ebdb51adc0719e279799a14501adbee28676921d94e3c9e1a93db1fd247",
+      "sha256": "72257ec62cec9ce49b2aed5607d62304928b0515035e83782cc637a9038a5a2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23867,7 +23867,7 @@
     },
     {
       "path": "formal/system/music-purchase-entitlement.md",
-      "sha256": "3dfda31a25a2f7066ace0c51aac81c728f8cd2fabd37f2abe6e9292f2e253685",
+      "sha256": "c097d062e8caa9295f1cc80b4038f4842778a7e97ebbb0f159248fb46ea8cd9a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

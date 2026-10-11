@@ -9695,7 +9695,7 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "acff7ebdb51adc0719e279799a14501adbee28676921d94e3c9e1a93db1fd247",
+    "tdf-hq/tdf-hq.cabal": "72257ec62cec9ce49b2aed5607d62304928b0515035e83782cc637a9038a5a2e",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
@@ -34264,7 +34264,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "acff7ebdb51adc0719e279799a14501adbee28676921d94e3c9e1a93db1fd247",
+      "sha256": "72257ec62cec9ce49b2aed5607d62304928b0515035e83782cc637a9038a5a2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
