@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-11T21:17:17.908Z",
+  "generatedAt": "2026-10-11T21:41:24.483Z",
   "repositoryRoot": ".",
   "filesScanned": 2247,
   "candidateCount": 1320,
@@ -13425,7 +13425,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 781,
+      "consumerCount": 782,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14177,7 +14177,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 782,
+      "consumerCount": 783,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14467,7 +14467,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 782,
+      "consumerCount": 783,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -21819,7 +21819,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 835,
+      "consumerCount": 836,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -29291,7 +29291,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 421,
+      "consumerCount": 422,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42618,7 +42618,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 871,
+      "consumerCount": 872,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -51819,7 +51819,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 871,
+      "consumerCount": 872,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -59185,7 +59185,7 @@
       "lines": [
         164
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -59230,13 +59230,13 @@
         "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/src/TDF/Artists/Enrichment.hs",
-        "tdf-hq/src/TDF/Directory/Policy.hs"
+        "tdf-hq/src/TDF/Artists/Enrichment.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -61279,7 +61279,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 871,
+      "consumerCount": 872,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61579,7 +61579,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 871,
+      "consumerCount": 872,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -62975,7 +62975,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 871,
+      "consumerCount": 872,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -98752,7 +98752,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -98796,14 +98796,14 @@
         "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
-        "tdf-hq/src/TDF/Directory/Policy.hs",
-        "tdf-hq/src/TDF/Interactions/API.hs"
+        "tdf-hq/src/TDF/Directory/Policy.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -114532,7 +114532,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 217,
+      "consumerCount": 218,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -130503,7 +130503,7 @@
       "lines": [
         562
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -130547,14 +130547,14 @@
         "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
-        "tdf-hq/src/TDF/Directory/Policy.hs",
-        "tdf-hq/src/TDF/Interactions/API.hs"
+        "tdf-hq/src/TDF/Directory/Policy.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -132564,7 +132564,7 @@
       "lines": [
         335
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -132609,13 +132609,13 @@
         "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/src/TDF/Artists/Enrichment.hs",
-        "tdf-hq/src/TDF/Directory/Policy.hs"
+        "tdf-hq/src/TDF/Artists/Enrichment.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -145618,7 +145618,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 871,
+      "consumerCount": 872,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
