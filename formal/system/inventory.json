@@ -7945,7 +7945,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
+      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8833,7 +8833,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "64d6270c6b48fcb9bd5af79ba337d67e45effcb9d319a02ed5dbff58926ebf63",
+      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23888,7 +23888,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1b4925d8eb0ae5d1aa871fe74c4cbfa44274158634df90a92353da6af8adbdb4",
+      "sha256": "fe975e4496fee1cffe592756fed9ce7941ac156794cf90f8822f54db6358e741",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
