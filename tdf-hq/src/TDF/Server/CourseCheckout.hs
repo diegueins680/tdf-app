@@ -503,6 +503,15 @@ createCourseCheckoutTransaction
         [toPersistValue courseKey] :: SqlPersistT IO [Single Int64])
       _ <- (rawSql "SELECT id::text FROM course_checkout_policy WHERE id = ?::uuid FOR SHARE"
         [PersistText (accpId policy)] :: SqlPersistT IO [Single Text])
+      -- The buyer's accepted version was compared before this transaction. With
+      -- the course locked, read the active policy again: one replaced in between
+      -- must not be bound to this order as accepted.
+      policyAtHold <- loadApprovedCourseCheckoutPolicy now courseKey
+      if policyAtHold == Just policy
+        then holdSeat
+        else pure (Left (conflictError
+          "Course terms changed; review the current terms and accept them again"))
+    holdSeat = do
       _ <- (rawSql "SELECT course_checkout_expire_holds(?, ?)"
         [PersistUTCTime now, toPersistValue courseKey]
         :: SqlPersistT IO [Single Int])

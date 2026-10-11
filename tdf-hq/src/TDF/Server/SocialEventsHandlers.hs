@@ -1197,8 +1197,11 @@ ticketTermsAcceptance (Just _) Nothing Nothing =
     Left err400{errBody = "Ticket terms must be accepted before seats can be held"}
 ticketTermsAcceptance (Just active) (Just accepted) Nothing
     | accepted == active = Right (Just active)
-    | otherwise =
-        Left err409{errBody = "Ticket terms changed; review the current terms and accept them again"}
+    | otherwise = Left ticketTermsChangedError
+
+ticketTermsChangedError :: ServerError
+ticketTermsChangedError =
+    err409{errBody = "Ticket terms changed; review the current terms and accept them again"}
 
 decodeTicketPlatformFeeBreakdown :: EventTicketOrder -> TicketPlatformFeeBreakdown
 decodeTicketPlatformFeeBreakdown order =
@@ -5073,6 +5076,12 @@ socialEventsServer user =
                                         [toPersistValue eventKey]
                                 when (null (lockedEvents :: [Entity SocialEvent])) $
                                     fail "Event not found while reserving tickets"
+                                -- The acceptance was checked before this transaction. Read the
+                                -- policy again now that the hold is being taken: a policy
+                                -- replaced in between must not be recorded as accepted.
+                                termsVersionAtHold <- loadActiveTicketTermsVersion now eventKey
+                                when (termsVersionAtHold /= mTermsVersion) $
+                                    liftIO (throwIO ticketTermsChangedError)
                                 soldAcross <-
                                     selectList [EventTicketTierEventId ==. eventKey] []
                                 let soldCount =
@@ -5108,6 +5117,8 @@ socialEventsServer user =
                         case fromException createErr :: Maybe SomeAsyncException of
                             Just _ -> liftIO (throwIO createErr)
                             Nothing
+                                | Just serverError <- fromException createErr ->
+                                    throwError (serverError :: ServerError)
                                 | isEventTicketCheckoutConflict createErr ->
                                     case tpwpIdempotencyKey of
                                         Nothing -> liftIO (throwIO createErr)

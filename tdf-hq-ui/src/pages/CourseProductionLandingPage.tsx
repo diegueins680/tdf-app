@@ -354,6 +354,8 @@ export default function CourseProductionLandingPage() {
   const [phone, setPhone] = useState(initialDraft?.phone ?? '');
   const [howHeard, setHowHeard] = useState(initialDraft?.howHeard ?? '');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  // The server said the terms on screen are not the current ones; they stay unacceptable until a reload succeeds.
+  const [termsStale, setTermsStale] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<EnrollmentFieldErrors>({});
   const [accountFields, setAccountFields] = useState<('fullName' | 'email')[]>([]);
   const [editAccountFields, setEditAccountFields] = useState(false);
@@ -423,6 +425,13 @@ export default function CourseProductionLandingPage() {
   useEffect(() => {
     setTermsAccepted(false);
   }, [checkoutTermsVersion]);
+  const reloadCheckoutTerms = () => {
+    setTermsStale(true);
+    // A failed reload keeps the cached, superseded terms on screen: they must stay unacceptable.
+    void metaQuery.refetch().then((result) => {
+      if (!result.isError) setTermsStale(false);
+    });
+  };
   const cohortQueries = useQueries({
     queries:
       availableSlugs.length > 1
@@ -516,7 +525,7 @@ export default function CourseProductionLandingPage() {
       if (view.termsChanged) {
         // The approved policy changed after the page loaded: show the new terms and ask again.
         setTermsAccepted(false);
-        void metaQuery.refetch();
+        reloadCheckoutTerms();
       }
       if (view.field) {
         if (view.field === 'fullName' || view.field === 'email') setEditAccountFields(true);
@@ -610,8 +619,8 @@ export default function CourseProductionLandingPage() {
   const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     if (registrationMutation.isPending || registrationMutation.isSuccess) return;
-    // Never bind an acceptance to terms that are still being replaced.
-    if (metaQuery.isFetching) return;
+    // Never bind an acceptance to terms that are still being replaced, or that could not be reloaded.
+    if (metaQuery.isFetching || termsStale) return;
     const errors = validateEnrollment();
     setFieldErrors(errors);
     const fieldOrder: CourseRegistrationField[] = ['fullName', 'email', 'phone', 'howHeard', 'terms'];
@@ -1098,6 +1107,8 @@ export default function CourseProductionLandingPage() {
           termsUrl={cmsPayload?.termsUrl ?? null}
           checkoutTerms={checkoutTerms}
           termsRefreshing={metaQuery.isFetching}
+          termsUnavailable={termsStale && !metaQuery.isFetching}
+          onRetryTerms={reloadCheckoutTerms}
           fieldErrors={visibleFieldErrors}
           formError={formError}
           submitting={submitting}
@@ -1778,6 +1789,8 @@ function EnrollmentDialog({
   termsUrl,
   checkoutTerms,
   termsRefreshing,
+  termsUnavailable,
+  onRetryTerms,
   fieldErrors,
   formError,
   submitting,
@@ -1817,6 +1830,8 @@ function EnrollmentDialog({
   termsUrl: string | null;
   checkoutTerms: CourseCheckoutTerms | null;
   termsRefreshing: boolean;
+  termsUnavailable: boolean;
+  onRetryTerms: () => void;
   fieldErrors: EnrollmentFieldErrors;
   formError: string | null;
   submitting: boolean;
@@ -2144,6 +2159,14 @@ function EnrollmentDialog({
                   </LegalDisclosure>
                 </Stack>
               )}
+              {termsUnavailable && (
+                <Alert
+                  severity="warning"
+                  action={<Button color="inherit" size="small" onClick={onRetryTerms}>Reintentar</Button>}
+                >
+                  No pudimos cargar los términos actualizados. Reinténtalo para poder aceptarlos.
+                </Alert>
+              )}
               <Box>
                 <FormControlLabel
                   control={(
@@ -2151,7 +2174,7 @@ function EnrollmentDialog({
                       checked={termsAccepted}
                       onChange={(event) => onTermsAcceptedChange(event.target.checked)}
                       required
-                      disabled={disableInputs || termsRefreshing}
+                      disabled={disableInputs || termsRefreshing || termsUnavailable}
                       inputRef={inputRefs.terms}
                       inputProps={{
                         'aria-invalid': Boolean(fieldErrors.terms),

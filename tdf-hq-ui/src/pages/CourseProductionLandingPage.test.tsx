@@ -749,6 +749,46 @@ describe('CourseProductionLandingPage', () => {
     }
   });
 
+  it('keeps consent blocked when the changed terms cannot be reloaded, and offers a retry', async () => {
+    getMetadataMock.mockResolvedValue(buildMetadata({ checkoutTerms: approvedTerms }));
+    registerMock.mockRejectedValueOnce(
+      apiError('Course terms changed; review the current terms and accept them again', 409),
+    );
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await openEnrollmentFromHero(container);
+      await fillGuestEnrollment();
+      getMetadataMock.mockRejectedValue(new Error('offline'));
+      await submitEnrollment();
+
+      await waitForExpectation(() => {
+        expect(text(getDialog())).toContain('No pudimos cargar los términos actualizados');
+      });
+      // The superseded version is still cached and on screen; it must not be acceptable.
+      expect(termsCheckbox().disabled).toBe(true);
+      expect(termsCheckbox().checked).toBe(false);
+      await submitEnrollment();
+      expect(registerMock).toHaveBeenCalledTimes(1);
+
+      getMetadataMock.mockResolvedValue(buildMetadata({
+        checkoutTerms: { termsVersion: 'course-terms-v4', termsSummary: 'Nuevos términos.', cancellationPolicy: 'Nueva política.' },
+      }));
+      const retry = Array.from(getDialog().querySelectorAll('button')).find((b) => b.textContent === 'Reintentar');
+      expect(retry).toBeTruthy();
+      await click(retry as HTMLElement);
+      await waitForExpectation(() => {
+        expect(text(getDialog())).toContain('versión course-terms-v4');
+        expect(termsCheckbox().disabled).toBe(false);
+      });
+      expect(text(getDialog())).not.toContain('No pudimos cargar los términos actualizados');
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('maps a full course conflict to a seats message instead of raw server text', async () => {
     registerMock.mockRejectedValueOnce(apiError('No course seats remain', 409));
     const container = document.createElement('div');

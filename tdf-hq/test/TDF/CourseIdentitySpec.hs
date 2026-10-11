@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.CourseIdentitySpec (spec) where
 
-import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, try)
 import Control.Monad (forM, void)
 import Control.Monad.Logger (runNoLoggingT)
@@ -12,7 +12,7 @@ import Data.Either (isLeft)
 import Data.Int (Int64)
 import Data.List (isInfixOf)
 import Data.Text (Text)
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey, toPersistValue)
+import Database.Persist.Sql (ConnectionPool, Single(..), SqlBackend, rawExecute, rawSql, runSqlPool, toSqlKey, toPersistValue)
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Servant (Handler, ServerError, errHTTPCode, runHandler)
 import System.Environment (lookupEnv)
@@ -147,6 +147,34 @@ spec = describe "course-identity-postgresql" $ do
             fmap C.checkoutId saved `shouldBe` fmap C.checkoutId checkout
         scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` (before+1)
         scalar pool "SELECT count(*) FROM commerce_payment_attempt" `shouldReturn` 0
+      it "requires the accepted terms version and rejects a stale one without holding a seat" $ \pool -> do
+        setCheckoutEnabled pool True
+        before <- scalar pool "SELECT count(*) FROM course_registration_checkout_runtime"
+        missing <- route pool "course-terms-missing" (payload { C.acceptedTermsVersion = Nothing })
+        either id (const 0) missing `shouldBe` 400
+        stale <- route pool "course-terms-stale" (payload { C.acceptedTermsVersion = Just "identity-terms-v0" })
+        either id (const 0) stale `shouldBe` 409
+        scalar pool "SELECT count(*) FROM course_registration_checkout_runtime" `shouldReturn` before
+      it "rejects a checkout whose policy is withdrawn while it waits to hold the seat" $ \pool -> do
+        setCheckoutEnabled pool True
+        before <- scalar pool "SELECT count(*) FROM course_registration_checkout_runtime"
+        held <- newEmptyMVar
+        released <- newEmptyMVar
+        -- The request validates the policy, then waits for the course lock held
+        -- here; the policy is withdrawn before that lock is released.
+        void $ forkIO $ do
+          runSqlPool (do
+            _ <- rawSql "SELECT id FROM course WHERE slug='identity-paid-course' FOR UPDATE" [] :: ReaderT SqlBackend IO [Single Int64]
+            liftIO (putMVar held ())
+            liftIO (threadDelay 1500000)
+            rawExecute "UPDATE course_checkout_policy SET active=false WHERE policy_version='identity-test-v1'" []) pool
+          putMVar released ()
+        takeMVar held
+        raced <- route pool "course-terms-raced" payload
+        takeMVar released
+        runSqlPool (rawExecute "UPDATE course_checkout_policy SET active=true WHERE policy_version='identity-test-v1'" []) pool
+        either id (const 0) raced `shouldBe` 409
+        scalar pool "SELECT count(*) FROM course_registration_checkout_runtime" `shouldReturn` before
       it "rejects unsupported key punctuation before either creation transaction" $ \pool -> do
         before <- scalar pool "SELECT count(*) FROM course_registration"
         setCheckoutEnabled pool False
@@ -158,7 +186,7 @@ spec = describe "course-identity-postgresql" $ do
         scalar pool "SELECT count(*) FROM course_registration" `shouldReturn` before
 
 payload :: C.CourseRegistrationRequest
-payload = C.CourseRegistrationRequest (Just "Synthetic course contact") (Just "course-identity@example.test") (Just "+593990000111") "landing" Nothing Nothing (Just True) Nothing
+payload = C.CourseRegistrationRequest (Just "Synthetic course contact") (Just "course-identity@example.test") (Just "+593990000111") "landing" Nothing Nothing (Just True) (Just "identity-terms-v1")
 
 submit :: ConnectionPool -> Text -> Text -> C.CourseRegistrationRequest -> IO (Either Int Int64)
 submit pool scope key body = do
