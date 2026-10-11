@@ -14043,7 +14043,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "b52295fbeaa6fe97207130e43c1a449b22d486152dd1775012b0ad2bafdf15f2",
+      "sha256": "4e9cad0a80df76907e5f2ccd05b7304aa94b8fbc1a25c102d86b3258cfe58164",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14589,7 +14589,7 @@
     {
       "id": "SURFACE-0b2762494d9e6ae1",
       "path": "tdf-hq/test/TDF/EventOrganizerSpec.hs",
-      "sha256": "364e0e8fa6fc7be63a859d6edacfe83ee8cf72bef003ebea63ea4e9408dc2925",
+      "sha256": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23755,7 +23755,7 @@
     },
     {
       "path": "formal/system/event-organizer-assignment.md",
-      "sha256": "d3be7d90dc78f0024e113e6e5db7ccb1d6d240dd30ca512c4c0e71fb61d62a2d",
+      "sha256": "9125b5f6a94c984a4adaf45d3054a4b1a96f281428a50ec49577163f3d4282e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
