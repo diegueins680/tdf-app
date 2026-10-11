@@ -23,6 +23,7 @@ jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
     profile: profileMock,
     event: profileMock,
+    venue: profileMock,
     profileReviews: profileReviewsMock,
     reviewEligibility: reviewEligibilityMock,
     createReview: jest.fn(),
@@ -92,6 +93,7 @@ function renderPage(initialEntry: string) {
         <Routes>
           <Route path="/directorio/:slug" element={<DirectoryPublicDetailPage kind="profile" />} />
           <Route path="/eventos/:eventId" element={<DirectoryPublicDetailPage kind="event" />} />
+          <Route path="/venues/:venueId" element={<DirectoryPublicDetailPage kind="venue" />} />
           <Route path="/social/eventos/:eventId" element={<LocationProbe />} />
           <Route path="/mis-clasificados" element={<LocationProbe />} />
         </Routes>
@@ -260,6 +262,41 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
       expect(screen.getByText('¿Quieres contactar este perfil?')).toBeTruthy();
     });
     expect(cancel.getAttribute('href')).toBe('/directorio/ana');
+    view.queryClient.clear();
+  });
+
+  it('shows the kind placeholder on the detail page when the profile has no media', async () => {
+    const view = renderPage('/directorio/ana');
+    const image = await screen.findByRole('img', { name: 'Imagen de referencia de Ana Sintética' });
+    expect(image.getAttribute('data-preview-source')).toBe('placeholder');
+    expect(image.getAttribute('src')).toContain('/artist-fallback.svg');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('shows the canonical preview image on the profile detail page', async () => {
+    profileMock.mockResolvedValue({ ...profile, previewImageUrl: 'https://cdn.example.test/ana.jpg' });
+    const view = renderPage('/directorio/ana');
+    const image = await screen.findByRole('img', { name: 'Foto de Ana Sintética' });
+    expect(image.getAttribute('data-preview-source')).toBe('media');
+    expect(image.getAttribute('src')).toBe('https://cdn.example.test/ana.jpg');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('shows the venue image from the public venue projection', async () => {
+    profileMock.mockResolvedValue({
+      id: 22,
+      name: 'Venue Sintético',
+      capacity: 120,
+      location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
+      imageUrl: 'https://cdn.example.test/venue.jpg',
+      canonicalUrl: '/venues/22',
+    });
+    const view = renderPage('/venues/22');
+    const image = await screen.findByRole('img', { name: 'Foto de Venue Sintético' });
+    expect(image.getAttribute('src')).toBe('https://cdn.example.test/venue.jpg');
+    view.unmount();
     view.queryClient.clear();
   });
 });
