@@ -52,7 +52,7 @@ describe('getSocialEventsOverviewUiState', () => {
       filtersActive: false,
     })).toEqual({
       emptyEventsMessage:
-        'No hay eventos sociales por venir. Usa Crear evento para registrar el primero; el calendario aparecera cuando exista al menos un evento.',
+        'No hay eventos por venir. Usa Crear evento para registrar el primero; el calendario aparecera cuando exista al menos un evento.',
       showFilters: false,
       showCalendar: false,
       showRefreshAction: false,
