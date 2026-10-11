@@ -7938,7 +7938,7 @@
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
-      "property": "A non-free download URL is issued only for an active entitlement whose order is provider-verified paid and not refunded.",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -7987,7 +7987,7 @@
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
       "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
       "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
-      "failure": "Unverified or failed payment leaves no entitlement. A recorded provider failure cancels the order permanently (open defect, see contract).",
+      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
@@ -8003,18 +8003,20 @@
         "scripts/test-music-purchase.sh",
         "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers and download authorization, with a three-repair reversion check; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
       "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
-      "confidence": "Low-medium: predicate contract only; no provider round-trip evidence.",
+      "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
-        "A recorded provider failure cancels the order irreversibly while the payment may still complete; repair needs a trigger migration and a product decision.",
-        "No reconciliation or webhook path exists for this domain.",
-        "Download limits count authorizations, not transferred bytes; signed URLs are bearer links for 300 seconds."
+        "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
+        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
+        "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
+        "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
+        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Payment record, entitlement and download rules are modeled within bounds and exercised on PostgreSQL; provider calls are untested and the failed-attempt cancellation defect is open. Commerce is disabled by default."
+        "reason": "Payment record, entitlement and download rules are modeled within bounds and exercised on PostgreSQL; provider calls are untested and several failure-path defects are open. Commerce is disabled by default and should stay disabled until they are closed."
       }
     },
     {
@@ -9662,9 +9664,9 @@
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
-    "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "85dab0f11475d2316d33bc10bf12ddacbd926dea4ddd2a68e77a85e9c1d20144",
+    "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "4d7b5709f67131d2a51819386e489a0d59f15d4f583bd20858aa26996ecaebf1",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "3771062ff9562ae91973e61c41cc25c6c8afac50430933670441d314e095088c",
-    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "f36213323c390707749c883910bf282c418f0635eaff035e974643017b4c7ff1",
+    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -9716,7 +9718,7 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
-    "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "7c4c39dcb7c33f1d11aee0ba18be515910495106b1c683851eb0ae26c2c1dd8a",
+    "tdf-hq/test/TDF/MusicPurchaseSpec.hs": "5c33f527b103c8dcafaf094e71b8c671e050438c8c7a9d6bd5815c8a4cbc85cb",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -33566,7 +33568,7 @@
     {
       "id": "SURFACE-bf94f0cb1cbb82d0",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
-      "sha256": "85dab0f11475d2316d33bc10bf12ddacbd926dea4ddd2a68e77a85e9c1d20144",
+      "sha256": "4d7b5709f67131d2a51819386e489a0d59f15d4f583bd20858aa26996ecaebf1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33594,7 +33596,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "f36213323c390707749c883910bf282c418f0635eaff035e974643017b4c7ff1",
+      "sha256": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34763,7 +34765,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "7c4c39dcb7c33f1d11aee0ba18be515910495106b1c683851eb0ae26c2c1dd8a",
+      "sha256": "5c33f527b103c8dcafaf094e71b8c671e050438c8c7a9d6bd5815c8a4cbc85cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41704,7 +41706,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "abaf1c0563ff82d9d63439d22d16d077cf0400470b561e1d3dcf26d2a48a97f6",
+      "sourceSha256": "7bfaac30a62f1a993cad27e290f21fb25fa88861c45ea4c60fcc7bde6731d50e",
       "definition": {
         "states": [
           "absent",

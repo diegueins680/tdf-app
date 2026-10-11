@@ -13965,7 +13965,7 @@
     {
       "id": "SURFACE-bf94f0cb1cbb82d0",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
-      "sha256": "85dab0f11475d2316d33bc10bf12ddacbd926dea4ddd2a68e77a85e9c1d20144",
+      "sha256": "4d7b5709f67131d2a51819386e489a0d59f15d4f583bd20858aa26996ecaebf1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13977,7 +13977,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "f36213323c390707749c883910bf282c418f0635eaff035e974643017b4c7ff1",
+      "sha256": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14619,7 +14619,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "7c4c39dcb7c33f1d11aee0ba18be515910495106b1c683851eb0ae26c2c1dd8a",
+      "sha256": "5c33f527b103c8dcafaf094e71b8c671e050438c8c7a9d6bd5815c8a4cbc85cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23678,7 +23678,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "787bef5c9cad1da92754d6205ee84b5ec53c5893de742654b063d6568e8a9c4f",
+      "sha256": "360dea0bbf4ee9783fc671b28b65a137fa64ac07dda5ba207a1b55c10deb5e78",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23867,7 +23867,7 @@
     },
     {
       "path": "formal/system/music-purchase-entitlement.md",
-      "sha256": "94406884db2a7f2aed75d32d9a0e442a0434aff5af5cf772fa0aec945f04543a",
+      "sha256": "3dfda31a25a2f7066ace0c51aac81c728f8cd2fabd37f2abe6e9292f2e253685",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23958,7 +23958,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "abaf1c0563ff82d9d63439d22d16d077cf0400470b561e1d3dcf26d2a48a97f6",
+      "sha256": "7bfaac30a62f1a993cad27e290f21fb25fa88861c45ea4c60fcc7bde6731d50e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
