@@ -342,7 +342,7 @@ function LegacySocialPage() {
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Explora eventos y envía invitaciones desde la vista dedicada.
+            Explora eventos sociales y envía invitaciones desde la vista dedicada.
           </Typography>
           <Button
             variant="outlined"
