@@ -481,6 +481,7 @@ jobs:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: |
+          sh scripts/test-operations-inbound-capture.sh
           bash scripts/test-auth-recovery-migration.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-credential-lifecycle.sh
