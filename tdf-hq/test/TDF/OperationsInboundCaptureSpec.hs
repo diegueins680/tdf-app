@@ -20,9 +20,10 @@ import TDF.ServerExtra
   ( IGInbound(..), IGInboundDeleted(..), MetaChannel(..), MetaInboundEvent(..), persistMetaInbound )
 import TDF.WhatsApp.History (IncomingWhatsAppRecord(..), recordIncomingWhatsAppMessage)
 
--- Messages are stored through the functions the webhooks call, so the
--- direction is the one the application writes, and the installed triggers
--- decide what reaches Operations.
+-- Inbound messages are stored through the functions the webhooks call, so
+-- the direction is the one the application writes, and the installed triggers
+-- decide what reaches Operations. The outgoing and history rows are inserted
+-- directly.
 spec :: Spec
 spec = describe "operations-inbound-capture-postgresql" $ do
   configured <- runIO (lookupEnv "TDF_OPERATIONS_CAPTURE_DATABASE_URL")
@@ -75,6 +76,17 @@ spec = describe "operations-inbound-capture-postgresql" $ do
           mid <- newId
           now <- getCurrentTime
           runSqlPool (insert_ (instagramRow mid "incoming" (addUTCTime (-3 * 86400) now))) pool
+          events pool mid `shouldReturn` []
+
+        it "stores a message whose capture fails, without an event" $ \pool -> do
+          mid <- newId
+          now <- getCurrentTime
+          -- An Operations key holds at most 320 characters; this sender exceeds it.
+          let longSender = T.replicate 400 "9"
+          runSqlPool (persistMetaInbound MetaInstagram now
+            [MetaInboundMessage (IGInbound mid longSender Nothing "Hola" Nothing Nothing Nothing Nothing Nothing)]) pool
+          rows <- runSqlPool (rawSql "SELECT count(*) FROM instagram_message WHERE external_id=?" [PersistText mid]) pool
+          rows `shouldBe` [Single (1 :: Int)]
           events pool mid `shouldReturn` []
 
 safeConnection :: String -> Bool

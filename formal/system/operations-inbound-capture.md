@@ -7,14 +7,17 @@ per sender and channel ("message needs a response", priority high).
 
 ## Rule
 
-- A message the application stores as a request from a customer produces exactly
-  one Operations event, in the transaction that stores it.
+- A message the application stores as a request from a customer produces one
+  Operations event, in the transaction that stores it.
+- Storing the message comes first: if the event cannot be recorded, the message is
+  stored without one and PostgreSQL logs a warning naming the message id.
 - The application's own outgoing messages produce none.
 - For Instagram and Facebook, two kinds of row are stored like an inbound message
   without being a new request, and produce none: the record of a deletion that
   arrived before its message, and a message imported from history (stored more than
   a day after it was sent, which only the backfill does).
 - A message delivered again finds its row, inserts nothing, and produces nothing.
+  That is a property of how the application stores messages, not of the trigger.
 
 ## Defect repaired (AUTHORITY-062)
 
@@ -27,18 +30,39 @@ that "exercises the installed WhatsApp capture trigger" inserted its rows with t
 direction `inbound`, which the application never writes, so it passed.
 
 Migration `2026-10-11_operations_inbound_capture_direction` replaces both functions
-so that they accept `incoming` as well and skip the two kinds of row above. It
-changes no table and captures nothing retroactively. A rollback file restores the
+so that they accept `incoming` as well, skip the two kinds of row above, and
+contain a capture failure so that it cannot undo the message. It changes no table
+and captures nothing retroactively. A rollback file restores the
 previous functions. The conformance test now inserts `incoming`.
 
 ## What changes when this is applied in production
 
-From the moment the migration is applied, every new inbound message creates an
-event, and the outbox worker opens or updates a high-priority work item for its
-sender in the reception queue. That is what the control center was built to do, and
-it has never happened in production. Automatic replies do not close these items.
-Reception should expect the items to start appearing; the volume equals the number
-of distinct people who write on each channel.
+None of the following has ever run in production, because no inbound message was
+ever captured.
+
+- **Rows.** Each new inbound message appends about five rows: a domain event, an
+  outbox entry and, once the worker projects it, a work-item event, a stream event
+  and an audit row. Growth is proportional to the number of inbound messages.
+- **Work items.** The worker opens one high-priority item per sender and channel in
+  the reception queue ("message needs a response") and updates it on each further
+  message. A new message reopens an item that was resolved or archived.
+- **Never closed automatically.** An automatic reply, a manual reply or a later
+  deletion of the message does not resolve the item.
+- **Service-level timers.** Each item gets acknowledgement, mitigation and
+  resolution timers at priority high, in business hours. Items nobody handles show
+  as breached. A reopened item keeps its original timers.
+- **Telephone numbers kept permanently.** The sender identifier, which on WhatsApp
+  is the telephone number, is written to the event's aggregate id and correlation
+  key and to the audit row's correlation id. The event and audit tables are
+  append-only by trigger and have no erasure path.
+- **Visibility.** The Operations API is served only when
+  `operations_organization.operations_enabled` is true; it is seeded false. The
+  production value was not checked. If it is false, events, items and breaches
+  accumulate where nobody sees them.
+- **Nothing is sent.** No code sends a message, e-mail or notification to staff or
+  customers because of these items.
+- **Turning it off.** Applying the rollback file by hand restores the previous
+  functions. The migration runner has no rollback step.
 
 ## Evidence
 
@@ -51,11 +75,15 @@ of distinct people who write on each channel.
   captured (`CapturedOnce`).
 - `tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs`
   (`scripts/test-operations-inbound-capture.sh`, PostgreSQL, fully migrated schema):
-  messages are stored through the functions the webhooks call. One event for a
-  WhatsApp message and none more when it is delivered again; one for an Instagram
-  and one for a Facebook message; none for an outgoing message, a deletion that
-  arrives first, or a history import. With the rollback applied the first three
-  cases fail (run locally on 2026-10-11).
+  inbound messages are stored through the functions the webhooks call; the
+  outgoing and history rows are inserted directly. One event for a WhatsApp message
+  and none more when it is delivered again; one for an Instagram and one for a
+  Facebook message; none for an outgoing message, a deletion that arrives first, or
+  a row three days old; a message whose capture fails is stored without an event.
+  With the rollback applied the first three cases fail (run locally on 2026-10-11).
+  Not covered: a WhatsApp sender matched to a party, the backfill route, the
+  one-day boundary, outgoing WhatsApp messages, and the projection into work items
+  (the existing HTTP test below covers the WhatsApp projection).
 - `scripts/lib/operations_conformance.py`: the existing HTTP test of the WhatsApp
   thread (event, projection, identity binding) now uses the application's
   direction. It runs in CI; it was not run locally.
@@ -64,13 +92,23 @@ of distinct people who write on each channel.
 
 - The model is bounded and checks the capture decision only. It does not cover the
   outbox worker, the projection into work items, or service-level clocks.
-- "Imported from history" is decided by age (more than one day between the
-  message's time and its insertion). A webhook delivery delayed by more than a day
-  is not captured; a backfill of messages less than a day old is.
+- "Imported from history" is decided by age: a row whose time is more than one day
+  before its insertion. Webhook rows carry the server's time and are always
+  captured, however late Meta delivers them. Backfill rows carry the message's own
+  time, so a backfilled message less than a day old is captured, and its item can
+  be at or past its timers when created. The model treats history as a kind of
+  row and does not model the one-day boundary.
+- A capture failure is contained with a savepoint per stored message, and the
+  event is then missing with only a log line to show for it.
+- Two simultaneous Instagram or Facebook payloads naming the same two senders in
+  opposite order can deadlock on the per-sender sequence row; with the containment
+  above the loser stores its message without an event.
+- The release tooling's schema verification does not check that these functions
+  accept `incoming`.
+- A sender correlated to another identity later is supported by the projection only
+  for WhatsApp.
 - A WhatsApp message is captured whatever its text, including opt-out keywords and
   consent confirmations.
 - Messages stored before the migration are not captured.
-- The sender identifier (a telephone number on WhatsApp) is the aggregate id of the
-  event, as designed in the control center; this change adds no new field.
 - Whether reception is staffed and configured to handle these items in production
   was not examined.

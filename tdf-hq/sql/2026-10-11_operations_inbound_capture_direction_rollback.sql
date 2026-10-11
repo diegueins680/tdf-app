@@ -1,6 +1,8 @@
 -- Restores the capture functions as installed by 2026-08-09_admin_operations_control_center.sql.
 -- Events already recorded stay; the triggers stop capturing messages stored as 'incoming'.
 
+BEGIN;
+
 CREATE OR REPLACE FUNCTION operations_whatsapp_inbound_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -39,3 +41,5 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+COMMIT;

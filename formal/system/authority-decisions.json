@@ -587,7 +587,7 @@
       ],
       "conflict": "The Operations control center captures inbound communication through triggers that accept only the directions inbound and received, while the application stores every inbound WhatsApp, Instagram and Facebook message with the direction incoming, so no inbound message has produced an Operations event; the conformance test inserted the direction inbound and passed.",
       "authority": "The control center design governs: inbound communication becomes a reception work item. The direction literal in the triggers was a mismatch with the application, not a decision to exclude it.",
-      "resolution": "A new migration replaces the two trigger functions so that they accept incoming as well and skip deletion records and history imports; a rollback file restores the previous functions; the conformance test uses the application's direction. No table changes and no retroactive capture. Applying it in production starts opening reception work items for inbound messages, which has never happened there."
+      "resolution": "A new migration replaces the two trigger functions so that they accept incoming as well, skip deletion records and history imports, and contain a capture failure so the message is still stored; a rollback file restores the previous functions; the conformance test uses the application's direction. No table changes and no retroactive capture. Applying it in production starts opening reception work items for inbound messages, which has never happened there, and writes sender telephone numbers to append-only Operations rows."
     }
   ]
 }
