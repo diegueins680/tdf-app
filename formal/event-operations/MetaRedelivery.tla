@@ -62,6 +62,7 @@ TypeOK == /\ stored \in BOOLEAN /\ replied \in BOOLEAN /\ deletedFirst \in BOOLE
 
 (* The worker considers a message once: a message it answered, held for a    *)
 (* person or failed on is not taken up again because it was delivered again. *)
+(* The administrator's release of a held message is outside this model.      *)
 ConsideredOnce == considered <= 1
 (* A stored message keeps the text it was stored with.                       *)
 TextKept == text = firstText

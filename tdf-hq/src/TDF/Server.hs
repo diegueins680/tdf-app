@@ -2739,7 +2739,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
             MetaInstagram ->
               -- A message already stored (delivered by webhook, or read by an
               -- earlier backfill) is left as it is.
-              void $ runDB $ ServerExtra.storeInstagramInboundOnce
+              runDB $ ServerExtra.storeInstagramInboundOnce
                 (InstagramMessage extId
                     sid
                     senderName
@@ -2761,7 +2761,7 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
                     Nothing
                     createdAt)
             MetaFacebook ->
-              void $ runDB $ ServerExtra.storeFacebookInboundOnce
+              runDB $ ServerExtra.storeFacebookInboundOnce
                 (ME.FacebookMessage extId
                     sid
                     senderName

@@ -575,7 +575,7 @@
       ],
       "conflict": "WhatsApp history states that a duplicate delivery must not rewrite the stored inbound message, while the Instagram and Facebook webhooks and the backfill overwrote the stored text, set the direction to incoming and reset the reply status to pending on every repeat, so a message held for a person or failed was taken up by the reply worker again; a unit test expected a late repeat to replace the text of a deleted message.",
       "authority": "The WhatsApp history rule governs for every Meta channel: a provider message is one event. The overwrite came from using an upsert, and the unit-test expectation recorded that behaviour, not a decision.",
-      "resolution": "Instagram and Facebook messages are inserted when absent and otherwise left as stored, filling only a missing sender name or attribution; a repeated deletion keeps its first time. The webhooks and the backfill share the function. The unit test now expects the original text. No schema change. Erasing deleted text, handling edits and the inbound capture triggers that never fire remain open."
+      "resolution": "Instagram and Facebook messages are inserted when absent and otherwise left as stored, filling only a missing sender name or attribution, or metadata that lacked the receiving account; a repeated deletion keeps its first time. A backfill no longer returns held or failed messages to the worker; the unhold action remains. The webhooks and the backfill share the function. The unit test now expects the original text. No schema change. Erasing deleted text, handling edits and the inbound capture triggers that never fire remain open."
     }
   ]
 }

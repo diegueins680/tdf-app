@@ -14,7 +14,7 @@ import Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import Database.Persist (Entity(..), getBy, insert_, update, (=.))
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, PersistValue(..), rawExecute, runSqlPool)
-import Database.PostgreSQL.Simple (SqlError(..))
+import Database.PostgreSQL.Simple (SqlError)
 import System.Environment (lookupEnv)
 import System.Random (randomRIO)
 import Test.Hspec
@@ -122,14 +122,19 @@ spec = describe "meta-redelivery-postgresql" $ do
           Just (Entity _ row) <- runSqlPool (getBy (ME.UniqueFacebookMessage mid)) pool
           (ME.facebookMessageReplyStatus row, ME.facebookMessageText row) `shouldBe` ("hold", Just "hola")
 
-        it "stores one message when several first deliveries arrive at once" $ \pool -> do
+        it "lets metadata gain the receiving account once and then keeps it" $ \pool -> do
+          mid <- newId
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"backfilled\":true}")
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"recipient_id\":\"biz-1\"}")
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"recipient_id\":\"biz-2\"}")
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"backfilled\":true}")
+          M.instagramMessageMetadata <$> instagram pool mid `shouldReturn` Just "{\"recipient_id\":\"biz-1\"}"
+
+        it "stores one message, and fails no delivery, when several first deliveries arrive at once" $ \pool -> do
           mid <- newId
           outcomes <- forConcurrently [1 .. 8 :: Int] $ \_ ->
             try (deliver pool MetaInstagram mid "hola") :: IO (Either SqlError ())
-          -- A delivery that loses to the unique index fails as a whole and is
-          -- delivered again by the provider; nothing else may go wrong.
-          [sqlState err | Left err <- outcomes] `shouldSatisfy` all (== "23505")
-          length [() | Right () <- outcomes] `shouldSatisfy` (>= 1)
+          length [() | Right () <- outcomes] `shouldBe` 8
           row <- instagram pool mid
           (M.instagramMessageText row, M.instagramMessageReplyStatus row) `shouldBe` (Just "hola", "pending")
 
@@ -154,7 +159,10 @@ deliver :: ConnectionPool -> MetaChannel -> Text -> Text -> IO ()
 deliver pool channel mid body = deliverAs pool channel mid body Nothing
 
 deliverAs :: ConnectionPool -> MetaChannel -> Text -> Text -> Maybe Text -> IO ()
-deliverAs pool channel mid body name = do
+deliverAs pool channel mid body name = deliverWith pool channel mid body name Nothing
+
+deliverWith :: ConnectionPool -> MetaChannel -> Text -> Text -> Maybe Text -> Maybe Text -> IO ()
+deliverWith pool channel mid body name metadata = do
   now <- getCurrentTime
   runSqlPool (persistMetaInbound channel now
     [ MetaInboundMessage IGInbound
@@ -166,7 +174,7 @@ deliverAs pool channel mid body name = do
         , igInboundAdName = Nothing
         , igInboundCampaignExternalId = Nothing
         , igInboundCampaignName = Nothing
-        , igInboundMetadata = Nothing
+        , igInboundMetadata = metadata
         }
     ]) pool
 

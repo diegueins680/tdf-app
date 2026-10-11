@@ -9037,7 +9037,7 @@
       "id": "MSG-META-REDELIVERY-001",
       "title": "A repeated Instagram or Facebook message leaves the stored message as it is",
       "domain": "MSG",
-      "statement": "A stored inbound Instagram or Facebook message keeps its text, direction, deletion and reply state however often a webhook delivers it again or a backfill reads it again; a repeat may only fill a missing sender name or advertising attribution, and a repeated deletion keeps its first time.",
+      "statement": "A stored inbound Instagram or Facebook message keeps its text, direction, deletion and reply state however often a webhook delivers it again or a backfill reads it again; a repeat may only fill a missing sender name or advertising attribution, or metadata that lacked the receiving account, and a repeated deletion keeps its first time.",
       "authority": "AUTHORITY-061; Meta delivers webhooks at least once, and the WhatsApp history rule that a duplicate delivery must not rewrite the stored message.",
       "source": "formal/system/meta-redelivery.md",
       "contract": "formal/system/meta-redelivery.md",
@@ -9054,7 +9054,7 @@
       ],
       "state": {
         "boundary": "instagram_message, facebook_message",
-        "authority": "PostgreSQL unique index on external_id; insert when absent"
+        "authority": "PostgreSQL unique index on external_id; one insert-or-leave statement"
       },
       "allowedTransitions": [
         "Message absent -> stored as pending",
@@ -9070,11 +9070,11 @@
       ],
       "effects": [
         "One row per provider message",
-        "The reply worker takes up a message once"
+        "A repeat never returns a message to the reply worker"
       ],
       "authorization": "Unauthenticated webhook routes admitted only by the Meta signature; the backfill keeps its existing authorization.",
       "privacy": "A repeat can no longer write new text into a message its sender deleted. Text stored before a deletion is still kept.",
-      "concurrency": "Simultaneous first deliveries are decided by the unique index; the losing transaction fails and is delivered again.",
+      "concurrency": "The store is one insert-or-leave statement on the unique index, so simultaneous first deliveries all succeed and leave one row.",
       "idempotency": "Keyed by the provider message id.",
       "failure": "A failed transaction stores nothing.",
       "recovery": "Meta redelivers; a repeat is harmless.",

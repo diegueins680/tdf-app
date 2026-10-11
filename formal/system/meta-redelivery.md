@@ -11,10 +11,13 @@ unique, so a message has one row. This rule covers what a repeat may do to it.
 - A stored message keeps its text, its direction, its deletion and its reply state
   (pending, answered, on hold for a person, failed) however often it is delivered or
   backfilled again.
-- A repeat may only fill a sender name or advertising attribution that was missing.
+- A repeat may only fill a sender name or advertising attribution that was missing,
+  or replace metadata that does not name the receiving account with metadata that
+  does (replies are sent from that account).
 - A deletion delivered again keeps its first time. A message whose deletion arrived
   first never gains text.
-- The reply worker therefore takes up a message once.
+- A repeat therefore never returns a message to the reply worker. An administrator
+  can still release a held or failed message through the existing unhold action.
 
 ## Defect repaired (AUTHORITY-061)
 
@@ -31,9 +34,12 @@ text, set the direction to `incoming` and set the reply status to `pending`:
 - A deletion delivered again moved the deletion time forward.
 
 `storeInstagramInboundOnce` and `storeFacebookInboundOnce` now insert the message
-when it is absent and otherwise leave it, filling only a missing sender name or
-attribution. The webhooks and the backfill use them. The deletion path sets the
+when it is absent and otherwise leave it, in one statement, filling only what the
+rule allows. The webhooks and the backfill use them. The deletion path sets the
 deletion time only when none is stored.
+
+A backfill used to return every held or failed message it read to the worker. That
+side effect is gone; the unhold action is the way to retry.
 
 ## Evidence
 
@@ -50,24 +56,30 @@ deletion time only when none is stored.
   not replace the stored text; an outgoing message is not turned into an incoming
   one; a deleted message keeps its text and first deletion time; a deletion that
   arrives first leaves no text; a missing sender name is filled and a stored one
-  kept; the same holds for Facebook; eight simultaneous first deliveries leave one
-  row.
+  kept; metadata gains the receiving account once and then keeps it; the same
+  holds for Facebook; eight simultaneous first deliveries all succeed and leave one
+  row. By reading, every case except the last fails against the previous upsert;
+  no run against the previous code was made.
 - `tdf-hq/test/TDF/ServerExtraSpec.hs`: the existing deletion case now expects the
   original text after a late repeat.
 
 ## Limits
 
 - The model is bounded, covers one message and checks safety only. It treats a
-  delivery as one atomic step.
-- Two simultaneous first deliveries are decided by the unique index: the loser's
-  transaction fails, its whole webhook batch is answered with an error, and Meta
-  delivers it again. No lock avoids that failure.
+  delivery, and the worker's read, reply and status write, as one atomic step each;
+  the real worker writes its outcome some time after reading, so a deletion that
+  arrives in between is still answered. The unhold action is not modelled, and
+  `NoTextAfterDeletion` has no control of its own (any state that breaks it also
+  breaks `TextKept`).
 - A message's text is kept after its sender deletes it; only the deletion time is
   recorded and the row is hidden from conversation views. Whether deleted text
   should be erased is undecided.
 - A real edit of a message by its sender, if Meta ever delivers one under the same
   id, is not applied. No edit event is handled today.
-- The backfill reports a message already stored as imported, as before.
+- The backfill reports a message already stored as imported, as before. When no
+  Instagram account id is configured it can also import the business's own
+  messages as incoming ones; that was so before and is not changed here.
+- Not tested: filling advertising attribution, and the Facebook deletion path.
 - The reply worker itself was read, not changed or tested. The capture triggers
   `operations_instagram_inbound_capture`, `operations_facebook_inbound_capture` and
   `operations_whatsapp_inbound_capture` test for the directions `inbound` and
