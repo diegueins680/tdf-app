@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Merch } from '../api/merch';
 import { MerchReputation } from '../api/merchReputation';
 import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
@@ -92,7 +93,23 @@ export default function MerchStorefrontPage() {
           </Grid>
         </Box>
 
-        {policies && <Box component="section" aria-labelledby="store-policies"><Typography id="store-policies" component="h2" variant="h6" fontWeight={800}>{language === 'en' ? 'Shipping and returns' : 'Envíos y devoluciones'}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{shippingPolicy}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{returnPolicy}</Typography></Box>}
+        {(shippingPolicy || returnPolicy) && (
+          <Box component="section" aria-labelledby="store-policies">
+            <Typography id="store-policies" component="h2" variant="h6" fontWeight={800} mb={1}>{language === 'en' ? 'Shipping and returns' : 'Envíos y devoluciones'}</Typography>
+            <Stack spacing={1}>
+              {shippingPolicy && (
+                <LegalDisclosure id="store-shipping-policy" language={language} headingLevel={3} title={language === 'en' ? 'Shipping policy' : 'Política de envíos'}>
+                  <Typography sx={{ whiteSpace: 'pre-wrap' }}>{shippingPolicy}</Typography>
+                </LegalDisclosure>
+              )}
+              {returnPolicy && (
+                <LegalDisclosure id="store-return-policy" language={language} headingLevel={3} title={language === 'en' ? 'Return policy' : 'Política de devoluciones'}>
+                  <Typography sx={{ whiteSpace: 'pre-wrap' }}>{returnPolicy}</Typography>
+                </LegalDisclosure>
+              )}
+            </Stack>
+          </Box>
+        )}
       </Stack>
     </Box>
   );
