@@ -483,6 +483,7 @@ jobs:
         run: |
           bash scripts/test-auth-recovery-migration.sh
           node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls

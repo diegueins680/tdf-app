@@ -622,6 +622,7 @@ import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
+import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -17817,6 +17818,7 @@ main = hspec $ do
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     DriveReplaySpec.spec
+    WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec

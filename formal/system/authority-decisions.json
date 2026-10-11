@@ -564,6 +564,17 @@
       "conflict": "Public WhatsApp consent accepted any number without proof of control, recorded consent and messaged the number immediately, and exposed consent state and timestamps through a public lookup.",
       "authority": "Explicit product-owner decision on 2026-10-06: double opt-in.",
       "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
+    },
+    {
+      "id": "AUTHORITY-060",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
+      ],
+      "conflict": "Inbound WhatsApp storage treats a repeated provider message as a duplicate delivery that must not change the stored message, while the webhook handler applied the opt-out keyword and sent the enrolment reply on every delivery, so a redelivered STOP withdrew a later subscription and a redelivered enrolment message was answered again.",
+      "authority": "The storage rule governs: a provider message is one event however often it is delivered. Re-running effects on redelivery was never a decision.",
+      "resolution": "The delivery that stores the message applies its opt-out or consent confirmation in the same transaction and alone sends the automatic reply and the confirmation notice; a delivery that finds the message stored changes nothing. Deliveries of one message are serialized by an advisory lock. No schema change. Delayed first delivery of an old STOP, the reply worker, delivery updates and other Meta channels remain open."
     }
   ]
 }

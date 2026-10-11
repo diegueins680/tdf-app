@@ -289,6 +289,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
                                       , applyWhatsAppDeliveryUpdate
                                       , normalizeWhatsAppPhone
                                       , recordIncomingWhatsAppMessage
+                                      , receiveIncomingWhatsAppMessage
                                       , recordOutgoingWhatsAppMessage
                                       )
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTemplateIO, sendWhatsAppTextIO)
@@ -1399,6 +1400,40 @@ listEngineersPublic = do
       [Asc PartyDisplayName]
     pure [PublicEngineerDTO (fromSqlKey pid) (M.partyDisplayName p) | Entity pid p <- parties]
 
+data WhatsAppReceipt = WhatsAppReceipt
+  { warFirst :: Bool
+  -- ^ This delivery stored the message; False for a redelivery.
+  , warConfirmed :: Bool
+  -- ^ This delivery turned a pending consent request into consent.
+  , warMessage :: Entity ME.WhatsAppMessage
+  }
+
+-- | Stores one inbound WhatsApp message and, in the same transaction, applies
+-- what it asks for (opt-out keyword, consent confirmation). Meta delivers a
+-- message again when an earlier delivery was slow or failed, and a signed body
+-- stays valid, so a delivery that finds the message already stored changes
+-- nothing: an earlier STOP must not undo a later subscription. Deliveries of
+-- one message are taken one at a time.
+receiveWhatsAppInbound :: UTCTime -> Maybe UTCTime -> IncomingWhatsAppRecord -> SqlPersistT IO WhatsAppReceipt
+receiveWhatsAppInbound now sentAt record = do
+  let externalId = T.strip (iwrExternalId record)
+  unless (T.null externalId) $ do
+    _ <- rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))"
+      [PersistText ("whatsapp-inbound:" <> externalId)] :: SqlPersistT IO [Single Int64]
+    pure ()
+  (first, message) <- receiveIncomingWhatsAppMessage now record
+  if not first
+    then pure (WhatsAppReceipt False False message)
+    else do
+      when (CampaignAutomation.isWhatsAppCampaignOptOutMessage (iwrText record)) $
+        CampaignAutomation.applyWhatsAppCampaignOptOut now (iwrSenderId record)
+          (ME.whatsAppMessagePartyId (entityVal message))
+      confirmed <-
+        if isWhatsAppConsentConfirmationMessage (iwrText record)
+          then applyWhatsAppConsentConfirmation now sentAt (iwrSenderId record)
+          else pure False
+      pure (WhatsAppReceipt True confirmed message)
+
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM
 whatsappWebhookServer =
        verifyHook
@@ -1431,34 +1466,27 @@ whatsappWebhookServer =
             }
           pure ()
       for_ inbound $ \WAInbound{..} -> do
-        incomingEntity <- liftIO $ flip runSqlPool envPool $
-          recordIncomingWhatsAppMessage now IncomingWhatsAppRecord
-            { iwrExternalId = waInboundExternalId
-            , iwrSenderId = waInboundSenderId
-            , iwrSenderName = waInboundSenderName
-            , iwrText = waInboundText
-            , iwrAdExternalId = waInboundAdExternalId
-            , iwrAdName = waInboundAdName
-            , iwrCampaignExternalId = waInboundCampaignExternalId
-            , iwrCampaignName = waInboundCampaignName
-            , iwrMetadata = waInboundMetadata
-            , iwrTransportPayload = Nothing
-            , iwrSource = Just "whatsapp_webhook"
-            }
-        when (CampaignAutomation.isWhatsAppCampaignOptOutMessage waInboundText) $
+        WhatsAppReceipt{warFirst, warConfirmed, warMessage = incomingEntity} <-
           liftIO $ flip runSqlPool envPool $
-            CampaignAutomation.applyWhatsAppCampaignOptOut
-              now
-              waInboundSenderId
-              (ME.whatsAppMessagePartyId (entityVal incomingEntity))
-        when (isWhatsAppConsentConfirmationMessage waInboundText) $ do
-          confirmed <- liftIO $ flip runSqlPool envPool $
-            applyWhatsAppConsentConfirmation now waInboundSentAt waInboundSenderId
-          when confirmed $
-            sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
-              "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
+            receiveWhatsAppInbound now waInboundSentAt IncomingWhatsAppRecord
+              { iwrExternalId = waInboundExternalId
+              , iwrSenderId = waInboundSenderId
+              , iwrSenderName = waInboundSenderName
+              , iwrText = waInboundText
+              , iwrAdExternalId = waInboundAdExternalId
+              , iwrAdName = waInboundAdName
+              , iwrCampaignExternalId = waInboundCampaignExternalId
+              , iwrCampaignName = waInboundCampaignName
+              , iwrMetadata = waInboundMetadata
+              , iwrTransportPayload = Nothing
+              , iwrSource = Just "whatsapp_webhook"
+              }
+        when warConfirmed $
+          sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
+            "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
         let lowerBody = T.toLower (T.strip waInboundText)
-        when ("inscribirme" `T.isInfixOf` lowerBody) $ do
+        -- A redelivered message is not answered again.
+        when (warFirst && "inscribirme" `T.isInfixOf` lowerBody) $ do
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do

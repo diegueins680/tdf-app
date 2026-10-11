@@ -598,6 +598,14 @@ existing payment models and HTTP contracts remain separate evidence.
     invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
     rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
 
+## WhatsApp redelivery
+
+`WhatsAppRedelivery.tla` and five configurations check the rule in
+[whatsapp-redelivery.md](../system/whatsapp-redelivery.md): a message is stored
+once, what it asks for is applied at most once, an enrolment message is answered at
+most once, and a stored opt-out has been applied. The positive model and four
+negative controls are mandatory in the formal runner.
+
 ## Provider retry admission
 
 `ProviderRetryAdmission.tla` and six configurations check the scoped payment retry
