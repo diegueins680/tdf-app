@@ -13831,7 +13831,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "7ebafb60ac6ff43feba395bd049cb7d4ed68ec3dba064aac9b0b9babc49b11cd",
+      "sha256": "57eed9ba0a7e340cbea920c7a42dd252290a2c8ec76d55051d9f7749ed3aab03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13885,7 +13885,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "51dddac257ae1914a70592dda25adcb4b5343dd302c0a7088c860fd14842418e",
+      "sha256": "1d64d32ffaf3c68313af7e6dbb0fae7d00278957d94575c03dcc1ba047c0be02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14641,7 +14641,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "527de464114af94677e38131551ef0570ec9430e54e2d6f4776db88123a9e64d",
+      "sha256": "9820d76a0b27ad39cd38775b00a4142bf1b7f0041d224e835e87ad41808d9551",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23678,7 +23678,7 @@
     },
     {
       "path": "formal/system/access-grant.md",
-      "sha256": "64d4ecfd49312943b3ed6c168fb7f36c9724a9db0efa62edffde6b5af774af16",
+      "sha256": "f1d5e8d94f977ef0f7dd39b7adfbbe250ef85c95ad7cd8359176ef736179d98f",
       "authority": "inferred",
       "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
       "kind": "requirement-candidate"
@@ -23958,7 +23958,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "21fd4d79e76c8b5f3b4dd8d043864c816730a285fe7f9a4dcaea0fe777e4827f",
+      "sha256": "ab2798b6f00244297ebf08702f19362f6da5621f9c445a35948494a29a1843b5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

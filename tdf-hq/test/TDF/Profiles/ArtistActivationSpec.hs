@@ -16,7 +16,7 @@ import Data.Text (Text)
 import Data.Time (getCurrentTime)
 import Database.Persist
 import Database.Persist.Postgresql (createPostgresqlPool)
-import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import Servant (errHTTPCode, runHandler, (:<|>)(..))
 import System.Environment (lookupEnv)
 import Test.Hspec
@@ -116,6 +116,48 @@ spec = describe "artist-self-service-postgresql" $ do
         decide open `shouldReturn` 0
         untouched <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 otherId]) pool
         untouched `shouldBe` [Single ("pending" :: Text)]
+      it "expires a request whose deadline passes while the decision waits for the row lock" $ \pool -> do
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'studio.rooms','view','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case inserted of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        -- Sampled while the request is still open, as the handler does before
+        -- its transaction starts.
+        sampled <- getCurrentTime
+        held <- newEmptyMVar
+        released <- newEmptyMVar
+        void $ forkIO $ do
+          runSqlPool (do
+            _ <- rawSql "SELECT id FROM feature_access_requests WHERE id=? FOR UPDATE" [PersistInt64 requestId] :: SqlPersistT IO [Single Int64]
+            liftIO (putMVar held ())
+            liftIO (threadDelay 2000000)) pool
+          putMVar released ()
+        takeMVar held
+        changed <- runSqlPool (transitionPendingAccessRequest sampled (toSqlKey requestId) [ME.FeatureAccessRequestStatus =. "approved"]) pool
+        takeMVar released
+        changed `shouldBe` (0 :: Int64)
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("expired" :: Text)]
+      it "does not complete an onboarding request whose deadline passes while activation waits for it" $ \pool -> do
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'artist.onboarding','create','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case inserted of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        sampled <- getCurrentTime
+        held <- newEmptyMVar
+        released <- newEmptyMVar
+        void $ forkIO $ do
+          runSqlPool (do
+            _ <- rawSql "SELECT id FROM feature_access_requests WHERE id=? FOR UPDATE" [PersistInt64 requestId] :: SqlPersistT IO [Single Int64]
+            liftIO (putMVar held ())
+            liftIO (threadDelay 2000000)) pool
+          putMVar released ()
+        takeMVar held
+        result <- runSqlPool (activateOwnArtistProfile (toSqlKey 2) sampled) pool
+        takeMVar released
+        result `shouldSatisfy` isRight
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("pending" :: Text)]
       it "commits expiry when a reviewer decides a lapsed request through the handler" $ \pool -> do
         let reviewer = AuthedUser
               { auPartyId = toSqlKey 9

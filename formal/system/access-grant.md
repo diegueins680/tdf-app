@@ -57,6 +57,14 @@ still throws and rolls back, so a global sweep there would also undo the expiry 
 unrelated requests (second review finding). The list endpoints keep the global
 sweep in their own transactions. Cancellation already raised its 409 after `runDB` returned.
 
+The deadline is judged after the lock, not before it. The handlers sample `now`
+before their transaction starts, and a decision can then wait for a pool
+connection or a concurrent row update. `transitionPendingAccessRequest` therefore
+locks the target row (`FOR UPDATE`) and only then reads the database clock
+(`deadlineClockAfterLock`, never earlier than the caller's sample); the sweep
+uses that instant. Self-service activation locks its pending onboarding requests
+the same way before deciding whether one is still open (third review finding).
+
 `ArtistActivationSpec` runs against disposable PostgreSQL through
 `scripts/test-artist-self-service.sh`. It covers the helper ("settles expiry
 before deciding or cancelling …") and the real `decideRequest` handler

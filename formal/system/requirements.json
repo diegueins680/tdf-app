@@ -8280,7 +8280,7 @@
       ],
       "authorization": "registryReviewerCanDecide requires Admin for grant-bearing requests.",
       "privacy": "Reviewer notes stay internal.",
-      "concurrency": "Revision and grant written in one transaction. transitionPendingAccessRequest settles lazy expiry and then applies a conditional UPDATE WHERE status = 'pending' in the same transaction, so at most one decision or cancellation is admitted.",
+      "concurrency": "Revision and grant written in one transaction. transitionPendingAccessRequest locks the target row, reads the database clock after the lock, settles lazy expiry against that instant and then applies a conditional UPDATE WHERE status = 'pending' in the same transaction, so at most one decision or cancellation is admitted and none after the deadline.",
       "idempotency": "Re-approval of an already granted role reports no change.",
       "failure": "Any precondition failure aborts without a grant.",
       "recovery": "Revoke through Roles and permissions.",

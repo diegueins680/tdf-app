@@ -238,6 +238,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , searchArtistProfilesDTO
                                      , resolvePublishedGenreSelections
                                      , activateOwnArtistProfile
+                                     , deadlineClockAfterLock
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -4296,7 +4297,13 @@ transitionPendingAccessRequest
 transitionPendingAccessRequest now requestKey changes = do
   -- Only the target is settled here: a later provisioning failure rolls this
   -- transaction back, and must not undo expiry of unrelated requests.
-  expirePendingAccessRequests now [ME.FeatureAccessRequestId ==. requestKey]
+  -- The caller sampled `now` before this transaction could own the row. Lock
+  -- the target first and judge the deadline against the database clock read
+  -- afterwards, so a decision that waited past `expires_at` cannot approve.
+  _ <- rawSql "SELECT id FROM feature_access_requests WHERE id = ? FOR UPDATE"
+    [toPersistValue requestKey] :: SqlPersistT IO [Single Int64]
+  deadline <- deadlineClockAfterLock now
+  expirePendingAccessRequests deadline [ME.FeatureAccessRequestId ==. requestKey]
   updateWhereCount
     [ ME.FeatureAccessRequestId ==. requestKey
     , ME.FeatureAccessRequestStatus ==. "pending"

@@ -3,6 +3,7 @@
 
 module TDF.Profiles.Artist
   ( activateOwnArtistProfile
+  , deadlineClockAfterLock
   , upsertArtistProfileRecord
   , validateArtistProfileUpsert
   , loadArtistProfileDTO
@@ -26,6 +27,7 @@ import           Data.Char                 ( GeneralCategory (Format, LineSepara
                                            , isDigit
                                            , isSpace
                                            )
+import           Data.Int                  (Int64)
 import qualified Data.Map.Strict           as Map
 import qualified Data.Set                  as Set
 import           Data.Maybe                (listToMaybe)
@@ -35,7 +37,7 @@ import           Data.Time                 (UTCTime, getCurrentTime)
 import           Data.UUID                 (UUID)
 import qualified Data.UUID                 as UUID
 import           Database.Persist
-import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql, updateWhereCount)
+import           Database.Persist.Sql      (Single(..), SqlPersistT, fromSqlKey, rawSql, updateWhereCount)
 
 import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy, hasCanonicalPartyRole)
 import qualified TDF.Catalog.Models        as Catalog
@@ -70,12 +72,19 @@ activateOwnArtistProfile partyId now = do
           profile <- loadOrCreateArtistProfileDTO partyId
           -- A request past its deadline is not completed here: approving it would
           -- resurrect an expired request. Activation itself still succeeds.
+          -- Lock the candidates before reading the clock: the deadline is judged
+          -- at the moment this transaction owns the rows, not when the caller
+          -- sampled `now` (it may have waited for a connection or a row lock).
+          _ <- rawSql
+            "SELECT id FROM feature_access_requests WHERE requester_party_id = ? AND feature_id = 'artist.onboarding' AND action = 'create' AND status = 'pending' FOR UPDATE"
+            [toPersistValue partyId] :: SqlPersistT IO [Single Int64]
+          deadline <- deadlineClockAfterLock now
           pending <- selectList
             ([ ME.FeatureAccessRequestRequesterPartyId ==. partyId
              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
              , ME.FeatureAccessRequestAction ==. "create"
              , ME.FeatureAccessRequestStatus ==. "pending"
-             ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just now])) []
+             ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just deadline])) []
           forM_ pending $ \(Entity key _) -> do
             let note = Just "Perfil de artista activado por su titular, sin aprobación manual."
             -- Recheck status and deadline in the UPDATE itself: a concurrent
@@ -84,7 +93,7 @@ activateOwnArtistProfile partyId now = do
             changed <- updateWhereCount
               ([ ME.FeatureAccessRequestId ==. key
                , ME.FeatureAccessRequestStatus ==. "pending"
-               ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just now]))
+               ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just deadline]))
               [ ME.FeatureAccessRequestStatus =. "approved"
               , ME.FeatureAccessRequestReviewerPartyId =. Nothing
               , ME.FeatureAccessRequestReviewerNotes =. note
@@ -111,6 +120,14 @@ activateOwnArtistProfile partyId now = do
                 , auditLogCreatedAt = now
                 }
           pure (Right profile)
+
+-- | The instant against which a request deadline is judged. Call it only after
+-- the request rows are locked: it reads the database clock at that point and
+-- never returns a time earlier than the caller's own sample.
+deadlineClockAfterLock :: UTCTime -> SqlPersistT IO UTCTime
+deadlineClockAfterLock sampled = do
+  rows <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
+  pure (foldr (\(Single databaseNow) acc -> max databaseNow acc) sampled rows)
 
 cleanOptionalText :: Maybe Text -> Maybe Text
 cleanOptionalText = (>>= nonBlank)
