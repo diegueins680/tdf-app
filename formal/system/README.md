@@ -75,6 +75,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - Domain contracts retain their existing source locations. This index references
   them instead of maintaining another handwritten copy of their transitions.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
+- [interaction-write-budget.md](interaction-write-budget.md): the per-account interaction write charge survives every outcome of the write, including database errors; bounded model, four negative controls and PostgreSQL tests.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification

@@ -564,6 +564,17 @@
       "conflict": "Public WhatsApp consent accepted any number without proof of control, recorded consent and messaged the number immediately, and exposed consent state and timestamps through a public lookup.",
       "authority": "Explicit product-owner decision on 2026-10-06: double opt-in.",
       "resolution": "Add confirmation_requested_at to whats_app_consent (additive); public requests become pending and activate only on a timely affirmative reply from the number; the public lookup is retired (410); public opt-out is a non-disclosing withdrawal. Existing consent rows are unchanged. Closes DEBT-PRIV-WHATSAPP-001."
+    },
+    {
+      "id": "AUTHORITY-059",
+      "sources": [
+        "tdf-hq/src/TDF/Interactions/Server.hs",
+        "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+        "formal/interactions/README.md"
+      ],
+      "conflict": "The interaction contract states that a rejected write cannot roll back its consumed budget, while the HTTP boundary ran the charge and the write in one transaction, so any write that raised a database error (for example a payload with a NUL escape, a lock timeout or a deadlock) aborted the charge and cost the account nothing.",
+      "authority": "The interaction contract and SOC-ABUSE-001 govern; the refund on database errors was an unexamined consequence of transaction scope, never a decision.",
+      "resolution": "The write runs after a savepoint taken once the charge is made; a database error returns to the savepoint and the transaction commits the counter. Unstorable text is answered 400 instead of 500; other statuses are unchanged. No schema change. Charging requests rejected before database work and pruning past counters remain open."
     }
   ]
 }

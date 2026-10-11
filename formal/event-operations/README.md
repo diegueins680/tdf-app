@@ -605,3 +605,11 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.

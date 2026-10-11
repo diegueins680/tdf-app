@@ -6921,8 +6921,8 @@
     {
       "id": "SOC-ABUSE-001",
       "title": "Rejected interaction writes consume the exact per-account minute budget",
-      "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
-      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; CI regression preserves the existing threshold.",
+      "statement": "Authenticated interaction write attempts consume a durable per-account calendar-minute counter after the session is confirmed and before the write runs. The charge is kept whether the write is answered, refused by a domain rule or refused by the database with an error; increment 91 returns HTTP 429 without running the write.",
+      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; AUTHORITY-059 for database-error outcomes.",
       "domain": "SOC",
       "actors": [
         "Authenticated interaction actor"
@@ -6937,10 +6937,12 @@
         "boundary": "directory_rate_limit interaction:write scope and HTTP queryWith"
       },
       "allowedTransitions": [
-        "Increment budget before domain command; return HTTP 429 when the minute counter exceeds 90"
+        "Increment budget before the write; return HTTP 429 when the minute counter exceeds 90",
+        "Write raises a database error -> write undone to a savepoint, charge committed"
       ],
       "forbiddenTransitions": [
         "Rejected domain writes roll back their consumed budget",
+        "A write refused by the database with an error rolls back its consumed budget",
         "Allow increment 91 within a minute",
         "Treat a fixed-minute rollover as a missing budget"
       ],
@@ -6949,32 +6951,38 @@
       ],
       "authorization": "Current HTTP session remains required; rate limiting never grants domain authority.",
       "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
-      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute.",
+      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute; the row stays locked until the attempt's transaction ends.",
       "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
-      "failure": "Domain rejection preserves the committed budget; quota exhaustion returns 429.",
+      "failure": "Domain rejection and database errors preserve the committed budget; unstorable text returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge.",
       "recovery": "The next database calendar-minute bucket has its own budget.",
       "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
-      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; scripts/interactions/test-api.py",
-      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; regression spans at most two calendar windows.",
-      "contract": "formal/interactions/README.md",
+      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; tdf-hq/src/TDF/Interactions/Server.hs; scripts/interactions/test-api.py",
+      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; ChargeCounted, LimitHolds and RefusedOnlyWhenSpent in the bounded model; the charge survives a raised write in PostgreSQL.",
+      "contract": "formal/system/interaction-write-budget.md",
       "implementation": [
         "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
         "tdf-hq/src/TDF/Interactions/Server.hs"
       ],
       "tests": [
         "scripts/interactions/test-api.py",
-        "scripts/interactions/test-http.sh"
+        "scripts/interactions/test-http.sh",
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+        "scripts/test-interaction-write-budget.sh"
       ],
-      "formalModels": [],
-      "verification": "Isolated real HTTP/PostgreSQL test checks 429 and exact persisted counter; no simulated payment or production evidence.",
-      "evidence": "CI run 37380322736 crossed 22:22 to 22:23 UTC during the old single-window assertion; corrected HTTP regression awaits execution.",
+      "formalModels": [
+        "formal/event-operations/InteractionWriteBudget.tla"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter.",
+      "evidence": "formal/system/interaction-write-budget.md",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Actual SQL and HTTP boundary inspected; revised runtime test pending.",
-      "ambiguity": [],
+      "confidence": "SQL limiter and HTTP boundary inspected; savepoint repair executed against PostgreSQL; pre-database rejections and uncommittable transactions are documented as uncharged.",
+      "ambiguity": [
+        "Whether requests rejected before database work (malformed identifier, oversized payload) should also be charged is undecided."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+        "reason": "Charge durability repaired and tested at the database boundary; the 400 mapping for unstorable text has no HTTP test and counter rows are never pruned."
       }
     },
     {
