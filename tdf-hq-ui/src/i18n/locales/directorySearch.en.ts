@@ -64,6 +64,7 @@ const directorySearch = {
   "organicResults": "Organic results · {{count}}",
   "photo": "Photo of {{title}}",
   "fallbackPhoto": "Placeholder image for {{title}}",
+  "viewProfile": "View profile",
   "removeLabel": "Remove {{title}} from your saved items",
   "saveLabel": "Save {{title}} to your account",
   "approximateLocation": "Approximate location",
