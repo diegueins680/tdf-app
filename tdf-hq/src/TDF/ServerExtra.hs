@@ -9,7 +9,7 @@
 
 module TDF.ServerExtra where
 
-import           Control.Monad              (filterM, forM, unless, when, join, guard)
+import           Control.Monad              (filterM, forM, unless, when, join, guard, void)
 import           Control.Applicative        ((<|>))
 import           Control.Exception          (SomeException, try)
 import           Control.Monad.Except       (MonadError)
@@ -4169,8 +4169,9 @@ persistMetaInbound channel now incoming =
           MetaFacebook ->
             tombstoneFacebook igInboundDeletedExternalId igInboundDeletedSenderId igInboundDeletedSenderName igInboundDeletedMetadata
   where
-    upsertInstagram externalId senderId senderName body adExt adName campExt campName meta = do
-      _ <- upsert (M.InstagramMessage externalId
+    upsertInstagram externalId senderId senderName body adExt adName campExt campName meta =
+      void $ storeInstagramInboundOnce
+        (M.InstagramMessage externalId
                     senderId
                     senderName
                     (Just body)
@@ -4190,21 +4191,10 @@ persistMetaInbound channel now incoming =
                     Nothing
                     Nothing
                     now)
-           ( [ M.InstagramMessageDirection =. "incoming"
-             , M.InstagramMessageReplyStatus =. "pending"
-             , M.InstagramMessageText =. Just body
-             ]
-             ++ maybe [] (\value -> [M.InstagramMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [M.InstagramMessageAdExternalId =. Just value]) adExt
-             ++ maybe [] (\value -> [M.InstagramMessageAdName =. Just value]) adName
-             ++ maybe [] (\value -> [M.InstagramMessageCampaignExternalId =. Just value]) campExt
-             ++ maybe [] (\value -> [M.InstagramMessageCampaignName =. Just value]) campName
-             ++ maybe [] (\value -> [M.InstagramMessageMetadata =. Just value]) meta
-           )
-      pure ()
 
-    upsertFacebook externalId senderId senderName body adExt adName campExt campName meta = do
-      _ <- upsert (ME.FacebookMessage externalId
+    upsertFacebook externalId senderId senderName body adExt adName campExt campName meta =
+      void $ storeFacebookInboundOnce
+        (ME.FacebookMessage externalId
                     senderId
                     senderName
                     (Just body)
@@ -4224,21 +4214,12 @@ persistMetaInbound channel now incoming =
                     Nothing
                     Nothing
                     now)
-           ( [ ME.FacebookMessageDirection =. "incoming"
-             , ME.FacebookMessageReplyStatus =. "pending"
-             , ME.FacebookMessageText =. Just body
-             ]
-             ++ maybe [] (\value -> [ME.FacebookMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [ME.FacebookMessageAdExternalId =. Just value]) adExt
-             ++ maybe [] (\value -> [ME.FacebookMessageAdName =. Just value]) adName
-             ++ maybe [] (\value -> [ME.FacebookMessageCampaignExternalId =. Just value]) campExt
-             ++ maybe [] (\value -> [ME.FacebookMessageCampaignName =. Just value]) campName
-             ++ maybe [] (\value -> [ME.FacebookMessageMetadata =. Just value]) meta
-           )
-      pure ()
 
     tombstoneInstagram externalId senderId senderName meta = do
-      _ <- upsert (M.InstagramMessage externalId
+      existing <- getBy (M.UniqueInstagramMessage externalId)
+      case existing of
+        Nothing -> insert_
+          (M.InstagramMessage externalId
                     senderId
                     senderName
                     Nothing
@@ -4258,14 +4239,16 @@ persistMetaInbound channel now incoming =
                     Nothing
                     (Just now)
                     now)
-           ( [ M.InstagramMessageDeletedAt =. Just now ]
-             ++ maybe [] (\value -> [M.InstagramMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [M.InstagramMessageMetadata =. Just value]) meta
-           )
-      pure ()
+        Just (Entity key stored) ->
+          update key $
+            [ M.InstagramMessageDeletedAt =. Just now | isNothing (M.instagramMessageDeletedAt stored) ]
+            ++ fillBlank (M.instagramMessageSenderName stored) M.InstagramMessageSenderName senderName
 
     tombstoneFacebook externalId senderId senderName meta = do
-      _ <- upsert (ME.FacebookMessage externalId
+      existing <- getBy (ME.UniqueFacebookMessage externalId)
+      case existing of
+        Nothing -> insert_
+          (ME.FacebookMessage externalId
                     senderId
                     senderName
                     Nothing
@@ -4285,11 +4268,49 @@ persistMetaInbound channel now incoming =
                     Nothing
                     (Just now)
                     now)
-           ( [ ME.FacebookMessageDeletedAt =. Just now ]
-             ++ maybe [] (\value -> [ME.FacebookMessageSenderName =. Just value]) senderName
-             ++ maybe [] (\value -> [ME.FacebookMessageMetadata =. Just value]) meta
-           )
-      pure ()
+        Just (Entity key stored) ->
+          update key $
+            [ ME.FacebookMessageDeletedAt =. Just now | isNothing (ME.facebookMessageDeletedAt stored) ]
+            ++ fillBlank (ME.facebookMessageSenderName stored) ME.FacebookMessageSenderName senderName
+
+-- | Stores an inbound Instagram message unless a message with its id is already
+-- stored, and says whether it stored it. Meta delivers a message more than
+-- once and a backfill reads messages that webhooks already delivered. A stored
+-- message keeps its text, direction, deletion and reply state; a repeat may
+-- only fill a sender name or advertising attribution that was missing.
+storeInstagramInboundOnce :: MonadIO m => M.InstagramMessage -> SqlPersistT m Bool
+storeInstagramInboundOnce row = do
+  existing <- getBy (M.UniqueInstagramMessage (M.instagramMessageExternalId row))
+  case existing of
+    Nothing -> insert_ row >> pure True
+    Just (Entity key stored) -> do
+      update key $
+        fillBlank (M.instagramMessageSenderName stored) M.InstagramMessageSenderName (M.instagramMessageSenderName row)
+        ++ fillBlank (M.instagramMessageAdExternalId stored) M.InstagramMessageAdExternalId (M.instagramMessageAdExternalId row)
+        ++ fillBlank (M.instagramMessageAdName stored) M.InstagramMessageAdName (M.instagramMessageAdName row)
+        ++ fillBlank (M.instagramMessageCampaignExternalId stored) M.InstagramMessageCampaignExternalId (M.instagramMessageCampaignExternalId row)
+        ++ fillBlank (M.instagramMessageCampaignName stored) M.InstagramMessageCampaignName (M.instagramMessageCampaignName row)
+      pure False
+
+-- | 'storeInstagramInboundOnce' for Facebook messages.
+storeFacebookInboundOnce :: MonadIO m => ME.FacebookMessage -> SqlPersistT m Bool
+storeFacebookInboundOnce row = do
+  existing <- getBy (ME.UniqueFacebookMessage (ME.facebookMessageExternalId row))
+  case existing of
+    Nothing -> insert_ row >> pure True
+    Just (Entity key stored) -> do
+      update key $
+        fillBlank (ME.facebookMessageSenderName stored) ME.FacebookMessageSenderName (ME.facebookMessageSenderName row)
+        ++ fillBlank (ME.facebookMessageAdExternalId stored) ME.FacebookMessageAdExternalId (ME.facebookMessageAdExternalId row)
+        ++ fillBlank (ME.facebookMessageAdName stored) ME.FacebookMessageAdName (ME.facebookMessageAdName row)
+        ++ fillBlank (ME.facebookMessageCampaignExternalId stored) ME.FacebookMessageCampaignExternalId (ME.facebookMessageCampaignExternalId row)
+        ++ fillBlank (ME.facebookMessageCampaignName stored) ME.FacebookMessageCampaignName (ME.facebookMessageCampaignName row)
+      pure False
+
+-- A field is written only when nothing is stored in it and a value arrived.
+fillBlank :: PersistField a => Maybe T.Text -> EntityField record (Maybe a) -> Maybe a -> [Update record]
+fillBlank stored field incoming =
+  [ field =. incoming | maybe True (T.null . T.strip) stored, isJust incoming ]
 
 verifyMetaWebhook
   :: ( MonadReader Env m

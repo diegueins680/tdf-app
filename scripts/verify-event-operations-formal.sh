@@ -145,6 +145,10 @@ run_tlc PrivacyDeletionWorkflow.tla PrivacyDeletionWorkflow.cfg privacy-deletion
 run_negative_tlc PrivacyDeletionEarlyClose.cfg privacy-deletion-earlyclose 'Invariant ClosureEvidence is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionDeadlineReset.cfg privacy-deletion-deadline 'Invariant FixedDeadline is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionStaleWrite.cfg privacy-deletion-stale 'Invariant NoStaleCommit is violated' PrivacyDeletionWorkflow.tla
+run_tlc MetaRedelivery.tla MetaRedelivery.cfg meta-redelivery
+run_negative_tlc MetaRedeliveryRepeatResetsReply.cfg meta-redelivery-repeat-resets-reply 'Invariant ConsideredOnce is violated' MetaRedelivery.tla
+run_negative_tlc MetaRedeliveryRepeatRewritesText.cfg meta-redelivery-repeat-rewrites-text 'Invariant TextKept is violated' MetaRedelivery.tla
+run_negative_tlc MetaRedeliveryRepeatMovesDeletion.cfg meta-redelivery-repeat-moves-deletion 'Invariant DeletionTimeKept is violated' MetaRedelivery.tla
 run_tlc SessionCacheIsolation.tla SessionCacheIsolation.cfg session-cache
 run_negative_tlc SessionCacheShared.cfg session-cache-shared "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
 run_negative_tlc SessionCacheActorReuse.cfg session-cache-actor-reuse "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
