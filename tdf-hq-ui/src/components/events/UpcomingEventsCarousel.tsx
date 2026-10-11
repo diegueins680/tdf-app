@@ -161,6 +161,9 @@ export default function UpcomingEventsCarousel() {
           // Until the viewer's answer is known, one tap could overwrite a "maybe" with "going".
           const rsvpKnown = rsvpQuery?.isSuccess === true && !rsvpQuery.isFetching;
           const status = rsvpQuery?.data?.rsvpStatus;
+          // The server refused or failed the read (offline, or an event this viewer cannot RSVP to):
+          // a button that can never enable explains nothing, so the card stays a plain link to the event.
+          const rsvpUnavailable = rsvpQuery?.isError === true && !rsvpQuery.isFetching;
           const pending = attendState[event.publicUpcomingEventId] === 'pending';
           const failed = attendState[event.publicUpcomingEventId] === 'failed';
           return (
@@ -180,7 +183,7 @@ export default function UpcomingEventsCarousel() {
               <Box sx={{ px: 1.25, pb: 1.25 }}>
                 {status ? (
                   <Chip size="small" color={status === 'accepted' ? 'success' : 'default'} label={t(rsvpLabelKey[status])} />
-                ) : (
+                ) : rsvpUnavailable ? null : (
                   <Button
                     size="small"
                     variant="outlined"

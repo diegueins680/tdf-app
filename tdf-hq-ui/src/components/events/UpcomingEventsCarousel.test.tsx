@@ -159,9 +159,11 @@ describe('UpcomingEventsCarousel', () => {
     getRsvpMock.mockRejectedValue(new Error('offline'));
     const view = await render();
     try {
-      await waitFor(() => Boolean(button(view.container, 'Asistiré')));
+      await waitFor(() => view.container.textContent?.includes('ELECTROETNIA') === true && getRsvpMock.mock.calls.length > 0);
       for (let i = 0; i < 4; i += 1) await act(async () => { await flush(); });
-      expect(button(view.container, 'Asistiré')?.disabled).toBe(true);
+      // No permanently disabled button: the card still links to the event, where RSVP is explained.
+      expect(button(view.container, 'Asistiré')).toBeFalsy();
+      expect(view.container.querySelector('a[href="/eventos/143"]')).not.toBeNull();
     } finally {
       await view.cleanup();
     }
