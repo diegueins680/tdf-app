@@ -460,6 +460,15 @@ jobs:
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
 
+      - name: Verify directory artist listings and canonical preview images
+        env:
+          PGPASSWORD: postgres
+          TDF_ARTIST_LISTINGS_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_artist_listings_test
+          TDF_ARTIST_LISTINGS_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: |
+          createdb -h postgres -U postgres tdf_artist_listings_test
+          bash scripts/test-directory-artist-listings.sh
+
       - name: Verify canonical provider retry concurrency and compatibility
         env:
           PGPASSWORD: postgres

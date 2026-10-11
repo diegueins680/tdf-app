@@ -122,6 +122,47 @@ describe('DirectorySearchPage', () => {
     }
   });
 
+  it('links derived artist listings to their canonical profile and shows the real profile image', async () => {
+    searchMock.mockResolvedValue({
+      items: [{
+        id: '55555555-5555-4555-8555-555555555555', type: 'classified', slug: 'synthetic-band-perfil',
+        title: 'Synthetic Band', summary: 'Banda derivada de su perfil público.',
+        imageUrl: 'https://cdn.example.test/synthetic-band.jpg',
+        location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
+        sponsored: false, score: 0.8,
+        sourceProfile: {
+          id: '66666666-6666-4666-8666-666666666666', slug: 'synthetic-band', name: 'Synthetic Band',
+          canonicalUrl: '/directorio/synthetic-band',
+        },
+      }],
+      sponsoredItems: [], facets: { entityTypes: { classified: 1 }, cities: [], total: 1 },
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={['/buscar?entityType=classified']}><DirectorySearchPage /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      const link = await waitFor(() => {
+        const anchor = Array.from(container.querySelectorAll('a')).find((element) => element.textContent === 'Ver perfil');
+        expect(anchor).toBeDefined();
+        return anchor!;
+      });
+      expect(link.getAttribute('href')).toBe('/directorio/synthetic-band');
+      const image = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Band"]');
+      expect(image?.getAttribute('src')).toBe('https://cdn.example.test/synthetic-band.jpg');
+      expect(image?.getAttribute('loading')).toBe('lazy');
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+    }
+  });
+
   it.each(['before-dispatch', 'before-response', 'same-party-return'] as const)('rejects obsolete favorite authority %s', async (scenario) => {
     sessionFixture = { partyId: 42 };
     searchMock.mockResolvedValue(eventSearchResponse);
