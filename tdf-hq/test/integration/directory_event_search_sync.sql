@@ -20,6 +20,8 @@ DECLARE
   versions_before BIGINT;
   subscriber BIGINT;
   late_search UUID;
+  retiring_city UUID;
+  retiring_venue BIGINT;
   republish_search UUID;
 BEGIN
   SELECT id INTO quito FROM city_reference
@@ -46,6 +48,24 @@ BEGIN
   RETURNING id INTO free_text_venue;
   IF (SELECT city_id FROM venue WHERE id = free_text_venue) IS DISTINCT FROM quito THEN
     RAISE EXCEPTION 'free-text city was not resolved to city_reference';
+  END IF;
+
+  -- 1a. An inferred city that is later retired still follows a text edit.
+  INSERT INTO city_reference (country_id, code, name_es, name_en, source_name, active)
+  SELECT country_id, 'SYNTHETIC-RETIRING-TOWN', 'Synthetic Retiring Town', 'Synthetic Retiring Town',
+         'synthetic-sync-test', TRUE
+  FROM city_reference WHERE id = quito
+  RETURNING id INTO retiring_city;
+  INSERT INTO venue (name, city, created_at, updated_at)
+  VALUES ('Synthetic retiring venue', 'synthetic retiring town', now(), now())
+  RETURNING id INTO retiring_venue;
+  IF (SELECT city_id FROM venue WHERE id = retiring_venue) IS DISTINCT FROM retiring_city THEN
+    RAISE EXCEPTION 'venue was not assigned the active synthetic city';
+  END IF;
+  UPDATE city_reference SET active = FALSE WHERE id = retiring_city;
+  UPDATE venue SET city = 'Quito' WHERE id = retiring_venue;
+  IF (SELECT city_id FROM venue WHERE id = retiring_venue) IS DISTINCT FROM quito THEN
+    RAISE EXCEPTION 'venue stayed on a retired inferred city after its city text changed';
   END IF;
 
   -- 2. A newly created public event is searchable at once, with city, image and kind words.

@@ -35,10 +35,19 @@ BEGIN
   ELSIF TG_OP = 'UPDATE'
     AND NEW.city IS DISTINCT FROM OLD.city
     AND NEW.city_id IS NOT DISTINCT FROM OLD.city_id
-    AND OLD.city_id IS NOT DISTINCT FROM directory_resolve_city_reference(OLD.city) THEN
+    AND (
+      (OLD.city_id IS NULL AND directory_resolve_city_reference(OLD.city) IS NULL)
+      OR EXISTS (
+        SELECT 1 FROM city_reference city
+        WHERE city.id = OLD.city_id
+          AND directory_normalize_text(city.name_es) = directory_normalize_text(OLD.city)
+      )
+    ) THEN
     -- The id agreed with the previous city text and the caller changed only
     -- the text (the venue API never writes city_id), so the id follows the
-    -- text. An id that was chosen independently of the text is kept.
+    -- text. An id that was chosen independently of the text is kept. The old
+    -- city is matched by name whether or not it is still active, so a venue
+    -- does not stay pinned to a city that was retired after it was assigned.
     NEW.city_id := directory_resolve_city_reference(NEW.city);
   END IF;
   RETURN NEW;
