@@ -144,7 +144,16 @@ def code_transitions(spec, root=ROOT):
     renderer = re.search(rf"^{re.escape(spec['renderer'])} (\w+) = case \1 of\n", source, re.M)
     if not renderer:
         raise RuntimeError(f"renderer {spec['renderer']} not found in {spec['file']}")
-    mappings = re.findall(r'^\s+([A-Z]\w*)\s*->\s*"(\w+)"', declaration_body(source, renderer.start()), re.M)
+    # Every branch must be exactly `Constructor -> "name"`: a prefix match would read
+    # `"lost" <> "_archived"` as "lost".
+    mappings = []
+    for branch in declaration_body(source, renderer.start()).split("\n")[1:]:
+        if not branch.strip():
+            continue
+        literal = re.fullmatch(r'\s+([A-Z]\w*)\s*->\s*"(\w+)"\s*', branch)
+        if not literal:
+            raise RuntimeError(f"{spec['renderer']} has a branch that is not a literal name: {branch.strip()}")
+        mappings.append(literal.groups())
     names = dict(mappings)
     if len(names) != len(mappings):
         raise RuntimeError(f"{spec['renderer']} maps a constructor more than once")
@@ -161,6 +170,9 @@ def code_transitions(spec, root=ROOT):
     if following and not re.match(r"[A-Za-z_]\w*'*(\s+[\w']+)*\s*(=|::|\|)", following):
         raise RuntimeError(f"{spec['validator']} allowedTransitions is not a single literal list")
     listed = table.group(1)
+    # Every element must be a literal pair: a named entry would add an edge this reader cannot see.
+    if re.sub(r"\(\w+,\s*\w+\)", "", listed).replace(",", "").strip():
+        raise RuntimeError(f"{spec['validator']} allowedTransitions has an entry that is not a literal pair")
     pairs = set()
     for source_state, target in re.findall(r"\((\w+),\s*(\w+)\)", listed):
         for constructor in (source_state, target):

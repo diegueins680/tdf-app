@@ -110,13 +110,24 @@ def code_controls(bindings, machines):
         target.write_text(extended)
         expect("list extended by another expression", gate.check_code(bindings, machines, root),
                "is not a single literal list")
+        named = source.replace("      , (RentalLost, RentalDisputed)\n",
+                               "      , (RentalLost, RentalDisputed)\n      , hiddenTransition\n", 1)
+        assert named != source
+        target.write_text(named)
+        expect("named entry inside the list", gate.check_code(bindings, machines, root),
+               "has an entry that is not a literal pair")
+        computed = source.replace('  RentalLost -> "lost"\n', '  RentalLost -> "lost" <> "_archived"\n', 1)
+        assert computed != source
+        target.write_text(computed)
+        expect("renderer branch computed from a literal", gate.check_code(bindings, machines, root),
+               "has a branch that is not a literal name")
     assert gate.without_haskell_comments('x = "-- {- text" -- gone\ny') == 'x = "-- {- text" \ny'
 
     unbound = copy.deepcopy(bindings)
     del unbound["machines"][RENTAL]["code"]
     expect("required validator binding removed", gate.check_code(unbound, machines),
            "required backend validator binding is missing")
-    return 16
+    return 18
 
 
 def main():
