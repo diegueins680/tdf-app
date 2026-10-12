@@ -1786,11 +1786,11 @@
     {
       "id": "PAY-CHECKOUT-002",
       "title": "Immutable checkout payable snapshot correspondence",
-      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation.",
+      "statement": "Every committed canonical checkout has at least one line whose exact payable sum equals its immutable parent payable total; preserve currency and monetary terms after creation. Lines are created only in the transaction that creates their checkout: no line, whatever its amount, joins a committed checkout.",
       "domain": "PAY",
-      "authority": "inferred",
-      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable.",
+      "authority": "inferred; AUTHORITY-070",
+      "source": "formal/system/checkout-arithmetic.md; tdf-hq/src/TDF/Server/Merch.hs; tdf-hq/src/TDF/Commerce/CheckoutStore.hs; formal/system/checkout-snapshot.md",
+      "property": "Nonempty line snapshot and exact numeric sum(line.total_minor)=checkout.total_minor; parent monetary fields immutable; the line set of a committed checkout is the one it was committed with.",
       "contract": "formal/system/checkout-arithmetic.md",
       "actors": [
         "CheckoutStore adapter",
@@ -1812,44 +1812,54 @@
         ]
       },
       "allowedTransitions": [
-        "Create header and all lines in one transaction.",
+        "Create header and all lines in one transaction (subtransactions included).",
         "Advance lifecycle/payment/refund counters while preserving monetary terms."
       ],
       "forbiddenTransitions": [
         "Commit missing lines or mismatched/overflowing aggregate.",
-        "Rewrite parent currency or monetary terms."
+        "Rewrite parent currency or monetary terms.",
+        "Insert a line for a checkout written by an earlier transaction, or for a checkout not visible to the inserting transaction."
       ],
       "effects": [
-        "Deferred commit-time validation; reject without committed financial mutation."
+        "Deferred commit-time validation; reject without committed financial mutation.",
+        "A late line insert is refused immediately (SQLSTATE 23514), before the reference check, so it never waits on another transaction's header."
       ],
       "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
       "privacy": "Synthetic tests use no real customer data or provider credentials.",
-      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry. Since 2026-10-12 a line insert reads age(xmin) of its checkout: a header written by an earlier transaction, or not visible, is refused, so zero-total appends and appends to a just-committed foreign header are closed; a creating transaction holding its uncommitted header is not waited on and still commits with its own lines.",
       "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
-      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch.",
-      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch. A line for a committed or invisible checkout is refused with SQLSTATE 23514 before the reference check.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence. The 2026-10-12 rule has a rollback that leaves the 2026-10-04 rules in place; a line appended before it is detectable by its xmin relative to the header's and by audit.",
       "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/__tests__/checkout-amount-postgres.mjs",
         "scripts/test-marketplace-contact-identity.sh"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
-      "evidence": "checkout-amount-postgres-fence.log",
+      "formalModels": [
+        "formal/event-operations/CheckoutSnapshot.tla",
+        "formal/event-operations/CheckoutSnapshot.cfg",
+        "formal/event-operations/CheckoutSnapshotLateLines.cfg",
+        "formal/event-operations/CheckoutSnapshotUnvalidated.cfg",
+        "formal/event-operations/CheckoutSnapshotMutableTerms.cfg"
+      ],
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls; the PostgreSQL test gains the fixed-snapshot cases, a race against an uncommitted header, a sixth negative control and the structural check of the new trigger.",
+      "evidence": "checkout-amount-postgres-fence.log; formal/system/checkout-snapshot.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "high within immutable/nonnegative schema assumptions; final hosted and deployed execution pending",
       "ambiguity": [
         "Privileged DDL, TRUNCATE and disabled triggers excluded.",
-        "Component subtotals intentionally differ for merchandise shipping."
+        "Component subtotals intentionally differ for merchandise shipping.",
+        "A line of total zero is a line: it may not join a committed checkout even though it leaves the sum unchanged (2026-10-12)."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local PG16 boundary, five negative controls and migration-era snapshot race pass; final PG17 CI and deployment pending."
+        "reason": "Local PG16 boundary, six negative controls, migration-era snapshot race and the fixed line snapshot pass; final PG17 CI and deployment pending."
       }
     },
     {
@@ -9048,7 +9058,7 @@
     ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
     ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
+    "docs/catalog-persistence/catalog-list-decisions.json": "d70eca856ffe5cb91eb8a1d677a8c8b9e1f50059dd55e33214ad0f0d0d33637d",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9089,6 +9099,11 @@
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
     "formal/event-operations/ChatMutationEarlyCommit.cfg": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d",
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
+    "formal/event-operations/CheckoutSnapshot.cfg": "abca531531a609c6ef0eef4dc3fbaec8962fb240abbd3a886e4301d302177189",
+    "formal/event-operations/CheckoutSnapshot.tla": "2804fb92dabdc6f6ccaa518ad570abfbdc641ff94a881e6a1a9b580568b1e8b0",
+    "formal/event-operations/CheckoutSnapshotLateLines.cfg": "8315772d5acae64ac6cd79fc54f0b0391eb38340b634916f80befe19944e44d3",
+    "formal/event-operations/CheckoutSnapshotMutableTerms.cfg": "4dfb78201a2f21e44a9b08df5d6bfee520884f45a2bcca4d760645b04e303c31",
+    "formal/event-operations/CheckoutSnapshotUnvalidated.cfg": "d12cb28153dca7a90a00bb13968fa1634846562d8867d224212aab93d6e954cf",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
     "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
@@ -9179,7 +9194,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
-    "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
+    "scripts/__tests__/checkout-amount-postgres.mjs": "796d7e5bf948d2a36f330633354e996221a242b62e6a67617eacabcdc550931c",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
     "scripts/__tests__/ci-pipeline.test.mjs": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
@@ -9261,7 +9276,7 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+    "scripts/lib/production-release.mjs": "8318ba97ee8b86a6675eea81ed9105049edfa07c00d66a353507a1cae5284ed8",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -9273,7 +9288,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+    "scripts/production-migrations.json": "32d77438bcbf563338b88eea9a9a9ad431b84563c1cba7bbd16d42a10021e736",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9348,7 +9363,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+    "scripts/verify-event-operations-formal.sh": "e2ba580c10ba19d5016f172cd5e6568f2037a5696ad464b0b208e2c978df847a",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9654,6 +9669,7 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql": "264802f5dcb909007664f265efdfa62b333d6e8d6959ec5abc366898282b8e26",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -11058,6 +11074,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/lib/production-release.mjs": [
       {
         "requirement": "PAY-CHECKOUT-002",
@@ -11098,6 +11120,36 @@
       {
         "requirement": "PAY-CHECKOUT-002",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshot.tla": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshot.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshotLateLines.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshotUnvalidated.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/CheckoutSnapshotMutableTerms.cfg": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Commerce/Merch.hs": [
@@ -17233,7 +17285,7 @@
     {
       "id": "SURFACE-790b053ca0c0e13b",
       "path": "scripts/__tests__/checkout-amount-postgres.mjs",
-      "sha256": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
+      "sha256": "796d7e5bf948d2a36f330633354e996221a242b62e6a67617eacabcdc550931c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19033,7 +19085,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "8318ba97ee8b86a6675eea81ed9105049edfa07c00d66a353507a1cae5284ed8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19310,7 +19362,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "32d77438bcbf563338b88eea9a9a9ad431b84563c1cba7bbd16d42a10021e736",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21407,7 +21459,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "e2ba580c10ba19d5016f172cd5e6568f2037a5696ad464b0b208e2c978df847a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31860,6 +31912,25 @@
       ]
     },
     {
+      "id": "SURFACE-661f6ad55c89846a",
+      "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+      "sha256": "264802f5dcb909007664f265efdfa62b333d6e8d6959ec5abc366898282b8e26",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8b345f57d28949bc",
+      "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
+      "sha256": "60da12bb85bdfcad3a77a9dc1f0d49ebc5efbdd85cf566ca3c82a5df9350cb9f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -40179,6 +40250,7 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
+    "SURFACE-8b345f57d28949bc",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-b4cc3e91d4f2bb58",
     "SURFACE-87ed7351125c499c",
@@ -40730,7 +40802,6 @@
     "AUTH-REGISTRY-001",
     "DEPLOY-BUILD-001",
     "PAY-CHECKOUT-001",
-    "PAY-CHECKOUT-002",
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
@@ -41894,7 +41965,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73cfc3feb0cfbc50a153906b4c673a527e3636b8e3cbcc55cf91bddc7cd5686",
+      "sourceSha256": "7ba9a47dbad2096cfb2e78945babd16284082bfe88c3e7fa42b2663d4565691f",
       "definition": {
         "states": [
           "absent",
