@@ -239,6 +239,26 @@ spec = describe "artist-self-service-postgresql" $ do
         takeMVar activated >>= (`shouldSatisfy` isRight)
         status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
         status `shouldBe` [Single ("approved" :: Text)]
+      it "does not complete an onboarding request whose deadline passes while activation waits for the Party" $ \pool -> do
+        inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'artist.onboarding','create','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
+        requestId <- case inserted of
+          [Single key] -> pure key
+          _ -> fail "Expected one access request"
+        sampled <- getCurrentTime
+        held <- newEmptyMVar
+        released <- newEmptyMVar
+        void $ forkIO $ do
+          runSqlPool (do
+            _ <- rawSql "SELECT id FROM party WHERE id=2 FOR UPDATE" [] :: SqlPersistT IO [Single Int64]
+            liftIO (putMVar held ())
+            liftIO (threadDelay 2000000)) pool
+          putMVar released ()
+        takeMVar held
+        result <- runSqlPool (activateOwnArtistProfile (toSqlKey 2) sampled) pool
+        takeMVar released
+        result `shouldSatisfy` isRight
+        status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
+        status `shouldBe` [Single ("pending" :: Text)]
       it "expires, rather than approves, a request that lapses while the self-service handler waits for it" $ \pool -> do
         rows <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(1,'artist.onboarding','create','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
         requestId <- case rows of

@@ -79,12 +79,16 @@ activateOwnArtistProfile partyId now = do
           profile <- loadOrCreateArtistProfileDTO partyId
           -- A request past its deadline is not completed here: approving it would
           -- resurrect an expired request. Activation itself still succeeds.
+          -- The Party lock and the role/profile work above can outlast a deadline
+          -- that was still ahead when the requests were locked, so judge it again
+          -- now; the rows are owned, only the clock can have moved.
+          settledDeadline <- deadlineClockAfterLock deadline
           pending <- selectList
             ([ ME.FeatureAccessRequestRequesterPartyId ==. partyId
              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
              , ME.FeatureAccessRequestAction ==. "create"
              , ME.FeatureAccessRequestStatus ==. "pending"
-             ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just deadline])) []
+             ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just settledDeadline])) []
           forM_ pending $ \(Entity key _) -> do
             let note = Just "Perfil de artista activado por su titular, sin aprobación manual."
             -- Recheck status and deadline in the UPDATE itself: a concurrent
@@ -93,7 +97,7 @@ activateOwnArtistProfile partyId now = do
             changed <- updateWhereCount
               ([ ME.FeatureAccessRequestId ==. key
                , ME.FeatureAccessRequestStatus ==. "pending"
-               ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just deadline]))
+               ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just settledDeadline]))
               [ ME.FeatureAccessRequestStatus =. "approved"
               , ME.FeatureAccessRequestReviewerPartyId =. Nothing
               , ME.FeatureAccessRequestReviewerNotes =. note
