@@ -524,6 +524,7 @@ jobs:
           sh scripts/test-meta-redelivery.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-credential-lifecycle.sh
+          sh scripts/test-whatsapp-consent.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls
         env:
