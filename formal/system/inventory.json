@@ -8,6 +8,7 @@
       ".github/workflows/build.yml",
       ".github/workflows/catalog-list-audit.yml",
       ".github/workflows/check-messaging-token.yml",
+      ".github/workflows/check-mobile-distribution.yml",
       ".github/workflows/ci-safe-install.yml",
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
@@ -145,6 +146,7 @@
       "scripts/__tests__/logical-correctness-audit.test.mjs",
       "scripts/__tests__/merch-commission-postgres.mjs",
       "scripts/__tests__/merch-runtime-safety.test.mjs",
+      "scripts/__tests__/mobile-distribution-expiry.test.mjs",
       "scripts/__tests__/music-browser-config.test.mjs",
       "scripts/__tests__/music-browser-probe.test.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
@@ -203,6 +205,7 @@
       "scripts/check-dependency-security.mjs",
       "scripts/check-generated-api.mjs",
       "scripts/check-messaging-token.mjs",
+      "scripts/check-mobile-distribution.mjs",
       "scripts/check-new-specification-surfaces.py",
       "scripts/check-public-routes.py",
       "scripts/check-state-machines.py",
@@ -2565,6 +2568,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0ad43ac6597144d2",
+      "path": ".github/workflows/check-mobile-distribution.yml",
+      "sha256": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
       "sha256": "ece2be17e5f353890f78bb06c10d649a5280f6c0dbfb7e173083c36ba6c48891",
@@ -3291,6 +3300,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-80d1ebf94eae3fbb",
+      "path": "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+      "sha256": "5aeb81bf949107e22fc329a2d7e6618acf0a15a279e1955cbb793c7fbdc1c6e6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
       "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
@@ -3636,6 +3651,12 @@
       "id": "SURFACE-ccd62b2a303eba94",
       "path": "scripts/check-messaging-token.mjs",
       "sha256": "f2505fab497e7f96880d22952a6863595548f6e1f6b08725cc5243708f2cec75",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7cf4797085be81ca",
+      "path": "scripts/check-mobile-distribution.mjs",
+      "sha256": "7f001f01cfd6039c2a4a0946414f23680f76a8af94dd7b132da80c80aa15b9c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4295,7 +4316,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c1fcb1781082b346ff89d410062806daa57e01df972b0feaebe1fbeb08e7d625",
+      "sha256": "29ac68daf5c4eef19ae22ef2c1eb2e000f5eb240911350f5c8ba3c5a262c554d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24147,7 +24168,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4f88b3644c09aa06d2e9847703c96350cdded7f653176928d28607a8d1c8bde5",
+      "sha256": "6f64a59499e5729dc640bf60fd3fdaa180479d730a16f0a2e55cb43df3f9b7d2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
