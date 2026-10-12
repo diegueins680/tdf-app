@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T04:49:27.979Z",
+  "generatedAt": "2026-10-12T05:50:53.768Z",
   "repositoryRoot": ".",
-  "filesScanned": 2243,
+  "filesScanned": 2244,
   "candidateCount": 1320,
   "byClassification": {
     "dynamic-business-catalog": 849,
@@ -15471,7 +15471,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "paymentMethods",
-      "line": 285,
+      "line": 365,
       "values": [
         "paypal",
         "bank_transfer"
@@ -15479,9 +15479,9 @@
       "valueCount": 2,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        285,
-        288,
-        291
+        365,
+        368,
+        371
       ],
       "consumerCount": 108,
       "backendConsumers": [
@@ -15622,7 +15622,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "session",
-      "line": 469,
+      "line": 549,
       "values": [
         "checkoutId",
         "attemptId",
@@ -15636,9 +15636,9 @@
       "valueCount": 8,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        469
+        549
       ],
-      "consumerCount": 603,
+      "consumerCount": 604,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -15820,10 +15820,10 @@
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
-        "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs"
+        "scripts/social/ProfileBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -20676,7 +20676,7 @@
       "lines": [
         181
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -20813,6 +20813,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -23183,7 +23184,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 636,
+      "consumerCount": 637,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -23367,11 +23368,11 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
         "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs",
-        "scripts/social/SessionSpec.hs"
+        "scripts/social/SessionModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -26819,7 +26820,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 612,
+      "consumerCount": 613,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -27005,8 +27006,8 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/run-ticket-retrieval-browser.mjs",
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -27106,7 +27107,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 246,
+      "consumerCount": 247,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -27271,6 +27272,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -27280,8 +27282,7 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-specification-conformance.py",
-        "scripts/test-studio-internship-audit-api-e2e.mjs",
-        "scripts/test-studio-internship-audit-api-e2e.sh"
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -30037,7 +30038,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 612,
+      "consumerCount": 613,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30223,8 +30224,8 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/run-ticket-retrieval-browser.mjs",
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -30324,7 +30325,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 246,
+      "consumerCount": 247,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -30489,6 +30490,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -30498,8 +30500,7 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-specification-conformance.py",
-        "scripts/test-studio-internship-audit-api-e2e.mjs",
-        "scripts/test-studio-internship-audit-api-e2e.sh"
+        "scripts/test-studio-internship-audit-api-e2e.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -33174,7 +33175,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -33312,6 +33313,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -33824,7 +33826,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 592,
+      "consumerCount": 593,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34007,10 +34009,10 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
-        "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs"
+        "scripts/social/ProfileBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -38254,7 +38256,7 @@
       "lines": [
         36
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -38398,6 +38400,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -39501,7 +39504,7 @@
         3774,
         4051
       ],
-      "consumerCount": 221,
+      "consumerCount": 222,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -39675,12 +39678,12 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-music-release-api-e2e.sh"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -39952,7 +39955,7 @@
       "lines": [
         3945
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -40116,6 +40119,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -40125,8 +40129,7 @@
         "scripts/test-specification-conformance.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-api-e2e.sh",
-        "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/ux-audit-inventory.mjs"
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -40389,7 +40392,7 @@
       "lines": [
         3982
       ],
-      "consumerCount": 147,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -40526,6 +40529,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -40773,7 +40777,7 @@
       "lines": [
         4018
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -40911,6 +40915,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -41164,7 +41169,7 @@
       "lines": [
         4326
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -41328,6 +41333,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -41337,8 +41343,7 @@
         "scripts/test-specification-conformance.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-api-e2e.sh",
-        "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/ux-audit-inventory.mjs"
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -41596,7 +41601,7 @@
       "lines": [
         4335
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -41760,6 +41765,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -41769,8 +41775,7 @@
         "scripts/test-specification-conformance.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-api-e2e.sh",
-        "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/ux-audit-inventory.mjs"
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -41827,7 +41832,7 @@
       "lines": [
         4451
       ],
-      "consumerCount": 229,
+      "consumerCount": 230,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -42002,12 +42007,12 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-music-directory-contract.mjs"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -42285,7 +42290,7 @@
       "lines": [
         4460
       ],
-      "consumerCount": 229,
+      "consumerCount": 230,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -42460,12 +42465,12 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/production_access.py",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
         "scripts/test-account-deletion-api.mjs",
-        "scripts/test-booking-conformance.py",
-        "scripts/test-music-directory-contract.mjs"
+        "scripts/test-booking-conformance.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -54864,7 +54869,7 @@
       "lines": [
         366
       ],
-      "consumerCount": 142,
+      "consumerCount": 143,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -55001,6 +55006,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -61148,7 +61154,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 529,
+      "line": 560,
       "values": [
         "consumidor_final",
         "cedula",
@@ -61158,7 +61164,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        529
+        560
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -67020,7 +67026,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 612,
+      "consumerCount": 613,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -67206,8 +67212,8 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/run-ticket-retrieval-browser.mjs",
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -67302,7 +67308,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 204,
+      "consumerCount": 205,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -67466,6 +67472,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -67475,8 +67482,7 @@
         "scripts/test-specification-conformance.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-api-e2e.sh",
-        "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/ux-audit-inventory.mjs"
+        "scripts/test-studio-internship-audit-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/admin.ts",
@@ -68058,7 +68064,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 160,
+      "consumerCount": 161,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -68208,6 +68214,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -68572,7 +68579,7 @@
       "lines": [
         66
       ],
-      "consumerCount": 160,
+      "consumerCount": 161,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -68722,6 +68729,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -69573,7 +69581,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 144,
+      "consumerCount": 145,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -69712,6 +69720,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -69761,7 +69770,7 @@
       "lines": [
         93
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -69901,6 +69910,7 @@
         "scripts/mobile-publishing-admin-audit.sh",
         "scripts/mobile-workspace-ready.mjs",
         "scripts/run-event-raci-browser.mjs",
+        "scripts/run-ticket-retrieval-browser.mjs",
         "scripts/social/preview.mjs",
         "scripts/specification-conformance.py",
         "scripts/specification-inventory.py",
@@ -75004,7 +75014,7 @@
       "lines": [
         10620
       ],
-      "consumerCount": 859,
+      "consumerCount": 860,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -83126,7 +83136,7 @@
       "lines": [
         18116
       ],
-      "consumerCount": 856,
+      "consumerCount": 857,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
