@@ -9051,7 +9051,7 @@
       },
       "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
-      "recovery": "The migration returns to dead_letter every failure that was relabelled retrying while its projection stayed dead-lettered; a manager can then retry it.",
+      "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
       "id": "OPS-FAILURE-REPLAY-001",
       "title": "A retried projection failure is run again and ends resolved or dead-lettered",
@@ -9103,10 +9103,10 @@
       ],
       "authorization": "Locked current grant and scope; manager, studio manager or administrator only.",
       "privacy": "The failure keeps only the redacted summary and SQLSTATE; the retry adds nothing private.",
-      "concurrency": "The failure row is locked before the decision, so one of several simultaneous retries is admitted. The retry updates the projection row only while it is dead-lettered, a state in which the worker does not hold it; the worker takes the projection row before the failure row.",
+      "concurrency": "The handler locks the failure row; the database trigger then re-queues the record's dead-lettered projection and re-reads the queue. One of several simultaneous retries is admitted (tested). The worker takes the projection row before the failure row; handler/worker interleavings are argued and were exercised by hand in review, not by the automated harness.",
       "idempotency": "A repeated retry is refused with 409 while the failure is retrying or resolved. Applying the migration again changes nothing.",
-      "failure": "Refusals and an audit failure leave failure and queue unchanged. A projection that keeps failing dead-letters again after eight attempts and can be retried again.",
-      "property": "retrying implies the projection is queued; at most one open failure per record; a processed projection has no open failure; a retry ends resolved or dead-lettered",
+      "failure": "Refusals and an audit failure leave failure and queue unchanged. 503 when the retry trigger is not installed. A projection that keeps failing dead-letters again after eight attempts, is announced again and can be retried again.",
+      "property": "Enforced by triggers and a unique partial index while the migration is applied: retrying implies a projection of the record is queued; at most one open projection failure per record; a processed projection has no open failure. A retry ends resolved or dead-lettered only if the worker runs.",
       "implementation": [
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
@@ -9122,7 +9122,8 @@
       "ambiguity": [
         "Only dead-lettered projections have an executor; a future provider failure needs its own before it can be retried.",
         "A projection that fails for a cause nobody repairs dead-letters again after each retry.",
-        "Whether Operations is enabled in production, and how many failures exist there, is unobserved."
+        "Whether Operations is enabled in production, and how many failures exist there, is unobserved.",
+        "The model's liveness property assumes the worker runs; with the worker disabled a retry stays retrying."
       ],
       "historicalStatus": "retry-relabelled-without-execution"
     }
@@ -9345,7 +9346,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "3e53f908b43d716dd0e7598ddf9352499c6f423d1a28939cd68f88c735caa906",
+    "scripts/lib/operations_conformance.py": "fa3360ce81d091860ce57236677608513428d31fe1ce68e0de13ba48c5468cfc",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -9359,7 +9360,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "7101e9880d27745261e40006bfc55b9d3737546aa6da3873a76dc95c98d6a2e6",
+    "scripts/production-migrations.json": "9cfea029dfe4e80e9da6cdf8d8ad0ef87c9e95ed965e770e34a7fb213905a48f",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9737,8 +9738,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
-    "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": "c5161aa2af3cea928558df30070ddb10e587e57a57076d6162c68fc1d3326ca0",
-    "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql": "530a16b70c5c5f95407a9710f2f3db7939feed3b1066bd78e3c20f4eb5d62ffc",
+    "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": "88300cc7f6a14dca19125f226431feb6ab8b696c5a3293259607833ca0212082",
+    "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql": "f17f3d8da0088734fe6df3968e577d78680456e3aaa6bd51adef7ee03a21873c",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -9798,7 +9799,7 @@
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
-    "tdf-hq/src/TDF/Operations/Server.hs": "9df92cdab28687eec4100a59ad031795d5367cc9d1e07692030b8e372e9fa2c2",
+    "tdf-hq/src/TDF/Operations/Server.hs": "fa53b1786d0b6936753f99b0318d9df61f42b01db5dd703737e3fd903b21b6d8",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
@@ -19082,7 +19083,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "3e53f908b43d716dd0e7598ddf9352499c6f423d1a28939cd68f88c735caa906",
+      "sha256": "fa3360ce81d091860ce57236677608513428d31fe1ce68e0de13ba48c5468cfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19411,7 +19412,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "7101e9880d27745261e40006bfc55b9d3737546aa6da3873a76dc95c98d6a2e6",
+      "sha256": "9cfea029dfe4e80e9da6cdf8d8ad0ef87c9e95ed965e770e34a7fb213905a48f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31952,7 +31953,7 @@
     {
       "id": "SURFACE-b925364fa550109b",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
-      "sha256": "c5161aa2af3cea928558df30070ddb10e587e57a57076d6162c68fc1d3326ca0",
+      "sha256": "88300cc7f6a14dca19125f226431feb6ab8b696c5a3293259607833ca0212082",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31964,7 +31965,7 @@
     {
       "id": "SURFACE-f1f2a0e3e6c50eef",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql",
-      "sha256": "530a16b70c5c5f95407a9710f2f3db7939feed3b1066bd78e3c20f4eb5d62ffc",
+      "sha256": "f17f3d8da0088734fe6df3968e577d78680456e3aaa6bd51adef7ee03a21873c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33519,7 +33520,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "9df92cdab28687eec4100a59ad031795d5367cc9d1e07692030b8e372e9fa2c2",
+      "sha256": "fa53b1786d0b6936753f99b0318d9df61f42b01db5dd703737e3fd903b21b6d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42015,7 +42016,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8405112c68bb8f3b861b3539130aa369f7098d9781921221c49fd8c3d92f9ba9",
+      "sourceSha256": "6900d34b2ee2227fe26e4cfa3d01a3b7caf2bf6cb75dccece1edf6b392884f47",
       "definition": {
         "states": [
           "absent",

@@ -4081,7 +4081,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "3e53f908b43d716dd0e7598ddf9352499c6f423d1a28939cd68f88c735caa906",
+      "sha256": "fa3360ce81d091860ce57236677608513428d31fe1ce68e0de13ba48c5468cfc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4255,7 +4255,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "7101e9880d27745261e40006bfc55b9d3737546aa6da3873a76dc95c98d6a2e6",
+      "sha256": "9cfea029dfe4e80e9da6cdf8d8ad0ef87c9e95ed965e770e34a7fb213905a48f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12883,13 +12883,13 @@
     {
       "id": "SURFACE-b925364fa550109b",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
-      "sha256": "c5161aa2af3cea928558df30070ddb10e587e57a57076d6162c68fc1d3326ca0",
+      "sha256": "88300cc7f6a14dca19125f226431feb6ab8b696c5a3293259607833ca0212082",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f1f2a0e3e6c50eef",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql",
-      "sha256": "530a16b70c5c5f95407a9710f2f3db7939feed3b1066bd78e3c20f4eb5d62ffc",
+      "sha256": "f17f3d8da0088734fe6df3968e577d78680456e3aaa6bd51adef7ee03a21873c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13855,7 +13855,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "9df92cdab28687eec4100a59ad031795d5367cc9d1e07692030b8e372e9fa2c2",
+      "sha256": "fa53b1786d0b6936753f99b0318d9df61f42b01db5dd703737e3fd903b21b6d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23888,7 +23888,7 @@
     },
     {
       "path": "formal/system/operations-failure-replay.md",
-      "sha256": "885b8d78f16153b8b5b1034f95dcee5474b70b75d235964dc4badb200afb6fc6",
+      "sha256": "05caa83d7ec8175879349a1564b5baddbdd375f68e98bc4d67946a9f7aad4d06",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23972,7 +23972,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8405112c68bb8f3b861b3539130aa369f7098d9781921221c49fd8c3d92f9ba9",
+      "sha256": "6900d34b2ee2227fe26e4cfa3d01a3b7caf2bf6cb75dccece1edf6b392884f47",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
