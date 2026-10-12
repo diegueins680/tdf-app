@@ -28,6 +28,7 @@ module TDF.Server.ServiceStorefront
   , loadPaypalEnvForService
   , createPaypalOrderRemoteForService
   , capturePaypalOrderRemoteForService
+  , getPaypalOrderRemoteForService
   , paypalRequestId
   , PaypalWebhookEnvelope(..)
   , PaypalWebhookHeaders(..)
