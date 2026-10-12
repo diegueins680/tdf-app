@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T20:51:15.656Z",
+  "generatedAt": "2026-10-12T21:05:19.054Z",
   "repositoryRoot": ".",
   "filesScanned": 2249,
   "candidateCount": 1320,
@@ -12264,7 +12264,7 @@
       "lines": [
         175
       ],
-      "consumerCount": 41,
+      "consumerCount": 42,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -12288,6 +12288,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_reference_cutover_negative.sh",
         "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
