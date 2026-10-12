@@ -23,7 +23,7 @@ import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           Database.Persist.Sql
   ( PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql
-  , toPersistValue, transactionSave, transactionUndo
+  , toPersistValue
   )
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
@@ -104,7 +104,10 @@ listTicketManualPayments eventKey = do
       }
 
 -- | Returns 'True' when this call (or an identical earlier approval) left the
--- checkout paid, so the caller must run the idempotent ticket issuance.
+-- checkout paid. The idempotent ticket issuance then runs in the same
+-- transaction: a manual approval has no external effect to preserve, so an
+-- issuance failure rolls the approval back and the evidence stays reviewable,
+-- instead of leaving a paid order without tickets and no review action left.
 reviewTicketManualPayment
   :: ManualReviewer
   -> SM.SocialEventId
@@ -112,8 +115,22 @@ reviewTicketManualPayment
   -> ManualReviewAction
   -> Text
   -> UTCTime
+  -> SqlPersistT IO ()
   -> SqlPersistT IO (Either Text Bool)
-reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
+reviewTicketManualPayment reviewer eventKey orderKey action notes now issueTickets = do
+  result <- decideTicketManualPayment reviewer eventKey orderKey action notes now
+  when (result == Right True) issueTickets
+  pure result
+
+decideTicketManualPayment
+  :: ManualReviewer
+  -> SM.SocialEventId
+  -> SM.EventTicketOrderId
+  -> ManualReviewAction
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either Text Bool)
+decideTicketManualPayment reviewer eventKey orderKey action notes now = do
   rows <- rawSql
     "SELECT checkout.id::text, checkout.status, checkout.environment,\
     \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at),\
@@ -205,7 +222,9 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
           && dCheckoutStatus d `notElem` ["awaiting_payment", "failed", "processing"] =
           pure (Left "This ticket checkout no longer accepts manual payment approval")
       | otherwise = do
-          transactionSave
+          -- A savepoint, not a commit: the row locks taken above must cover the
+          -- decision, or a concurrent reviewer acts on the same pre-image.
+          rawExecute "SAVEPOINT tdf_manual_review" []
           when (dEvidenceStatus d == "submitted") $
             rawExecute
               "UPDATE commerce_manual_payment_evidence\
@@ -223,6 +242,7 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
                 (Checkout.PaymentAttemptReference (dAttempt d))
                 Checkout.ProviderBankTransfer "manual_evidence_rejected" correlation now
               audit d "manual_payment_rejected"
+              keepDecision
               pure (Right False)
             ManualApprove -> do
               rawExecute
@@ -247,7 +267,7 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
                 , Checkout.pbcCorrelationId = correlation
                 }
               case binding of
-                Left problem -> transactionUndo >> pure (Left problem)
+                Left problem -> undoDecision >> pure (Left problem)
                 Right () -> do
                   verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
                     { Checkout.vpAttempt = Checkout.PaymentAttemptReference (dAttempt d)
@@ -267,8 +287,17 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
                     , Checkout.vpCorrelationId = correlation
                     }
                   case verified of
-                    Left problem -> transactionUndo >> pure (Left problem)
-                    Right _ -> audit d "manual_payment_approved" >> pure (Right True)
+                    Left problem -> undoDecision >> pure (Left problem)
+                    Right _ -> do
+                      audit d "manual_payment_approved"
+                      keepDecision
+                      pure (Right True)
+
+    keepDecision, undoDecision :: SqlPersistT IO ()
+    keepDecision = rawExecute "RELEASE SAVEPOINT tdf_manual_review" []
+    undoDecision = do
+      rawExecute "ROLLBACK TO SAVEPOINT tdf_manual_review" []
+      keepDecision
 
     exception :: Decision -> Text -> SqlPersistT IO ()
     exception d code = Checkout.recordReconciliationException
