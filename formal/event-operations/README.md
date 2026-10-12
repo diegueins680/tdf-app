@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `MigrationLedger.cfg` (2026-10-12) | 3 manifest entries, 2 source versions, 3 batch runs; source changes with or without a declared compatible checksum, image rollback, preparation | PASS; 1,282,056 generated, 334,720 distinct states, depth 25; `LedgerImpliesEffects`, `EffectsRecorded`, `SingleApplication`, `NoRunPastDrift`, `PreparationSound` |
+| `MigrationLedgerRecordAfterCommit.cfg`, `MigrationLedgerBatchUnchecked.cfg`, `MigrationLedgerPrepareUnchecked.cfg`, `MigrationLedgerUnknownAccepted.cfg` | Negative controls: ledger row written after the migration's commit, batch checksum check removed, preparation checksum check removed, unknown ledger rows accepted by preparation | Expected non-zero exit with `EffectsRecorded`, `NoRunPastDrift`, `PreparationSound`, `PreparationSound` violated |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -621,3 +623,16 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
+`MigrationLedger.tla` checks the production migration correspondence of
+DEPLOY-MIGRATION-001: a batch run walks the manifest in order, halts on an
+applied entry whose recorded checksum the candidate does not allow, skips other
+applied entries and applies pending ones, recording each in the ledger in the
+same transaction; release preparation reconciles the ledger with the candidate
+manifest and rejects unknown or changed history, while the batch tolerates a
+ledger row an older image does not know (image rollback). Four controls each
+remove one guard (`RecordAfterCommit`, `BatchUnchecked`, `PrepareUnchecked`,
+`UnknownAccepted`) and must violate the named invariant. The advisory lock is
+below the model; `scripts/__tests__/migration-batch-postgres.mjs` runs the
+rendered batch through psql. Bounds and exclusions are in
+`formal/system/migration-correspondence.md`.

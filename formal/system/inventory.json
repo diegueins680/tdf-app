@@ -145,6 +145,7 @@
       "scripts/__tests__/logical-correctness-audit.test.mjs",
       "scripts/__tests__/merch-commission-postgres.mjs",
       "scripts/__tests__/merch-runtime-safety.test.mjs",
+      "scripts/__tests__/migration-batch-postgres.mjs",
       "scripts/__tests__/music-browser-config.test.mjs",
       "scripts/__tests__/music-browser-probe.test.mjs",
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
@@ -2575,7 +2576,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+      "sha256": "1807a7b7f6b83e4ff0127723e79f747c4444c90e59960140e30859a7da739b73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3293,6 +3294,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e9849b3ef51bdb0f",
+      "path": "scripts/__tests__/migration-batch-postgres.mjs",
+      "sha256": "42331eb9dc4666bd706d92a39778be407725c3e820831d32b791f96778c45b7d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
       "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
@@ -3415,7 +3422,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+      "sha256": "d99e088c7026739b5f0c6b80497aedb1b620209d594282a413bd0b015d54aadf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4099,7 +4106,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "cee7c657882f5aa1c12635b529ffe332ba81fcab8b5de9c9eaa58c029200a7c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5539,7 +5546,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "69b2907926cbf17f12502f1fc930b8a3cdb42b0d1513227ab5aac2f1c6015a7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22018,6 +22025,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MigrationLedger.cfg",
+      "sha256": "0f757c07e56c045be149f4b14e41ad0ea03b04f550078df4c4ed3014cfc5312c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MigrationLedger.tla",
+      "sha256": "054740b9f0b72abb895c8d3336c00c00dd5f318d719e45b1d4d6d70599e0a38d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MigrationLedgerBatchUnchecked.cfg",
+      "sha256": "abe5ed5ea3e04133aed1a588f93db73bf13561e46734c626f341e04b4efd32ec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
+      "sha256": "d58398e2d189544d7ebe65580e7c5cd4eac0740210f30744f530b289cfc5dc92",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg",
+      "sha256": "1df67107dc4f8d5061101506c7fa85b691cd7a838036030f862c872fce0fecb9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MigrationLedgerUnknownAccepted.cfg",
+      "sha256": "26bcdcdb9ebd45f83e9f5990221ebf2e2c56b74e4bb81bdaca67b33161c6dee7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/NativeArtistFollow.cfg",
       "sha256": "dfef4ecafcf1daf1a0811e78feebd12644ca0d8561fe81c385380611b0af5c09",
       "authority": "inferred",
@@ -22453,7 +22502,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "97265617534d6a867c9a6f4152cf1aeac3964274b72905d5114c8d429a59a59b",
+      "sha256": "1f193289815f612f4769f37529fd3742da32df5eafbe166bed284430bf4407c3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23937,7 +23986,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "a6cbbcc4c9f376e0d5e167a3c1e93f097e8cef4a995c19b948eb18bbee943ec4",
+      "sha256": "0cf0485572612376f8eb7969c1accf20d3cdefb316f5e10745817f23c1db66ac",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -23951,7 +24000,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "31a60e399ede68a7058fac265b58305f8bad905b2357cecbf076904483e7f916",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24118,6 +24167,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/migration-correspondence.md",
+      "sha256": "838b121b3da350aabe52beada09a7c9b9b52d7424a0be8494e75f5c1a1c78711",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/mobile-ci-boundary.md",
       "sha256": "9a575555254915509ffd922c6dc7177151720a8f1f13c5d84bd615c81ddd0031",
       "authority": "inferred",
@@ -24231,7 +24287,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dbd23d2eaa92f238c7a5cbdb23e48c891f2d34afcd5174ceb6140447b1f7a0ac",
+      "sha256": "ed708b33a980c730ba0e7140a2fb898fd21fa3e6fb56ae5d377696e1c8596e0e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33292,6 +33348,91 @@
         "          RequireDurableKey = FALSE",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT NoDispatchWithoutDurableKey"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MigrationLedger.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  N = 3",
+        "  Versions = {1, 2}",
+        "  MaxRuns = 3",
+        "  AtomicRecord = TRUE",
+        "  BatchChecksumGuard = TRUE",
+        "  PrepareChecksumGuard = TRUE",
+        "  RejectUnknown = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK LedgerImpliesEffects EffectsRecorded SingleApplication NoRunPastDrift PreparationSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MigrationLedgerBatchUnchecked.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  N = 3",
+        "  Versions = {1, 2}",
+        "  MaxRuns = 3",
+        "  AtomicRecord = TRUE",
+        "  BatchChecksumGuard = FALSE",
+        "  PrepareChecksumGuard = TRUE",
+        "  RejectUnknown = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK LedgerImpliesEffects EffectsRecorded SingleApplication NoRunPastDrift PreparationSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  N = 3",
+        "  Versions = {1, 2}",
+        "  MaxRuns = 3",
+        "  AtomicRecord = TRUE",
+        "  BatchChecksumGuard = TRUE",
+        "  PrepareChecksumGuard = FALSE",
+        "  RejectUnknown = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK LedgerImpliesEffects EffectsRecorded SingleApplication NoRunPastDrift PreparationSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  N = 3",
+        "  Versions = {1, 2}",
+        "  MaxRuns = 3",
+        "  AtomicRecord = FALSE",
+        "  BatchChecksumGuard = TRUE",
+        "  PrepareChecksumGuard = TRUE",
+        "  RejectUnknown = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK LedgerImpliesEffects EffectsRecorded SingleApplication NoRunPastDrift PreparationSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MigrationLedgerUnknownAccepted.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  N = 3",
+        "  Versions = {1, 2}",
+        "  MaxRuns = 3",
+        "  AtomicRecord = TRUE",
+        "  BatchChecksumGuard = TRUE",
+        "  PrepareChecksumGuard = TRUE",
+        "  RejectUnknown = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS TypeOK LedgerImpliesEffects EffectsRecorded SingleApplication NoRunPastDrift PreparationSound"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

@@ -2326,7 +2326,7 @@
     {
       "authority": "inferred",
       "source": "ops/hetzner/README.md; formal/system/authority-decisions.json",
-      "contract": "ops/hetzner/README.md",
+      "contract": "formal/system/migration-correspondence.md",
       "domain": "DEPLOY",
       "actors": [
         "Release operator",
@@ -2358,19 +2358,29 @@
       ],
       "authorization": "Preparation is local inspection. Deployment requires independent exact-head review, merge, post-merge gates and a guarded executor.",
       "privacy": "Plans contain migration hashes and allowlisted identities, never SQL data, credentials or raw child-process diagnostics.",
-      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
+      "concurrency": "Source is immutable and the CLI checks checkout cleanliness/head before and after. The batch runs under one advisory lock and exits 3 while another migration holds it. Each ledger row commits in the transaction of its migration (a file's own COMMIT commits both), so a crash leaves effects and ledger row together or neither. A future executor must re-observe live state under its release lock; a recent observation does not prevent runtime races.",
       "idempotency": "Repeated preparation is observational; exclusive output creation prevents receipt overwrite.",
-      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action.",
+      "failure": "Reject malformed, stale, future-dated, wrong-target, dirty-source or checksum-incompatible inputs without remote action. A failing migration leaves no effects and no ledger row; a held lock ends the batch with status 3 before touching anything (before 2026-10-12 the refusal exited 0 and the entrypoint reported success).",
       "recovery": "Preserve prior receipts and applied migration history. Correct source/input under review; never alter applied SQL to make the comparison pass.",
       "observability": "Record source revision, raw manifest hash, expanded migration checksums, applied source/checksum, input receipt hash, preparation source hash, timestamps, pending count and outstanding release gates.",
-      "formalModels": [],
-      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags. No model-to-whole-system proof.",
-      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt.",
+      "formalModels": [
+        "formal/event-operations/MigrationLedger.tla",
+        "formal/event-operations/MigrationLedger.cfg",
+        "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg",
+        "formal/event-operations/MigrationLedgerBatchUnchecked.cfg",
+        "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
+        "formal/event-operations/MigrationLedgerUnknownAccepted.cfg"
+      ],
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 25) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
+      "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt. TLC runs registered in scripts/verify-event-operations-formal.sh; migration-batch-postgres.mjs in CI; the lock refusal exiting 0 reproduced with psql 16 on 2026-10-12.",
       "status": "specified and implemented",
-      "confidence": "High for tested source/ledger comparison boundary; live migration application and guarded recovery remain open.",
+      "confidence": "High for the tested source/ledger comparison and the batch semantics on the migrated fixture; live migration application and guarded recovery remain open.",
       "ambiguity": [
         "Runtime receipt trust is local and unsigned; a deployment executor must acquire fresh observations itself.",
-        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison."
+        "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison.",
+        "The batch tolerates ledger rows its manifest does not know so an older image can start after a rollback; release preparation rejects them. A hole (a pending entry before an applied one) is applied after the later entry by the next batch; independence of such migrations is assumed (AUTHORITY-075).",
+        "Effects applied without a ledger row under the previous batch layout (or by hand) are re-applied by the next batch and need a forward repair when the SQL is not idempotent; the atomic row prevents new occurrences only.",
+        "The atomic ledger row requires every manifest file to end with its COMMIT and to use no statement that refuses a transaction block; production-release.test.mjs checks the registered manifest."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2378,18 +2388,22 @@
       },
       "id": "DEPLOY-MIGRATION-001",
       "title": "Immutable production migration correspondence before release",
-      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution.",
+      "statement": "Release preparation must bind the exact candidate revision and every included SQL blob to the manifest, reject unrecognized or changed applied history, and retain every pending migration in manifest order. Preparation must not authorize production execution. The batch that applies pending migrations records each ledger row in the same transaction as the migration it describes, and refuses to proceed with a non-zero status while another migration holds the lock.",
       "property": "Every applied ledger entry occurs once in the manifest and matches its expanded checksum or an explicitly registered compatible checksum; every introduction commit is a candidate ancestor.",
       "implementation": [
         "scripts/lib/migration-contract.mjs",
         "scripts/lib/hetzner-preparation.mjs",
         "scripts/prepare-hetzner-release.mjs",
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/lib/production-release.mjs",
+        "scripts/render-production-migration-batch.mjs",
+        "tdf-hq/production-entrypoint.sh"
       ],
       "tests": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs"
       ],
       "critical": true
     },
@@ -9179,7 +9193,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+    ".github/workflows/ci.yml": "1807a7b7f6b83e4ff0127723e79f747c4444c90e59960140e30859a7da739b73",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
@@ -9238,6 +9252,12 @@
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/ManualBankTransfer.tla": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+    "formal/event-operations/MigrationLedger.cfg": "0f757c07e56c045be149f4b14e41ad0ea03b04f550078df4c4ed3014cfc5312c",
+    "formal/event-operations/MigrationLedger.tla": "054740b9f0b72abb895c8d3336c00c00dd5f318d719e45b1d4d6d70599e0a38d",
+    "formal/event-operations/MigrationLedgerBatchUnchecked.cfg": "abe5ed5ea3e04133aed1a588f93db73bf13561e46734c626f341e04b4efd32ec",
+    "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg": "d58398e2d189544d7ebe65580e7c5cd4eac0740210f30744f530b289cfc5dc92",
+    "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg": "1df67107dc4f8d5061101506c7fa85b691cd7a838036030f862c872fce0fecb9",
+    "formal/event-operations/MigrationLedgerUnknownAccepted.cfg": "26bcdcdb9ebd45f83e9f5990221ebf2e2c56b74e4bb81bdaca67b33161c6dee7",
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
@@ -9351,6 +9371,7 @@
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
+    "scripts/__tests__/migration-batch-postgres.mjs": "42331eb9dc4666bd706d92a39778be407725c3e820831d32b791f96778c45b7d",
     "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
@@ -9365,7 +9386,7 @@
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
-    "scripts/__tests__/production-release.test.mjs": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+    "scripts/__tests__/production-release.test.mjs": "d99e088c7026739b5f0c6b80497aedb1b620209d594282a413bd0b015d54aadf",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
@@ -9411,7 +9432,7 @@
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+    "scripts/lib/production-release.mjs": "cee7c657882f5aa1c12635b529ffe332ba81fcab8b5de9c9eaa58c029200a7c4",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -9431,6 +9452,7 @@
     "scripts/quality-repo.sh": "c1fcb1781082b346ff89d410062806daa57e01df972b0feaebe1fbeb08e7d625",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
+    "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -9502,7 +9524,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+    "scripts/verify-event-operations-formal.sh": "69b2907926cbf17f12502f1fc930b8a3cdb42b0d1513227ab5aac2f1c6015a7f",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11281,6 +11303,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "implementation"
       },
@@ -11745,6 +11771,26 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/render-production-migration-batch.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/production-entrypoint.sh": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/hetzner-preparation.test.mjs": [
       {
         "requirement": "DEPLOY-MIGRATION-001",
@@ -11753,6 +11799,48 @@
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/migration-batch-postgres.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/MigrationLedger.tla": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MigrationLedger.cfg": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MigrationLedgerBatchUnchecked.cfg": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MigrationLedgerUnknownAccepted.cfg": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Social/Chat.hs": [
@@ -12047,16 +12135,6 @@
       {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "formalModels"
-      }
-    ],
-    "tdf-hq/production-entrypoint.sh": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "implementation"
       }
     ],
     "scripts/test-automatic-migrations-production-schema.sh": [
@@ -16802,7 +16880,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+      "sha256": "1807a7b7f6b83e4ff0127723e79f747c4444c90e59960140e30859a7da739b73",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18118,6 +18196,18 @@
       ]
     },
     {
+      "id": "SURFACE-e9849b3ef51bdb0f",
+      "path": "scripts/__tests__/migration-batch-postgres.mjs",
+      "sha256": "42331eb9dc4666bd706d92a39778be407725c3e820831d32b791f96778c45b7d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-631aeb76db362a8e",
       "path": "scripts/__tests__/music-browser-config.test.mjs",
       "sha256": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
@@ -18342,7 +18432,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+      "sha256": "d99e088c7026739b5f0c6b80497aedb1b620209d594282a413bd0b015d54aadf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19434,7 +19524,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "cee7c657882f5aa1c12635b529ffe332ba81fcab8b5de9c9eaa58c029200a7c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19443,6 +19533,10 @@
         },
         {
           "requirement": "PAY-CHECKOUT-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "implementation"
         },
         {
@@ -19914,7 +20008,12 @@
       "path": "scripts/render-production-migration-batch.mjs",
       "sha256": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-173452b4342d16ba",
@@ -21857,7 +21956,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "69b2907926cbf17f12502f1fc930b8a3cdb42b0d1513227ab5aac2f1c6015a7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29207,6 +29306,10 @@
       "sha256": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "DEPLOY-STARTUP-001",
           "relationship": "implementation"
@@ -39658,7 +39761,6 @@
     "SURFACE-bac1f41447e33768",
     "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
-    "SURFACE-b6551e477e5d382b",
     "SURFACE-173452b4342d16ba",
     "SURFACE-39275efbaea5cb7e",
     "SURFACE-0d0cc214c0715c2d",
@@ -41268,7 +41370,6 @@
     "PAY-CHECKOUT-002",
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
-    "DEPLOY-MIGRATION-001",
     "DEPLOY-STARTUP-001",
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
@@ -42424,7 +42525,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dbd23d2eaa92f238c7a5cbdb23e48c891f2d34afcd5174ceb6140447b1f7a0ac",
+      "sourceSha256": "ed708b33a980c730ba0e7140a2fb898fd21fa3e6fb56ae5d377696e1c8596e0e",
       "definition": {
         "states": [
           "absent",
