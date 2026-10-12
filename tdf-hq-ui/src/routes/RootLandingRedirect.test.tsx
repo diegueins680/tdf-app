@@ -8,6 +8,12 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => sessionState,
 }));
 
+// The shell carousel reaches the API client, which this routing test does not exercise.
+jest.unstable_mockModule('../components/events/UpcomingEventsCarousel', () => ({
+  default: () => null,
+  EVENTS_PATH: '/social/eventos',
+}));
+
 const { RootLandingRedirect } = await import('./publicRoutes');
 
 function LocationProbe() {
