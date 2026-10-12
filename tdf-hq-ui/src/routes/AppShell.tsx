@@ -17,6 +17,7 @@ import { buildLoginRedirectPath, pickLandingPath } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
 import ForbiddenPage from '../pages/ForbiddenPage';
 import PublicBranding from '../components/PublicBranding';
+import UpcomingEventsCarousel from '../components/events/UpcomingEventsCarousel';
 import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
@@ -267,6 +268,7 @@ export function Shell() {
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <RegistryBreadcrumbs />
             <SignupMobileInvitation />
+            {!forbiddenDecision && <UpcomingEventsCarousel />}
             {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <RouteErrorBoundary><Outlet /></RouteErrorBoundary>}
           </Container>
           {!forbiddenDecision && !hideFloatingAssistants && (
