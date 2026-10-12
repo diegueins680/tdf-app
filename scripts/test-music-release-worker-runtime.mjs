@@ -288,6 +288,12 @@ try {
     assert.equal(sql(`SELECT object_key||':'||processing_state||':'||(provenance->>'rebound_from_object_key') FROM music_asset WHERE id='${f.asset}'`),
       `${key}:uploaded:${f.key}`);
     assert.equal(jobState(f), 'cancelled:2:true');
+    // A conflicting re-enqueue for the same session creates no job and must change nothing.
+    sql(`INSERT INTO music_processing_job(id,release_version_id,source_asset_id,job_kind,job_key,max_attempts)
+      VALUES ('${randomUUID()}','${f.version}','${f.asset}','inspect_audio','${session}',2) ON CONFLICT(job_kind,job_key) DO NOTHING;`);
+    assert.equal(sql(`SELECT object_key FROM music_asset WHERE id='${f.asset}'`), key);
+    assert.equal(sql(`SELECT status FROM music_processing_job WHERE id='${job}'`), 'queued');
+    assert.equal(sql(`SELECT status FROM music_upload_session WHERE id='${session}'`), 'completed');
     const result = worker();
     assert.equal(result.status, 0, result.stderr);
     assert.equal(sql(`SELECT status FROM music_processing_job WHERE id='${job}'`), 'succeeded');

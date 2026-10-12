@@ -7782,9 +7782,9 @@
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
       "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's earlier open attempts are cancelled.",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
       "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md. After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected (2026-10-12_music_upload_rebind).",
+      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md. After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
