@@ -948,7 +948,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -962,7 +962,8 @@
       "inputs": [
         "Domain formal-model.yaml machines",
         "formal/system/state-machine-bindings.json",
-        "Migrated PostgreSQL catalog"
+        "Migrated PostgreSQL catalog",
+        "Bound Haskell validators and their state renderers"
       ],
       "state": {
         "machine": [
@@ -982,7 +983,8 @@
       ],
       "effects": [
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
-        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048)."
+        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
+        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -998,21 +1000,23 @@
       "implementation": [
         "scripts/check-state-machines.py",
         "formal/system/state-machine-bindings.json",
-        "docs/revenue-platform/formal-model.yaml"
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database and twelve negative controls",
+      "verification": "Catalog comparison, plus static comparison of four bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals); guards and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and seven database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Fourteen machines enforce transitions only in application code."
+        "Ten machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -4530,7 +4534,8 @@
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/fr.ts",
-        "tdf-hq-ui/src/i18n/locales/pt.ts"
+        "tdf-hq-ui/src/i18n/locales/pt.ts",
+        "tdf-hq-ui/src/utils/checkoutStripe.ts"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -4551,6 +4556,7 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "e2e/integration/ticket-retrieval.spec.mjs",
         "playwright.ticket-retrieval.config.mjs",
         "scripts/run-ticket-retrieval-browser.mjs"
@@ -6719,7 +6725,8 @@
         "tdf-hq-ui/public/mobile-app/privacy.html",
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
-        "tdf-hq-ui/public/mobile-distribution.json"
+        "tdf-hq-ui/public/mobile-distribution.json",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
@@ -8551,7 +8558,7 @@
     {
       "id": "COURSE-ENROLL-001",
       "title": "Course enrollment opens immediately and accepts local phone formats",
-      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164.",
+      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164. Server intake (legacy lead and checkout) normalizes phones with the same rules as the web normalizer (tdf-hq-ui/src/utils/phone.ts), checked against the same accept/reject table; the server is deliberately stricter in two ways: only the ASCII space separates digit groups (newlines and Unicode separators are rejected), and a 00 prefix needs at least 9 following digits.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "COURSE",
       "actors": [
@@ -8600,23 +8607,27 @@
       "implementation": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/utils/phone.ts",
-        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts"
+        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
+        "tdf-hq/src/TDF/CoursePhone.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/utils/phone.test.ts",
         "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
-        "e2e/web/course-enrollment.spec.mjs"
+        "e2e/web/course-enrollment.spec.mjs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
       "ambiguity": [
-        "Backend legacy path should also accept local EC formats; course terms URL not yet exposed by metadata."
+        "Course terms URL not yet exposed by course metadata."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Web behavior verified synthetically; backend normalization pending."
+        "reason": "Web flow verified synthetically and by read-only production smoke; server phone normalization covered by Haskell tests. A deployed backend release and a physical-device enrollment remain to be verified."
       },
       "critical": false,
       "property": "EnrollmentInView and E164Phone",
@@ -8772,6 +8783,83 @@
         "classification": "PARTIAL",
         "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
       }
+    },
+    {
+      "id": "EVT-DISCOVERY-001",
+      "title": "One events entry in navigation and an upcoming-events carousel after login",
+      "domain": "EVT",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
+      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
+      "source": "tdf-hq-ui navigation and shells",
+      "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Signed-in session for the carousel"
+      ],
+      "inputs": [
+        "GET /social-events/upcoming",
+        "GET /social-events/events/{id}/rsvp",
+        "PUT /social-events/events/{id}/rsvp"
+      ],
+      "state": {
+        "carousel": [
+          "hidden",
+          "visible",
+          "dismissed for session"
+        ]
+      },
+      "allowedTransitions": [
+        "visible -> dismissed for session",
+        "no RSVP -> accepted via one tap"
+      ],
+      "forbiddenTransitions": [
+        "Carousel shown to anonymous visitors",
+        "Second events entry in the public navigation"
+      ],
+      "effects": [
+        "Viewer's RSVP upserted with their showEventRsvpsOnProfile preference"
+      ],
+      "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
+      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
+      "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
+      "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
+      "observability": "None beyond existing RSVP and API telemetry.",
+      "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests",
+      "evidence": "Local Jest execution",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with mocked APIs; not yet exercised against production data.",
+      "ambiguity": [
+        "\"Eventos descubiertos\" remains a separate staff discovery tool in the sidebar."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
     },
     {
       "id": "LEGAL-DISCLOSURE-001",

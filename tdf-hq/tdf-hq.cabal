@@ -187,6 +187,7 @@ executable tdf-hq-exe
     TDF.Server.PaymentAvailability
     TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
+    TDF.CoursePhone
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
     TDF.ServerAuth
@@ -544,6 +545,7 @@ test-suite tdf-hq-test
     TDF.Server.PaymentAvailability
     TDF.Server.ProviderExecution
     TDF.Server.CourseCheckout
+    TDF.CoursePhone
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
     TDF.Server.DDEX
