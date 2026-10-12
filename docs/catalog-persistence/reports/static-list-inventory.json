@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T02:52:53.279Z",
+  "generatedAt": "2026-10-12T08:04:55.131Z",
   "repositoryRoot": ".",
   "filesScanned": 2245,
   "candidateCount": 1320,
@@ -54648,7 +54648,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "roles",
-      "line": 341,
+      "line": 365,
       "values": [
         "Customer",
         "Artist"
@@ -54656,7 +54656,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        341
+        365
       ],
       "consumerCount": 190,
       "backendConsumers": [
@@ -54856,7 +54856,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "modules",
-      "line": 342,
+      "line": 366,
       "values": [
         "Packages",
         "Scheduling"
@@ -54864,7 +54864,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        342
+        366
       ],
       "consumerCount": 142,
       "backendConsumers": [
@@ -55046,7 +55046,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "roles",
-      "line": 387,
+      "line": 411,
       "values": [
         "customer",
         "artist"
@@ -55054,7 +55054,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        387
+        411
       ],
       "consumerCount": 252,
       "backendConsumers": [
@@ -56763,7 +56763,7 @@
       "domain": "payments-finance",
       "kind": "literal-union",
       "name": "MarketplacePaymentMethod",
-      "line": 193,
+      "line": 195,
       "values": [
         "stripe",
         "contact",
@@ -56773,7 +56773,7 @@
       "valueCount": 4,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        193
+        195
       ],
       "consumerCount": 97,
       "backendConsumers": [
@@ -56910,7 +56910,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "method",
-      "line": 196,
+      "line": 198,
       "values": [
         "stripe",
         "card",
@@ -56920,8 +56920,8 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        196,
-        211
+        198,
+        213
       ],
       "consumerCount": 277,
       "backendConsumers": [
@@ -57160,7 +57160,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "DEFAULT_MARKETPLACE_VIEW_STATE",
-      "line": 255,
+      "line": 257,
       "values": [
         "search",
         "category",
@@ -57172,7 +57172,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        255
+        257
       ],
       "consumerCount": 51,
       "backendConsumers": [
@@ -57262,7 +57262,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "sort",
-      "line": 1050,
+      "line": 1052,
       "values": [
         "relevance",
         "price-asc",
@@ -57272,7 +57272,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1050
+        1052
       ],
       "consumerCount": 307,
       "backendConsumers": [
@@ -57511,7 +57511,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 2019,
+      "line": 2021,
       "values": [
         "all",
         "relevance",
@@ -57525,7 +57525,7 @@
       "valueCount": 8,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        2019
+        2021
       ],
       "consumerCount": 14,
       "backendConsumers": [
