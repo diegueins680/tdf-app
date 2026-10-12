@@ -139,6 +139,8 @@ spec = describe "artist-self-service-postgresql" $ do
         status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
         status `shouldBe` [Single ("expired" :: Text)]
       it "does not complete an onboarding request whose deadline passes while activation waits for it" $ \pool -> do
+        -- Both waiting tests leave their lapsed request pending; retire it so either can run first.
+        runSqlPool (rawExecute "UPDATE feature_access_requests SET status='expired' WHERE requester_party_id=2 AND status='pending'" []) pool
         inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'artist.onboarding','create','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
         requestId <- case inserted of
           [Single key] -> pure key
@@ -240,6 +242,8 @@ spec = describe "artist-self-service-postgresql" $ do
         status <- runSqlPool (rawSql "SELECT status FROM feature_access_requests WHERE id=?" [PersistInt64 requestId]) pool
         status `shouldBe` [Single ("approved" :: Text)]
       it "does not complete an onboarding request whose deadline passes while activation waits for the Party" $ \pool -> do
+        -- Both waiting tests leave their lapsed request pending; retire it so either can run first.
+        runSqlPool (rawExecute "UPDATE feature_access_requests SET status='expired' WHERE requester_party_id=2 AND status='pending'" []) pool
         inserted <- runSqlPool (rawSql "INSERT INTO feature_access_requests(requester_party_id,feature_id,action,role_context,module_context,status,reviewer_group,requested_at,updated_at,expires_at) VALUES(2,'artist.onboarding','create','[]','[]','pending','admin',now(),now(),clock_timestamp()+interval '1 second') RETURNING id" []) pool :: IO [Single Int64]
         requestId <- case inserted of
           [Single key] -> pure key
