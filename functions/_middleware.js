@@ -10,7 +10,13 @@ export const LEGACY_PRODUCTION_HOST = 'tdf-app.pages.dev';
 export function canonicalRedirectLocation(requestUrl) {
   const url = new URL(requestUrl);
   if (url.hostname !== LEGACY_PRODUCTION_HOST || url.pathname.startsWith('/.well-known/')) return null;
-  return new URL(`${url.pathname}${url.search}${url.hash}`, PUBLIC_ORIGIN).toString();
+  // Assign the parts instead of resolving a relative reference: a path that
+  // starts with `//` would otherwise be read as another host.
+  const target = new URL(PUBLIC_ORIGIN);
+  target.pathname = url.pathname;
+  target.search = url.search;
+  target.hash = url.hash;
+  return target.toString();
 }
 
 export async function onRequest(context) {

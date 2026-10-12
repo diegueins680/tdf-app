@@ -96,6 +96,20 @@ test('redirects the legacy production Pages host to the canonical site', async (
   assert.equal(response.headers.get('location'), 'https://www.tdfrecords.net/');
 });
 
+test('keeps legacy-host redirects on the canonical site for double-slash paths', async () => {
+  for (const [legacy, canonical] of [
+    ['https://tdf-app.pages.dev//evil.example/path?x=1', 'https://www.tdfrecords.net//evil.example/path?x=1'],
+    ['https://tdf-app.pages.dev/\\evil.example/path', 'https://www.tdfrecords.net//evil.example/path'],
+    ['https://tdf-app.pages.dev///evil.example', 'https://www.tdfrecords.net///evil.example'],
+  ]) {
+    const location = canonicalRedirectLocation(legacy);
+    assert.equal(location, canonical, legacy);
+    assert.equal(new URL(location).origin, 'https://www.tdfrecords.net', legacy);
+  }
+  const response = await middleware({ request: new Request('https://tdf-app.pages.dev//evil.example/path'), next: async () => new Response('page') });
+  assert.equal(new URL(response.headers.get('location')).hostname, 'www.tdfrecords.net');
+});
+
 test('leaves the canonical site, branch previews and app-link files alone', async () => {
   for (const url of [
     'https://www.tdfrecords.net/eventos/141',
