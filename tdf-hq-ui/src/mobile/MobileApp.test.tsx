@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import i18n from '../i18n';
@@ -121,6 +121,41 @@ it('lets admitted Android testers open Play without another request, in both lan
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
   expect(await screen.findByRole('link', { name: 'I already have access: open Google Play' })).toBeTruthy();
   await expectNoSeriousAccessibilityViolations(view.container);
+});
+
+it('uses the official store badges only where the store allows them', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig() } as Response);
+  mount(<Page />);
+  const play = await screen.findByRole('link', { name: 'Ya tengo acceso: abrir Google Play' });
+  expect(play.querySelector('img')?.getAttribute('src')).toBe('/badges/google-play-badge-es.png');
+  fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
+  const testflight = await screen.findByRole('link', { name: 'Probar beta en TestFlight' });
+  expect(testflight.querySelector('img')).toBeNull();
+});
+
+it('shows the App Store badge once iOS is a public App Store listing, in the page language', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ios: { ...config.ios, status: 'public', url: 'https://apps.apple.com/app/id6779786470' }, android: closedConfig().android }) } as Response);
+  mount(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
+  const badgeSrc = (href: string) => document.querySelector(`a[href="${href}"] img`)?.getAttribute('src');
+  await waitFor(() => expect(badgeSrc('https://apps.apple.com/app/id6779786470')).toBe('/badges/app-store-badge-es.svg'));
+  fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  await waitFor(() => expect(badgeSrc('https://apps.apple.com/app/id6779786470')).toBe('/badges/app-store-badge-en.svg'));
+  fireEvent.click(screen.getByRole('button', { name: 'Android' }));
+  await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
+  await act(async () => { await i18n.changeLanguage('fr'); });
+  await waitFor(() => expect(document.querySelector('a[href^="https://play.google.com"] img')?.getAttribute('src')).toBe('/badges/google-play-badge-en.png'));
+  expect(screen.getByRole('link', { name: 'I already have access: open Google Play' })).toBeTruthy();
+});
+
+it.each(['ios', 'android'] as const)('keeps the %s pre-order link as text instead of a download badge', async platform => {
+  const url = platform === 'ios' ? 'https://apps.apple.com/app/id6779786470' : 'https://play.google.com/store/apps/details?id=com.tdf.records';
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ...config, [platform]: { ...config.ios, status: 'store_preorder', url } }) } as Response);
+  mount(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: platform === 'ios' ? 'iPhone / iOS' : 'Android' }));
+  const link = await waitFor(() => { const found = document.querySelector(`a[href="${url}"]`); if (!found) throw new Error('pre-order link missing'); return found; });
+  expect(link.querySelector('img')).toBeNull();
+  expect(link.textContent).toBe(i18n.t('app.preorder'));
 });
 it.each([
   { capacity: 'full' }, { capacity: 'unknown' }, { validUntil: new Date(Date.now() - 1).toISOString() },
