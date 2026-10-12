@@ -14,9 +14,9 @@ jest.unstable_mockModule('../api/feedback', () => ({ submitFeedback: submit }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicBatch: async () => ({ catalogs: [['feedback-categories', 'feedback-category', category], ['feedback-severities', 'feedback-severity', severity]].map(([code, scopeKind, id]) => ({ catalog: { code }, items: (code === 'feedback-categories' ? ['bug', 'idea', 'ux'] : ['p2', 'p4']).map((itemCode, index) => ({ id: index === 0 ? id : `${id}-${itemCode}`, code: itemCode, active: true, workflowState: 'published' })), defaults: [{ scopeKind, scopeId: 'global', entityId: id }] })) }) } }));
 const { default: Page } = await import('../pages/MobileAppPage');
 const { default: Promo, DISMISS_KEY, DISMISS_MS, promoDismissed } = await import('./MobilePromoContent');
-const { campaignTags, appLink } = await import('./telemetry');
+const { campaignTags, appLink, entrySurface, smartLink } = await import('./telemetry');
 const config = { ios: { status: 'testflight_external', url: 'https://testflight.apple.com/join/7k3VE2JJ', verifiedAt: new Date(Date.now() - 1000).toISOString(), validUntil: new Date(Date.now() + 86400000).toISOString(), capacity: 'available' }, android: { status: 'unavailable', verifiedAt: '2026-01-01', validUntil: '2027-01-01' } };
-function mount(element: React.ReactNode) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter>{element}</MemoryRouter></QueryClientProvider>); }
+function mount(element: React.ReactNode, route = '/app') { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter initialEntries={[route]}>{element}</MemoryRouter></QueryClientProvider>); }
 beforeEach(async () => { await i18n.changeLanguage('es'); localStorage.clear(); capture.mockClear(); submit.mockReset(); submit.mockResolvedValue(); global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => config } as Response); });
 afterEach(cleanup);
 it('shows unavailable Android honestly, keeps iOS selectable and translates', async () => {
@@ -183,4 +183,47 @@ it('rechecks expiry at click time before sending an admitted tester away', async
     expect(capture.mock.calls.some(([event]) => event === 'mobile_testing_join_clicked')).toBe(false);
     expect(await screen.findByRole('textbox', { name: /Correo para coordinar/ })).toBeTruthy();
   } finally { now.mockRestore(); }
+});
+
+it('reports one exposure per visit with the state the visitor saw, and keeps the entry surface allowlisted', async () => {
+  mount(<Page />, '/app?surface=nav&utm_source=instagram&utm_campaign=tu_escena&token=secret');
+  await screen.findByRole('button', { name: 'Solicitar acceso' });
+  fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
+  await screen.findByRole('link', { name: 'Probar beta en TestFlight' });
+  const views = capture.mock.calls.filter(([event]) => event === 'mobile_landing_viewed');
+  expect(views).toHaveLength(1);
+  expect(views[0][1]).toEqual(expect.objectContaining({ platform: 'android', distribution_status: 'unavailable', entry_surface: 'nav', source: 'instagram', campaign: 'tu_escena', surface: 'app_landing' }));
+  expect(JSON.stringify(views)).not.toContain('secret');
+  expect(entrySurface('?surface=qr')).toBe('qr');
+  expect(entrySurface('?surface=<img onerror=x>')).toBeUndefined();
+  expect(smartLink('?utm_source=whatsapp&token=secret', 'qr')).toBe('https://www.tdfrecords.net/app?surface=qr&utm_source=whatsapp');
+});
+it('stores campaign labels first-party on landing so later funnel events stay attributed', async () => {
+  mount(<Page />, '/app?utm_source=whatsapp&utm_medium=chat&utm_campaign=patch_culture');
+  await screen.findByRole('button', { name: 'Solicitar acceso' });
+  const stored = JSON.parse(localStorage.getItem('tdf:growth-attribution:v1') ?? '{}');
+  expect(stored).toEqual(expect.objectContaining({ source: 'whatsapp', medium: 'chat', campaign: 'patch_culture', landingPath: '/app' }));
+});
+it('offers the QR only to desktop visitors and the copyable smart link to everyone', async () => {
+  const writeText = jest.fn<(text: string) => Promise<void>>().mockResolvedValue();
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) Safari/605.1' });
+  const desktop = mount(<Page />, '/app?utm_source=instagram');
+  const qr = await screen.findByRole('img', { name: 'Código QR que abre tdfrecords.net/app' });
+  expect(qr.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+  fireEvent.click(screen.getByRole('button', { name: 'Copiar enlace' }));
+  expect(await screen.findByText('Enlace copiado.')).toBeTruthy();
+  expect(writeText).toHaveBeenCalledWith('https://www.tdfrecords.net/app?surface=share&utm_source=instagram');
+  expect(capture.mock.calls.some(([event]) => event === 'mobile_share_link_copied')).toBe(true);
+  await expectNoSeriousAccessibilityViolations(desktop.container);
+  desktop.unmount();
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla/5.0 (Linux; Android 14) Chrome/120' });
+  mount(<Page />);
+  await screen.findByRole('button', { name: 'Solicitar acceso' });
+  expect(screen.queryByRole('img', { name: 'Código QR que abre tdfrecords.net/app' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Copiar enlace' })).toBeTruthy();
+});
+it('opens the feedback form from the store feedback link', async () => {
+  mount(<Page />, '/app?feedback=1&utm_source=google_play&utm_medium=closed_testing');
+  expect(await screen.findByLabelText(/Cuéntanos qué ocurrió/)).toBeTruthy();
 });

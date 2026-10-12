@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Chip, Paper, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
+import QRCode from 'qrcode';
+import { captureGrowthAttribution } from '../analytics/growthAttribution';
 import { MOBILE_CANONICAL_URL, availableChannel, channelLabel, detectPlatform, validateDistribution, type DistributionChannel, type MobilePlatform } from '../mobile/distribution';
 import MobileFeedbackForm from '../mobile/MobileFeedbackForm';
-import { useMobileTelemetry } from '../mobile/telemetry';
+import { smartLink, useMobileTelemetry } from '../mobile/telemetry';
 
 // Official store artwork (public/badges), in the page language. Apple's badge is only for App Store listings, so
 // TestFlight keeps a text button; a pre-order keeps its text label because both badges say "download".
@@ -21,11 +24,17 @@ const storeBadge = (platform: MobilePlatform, channel: DistributionChannel, lang
 
 export default function MobileAppPage() {
   const { t, i18n } = useTranslation();
+  const { search, pathname } = useLocation();
   const detected = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
   const [platform, setPlatform] = useState<MobilePlatform>(detected === 'ios' ? 'ios' : 'android');
-  const [form, setForm] = useState<'request' | 'feedback' | null>(new URLSearchParams(window.location.search).get('feedback') === '1' ? 'feedback' : null);
+  const [form, setForm] = useState<'request' | 'feedback' | null>(new URLSearchParams(search).get('feedback') === '1' ? 'feedback' : null);
   const [now, setNow] = useState(Date.now);
+  const [qr, setQr] = useState<string | null>(null);
+  const [copied, setCopied] = useState<'done' | 'failed' | null>(null);
+  const viewed = useRef(false);
   const track = useMobileTelemetry('app_landing');
+  // One canonical link to share: the smart link keeps only the allowlisted campaign tags of this visit.
+  const shareUrl = smartLink(search, 'share');
   const distribution = useQuery({
     queryKey: ['mobile-distribution'],
     queryFn: async () => {
@@ -41,7 +50,36 @@ export default function MobileAppPage() {
     const interval = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => { document.title = previous; canonical.remove(); clearInterval(interval); };
   }, []);
+  // Campaign tags on the landing are kept first-party so later funnel events (join, feedback) stay attributed
+  // after the visitor navigates within TDF. Only utm labels and referral codes are stored; never the full query.
+  useEffect(() => { captureGrowthAttribution({ search, pathname }); }, [search, pathname]);
+  useEffect(() => { if (new URLSearchParams(search).get('feedback') === '1') setForm('feedback'); }, [search]);
   const channel = distribution.data?.[platform];
+  // Exposure is reported once per visit, after the manifest answered, with the state the visitor actually saw.
+  useEffect(() => {
+    if (viewed.current || distribution.isPending) return;
+    viewed.current = true;
+    track('mobile_landing_viewed', { platform, distribution_status: distribution.data?.[platform]?.status ?? 'unknown', detected_platform: detected });
+  }, [distribution.isPending, distribution.data, platform, detected, track]);
+  // Desktop visitors scan the smart link with the phone they will install on; phones already are the phone.
+  const showQr = detected === 'desktop';
+  const qrUrl = smartLink(search, 'qr');
+  useEffect(() => {
+    if (!showQr) return;
+    let cancelled = false;
+    QRCode.toString(qrUrl, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' })
+      .then(svg => { if (!cancelled) setQr(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`); })
+      .catch(() => { if (!cancelled) setQr(null); });
+    return () => { cancelled = true; };
+  }, [showQr, qrUrl]);
+  const copyLink = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied('done');
+      track('mobile_share_link_copied', { platform });
+    } catch { setCopied('failed'); }
+  };
   const active = channel && availableChannel(channel, now);
   const beta = channel?.status !== 'public' && channel?.status !== 'store_preorder';
   const badge = channel ? storeBadge(platform, channel, i18n.language) : null;
@@ -99,6 +137,18 @@ export default function MobileAppPage() {
     </Stack></Paper>}
     <Typography variant="body2" color="text.secondary">{t('app.optout')}</Typography>
     <Button component="a" href="/mobile-app/privacy.html">{t('app.privacy')}</Button>
-    <Typography variant="body2">{t('app.share')}</Typography>
+    <Paper variant="outlined" component="section" aria-labelledby="mobile-share-heading" sx={{ p: 2 }}><Stack spacing={1.5}>
+      <Typography id="mobile-share-heading" component="h2" variant="h6">{t('app.share')}</Typography>
+      <Typography variant="body2" color="text.secondary">{t('app.shareHint')}</Typography>
+      <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }} spacing={1}>
+        <Typography component="code" sx={{ fontFamily: 'monospace', overflowWrap: 'anywhere' }}>{MOBILE_CANONICAL_URL}</Typography>
+        <Button variant="outlined" onClick={() => void copyLink()}>{t('app.copyLink')}</Button>
+      </Stack>
+      <Typography aria-live="polite" variant="body2" sx={{ minHeight: '1.5em' }}>{copied === 'done' ? t('app.copied') : copied === 'failed' ? t('app.copyFailed') : ''}</Typography>
+      {showQr && qr && <Stack spacing={1} alignItems="flex-start">
+        <Typography variant="body2">{t('app.qrHint')}</Typography>
+        <img src={qr} alt={t('app.qrAlt')} width={160} height={160} style={{ display: 'block', background: '#fff', padding: 4, border: '1px solid #ccc' }} />
+      </Stack>}
+    </Stack></Paper>
   </Stack>;
 }
