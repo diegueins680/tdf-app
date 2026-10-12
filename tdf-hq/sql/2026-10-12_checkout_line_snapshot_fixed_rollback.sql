@@ -4,5 +4,7 @@
 BEGIN;
 SET LOCAL lock_timeout = '10s';
 DROP TRIGGER IF EXISTS trg_commerce_checkout_line_fixed ON commerce_checkout_line_item;
+DROP TRIGGER IF EXISTS trg_commerce_checkout_created ON commerce_checkout_session;
 DROP FUNCTION IF EXISTS commerce_reject_late_checkout_line();
+DROP FUNCTION IF EXISTS commerce_register_checkout_creation();
 COMMIT;

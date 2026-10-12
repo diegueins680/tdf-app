@@ -586,9 +586,9 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Server/Merch.hs"
       ],
-      "conflict": "PAY-CHECKOUT-002 and the 2026-10-04 migration describe a nonempty immutable line snapshot, while the rules only froze existing lines and checked the sum: a zero-total line could be appended to a committed checkout by a later transaction, and a line could be appended to another transaction's checkout once its header committed. The 2026-10-04 note treats zero appends as preserving the invariant.",
+      "conflict": "PAY-CHECKOUT-002 and the 2026-10-04 migration describe a nonempty immutable line snapshot, while the rules only froze existing lines and checked the sum: a zero-total line could be appended to a committed checkout by a later transaction. The 2026-10-04 note treats zero appends as preserving the invariant.",
       "authority": "The requirement statement and the migration's own comment (an immutable line snapshot); both current writers create header and lines in one transaction, and refund allocation and receipts read the lines, so a line nobody paid for must not join a paid checkout.",
-      "resolution": "Lines are created only in the transaction that creates their checkout: tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql refuses a line whose checkout was written by an earlier transaction (age(xmin) > 0) or is not visible, before the reference check. The sum check, the frozen lines and terms of 2026-10-04 stay. The requirement statement, property and transitions say so; CheckoutSnapshot.tla with three controls and the extended PostgreSQL test are the evidence. Haskell is unchanged."
+      "resolution": "Lines are created only in the transaction that creates their checkout: tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql records each inserted checkout id in a transaction-local setting and refuses a line whose checkout id is not recorded there (an xmin-age design was rejected in review: header updates re-stamp xmin and xid order is not commit order). The sum check, the frozen lines and terms of 2026-10-04 stay. The requirement statement, property and transitions say so; CheckoutSnapshot.tla with three controls checks the guard implies the invariants, and the extended PostgreSQL test exercises the mechanism. Haskell is unchanged."
     }
   ]
 }

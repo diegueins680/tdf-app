@@ -1817,18 +1817,18 @@
       "forbiddenTransitions": [
         "Commit missing lines or mismatched/overflowing aggregate.",
         "Rewrite parent currency or monetary terms.",
-        "Insert a line for a checkout written by an earlier transaction, or for a checkout not visible to the inserting transaction."
+        "Insert a line for a checkout that the inserting transaction did not create (committed by another transaction, only updated by this one, uncommitted elsewhere, rolled back to a savepoint, or unknown)."
       ],
       "effects": [
         "Deferred commit-time validation; reject without committed financial mutation.",
-        "A late line insert is refused immediately (SQLSTATE 23514), before the reference check, so it never waits on another transaction's header."
+        "A line for a checkout not created by the inserting transaction is refused at insert (SQLSTATE 23514)."
       ],
       "authorization": "Arithmetic admission grants no payment or management capability; retain caller and provider authorization.",
       "privacy": "Synthetic tests use no real customer data or provider credentials.",
-      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry. Since 2026-10-12 a line insert reads age(xmin) of its checkout: a header written by an earlier transaction, or not visible, is refused, so zero-total appends and appends to a just-committed foreign header are closed; a creating transaction holding its uncommitted header is not waited on and still commits with its own lines.",
+      "concurrency": "Immutable parent and existing lines plus nonnegative appended totals prevent concurrent positive appends from preserving equality; six observed concurrent transactions test RC/RR/Serializable. A migration-created visible singleton fences pre-enforcement repeatable-read snapshots; SQLSTATE40001 requests retry. Since 2026-10-12 the header insert records the checkout id in a transaction-local setting and a line is accepted only for a recorded id, so zero-total appends are closed whatever the isolation level, the order in which transactions began, or updates of the header; a creating transaction holding its uncommitted header is not waited on and still commits with its own lines.",
       "idempotency": "Deterministic arithmetic is repeatable for identical inputs; this adds no provider replay permission.",
-      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch. A line for a committed or invisible checkout is refused with SQLSTATE 23514 before the reference check.",
-      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence. The 2026-10-12 rule has a rollback that leaves the 2026-10-04 rules in place; a line appended before it is detectable by its xmin relative to the header's and by audit.",
+      "failure": "SQLSTATE 23514; migration preflight aborts atomically on historical mismatch. A line for a checkout the transaction did not create is refused with SQLSTATE 23514 at insert.",
+      "recovery": "Retain additive constraints during compatible forward recovery. Reconcile historical mismatches separately; never invent missing evidence. The 2026-10-12 rule has a rollback that leaves the 2026-10-04 rules in place; a line appended before it is not identifiable from the rows (xmin is re-stamped by header updates), only from audit and domain records.",
       "observability": "Record exact source SHA/hash, fixed QuickCheck seed, negative-control results and HTTP/database evidence without personal payloads.",
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
@@ -1847,7 +1847,7 @@
         "formal/event-operations/CheckoutSnapshotUnvalidated.cfg",
         "formal/event-operations/CheckoutSnapshotMutableTerms.cfg"
       ],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls; the PostgreSQL test gains the fixed-snapshot cases, a race against an uncommitted header, a sixth negative control and the structural check of the new trigger.",
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls checks that the guard implies the invariants; the PostgreSQL test exercises the mechanism: fixed-snapshot cases, a header update before the append, a session that began before the checkout was created, subtransactions, two negative controls and the structural check of both new triggers.",
       "evidence": "checkout-amount-postgres-fence.log; formal/system/checkout-snapshot.md",
       "critical": true,
       "status": "specified and implemented",
@@ -1859,7 +1859,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local PG16 boundary, six negative controls, migration-era snapshot race and the fixed line snapshot pass; final PG17 CI and deployment pending."
+        "reason": "Local PG16 boundary, seven negative controls, migration-era snapshot race and the fixed line snapshot (mechanism tested, not modelled) pass; final PG17 CI and deployment pending."
       }
     },
     {
