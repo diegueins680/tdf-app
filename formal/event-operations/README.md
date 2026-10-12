@@ -605,3 +605,11 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Ticket bank transfer review
+
+`TicketManualReview.tla` and five configurations check the rule in
+[ticket-manual-review.md](../system/ticket-manual-review.md): concurrent reviewers
+of one transfer reach one decision, record at most one payment, and are each
+answered. The two positive models and three negative controls are mandatory in
+the formal runner.

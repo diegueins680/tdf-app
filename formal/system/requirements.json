@@ -7200,7 +7200,7 @@
       "title": "Settle public ticket orders by staff-verified bank transfer",
       "domain": "EVT",
       "statement": "An approved ticket policy may opt into manual bank transfer with a bounded hold and a selection cutoff. The immutable checkout snapshot is preserved; a separately guarded extension keeps the seat while the buyer transfers and staff verifies. A reported transfer reference is evidence only. An event organizer or administrator who is neither the submitting party nor the buyer's email approves it, which records the canonical staff-verified payment and issues tickets through the provider-capture issuance path.",
-      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil",
+      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil; AUTHORITY-064",
       "source": "docs/events/ticket-manual-bank-transfer.md",
       "contract": "docs/events/ticket-manual-bank-transfer.md",
       "actors": [
@@ -7241,7 +7241,7 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows; the hold guard and expiry run in the database.",
+      "concurrency": "Review locks checkout, attempt and evidence rows and holds them until it commits, so a concurrent reviewer waits and is answered from the decided state; the evidence transition guard, the hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
       "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
@@ -7272,14 +7272,24 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/api/eventTickets.test.ts"
+        "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests.",
-      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence.",
+      "formalModels": [
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
+      ],
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests. The review transaction is run directly against PostgreSQL, including approval and rejection races, with a bounded TLC model and three controls (formal/system/ticket-manual-review.md).",
+      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence. Review transaction test and model run locally on 2026-10-11.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants are exercised directly; the Haskell review transaction is exercised end to end only through deployed HTTP verification.",
+      "confidence": "Database invariants and the Haskell review transaction are exercised directly against PostgreSQL; ticket issuance after approval and the HTTP handler are exercised only through deployed HTTP verification.",
       "ambiguity": [
         "No bank API confirms deposits; staff verification against the statement is the authority."
       ],

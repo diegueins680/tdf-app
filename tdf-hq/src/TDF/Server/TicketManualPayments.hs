@@ -23,7 +23,7 @@ import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           Database.Persist.Sql
   ( PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql
-  , toPersistValue, transactionSave, transactionUndo
+  , toPersistValue, transactionUndo
   )
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
@@ -205,7 +205,8 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
           && dCheckoutStatus d `notElem` ["awaiting_payment", "failed", "processing"] =
           pure (Left "This ticket checkout no longer accepts manual payment approval")
       | otherwise = do
-          transactionSave
+          -- The row locks taken by the read above are held to the end of the
+          -- transaction, so a second reviewer waits and then sees this decision.
           when (dEvidenceStatus d == "submitted") $
             rawExecute
               "UPDATE commerce_manual_payment_evidence\

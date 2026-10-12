@@ -576,6 +576,17 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-064",
+      "sources": [
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
+      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
+      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
     }
   ]
 }
