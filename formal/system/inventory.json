@@ -5791,7 +5791,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "050582b916667b38b70e8d1e592a23bfdc0ff603f1cfabcfbfbee00f218ba839",
+      "sha256": "b46c71e7b33aeb0c8e04163d095f38983e126c3ad28762a03c40ac3365a6af1e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9013,7 +9013,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "7514e5f5058c87dd0c7b3810fa1c143ae998ef8473edd932e4b6f6f5e5991c91",
+      "sha256": "42b603d7386c9a8e896e8e599c2ccdc38d90a485ccaa4674aa9e78295154df3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
