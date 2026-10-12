@@ -5791,7 +5791,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "b9084810f99e20a48c7f3e7cf9228d74cf6596c519c4c9f6016d4d0f9b90fbbc",
+      "sha256": "050582b916667b38b70e8d1e592a23bfdc0ff603f1cfabcfbfbee00f218ba839",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9013,7 +9013,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "196e609366d1b501a259e7d24b768067872f6ecc0185fdf201c021110b2a7e11",
+      "sha256": "7514e5f5058c87dd0c7b3810fa1c143ae998ef8473edd932e4b6f6f5e5991c91",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13357,7 +13357,7 @@
     {
       "id": "SURFACE-f215d4911e9d9bef",
       "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-      "sha256": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
+      "sha256": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13969,7 +13969,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "a9cd2d0a7235a1cdf384fd1eb46f574333168f60d4dff94933eb63ac39aad977",
+      "sha256": "ca923ce0efbe3b8bebf51caf037d5ba99b07ba627c4188417811e79223353b8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14035,7 +14035,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "b280078ac6b9c502d3336185a97903d77879fa443ad0d8f3975318eb7f246723",
+      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14803,7 +14803,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "f94e605628d44e91aff6bf3ba9e336d239fc6d9b2064e57b46d6d6092a6d7aa2",
+      "sha256": "615968938d18079e779b232ff6e0107c3a7244adb04f862226f351b12d9c8332",
       "semanticConformance": "not-established-by-discovery"
     },
     {
