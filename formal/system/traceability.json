@@ -1834,6 +1834,7 @@
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
         "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
@@ -9670,6 +9671,7 @@
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
     "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql": "264802f5dcb909007664f265efdfa62b333d6e8d6959ec5abc366898282b8e26",
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql": "60da12bb85bdfcad3a77a9dc1f0d49ebc5efbdd85cf566ca3c82a5df9350cb9f",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -11075,6 +11077,12 @@
       }
     ],
     "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql": [
       {
         "requirement": "PAY-CHECKOUT-002",
         "relationship": "implementation"
@@ -31928,7 +31936,12 @@
       "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
       "sha256": "60da12bb85bdfcad3a77a9dc1f0d49ebc5efbdd85cf566ca3c82a5df9350cb9f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c4cd603babd8c4c",
@@ -40250,7 +40263,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-8b345f57d28949bc",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-b4cc3e91d4f2bb58",
     "SURFACE-87ed7351125c499c",
@@ -41965,7 +41977,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7ba9a47dbad2096cfb2e78945babd16284082bfe88c3e7fa42b2663d4565691f",
+      "sourceSha256": "806a04ea4906b7facb0e92e5b2a1d49a68136aab684620c6b5cbae9591b1e16e",
       "definition": {
         "states": [
           "absent",

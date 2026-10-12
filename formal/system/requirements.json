@@ -1833,6 +1833,7 @@
       "implementation": [
         "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
         "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+        "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed_rollback.sql",
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
