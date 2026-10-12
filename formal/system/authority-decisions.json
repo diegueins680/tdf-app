@@ -578,6 +578,29 @@
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
     },
     {
+      "id": "AUTHORITY-054",
+      "sources": [
+        "formal/system/requirements.json#AUTH-ACCESS-PROVISION-001",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "conflict": "AUTH-ACCESS-PROVISION-001 stated that only an administrator distinct from the requester may approve artist.onboarding:create, while createRequest has self-activated that pair through the artist.self-service.artist policy since 2026-09-16.",
+      "authority": "Approved artist self-service decision (2026-09-16, recorded in AUTH-ARTIST-INVITE-001 ambiguity and the artist.self-service.artist policy migration).",
+      "resolution": "The requirement statement is corrected to the self-service product decision; the distinct-administrator rule is retained for every reviewed decision and model-checked in AccessGrant.tla. The implementation is unchanged on this point."
+    },
+    {
+      "id": "AUTHORITY-055",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs",
+        "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
+      "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
+      "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
       "id": "AUTHORITY-065",
       "sources": [
         "docs/operations-control-center/architecture.md",
