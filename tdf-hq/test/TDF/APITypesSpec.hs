@@ -536,6 +536,33 @@ spec = do
                 "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"mid\\u202E1\"}"
                 `shouldSatisfy` isLeft
 
+    describe "CourseRegistrationRequest ToJSON" $ do
+        let legacyRequest = Courses.CourseRegistrationRequest (Just "Ada Lovelace") (Just "ada@example.com") Nothing "landing" Nothing Nothing (Just True) Nothing
+        it "keeps the stored identity of requests recorded before terms versions existed" $
+            -- Idempotent retries compare this encoding with the saved jsonb payload.
+            toJSON legacyRequest
+                `shouldBe` object
+                    [ "fullName" .= ("Ada Lovelace" :: T.Text)
+                    , "email" .= ("ada@example.com" :: T.Text)
+                    , "phoneE164" .= (Nothing :: Maybe T.Text)
+                    , "source" .= ("landing" :: T.Text)
+                    , "howHeard" .= (Nothing :: Maybe T.Text)
+                    , "utm" .= (Nothing :: Maybe Value)
+                    , "termsAccepted" .= True
+                    ]
+        it "includes the accepted terms version when one was sent" $
+            toJSON (legacyRequest { Courses.acceptedTermsVersion = Just "course-terms-v1" })
+                `shouldBe` object
+                    [ "fullName" .= ("Ada Lovelace" :: T.Text)
+                    , "email" .= ("ada@example.com" :: T.Text)
+                    , "phoneE164" .= (Nothing :: Maybe T.Text)
+                    , "source" .= ("landing" :: T.Text)
+                    , "howHeard" .= (Nothing :: Maybe T.Text)
+                    , "utm" .= (Nothing :: Maybe Value)
+                    , "termsAccepted" .= True
+                    , "acceptedTermsVersion" .= ("course-terms-v1" :: T.Text)
+                    ]
+
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration

@@ -31,7 +31,7 @@ module TDF.Routes.Courses
   ) where
 
 import           Data.Char (isAlphaNum)
-import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
+import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON(toJSON), Value(..), defaultOptions, genericParseJSON, genericToJSON, (.:!))
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (Parser)
@@ -134,7 +134,14 @@ instance FromJSON CourseRegistrationRequest where
       ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted", "acceptedTermsVersion"]
       value
     genericParseJSON strictObjectOptions value
-instance ToJSON CourseRegistrationRequest
+-- The encoded request is the stored identity of an idempotent registration
+-- (compared as jsonb, where an absent key and a null differ). Requests recorded
+-- before `acceptedTermsVersion` existed have no such key, so omit it when absent.
+instance ToJSON CourseRegistrationRequest where
+  toJSON request = case genericToJSON defaultOptions request of
+    Object fields | Nothing <- acceptedTermsVersion request ->
+      Object (AesonKeyMap.delete "acceptedTermsVersion" fields)
+    encoded -> encoded
 
 data CourseRegistrationResponse = CourseRegistrationResponse
   { id     :: Int64
