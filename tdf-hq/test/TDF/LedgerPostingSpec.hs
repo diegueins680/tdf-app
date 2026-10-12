@@ -61,7 +61,7 @@ spec = describe "ledger-posting-postgresql" $ do
           addEntry pool txn "revenue.spec" "USD" (-2)
           post pool txn `shouldReturn` Left "is not balanced by currency"
 
-        it "takes no entry once posted, nor an update or a deletion of one" $ \pool -> do
+        it "takes no entry once posted, nor an update, a deletion or a move of one" $ \pool -> do
           txn <- posted pool
           addEntryEither pool txn "cash.spec" "USD" 1 `shouldReturn` Left "Posted ledger entries are immutable"
           sqlEither pool "UPDATE commerce_ledger_entry SET amount_minor = amount_minor + 1 WHERE transaction_id = ?::uuid"
@@ -69,6 +69,11 @@ spec = describe "ledger-posting-postgresql" $ do
           sqlEither pool "DELETE FROM commerce_ledger_entry WHERE transaction_id = ?::uuid" [PersistText txn]
             `shouldReturn` Left "Posted ledger entries are immutable"
           entriesOf pool txn `shouldReturn` 2
+          other <- draft pool
+          addEntry pool other "cash.spec" "USD" 999
+          sqlEither pool "UPDATE commerce_ledger_entry SET transaction_id = ?::uuid WHERE transaction_id = ?::uuid"
+            [PersistText txn, PersistText other] `shouldReturn` Left "cannot move between transactions"
+          balanceOf pool txn `shouldReturn` 0
 
         it "does not return a posted transaction to draft" $ \pool -> do
           txn <- posted pool
@@ -92,6 +97,8 @@ spec = describe "ledger-posting-postgresql" $ do
           reverseWith pool original reverser `shouldReturn` Right ()
           statusOf pool original `shouldReturn` "reversed"
           sqlEither pool "UPDATE commerce_ledger_transaction SET status = 'posted' WHERE id = ?::uuid" [PersistText original]
+            `shouldReturn` Left "is reversed and cannot change status"
+          sqlEither pool "UPDATE commerce_ledger_transaction SET reversal_of = ?::uuid WHERE id = ?::uuid" [PersistText original, PersistText original]
             `shouldReturn` Left "is reversed and cannot change status"
           draftOne <- draft pool
           reverseWith pool draftOne reverser `shouldReturn` Left "is a draft and has nothing to reverse"
@@ -204,7 +211,7 @@ sqlEither pool statement params = do
       in head ([rule | rule <- rules, rule `T.isInfixOf` text] ++ [text])
     rules =
       [ "has no entries", "is not balanced by currency", "Posted ledger entries are immutable"
-      , "is posted; create a reversing transaction", "must be created as draft"
+      , "is posted; create a reversing transaction", "must be created as draft", "cannot move between transactions"
       , "can only be reversed by a posted transaction", "is reversed and cannot change status"
       , "is a draft and has nothing to reverse" ]
 
@@ -214,5 +221,7 @@ forget = do
   rawExecute "ALTER TABLE commerce_ledger_entry DISABLE TRIGGER trg_commerce_ledger_entry_immutable" []
   rawExecute "DELETE FROM commerce_ledger_entry WHERE transaction_id IN (SELECT id FROM commerce_ledger_transaction WHERE source_type = 'ledger_posting_spec')" []
   rawExecute "ALTER TABLE commerce_ledger_entry ENABLE TRIGGER trg_commerce_ledger_entry_immutable" []
-  rawExecute "UPDATE commerce_ledger_transaction SET reversal_of = NULL WHERE source_type = 'ledger_posting_spec'" []
+  -- Reversed rows first: they reference their reverser (ON DELETE RESTRICT)
+  -- and their check constraint forbids clearing the reference.
+  rawExecute "DELETE FROM commerce_ledger_transaction WHERE source_type = 'ledger_posting_spec' AND reversal_of IS NOT NULL" []
   rawExecute "DELETE FROM commerce_ledger_transaction WHERE source_type = 'ledger_posting_spec'" []

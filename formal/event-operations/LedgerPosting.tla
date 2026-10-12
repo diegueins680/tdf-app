@@ -106,8 +106,9 @@ PostedImmutable == status \in {"posted", "reversed"} => postedShape = <<balance,
    second posting after a reopening. *)
 PostedHistory == status \in {"posted", "reversed"} => postedShape = firstShape
 
-(* Only a posted transaction with a posted reverser becomes reversed; the
-   model keeps this by construction, stated for the reader. *)
+(* Only a posted transaction with a posted reverser becomes reversed: kept by
+   the Reverse guard; the InsertPosted control (a row created already
+   reversed, reverser none) breaks it too. *)
 ReversedByPosted == status = "reversed" => reverser = "posted"
 
 =============================================================================

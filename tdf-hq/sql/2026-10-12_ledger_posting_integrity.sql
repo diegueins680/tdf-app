@@ -22,8 +22,9 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF OLD.status = 'reversed' AND NEW.status IS DISTINCT FROM 'reversed' THEN
-    RAISE EXCEPTION 'Ledger transaction % is reversed and cannot change status', NEW.id
+  IF OLD.status = 'reversed'
+     AND (NEW.status IS DISTINCT FROM 'reversed' OR NEW.reversal_of IS DISTINCT FROM OLD.reversal_of) THEN
+    RAISE EXCEPTION 'Ledger transaction % is reversed and cannot change status or reversal', NEW.id
       USING ERRCODE = 'check_violation';
   END IF;
   IF OLD.status = 'posted' AND NEW.status = 'draft' THEN
@@ -67,13 +68,18 @@ CREATE TRIGGER trg_commerce_ledger_posting
   FOR EACH ROW EXECUTE FUNCTION commerce_validate_ledger_posting();
 
 -- Entries of a posted or reversed transaction are fixed: no insert, update or
--- delete. The transaction row is locked so a concurrent posting sees the
--- entry or the entry sees the posted status, never neither.
+-- delete, and no entry moves between transactions. The transaction row is
+-- locked so a concurrent posting sees the entry or the entry sees the posted
+-- status, never neither.
 CREATE OR REPLACE FUNCTION commerce_protect_posted_ledger()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   transaction_status TEXT;
 BEGIN
+  IF TG_OP = 'UPDATE' AND NEW.transaction_id IS DISTINCT FROM OLD.transaction_id THEN
+    RAISE EXCEPTION 'Ledger entries cannot move between transactions'
+      USING ERRCODE = 'check_violation';
+  END IF;
   SELECT status INTO transaction_status
     FROM commerce_ledger_transaction
     WHERE id = COALESCE(OLD.transaction_id, NEW.transaction_id)
@@ -92,6 +98,11 @@ DROP TRIGGER IF EXISTS trg_commerce_ledger_entry_immutable ON commerce_ledger_en
 CREATE TRIGGER trg_commerce_ledger_entry_immutable
   BEFORE INSERT OR UPDATE OR DELETE ON commerce_ledger_entry
   FOR EACH ROW EXECUTE FUNCTION commerce_protect_posted_ledger();
+
+-- Posting, the immutability check and the reference check read entries by
+-- transaction; the table had no index for that.
+CREATE INDEX IF NOT EXISTS idx_commerce_ledger_entry_transaction
+  ON commerce_ledger_entry(transaction_id);
 
 -- Existing posted transactions that the old rules let drift are reported,
 -- not altered: a correction is a reviewed reversing transaction.

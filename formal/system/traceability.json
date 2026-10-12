@@ -9131,7 +9131,7 @@
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LedgerPosting.cfg": "7ee939e72c34c8c634ed5df4a4f0fae87f93f97550355daa0ad59114a699362e",
-    "formal/event-operations/LedgerPosting.tla": "6b747c0e2847f5797127609538974da5e620f279ec3e561ecb04dbf1e13674ff",
+    "formal/event-operations/LedgerPosting.tla": "1502e7e2cac459080301080b5f4dea001b381a8bb3bda3cf897c52843b51d299",
     "formal/event-operations/LedgerPostingAppend.cfg": "97577a41d044d05aa7840c66ec0da223c639f6a8b07b02df24b5e5beaf00037a",
     "formal/event-operations/LedgerPostingInsertPosted.cfg": "710514c3e5c09f9d260c13402409c7d849ab847821044d5f89bced556ed68fbb",
     "formal/event-operations/LedgerPostingReopen.cfg": "9d4b5a70bca4055bd7222995d60498552b89ee5737476639b6b9416352b00ec6",
@@ -9693,8 +9693,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
-    "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": "fa0c5ded0b47a86cf337bf1c483f102a1dc88463274f70e5c3758c5cf58d925e",
-    "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql": "f4ddeda8e5c04d31ad8fa0ea48c99d69b10bac047457b49c0d9ccc6db7ff67b0",
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": "9767adcb3e7b231f82b456f29bd71857ab7de8eefd473bf372a3c109734c1395",
+    "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql": "5bf3cb0d88d30543a7c0d1d13cb3d972a8170ae60dc71873b828dba0c329a546",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -9825,7 +9825,7 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
-    "tdf-hq/test/TDF/LedgerPostingSpec.hs": "28551ec9db253d75090a48f9cb8d86ecf3c7e25512b07abbda47692e93049121",
+    "tdf-hq/test/TDF/LedgerPostingSpec.hs": "26cf0d882effe50205eae360b4e14841bb2b1a74a7e792ad3fdfe98144774291",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -31976,7 +31976,7 @@
     {
       "id": "SURFACE-997107e9fdf27779",
       "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
-      "sha256": "fa0c5ded0b47a86cf337bf1c483f102a1dc88463274f70e5c3758c5cf58d925e",
+      "sha256": "9767adcb3e7b231f82b456f29bd71857ab7de8eefd473bf372a3c109734c1395",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31988,7 +31988,7 @@
     {
       "id": "SURFACE-5e57444e40a2d228",
       "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
-      "sha256": "f4ddeda8e5c04d31ad8fa0ea48c99d69b10bac047457b49c0d9ccc6db7ff67b0",
+      "sha256": "5bf3cb0d88d30543a7c0d1d13cb3d972a8170ae60dc71873b828dba0c329a546",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35091,7 +35091,7 @@
     {
       "id": "SURFACE-5f5dc3d94ae878f5",
       "path": "tdf-hq/test/TDF/LedgerPostingSpec.hs",
-      "sha256": "28551ec9db253d75090a48f9cb8d86ecf3c7e25512b07abbda47692e93049121",
+      "sha256": "26cf0d882effe50205eae360b4e14841bb2b1a74a7e792ad3fdfe98144774291",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -12891,13 +12891,13 @@
     {
       "id": "SURFACE-997107e9fdf27779",
       "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
-      "sha256": "fa0c5ded0b47a86cf337bf1c483f102a1dc88463274f70e5c3758c5cf58d925e",
+      "sha256": "9767adcb3e7b231f82b456f29bd71857ab7de8eefd473bf372a3c109734c1395",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5e57444e40a2d228",
       "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
-      "sha256": "f4ddeda8e5c04d31ad8fa0ea48c99d69b10bac047457b49c0d9ccc6db7ff67b0",
+      "sha256": "5bf3cb0d88d30543a7c0d1d13cb3d972a8170ae60dc71873b828dba0c329a546",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14649,7 +14649,7 @@
     {
       "id": "SURFACE-5f5dc3d94ae878f5",
       "path": "tdf-hq/test/TDF/LedgerPostingSpec.hs",
-      "sha256": "28551ec9db253d75090a48f9cb8d86ecf3c7e25512b07abbda47692e93049121",
+      "sha256": "26cf0d882effe50205eae360b4e14841bb2b1a74a7e792ad3fdfe98144774291",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21739,7 +21739,7 @@
     },
     {
       "path": "formal/event-operations/LedgerPosting.tla",
-      "sha256": "6b747c0e2847f5797127609538974da5e620f279ec3e561ecb04dbf1e13674ff",
+      "sha256": "1502e7e2cac459080301080b5f4dea001b381a8bb3bda3cf897c52843b51d299",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -23846,7 +23846,7 @@
     },
     {
       "path": "formal/system/ledger-posting.md",
-      "sha256": "d389d232140fd87eae18e07b0d7719be97c76c0451d1353cc7e40a80562847bc",
+      "sha256": "31cfc453d0a43f7821b3789064da4f64171eecf3df224718162bc4c776cb588f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

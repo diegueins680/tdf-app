@@ -20,7 +20,11 @@ schema (2026-10-12), each of these passed:
    again, and a second posting replaced the first);
 3. a transaction inserted already `posted` with no entries;
 4. a transaction inserted already `reversed`, or reversed by itself, by a
-   draft, or by nothing in particular.
+   draft, or by nothing in particular;
+5. (found by the independent review) an entry of a draft moved into a posted
+   transaction by changing its `transaction_id`, since the entry rule looked
+   only at the old transaction; and a reversed transaction re-pointed at any
+   `reversal_of`.
 
 The sum itself was already exact: PostgreSQL sums `bigint` as `numeric`. The
 Haskell writers insert a draft, its entries, then post, so they did not hit
@@ -35,12 +39,17 @@ draft`; `draft -> reversed`; any status change of a `reversed` transaction;
 `posted`; and `draft -> posted` without entries or with a non-zero sum in any
 currency (`SUM(amount_minor::numeric)`). Every refusal raises SQLSTATE 23514.
 `trg_commerce_ledger_entry_immutable` now fires `BEFORE INSERT OR UPDATE OR
-DELETE` and locks the transaction row `FOR NO KEY UPDATE`, so an entry and a
-posting of the same transaction serialise: either the entry lands in the
+DELETE`, refuses a change of `transaction_id`, and locks the transaction row
+`FOR NO KEY UPDATE`, so an entry and a posting of the same transaction
+serialise: either the entry lands in the
 draft and the posting sees it, or the posting lands first and the entry is
-refused. Posted transactions found unbalanced or empty at migration time are
-reported with warnings, not altered: the correction is a reviewed reversing
-transaction. No Haskell change. Rollback restores the 2026-08-13 functions and
+refused. A reversed transaction changes neither status nor `reversal_of`. The
+migration adds the missing index on `commerce_ledger_entry(transaction_id)`,
+which posting, the entry rule and the foreign key all read by. Posted
+transactions found unbalanced or empty at migration time are reported with
+warnings, not altered: the correction is a reviewed reversing transaction.
+The report is one pass over the entries, run while the trigger replacement
+holds its locks; negligible at today's size. No Haskell change. Rollback restores the 2026-08-13 functions and
 triggers. Decision in AUTHORITY-069.
 
 ## Model
@@ -56,16 +65,20 @@ of the posting), `PostedHistory` (of the first posting), `ReversedByPosted`.
 `Append` (`EntriesFixed` off: `PostedImmutable`), `Unvalidated`
 (`PostValidated` off: `PostedBalanced`), `Reopen` (`NoReopen` off:
 `PostedHistory`), `InsertPosted` (`DraftOnly` off: `PostedBalanced`).
-Abstractions: amounts are small integers (the exactness of the SQL sum is a
-property of `numeric`, tested, not modelled); the reverser's own entries are
-not modelled; concurrency is not modelled (the row lock is tested).
+Abstractions: entries are a per-currency balance and a count, so an entry's
+update, deletion or move between transactions are not actions (the rule is
+tested, not modelled); amounts are small integers (the exactness of the SQL
+sum is a property of `numeric`, tested, not modelled); the reverser's own
+entries are not modelled; concurrency is not modelled (the row lock is
+tested, with two sessions, by the independent review and by the spec's racing
+case).
 
 ## Evidence
 
 | Check | Where | Result (2026-10-12, local) |
 | --- | --- | --- |
 | Model and four controls | `scripts/verify-event-operations-formal.sh` | PASS; controls fail on their named invariant |
-| `ledger-posting-postgresql` (8 cases: balanced post; unbalanced and empty refused; two `maxBound` entries and -2 refused, which a 64-bit sum would accept; no insert, update or delete once posted; no reopening; draft-only creation; reversal rules; an entry racing a posting leaves a draft with the entry or a posted balanced transaction) | `scripts/test-ledger-posting.sh`, CI step with the credential lifecycle spec | see PR |
+| `ledger-posting-postgresql` (8 cases: balanced post; unbalanced and empty refused; two `maxBound` entries and -2 refused, which a 64-bit sum would accept; no insert, update, delete or move once posted; no reopening; draft-only creation; reversal rules incl. no re-pointing; an entry racing a posting leaves a draft with the entry or a posted balanced transaction; cleanup needs table ownership for `DISABLE TRIGGER`) | `scripts/test-ledger-posting.sh`, CI step with the credential lifecycle spec | see PR |
 | Migration twice, rollback twice, forward again; the ten probes above after the migration | schema copy | clean; every gap refused, valid paths pass |
 | Automatic-migration production-schema test | `scripts/test-automatic-migrations-production-schema.sh` | see PR |
 

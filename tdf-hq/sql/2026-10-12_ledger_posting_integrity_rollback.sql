@@ -3,6 +3,7 @@
 -- they are. Safe to apply again.
 BEGIN;
 SET LOCAL lock_timeout = '10s';
+DROP INDEX IF EXISTS idx_commerce_ledger_entry_transaction;
 
 CREATE OR REPLACE FUNCTION commerce_validate_ledger_posting()
 RETURNS trigger LANGUAGE plpgsql AS $$
