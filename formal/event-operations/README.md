@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `CheckoutSnapshot.cfg` (2026-10-12) | One canonical checkout, totals 1..3, lines of 0..2 (at most three), one later transaction appending lines; create, add line, commit, abort, late append, late commit or abort, change total | PASS; 200 generated, 85 distinct states, depth 7; `CommittedSum`, `SnapshotFixed`, `TermsFixed` |
+| `CheckoutSnapshotLateLines.cfg`, `CheckoutSnapshotUnvalidated.cfg`, `CheckoutSnapshotMutableTerms.cfg` | Negative controls: lines appended to a committed checkout, commit without the sum check, a committed total changed | Expected exit 12 with `SnapshotFixed`, `CommittedSum`, `TermsFixed` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -605,3 +607,15 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Checkout line snapshot (2026-10-12)
+
+`CheckoutSnapshot.tla` models the line snapshot of one canonical checkout in
+PostgreSQL (PAY-CHECKOUT-002): header and lines are created in one
+transaction, committed only with at least one line whose exact sum is the
+payable total, and from then on neither the lines nor the total change; a
+later transaction cannot append a line, whatever its amount. Bounded: small
+integer amounts, one late transaction, no isolation levels; the exact
+`numeric` sum, the six racing appends and the pre-enforcement snapshot fence
+are tested by `checkout-amount-postgres.mjs`. See
+[checkout line snapshot](../system/checkout-snapshot.md).

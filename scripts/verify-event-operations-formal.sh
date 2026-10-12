@@ -317,6 +317,10 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc CheckoutSnapshot.tla CheckoutSnapshot.cfg checkout-snapshot
+run_negative_tlc CheckoutSnapshotLateLines.cfg checkout-snapshot-late-lines 'Invariant SnapshotFixed is violated' CheckoutSnapshot.tla
+run_negative_tlc CheckoutSnapshotUnvalidated.cfg checkout-snapshot-unvalidated 'Invariant CommittedSum is violated' CheckoutSnapshot.tla
+run_negative_tlc CheckoutSnapshotMutableTerms.cfg checkout-snapshot-mutable-terms 'Invariant TermsFixed is violated' CheckoutSnapshot.tla
 run_tlc NavigationVisit.tla NavigationVisit.cfg navigation-visit
 run_negative_tlc NavigationVisitUnsafe.cfg navigation-visit-unsafe 'Invariant NoFailedVisits is violated' NavigationVisit.tla
 run_tlc ProviderRollback.tla ProviderRollback.cfg provider-rollback

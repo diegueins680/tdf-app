@@ -752,7 +752,8 @@ BEGIN
     SELECT 1 FROM (VALUES
       ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
       ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
-      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_fixed', 'commerce_reject_late_checkout_line', false, 7)
     ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
