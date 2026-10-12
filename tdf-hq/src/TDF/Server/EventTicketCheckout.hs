@@ -9,6 +9,7 @@ module TDF.Server.EventTicketCheckout
   , ticketCheckoutAwaitsPayment
   , ticketPaymentAllowed
   , ticketPaymentMethodsOffered
+  , ticketOrderSalesOpen
   ) where
 
 import           Control.Exception
@@ -29,6 +30,7 @@ import           Data.Either (isRight)
 import           Data.Int (Int64)
 import           Data.Maybe (fromMaybe, isJust, isNothing)
 import           Data.Text (Text)
+import           Text.Read (readMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, addUTCTime, getCurrentTime)
@@ -1016,7 +1018,10 @@ requireTicketPaymentContext rawEventId rawOrderId mLookupToken = do
 -- | Whether the event still sells tickets: the same eligibility the storefront
 -- and order creation apply.
 ticketSalesOpen :: SM.SocialEventId -> AppM Bool
-ticketSalesOpen eventKey = runDB $ do
+ticketSalesOpen = runDB . ticketEventSalesOpen
+
+ticketEventSalesOpen :: SM.SocialEventId -> SqlPersistT IO Bool
+ticketEventSalesOpen eventKey = do
   mEvent <- get eventKey
   case mEvent of
     Nothing -> pure False
@@ -1024,6 +1029,30 @@ ticketSalesOpen eventKey = runDB $ do
       purchaseEnabled <- SocialEvents.eventTicketPurchaseEnabledFor eventRow
       pure . isRight $ SocialEvents.validateTicketPurchaseEventEligibility
         (SM.socialEventMetadata eventRow) purchaseEnabled
+
+-- | The same question for a commerce checkout's ticket order, addressed by the
+-- checkout's domain order id. Shared provider execution starts hosted sessions
+-- for ticket checkouts without passing through this module's handlers.
+ticketOrderSalesOpen :: Text -> SqlPersistT IO Bool
+ticketOrderSalesOpen domainOrderId =
+  case readMaybe (T.unpack domainOrderId) :: Maybe Int64 of
+    Nothing -> pure False
+    Just rawOrderId -> do
+      mOrder <- get (toSqlKey rawOrderId :: SM.EventTicketOrderId)
+      maybe (pure False) (ticketEventSalesOpen . SM.eventTicketOrderEventId) mOrder
+
+-- | Whether this checkout already sent a capture to the provider. A retry then
+-- reconciles a capture the provider may have accepted, and must not be refused.
+ticketCaptureAlreadyAttempted :: TicketPaymentContext -> Checkout.PaymentProvider -> AppM Bool
+ticketCaptureAlreadyAttempted context provider = do
+  rows <- runDB (rawSql
+    "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt\
+    \ WHERE checkout_id = ?::uuid AND provider = ? AND operation = ?)"
+    [ PersistText (Checkout.checkoutReferenceId (tpcCheckout context))
+    , PersistText (Checkout.paymentProviderText provider)
+    , PersistText (Checkout.paymentOperationText Checkout.OperationCapture)
+    ] :: SqlPersistT IO [Single Bool])
+  pure (rows == [Single True])
 
 -- | Refuse to start or take a payment once the event no longer sells tickets.
 -- Checkouts already processing or paid pass, so a payment in flight settles and
@@ -1420,7 +1449,10 @@ capturePublicEventTicketPaypalOrder
   -> AppM Routes.PublicEventTicketCheckoutResponse
 capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
-  requireTicketSalesOpen context
+  -- A first capture is a new charge and needs open sales. A repeated one may be
+  -- reconciling a capture PayPal already accepted, so it always proceeds.
+  captureAttempted <- ticketCaptureAlreadyAttempted context Checkout.ProviderPayPal
+  unless captureAttempted (requireTicketSalesOpen context)
   if tpcCheckoutStatus context == "paid"
     then finalizeVerifiedTicketOrder context >> loadTicketCheckoutDTO (tpcOrderKey context) Nothing
     else do
