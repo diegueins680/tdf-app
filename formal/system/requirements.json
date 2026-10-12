@@ -7737,7 +7737,8 @@
         "formal/event-operations/MusicAssetProcessing.cfg",
         "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
         "formal/event-operations/MusicAssetProcessingPreempt.cfg",
-        "formal/event-operations/MusicAssetProcessingUnverified.cfg"
+        "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+        "formal/event-operations/MusicAssetProcessingOverLimit.cfg"
       ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-ASSET-001",
@@ -7850,7 +7851,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls (formal/system/music-asset-processing.md)",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [

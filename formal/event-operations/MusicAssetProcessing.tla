@@ -18,7 +18,7 @@
                      upload's SHA-256 evidence *)
 EXTENDS Naturals, FiniteSets
 
-CONSTANTS Fence, ClaimOnlyExpired, VerifyChecksum, MaxAttempts
+CONSTANTS Fence, ClaimOnlyExpired, VerifyChecksum, MaxAttempts, MaxClaims
 
 Processes == {"p1", "p2"}
 
@@ -38,15 +38,15 @@ vars == <<status, attempt, owner, phase, token, lease, leaseLive, asset, bytesMa
 
 TypeOK ==
   /\ status \in {"queued", "running", "retry", "succeeded", "dead_letter"}
-  /\ attempt \in 0..MaxAttempts
+  /\ attempt \in 0..MaxClaims
   /\ owner \in Processes \cup {"none"}
   /\ phase \in [Processes -> {"idle", "working"}]
-  /\ token \in [Processes -> 0..MaxAttempts]
+  /\ token \in [Processes -> 0..MaxClaims]
   /\ lease \in [Processes -> BOOLEAN]
   /\ leaseLive \in BOOLEAN
   /\ asset \in {"uploaded", "valid"}
   /\ bytesMatch \in BOOLEAN
-  /\ doneToken \in 0..MaxAttempts
+  /\ doneToken \in 0..MaxClaims
 
 Init ==
   /\ status = "queued"
@@ -65,9 +65,10 @@ Claimable ==
   \/ status = "running" /\ (~ClaimOnlyExpired \/ ~leaseLive)
 
 (* The SQL claim has no attempt bound: an expired last attempt is reclaimed
-   and runs once more. The bound here only keeps the state space finite. *)
+   and runs once more, past MaxAttempts; such a run still fails into
+   dead_letter. MaxClaims (> MaxAttempts) only keeps the state space finite. *)
 Claim(p) ==
-  /\ phase[p] = "idle" /\ Claimable /\ attempt < MaxAttempts
+  /\ phase[p] = "idle" /\ Claimable /\ attempt < MaxClaims
   /\ status' = "running"
   /\ attempt' = attempt + 1
   /\ owner' = p
@@ -138,5 +139,10 @@ LiveLeaseIsCurrent == \A p \in Processes : phase[p] = "working" /\ lease[p] => t
 
 (* Two processes never both hold a live lease. *)
 OneLiveLease == Cardinality({p \in Processes : phase[p] = "working" /\ lease[p]}) <= 1
+
+(* A run past the attempt bound (an expired last attempt reclaimed) is
+   reachable, so the fence is checked on that path too. The OverLimit control
+   configuration shows this invariant violated: the path exists. *)
+NoOverLimitRun == attempt <= MaxAttempts
 
 =============================================================================

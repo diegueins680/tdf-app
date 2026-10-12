@@ -7738,7 +7738,8 @@
         "formal/event-operations/MusicAssetProcessing.cfg",
         "formal/event-operations/MusicAssetProcessingUnfenced.cfg",
         "formal/event-operations/MusicAssetProcessingPreempt.cfg",
-        "formal/event-operations/MusicAssetProcessingUnverified.cfg"
+        "formal/event-operations/MusicAssetProcessingUnverified.cfg",
+        "formal/event-operations/MusicAssetProcessingOverLimit.cfg"
       ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-ASSET-001",
@@ -7851,7 +7852,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls (formal/system/music-asset-processing.md)",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md)",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
@@ -9127,11 +9128,12 @@
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
-    "formal/event-operations/MusicAssetProcessing.cfg": "589518f934e56ae1092554a1ebc7ebe65adc1d8620039db8ae97f147f6afd8c3",
-    "formal/event-operations/MusicAssetProcessing.tla": "9e71167f4527c7af61efa2f731fd64e80d62d6c6eb3f95783a482e5d17cfe2d8",
-    "formal/event-operations/MusicAssetProcessingPreempt.cfg": "16825ee21edaeaf63d186fe9a5ab36c2acb4a6efe435215c30ee51966933e5c5",
-    "formal/event-operations/MusicAssetProcessingUnfenced.cfg": "163623d95107174e8351a6d78cc49975c6c9679692e1d2fb31fdc893c208a4d8",
-    "formal/event-operations/MusicAssetProcessingUnverified.cfg": "50a3d81acb28a3360117f0aeb70005713b042f4824a61c405c1582439daee8d4",
+    "formal/event-operations/MusicAssetProcessing.cfg": "0972d9ab80204b322beb24dd99d49312b44c1e23595aa54ac846b973c4b1cf15",
+    "formal/event-operations/MusicAssetProcessing.tla": "6f0167da2f93118739c333411bdb2de475188072ab6402c4b3aa4d383a8abfab",
+    "formal/event-operations/MusicAssetProcessingOverLimit.cfg": "64f463cf7a8356dab9d5f0bac790b586a3cd35e7d717dc3dfe667250d022b3c7",
+    "formal/event-operations/MusicAssetProcessingPreempt.cfg": "66f020b836a7aae643ff02e44fd0dbef4dad1241bfa9fcd13f8fd4d2e9457c19",
+    "formal/event-operations/MusicAssetProcessingUnfenced.cfg": "9dd50d8e5a4e802760fd2a91fd4f0479c569816392ab14b56dcd6dfb768ae1b4",
+    "formal/event-operations/MusicAssetProcessingUnverified.cfg": "ed337a81bc1f02f30f7850b4d835ca5491e245b20669ce55100b005898b91d53",
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
@@ -9381,7 +9383,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "d672432966fc2ea988995a62ac391d8a73177015509c0676aed50a19e63c5e9c",
+    "scripts/verify-event-operations-formal.sh": "f6a1b99e28644f6954ee971231e189f09230b9da3c9092436748a62ef82993c2",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -15336,6 +15338,12 @@
       }
     ],
     "formal/event-operations/MusicAssetProcessingUnverified.cfg": [
+      {
+        "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MusicAssetProcessingOverLimit.cfg": [
       {
         "requirement": "MEDIA-MUSIC-ASSET-001",
         "relationship": "formalModels"
@@ -21470,7 +21478,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d672432966fc2ea988995a62ac391d8a73177015509c0676aed50a19e63c5e9c",
+      "sha256": "f6a1b99e28644f6954ee971231e189f09230b9da3c9092436748a62ef82993c2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41956,7 +41964,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a2e104462694cfb202d9a72148b914d03f31f36549c0415a5a7156f62509c853",
+      "sourceSha256": "d9cce688258a2a962e99037c967869edaaec958d64030a47bdd96587356c7285",
       "definition": {
         "states": [
           "absent",

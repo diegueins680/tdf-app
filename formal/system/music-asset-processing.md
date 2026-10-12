@@ -43,15 +43,19 @@ below, not fixed here; three further gaps follow it.
 
 `formal/event-operations/MusicAssetProcessing.tla`: one job, two processes
 with the same worker name, one source object whose bytes match the evidence or
-not, `MaxAttempts = 3`. Actions: claim, lease expiry, fenced stop, promote,
+not, `MaxAttempts = 3`, `MaxClaims = 4`. Actions: claim, lease expiry, fenced stop, promote,
 fail (for any reason). Invariants `PromotedOnlyVerified`, `CompletionIsCurrent` (a completion is
 written by the attempt that owns the job), `LiveLeaseIsCurrent` (nobody
-reclaims a live job), `OneLiveLease`. 442 states generated, 284 distinct.
+reclaims a live job), `OneLiveLease`. 934 states generated, 554 distinct.
 Three controls remove one guard each: `Unfenced` (name only, no attempt token:
 a stale process completes a reclaimed job — `CompletionIsCurrent`), `Preempt`
 (a running job can be reclaimed before its lease expires —
 `LiveLeaseIsCurrent`), `Unverified` (promotion without the checksum —
-`PromotedOnlyVerified`).
+`PromotedOnlyVerified`). A fourth configuration, `OverLimit`, is a
+reachability witness, not a guard removal: it asserts `attempt <= MaxAttempts`
+and TLC refutes it, showing that an expired last attempt is reclaimed and runs
+past the bound, so the four invariants above are checked on that path too
+(the independent review of the model asked for it).
 
 The guard's SQL and the model agree on: name + attempt + lease age on the job
 row, reclaim only after expiry, checksum before promotion. Abstractions: the
@@ -59,9 +63,10 @@ model's `Promote` is one step where the script runs two guarded transactions
 (asset promotion, then `mark_succeeded`) with object writes and derivative
 inserts between them, so "asset valid, job still running or retried" is a
 real state the model does not have (safety still follows from the
-per-statement guard); `Fail` fails an attempt for any reason; `Claim` is
-bounded by `MaxAttempts` for finiteness while the SQL claim has no attempt
-bound (an expired last attempt runs once more); the guard's second branch —
+per-statement guard); `Fail` fails an attempt for any reason; the SQL claim has no attempt
+bound and neither has the model's `Claim` below `MaxClaims`, which exists only
+for finiteness (an expired last attempt is reclaimed and runs once more, and
+fails into `dead_letter`; a worker that dies on every run reclaims forever); the guard's second branch —
 `mark_failed`'s follow-up transaction is fenced on `attempt_count`, final
 status and `locked_by IS NULL` — is not modelled. Not modelled either: the
 version-level `FOR NO KEY UPDATE` that serialises sibling jobs, S3 object
