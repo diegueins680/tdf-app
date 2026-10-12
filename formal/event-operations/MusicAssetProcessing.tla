@@ -64,6 +64,8 @@ Claimable ==
   \/ status \in {"queued", "retry"}
   \/ status = "running" /\ (~ClaimOnlyExpired \/ ~leaseLive)
 
+(* The SQL claim has no attempt bound: an expired last attempt is reclaimed
+   and runs once more. The bound here only keeps the state space finite. *)
 Claim(p) ==
   /\ phase[p] = "idle" /\ Claimable /\ attempt < MaxAttempts
   /\ status' = "running"
@@ -109,9 +111,9 @@ Promote(p) ==
   /\ leaseLive' = FALSE
   /\ UNCHANGED <<attempt, token, bytesMatch>>
 
+(* An attempt fails for any reason (mismatch, download, render, upload). *)
 Fail(p) ==
   /\ phase[p] = "working" /\ Guard(p)
-  /\ ~bytesMatch
   /\ status' = IF attempt < MaxAttempts THEN "retry" ELSE "dead_letter"
   /\ doneToken' = token[p]
   /\ owner' = "none"

@@ -587,7 +587,7 @@
       ],
       "conflict": "MEDIA-MUSIC-ASSET-001 listed four asset states (quarantined, processing, promoted, failed) and transitions 'processing -> failed -> retried'; music_asset.processing_state allows nine values and the worker never writes 'failed' or 'promoted' (a promoted master is 'valid' and immutable, a derivative is 'ready'). Retry and dead-letter live on music_processing_job, not on the asset.",
       "authority": "The column CHECK constraints and the worker script, which the requirement's own tests exercise.",
-      "resolution": "Decided 2026-10-12: the requirement lists the column's asset states and the job statuses; the lease guard (worker name, claimed attempt as fencing token, lease age on the job row, reclaim only after expiry) and checksum-gated promotion are the stated concurrency rules and are modelled in MusicAssetProcessing.tla. The three gaps (no purge of abandoned uploads, checksum mismatch retried until max_attempts, dead-lettered asset left 'inspecting') are recorded as ambiguities, not fixed."
+      "resolution": "Decided 2026-10-12: the requirement lists the column's asset states and the job statuses; the lease guard (worker name, claimed attempt as fencing token, lease age on the job row, reclaim only after expiry) and checksum-gated promotion are the stated concurrency rules and are modelled in MusicAssetProcessing.tla. The three gaps (no purge of abandoned uploads, checksum mismatch retried until max_attempts, dead-lettered asset left 'inspecting') are recorded as ambiguities, not fixed; the defect the independent review found (a re-upload with the same declared hash is bound to the old asset row and never inspected) is recorded on the requirement for a follow-up slice."
     }
   ]
 }

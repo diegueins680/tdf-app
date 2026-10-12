@@ -36,16 +36,17 @@ re-verified here; their existing tests are listed on the requirement.
   are reachable only through purchase entitlements or free grants
   (PAY-MUSIC-DOWNLOAD-001).
 
-No defect was found in this scope. Three gaps are recorded below.
+One defect was found by the independent review of this slice and is recorded
+below, not fixed here; three further gaps follow it.
 
 ## Model
 
 `formal/event-operations/MusicAssetProcessing.tla`: one job, two processes
 with the same worker name, one source object whose bytes match the evidence or
 not, `MaxAttempts = 3`. Actions: claim, lease expiry, fenced stop, promote,
-fail. Invariants `PromotedOnlyVerified`, `CompletionIsCurrent` (a completion is
+fail (for any reason). Invariants `PromotedOnlyVerified`, `CompletionIsCurrent` (a completion is
 written by the attempt that owns the job), `LiveLeaseIsCurrent` (nobody
-reclaims a live job), `OneLiveLease`. 300 states generated, 206 distinct.
+reclaims a live job), `OneLiveLease`. 442 states generated, 284 distinct.
 Three controls remove one guard each: `Unfenced` (name only, no attempt token:
 a stale process completes a reclaimed job — `CompletionIsCurrent`), `Preempt`
 (a running job can be reclaimed before its lease expires —
@@ -53,11 +54,21 @@ a stale process completes a reclaimed job — `CompletionIsCurrent`), `Preempt`
 `PromotedOnlyVerified`).
 
 The guard's SQL and the model agree on: name + attempt + lease age on the job
-row, reclaim only after expiry, checksum before promotion. Not modelled: the
+row, reclaim only after expiry, checksum before promotion. Abstractions: the
+model's `Promote` is one step where the script runs two guarded transactions
+(asset promotion, then `mark_succeeded`) with object writes and derivative
+inserts between them, so "asset valid, job still running or retried" is a
+real state the model does not have (safety still follows from the
+per-statement guard); `Fail` fails an attempt for any reason; `Claim` is
+bounded by `MaxAttempts` for finiteness while the SQL claim has no attempt
+bound (an expired last attempt runs once more); the guard's second branch —
+`mark_failed`'s follow-up transaction is fenced on `attempt_count`, final
+status and `locked_by IS NULL` — is not modelled. Not modelled either: the
 version-level `FOR NO KEY UPDATE` that serialises sibling jobs, S3 object
 writes (idempotent by key and content), derivative rendering, and the
 `heartbeat` that renews the lease; a renewal that fails marks the run
-`lease-lost` and the run stops (the `Fenced` action).
+`lease-lost` and the run stops (the `Fenced` action). `OneLiveLease` follows
+from `LiveLeaseIsCurrent`.
 
 ## Evidence
 
@@ -70,7 +81,30 @@ The requirement previously listed four asset states (`quarantined`,
 `processing`, `promoted`, `failed`); the column allows nine
 (`quarantined`, `uploaded`, `inspecting`, `valid`, `invalid`, `processing`,
 `ready`, `failed`, `deleted`) and the job has seven statuses. The requirement
-now lists the real sets.
+now lists the column sets; the values code actually writes are asset
+`uploaded`, `inspecting`, `valid`, `ready` and job `queued`, `running`,
+`retry`, `succeeded`, `dead_letter`.
+
+## Defect (recorded, not fixed here)
+
+**A corrected re-upload after a checksum-mismatch dead letter is never
+inspected.** `confirmMusicUpload` inserts the asset `ON CONFLICT
+(release_version_id, asset_role, sha256) DO NOTHING` and, on conflict, binds
+the new session to the *existing* asset row and enqueues a job keyed by the
+new session. The worker's claim reads bucket/object key from that row, i.e.
+the first session's quarantine object. So: bytes Y uploaded under declared
+hash X → mismatch → retry ×5 → dead letter, asset left at key 1; the user
+uploads the correct bytes X under the same hash → conflict → bound to the old
+row → the new job downloads key 1 again → dead letter again. No API writes
+`deleted`/`invalid` or re-points the asset; the only exit is a new release
+version. `version_completion_sql` also keeps the version `validation_failed`
+while any dead-lettered job of the version exists. Proposed fix (follow-up
+slice, with the worker runtime test extended): on conflict with a
+non-immutable asset in `uploaded`/`inspecting`, re-point its bucket, object
+key, etag, size and provenance to the new session before enqueueing, and
+cancel that asset's dead-lettered jobs. Side effect of the same design: two
+tracks of one version with byte-identical masters bind the second upload to
+the first track's asset, so the second track never gets a master.
 
 ## Gaps (not fixed here)
 
@@ -83,10 +117,12 @@ now lists the real sets.
    `process_artwork` return 1 on mismatch; `mark_failed` schedules
    `retry` with a growing delay until `max_attempts` (5) and only then
    `dead_letter`. Each retry downloads the object again. The outcome is right
-   (never promoted, version `validation_failed`), the cost is not.
+   (never promoted, version `validation_failed`), the cost is not; and because
+   of the defect above the dead letter is final for that hash.
 3. **A dead-lettered source asset keeps `processing_state = 'inspecting'`.**
    The worker never writes `failed`; the version state and the job carry the
-   failure, the asset row does not.
+   failure, the asset row does not, and the row stays in the in-flight
+   partial index `idx_music_asset_processing` for good.
 
 The first two are candidates for a worker change with the runtime test
 extended; the third is a reporting gap.

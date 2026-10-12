@@ -7790,7 +7790,7 @@
       "allowedTransitions": [
         "upload session initiated -> uploading -> completed; confirmation creates the asset as uploaded and one job per session",
         "asset uploaded -> inspecting -> valid (master, immutable, master bucket) with derivatives inserted ready and immutable",
-        "job queued/retry -> running (claim, attempt+1) -> succeeded | retry (run_after delayed) | dead_letter at max_attempts",
+        "job queued/retry -> running (claim, attempt+1) -> succeeded | retry (run_after delayed) | dead_letter at or beyond max_attempts (an expired last attempt is reclaimed once more)",
         "running -> reclaimed by another run only after the lease expired"
       ],
       "forbiddenTransitions": [
@@ -7809,7 +7809,7 @@
       "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
       "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
       "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). A corrected re-upload after a checksum-mismatch dead letter is not inspected (defect recorded 2026-10-12 in formal/system/music-asset-processing.md): the only recovery is a new release version.",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -7855,6 +7855,7 @@
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
+        "Defect (recorded 2026-10-12, not fixed): confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing non-promoted asset row and the worker re-inspects the old quarantine object, so a checksum-mismatch dead letter cannot be recovered by uploading the correct bytes.",
         "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only).",
         "Abandoned upload sessions are never marked expired and purge_abandoned_upload is never enqueued (formal/system/music-asset-processing.md).",
         "A checksum mismatch is retried up to max_attempts before dead_letter although it cannot succeed.",
@@ -7862,7 +7863,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local integration evidence only; no deployment."
+        "reason": "Lease guard, claim and checksum-gated promotion read from source and model-checked (2026-10-12); one recorded defect (re-upload after mismatch not inspected) awaits a fix; local-only runtime evidence; not deployed."
       }
     },
     {
@@ -9127,7 +9128,7 @@
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/MusicAssetProcessing.cfg": "589518f934e56ae1092554a1ebc7ebe65adc1d8620039db8ae97f147f6afd8c3",
-    "formal/event-operations/MusicAssetProcessing.tla": "29f1825cd855a1b6e35273f9142bf491c90ea52f01d8b3cdfbcfa8a4b3e89eee",
+    "formal/event-operations/MusicAssetProcessing.tla": "9e71167f4527c7af61efa2f731fd64e80d62d6c6eb3f95783a482e5d17cfe2d8",
     "formal/event-operations/MusicAssetProcessingPreempt.cfg": "16825ee21edaeaf63d186fe9a5ab36c2acb4a6efe435215c30ee51966933e5c5",
     "formal/event-operations/MusicAssetProcessingUnfenced.cfg": "163623d95107174e8351a6d78cc49975c6c9679692e1d2fb31fdc893c208a4d8",
     "formal/event-operations/MusicAssetProcessingUnverified.cfg": "50a3d81acb28a3360117f0aeb70005713b042f4824a61c405c1582439daee8d4",
@@ -41955,7 +41956,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff181dcefe15b34bc7ccca87929662245f2b429b239f7ba301255beaea2a33fd",
+      "sourceSha256": "a2e104462694cfb202d9a72148b914d03f31f36549c0415a5a7156f62509c853",
       "definition": {
         "states": [
           "absent",
