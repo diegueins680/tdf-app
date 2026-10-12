@@ -27,7 +27,10 @@ def verify_whatsapp_consent(sql, request, check):
             lambda _: request('/public/whatsapp/consent', body, token=None, method='POST'), range(4)))
     check('concurrent first consent requests are all answered ' + str(statuses), statuses == [200, 200, 200, 200])
     check('concurrent first consent requests create one pending row', rows() == '1,false,pending_confirmation,false,false')
-    check('concurrent first consent requests attempt one confirmation message', attempts() == 1)
+    # Without a provider each claimed request is refused and released at once,
+    # so a later submitter may claim again: one attempt per claim, never more
+    # than one per request.
+    check('concurrent first consent requests attempt at most one message each', 1 <= attempts() <= 4)
     check('public consent request discloses nothing',
           json.loads(request('/public/whatsapp/consent', body, token=None, method='POST')[1])['status']['consent'] is False)
 
@@ -48,18 +51,25 @@ def verify_whatsapp_consent(sql, request, check):
           and rows() == '1,false,pending_confirmation,true,false')
     check('non-affirmative reply does not confirm', reply('wamid.consent.other', 'si quiero', now) == 200
           and rows() == '1,false,pending_confirmation,true,false')
-    check('affirmative reply after the request activates consent once', reply('wamid.consent.ok', 'Sí', now) == 200
-          and rows() == '1,true,confirmed_by_reply,false,false')
+    notices = lambda: int(sql("SELECT count(*) FROM whats_app_message WHERE direction='outgoing' AND source='consent_confirmation'"
+                              " AND phone_e164='" + phone + "'"))
+    # The webhook must answer 200 and record the confirmation notice: the
+    # notice row shares the number with the inbound reply row and
+    # whats_app_message is unique on (phone_e164, created_at).
+    check('affirmative reply after the request activates consent once and records the notice', reply('wamid.consent.ok', 'Sí', now) == 200
+          and rows() == '1,true,confirmed_by_reply,false,false' and notices() == 1)
     check('redelivered confirmation changes nothing', reply('wamid.consent.ok', 'Sí', now) == 200
-          and rows() == '1,true,confirmed_by_reply,false,false')
+          and rows() == '1,true,confirmed_by_reply,false,false' and notices() == 1)
+    before = attempts()
     check('active consent is not re-requested', request('/public/whatsapp/consent', body, token=None, method='POST')[0] == 200
-          and attempts() == 1)
+          and attempts() == before and rows() == '1,true,confirmed_by_reply,false,false')
     check('opt-out keyword withdraws consent and clears any request', reply('wamid.consent.stop', 'STOP', now + 1) == 200
           and rows() == '1,false,Inbound WhatsApp opt-out keyword,false,true')
     check('late affirmative reply cannot revive a withdrawn request', reply('wamid.consent.late', 'SI', now + 2) == 200
           and rows() == '1,false,Inbound WhatsApp opt-out keyword,false,true')
+    before = attempts()
     check('a new request after withdrawal is claimed again', request('/public/whatsapp/consent', body, token=None, method='POST')[0] == 200
-          and attempts() == 2 and rows() == '1,false,pending_confirmation,false,true')
+          and attempts() == before + 1 and rows() == '1,false,pending_confirmation,false,true')
     sql("UPDATE whats_app_consent SET confirmation_requested_at = now() - interval '8 days' WHERE phone_e164='" + phone + "'")
     check('expired request cannot be confirmed', reply('wamid.consent.expired', 'SI', now + 3) == 200
           and rows() == '1,false,pending_confirmation,true,true')

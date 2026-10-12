@@ -7566,7 +7566,7 @@
         "tdf-hq-ui/src/vite-env.d.ts"
       ],
       "verification": "Bounded TLC check of WhatsAppConsent.tla (183,500 states, 48,824 distinct, depth 20) with five single-guard negative controls; mirrored-statement PostgreSQL test with two-session races (creation, withdrawal versus confirmation in both orders, reclaim versus confirmation) and the pre-fix check-then-insert as a negative control; real-backend HTTP harness section (concurrent public requests, signed webhook replies with their own timestamps); SQLite unit tests; PostgreSQL migration rehearsal in CI.",
-      "evidence": "TLC runs registered in scripts/verify-event-operations-formal.sh; scripts/__tests__/whatsapp-consent-postgres.mjs; whatsapp_consent_conformance.py in the booking harness; keyword, window and claim-interval unit tests; the creation race reproduced against the real backend on 2026-10-12 (one 200, three 500) before the fix.",
+      "evidence": "TLC runs registered in scripts/verify-event-operations-formal.sh; scripts/__tests__/whatsapp-consent-postgres.mjs; whatsapp_consent_conformance.py in the booking harness; keyword, window and claim-interval unit tests; the creation race reproduced against the real backend on 2026-10-12 (one 200, three 500) before the fix. The confirmation-notice collision was reproduced the same day against the real backend (consent activated, webhook 500, no notice row) before the fix.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7606,13 +7606,13 @@
         "withdrawn -> active without a new request and reply"
       ],
       "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages; the confirmation notice is recorded with its own timestamp because whats_app_message is unique on (phone_e164, created_at) and the inbound reply is recorded for the same number."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
       "concurrency": "Row creation is INSERT ... ON CONFLICT DO NOTHING; claim, release, confirmation and withdrawal are single conditional statements on the unique phone row, so PostgreSQL serializes them on the row lock and re-evaluates each predicate after the earlier writer commits. Before 2026-10-12 creation used insertUnique (lookup, then insert): concurrent first requests raised a duplicate-key error and answered 500.",
       "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
-      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
+      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected. A confirming reply answers 200 to Meta after the one-statement activation and the notice record; before 2026-10-12 the notice insert collided with the inbound reply row on (phone_e164, created_at) and the webhook answered 500 without recording the notice.",
       "recovery": "A number can request again after 24 hours or after a request expires.",
       "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
       "tests": [
@@ -7635,7 +7635,8 @@
         "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
         "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
         "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window.",
-        "The confirmation window is measured from receipt (request no older than 7 days at delivery), not from the reply timestamp; a reply sent inside the window but delivered after it does not confirm. Stricter than the statement; kept (AUTHORITY-074)."
+        "The confirmation window is measured from receipt (request no older than 7 days at delivery), not from the reply timestamp; a reply sent inside the window but delivered after it does not confirm. Stricter than the statement; kept (AUTHORITY-074).",
+        "whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration, not an index; other inbound flows that record a reply with the handler timestamp (course registration by WhatsApp) share the hazard and are outside this requirement (follow-up: plain index migration and model change)."
       ],
       "conformance": {
         "classification": "PARTIAL",

@@ -153,5 +153,17 @@ for (const confirmFirst of [false, true]) {
   else { assert.deepEqual([a.stdout, b.stdout], ['claimed:1', 'confirmed:0']); assert.equal(state(phone), 'false,pending_confirmation,true,false'); }
 }
 
+// whats_app_message is unique on (phone_e164, created_at): the model's
+// IndexWhatsAppMessagePhone line is a Persistent unique declaration. An inbound
+// reply and the confirmation notice recorded with one timestamp collide, which
+// is why the webhook handler stamps the notice separately.
+{
+  const phone = freshPhone(), at = `'2026-10-12T21:00:00.000001Z'`;
+  const message = (external, direction, created) => `INSERT INTO whats_app_message(external_id,sender_id,direction,phone_e164,created_at) VALUES ('${external}','${phone}','${direction}','${phone}',${created});`;
+  reject(`BEGIN; ${message('in-' + phone, 'incoming', at)} ${message('out-' + phone, 'outgoing', at)} COMMIT;`, /index_whats_app_message_phone/, 'one message per number per timestamp');
+  pass(`BEGIN; ${message('in-' + phone, 'incoming', at)} ${message('out-' + phone, 'outgoing', `${at}::timestamptz + interval '1 microsecond'`)} COMMIT;`, 'distinct timestamps record both');
+  pass(`DELETE FROM whats_app_message WHERE phone_e164='${phone}';`, 'cleanup messages');
+}
+
 pass(`DELETE FROM whats_app_consent WHERE phone_e164 LIKE '+5939900%';`, 'cleanup');
 console.log('whatsapp-consent-postgres: ok');

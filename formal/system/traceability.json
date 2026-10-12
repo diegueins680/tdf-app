@@ -7567,7 +7567,7 @@
         "tdf-hq-ui/src/vite-env.d.ts"
       ],
       "verification": "Bounded TLC check of WhatsAppConsent.tla (183,500 states, 48,824 distinct, depth 20) with five single-guard negative controls; mirrored-statement PostgreSQL test with two-session races (creation, withdrawal versus confirmation in both orders, reclaim versus confirmation) and the pre-fix check-then-insert as a negative control; real-backend HTTP harness section (concurrent public requests, signed webhook replies with their own timestamps); SQLite unit tests; PostgreSQL migration rehearsal in CI.",
-      "evidence": "TLC runs registered in scripts/verify-event-operations-formal.sh; scripts/__tests__/whatsapp-consent-postgres.mjs; whatsapp_consent_conformance.py in the booking harness; keyword, window and claim-interval unit tests; the creation race reproduced against the real backend on 2026-10-12 (one 200, three 500) before the fix.",
+      "evidence": "TLC runs registered in scripts/verify-event-operations-formal.sh; scripts/__tests__/whatsapp-consent-postgres.mjs; whatsapp_consent_conformance.py in the booking harness; keyword, window and claim-interval unit tests; the creation race reproduced against the real backend on 2026-10-12 (one 200, three 500) before the fix. The confirmation-notice collision was reproduced the same day against the real backend (consent activated, webhook 500, no notice row) before the fix.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7607,13 +7607,13 @@
         "withdrawn -> active without a new request and reply"
       ],
       "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages; the confirmation notice is recorded with its own timestamp because whats_app_message is unique on (phone_e164, created_at) and the inbound reply is recorded for the same number."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
       "concurrency": "Row creation is INSERT ... ON CONFLICT DO NOTHING; claim, release, confirmation and withdrawal are single conditional statements on the unique phone row, so PostgreSQL serializes them on the row lock and re-evaluates each predicate after the earlier writer commits. Before 2026-10-12 creation used insertUnique (lookup, then insert): concurrent first requests raised a duplicate-key error and answered 500.",
       "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
-      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
+      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected. A confirming reply answers 200 to Meta after the one-statement activation and the notice record; before 2026-10-12 the notice insert collided with the inbound reply row on (phone_e164, created_at) and the webhook answered 500 without recording the notice.",
       "recovery": "A number can request again after 24 hours or after a request expires.",
       "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
       "tests": [
@@ -7636,7 +7636,8 @@
         "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
         "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
         "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window.",
-        "The confirmation window is measured from receipt (request no older than 7 days at delivery), not from the reply timestamp; a reply sent inside the window but delivered after it does not confirm. Stricter than the statement; kept (AUTHORITY-074)."
+        "The confirmation window is measured from receipt (request no older than 7 days at delivery), not from the reply timestamp; a reply sent inside the window but delivered after it does not confirm. Stricter than the statement; kept (AUTHORITY-074).",
+        "whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration, not an index; other inbound flows that record a reply with the handler timestamp (course registration by WhatsApp) share the hazard and are outside this requirement (follow-up: plain index migration and model change)."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9352,7 +9353,7 @@
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
-    "scripts/__tests__/whatsapp-consent-postgres.mjs": "4183c5f1d58b4241a56a288a536583a7e0823bf1ad0e10b3094e208f1e5d323d",
+    "scripts/__tests__/whatsapp-consent-postgres.mjs": "3a8151cb5b4c87826c236dbb68c49e57992613ba9bb40cfa0e686688e54a605f",
     "scripts/artist-enrichment.mjs": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
@@ -9397,7 +9398,7 @@
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
-    "scripts/lib/whatsapp_consent_conformance.py": "4cd93322a215c8537c42d3c06d944ad49da0028adb8a417b6700c2db6f341165",
+    "scripts/lib/whatsapp_consent_conformance.py": "9ba28c4d22ae14ccb96cf2687e2eb57fe95a71897a926fa21e0174a7eebc9357",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
@@ -9858,7 +9859,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "a2e496cf658db161b0c8f7e773648d612dd2a6c4554e0cb7cd06257503e22c4f",
+    "tdf-hq/src/TDF/Server.hs": "731679c09256a52fc30b00e0b5f12f2704e71f7011c0fd4211c479ed9134890f",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -18438,7 +18439,7 @@
     {
       "id": "SURFACE-add3538e481ff7f7",
       "path": "scripts/__tests__/whatsapp-consent-postgres.mjs",
-      "sha256": "4183c5f1d58b4241a56a288a536583a7e0823bf1ad0e10b3094e208f1e5d323d",
+      "sha256": "3a8151cb5b4c87826c236dbb68c49e57992613ba9bb40cfa0e686688e54a605f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19505,7 +19506,7 @@
     {
       "id": "SURFACE-c1661bacc266994d",
       "path": "scripts/lib/whatsapp_consent_conformance.py",
-      "sha256": "4cd93322a215c8537c42d3c06d944ad49da0028adb8a417b6700c2db6f341165",
+      "sha256": "9ba28c4d22ae14ccb96cf2687e2eb57fe95a71897a926fa21e0174a7eebc9357",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34003,7 +34004,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "a2e496cf658db161b0c8f7e773648d612dd2a6c4554e0cb7cd06257503e22c4f",
+      "sha256": "731679c09256a52fc30b00e0b5f12f2704e71f7011c0fd4211c479ed9134890f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42375,7 +42376,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b1b5bcfb05793fb7150617fc886f22f5a764c056268af79f753678ec0b816cf2",
+      "sourceSha256": "8e80dfd77b4779da1c76f57ce3149f616c6db9c0873c29c04e5302e2246e5724",
       "definition": {
         "states": [
           "absent",

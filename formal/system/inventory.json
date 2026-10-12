@@ -3493,7 +3493,7 @@
     {
       "id": "SURFACE-add3538e481ff7f7",
       "path": "scripts/__tests__/whatsapp-consent-postgres.mjs",
-      "sha256": "4183c5f1d58b4241a56a288a536583a7e0823bf1ad0e10b3094e208f1e5d323d",
+      "sha256": "3a8151cb5b4c87826c236dbb68c49e57992613ba9bb40cfa0e686688e54a605f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4153,7 +4153,7 @@
     {
       "id": "SURFACE-c1661bacc266994d",
       "path": "scripts/lib/whatsapp_consent_conformance.py",
-      "sha256": "4cd93322a215c8537c42d3c06d944ad49da0028adb8a417b6700c2db6f341165",
+      "sha256": "9ba28c4d22ae14ccb96cf2687e2eb57fe95a71897a926fa21e0174a7eebc9357",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13945,7 +13945,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "a2e496cf658db161b0c8f7e773648d612dd2a6c4554e0cb7cd06257503e22c4f",
+      "sha256": "731679c09256a52fc30b00e0b5f12f2704e71f7011c0fd4211c479ed9134890f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23930,7 +23930,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "0c97ad97b1ad3a83a36f1282f6a0786e3013d3023a8e83fe322082969799e09b",
+      "sha256": "512b5b20ce9b9ea4f1e08d1f484f47089c9c7ceb3a9112fb39b4c1f7ddb4d177",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24210,7 +24210,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b1b5bcfb05793fb7150617fc886f22f5a764c056268af79f753678ec0b816cf2",
+      "sha256": "8e80dfd77b4779da1c76f57ce3149f616c6db9c0873c29c04e5302e2246e5724",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24273,7 +24273,7 @@
     },
     {
       "path": "formal/system/whatsapp-consent.md",
-      "sha256": "1ee73fe358006ffb2c23a36f5cd0259cb5a2a9e2c3db696c978941cecf7185c5",
+      "sha256": "38c195fd98df88b76891432434488e8e4750afa4891cbca9e90c41f3168829b5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

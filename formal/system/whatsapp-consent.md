@@ -71,6 +71,23 @@ this slice by creating the row with `INSERT ... ON CONFLICT (phone_e164) DO
 NOTHING` before the conditional claim. The PostgreSQL test keeps the
 check-then-insert shape as a negative control.
 
+A confirming reply activated consent and then failed. The webhook handler
+records the inbound message at its single `now`, and after the one-statement
+activation it recorded the "Gracias, confirmamos" notice with the same `now`
+for the same number. `whats_app_message` is unique on
+`(phone_e164, created_at)`: the model line `IndexWhatsAppMessagePhone
+phoneE164 createdAt` in `ModelsExtra.hs` is a Persistent unique declaration
+(any capitalised line after the fields is one), not an index, and the
+production snapshot of 2026-08-14 carries it as the constraint
+`index_whats_app_message_phone`. The notice insert raised a duplicate key,
+the webhook answered 500 to Meta and no notice row exists; consent was
+already committed, so Meta's redelivery is a no-op. Reproduced on 2026-10-12
+against the real backend. Fixed in this slice by stamping the notice with
+its own `getCurrentTime`. The constraint is applied production schema and
+is left in place; the course-registration reply in the same handler shares
+the hazard and is outside this requirement (follow-up: plain index migration
+and model change).
+
 ## Model
 
 `formal/event-operations/WhatsAppConsent.tla` has one number, a server clock
@@ -108,7 +125,8 @@ test covers it. Bounded model checking; not a proof of the Haskell or SQL.
   mirrored statements, single-session boundaries (interval strictness,
   release of the own claim only, reply at the exact request time, window
   edge, redelivery, no claim on active consent), and the three two-session
-  races above with the pre-fix creation shape as a negative control.
+  races above with the pre-fix creation shape as a negative control, and
+  the `(phone_e164, created_at)` collision pinned as a schema fact.
 - `scripts/lib/whatsapp_consent_conformance.py` in the booking conformance
   harness: four simultaneous public requests against the real backend (all
   200, one pending row, one attempted message), signed Meta webhook replies
