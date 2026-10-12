@@ -796,6 +796,17 @@ runStripeRequestSafely action = do
 tryAny :: IO a -> IO (Either SomeException a)
 tryAny = try
 
+-- Like tryAny, but cancellation and other asynchronous exceptions propagate.
+trySynchronous :: IO a -> IO (Either SomeException a)
+trySynchronous action = do
+    result <- try action
+    case result of
+        Left err ->
+            case fromException err :: Maybe SomeAsyncException of
+                Just _ -> throwIO err
+                Nothing -> pure (Left err)
+        Right value -> pure (Right value)
+
 isEventTicketCheckoutConflict :: SomeException -> Bool
 isEventTicketCheckoutConflict exception =
     case fromException exception of
@@ -5639,12 +5650,19 @@ socialEventsServer user =
                     { ManualPayments.mrPartyId = fromSqlKey (auPartyId user)
                     , ManualPayments.mrStrictAdmin = hasStrictAdminAccess user
                     }
-        result <- liftIO $
-            runSqlPool (ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now) envPool
-        paid <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
-        -- Issuance is idempotent and runs after the payment commit, as for provider captures.
-        when paid $
-            void $ liftIO $ runSqlPool (finalizePaidTicketOrder now orderKey) envPool
+        -- Approval and the idempotent issuance commit together; a failed
+        -- issuance leaves the transfer reviewable instead of paid without tickets.
+        outcome <- liftIO $ trySynchronous $
+            runSqlPool
+                ( ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now
+                    (void (finalizePaidTicketOrder now orderKey))
+                )
+                envPool
+        result <- either
+            (const (throwError err409{errBody = "Tickets could not be issued, so the transfer was not approved; try again"}))
+            pure
+            outcome
+        _ <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
         rows <- liftIO $ runSqlPool (ManualPayments.listTicketManualPayments eventKey) envPool
         case filter ((== T.pack (show (fromSqlKey orderKey))) . tmpOrderId) rows of
             dto : _ -> pure dto
