@@ -13,6 +13,9 @@ module TDF.Server.EventTicketCheckout
   , lockTicketEventSalesOpen
   , lockTicketOrderSalesOpen
   , ticketSalesClosedRefusal
+  , paypalCaptureFailureCode
+  , ticketCaptureUnverified
+  , ticketUnverifiedCaptureRefusal
   ) where
 
 import           Control.Exception
@@ -900,12 +903,17 @@ loadPublicTicketPaymentMethods runtime = do
             then pure []
             else do
               terms <- runDB (loadManualTransferTerms (toSqlKey (trvOrderId runtime)))
-              PaymentAvailability.availableImplementedPaymentMethods
+              methods <- PaymentAvailability.availableImplementedPaymentMethods
                 environment
                 PaymentAvailability.FlowEventTicket
                 (trvCheckoutTotalMinor runtime)
                 (trvCurrency runtime)
                 (manualTransferSelectable now terms)
+              -- While a PayPal capture is unverified only PayPal stays offered:
+              -- retrying it reconciles the same provider order, whereas another
+              -- rail could charge the buyer a second time.
+              unverified <- runDB (ticketCaptureUnverified checkout)
+              pure (if unverified then filter (== paypalMethodCode) methods else methods)
 
 requireLookupToken :: SM.EventTicketOrderId -> Maybe Text -> AppM ()
 requireLookupToken orderKey mLookupToken = do
@@ -1106,6 +1114,44 @@ ticketPaymentMethodsOffered :: UTCTime -> Text -> UTCTime -> Bool -> Bool
 ticketPaymentMethodsOffered now status holdExpiresAt salesOpen =
   ticketCheckoutAwaitsPayment status && holdExpiresAt > now && salesOpen
 
+-- | Failure code for a PayPal capture request that errored, given the status of
+-- the provider order read back afterwards ('Nothing' when the readback failed
+-- too). PayPal reporting the order not completed is a definite failure; without
+-- a readback the capture may have been taken, so it is recorded as unverified.
+paypalCaptureFailureCode :: Maybe Text -> Text
+paypalCaptureFailureCode Nothing = paypalCaptureUnverifiedCode
+paypalCaptureFailureCode (Just _) = "paypal_capture_request"
+
+paypalCaptureUnverifiedCode :: Text
+paypalCaptureUnverifiedCode = "paypal_capture_unverified"
+
+paypalMethodCode :: Text
+paypalMethodCode = Checkout.paymentProviderText Checkout.ProviderPayPal
+
+-- | Whether the checkout's PayPal capture ended without the provider confirming
+-- either outcome. A later capture attempt replays the same attempt row, so its
+-- definite result (succeeded, or a different failure code) clears this.
+ticketCaptureUnverified :: Checkout.CheckoutReference -> SqlPersistT IO Bool
+ticketCaptureUnverified checkout = do
+  rows <- rawSql
+    "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt\
+    \ WHERE checkout_id = ?::uuid AND provider = ? AND operation = 'capture'\
+    \ AND status = 'failed' AND failure_code = ?)"
+    [ PersistText (Checkout.checkoutReferenceId checkout)
+    , PersistText paypalMethodCode
+    , PersistText paypalCaptureUnverifiedCode
+    ] :: SqlPersistT IO [Single Bool]
+  pure (rows == [Single True])
+
+-- | Guard result for starting a payment on another rail: refused while a PayPal
+-- capture for the same checkout is unverified.
+ticketUnverifiedCaptureRefusal :: Checkout.CheckoutReference -> SqlPersistT IO (Maybe Text)
+ticketUnverifiedCaptureRefusal checkout = do
+  unverified <- ticketCaptureUnverified checkout
+  pure $ if unverified
+    then Just "A PayPal payment for this order could not be verified; retry PayPal so it is reconciled before using another payment method"
+    else Nothing
+
 ticketReference :: TicketPaymentContext -> Text
 ticketReference = T.pack . show . fromSqlKey . tpcOrderKey
 
@@ -1197,8 +1243,12 @@ beginTicketPaymentAttemptWith salesGated context provider operation merchantRef 
   either (throwError . conflict) pure result
   where
     salesGuard
-      | salesGated && ticketCheckoutAwaitsPayment (tpcCheckoutStatus context) =
-          ticketSalesClosedRefusal <$> lockTicketEventSalesOpen (tpcEventKey context)
+      | salesGated && ticketCheckoutAwaitsPayment (tpcCheckoutStatus context) = do
+          closed <- ticketSalesClosedRefusal <$> lockTicketEventSalesOpen (tpcEventKey context)
+          case (closed, provider) of
+            (Just refusal, _) -> pure (Just refusal)
+            (Nothing, Checkout.ProviderPayPal) -> pure Nothing
+            (Nothing, _) -> ticketUnverifiedCaptureRefusal (tpcCheckout context)
       | otherwise = pure Nothing
 
 failTicketPaymentAttempt
@@ -1545,10 +1595,21 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
         context Checkout.ProviderPayPal Checkout.OperationCapture merchantRef "capture"
       outcome <- case alreadyCaptured of
         Just known -> pure known
+        -- The request can fail after PayPal took the capture (its response or
+        -- the follow-up read was lost), so the order is read back before the
+        -- attempt is failed: a completed order is recorded as the payment it
+        -- is, and a failed readback leaves the capture marked unverified.
         Nothing -> ServiceStorefront.capturePaypalOrderRemoteForService
           sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
-          `catchError` failTicketPaymentAttempt context attempt
-            Checkout.ProviderPayPal "paypal_capture_request"
+          `catchError` \captureError -> do
+            readback <- (Just <$> ServiceStorefront.getPaypalOrderRemoteForService
+                sharedProviderManager clientId clientSecret baseUrl suppliedOrderId)
+              `catchError` const (pure Nothing)
+            case readback of
+              Just known | ServiceStorefront.spcoStatus known == "COMPLETED" -> pure known
+              _ -> failTicketPaymentAttempt context attempt Checkout.ProviderPayPal
+                (paypalCaptureFailureCode (ServiceStorefront.spcoStatus <$> readback))
+                captureError
       now <- liftIO getCurrentTime
       case ServiceStorefront.spcoStatus outcome of
         "COMPLETED" -> do
