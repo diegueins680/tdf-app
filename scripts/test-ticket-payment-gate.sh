@@ -14,6 +14,7 @@ node "$repo_root/scripts/render-production-migration-batch.mjs" | psql -X -v ON_
 export COMMERCE_CHECKOUT_ENV=sandbox
 export COMMERCE_LOOKUP_TOKEN_SECRET=synthetic-ticket-payment-gate-lookup-secret-000000
 export COMMERCE_EVENT_ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
+export COMMERCE_BANK_TRANSFER_INSTRUCTIONS='Synthetic test account; no transfer is ever made'
 export TDF_TICKET_PAYMENT_GATE_TEST_DB="host=$PGHOST dbname=$test_database"
 cd "$repo_root/tdf-hq"
 stack test tdf-hq:test:tdf-hq-test --jobs 1 --test-arguments='--match ticket-payment-gate-postgresql'

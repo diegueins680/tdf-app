@@ -676,7 +676,9 @@ export default function PublicEventTicketsPage() {
                         {offeredPaymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
                         {offeredPaymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
                     </Stack>}
-                    {!paid && checkout.bankTransfer && (
+                    {/* A stale order may already be paid by another rail: no transfer
+                        instructions or evidence form until it is read again. */}
+                    {!paid && !orderStale && checkout.bankTransfer && (
                       <TicketBankTransferPanel
                         transfer={checkout.bankTransfer}
                         english={english}

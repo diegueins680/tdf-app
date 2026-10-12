@@ -93,12 +93,18 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         attempts <- scalar pool "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid" [PersistText (oCheckout order)]
         attempts `shouldBe` 1
 
-      it "does not gate evidence for a transfer the buyer already made" $ \pool -> do
+      it "accepts evidence for a transfer the buyer selected before sales closed" $ \pool -> do
+        activateBankTransfer pool
         order <- newOrder pool "evidence"
+        selected <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+        fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) selected `shouldBe` Right (Just "awaiting_evidence")
         closeSales pool order "postponed"
-        run pool (bankEvidence (oEvent order) (oOrder order) (Just (oToken order))
-            (Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-REF-1"))
-          >>= (`shouldNotSatisfy` salesClosed)
+        submitted <- run pool (bankEvidence (oEvent order) (oOrder order) (Just (oToken order))
+          (Routes.PublicEventTicketBankTransferEvidenceRequest "SYNTHETIC-REF-1"))
+        fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) submitted `shouldBe` Right (Just "submitted")
+        stored <- runSqlPool (rawSql
+          "SELECT count(*) FROM commerce_manual_payment_evidence WHERE customer_reference='SYNTHETIC-REF-1'" []) pool
+        stored `shouldBe` [Single (1 :: Int64)]
 
       it "does not gate a checkout that is already processing" $ \pool -> do
         order <- newOrder pool "processing"
@@ -135,13 +141,7 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         -- a closure that arrives after the sales check must find the attempt
         -- already recorded when it finally gets the event row.
         order <- newOrder pool "attempt-order"
-        runSqlPool (do
-          rawExecute "UPDATE commerce_provider_account SET enabled=TRUE, status='ready', credential_status='validated',\
-            \ contract_status='approved', merchant_account_ref='tdf-manual-settlement', verified_at=now(), verified_by=1\
-            \ WHERE provider='bank_transfer' AND environment='sandbox'" []
-          rawExecute "UPDATE commerce_provider_capability SET verification_status='sandbox_verified', verified_at=now()\
-            \ WHERE provider_account_id IN (SELECT id FROM commerce_provider_account\
-            \ WHERE provider='bank_transfer' AND environment='sandbox')" []) pool
+        activateBankTransfer pool
         totals <- runSqlPool (rawSql "SELECT total_minor, currency FROM commerce_checkout_session WHERE id=?::uuid"
           [PersistText (oCheckout order)]) pool
         (total, currency) <- case totals of
@@ -191,6 +191,18 @@ spec = describe "ticket-payment-gate-postgresql" $ do
       it "treats an unknown or malformed ticket order as not on sale" $ \pool -> do
         runSqlPool (ticketOrderSalesOpen "999999999") pool `shouldReturn` False
         runSqlPool (ticketOrderSalesOpen "not-a-number") pool `shouldReturn` False
+
+-- | Mark the sandbox bank-transfer account ready and its capabilities verified,
+-- so the manual rail and the canonical attempt path are reachable.
+activateBankTransfer :: ConnectionPool -> IO ()
+activateBankTransfer pool =
+  runSqlPool (do
+    rawExecute "UPDATE commerce_provider_account SET enabled=TRUE, status='ready', credential_status='validated',\
+            \ contract_status='approved', merchant_account_ref='tdf-manual-settlement', verified_at=now(), verified_by=1\
+            \ WHERE provider='bank_transfer' AND environment='sandbox'" []
+    rawExecute "UPDATE commerce_provider_capability SET verification_status='sandbox_verified', verified_at=now()\
+            \ WHERE provider_account_id IN (SELECT id FROM commerce_provider_account\
+            \ WHERE provider='bank_transfer' AND environment='sandbox')" []) pool
 
 data Order = Order
   { oEvent    :: Int64
@@ -266,9 +278,10 @@ newOrder pool label = do
     _ -> fail "Expected one tier"
   runSqlPool (rawExecute
     "INSERT INTO event_ticket_checkout_policy(event_id,policy_version,currency,terms_version,terms_summary,refund_policy,\
-    \ approval_status,active,approved_at,approved_by,created_at,updated_at)\
+    \ approval_status,active,approved_at,approved_by,created_at,updated_at,\
+    \ manual_transfer_hold_minutes,manual_transfer_cutoff_at)\
     \ VALUES (?, 'gate-v1', 'USD', 'gate-terms-v1', 'Synthetic terms', 'Synthetic refund policy',\
-    \ 'approved', TRUE, now(), 'synthetic-test', now(), now())"
+    \ 'approved', TRUE, now(), 'synthetic-test', now(), now(), 120, now()+interval '20 days')"
     [PersistInt64 eventId]) pool
   created <- run pool (createOrder eventId (Just ("ticket-payment-gate-" <> label <> "-0001"))
     (Routes.PublicEventTicketCheckoutRequest tierId 1 "Synthetic Buyer"

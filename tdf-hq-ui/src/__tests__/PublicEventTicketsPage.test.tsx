@@ -427,6 +427,16 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     const providers = funnelCaptureMock.mock.calls.map((call) => call[1]);
     expect(providers).toEqual(expect.arrayContaining([expect.objectContaining({ provider: 'bank_transfer' })]));
     providers.forEach(expectNoPrivateTicketData);
+
+    // A refresh that fails leaves the order stale: it may already be paid by
+    // another rail, so the transfer instructions and evidence form go away.
+    getCheckoutMock.mockRejectedValueOnce(new Error('Temporary outage'));
+    const refresh = Array.from(container.querySelectorAll('button'))
+      .find((candidate) => candidate.textContent === 'Actualizar estado de la orden')!;
+    await act(async () => { fireEvent.click(refresh); });
+    await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
+    expect(container.textContent).not.toContain('Banco Internacional ahorros 440781141');
+    expect(container.querySelector('input[maxlength="120"]')).toBeNull();
   });
 
   it('keeps a receipt out of search and its order reference out of canonical metadata', async () => {
