@@ -109,7 +109,11 @@ export default function PublicEventTicketsPage() {
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   // The order on screen could not be refreshed: its payment methods may be stale,
   // so none is offered until the server answers again.
-  const [orderStale, setOrderStale] = useState(false);
+  const [lookupFailed, setLookupFailed] = useState(false);
+  // A provider may have taken a payment the server could not confirm. Reading
+  // the order again does not ask the provider, so only a paid order clears this.
+  const [paymentUnconfirmed, setPaymentUnconfirmed] = useState(false);
+  const orderStale = lookupFailed || paymentUnconfirmed;
   const [message, setMessage] = useState<string | null>(null);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
@@ -192,11 +196,14 @@ export default function PublicEventTicketsPage() {
       .then((response) => {
         if (!active) return;
         setCheckout(response);
-        setOrderStale(false);
+        setLookupFailed(false);
+        if (response.paymentStatus === 'paid') setPaymentUnconfirmed(false);
         if (resourcePath) navigate(location.pathname, { replace: true });
       })
       .catch(() => {
-        if (active) setOrderStale(true);
+        if (active) setLookupFailed(true);
+        // A provider return that could not be reconciled is not a plain read.
+        if (active && resourcePath) setPaymentUnconfirmed(true);
         if (active) setMessage(english
           ? 'We could not load your order. Check your connection and try again. Do not buy or pay again.'
           : 'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.');
@@ -446,7 +453,9 @@ export default function PublicEventTicketsPage() {
         } catch {
           // PayPal may have taken the payment even though the server could not
           // confirm it: offer no other rail until the order is read again.
-          setOrderStale(true);
+          setPaymentUnconfirmed(true);
+          setPaypalOpen(false);
+          setPaypalOrderId(null);
           setMessage(english
             ? 'The server could not verify PayPal. The ticket is not shown as paid.'
             : 'El servidor no pudo verificar PayPal. No mostramos la entrada como pagada.');
@@ -667,6 +676,9 @@ export default function PublicEventTicketsPage() {
                   </Stack>
                   {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
                   {message && <Alert severity="warning">{message}</Alert>}
+                  {!paid && paymentUnconfirmed && <Alert severity="warning">{english
+                    ? 'A payment for this order may have been taken but is not confirmed yet. Do not pay again; refresh the order status later or contact us.'
+                    : 'Es posible que ya se haya cobrado un pago de esta orden, pero aún no está confirmado. No vuelvas a pagar; actualiza el estado más tarde o contáctanos.'}</Alert>}
                   {!paid && !orderStale && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}

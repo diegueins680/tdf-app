@@ -500,9 +500,21 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
     await waitForExpectation(() => expect(container.textContent).toContain('El servidor no pudo verificar PayPal'));
     expect(labels()).not.toContain('Datafast');
-    const refresh = Array.from(container.querySelectorAll('button'))
-      .find((button) => button.textContent === 'Actualizar estado de la orden');
-    expect(refresh).toBeTruthy();
+    // Reading the order again does not ask PayPal: an unpaid answer must not
+    // bring the other rails back.
+    const refresh = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    const lookups = getCheckoutMock.mock.calls.length;
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(getCheckoutMock.mock.calls.length).toBeGreaterThan(lookups));
+    await waitForExpectation(() => expect(refresh().disabled).toBe(false));
+    expect(labels()).not.toContain('Datafast');
+    expect(container.textContent).toContain('No vuelvas a pagar');
+    // Only a paid order settles it.
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    expect(container.textContent).not.toContain('No vuelvas a pagar');
   });
 
   it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {
