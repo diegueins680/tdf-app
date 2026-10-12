@@ -648,7 +648,9 @@ export default function PublicEventTicketsPage() {
               <CardContent>
                 <Stack spacing={2}>
                   <Typography variant="h5" fontWeight={800}>{english ? 'Order status' : 'Estado de la orden'} #{checkout.orderId}</Typography>
-                  <Button disabled={paymentBusy || hostedPaymentLocked || datafastOpen || paypalOpen} onClick={() => setLookupRevision((revision) => revision + 1)}>
+                  {/* Reading the order again is safe while a hosted payment holds its lock: a
+                      payment the provider confirmed may only need this to show its tickets. */}
+                  <Button disabled={paymentBusy || datafastOpen || paypalOpen} onClick={() => setLookupRevision((revision) => revision + 1)}>
                     {english ? 'Refresh order status' : 'Actualizar estado de la orden'}
                   </Button>
                   {paid ? <Alert severity="success">{issued

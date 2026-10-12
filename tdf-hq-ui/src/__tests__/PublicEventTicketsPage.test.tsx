@@ -624,6 +624,16 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledWith(
       'ticketing_payment_initiated', expect.objectContaining({ event_id: 41, provider: 'placetopay' }),
     ));
+    if (state === 'prepared') {
+      // The session cannot be retried, so the hosted safety lock is held. Reading
+      // the order again must stay possible: a confirmed payment may only need it.
+      const refresh = () => [...container.querySelectorAll('button')]
+        .find((item) => item.textContent === 'Actualizar estado de la orden');
+      await waitForExpectation(() => expect(refresh()?.disabled).toBe(false));
+      const lookups = getCheckoutMock.mock.calls.length;
+      await act(async () => fireEvent.click(refresh()!));
+      await waitForExpectation(() => expect(getCheckoutMock.mock.calls.length).toBeGreaterThan(lookups));
+    }
     await renderTracking('/eventos/41/orden/92');
     expect(funnelCaptureMock.mock.calls.filter(([phase]) => phase === 'ticketing_payment_initiated')).toHaveLength(1);
     expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
