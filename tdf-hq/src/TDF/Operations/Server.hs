@@ -971,28 +971,39 @@ replayFailureHandler original failureId command = runOperationsWrite original $ 
   validateCommandMetadata (command.requestId) (command.sourceClient)
   when (T.null (T.strip (command.reason))) $ rejectCommand err422 {errBody = "Replay reason is required"}
   locked <- rawSql
-    "SELECT organization_id::text,branch_id::text,status,retryable FROM operations_integration_failure WHERE id=?::uuid FOR UPDATE"
-    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single Text, Single Bool)]
-  (scope, previous) <- case locked of
-    [(Single org, Single (Just branch), Single previous, Single True)] ->
+    "SELECT organization_id::text,branch_id::text,status,retryable,provider FROM operations_integration_failure WHERE id=?::uuid FOR UPDATE"
+    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single Text, Single Bool, Single Text)]
+  (scope, previous, provider) <- case locked of
+    [(Single org, Single (Just branch), Single previous, Single True, Single provider)] ->
       case (UUID.fromText org, UUID.fromText branch) of
-        (Just organization, Just branchId) -> pure (OperationsScope organization branchId, previous)
+        (Just organization, Just branchId) -> pure (OperationsScope organization branchId, previous, provider)
         _ -> rejectCommand err500
     _ -> rejectCommand err404
   lockOperationsScope user scope []
   unless (previous `elem` ["open", "dead_letter"]) $ rejectCommand err409
+  -- Only a dead-lettered projection has something this server can run again.
+  -- Admitting any other failure would leave it in 'retrying' with no executor.
+  unless (provider == "internal_outbox") $
+    rejectCommand err409 {errBody = "No automatic retry exists for this failure"}
+  -- Put the projection back in the worker's queue in the same transaction that
+  -- records the retry. With nothing left unprocessed the failure is over.
   rows <- rawSql
-    "UPDATE operations_integration_failure SET status='retrying',next_attempt_at=clock_timestamp(),last_attempt_at=clock_timestamp(),attempt_count=attempt_count+1 WHERE id=?::uuid \
-    \RETURNING jsonb_build_object('id',id,'organizationId',organization_id,'branchId',branch_id,'provider',provider,'direction',direction,'sourceRecordType',source_record_type,'sourceRecordId',source_record_id,'failureCode',failure_code,'redactedSummary',redacted_summary,'retryable',retryable,'status',status,'attemptCount',attempt_count,'lastAttemptAt',last_attempt_at,'nextAttemptAt',next_attempt_at,'createdAt',created_at)::text,source_record_type,source_record_id"
-    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
+    "WITH failure AS (SELECT organization_id,source_record_type,source_record_id FROM operations_integration_failure WHERE id=?::uuid), \
+    \requeued AS (UPDATE operations_outbox outbox SET status='pending',attempt_count=0,next_attempt_at=clock_timestamp(),locked_at=NULL,locked_by=NULL,last_error=NULL \
+    \ FROM failure WHERE outbox.organization_id=failure.organization_id AND outbox.aggregate_type=failure.source_record_type AND outbox.aggregate_id=failure.source_record_id AND outbox.status='dead_letter' RETURNING outbox.id), \
+    \waiting AS (SELECT outbox.id FROM operations_outbox outbox, failure WHERE outbox.organization_id=failure.organization_id AND outbox.aggregate_type=failure.source_record_type AND outbox.aggregate_id=failure.source_record_id AND outbox.status IN ('pending','processing')), \
+    \queued AS (SELECT EXISTS (SELECT 1 FROM requeued) OR EXISTS (SELECT 1 FROM waiting) AS present) \
+    \UPDATE operations_integration_failure SET status=CASE WHEN queued.present THEN 'retrying' ELSE 'resolved' END,next_attempt_at=CASE WHEN queued.present THEN clock_timestamp() END,resolved_at=CASE WHEN queued.present THEN NULL ELSE clock_timestamp() END,last_attempt_at=clock_timestamp(),attempt_count=attempt_count+1 FROM queued WHERE id=?::uuid \
+    \RETURNING jsonb_build_object('id',id,'organizationId',organization_id,'branchId',branch_id,'provider',provider,'direction',direction,'sourceRecordType',source_record_type,'sourceRecordId',source_record_id,'failureCode',failure_code,'redactedSummary',redacted_summary,'retryable',retryable,'status',status,'attemptCount',attempt_count,'lastAttemptAt',last_attempt_at,'nextAttemptAt',next_attempt_at,'createdAt',created_at)::text,source_record_type,source_record_id,status"
+    [uuidValue failureId, uuidValue failureId] :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Text)]
   case rows of
-    [(Single payload, Single sourceType, Single sourceId)] -> do
+    [(Single payload, Single sourceType, Single sourceId, Single outcome)] -> do
       rawExecute
         "INSERT INTO operations_admin_audit(organization_id,branch_id,actor_party_id,acting_role,source_client,action,target_entity_type,target_entity_id,previous_value,new_value,request_id,correlation_id,reason) \
-        \VALUES(?::uuid,?::uuid,?,?::text,?::text,'integration_failure_replayed',?::text,?::text,jsonb_build_object('status',?::text),jsonb_build_object('status','retrying'),?::text,?::text,?::text)"
+        \VALUES(?::uuid,?::uuid,?,?::text,?::text,'integration_failure_replayed',?::text,?::text,jsonb_build_object('status',?::text),jsonb_build_object('status',?::text),?::text,?::text,?::text)"
         [uuidValue (scopeOrganizationId scope),uuidValue (scopeBranchId scope),partyIdValue user
         ,PersistText (auditRole user),PersistText (command.sourceClient),PersistText sourceType,PersistText sourceId
-        ,PersistText previous,PersistText (command.requestId),PersistText (UUID.toText failureId),PersistText (T.strip (command.reason))]
+        ,PersistText previous,PersistText outcome,PersistText (command.requestId),PersistText (UUID.toText failureId),PersistText (T.strip (command.reason))]
       decodeCommandJson payload
     _ -> rejectCommand err500
 
