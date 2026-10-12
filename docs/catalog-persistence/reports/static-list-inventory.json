@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T13:21:12.672Z",
+  "generatedAt": "2026-10-12T17:26:33.755Z",
   "repositoryRoot": ".",
   "filesScanned": 2245,
   "candidateCount": 1320,
@@ -80911,7 +80911,7 @@
       "lines": [
         16075
       ],
-      "consumerCount": 170,
+      "consumerCount": 171,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -88043,7 +88043,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 168,
+      "consumerCount": 169,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
