@@ -9199,7 +9199,7 @@
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsAuxiliaryWrite.cfg": "81f414ffc188615f356d2aff00d2e9b971da05724e2e817334a03ee8b93c6185",
-    "formal/event-operations/OperationsAuxiliaryWrite.tla": "57db796fdf3919b6f612e49fa616beb51dbf6edc07ac941f8580d57f63d95baf",
+    "formal/event-operations/OperationsAuxiliaryWrite.tla": "c38da2f0e47da088880d71dc8f73d940a914f071361e3093dbe732eee24f8d37",
     "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg": "ec90ea40b0dcee1870584ff668b482809f1f336b8a37ecb21b8c9acc79dd2759",
     "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg": "0449597ef0da6ddb03a5874dd1bae0749696abe83d643da49c2d646427272946",
     "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg": "fc5b4ae78ce540999df67d37bb838126764adf0a9ad67a8a6cc02015384a2514",

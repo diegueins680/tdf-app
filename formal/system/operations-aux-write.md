@@ -10,12 +10,15 @@ Every auxiliary mutation runs through `runOperationsWrite`
 (`withCurrentAuthSession`), the actor's active role grants are read under
 that lock and replace the token's roles, and the handler runs in the same
 transaction. `resolveCommandScope` picks the actor's active membership in an
-enabled organization and branch and `lockOperationsScope` locks the member
-rows `FOR SHARE` through commit. Notes go through `withLockedWorkItem`
-(the work item `FOR UPDATE`, assignment and mentioned members checked under
-the lock) and insert note, mentions, stream event and audit in that
-transaction. A failure retry locks the failure row `FOR UPDATE`, admits only
-an eligible status, sets `retrying` and writes the audit. A saved view is an
+enabled organization and branch and `lockOperationsScope` re-checks the
+organization and branch flags and locks those rows and the member rows
+`FOR SHARE` through commit. Notes go through `withLockedWorkItem`
+(the work item `FOR UPDATE`, then assignment-dependent visibility for
+Teacher and Engineer, and the mentioned members, checked under the lock;
+managers see every item, so there is no must-be-assigned rule) and insert note, mentions, stream event and audit in that
+transaction. A failure retry (`replayFailureHandler`, Admin, Manager or StudioManager)
+locks the failure row `FOR UPDATE`, admits only `open` or `dead_letter`
+with `retryable` set, sets `retrying` and writes the audit. A saved view is an
 owner-bound upsert on `(organization, owner, name)` followed by its audit. A
 push registration stores only `pgp_sym_encrypt(token, key)` through a CTE
 that inserts nothing when the key setting is empty (the handler answers
@@ -33,13 +36,17 @@ resolve the failure, and waits while a command holds its locks. A command
 locks, reads its authority once under the locks, then commits (result and
 audit together) or is rejected. Invariants: `CurrentAuthority` (no commit
 without a valid session, active grant, active membership and, for a note,
-the assignment), `AtomicEvidence` (result iff audit), `OneRetry`,
+the assignment-dependent visibility), `AtomicEvidence` (result iff audit), `OneRetry`,
 `EncryptedPush`. 34,172 states generated, 13,744 distinct. Controls:
 `Unlocked` (`LocksHeld` off: the environment moves between the read and the
 commit, `CurrentAuthority`), `PartialAudit` (`AtomicAudit` off:
 `AtomicEvidence`), `RetryTwice` (`SingleRetry` off: `OneRetry`),
 `Unencrypted` (`EncryptionRequired` off: `EncryptedPush`). Abstractions: one
-actor and one scope; a session, grant and membership are booleans; mentions,
+actor and one scope; a session, grant and membership are booleans (the
+per-handler role gates differ: notes and views need a mutating role, push
+also admits ReadOnly, retry needs Admin, Manager or StudioManager); the
+retry's `open` stands for both admitted statuses and `retryable` is not
+modelled; mentions,
 view contents and the retry's downstream execution are not modelled; the
 model states the guards the handlers are read to apply and does not refine
 the SQL. Decision in AUTHORITY-072.

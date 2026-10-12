@@ -2,16 +2,19 @@
 (* Auxiliary Operations mutations (OPS-AUX-WRITE-001): notes, failure retry,
    saved views and push registration in tdf-hq/src/TDF/Operations/Server.hs
    (runOperationsWrite, lockOperationsScope, withLockedWorkItem,
-   createNoteHandler, retryFailureHandler, createSavedViewHandler,
+   createNoteHandler, replayFailureHandler, createSavedViewHandler,
    createPushSubscriptionHandler).
 
    Two commands of one actor, each a note, a retry, a view or a push. A
    command takes its locks (session, grant, scope membership, and the work
    item or failure row), reads authority under them, then commits its result
-   together with its audit row or is rejected without effect. The
-   environment may revoke the session, deactivate the grant, remove the
-   membership, unassign the work item or resolve the failure; while a
-   command holds its locks those changes wait.
+   together with its audit row or is rejected without effect. For a note,
+   "assigned" stands for the actor's assignment-dependent visibility of the
+   work item (Teacher and Engineer see only their assignments; managers see
+   every item), read under the item's lock. The environment may revoke the
+   session, deactivate the grant, remove the membership, take that
+   visibility away or resolve the failure; while a command holds its locks
+   those changes wait.
 
    Guards, each removed by one negative configuration:
      LocksHeld           environment changes wait for a locked command
@@ -29,7 +32,7 @@ VARIABLES
   session,    \* TRUE while the actor's session is valid
   grant,      \* TRUE while the actor's role grant is active
   member,     \* TRUE while the actor's scope membership is active
-  assigned,   \* TRUE while the work item is assigned to the actor
+  assigned,   \* TRUE while the actor's assignment-dependent visibility of the item holds
   failure,    \* open | retrying | resolved
   encryption, \* TRUE while the push key is configured
   cmd,        \* [Commands -> [kind, phase, auth, result, audit]]; auth is the authority read under the locks
@@ -112,7 +115,7 @@ Next ==
 Spec == Init /\ [][Next]_vars
 
 (* A command commits only with a valid session, an active grant, an active
-   membership and, for a note, the current assignment. *)
+   membership and, for a note, the current assignment-dependent visibility. *)
 CurrentAuthority == ~badCommit
 
 (* A result exists exactly when its audit row does. *)

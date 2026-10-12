@@ -22117,7 +22117,7 @@
     },
     {
       "path": "formal/event-operations/OperationsAuxiliaryWrite.tla",
-      "sha256": "57db796fdf3919b6f612e49fa616beb51dbf6edc07ac941f8580d57f63d95baf",
+      "sha256": "c38da2f0e47da088880d71dc8f73d940a914f071361e3093dbe732eee24f8d37",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -22418,7 +22418,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "f1ca456e538ec8e3e0b4af1c661ebcea61ea7d5cb86a31a2e683019534f3e45f",
+      "sha256": "9ee693c457788ea9719b8f73cda0140e7dcae9c417d825f74041cd24b61491fd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23839,7 +23839,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "7e716efe87e05a7bdc1aae3837d921e15243da14edd1911c3e2d5454dd649e0b",
+      "sha256": "e8cc6d53f95f06262d76bebe3d8edbe94a66387ffdc8a1605a0628e978b05a4b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24035,7 +24035,7 @@
     },
     {
       "path": "formal/system/operations-aux-write.md",
-      "sha256": "7c93c5da7b52e5054eb880eea1a4f81a808bccf898ee67810ffbdd1824ef6e3e",
+      "sha256": "fcdd2dbfc5d2342abaff2cd916b9b05caac90c71bd46d4ac7357bf2a04dee9fa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
