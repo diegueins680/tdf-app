@@ -3411,7 +3411,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
+      "sha256": "e457c1521db3347e64a96b3c09f7eeba9b73495a29ff72f72f3613054cb3b626",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4095,7 +4095,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
+      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4833,7 +4833,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
+      "sha256": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
