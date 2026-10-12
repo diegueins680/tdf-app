@@ -225,9 +225,12 @@ spec = describe "ticket-payment-gate-postgresql" $ do
           [PersistText (oCheckout order)]
         transfers `shouldBe` 0
 
-        -- PayPal reporting the order not completed settles it as a plain failure.
-        paypalCaptureFailureCode (Just "APPROVED") `shouldNotBe` paypalCaptureFailureCode Nothing
-        setFailureCode (paypalCaptureFailureCode (Just "APPROVED"))
+        -- An order PayPal still reports approved or pending can yet be captured.
+        paypalCaptureFailureCode (Just "APPROVED") `shouldBe` paypalCaptureFailureCode Nothing
+        paypalCaptureFailureCode (Just "PENDING") `shouldBe` paypalCaptureFailureCode Nothing
+        -- Only a status that rules a capture out settles it as a plain failure.
+        paypalCaptureFailureCode (Just "VOIDED") `shouldNotBe` paypalCaptureFailureCode Nothing
+        setFailureCode (paypalCaptureFailureCode (Just "VOIDED"))
         runSqlPool (ticketUnverifiedCaptureRefusal checkout) pool `shouldReturn` Nothing
         view >>= (`shouldSatisfy` offersTransfer)
         selected <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))

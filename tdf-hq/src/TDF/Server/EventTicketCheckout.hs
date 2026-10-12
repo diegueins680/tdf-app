@@ -1116,11 +1116,14 @@ ticketPaymentMethodsOffered now status holdExpiresAt salesOpen =
 
 -- | Failure code for a PayPal capture request that errored, given the status of
 -- the provider order read back afterwards ('Nothing' when the readback failed
--- too). PayPal reporting the order not completed is a definite failure; without
--- a readback the capture may have been taken, so it is recorded as unverified.
+-- too). Without a readback, or while PayPal still reports the order approved or
+-- pending, the capture may yet be taken, so it is recorded as unverified. Any
+-- other status is PayPal's definite answer that no capture is under way.
 paypalCaptureFailureCode :: Maybe Text -> Text
 paypalCaptureFailureCode Nothing = paypalCaptureUnverifiedCode
-paypalCaptureFailureCode (Just _) = "paypal_capture_request"
+paypalCaptureFailureCode (Just status)
+  | status == "APPROVED" || status == "PENDING" = paypalCaptureUnverifiedCode
+  | otherwise = "paypal_capture_request"
 
 paypalCaptureUnverifiedCode :: Text
 paypalCaptureUnverifiedCode = "paypal_capture_unverified"
@@ -1598,7 +1601,8 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
         -- The request can fail after PayPal took the capture (its response or
         -- the follow-up read was lost), so the order is read back before the
         -- attempt is failed: a completed order is recorded as the payment it
-        -- is, and a failed readback leaves the capture marked unverified.
+        -- is, and a failed or still-open readback leaves the capture marked
+        -- unverified.
         Nothing -> ServiceStorefront.capturePaypalOrderRemoteForService
           sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
           `catchError` \captureError -> do
