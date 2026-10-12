@@ -9802,7 +9802,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "b1853f7816344188c5c6336a4178cb49a2d755cee1d2c9aad0727d241d2834e0",
+    "tdf-hq/src/TDF/Server.hs": "b505eeb8d4f008a169eac53c2159fbd6b798a5658ff653f9598ca2d0f487a750",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -9878,7 +9878,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
-    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "490d719e542af5ad31eae62a0baba6b3b82f015348c051005f84df03b6a56921",
+    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "11c62627a222291bcd22071cb7e684c4f6b2582fa1ecf669ead7f6da21304cb2",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -33730,7 +33730,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "b1853f7816344188c5c6336a4178cb49a2d755cee1d2c9aad0727d241d2834e0",
+      "sha256": "b505eeb8d4f008a169eac53c2159fbd6b798a5658ff653f9598ca2d0f487a750",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35436,7 +35436,7 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "490d719e542af5ad31eae62a0baba6b3b82f015348c051005f84df03b6a56921",
+      "sha256": "11c62627a222291bcd22071cb7e684c4f6b2582fa1ecf669ead7f6da21304cb2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

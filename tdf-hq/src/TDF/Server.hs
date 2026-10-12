@@ -1423,7 +1423,13 @@ receiveWhatsAppInbound now sentAt record = do
       [PersistText ("whatsapp-inbound:" <> externalId)] :: SqlPersistT IO [Single Int64]
     pure ()
   (first, message) <- receiveIncomingWhatsAppMessage now record
-  if not first
+  -- Earlier versions stored the message and applied its effects in separate,
+  -- later transactions, which may never have committed; such a row has no
+  -- 'effects_applied' entry. Its next delivery applies them, once, so a STOP
+  -- from before this version cannot stay ineffective. A row stored by this
+  -- version carries the entry from its storing transaction.
+  applied <- if first then pure False else whatsAppEffectsApplied (entityKey message)
+  if applied
     then pure (WhatsAppReceipt False False message)
     else do
       when (CampaignAutomation.isWhatsAppCampaignOptOutMessage (iwrText record)) $
@@ -1433,11 +1439,29 @@ receiveWhatsAppInbound now sentAt record = do
         if isWhatsAppConsentConfirmationMessage (iwrText record)
           then applyWhatsAppConsentConfirmation now sentAt (iwrSenderId record)
           else pure False
-      pure (WhatsAppReceipt True confirmed message)
+      markWhatsAppEffectsApplied now (entityKey message)
+      pure (WhatsAppReceipt first confirmed message)
+
+whatsAppEffectsApplied :: Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+whatsAppEffectsApplied messageKey = do
+  rows <- rawSql
+    "SELECT 1::bigint FROM audit_log WHERE entity = 'whatsapp_message' AND entity_id = ? \
+    \AND action = 'effects_applied' LIMIT 1"
+    [PersistText (T.pack (show (fromSqlKey messageKey)))] :: SqlPersistT IO [Single Int64]
+  pure (not (null rows))
+
+markWhatsAppEffectsApplied :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO ()
+markWhatsAppEffectsApplied now messageKey =
+  PersistSql.rawExecute
+    "INSERT INTO audit_log(entity, entity_id, action, created_at) \
+    \VALUES ('whatsapp_message', ?, 'effects_applied', ?)"
+    [PersistText (T.pack (show (fromSqlKey messageKey))), toPersistValue now]
 
 -- | Takes the one automatic reply an inbound message may receive. True for the
 -- first caller only; the claim is an audit entry of the message, written
--- before the reply is sent, so a message is answered at most once.
+-- before the reply is sent, so a message is answered at most once. A message
+-- answered before this version has no claim entry but carries its reply time,
+-- which refuses the claim too.
 claimWhatsAppAutoReply :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
 claimWhatsAppAutoReply now messageKey = do
   let messageId = T.pack (show (fromSqlKey messageKey))
@@ -1447,8 +1471,9 @@ claimWhatsAppAutoReply now messageKey = do
     "INSERT INTO audit_log(entity, entity_id, action, created_at) \
     \SELECT 'whatsapp_message', ?, 'auto_reply_claimed', ? \
     \WHERE NOT EXISTS (SELECT 1 FROM audit_log WHERE entity = 'whatsapp_message' \
-    \AND entity_id = ? AND action = 'auto_reply_claimed')"
-    [PersistText messageId, toPersistValue now, PersistText messageId]
+    \AND entity_id = ? AND action = 'auto_reply_claimed') \
+    \AND EXISTS (SELECT 1 FROM whats_app_message WHERE id = ? AND replied_at IS NULL)"
+    [PersistText messageId, toPersistValue now, PersistText messageId, toPersistValue (fromSqlKey messageKey)]
   pure (inserted == 1)
 
 whatsappWebhookServer :: ServerT WhatsAppWebhookAPI AppM

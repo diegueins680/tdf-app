@@ -43,6 +43,20 @@ consent confirmation in one transaction, only when it stored the message.
 `claimWhatsAppAutoReply` gives the reply of a message to one caller. The course
 registration still runs on every delivery, as before.
 
+### Rows stored before this version (review of 2026-10-12)
+
+The previous handler stored the message and applied its opt-out or
+confirmation in later, separate transactions, and recorded no claim before
+sending the enrolment reply. Those rows survive the rollout. Two compatibility
+rules cover them: a stored message without an `effects_applied` audit entry
+(every row stored by this version writes one in its storing transaction)
+applies its effects on its next delivery, once, and then carries the entry; the
+reply claim also refuses a message whose `replied_at` is set, which is how the
+previous version recorded a sent reply. The one-time rule may re-apply a STOP
+that a later subscription reversed, for such a row only; leaving a STOP
+ineffective was judged worse. Not modelled: the model starts from rows stored
+by this version.
+
 ## Evidence
 
 - `formal/event-operations/WhatsAppRedelivery.tla`: three deliveries over two

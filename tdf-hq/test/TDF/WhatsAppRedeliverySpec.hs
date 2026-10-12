@@ -115,6 +115,35 @@ spec = describe "whatsapp-redelivery-postgresql" $ do
           claims <- forConcurrently [1 .. 8 :: Int] $ \_ -> claim pool (entityKey (warMessage receipt))
           length (filter id claims) `shouldBe` 1
 
+        it "applies the STOP of a message stored before this version when it is delivered again, once" $ \pool -> do
+          phone <- newPhone
+          subscribe pool phone
+          _ <- storedBefore pool phone "m1" "STOP" Nothing
+          again <- deliver pool phone "m1" "STOP"
+          (warFirst again, warConfirmed again) `shouldBe` (False, False)
+          consentOf pool phone `shouldReturn` [False]
+          subscribe pool phone
+          _ <- deliver pool phone "m1" "STOP"
+          consentOf pool phone `shouldReturn` [True]
+
+        it "confirms a pending request from a yes stored before this version, once" $ \pool -> do
+          phone <- newPhone
+          request pool phone
+          _ <- storedBefore pool phone "m1" "Sí" Nothing
+          again <- deliver pool phone "m1" "Sí"
+          (warFirst again, warConfirmed again) `shouldBe` (False, True)
+          third <- deliver pool phone "m1" "Sí"
+          warConfirmed third `shouldBe` False
+          consentOf pool phone `shouldReturn` [True]
+
+        it "does not answer again a message answered before this version" $ \pool -> do
+          phone <- newPhone
+          now <- getCurrentTime
+          answered <- storedBefore pool phone "m1" "inscribirme" (Just now)
+          claim pool answered `shouldReturn` False
+          unanswered <- storedBefore pool phone "m2" "inscribirme" Nothing
+          claim pool unanswered `shouldReturn` True
+
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
   && "_test" `isSuffixOf` value && any (`isPrefixOf` value)
@@ -152,6 +181,22 @@ deliver pool phone label body = do
     , iwrTransportPayload = Nothing
     , iwrSource = Just "whatsapp_webhook"
     }) pool
+
+-- A message as an earlier version stored it: no effects entry, no claim entry,
+-- answered or not.
+storedBefore :: ConnectionPool -> Text -> Text -> Text -> Maybe UTCTime -> IO (Key ME.WhatsAppMessage)
+storedBefore pool phone label body repliedAt = do
+  now <- getCurrentTime
+  rows <- runSqlPool (rawSql
+    "INSERT INTO whats_app_message(external_id,sender_id,phone_e164,text,direction,reply_status, \
+    \attempt_count,replied_at,delivery_status,created_at) \
+    \VALUES(?,?,?,?,'incoming',?,0,?,'received',?) RETURNING id"
+    [ PersistText (externalIdFor phone label), PersistText phone, PersistText phone, PersistText body
+    , PersistText (maybe "pending" (const "sent") repliedAt), toPersistValue repliedAt
+    , toPersistValue (addUTCTime (-3600) now) ]) pool
+  case rows of
+    [Single key] -> pure key
+    _ -> fail "The earlier-version message was not stored"
 
 -- The sent time of a message is the time of its first delivery.
 sentTime :: Text -> Text -> UTCTime -> IO UTCTime
