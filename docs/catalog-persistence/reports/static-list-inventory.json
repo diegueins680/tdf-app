@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-11T20:23:50.661Z",
+  "generatedAt": "2026-10-12T03:15:42.051Z",
   "repositoryRoot": ".",
   "filesScanned": 2243,
   "candidateCount": 1320,
@@ -54646,7 +54646,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "roles",
-      "line": 341,
+      "line": 365,
       "values": [
         "Customer",
         "Artist"
@@ -54654,7 +54654,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        341
+        365
       ],
       "consumerCount": 190,
       "backendConsumers": [
@@ -54854,7 +54854,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "modules",
-      "line": 342,
+      "line": 366,
       "values": [
         "Packages",
         "Scheduling"
@@ -54862,7 +54862,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        342
+        366
       ],
       "consumerCount": 142,
       "backendConsumers": [
@@ -55044,7 +55044,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "roles",
-      "line": 387,
+      "line": 411,
       "values": [
         "customer",
         "artist"
@@ -55052,7 +55052,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        387
+        411
       ],
       "consumerCount": 252,
       "backendConsumers": [
