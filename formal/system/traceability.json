@@ -7242,7 +7242,7 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows and holds them until it commits, so a concurrent reviewer waits and is answered from the decided state; the evidence transition guard, the hold guard and expiry run in the database.",
+      "concurrency": "Review locks checkout, attempt and evidence rows and holds them until it commits, so a concurrent reviewer waits and is answered from the decided state; the evidence transition guard, the hold guard and expiry run in the database. A reviewer and the buyer acting at the same moment take these locks in different orders and one can fail with a deadlock error (open).",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
       "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
@@ -7290,9 +7290,10 @@
       "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence. Review transaction test and model run locally on 2026-10-11.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants and the Haskell review transaction are exercised directly against PostgreSQL; ticket issuance after approval and the HTTP handler are exercised only through deployed HTTP verification.",
+      "confidence": "Database invariants are exercised directly, and the Haskell review transaction is run against PostgreSQL for its decisions, refusals and reviewer overlaps, with a fixture that has no payment intent; its undo paths, ticket issuance after approval and the HTTP handler are exercised only through deployed HTTP verification.",
       "ambiguity": [
-        "No bank API confirms deposits; staff verification against the statement is the authority."
+        "No bank API confirms deposits; staff verification against the statement is the authority.",
+        "Whether an approval should be bound to the reference the reviewer saw is undecided; it is not."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9807,7 +9808,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
-    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "7f698d07589aa30f6234a4dd7e16091913cea85b3e7fec66039c6324ce45da78",
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "22d181be82005af43a3419ee017f426691058088c5017ab21f467dacee833ab6",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -35292,7 +35293,7 @@
     {
       "id": "SURFACE-89f49f12c8c895f1",
       "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-      "sha256": "7f698d07589aa30f6234a4dd7e16091913cea85b3e7fec66039c6324ce45da78",
+      "sha256": "22d181be82005af43a3419ee017f426691058088c5017ab21f467dacee833ab6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41955,7 +41956,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dfe73aedc595bb7c0cf904eda6ccf49b221d1be32077dd96dbcc445e1a178f94",
+      "sourceSha256": "0a2e499e13f2cc1e93c5f1fd1ff7eb9faf864966860922f51e5af7388c8925a1",
       "definition": {
         "states": [
           "absent",

@@ -14803,7 +14803,7 @@
     {
       "id": "SURFACE-89f49f12c8c895f1",
       "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-      "sha256": "7f698d07589aa30f6234a4dd7e16091913cea85b3e7fec66039c6324ce45da78",
+      "sha256": "22d181be82005af43a3419ee017f426691058088c5017ab21f467dacee833ab6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23699,7 +23699,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "b631cf5546b901349b53bd535504da3692f9e71f45805f3413127156df5ba011",
+      "sha256": "bf1d2d41cbc15564146615bee8335fe4c481b6b6cb5b1df21616192e9b2c9a01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23972,7 +23972,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dfe73aedc595bb7c0cf904eda6ccf49b221d1be32077dd96dbcc445e1a178f94",
+      "sha256": "0a2e499e13f2cc1e93c5f1fd1ff7eb9faf864966860922f51e5af7388c8925a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24021,7 +24021,7 @@
     },
     {
       "path": "formal/system/ticket-manual-review.md",
-      "sha256": "d78b34b3f83e56d97a798ab4e9719cffc557bd76fae8e0da460d61c93ebeea86",
+      "sha256": "ab9b51e23d2f314c937fa0ff80aa9ae44c63bc68633f9a72da3a1b5bac76bb44",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
