@@ -1,10 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.TicketPaymentGateSpec (spec) where
 
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
+import Control.Exception (SomeException, try)
+import Control.Monad (void)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Either (isLeft)
 import Data.Int (Int64)
 import Data.List (isInfixOf)
 import Data.Text (Text)
@@ -21,7 +26,7 @@ import TDF.API.ProviderExecution (PaymentSessionCreateDTO(..))
 import TDF.Config (loadConfig)
 import TDF.DB (Env(..))
 import qualified TDF.Routes.EventTickets as Routes
-import TDF.Server.EventTicketCheckout (publicEventTicketsServer, ticketOrderSalesOpen)
+import TDF.Server.EventTicketCheckout (lockTicketOrderSalesOpen, publicEventTicketsServer, ticketOrderSalesOpen)
 import TDF.Server.ProviderExecution (providerExecutionServer)
 
 -- | A held, unpaid ticket order must not be payable once its event stops selling
@@ -97,6 +102,29 @@ spec = describe "ticket-payment-gate-postgresql" $ do
           [PersistText (oCheckout order)]) pool
         closeSales pool order "postponed"
         run pool (datafastCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldNotSatisfy` salesClosed)
+
+      it "makes a closure wait for a payment authorization that already holds the event" $ \pool -> do
+        order <- newOrder pool "ordering"
+        held <- newEmptyMVar
+        release <- newEmptyMVar
+        finished <- newEmptyMVar
+        void $ forkIO $ do
+          open <- runSqlPool (do
+            open <- lockTicketOrderSalesOpen (T.pack (show (oOrder order)))
+            liftIO (putMVar held ())
+            liftIO (takeMVar release)
+            pure open) pool
+          putMVar finished open
+        takeMVar held
+        blocked <- try (runSqlPool (do
+          rawExecute "SET LOCAL lock_timeout = '300ms'" []
+          rawExecute "UPDATE social_event SET updated_at = now() WHERE id=?" [PersistInt64 (oEvent order)]) pool)
+          :: IO (Either SomeException ())
+        blocked `shouldSatisfy` isLeft
+        putMVar release ()
+        takeMVar finished `shouldReturn` True
+        closeSales pool order "postponed"
+        runSqlPool (lockTicketOrderSalesOpen (T.pack (show (oOrder order)))) pool `shouldReturn` False
 
       it "treats an unknown or malformed ticket order as not on sale" $ \pool -> do
         runSqlPool (ticketOrderSalesOpen "999999999") pool `shouldReturn` False
