@@ -239,6 +239,8 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , searchArtistProfilesDTO
                                      , resolvePublishedGenreSelections
                                      , activateOwnArtistProfile
+                                     , deadlineClockAfterLock
+                                     , lockPendingOnboardingRequests
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -3919,10 +3921,27 @@ accessRequestsServer user =
       Env pool _ <- ask
       now <- liftIO getCurrentTime
       result <- liftIO $ flip runSqlPool pool $ do
+        let ownOnboardingRequests =
+              [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+              , ME.FeatureAccessRequestAction ==. "create"
+              ]
+        -- Settle a lapsed onboarding request first, so self-service records a
+        -- fresh approval instead of resurrecting an expired request. The rows
+        -- are locked before the clock is read, in the same order activation and
+        -- a reviewer's decision use.
+        lockPendingOnboardingRequests (auPartyId user)
+        lockedAt <- deadlineClockAfterLock now
+        expirePendingAccessRequests lockedAt ownOnboardingRequests
         activated <- activateOwnArtistProfile (auPartyId user) now
         case activated of
           Left message -> pure (Left message)
           Right _ -> do
+            -- Activation leaves a request that lapsed while it waited untouched.
+            -- Settle it against the clock as it stands now, so the update below
+            -- can only meet a request that is still open.
+            activatedAt <- deadlineClockAfterLock now
+            expirePendingAccessRequests activatedAt ownOnboardingRequests
             existing <- selectFirst
               [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
               , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
@@ -4094,78 +4113,79 @@ accessRequestsServer user =
           provisioningCorrelation = "feature-access-request:" <> requestNumber
       Env{envPool} <- ask
       transactionResult <- liftIO $ try $ flip runSqlPool envPool $ do
-        changed <- updateWhereCount
-          [ ME.FeatureAccessRequestId ==. requestKey
-          , ME.FeatureAccessRequestStatus ==. "pending"
-          ]
+        changed <- transitionPendingAccessRequest now requestKey
           [ ME.FeatureAccessRequestStatus =. decisionValue
           , ME.FeatureAccessRequestReviewerPartyId =. Just (auPartyId user)
           , ME.FeatureAccessRequestReviewerNotes =. notesValue
           , ME.FeatureAccessRequestUpdatedAt =. now
           , ME.FeatureAccessRequestDecidedAt =. Just now
           ]
-        when (changed /= 1) $
-          liftIO (throwIO AccessRequestDecisionConflict)
-        provisionedRole <- case roleToProvision of
-          Nothing -> pure Nothing
-          Just roleCode -> do
-            result <- provisionReviewedSecurityRole
-              (ME.featureAccessRequestRequesterPartyId requestValue)
-              (auPartyId user)
-              roleCode
-              (ME.featureAccessRequestRequestedAt requestValue)
+        -- A request that is no longer pending (including one the sweep just
+        -- expired) is reported as a value, not thrown: throwing would roll the
+        -- expiry back and leave the lapsed request pending.
+        if changed /= 1
+          then pure Nothing
+          else fmap Just $ do
+            provisionedRole <- case roleToProvision of
+              Nothing -> pure Nothing
+              Just roleCode -> do
+                result <- provisionReviewedSecurityRole
+                  (ME.featureAccessRequestRequesterPartyId requestValue)
+                  (auPartyId user)
+                  roleCode
+                  (ME.featureAccessRequestRequestedAt requestValue)
+                  now
+                  generatedReviewNotes
+                  provisioningReason
+                  provisioningCorrelation
+                case result of
+                  Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
+                  Right _ -> pure (Just roleCode)
+            insert_ (featureAccessRequestHistoryRecord
+              requestKey
+              (Just (auPartyId user))
+              decisionValue
+              (Just "pending")
+              decisionValue
+              notesValue
+              now)
+            insert_ Notification
+              { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
+              , notificationNotifType = "access_request_decided"
+              , notificationTitle = if decisionValue == "approved"
+                  then "Solicitud de acceso aprobada"
+                  else "Solicitud de acceso rechazada"
+              , notificationBody = case provisionedRole of
+                  Just roleCode ->
+                    "La solicitud fue aprobada y el rol " <> roleToText roleCode
+                      <> " ya fue otorgado mediante una revisión auditable. "
+                      <> "Recarga tu sesión para verlo en la navegación."
+                  Nothing | decisionValue == "approved" ->
+                    "La solicitud fue aprobada para provisión manual mediante un permiso "
+                      <> "compatible y auditable."
+                  Nothing ->
+                    "La solicitud fue revisada. Consulta las notas del revisor "
+                      <> "para más información."
+              , notificationTargetType = Just "feature_access_request"
+              , notificationTargetId = Just (fromIntegral requestIdValue)
+              , notificationTargetKey = Nothing
+              , notificationIsRead = False
+              , notificationCreatedAt = now
+              }
+            writeFeatureAccessRequestAudit
+              (Just (auPartyId user))
+              requestKey
+              ("access_request_" <> decisionValue)
+              (ME.featureAccessRequestFeatureId requestValue)
+              (ME.featureAccessRequestAction requestValue)
+              decisionValue
               now
-              generatedReviewNotes
-              provisioningReason
-              provisioningCorrelation
-            case result of
-              Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
-              Right _ -> pure (Just roleCode)
-        insert_ (featureAccessRequestHistoryRecord
-          requestKey
-          (Just (auPartyId user))
-          decisionValue
-          (Just "pending")
-          decisionValue
-          notesValue
-          now)
-        insert_ Notification
-          { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
-          , notificationNotifType = "access_request_decided"
-          , notificationTitle = if decisionValue == "approved"
-              then "Solicitud de acceso aprobada"
-              else "Solicitud de acceso rechazada"
-          , notificationBody = case provisionedRole of
-              Just roleCode ->
-                "La solicitud fue aprobada y el rol " <> roleToText roleCode
-                  <> " ya fue otorgado mediante una revisión auditable. "
-                  <> "Recarga tu sesión para verlo en la navegación."
-              Nothing | decisionValue == "approved" ->
-                "La solicitud fue aprobada para provisión manual mediante un permiso "
-                  <> "compatible y auditable."
-              Nothing ->
-                "La solicitud fue revisada. Consulta las notas del revisor "
-                  <> "para más información."
-          , notificationTargetType = Just "feature_access_request"
-          , notificationTargetId = Just (fromIntegral requestIdValue)
-          , notificationTargetKey = Nothing
-          , notificationIsRead = False
-          , notificationCreatedAt = now
-          }
-        writeFeatureAccessRequestAudit
-          (Just (auPartyId user))
-          requestKey
-          ("access_request_" <> decisionValue)
-          (ME.featureAccessRequestFeatureId requestValue)
-          (ME.featureAccessRequestAction requestValue)
-          decisionValue
-          now
-        getJustEntity requestKey
+            getJustEntity requestKey
       updated <- case transactionResult of
-        Right value -> pure value
+        Right (Just value) -> pure value
+        Right Nothing ->
+          throwError err409 { errBody = "Access request is no longer pending" }
         Left exception -> case fromException exception of
-          Just AccessRequestDecisionConflict ->
-            throwError err409 { errBody = "Access request is no longer pending" }
           Just (AccessRequestProvisioningFailure message) ->
             throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
           Nothing -> liftIO (throwIO (exception :: SomeException))
@@ -4179,10 +4199,7 @@ accessRequestsServer user =
       unless (ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user) $
         throwError err404
       now <- liftIO getCurrentTime
-      changed <- runDB $ updateWhereCount
-        [ ME.FeatureAccessRequestId ==. requestKey
-        , ME.FeatureAccessRequestStatus ==. "pending"
-        ]
+      changed <- runDB $ transitionPendingAccessRequest now requestKey
         [ ME.FeatureAccessRequestStatus =. "cancelled"
         , ME.FeatureAccessRequestUpdatedAt =. now
         , ME.FeatureAccessRequestCancelledAt =. Just now
@@ -4294,9 +4311,8 @@ isFeatureAccessReviewer AuthedUser{..} =
   any (`elem` auRoles) [Admin, Manager, StudioManager]
     && auModules == modulesForRoles auRoles
 
-data AccessRequestDecisionFailure
-  = AccessRequestDecisionConflict
-  | AccessRequestProvisioningFailure Text
+newtype AccessRequestDecisionFailure
+  = AccessRequestProvisioningFailure Text
   deriving (Show)
 
 instance Exception AccessRequestDecisionFailure
@@ -4322,12 +4338,40 @@ encodeAccessContext = TE.decodeUtf8 . BL.toStrict . encode
 decodeAccessContext :: Text -> [Text]
 decodeAccessContext = fromMaybe [] . decodeStrict' . TE.encodeUtf8
 
+-- | Apply a decision or cancellation to a request that is still pending.
+-- Expiry is materialized lazily, so it is settled first in the same
+-- transaction: a request past its deadline becomes terminal ("expired") and
+-- the conditional update then changes no row. Returns the rows changed.
+transitionPendingAccessRequest
+  :: UTCTime
+  -> ME.FeatureAccessRequestId
+  -> [Update ME.FeatureAccessRequest]
+  -> SqlPersistT IO Int64
+transitionPendingAccessRequest now requestKey changes = do
+  -- Only the target is settled here: a later provisioning failure rolls this
+  -- transaction back, and must not undo expiry of unrelated requests.
+  -- The caller sampled `now` before this transaction could own the row. Lock
+  -- the target first and judge the deadline against the database clock read
+  -- afterwards, so a decision that waited past `expires_at` cannot approve.
+  _ <- rawSql "SELECT id FROM feature_access_requests WHERE id = ? FOR UPDATE"
+    [toPersistValue requestKey] :: SqlPersistT IO [Single Int64]
+  deadline <- deadlineClockAfterLock now
+  expirePendingAccessRequests deadline [ME.FeatureAccessRequestId ==. requestKey]
+  updateWhereCount
+    [ ME.FeatureAccessRequestId ==. requestKey
+    , ME.FeatureAccessRequestStatus ==. "pending"
+    ]
+    changes
+
 expireFeatureAccessRequests :: UTCTime -> SqlPersistT IO ()
-expireFeatureAccessRequests now = do
+expireFeatureAccessRequests now = expirePendingAccessRequests now []
+
+expirePendingAccessRequests :: UTCTime -> [Filter ME.FeatureAccessRequest] -> SqlPersistT IO ()
+expirePendingAccessRequests now scope = do
   expired <- selectList
-    [ ME.FeatureAccessRequestStatus ==. "pending"
-    , ME.FeatureAccessRequestExpiresAt <=. Just now
-    ] []
+    ([ ME.FeatureAccessRequestStatus ==. "pending"
+     , ME.FeatureAccessRequestExpiresAt <=. Just now
+     ] <> scope) []
   forM_ expired $ \(Entity requestId requestValue) -> do
     changed <- updateWhereCount
       [ ME.FeatureAccessRequestId ==. requestId
