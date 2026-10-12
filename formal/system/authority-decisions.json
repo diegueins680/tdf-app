@@ -599,6 +599,20 @@
       "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
       "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-076",
+      "sources": [
+        "formal/system/requirements.json#OPS-WORKER-001",
+        "tdf-hq/src/TDF/Operations/Worker.hs",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "formal/system/operations-worker-tick.md",
+        "formal/event-operations/OperationsWorkerTick.tla"
+      ],
+      "conflict": "OPS-WORKER-001 requires a failed projection to be reported as a fixed failure and the worker to keep working, but operations_work_item_entity_reference is a deferred constraint trigger: a domain event for an entity that no longer exists raised at the tick's commit, outside operations_process_outbox_batch's per-row handling, so the whole tick (outbox, SLA, archive) rolled back, no attempt was recorded and the same failure repeated every second while every other pending row stayed blocked.",
+      "authority": "The requirement statement (fixed failure, single invocation, preserved pending/dead-letter evidence) and the batch function's own per-row attempt, backoff and dead-letter design.",
+      "resolution": "The worker runs SET CONSTRAINTS ALL IMMEDIATE at the start of the tick, so the trigger fires inside the batch and the poisoned row fails alone with its attempt, backoff and dead letter; the trigger and the function are unchanged. Checked by the bounded OperationsWorkerTick model and the mirrored-statement PostgreSQL test with the deferred tick as a negative control."
     }
   ]
 }

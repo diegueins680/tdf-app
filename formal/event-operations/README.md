@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `OperationsWorkerTick.cfg` (2026-10-12) | 3 outbox rows (1 poisoned), 3 attempts to dead letter, 6 ticks; backoff elapses between ticks | PASS; 61 generated, 27 distinct states, depth 9; `PoisonIsolated`, `NoAbortedTick`, `AttemptsRecorded`, `DeadLetterAtBound` |
+| `OperationsWorkerTickDeferredCheck.cfg`, `OperationsWorkerTickNoAttempt.cfg`, `OperationsWorkerTickUnboundedRetry.cfg` | Negative controls: constraints deferred to commit (the previous tick), failed projection records no attempt, no dead-letter bound | Expected non-zero exit with `PoisonIsolated`, `AttemptsRecorded`, `DeadLetterAtBound` violated |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -621,3 +623,14 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
+`OperationsWorkerTick.tla` checks the Operations worker's maintenance tick of
+OPS-WORKER-001: every due outbox row is projected or fails alone with a
+recorded attempt and a backoff, and a row whose entity no longer exists is
+dead-lettered after the attempt bound, so one poisoned row never holds the
+batch hostage. The `DeferredCheck` control is the previous tick, in which the
+deferred reference trigger fired at commit and rolled the whole tick back;
+`NoAttempt` and `UnboundedRetry` remove the two retry guards.
+`scripts/__tests__/operations-worker-tick-postgres.mjs` runs the tick's
+statements against the migrated fixture. Bounds and exclusions are in
+`formal/system/operations-worker-tick.md`.
