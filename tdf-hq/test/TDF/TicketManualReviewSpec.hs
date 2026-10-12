@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.TicketManualReviewSpec (spec) where
 
-import Control.Concurrent.Async (concurrently)
+import Control.Concurrent (threadDelay)
+import Control.Concurrent.Async (wait, withAsync)
+import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.Exception (SomeException, try)
 import Control.Monad (forM_)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
-import Data.Either (isLeft)
 import Data.Int (Int64)
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.List (isPrefixOf, isSuffixOf, sort)
@@ -60,45 +62,46 @@ spec = describe "ticket-manual-review-postgresql" $ do
 
         it "refuses a reviewer who is neither the organizer nor an administrator" $ \pool -> do
           c <- transfer made pool
-          outcome <- review pool c (ManualReviewer (outsider c) False) ManualApprove
-          outcome `shouldSatisfy` isLeft
+          review pool c (ManualReviewer (outsider c) False) ManualApprove
+            `shouldReturn` Left "Only the event organizer or an administrator may review this payment"
           state pool c `shouldReturn` ("submitted", "requires_review", "awaiting_payment", 0)
 
         it "refuses the person who submitted the reference, even as administrator" $ \pool -> do
           c <- transfer made pool
-          outcome <- review pool c (ManualReviewer (submitter c) True) ManualApprove
-          outcome `shouldSatisfy` isLeft
+          review pool c (ManualReviewer (submitter c) True) ManualApprove
+            `shouldReturn` Left "Bank transfer evidence requires an independent reviewer"
           state pool c `shouldReturn` ("submitted", "requires_review", "awaiting_payment", 0)
 
         it "refuses a reviewer whose email is the buyer's" $ \pool -> do
           c <- transfer made pool
           runSqlPool (rawExecute "UPDATE party SET primary_email=? WHERE id=?"
             [PersistText (T.toUpper (buyerEmail c)), PersistInt64 (outsider c)]) pool
-          outcome <- review pool c (ManualReviewer (outsider c) True) ManualApprove
-          outcome `shouldSatisfy` isLeft
+          review pool c (ManualReviewer (outsider c) True) ManualApprove
+            `shouldReturn` Left "Staff cannot review a transfer for an order bought with their own email"
           state pool c `shouldReturn` ("submitted", "requires_review", "awaiting_payment", 0)
 
-        it "rejects without a payment, and a rejected reference cannot then be approved" $ \pool -> do
+        it "rejects without a payment, repeats a rejection, and does not approve a rejected reference" $ \pool -> do
           c <- transfer made pool
           review pool c (organizer c) ManualReject `shouldReturn` Right False
           state pool c `shouldReturn` ("rejected", "failed", "failed", 0)
-          outcome <- review pool c (organizer c) ManualApprove
-          outcome `shouldSatisfy` isLeft
+          review pool c (organizer c) ManualReject `shouldReturn` Right False
+          review pool c (organizer c) ManualApprove
+            `shouldReturn` Left "Rejected evidence must be resubmitted by the buyer before approval"
           state pool c `shouldReturn` ("rejected", "failed", "failed", 0)
           payments pool c `shouldReturn` 0
 
         it "does not change an approved transfer when a rejection follows" $ \pool -> do
           c <- transfer made pool
           review pool c (organizer c) ManualApprove `shouldReturn` Right True
-          outcome <- review pool c (organizer c) ManualReject
-          outcome `shouldSatisfy` isLeft
+          review pool c (organizer c) ManualReject
+            `shouldReturn` Left "Approved bank transfer evidence cannot be changed"
           state pool c `shouldReturn` ("approved", "succeeded", "paid", 2000)
 
         it "refuses approval after the seat hold has passed and records it for reconciliation" $ \pool -> do
           c <- transfer made pool
           now <- getCurrentTime
-          outcome <- reviewAt pool c (organizer c) ManualApprove (addUTCTime 3600 now)
-          outcome `shouldSatisfy` isLeft
+          reviewAt pool c (organizer c) ManualApprove (addUTCTime 3600 now)
+            `shouldReturn` Left "The seat hold expired; the transfer requires reconciliation or refund and no ticket was issued"
           state pool c `shouldReturn` ("submitted", "requires_review", "awaiting_payment", 0)
           exceptions pool c `shouldReturn` ["manual_payment_after_ticket_hold_expiry"]
 
@@ -108,35 +111,59 @@ spec = describe "ticket-manual-review-postgresql" $ do
           now <- getCurrentTime
           outcome <- runSqlPool (reviewTicketManualPayment (organizer other) (toSqlKey (eventId other))
             (toSqlKey (orderId c)) ManualApprove "Deposito verificado" now) pool
-          outcome `shouldSatisfy` isLeft
+          outcome `shouldBe` Left "No bank transfer evidence exists for this ticket order"
           state pool c `shouldReturn` ("submitted", "requires_review", "awaiting_payment", 0)
 
-        it "settles one way when approval and rejection race" $ \pool -> do
-          forM_ [1 :: Int .. 8] $ \_ -> do
+        it "answers both reviewers when approval and rejection overlap" $ \pool -> do
+          forM_ [1 :: Int .. 4] $ \_ -> do
             c <- transfer made pool
-            (approval, rejection) <- concurrently
-              (try (review pool c (organizer c) ManualApprove) :: IO (Either SomeException (Either Text Bool)))
-              (try (review pool c (ManualReviewer (outsider c) True) ManualReject) :: IO (Either SomeException (Either Text Bool)))
-            map answered [approval, rejection] `shouldBe` [True, True]
+            (approval, rejection) <- overlapping pool c
+              (review pool c (organizer c) ManualApprove)
+              (review pool c (ManualReviewer (outsider c) True) ManualReject)
             settled <- state pool c
-            paid <- payments pool c
-            (settled, paid) `shouldSatisfy` (`elem`
-              [ (("approved", "succeeded", "paid", 2000), 1)
-              , (("rejected", "failed", "failed", 0), 0) ])
+            (fmap decided approval, fmap decided rejection, settled) `shouldSatisfy` (`elem`
+              [ (Right (Just True), Right Nothing, ("approved", "succeeded", "paid", 2000))
+              , (Right Nothing, Right (Just False), ("rejected", "failed", "failed", 0)) ])
 
-        it "records one payment when two approvals race" $ \pool -> do
-          forM_ [1 :: Int .. 8] $ \_ -> do
+        it "answers both reviewers with success when two approvals overlap" $ \pool -> do
+          forM_ [1 :: Int .. 4] $ \_ -> do
             c <- transfer made pool
-            (first, second) <- concurrently
-              (try (review pool c (organizer c) ManualApprove) :: IO (Either SomeException (Either Text Bool)))
-              (try (review pool c (ManualReviewer (outsider c) True) ManualApprove) :: IO (Either SomeException (Either Text Bool)))
-            map answered [first, second] `shouldBe` [True, True]
+            (first, second) <- overlapping pool c
+              (review pool c (organizer c) ManualApprove)
+              (review pool c (ManualReviewer (outsider c) True) ManualApprove)
+            (fmap decided first, fmap decided second) `shouldBe` (Right (Just True), Right (Just True))
             state pool c `shouldReturn` ("approved", "succeeded", "paid", 2000)
             payments pool c `shouldReturn` 1
 
--- The reviewer received a decision or a refusal, not a database error.
-answered :: Either SomeException a -> Bool
-answered = either (const False) (const True)
+-- A decision (Just) or a refusal (Nothing).
+decided :: Either Text Bool -> Maybe Bool
+decided = either (const Nothing) Just
+
+-- Runs two reviews so that they overlap: the checkout row is held until both
+-- are waiting for it, then released. A database error in either is kept.
+overlapping :: ConnectionPool -> Case -> IO a -> IO b -> IO (Either String a, Either String b)
+overlapping pool c one' two = do
+  held <- newEmptyMVar
+  release <- newEmptyMVar
+  withAsync (runSqlPool (do
+      _ <- rawSql "SELECT status FROM commerce_checkout_session WHERE id=?::uuid FOR UPDATE"
+        [PersistText (checkout c)] :: SqlPersistT IO [Single Text]
+      liftIO (putMVar held () >> takeMVar release)) pool) $ \holder -> do
+    takeMVar held
+    outcome <- withAsync (attempt one') $ \first -> withAsync (attempt two) $ \second -> do
+      bothWaiting
+      putMVar release ()
+      (,) <$> wait first <*> wait second
+    wait holder
+    pure outcome
+  where
+    attempt :: IO x -> IO (Either String x)
+    attempt action = either (\e -> Left (show (e :: SomeException))) Right <$> try action
+    bothWaiting = do
+      n <- one pool
+        "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()\
+        \ AND wait_event_type = 'Lock' AND query LIKE 'SELECT checkout.id::text, checkout.status%'" []
+      if n >= 2 then pure () else threadDelay 20000 >> bothWaiting
 
 data Case = Case
   { eventId :: Int64
@@ -185,7 +212,7 @@ payments pool c = one pool
 exceptions :: ConnectionPool -> Case -> IO [Text]
 exceptions pool c = do
   rows <- runSqlPool (rawSql
-    "SELECT exception_type FROM commerce_reconciliation_exception WHERE internal_reference = ?"
+    "SELECT exception_type FROM commerce_reconciliation_exception WHERE provider = 'bank_transfer' AND internal_reference = ?"
     [PersistText (T.pack (show (orderId c)))]) pool
   pure (sort [code | Single code <- rows])
 
@@ -312,7 +339,7 @@ forget made pool = do
         \ AND source_id IN (SELECT id::text FROM commerce_payment_attempt WHERE checkout_id=?::uuid)" session
       forM_ byAttempt $ \t -> rawExecute ("DELETE FROM " <> t <> " WHERE payment_attempt_id IN " <> attempts) session
       forM_ byCheckout $ \t -> rawExecute ("DELETE FROM " <> t <> " WHERE checkout_id=?::uuid") session
-      rawExecute "DELETE FROM commerce_reconciliation_exception WHERE internal_reference=?" [PersistText (T.pack (show (orderId c)))]
+      rawExecute "DELETE FROM commerce_reconciliation_exception WHERE provider='bank_transfer' AND internal_reference=?" [PersistText (T.pack (show (orderId c)))]
       rawExecute "DELETE FROM commerce_payment_attempt WHERE checkout_id=?::uuid" session
       rawExecute "DELETE FROM commerce_checkout_session WHERE id=?::uuid" session
       rawExecute "DELETE FROM event_ticket_order WHERE id=?" order
