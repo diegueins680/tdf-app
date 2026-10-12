@@ -5791,7 +5791,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "c6b70b8b757541ad2e9794b1f0fbf0868f9881ed2a78857695f1140d4c40b2c8",
+      "sha256": "b9084810f99e20a48c7f3e7cf9228d74cf6596c519c4c9f6016d4d0f9b90fbbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9013,7 +9013,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "ca76da4763575e18ca057a043e3b76a4795aced603fdae45d65f44e63625baa4",
+      "sha256": "196e609366d1b501a259e7d24b768067872f6ecc0185fdf201c021110b2a7e11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13969,7 +13969,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "b44d4b498dd663d58ff49b3c761d428f2c97a49e8bbbb3d5a0220cf2d645041c",
+      "sha256": "f22ed08af8562e7199660000fa508761dff8b53fd8ffebd72d6c373ea573fa9f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14059,7 +14059,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
+      "sha256": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14803,7 +14803,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "1a90346882be9e09f90af5c87c611a69e7846687486d2f878040ed629d140c5e",
+      "sha256": "2d9887550a94d548df5cd5a8edb0560f10c1619413484633bd7b89f0108beb7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {

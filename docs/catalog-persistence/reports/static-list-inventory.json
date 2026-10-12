@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T09:03:59.547Z",
+  "generatedAt": "2026-10-12T10:07:16.865Z",
   "repositoryRoot": ".",
   "filesScanned": 2245,
   "candidateCount": 1320,
@@ -15474,7 +15474,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "paymentMethods",
-      "line": 376,
+      "line": 395,
       "values": [
         "paypal",
         "bank_transfer"
@@ -15482,9 +15482,9 @@
       "valueCount": 2,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        376,
-        379,
-        382
+        395,
+        398,
+        401
       ],
       "consumerCount": 109,
       "backendConsumers": [
@@ -15625,7 +15625,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "session",
-      "line": 560,
+      "line": 579,
       "values": [
         "checkoutId",
         "attemptId",
@@ -15639,7 +15639,7 @@
       "valueCount": 8,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        560
+        579
       ],
       "consumerCount": 604,
       "backendConsumers": [
@@ -61155,7 +61155,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 560,
+      "line": 566,
       "values": [
         "consumidor_final",
         "cedula",
@@ -61165,7 +61165,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        560
+        566
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -138622,7 +138622,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 53,
+      "consumerCount": 54,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -138672,6 +138672,7 @@
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/utils/providerPaymentResume.ts"
       ],
@@ -141452,7 +141453,7 @@
       "domain": "studio-services-booking",
       "kind": "haskell-list",
       "name": "paypalWebhookDomainTypes",
-      "line": 1082,
+      "line": 1083,
       "values": [
         "mixing_mastering",
         "marketplace_sale",
@@ -141464,7 +141465,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1082
+        1083
       ],
       "consumerCount": 66,
       "backendConsumers": [
