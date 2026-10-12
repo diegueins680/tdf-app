@@ -617,6 +617,7 @@ import TDF.Seed
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
+import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
@@ -2045,6 +2046,32 @@ main = hspec $ do
                   , CourseCheckout.EnrollmentCompleted
                   , CourseCheckout.EnrollmentExpired
                   ]
+
+    describe "event ticket payment after sales close" $ do
+        let unpaid = ["holding", "awaiting_payment", "failed"] :: [Text]
+            settled = ["processing", "paid", "refunded", "expired", "cancelled"] :: [Text]
+            instant = UTCTime (fromGregorian 2026 10 12) 0
+            later = UTCTime (fromGregorian 2026 10 12) 600
+        it "refuses to start or take a payment for an unpaid order once the event stops selling" $
+            forM_ unpaid $ \status ->
+                fmap errHTTPCode (either Just (const Nothing) (EventTicketCheckoutServer.ticketPaymentAllowed status False))
+                    `shouldBe` Just 409
+        it "lets an unpaid order be paid while the event still sells tickets" $
+            forM_ unpaid $ \status ->
+                EventTicketCheckoutServer.ticketPaymentAllowed status True `shouldSatisfy` isRight
+        it "does not gate a checkout that is already processing or paid, so a payment in flight settles" $
+            forM_ settled $ \status -> do
+                EventTicketCheckoutServer.ticketCheckoutAwaitsPayment status `shouldBe` False
+                EventTicketCheckoutServer.ticketPaymentAllowed status False `shouldSatisfy` isRight
+        it "lists no payment methods for an unpaid order whose event stopped selling" $
+            forM_ unpaid $ \status -> do
+                EventTicketCheckoutServer.ticketPaymentMethodsOffered instant status later False `shouldBe` False
+                EventTicketCheckoutServer.ticketPaymentMethodsOffered instant status later True `shouldBe` True
+        it "lists no payment methods once the hold lapsed or the order is no longer unpaid" $ do
+            EventTicketCheckoutServer.ticketPaymentMethodsOffered later "awaiting_payment" instant True `shouldBe` False
+            EventTicketCheckoutServer.ticketPaymentMethodsOffered later "awaiting_payment" later True `shouldBe` False
+            forM_ settled $ \status ->
+                EventTicketCheckoutServer.ticketPaymentMethodsOffered instant status later True `shouldBe` False
 
     describe "event ticket pricing and fulfillment invariants" $ do
         it "derives stable unguessable lookup capabilities from a server-only key" $ do
@@ -17820,6 +17847,7 @@ main = hspec $ do
     LiveIntakeIdentitySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
+    TicketPaymentGateSpec.spec
     MarketplaceIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
