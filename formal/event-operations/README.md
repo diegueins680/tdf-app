@@ -605,3 +605,12 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Access grant boundary — AUTH-ACCESS-PROVISION-001 / AUTH-ARTIST-INVITE-001 (2026-10-09)
+
+`AccessGrant.tla` checks one reviewed access request and one personal invitation link.
+Seven mutation configurations each disable one guard and must violate the named
+invariant: `SelfApproval`, `NonAdmin`, `Expired`, `Rebind`, `RevokedLink`,
+`Reactivate`, `AdminInvite`. Local run with TLC 1.7.2 on Temurin 21: 212 distinct
+states for the intended model, and every control failed on its expected invariant.
+Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
