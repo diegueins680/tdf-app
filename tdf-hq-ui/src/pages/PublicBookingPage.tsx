@@ -421,7 +421,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     presetConfig?.description ??
     'Completa tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.';
   const introChips = presetConfig?.introChips ?? [
-    '1. Agenda sin crear cuenta',
+    '1. Elige tu servicio y agenda sin crear cuenta',
     '2. Recibe un ID de reserva',
     '3. Coordina ajustes por WhatsApp',
   ];
@@ -1765,6 +1765,52 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     );
   }
 
+  const serviceField = (
+    <Grid item xs={12}>
+      <TextField
+        label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
+        select
+        value={form.serviceOfferingId}
+        onChange={(e) => {
+          const nextService = services.find((service) => service.id === e.target.value);
+          if (!nextService) return;
+          setForm((prev) => ({
+            ...prev,
+            serviceOfferingId: nextService.id,
+            serviceType: nextService.name,
+            resourceLabels: serviceResourceLabels(nextService),
+          }));
+        }}
+        fullWidth
+        required
+        disabled={formDisabled || Boolean(presetService)}
+        helperText={
+          presetService
+            ? `Servicio preseleccionado para este enlace. ${
+                estimatePriceLabel
+                  ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+                  : `Moneda: ${studioCurrency}`
+              }`
+            : estimatePriceLabel
+            ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+            : `Moneda: ${studioCurrency}`
+        }
+      >
+        {services.map((svc) => (
+          <MenuItem key={svc.id} value={svc.id}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+              <Typography>{svc.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {servicePriceLookup.get(svc.id)}
+              </Typography>
+            </Stack>
+          </MenuItem>
+        ))}
+        {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
+      </TextField>
+    </Grid>
+  );
+
   return (
     <Box data-testid="public-booking-layout" sx={BOOKING_LAYOUT_SX}>
       <Card
@@ -1932,6 +1978,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     <Grid container spacing={2.5}>
                       {activeStep === 0 && (
                         <>
+                          {serviceField}
                           <Grid item xs={12} sm={6}>
                             <TextField
                               label="Nombre completo"
@@ -2007,49 +2054,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
 
                       {activeStep === 1 && (
                         <>
-                          <Grid item xs={12}>
-                            <TextField
-                              label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
-                              select
-                              value={form.serviceOfferingId}
-                              onChange={(e) => {
-                                const nextService = services.find((service) => service.id === e.target.value);
-                                if (!nextService) return;
-                                setForm((prev) => ({
-                                  ...prev,
-                                  serviceOfferingId: nextService.id,
-                                  serviceType: nextService.name,
-                                  resourceLabels: serviceResourceLabels(nextService),
-                                }));
-                              }}
-                              fullWidth
-                              required
-                              disabled={formDisabled || Boolean(presetService)}
-                              helperText={
-                                presetService
-                                  ? `Servicio preseleccionado para este enlace. ${
-                                      estimatePriceLabel
-                                        ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                                        : `Moneda: ${studioCurrency}`
-                                    }`
-                                  : estimatePriceLabel
-                                  ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                                  : `Moneda: ${studioCurrency}`
-                              }
-                            >
-                              {services.map((svc) => (
-                                <MenuItem key={svc.id} value={svc.id}>
-                                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-                                    <Typography>{svc.name}</Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {servicePriceLookup.get(svc.id)}
-                                    </Typography>
-                                  </Stack>
-                                </MenuItem>
-                              ))}
-                              {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
-                            </TextField>
-                          </Grid>
+                          {serviceField}
                           <Grid item xs={12} sm={7}>
                             <TextField
                               label="Fecha y hora"

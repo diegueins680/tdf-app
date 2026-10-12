@@ -386,6 +386,39 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
+  it('lets visitors pick any published service from the contact step', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    expect(container.textContent).toContain('Elige tu servicio');
+    const serviceSelect = container.querySelector<HTMLElement>('[role="combobox"]');
+    expect(serviceSelect).not.toBeNull();
+    expect(serviceSelect?.textContent).toContain('Grabación de banda');
+
+    await act(async () => {
+      serviceSelect?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+      await flushPromises();
+    });
+    const optionLabels = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).map(
+      (option) => option.textContent ?? '',
+    );
+    expect(optionLabels.some((label) => label.includes('Grabación de banda'))).toBe(true);
+    expect(optionLabels.some((label) => label.includes('Práctica en DJ Booth'))).toBe(true);
+
+    const djOption = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).find((option) =>
+      option.textContent?.includes('Práctica en DJ Booth'),
+    );
+    await act(async () => {
+      djOption?.click();
+      await flushPromises();
+    });
+    expect(container.textContent).toContain('Estimado para Práctica en DJ Booth');
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('preserves booking acquisition context through optional login and signup', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
