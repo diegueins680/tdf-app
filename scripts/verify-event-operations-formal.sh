@@ -232,6 +232,11 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc LedgerPosting.tla LedgerPosting.cfg ledger-posting
+run_negative_tlc LedgerPostingAppend.cfg ledger-posting-append 'Invariant PostedImmutable is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingUnvalidated.cfg ledger-posting-unvalidated 'Invariant PostedBalanced is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingReopen.cfg ledger-posting-reopen 'Invariant PostedHistory is violated' LedgerPosting.tla
+run_negative_tlc LedgerPostingInsertPosted.cfg ledger-posting-insert-posted 'Invariant PostedBalanced is violated' LedgerPosting.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
