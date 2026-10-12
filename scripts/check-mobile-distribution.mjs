@@ -10,20 +10,57 @@ export const PUBLISHED_MANIFEST_URL = 'https://www.tdfrecords.net/mobile-distrib
 export const DEFAULT_WARNING_HOURS = 48;
 const HOUR = 3_600_000;
 
+const STATUSES = ['unavailable', 'coming_soon', 'internal_testing', 'closed_testing', 'open_testing', 'testflight_internal', 'testflight_external', 'store_preorder', 'public'];
+const ACCESSIBLE = ['closed_testing', 'open_testing', 'testflight_external', 'store_preorder', 'public'];
+export const DISTRIBUTION_STATUSES = { all: STATUSES, accessible: ACCESSIBLE };
+
+// The same invariants as validateDistribution in tdf-hq-ui/src/mobile/distribution.ts.
+// The landing rejects the whole manifest when one fails and then offers no store
+// link on either platform, so a manifest it would reject must fail here too.
+export function validatePublishedDistribution(manifest) {
+  if (!manifest || typeof manifest !== 'object') throw new Error('Invalid mobile distribution');
+  for (const platform of ['ios', 'android']) {
+    const c = manifest[platform];
+    if (!c || typeof c !== 'object') throw new Error(`Missing ${platform} channel`);
+    if (!STATUSES.includes(c.status) || typeof c.verifiedAt !== 'string' || typeof c.validUntil !== 'string'
+      || !Number.isFinite(Date.parse(c.verifiedAt)) || !Number.isFinite(Date.parse(c.validUntil))
+      || Date.parse(c.validUntil) <= Date.parse(c.verifiedAt)) throw new Error(`Invalid ${platform} distribution state`);
+    if (platform === 'ios' && ['internal_testing', 'closed_testing', 'open_testing'].includes(c.status)) throw new Error('Wrong iOS channel');
+    if (platform === 'android' && c.status.startsWith('testflight')) throw new Error('Wrong Android channel');
+    if (ACCESSIBLE.includes(c.status) !== Boolean(c.url)) throw new Error(`${platform} channel URL contradicts status`);
+    if (c.capacity && !['available', 'full', 'unknown'].includes(c.capacity)) throw new Error(`Invalid ${platform} capacity`);
+    if (c.url) {
+      const u = new URL(c.url);
+      if (u.protocol !== 'https:' || u.username || u.password || u.port || u.hash) throw new Error(`Unsafe ${platform} distribution URL`);
+      const valid = platform === 'ios'
+        ? c.status === 'testflight_external' ? u.hostname === 'testflight.apple.com' && /^\/join\/[a-zA-Z0-9]+$/.test(u.pathname) && !u.search
+          : u.hostname === 'apps.apple.com' && u.pathname.endsWith('/id6779786470')
+        : u.hostname === 'play.google.com' && (c.status === 'public' || c.status === 'store_preorder'
+          ? u.pathname === '/store/apps/details' && u.searchParams.get('id') === 'com.tdf.records'
+          : u.pathname === '/apps/testing/com.tdf.records');
+      if (!valid) throw new Error(`Unexpected ${platform} distribution destination`);
+    }
+    if (c.status === 'closed_testing' && !['direct', 'approval_required'].includes(c.admission ?? '')) throw new Error('Closed testing requires admission policy');
+    if (c.enrollmentUrl) {
+      const u = new URL(c.enrollmentUrl);
+      if (c.status !== 'closed_testing' || u.protocol !== 'https:' || u.hostname !== 'groups.google.com' || !/^\/g\/[\w-]+$/.test(u.pathname)
+        || u.search || u.hash || u.username || u.password || u.port) throw new Error(`Unsafe ${platform} enrollment URL`);
+    }
+  }
+  return manifest;
+}
+
 // One finding per platform that links to a store: 'current', 'expiring' or 'expired'.
 export function distributionExpiry(manifest, now, warningHours = DEFAULT_WARNING_HOURS) {
-  if (!manifest || typeof manifest !== 'object') throw new Error('Invalid mobile distribution');
   if (!Number.isFinite(now) || !(warningHours > 0)) throw new Error('Invalid check time or warning window');
+  validatePublishedDistribution(manifest);
   const findings = [];
   for (const platform of ['ios', 'android']) {
     const channel = manifest[platform];
-    if (!channel || typeof channel !== 'object') throw new Error(`Missing ${platform} channel`);
-    const validUntil = Date.parse(channel.validUntil);
-    if (typeof channel.validUntil !== 'string' || !Number.isFinite(validUntil)) throw new Error(`Invalid ${platform} validUntil`);
-    if (!channel.url) continue; // Nothing is offered, so nothing can lapse.
-    const hoursLeft = (validUntil - now) / HOUR;
+    if (!channel.url) continue; // A status that offers no link; validated above.
+    const hoursLeft = (Date.parse(channel.validUntil) - now) / HOUR;
     const state = hoursLeft <= 0 ? 'expired' : hoursLeft < warningHours ? 'expiring' : 'current';
-    findings.push({ platform, status: String(channel.status), validUntil: channel.validUntil, hoursLeft, state });
+    findings.push({ platform, status: channel.status, validUntil: channel.validUntil, hoursLeft, state });
   }
   return findings;
 }
