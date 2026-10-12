@@ -1030,6 +1030,11 @@
       "id": "2026-10-07_directory_artist_listing_backfill_apply",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
       "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
+    },
+    {
+      "id": "2026-10-12_ledger_posting_integrity",
+      "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
+      "introducedBy": "0fc94499f6a9e007abc990be8cff8a32cacad19b"
     }
   ]
 }
