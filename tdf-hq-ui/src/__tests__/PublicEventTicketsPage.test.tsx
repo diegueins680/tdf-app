@@ -239,6 +239,17 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).not.toContain('Elige tus entradas');
   });
 
+  it('shows an unpaid order without any way to pay once the event stopped selling', async () => {
+    getStorefrontMock.mockRejectedValue(new Error('404: Tickets are not on sale'));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'awaiting_payment', paymentMethods: [] }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Estado de la orden'));
+    expect(container.textContent).toContain('La orden no está pagada');
+    const actions = Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
+    expect(actions.some((label) => /datafast|paypal|transferencia|tarjeta|pagar/i.test(label))).toBe(false);
+    expect(container.textContent).not.toContain('Elige tus entradas');
+  });
+
   it('does not wait for a slow storefront before displaying an authorized order', async () => {
     getStorefrontMock.mockImplementation(() => new Promise(() => {}));
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));

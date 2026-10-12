@@ -6,6 +6,9 @@
 module TDF.Server.EventTicketCheckout
   ( publicEventTicketsServer
   , deriveTicketLookupToken
+  , ticketCheckoutAwaitsPayment
+  , ticketPaymentAllowed
+  , ticketPaymentMethodsOffered
   ) where
 
 import           Control.Exception
@@ -878,9 +881,7 @@ loadPublicTicketPaymentMethods runtime = do
   -- An order stays readable after its event leaves the on-sale lifecycle, but it
   -- must not offer a way to pay for it.
   salesOpen <- ticketSalesOpen (toSqlKey (trvEventId runtime))
-  if trvPaymentStatus runtime `notElem` ["holding", "awaiting_payment", "failed"]
-      || trvHoldExpiresAt runtime <= now
-      || not salesOpen
+  if not (ticketPaymentMethodsOffered now (trvPaymentStatus runtime) (trvHoldExpiresAt runtime) salesOpen)
     then pure []
     else do
       let checkout = Checkout.CheckoutReference (trvCheckoutId runtime)
@@ -1029,10 +1030,27 @@ ticketSalesOpen eventKey = runDB $ do
 -- retries stay idempotent; evidence for a transfer already made is not gated.
 requireTicketSalesOpen :: TicketPaymentContext -> AppM ()
 requireTicketSalesOpen context =
-  when (tpcCheckoutStatus context `elem` ["holding", "awaiting_payment", "failed"]) $ do
+  when (ticketCheckoutAwaitsPayment (tpcCheckoutStatus context)) $ do
     salesOpen <- ticketSalesOpen (tpcEventKey context)
-    unless salesOpen $
-      throwError (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
+    either throwError pure (ticketPaymentAllowed (tpcCheckoutStatus context) salesOpen)
+
+-- | Checkout statuses in which a payment can still be started or taken.
+ticketCheckoutAwaitsPayment :: Text -> Bool
+ticketCheckoutAwaitsPayment status = status `elem` ["holding", "awaiting_payment", "failed"]
+
+-- | The decision behind 'requireTicketSalesOpen': checkout status, then whether
+-- the event still sells tickets.
+ticketPaymentAllowed :: Text -> Bool -> Either ServerError ()
+ticketPaymentAllowed status salesOpen
+  | ticketCheckoutAwaitsPayment status && not salesOpen =
+      Left (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
+  | otherwise = Right ()
+
+-- | Whether an order view may list payment methods at all: only for an unpaid
+-- order with a live hold on an event that still sells tickets.
+ticketPaymentMethodsOffered :: UTCTime -> Text -> UTCTime -> Bool -> Bool
+ticketPaymentMethodsOffered now status holdExpiresAt salesOpen =
+  ticketCheckoutAwaitsPayment status && holdExpiresAt > now && salesOpen
 
 ticketReference :: TicketPaymentContext -> Text
 ticketReference = T.pack . show . fromSqlKey . tpcOrderKey
