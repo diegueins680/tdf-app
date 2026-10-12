@@ -107,7 +107,7 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
-| `DriveReplay.cfg` (2026-10-12) | One idempotency key, two requests from two actors with two request shapes, a provider entry absent/legacy/bound; lookup, create, reuse, conflict | PASS; 524 generated, 364 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
+| `DriveReplay.cfg` (2026-10-12) | One idempotency key, two requests from two actors with two request shapes, a provider entry initially absent, legacy or bound; lookup, create, reuse (no new object; sharing still runs), conflict (refused before any call) | PASS; 1,420 generated, 940 distinct states; `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `ConflictNoMutation` |
 | `DriveReplayUnchecked.cfg`, `DriveReplayActorIgnored.cfg`, `DriveReplayLegacyAdopted.cfg`, `DriveReplayRace.cfg` | Three negative controls (fingerprint not checked, actor not bound, legacy entry adopted) and one documented non-guarantee (`SingleObject`: two concurrent misses both create) | Expected exit 12 with `ReuseBinds`, `NoForeignReuse`, `NoLegacyAdoption`, `SingleObject` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
@@ -613,7 +613,8 @@ are defined there; the model does not establish a complete checkout lifecycle.
 `DriveReplay.tla` models the reuse of a Google Drive upload by idempotency
 key (MEDIA-DRIVE-001): a request reuses an existing entry only when the
 stored fingerprint binds its own actor and request shape, never adopts a
-legacy entry without a fingerprint, and mutates nothing on a conflict. The
+legacy entry without a fingerprint, creates no object on a reuse, and
+makes no provider call on a conflict. The
 `Race` configuration is an expected counterexample: lookup and create are
 separate provider calls, so two concurrent misses both create. The model
 records that limitation; it does not remove it. See

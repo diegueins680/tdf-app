@@ -587,7 +587,7 @@
       ],
       "conflict": "MEDIA-DRIVE-001 had no formal model. Its concurrency text accepts that the provider lookup and the multipart create are separate requests, so two requests that both miss can both create; a model stating exactly-once reuse would contradict the implementation, and a model omitting the race would overstate it.",
       "authority": "The requirement's own concurrency and ambiguity fields (no exactly-once guarantee; concurrent creation not covered) and the drive-replay note, which classify the race as outside the repair, not as a defect.",
-      "resolution": "DriveReplay.tla states what the implementation guarantees (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict or reuse mutates nothing) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create."
+      "resolution": "DriveReplay.tla states what the implementation is read to guarantee, within the model's bounds (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict makes no provider call and a reuse creates no object; correspondence to the Haskell is by reading, not refinement) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create."
     }
   ]
 }

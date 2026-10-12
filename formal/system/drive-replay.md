@@ -49,18 +49,23 @@ No real Google operation is required by this verification.
 from two actors with two request shapes (name, MIME, folder and bytes
 abstracted as one value), a provider entry that is absent, legacy (no
 fingerprint) or bound to an actor and shape. Each request looks the entry up,
-then creates, reuses or conflicts exactly as `uploadToDrive` does. Invariants:
+then creates, reuses or conflicts as `uploadToDrive` does, with two
+simplifications: the folder is part of the shape (in the Haskell the lookup
+is scoped to the folder, so a same-key request for another folder misses and
+creates), and the fingerprint has no version (a version bump makes old bound
+entries conflict like legacy ones). Invariants:
 `ReuseBinds` (a reuse's entry carries the request's own shape),
 `NoForeignReuse` (and its actor), `NoLegacyAdoption`, `ConflictNoMutation`
-(objects exist only for requests that report a creation). Three controls
+(objects exist only for requests that report a creation; a reuse creates
+nothing but still runs the best-effort sharing and metadata calls). Three controls
 remove one guard each: `Unchecked` (`FingerprintChecked` off: `ReuseBinds`),
 `ActorIgnored` (`ActorBound` off: `NoForeignReuse`), `LegacyAdopted`
 (`LegacyRejected` off: `NoLegacyAdoption`). A fourth configuration, `Race`,
 checks `SingleObject` (at most one provider object per key) with every guard
 on and is registered as an expected counterexample: two requests that both
 see no entry both create. That is the limitation the paragraph above records;
-the model makes it explicit rather than proving it away. Decision in
-AUTHORITY-071. The model does not cover provider visibility lag, process
+the model makes it explicit rather than proving it away. 1,420 states generated, 940 distinct. Decision in
+AUTHORITY-071. The entry may start absent, legacy or bound. The model does not cover provider visibility lag, process
 death after the create, out-of-band property changes or the best-effort
 sharing and metadata calls after the decision. `DriveReplaySpec` (nine
 examples) is the execution evidence for the three guards; it passed on the

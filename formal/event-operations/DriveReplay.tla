@@ -47,7 +47,7 @@ TypeOK ==
        /\ req[r].result \in {"none", "created", "reused", "conflict"}
 
 Init ==
-  /\ entry \in {None, Legacy}
+  /\ entry \in Entries
   /\ objects = 0
   /\ req \in [Requests -> [actor : Actors, shape : Shapes, phase : {"idle"},
                            seen : {None}, result : {"none"}]]
@@ -58,8 +58,8 @@ Lookup(r) ==
   /\ UNCHANGED <<entry, objects>>
 
 (* The multipart create: the entry is written with the request's fingerprint.
-   A second create for the same key adds an object; the first entry stays
-   the findable one. *)
+   A second create for the same key adds an object; a later lookup would then
+   fail closed (two matches), which no request in this model reaches. *)
 Create(r) ==
   /\ req[r].phase = "looked" /\ req[r].seen = None
   /\ objects' = objects + 1
@@ -105,8 +105,8 @@ NoForeignReuse == \A r \in Reused : entry.kind = "bound" /\ entry.actor = req[r]
 (* A legacy entry without a fingerprint is never adopted. *)
 NoLegacyAdoption == \A r \in Reused : entry.kind # "legacy"
 
-(* Objects are created only by requests that report a creation: a conflict
-   or a reuse mutates nothing. *)
+(* Objects are created only by requests that report a creation: neither a
+   conflict nor a reuse creates a provider object. *)
 ConflictNoMutation == objects = Cardinality({r \in Requests : req[r].result = "created"})
 
 (* Not an invariant of the lookup-then-create design: two requests that

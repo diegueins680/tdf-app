@@ -21515,7 +21515,7 @@
     },
     {
       "path": "formal/event-operations/DriveReplay.tla",
-      "sha256": "75cfbe203e463332a60143b9f06aeee469926c5f0b890d6237db35e73d60bc2d",
+      "sha256": "87d1d2eb87049f2ec754a8ee05edd30084261d6ff40fee51d275c13ef9a9193f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -22418,7 +22418,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "39cbbafa925235e16110e12441f90e434b98ad70bc13391e6e4a95913bffb1d7",
+      "sha256": "8116ae62609687b815c5a9a709a9afd471eae00f805e6902947839629be5327f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23839,7 +23839,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ff244f94e16169cd8e6986a032a29f5b0087b150e5647d8e510c91bee1b3f205",
+      "sha256": "199477a2bf65b3807e6c585c1663bbfcb5e9922b4a775a2d9c6969c95ba527e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23923,7 +23923,7 @@
     },
     {
       "path": "formal/system/drive-replay.md",
-      "sha256": "08a559752029004cd7de2ba18dba63c91aa2793fa33ea396ad76afdac6eadd1a",
+      "sha256": "dce546b8e6b9f216e51fead97a26f5ae9272a42abd5d11b1d0ab9b8f2d9a2574",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24119,7 +24119,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ddf2fdc9b8523364318d3fce3e33800d70e682d557721f97ae5b0d522aa91585",
+      "sha256": "c1c76d437ef5149bccf9a7b245bb651d1dace514e2b203bb0461bb0b8d488531",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
