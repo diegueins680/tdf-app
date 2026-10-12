@@ -7740,7 +7740,7 @@
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-068 (re-upload rebinding)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -7783,9 +7783,9 @@
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
       "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's earlier open attempts are cancelled.",
       "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md. After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -7800,7 +7800,9 @@
         "scripts/run-music-release-worker.sh",
         "scripts/run-music-release-worker-once.sh",
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.ts",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -7828,7 +7830,7 @@
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
       "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); re-upload scenario of scripts/test-music-release-worker-runtime.mjs and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, local)",
       "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
       "ambiguity": [
         "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."
@@ -9048,7 +9050,7 @@
     ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
     ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
+    "docs/catalog-persistence/catalog-list-decisions.json": "1c3cfbb8a518720a6bee580dd3e9d1e6569099091e4ef774beb678f91e212463",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9273,7 +9275,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+    "scripts/production-migrations.json": "e0fd58408c3bab8d62e2b1af8e6c491b292485bb1c0725f8f50ae56db6df6c58",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9316,7 +9318,7 @@
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
     "scripts/test-music-release-audio-pipeline.sh": "872c969557cc8cde9e5e135d768cfa5da60937beacb954de5ad1301c5331b8de",
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
-    "scripts/test-music-release-worker-runtime.mjs": "f5628439aa2d4d8b33b9f79eeaa256afeb677f8d817f810c84c85b4869ecd159",
+    "scripts/test-music-release-worker-runtime.mjs": "b74659b4da310fc6b8333945ae555e5dfd672ad30ab77afdcf839e53958553e7",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
@@ -9654,6 +9656,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
+    "tdf-hq/sql/2026-10-12_music_upload_rebind.sql": "af637f970213c6abe0a6bb93120d328c84cf1f03f8e313723ef809531fa98dd4",
+    "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql": "102b0b2e57a2d21efed759ef806fc8217b2ab70baa29d2be327efaea22226522",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -15140,6 +15144,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-10-12_music_upload_rebind.sql": [
+      {
+        "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql": [
+      {
+        "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": [
       {
         "requirement": "MEDIA-MUSIC-ASSET-001",
@@ -19310,7 +19326,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "e0fd58408c3bab8d62e2b1af8e6c491b292485bb1c0725f8f50ae56db6df6c58",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20799,7 +20815,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "f5628439aa2d4d8b33b9f79eeaa256afeb677f8d817f810c84c85b4869ecd159",
+      "sha256": "b74659b4da310fc6b8333945ae555e5dfd672ad30ab77afdcf839e53958553e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31860,6 +31876,30 @@
       ]
     },
     {
+      "id": "SURFACE-bb5374a4245d435b",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "sha256": "af637f970213c6abe0a6bb93120d328c84cf1f03f8e313723ef809531fa98dd4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-bc1978863657c5ed",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql",
+      "sha256": "102b0b2e57a2d21efed759ef806fc8217b2ab70baa29d2be327efaea22226522",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -41894,7 +41934,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73cfc3feb0cfbc50a153906b4c673a527e3636b8e3cbcc55cf91bddc7cd5686",
+      "sourceSha256": "a7f6ef950b54156d0a0d7d21be626b00804883c273f85b3198ecae720373ce22",
       "definition": {
         "states": [
           "absent",

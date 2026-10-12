@@ -176,7 +176,8 @@ try {
   for (const file of ['init_schema.sql', '2026-07-12_notification_table.sql',
     '2026-08-05_artist_enrichment.sql', '2026-08-13_unified_checkout_core.sql',
     '2026-09-04_access_request_notification_types.sql', '2026-09-11_music_release_platform.sql',
-    '2026-09-15_music_preview_ranges.sql', '2026-09-16_music_ddex_operations.sql']) {
+    '2026-09-15_music_preview_ranges.sql', '2026-09-16_music_ddex_operations.sql',
+    '2026-10-12_music_upload_rebind.sql']) {
     command('psql', ['-Xq', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', join(root, 'tdf-hq/sql', file)]);
   }
   artist = sql("INSERT INTO party(display_name) VALUES ('Synthetic worker artist') RETURNING id");
@@ -263,6 +264,36 @@ try {
     assert.match(assertFailure(f).stderr, /checksum/);
     assert.doesNotMatch(readFileSync(trace, 'utf8'), /PUT|DELETE/);
     cancel(f);
+  });
+  check('re-upload with the same declared hash is inspected after a checksum-mismatch dead letter', () => {
+    const master = readFileSync(join(runtime, 'master.wav'));
+    const f = fixture('inspect_audio', Buffer.from('corrupt synthetic bytes'), sha(master));
+    assert.match(assertFailure(f).stderr, /checksum/);
+    retryNow(f);
+    assert.match(worker().stderr, /checksum/);
+    assert.equal(jobState(f), 'dead_letter:2:true');
+    // The corrected bytes arrive through a new upload session; confirmMusicUpload
+    // binds it to the existing asset row and enqueues a job keyed by the session.
+    const session = randomUUID(), job = randomUUID(), key = `${session}/original`;
+    mkdirSync(join(objects, 'music-test-quarantine', session));
+    writeFileSync(join(objects, 'music-test-quarantine', key), master);
+    sql(`INSERT INTO music_upload_session(id,release_version_id,recording_id,asset_role,provider,bucket_name,quarantine_object_key,
+        original_filename,expected_media_type,expected_size,expected_sha256,status,idempotency_key,part_size_bytes,expires_at,
+        completed_asset_id,created_by,completed_at)
+      VALUES ('${session}','${f.version}','${f.recording}','master_audio','s3_compatible','music-test-quarantine','${key}',
+        'master.wav','audio/wav',${master.length},'${sha(master)}','completed','${session}',5242880,NOW()+INTERVAL '1 hour',
+        '${f.asset}',${artist},NOW());
+      INSERT INTO music_processing_job(id,release_version_id,source_asset_id,job_kind,job_key,max_attempts)
+      VALUES ('${job}','${f.version}','${f.asset}','inspect_audio','${session}',2);`);
+    assert.equal(sql(`SELECT object_key||':'||processing_state||':'||(provenance->>'rebound_from_object_key') FROM music_asset WHERE id='${f.asset}'`),
+      `${key}:uploaded:${f.key}`);
+    assert.equal(jobState(f), 'cancelled:2:true');
+    const result = worker();
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(sql(`SELECT status FROM music_processing_job WHERE id='${job}'`), 'succeeded');
+    assert.equal(sql(`SELECT bucket_name||':'||processing_state||':'||immutable FROM music_asset WHERE id='${f.asset}'`), 'music-test-master:valid:true');
+    assert.equal(sha(readFileSync(join(objects, 'music-test-master', `masters/${f.version}/${f.asset}/original`))), sha(master));
+    assert.equal(sql(`SELECT count(*) FROM music_asset WHERE parent_asset_id='${f.asset}'`), '5');
   });
   check('failed audio decoding cannot produce success or delete quarantine', () => {
     const f = fixture('inspect_audio', Buffer.from('not an audio file'));

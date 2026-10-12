@@ -1750,6 +1750,8 @@
       "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
       "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
       "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+      "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -4253,7 +4255,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "e0fd58408c3bab8d62e2b1af8e6c491b292485bb1c0725f8f50ae56db6df6c58",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5177,7 +5179,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "f5628439aa2d4d8b33b9f79eeaa256afeb677f8d817f810c84c85b4869ecd159",
+      "sha256": "b74659b4da310fc6b8333945ae555e5dfd672ad30ab77afdcf839e53958553e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12876,6 +12878,18 @@
       "id": "SURFACE-48d8c4fab6aef615",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
       "sha256": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bb5374a4245d435b",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "sha256": "af637f970213c6abe0a6bb93120d328c84cf1f03f8e313723ef809531fa98dd4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bc1978863657c5ed",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql",
+      "sha256": "102b0b2e57a2d21efed759ef806fc8217b2ab70baa29d2be327efaea22226522",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23643,7 +23657,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "d535216254f854f9bb872e6dcebce42edf9121ea581f2149e149f0fc94565c60",
+      "sha256": "d65254a9ff0b31f6f95243b714a50123e30f5523fea5689d2300452d6f07f277",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23831,6 +23845,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-upload-rebind.md",
+      "sha256": "5703eec94fb9d4336e9c26f91e0ed8ffbfbadacf8fa70b7cbfd11249ab0e3629",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-command-boundary.md",
       "sha256": "b8b856db3313d417afb450cc04f38f41b7f557f2da6b092b209e25b5d0630663",
       "authority": "inferred",
@@ -23916,7 +23937,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c73cfc3feb0cfbc50a153906b4c673a527e3636b8e3cbcc55cf91bddc7cd5686",
+      "sha256": "a7f6ef950b54156d0a0d7d21be626b00804883c273f85b3198ecae720373ce22",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

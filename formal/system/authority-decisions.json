@@ -576,6 +576,18 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-068",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-upload-rebind.md"
+      ],
+      "conflict": "confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing asset row (unique on version, role, sha256) but leaves the row's quarantine object, so after a checksum-mismatch dead letter the corrected bytes were never inspected; the requirement's recovery text ('failed jobs are retried') assumed a retry could succeed.",
+      "authority": "MEDIA-MUSIC-ASSET-001's statement that the worker re-downloads and recomputes the hash of the uploaded bytes, and its idempotency rule (identical input, identical result).",
+      "resolution": "Decided 2026-10-12: enqueueing a processing job for an upload session re-points the session's non-promoted asset (same version, same declared hash, different object) at the session's object, resets it to uploaded, records the previous key in provenance and cancels the asset's queued, retry and dead-lettered jobs; a running attempt is left to finish because bytes it verifies carry the same hash; promoted assets are never re-pointed. Migration 2026-10-12_music_upload_rebind (manifest entry 203). No handler change."
     }
   ]
 }
