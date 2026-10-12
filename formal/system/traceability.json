@@ -7201,7 +7201,7 @@
       "title": "Settle public ticket orders by staff-verified bank transfer",
       "domain": "EVT",
       "statement": "An approved ticket policy may opt into manual bank transfer with a bounded hold and a selection cutoff. The immutable checkout snapshot is preserved; a separately guarded extension keeps the seat while the buyer transfers and staff verifies. A reported transfer reference is evidence only. An event organizer or administrator who is neither the submitting party nor the buyer's email approves it, which records the canonical staff-verified payment and issues tickets through the provider-capture issuance path.",
-      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil",
+      "authority": "User decision of 2026-10-06 for PATCH CULTURE vol. 1: add bank transfer with manual confirmation, 24-hour hold, selections close 2026-10-22 18:00 America/Guayaquil; AUTHORITY-064",
       "source": "docs/events/ticket-manual-bank-transfer.md",
       "contract": "docs/events/ticket-manual-bank-transfer.md",
       "actors": [
@@ -7242,7 +7242,7 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows; the hold guard and expiry run in the database.",
+      "concurrency": "Review locks checkout, attempt and evidence rows and holds them until it commits, so a concurrent reviewer waits and is answered from the decided state; the evidence transition guard, the hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
       "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
@@ -7273,14 +7273,24 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/api/eventTickets.test.ts"
+        "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests.",
-      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence.",
+      "formalModels": [
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
+      ],
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests. The review transaction is run directly against PostgreSQL, including approval and rejection races, with a bounded TLC model and three controls (formal/system/ticket-manual-review.md).",
+      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence. Review transaction test and model run locally on 2026-10-11.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants are exercised directly; the Haskell review transaction is exercised end to end only through deployed HTTP verification.",
+      "confidence": "Database invariants and the Haskell review transaction are exercised directly against PostgreSQL; ticket issuance after approval and the HTTP handler are exercised only through deployed HTTP verification.",
       "ambiguity": [
         "No bank API confirms deposits; staff verification against the statement is the authority."
       ],
@@ -9042,7 +9052,7 @@
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+    ".github/workflows/ci.yml": "81a650de74eec994159b3197f2491318e92fd410315bab85e094c48a15b88ec0",
     ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
@@ -9137,6 +9147,12 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+    "formal/event-operations/TicketManualReview.cfg": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76",
+    "formal/event-operations/TicketManualReview.tla": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+    "formal/event-operations/TicketManualReviewLockReleased.cfg": "6d345445daf969c94c0ba93bfcd21a892636d8ef1818d69bd06804dbfe58af8d",
+    "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg": "6ee38440ebb4d65c56a744d7aa8e4b74f9388159b5133a564d3f6d358b52da6d",
+    "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg": "3393757d152879613fe1b2dc59a6a6196d4270bc029399df77b33b6ef3f76515",
+    "formal/event-operations/TicketManualReviewSubmitterReviews.cfg": "94aa99787cade85e26b09bf56f2491f36d789ee9564322a47a43c8e7c14ceac4",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
@@ -9340,12 +9356,13 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test-ticket-manual-review.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+    "scripts/verify-event-operations-formal.sh": "ab38be201b30e1bf9b6034084146b6e15d2a0383b505d22b3d84464d8be93905",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9734,7 +9751,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
-    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
+    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "3f19e950544a7b82afbbc619c418d027d432813c176ee4792a16f13a13aaa123",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
@@ -9755,12 +9772,12 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
+    "tdf-hq/tdf-hq.cabal": "4aaac520caaf8b72c8a7f4d9fb969554ff4d82a928568f0d6e203a65ca9fe33f",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+    "tdf-hq/test/Spec.hs": "d30b02eac2974187b5086581677f52718e9f09ce270d3a45d01c3009afe6dd09",
     "tdf-hq/test/TDF/APITypesSpec.hs": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -9790,6 +9807,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "7f698d07589aa30f6234a4dd7e16091913cea85b3e7fec66039c6324ce45da78",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -9994,6 +10012,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -14674,6 +14696,54 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-manual-review.sh": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/TicketManualReview.tla": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReview.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleased.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewSubmitterReviews.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql": [
       {
         "requirement": "EVT-TICKET-INVOICE-001",
@@ -16400,7 +16470,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+      "sha256": "81a650de74eec994159b3197f2491318e92fd410315bab85e094c48a15b88ec0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21257,6 +21327,18 @@
       ]
     },
     {
+      "id": "SURFACE-4c827aef16e690c3",
+      "path": "scripts/test-ticket-manual-review.sh",
+      "sha256": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-75ed4534ce225e0f",
       "path": "scripts/test-trial-identity.sh",
       "sha256": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
@@ -21383,7 +21465,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "ab38be201b30e1bf9b6034084146b6e15d2a0383b505d22b3d84464d8be93905",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21437,6 +21519,10 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -33910,7 +33996,7 @@
     {
       "id": "SURFACE-4f6a7b230d53af08",
       "path": "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-      "sha256": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
+      "sha256": "3f19e950544a7b82afbbc619c418d027d432813c176ee4792a16f13a13aaa123",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34427,7 +34513,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
+      "sha256": "4aaac520caaf8b72c8a7f4d9fb969554ff4d82a928568f0d6e203a65ca9fe33f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34541,7 +34627,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "d30b02eac2974187b5086581677f52718e9f09ce270d3a45d01c3009afe6dd09",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35199,6 +35285,18 @@
       "requirements": [
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-89f49f12c8c895f1",
+      "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+      "sha256": "7f698d07589aa30f6234a4dd7e16091913cea85b3e7fec66039c6324ce45da78",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
           "relationship": "tests"
         }
       ]
@@ -40728,7 +40826,6 @@
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
-    "EVT-TICKET-MANUAL-001",
     "EVT-TICKET-INVOICE-001",
     "PRIV-WHATSAPP-001",
     "MEDIA-MUSIC-RELEASE-001",
@@ -41858,7 +41955,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "590dca6d55d4d8a44564eb516b332d259339170d80019571ee55c2b044f3d704",
+      "sourceSha256": "dfe73aedc595bb7c0cf904eda6ccf49b221d1be32077dd96dbcc445e1a178f94",
       "definition": {
         "states": [
           "absent",
