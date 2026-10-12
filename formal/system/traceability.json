@@ -9205,7 +9205,7 @@
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
-    "scripts/__tests__/mobile-distribution-expiry.test.mjs": "f78946fa7594b347b1f1accabac140fe5c6da15f156dfccfa49aa8fd38edfdc4",
+    "scripts/__tests__/mobile-distribution-expiry.test.mjs": "ecd339c9b4d90552067e02c9683796014168529c566537399f0ac24589ea1d36",
     "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
@@ -9233,7 +9233,7 @@
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
-    "scripts/check-mobile-distribution.mjs": "e4523c5f5dbd2a8062c7063fa98d60702f67ca352737eedc6db4c034353db998",
+    "scripts/check-mobile-distribution.mjs": "ea7a2df3f888993078da75d09bccc970b75bb4e7f8f202c79ecab35a59b7781f",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
@@ -17755,7 +17755,7 @@
     {
       "id": "SURFACE-80d1ebf94eae3fbb",
       "path": "scripts/__tests__/mobile-distribution-expiry.test.mjs",
-      "sha256": "f78946fa7594b347b1f1accabac140fe5c6da15f156dfccfa49aa8fd38edfdc4",
+      "sha256": "ecd339c9b4d90552067e02c9683796014168529c566537399f0ac24589ea1d36",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18344,7 +18344,7 @@
     {
       "id": "SURFACE-7cf4797085be81ca",
       "path": "scripts/check-mobile-distribution.mjs",
-      "sha256": "e4523c5f5dbd2a8062c7063fa98d60702f67ca352737eedc6db4c034353db998",
+      "sha256": "ea7a2df3f888993078da75d09bccc970b75bb4e7f8f202c79ecab35a59b7781f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

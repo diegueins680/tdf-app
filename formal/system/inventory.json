@@ -3296,7 +3296,7 @@
     {
       "id": "SURFACE-80d1ebf94eae3fbb",
       "path": "scripts/__tests__/mobile-distribution-expiry.test.mjs",
-      "sha256": "f78946fa7594b347b1f1accabac140fe5c6da15f156dfccfa49aa8fd38edfdc4",
+      "sha256": "ecd339c9b4d90552067e02c9683796014168529c566537399f0ac24589ea1d36",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3650,7 +3650,7 @@
     {
       "id": "SURFACE-7cf4797085be81ca",
       "path": "scripts/check-mobile-distribution.mjs",
-      "sha256": "e4523c5f5dbd2a8062c7063fa98d60702f67ca352737eedc6db4c034353db998",
+      "sha256": "ea7a2df3f888993078da75d09bccc970b75bb4e7f8f202c79ecab35a59b7781f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
