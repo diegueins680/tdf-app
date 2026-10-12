@@ -444,6 +444,9 @@ export default function PublicEventTicketsPage() {
             ? 'PayPal returned, but the server has not confirmed payment.'
             : 'PayPal respondió, pero el servidor todavía no confirmó el pago.'));
         } catch {
+          // PayPal may have taken the payment even though the server could not
+          // confirm it: offer no other rail until the order is read again.
+          setOrderStale(true);
           setMessage(english
             ? 'The server could not verify PayPal. The ticket is not shown as paid.'
             : 'El servidor no pudo verificar PayPal. No mostramos la entrada como pagada.');

@@ -12,6 +12,7 @@ module TDF.Server.EventTicketCheckout
   , ticketOrderSalesOpen
   , lockTicketEventSalesOpen
   , lockTicketOrderSalesOpen
+  , ticketSalesClosedRefusal
   ) where
 
 import           Control.Exception
@@ -1086,8 +1087,18 @@ ticketPaymentAllowed status salesOpen
   | otherwise = Right ()
 
 ticketSalesClosedError :: ServerError
-ticketSalesClosedError =
-  conflict "Tickets are no longer on sale for this event; this order cannot be paid"
+ticketSalesClosedError = conflict ticketSalesClosedMessage
+
+ticketSalesClosedMessage :: Text
+ticketSalesClosedMessage =
+  "Tickets are no longer on sale for this event; this order cannot be paid"
+
+-- | Guard result for the payment-attempt transaction: a refusal unless the
+-- event still sells tickets.
+ticketSalesClosedRefusal :: Bool -> Maybe Text
+ticketSalesClosedRefusal salesOpen
+  | salesOpen = Nothing
+  | otherwise = Just ticketSalesClosedMessage
 
 -- | Whether an order view may list payment methods at all: only for an unpaid
 -- order with a live hold on an event that still sells tickets.
@@ -1171,26 +1182,24 @@ beginTicketPaymentAttemptWith
   -> AppM Checkout.PaymentAttemptReference
 beginTicketPaymentAttemptWith salesGated context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ do
-    salesOpen <- if salesGated && ticketCheckoutAwaitsPayment (tpcCheckoutStatus context)
-      then lockTicketEventSalesOpen (tpcEventKey context)
-      else pure True
-    if not salesOpen
-      then pure (Left ticketSalesClosedError)
-      else either (Left . conflict) Right <$>
-        PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
-          { Checkout.pacCheckout = tpcCheckout context
-          , Checkout.pacProvider = provider
-          , Checkout.pacEnvironment = tpcEnvironment context
-          , Checkout.pacOperation = operation
-          , Checkout.pacAmountMinor = tpcAmountMinor context
-          , Checkout.pacCurrency = tpcCurrency context
-          , Checkout.pacMerchantRef = merchantRef
-          , Checkout.pacIdempotencyKey = ticketPaymentIdempotencyKey context provider operation
-          , Checkout.pacCreatedAt = now
-          , Checkout.pacCorrelationId = ticketPaymentCorrelationId context provider operationLabel
-          }
-  either throwError pure result
+  result <- runDB $ PaymentRuntime.beginPaymentAttemptGuarded salesGuard Checkout.PaymentAttemptCreation
+    { Checkout.pacCheckout = tpcCheckout context
+    , Checkout.pacProvider = provider
+    , Checkout.pacEnvironment = tpcEnvironment context
+    , Checkout.pacOperation = operation
+    , Checkout.pacAmountMinor = tpcAmountMinor context
+    , Checkout.pacCurrency = tpcCurrency context
+    , Checkout.pacMerchantRef = merchantRef
+    , Checkout.pacIdempotencyKey = ticketPaymentIdempotencyKey context provider operation
+    , Checkout.pacCreatedAt = now
+    , Checkout.pacCorrelationId = ticketPaymentCorrelationId context provider operationLabel
+    }
+  either (throwError . conflict) pure result
+  where
+    salesGuard
+      | salesGated && ticketCheckoutAwaitsPayment (tpcCheckoutStatus context) =
+          ticketSalesClosedRefusal <$> lockTicketEventSalesOpen (tpcEventKey context)
+      | otherwise = pure Nothing
 
 failTicketPaymentAttempt
   :: TicketPaymentContext

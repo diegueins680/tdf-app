@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.TicketPaymentGateSpec (spec) where
 
-import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, try)
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
@@ -14,6 +14,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time (getCurrentTime)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), rawExecute, rawSql, runSqlPool)
@@ -23,10 +24,13 @@ import System.Environment (lookupEnv)
 import Test.Hspec
 
 import TDF.API.ProviderExecution (PaymentSessionCreateDTO(..))
+import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import TDF.Config (loadConfig)
 import TDF.DB (Env(..))
 import qualified TDF.Routes.EventTickets as Routes
-import TDF.Server.EventTicketCheckout (lockTicketOrderSalesOpen, publicEventTicketsServer, ticketOrderSalesOpen)
+import TDF.Server.EventTicketCheckout
+  (lockTicketOrderSalesOpen, publicEventTicketsServer, ticketOrderSalesOpen, ticketSalesClosedRefusal)
 import TDF.Server.ProviderExecution (providerExecutionServer)
 
 -- | A held, unpaid ticket order must not be payable once its event stops selling
@@ -125,6 +129,64 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         takeMVar finished `shouldReturn` True
         closeSales pool order "postponed"
         runSqlPool (lockTicketOrderSalesOpen (T.pack (show (oOrder order)))) pool `shouldReturn` False
+
+      it "keeps the event locked from the sales check until the payment attempt is committed" $ \pool -> do
+        -- Through the real attempt path, which commits once before it inserts:
+        -- a closure that arrives after the sales check must find the attempt
+        -- already recorded when it finally gets the event row.
+        order <- newOrder pool "attempt-order"
+        runSqlPool (do
+          rawExecute "UPDATE commerce_provider_account SET enabled=TRUE, status='ready', credential_status='validated',\
+            \ contract_status='approved', merchant_account_ref='tdf-manual-settlement', verified_at=now(), verified_by=1\
+            \ WHERE provider='bank_transfer' AND environment='sandbox'" []
+          rawExecute "UPDATE commerce_provider_capability SET verification_status='sandbox_verified', verified_at=now()\
+            \ WHERE provider_account_id IN (SELECT id FROM commerce_provider_account\
+            \ WHERE provider='bank_transfer' AND environment='sandbox')" []) pool
+        totals <- runSqlPool (rawSql "SELECT total_minor, currency FROM commerce_checkout_session WHERE id=?::uuid"
+          [PersistText (oCheckout order)]) pool
+        (total, currency) <- case totals of
+          [(Single amount, Single code)] -> pure (amount :: Int64, code :: Text)
+          _ -> fail "Expected one checkout"
+        now <- getCurrentTime
+        let orderText = T.pack (show (oOrder order))
+            creation = Checkout.PaymentAttemptCreation
+              { Checkout.pacCheckout = Checkout.CheckoutReference (oCheckout order)
+              , Checkout.pacProvider = Checkout.ProviderBankTransfer
+              , Checkout.pacEnvironment = Checkout.CheckoutSandbox
+              , Checkout.pacOperation = Checkout.OperationManualVerify
+              , Checkout.pacAmountMinor = total
+              , Checkout.pacCurrency = currency
+              , Checkout.pacMerchantRef = "tdf-manual-settlement"
+              , Checkout.pacIdempotencyKey = "synthetic-attempt-order"
+              , Checkout.pacCreatedAt = now
+              , Checkout.pacCorrelationId = "synthetic-attempt-order"
+              }
+        checked <- newEmptyMVar
+        release <- newEmptyMVar
+        attempted <- newEmptyMVar
+        closureSaw <- newEmptyMVar
+        let salesGuard = do
+              refusal <- ticketSalesClosedRefusal <$> lockTicketOrderSalesOpen orderText
+              liftIO (putMVar checked ())
+              liftIO (takeMVar release)
+              pure refusal
+        void $ forkIO $ do
+          outcome <- try (runSqlPool (PaymentRuntime.beginPaymentAttemptGuarded salesGuard creation) pool)
+          putMVar attempted (either (\err -> Left (T.pack (show (err :: SomeException)))) id outcome)
+        takeMVar checked
+        void $ forkIO $ do
+          seen <- runSqlPool (do
+            rawExecute
+              "UPDATE social_event SET workflow_state_id = (SELECT s.id FROM workflow_state s JOIN workflow_definition d ON d.id=s.workflow_id\
+              \ WHERE d.code='social-event-lifecycle' AND s.code='postponed') WHERE id=?"
+              [PersistInt64 (oEvent order)]
+            rawSql "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid" [PersistText (oCheckout order)]) pool
+          putMVar closureSaw (seen :: [Single Int64])
+        threadDelay 400000
+        putMVar release ()
+        outcome <- takeMVar attempted
+        fmap (const ()) outcome `shouldBe` Right ()
+        takeMVar closureSaw `shouldReturn` [Single 1]
 
       it "treats an unknown or malformed ticket order as not on sale" $ \pool -> do
         runSqlPool (ticketOrderSalesOpen "999999999") pool `shouldReturn` False

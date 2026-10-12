@@ -469,6 +469,32 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
   });
 
+  it('offers no other payment rail after a PayPal capture the server could not verify', async () => {
+    readEnvMock.mockReturnValue('synthetic-public-client');
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'awaiting_payment' }));
+    createPaypalOrderMock.mockResolvedValue({ pcPaypalOrderId: 'BOUND-PAYPAL-ORDER' });
+    capturePaypalOrderMock.mockRejectedValue(new Error('502: readback failed'));
+    const render = jest.fn<(target: string | HTMLElement) => Promise<void>>().mockResolvedValue(undefined);
+    const close = jest.fn<() => void>();
+    const buttons = jest.fn<NonNullable<typeof window.paypal>['Buttons']>(() => ({ render, close }));
+    window.paypal = { Buttons: buttons };
+    await renderTracking('/eventos/41/orden/92');
+    const labels = () => Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
+    const paypalButton = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'PayPal')!;
+    await waitForExpectation(() => expect(paypalButton()?.disabled).toBe(false));
+    expect(labels()).toContain('Datafast');
+    await act(async () => fireEvent.click(paypalButton()));
+    await waitForExpectation(() => expect(render).toHaveBeenCalledTimes(1));
+    const options = buttons.mock.calls[0]![0];
+    await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor no pudo verificar PayPal'));
+    expect(labels()).not.toContain('Datafast');
+    const refresh = Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden');
+    expect(refresh).toBeTruthy();
+  });
+
   it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {
     getStorefrontMock.mockResolvedValue({
       ...storefrontFixture,

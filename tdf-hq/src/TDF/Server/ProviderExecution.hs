@@ -161,14 +161,13 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
         }
   -- Recheck ticket eligibility under the event lock in the transaction that
   -- records the attempt: the check above can be overtaken by a closure.
+  let ticketSalesGuard
+        | Store.ceDomainType checkout == "event_ticket_order" =
+            EventTicketCheckout.ticketSalesClosedRefusal
+              <$> EventTicketCheckout.lockTicketOrderSalesOpen (Store.ceDomainOrderId checkout)
+        | otherwise = pure Nothing
   attempt <- liftIO (runSqlPool
-      (do
-        salesOpen <- if Store.ceDomainType checkout == "event_ticket_order"
-          then EventTicketCheckout.lockTicketOrderSalesOpen (Store.ceDomainOrderId checkout)
-          else pure True
-        if salesOpen
-          then PaymentRuntime.beginPaymentAttemptForMethod paymentMethod attemptCreation
-          else pure (Left "Tickets are no longer on sale for this event; this order cannot be paid"))
+      (PaymentRuntime.beginPaymentAttemptForMethodGuarded ticketSalesGuard paymentMethod attemptCreation)
       envPool)
     >>= either (throwError . conflict) pure
   previousReference <- liftIO (runSqlPool (Store.loadAttemptProviderReference attempt) envPool)
