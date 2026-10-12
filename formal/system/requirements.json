@@ -9050,7 +9050,7 @@
       },
       "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
-      "recovery": "The migration returns to dead_letter every failure that was relabelled retrying while its projection stayed dead-lettered; a manager can then retry it.",
+      "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
       "id": "OPS-FAILURE-REPLAY-001",
       "title": "A retried projection failure is run again and ends resolved or dead-lettered",
@@ -9102,10 +9102,10 @@
       ],
       "authorization": "Locked current grant and scope; manager, studio manager or administrator only.",
       "privacy": "The failure keeps only the redacted summary and SQLSTATE; the retry adds nothing private.",
-      "concurrency": "The failure row is locked before the decision, so one of several simultaneous retries is admitted. The retry updates the projection row only while it is dead-lettered, a state in which the worker does not hold it; the worker takes the projection row before the failure row.",
+      "concurrency": "The handler locks the failure row; the database trigger then re-queues the record's dead-lettered projection and re-reads the queue. One of several simultaneous retries is admitted (tested). The worker takes the projection row before the failure row; handler/worker interleavings are argued and were exercised by hand in review, not by the automated harness.",
       "idempotency": "A repeated retry is refused with 409 while the failure is retrying or resolved. Applying the migration again changes nothing.",
-      "failure": "Refusals and an audit failure leave failure and queue unchanged. A projection that keeps failing dead-letters again after eight attempts and can be retried again.",
-      "property": "retrying implies the projection is queued; at most one open failure per record; a processed projection has no open failure; a retry ends resolved or dead-lettered",
+      "failure": "Refusals and an audit failure leave failure and queue unchanged. 503 when the retry trigger is not installed. A projection that keeps failing dead-letters again after eight attempts, is announced again and can be retried again.",
+      "property": "Enforced by triggers and a unique partial index while the migration is applied: retrying implies a projection of the record is queued; at most one open projection failure per record; a processed projection has no open failure. A retry ends resolved or dead-lettered only if the worker runs.",
       "implementation": [
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
@@ -9121,7 +9121,8 @@
       "ambiguity": [
         "Only dead-lettered projections have an executor; a future provider failure needs its own before it can be retried.",
         "A projection that fails for a cause nobody repairs dead-letters again after each retry.",
-        "Whether Operations is enabled in production, and how many failures exist there, is unobserved."
+        "Whether Operations is enabled in production, and how many failures exist there, is unobserved.",
+        "The model's liveness property assumes the worker runs; with the worker disabled a retry stays retrying."
       ],
       "historicalStatus": "retry-relabelled-without-execution"
     }

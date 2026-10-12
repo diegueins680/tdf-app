@@ -417,10 +417,12 @@ def verify_operations(sql, request, check, env, database, output, actors):
     check('operations failure retry admits exactly one request', sorted(reply[0] for reply in replies) == [202] + [409] * 7
           and failures('a', "status || '|' || attempt_count") == 'retrying|9')
     check('operations admitted retry puts the projection back in the queue',
-          sql('SELECT status FROM operations_outbox WHERE event_id=' + q(first) + ' AND attempt_count < 8') == 'pending')
+          sql("SELECT status || '|' || attempt_count FROM operations_outbox WHERE event_id=" + q(first)) == 'pending|0')
     check('operations failure audit retains actual statuses', sql("SELECT (previous_value->>'status') || '>' || (new_value->>'status') FROM operations_admin_audit WHERE correlation_id=" + q(projection_failure)) == 'dead_letter>retrying')
     check('operations retried projection that fails again returns the same failure to dead letter', exhaust(first).endswith('/1')
           and outbox(first) == 'dead_letter' and failures('a', "count(*) || '|' || min(status)") == '1|dead_letter')
+    check('operations second dead letter is announced again', count('operations_domain_event',
+          "aggregate_type='integration_failure' AND aggregate_id=" + q(projection_failure)) == 2)
     check('operations failure can be retried again after a second dead letter', retry()[0] == 202 and failures('a') == 'retrying')
     admit_projection()
     project(first)
@@ -435,23 +437,43 @@ def verify_operations(sql, request, check, env, database, output, actors):
     check('operations resolving a failure closes the work item that announced it',
           sql("SELECT string_agg(DISTINCT status, ',') FROM operations_work_item WHERE correlation_key=" + q('integration_failure:' + projection_failure)) == 'resolved')
 
-    # Failures relabelled before this repair: never re-queued, never left 'retrying'.
+    # Rows as an earlier server left them: relabelled without a re-queue, or duplicated.
+    def migrate():
+        with (output / 'operations-replay-migration.log').open('a') as log:
+            subprocess.run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', str(Path(__file__).resolve().parents[2] / 'tdf-hq/sql/2026-10-11_operations_failure_replay.sql')],
+                           env=env, stdout=log, stderr=log, check=True)
     refuse_projection()
     stranded, queued = replay_event('b'), replay_event('c')
     for event in [stranded, queued]: exhaust(event)
-    sql("UPDATE operations_integration_failure SET status='retrying' WHERE id=" + q(failures('b', 'id')))
-    check('operations fixture has a second retry in the queue', replay_of(failures('c', 'id'))()[0] == 202 and outbox(queued) == 'pending')
-    with (output / 'operations-replay-migration.log').open('a') as log:
-        subprocess.run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', str(Path(__file__).resolve().parents[2] / 'tdf-hq/sql/2026-10-11_operations_failure_replay.sql')],
-                       env=env, stdout=log, stderr=log, check=True)
-    check('operations migration returns a stranded retry to dead letter and keeps a queued one',
-          failures('b') == 'dead_letter' and failures('c') == 'retrying' and outbox(stranded) == 'dead_letter' and outbox(queued) == 'pending')
+    sql('ALTER TABLE operations_integration_failure DISABLE TRIGGER USER; DROP INDEX operations_integration_failure_open_uidx; '
+        "UPDATE operations_integration_failure SET status='retrying' WHERE id=" + q(failures('b', 'id')) + '; '
+        'INSERT INTO operations_integration_failure(organization_id,branch_id,provider,direction,source_record_type,source_record_id,failure_code,redacted_summary,retryable,status) '
+        "SELECT organization_id,branch_id,provider,direction,source_record_type,source_record_id,failure_code,redacted_summary,retryable,'dead_letter' FROM operations_integration_failure WHERE id=" + q(failures('b', 'id')) + '; '
+        'ALTER TABLE operations_integration_failure ENABLE TRIGGER USER')
+    check('operations fixture holds a stranded and a duplicated failure', failures('b', "string_agg(status, ',' ORDER BY created_at, id)") == 'retrying,dead_letter' and outbox(stranded) == 'dead_letter')
+    sql("UPDATE operations_integration_failure SET status='retrying' WHERE id=" + q(failures('c', 'id')))
+    check('operations relabel by an earlier server still puts the projection back in the queue', failures('c') == 'retrying' and outbox(queued) == 'pending')
+    migrate()
+    check('operations migration returns a stranded retry to dead letter, keeps one failure per record and keeps a queued retry',
+          failures('b', "string_agg(status, ',' ORDER BY created_at, id)") == 'dead_letter,resolved' and failures('c') == 'retrying'
+          and outbox(stranded) == 'dead_letter' and outbox(queued) == 'pending'
+          and sql("SELECT count(*) FROM pg_indexes WHERE indexname='operations_integration_failure_open_uidx'") == '1')
     admit_projection()
     project(queued)
-    sql("UPDATE operations_integration_failure SET status='dead_letter' WHERE id=" + q(failures('c', 'id')))
+    sql('ALTER TABLE operations_integration_failure DISABLE TRIGGER USER; '
+        "UPDATE operations_integration_failure SET status='dead_letter',resolved_at=NULL WHERE id=" + q(failures('c', 'id')) + '; '
+        'ALTER TABLE operations_integration_failure ENABLE TRIGGER USER')
     response = replay_of(failures('c', 'id'))()
     check('operations retry with nothing left to run resolves the failure', response[0] == 202
           and json.loads(response[1])['status'] == 'resolved' and failures('c') == 'resolved')
+    sql("UPDATE operations_integration_failure SET status='dead_letter',resolved_at=NULL WHERE id=" + q(failures('c', 'id')))
+    migrate()
+    check('operations migration resolves a failure whose projections have all run', failures('c') == 'resolved')
+    sql('ALTER FUNCTION operations_integration_failure_retry() RENAME TO synthetic_ops_absent_retry')
+    try:
+        check('operations retry is refused while its trigger is not installed', replay_of(failures('b', "min(id::text) FILTER (WHERE status='dead_letter')"))()[0] == 503
+              and outbox(stranded) == 'dead_letter')
+    finally: sql('ALTER FUNCTION synthetic_ops_absent_retry() RENAME TO operations_integration_failure_retry')
     sql('DROP FUNCTION synthetic_ops_projection_failure()')
 
     view = {'organizationId': org, 'name': 'Synthetic owned view', 'shared': False, 'filters': {},
