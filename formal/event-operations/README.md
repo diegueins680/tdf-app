@@ -105,6 +105,9 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
 | `SessionFence.cfg` | 1 authentication/transaction; 32 token records; 2 actors; witness present/absent; read/new/replay | PASS; 12,685 generated, 1,153 distinct states, depth 5 |
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
+| `MusicPublication.cfg` (2026-10-11) | One release, three versions (v2 and v3 correct v1); staff schedule, suspend, re-approve, take down and withdraw without fairness; a scheduled version may turn invalid; the two schedulers are weakly fair | PASS; 32,257 generated, 7,168 distinct states, depth 18; six invariants and the `Progress` property |
+| `MusicPublicationBatch.cfg`, `MusicPublicationStayWithdrawn.cfg` | Negative controls: whole-batch publication, a withdrawn release never republishes | Expected exit 13: `Progress` violated (a due version stays scheduled forever) |
+| `MusicPublicationReplacedOnly.cfg`, `MusicPublicationPointerStale.cfg` | Negative controls: retire only the replaced version, pointer kept on a version that left the live states | Expected exit 12 with `OnlyInvalidFails`, `PointerLive` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -230,6 +233,13 @@ The runner requires the exact named failures from all three negative controls.
 - `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
   receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
   existing current-authorization fence; it does not prove session revocation or constant-time access.
+- `MusicPublication.tla` (2026-10-11): scheduled publication of music release
+  versions. Each due candidate publishes or fails in its own subtransaction; a
+  publication retires every other live version; publication reopens a withdrawn
+  release; the release pointer follows any exit from the live states. See
+  [music publication](../system/music-publication.md). The retirement chain is
+  one step and the submission rules are a boolean; SQL refinement is the
+  PostgreSQL spec, not this model.
 - `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
   lock retention through the event decision. It models current validity, not permanent revocation
   epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes

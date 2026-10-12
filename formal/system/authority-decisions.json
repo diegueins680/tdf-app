@@ -576,6 +576,18 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-066",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "docs/music-releases/architecture-and-data-model.md",
+        "formal/system/music-publication.md"
+      ],
+      "conflict": "music_publish_due retired only the version a candidate was created from and ran every candidate in one transaction, so a second correction of the same source made the batch violate uq_music_release_one_published_version on every run; music_withdraw_due set music_release.withdrawn_at and nothing cleared it, so a scheduled correction of a withdrawn release never published; API-side withdrawal or re-approval left published_version_id on a version that was no longer live. The architecture document says the schedulers 'update the single public version' and does not say what happens to other live versions, to a withdrawn release, or to a failing candidate.",
+      "authority": "The requirement's forbidden transitions (one public version per release, no silent stuck state) and the scheduler-only publication rule of transitionReleaseVersion.",
+      "resolution": "Decided 2026-10-11: (1) publishing a version retires every other published, replacement_pending or takedown_scheduled version of its release through the lifecycle chain, not only the one it replaces; (2) publication clears withdrawn_at, so scheduling a correction of a withdrawn release (staff-only) republishes it; (3) each due candidate publishes or withdraws in its own subtransaction; a candidate that fails at publication becomes suspended with a publication_failed audit event, a failed withdrawal is recorded once as withdrawal_failed and retried; (4) published_version_id is kept by one trigger: set on published, cleared when the version leaves published, suspended, replacement_pending or takedown_scheduled; suspended keeps the pointer. Migration 2026-10-11_music_publication_isolation (manifest entry 203) and MusicPublication.tla."
     }
   ]
 }

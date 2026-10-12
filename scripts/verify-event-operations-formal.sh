@@ -232,6 +232,11 @@ expect_counterexample() {
   echo "Expected mutation counterexample: ${config}: ${invariant}"
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc MusicPublication.tla MusicPublication.cfg music-publication
+run_negative_tlc MusicPublicationBatch.cfg music-publication-batch 'Temporal properties were violated' MusicPublication.tla
+run_negative_tlc MusicPublicationReplacedOnly.cfg music-publication-replaced-only 'Invariant OnlyInvalidFails is violated' MusicPublication.tla
+run_negative_tlc MusicPublicationStayWithdrawn.cfg music-publication-stay-withdrawn 'Temporal properties were violated' MusicPublication.tla
+run_negative_tlc MusicPublicationPointerStale.cfg music-publication-pointer-stale 'Invariant PointerLive is violated' MusicPublication.tla
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
