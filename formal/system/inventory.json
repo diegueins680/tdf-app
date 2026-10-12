@@ -2852,7 +2852,7 @@
     {
       "id": "SURFACE-6d25c31944ebbae3",
       "path": "functions/_middleware.js",
-      "sha256": "ab00d7f6b98d3d5b788034a5de2ea774649ab9211e2c6b637433f70089c84611",
+      "sha256": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3116,7 +3116,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "8017978e7babcc0c5786495805a025d1d7b34940ce471a24a992e1b2c2869e52",
+      "sha256": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
       "semanticConformance": "not-established-by-discovery"
     },
     {

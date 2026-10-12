@@ -9388,7 +9388,7 @@
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
-    "functions/_middleware.js": "ab00d7f6b98d3d5b788034a5de2ea774649ab9211e2c6b637433f70089c84611",
+    "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId].js": "b187d6e72c55ccb34930bac8e64928470ef98def12849c046d4004a14aec2fb8",
@@ -9427,7 +9427,7 @@
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
-    "scripts/__tests__/event-preview.test.mjs": "8017978e7babcc0c5786495805a025d1d7b34940ce471a24a992e1b2c2869e52",
+    "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
@@ -17505,7 +17505,7 @@
     {
       "id": "SURFACE-6d25c31944ebbae3",
       "path": "functions/_middleware.js",
-      "sha256": "ab00d7f6b98d3d5b788034a5de2ea774649ab9211e2c6b637433f70089c84611",
+      "sha256": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18047,7 +18047,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "8017978e7babcc0c5786495805a025d1d7b34940ce471a24a992e1b2c2869e52",
+      "sha256": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
