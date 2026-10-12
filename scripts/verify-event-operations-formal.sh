@@ -96,6 +96,13 @@ run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandf
 run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
+# AUTH-OPS-READ-001: one state; every invariant quantifies over the whole finite policy, so TLC reports a constant-level failure.
+run_tlc OperationsReadPolicy.tla OperationsReadPolicy.cfg operations-read-policy
+run_negative_tlc OperationsReadPolicyWildcardSecurity.cfg operations-read-policy-wildcard-security 'The invariant of NoSecurityDisclosure is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicySqlDrift.cfg operations-read-policy-sql-drift 'The invariant of ReadersAgree is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyUnassigned.cfg operations-read-policy-unassigned 'The invariant of SpecialistsAssigned is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyReadOnlyWrites.cfg operations-read-policy-readonly-writes 'The invariant of ReadOnlyNoWriteGain is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyUnknownGrant.cfg operations-read-policy-unknown-grant 'The invariant of UnknownNothing is equal to FALSE' OperationsReadPolicy.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla

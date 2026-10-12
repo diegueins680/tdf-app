@@ -576,6 +576,19 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-073",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-read-policy.md",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "AUTH-OPS-READ-001 had no formal model; the read policy exists twice (the Haskell predicate for detail and writes, the SQL scope filter for list, metrics and stream) and their agreement, the Admin-only security rule and ReadOnly's write neutrality were stated in prose and three Hspec examples.",
+      "authority": "The requirement's property and forbidden transitions, docs/operations-control-center/rbac.md, and the two evaluators as read on 2026-10-12.",
+      "resolution": "OperationsReadPolicy.tla copies the grant table and both evaluators and checks the five invariants exhaustively over the finite policy (ten roles, two assignment flags, fifteen entity types) with one negative configuration per guard. The copy is by hand: it establishes the policy's properties, not the Haskell or SQL text, which ModelSpec and the conformance harness keep covering. No code change."
     }
   ]
 }
