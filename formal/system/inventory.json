@@ -503,6 +503,7 @@
       "scripts/test-ticket-confirmation-lease.py",
       "scripts/test-ticket-confirmation-smtp.py",
       "scripts/test-ticket-confirmation.sh",
+      "scripts/test-ticket-payment-gate.sh",
       "scripts/test-trial-identity.sh",
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
@@ -2069,6 +2070,7 @@
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
       "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+      "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
@@ -2567,7 +2569,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a2b16ce831029af15eb6605a1268c0c88c391200782d230ac71de6ec5da5c5b1",
+      "sha256": "ce94559a46483a3c794944421d190839220e5bdedc10088c18901d6ddbd9c16f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5430,6 +5432,12 @@
       "id": "SURFACE-1a3dda71702f835f",
       "path": "scripts/test-ticket-confirmation.sh",
       "sha256": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c98eef3148a1eabf",
+      "path": "scripts/test-ticket-payment-gate.sh",
+      "sha256": "8f11d764385376de8ca06c65a349e0de2fa456f8f4cb236274a2109f9090db05",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14387,7 +14395,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
+      "sha256": "99aa0ed1c57e1bb569c11a41868d9f7483d70f30d26110ea2031f1968b496550",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14453,7 +14461,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "15419f9d40ae53dcd9e1bc633be2f4d8899decbbb5e0582c0affcc14f930bdd8",
+      "sha256": "e8c8ae2387649a12d497b62dea2e21158b27a0faae28a578dd2e76bb74d18317",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14790,6 +14798,12 @@
       "id": "SURFACE-ae8c576d860734fa",
       "path": "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
       "sha256": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b88bd7d333ae2b44",
+      "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+      "sha256": "1a90346882be9e09f90af5c87c611a69e7846687486d2f878040ed629d140c5e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23916,7 +23930,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a7fa79a35a00003e8962f5f2211c26fc40b2cfb2932302c0913ee115ce9ab2c1",
+      "sha256": "a566af1e8c34f70466982ddb432c281ffc2c1e51b150259803c55015544e61d1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
