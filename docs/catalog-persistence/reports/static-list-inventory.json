@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T21:06:53.948Z",
+  "generatedAt": "2026-10-12T22:33:29.907Z",
   "repositoryRoot": ".",
-  "filesScanned": 2251,
+  "filesScanned": 2253,
   "candidateCount": 1320,
   "byClassification": {
     "dynamic-business-catalog": 849,
@@ -29300,7 +29300,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 425,
+      "consumerCount": 426,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29547,6 +29547,7 @@
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Service.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/app/ddex/document/[id].tsx",
         "tdf-mobile/app/ddex/index.tsx",
         "tdf-mobile/app/ddex/partners.tsx",
@@ -36591,7 +36592,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 335,
+      "consumerCount": 336,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -36796,6 +36797,7 @@
         "tdf-hq/test/MusicDdexCreditsFixtureMain.hs",
         "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_reference_cutover_negative.sh",
         "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
@@ -36871,7 +36873,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -37076,6 +37078,7 @@
         "tdf-hq/test/MusicDdexCreditsFixtureMain.hs",
         "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_reference_cutover_negative.sh",
         "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
@@ -59209,7 +59212,7 @@
       "lines": [
         164
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -59347,6 +59350,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -64005,7 +64009,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 463,
+      "consumerCount": 464,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -75041,7 +75045,7 @@
       "lines": [
         10620
       ],
-      "consumerCount": 864,
+      "consumerCount": 865,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -83165,7 +83169,7 @@
       "lines": [
         18116
       ],
-      "consumerCount": 861,
+      "consumerCount": 862,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -98797,7 +98801,7 @@
       "lines": [
         277
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -98937,6 +98941,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -114590,7 +114595,7 @@
       "lines": [
         206
       ],
-      "consumerCount": 217,
+      "consumerCount": 218,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -114772,6 +114777,7 @@
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.test.ts",
         "tdf-mobile/src/api/interactions.ts",
@@ -130579,7 +130585,7 @@
       "lines": [
         562
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -130719,6 +130725,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -132641,7 +132648,7 @@
       "lines": [
         335
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/db/init.sh",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -132784,6 +132791,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/Rooms.hs",
         "tdf-hq/src/TDF/API/Services.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/interactions.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -140387,7 +140395,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2390,
+      "line": 2431,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -140395,7 +140403,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2390
+        2431
       ],
       "consumerCount": 2,
       "backendConsumers": [
@@ -140427,7 +140435,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4651,
+      "line": 4692,
       "values": [
         "confirmed",
         "tentative",
@@ -140436,7 +140444,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4651
+        4692
       ],
       "consumerCount": 56,
       "backendConsumers": [
@@ -140529,7 +140537,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 5991,
+      "line": 6032,
       "values": [
         "note",
         "call",
@@ -140542,7 +140550,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        5991
+        6032
       ],
       "consumerCount": 107,
       "backendConsumers": [
@@ -140689,7 +140697,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16552,
+      "line": 16593,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -140697,7 +140705,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16552
+        16593
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -144573,7 +144581,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 729,
+      "line": 730,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -144585,7 +144593,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        729
+        730
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -145402,7 +145410,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -145610,6 +145618,7 @@
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
         "tdf-mobile/src/api/artists.ts",
