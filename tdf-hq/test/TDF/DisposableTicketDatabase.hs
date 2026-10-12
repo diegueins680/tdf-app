@@ -1,12 +1,16 @@
 -- A deliberately narrow direct-harness admission boundary. Do not parse or
 -- interpolate arbitrary libpq strings: only these complete URLs are supported.
-module TDF.DisposableTicketDatabase (safeTicketDatabase, safeConfirmationDatabase) where
+module TDF.DisposableTicketDatabase
+  ( safeTicketDatabase, safeConfirmationDatabase, safeManualReviewDatabase ) where
 
 safeTicketDatabase :: Bool -> [Maybe String] -> String -> Bool
 safeTicketDatabase = safeNamedDatabase "/tdf_ticket_admission_test"
 
 safeConfirmationDatabase :: Bool -> [Maybe String] -> String -> Bool
 safeConfirmationDatabase = safeNamedDatabase "/tdf_ticket_confirmation_worker_test"
+
+safeManualReviewDatabase :: Bool -> [Maybe String] -> String -> Bool
+safeManualReviewDatabase = safeNamedDatabase "/tdf_ticket_manual_review_test"
 
 safeNamedDatabase :: String -> Bool -> [Maybe String] -> String -> Bool
 safeNamedDatabase database ci overrides dsn =

@@ -321,12 +321,15 @@
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": [
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
-        "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql",
-        "tdf-hq/src/TDF/Commerce/StateMachine.hs"
+        "tdf-hq/sql/2026-10-12_ledger_posting_integrity_rollback.sql"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions. No proof of persisted SQL ledger or production use of this helper. Bounded TLC model of ledger posting with four negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md).",
-      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control. Bounded TLC model of ledger posting with four negative controls and the ledger-posting-postgresql spec against the fully migrated schema (formal/system/ledger-posting.md).",
+      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -380,8 +383,10 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation. Posted transactions found unbalanced or empty when the 2026-10-12 migration runs are reported with warnings and left as they are; a correction is a reviewed reversing transaction.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/test-ledger-posting.sh",
         "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+        "tdf-hq/test/integration/ledger_posting_balance.sql",
+        "scripts/test-ticket-manual-review.sh",
+        "scripts/test-ledger-posting.sh",
         "tdf-hq/test/TDF/LedgerPostingSpec.hs"
       ],
       "formalModels": [
@@ -397,11 +402,12 @@
         "Full cross-system refinement and current deployed correspondence remain unverified.",
         "Production ledger drift is unknown until the migration's warnings are read at release time.",
         "No writer uses 'reversed' today; the reversal rule bounds a future writer.",
-        "validateLedgerBalance (Haskell) has no runtime caller; the database rule is the enforced one."
+        "validateLedgerBalance (Haskell) has no runtime caller; the database rule is the enforced one.",
+        "Before 2026-10-12 the database validated balance only on draft -> posted, so a transaction inserted as posted or an entry appended after posting was not rejected; the ledger posting integrity migration closes both."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
       }
     },
     {
@@ -479,7 +485,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -525,7 +531,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -540,7 +546,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -586,7 +592,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -600,7 +606,7 @@
         "scripts/production-release.mjs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -645,7 +651,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -4476,7 +4482,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4588,7 +4594,9 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "scripts/test-ticket-payment-gate.sh"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -5645,11 +5653,11 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
+        "reason": "Edge headers verified on the deployed site and in tests; hydrated canonical metadata is verified only in Jest, not in a deployed browser."
       },
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
-      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke.",
+      "evidence": "2026-10-09: deployed responses for https://www.tdfrecords.net/eventos/141/entradas and /eventos/141/orden/<id> returned Cache-Control 'private, no-store', X-Robots-Tag 'noindex, follow' and Referrer-Policy 'no-referrer'; the event page /eventos/141 publishes Event (no Offer) JSON-LD. Edge tests 7/7 and PublicEventTicketsPage/TicketBankTransferPanel Jest 30/30 on 3874e23. Canonical and robots metadata are set after hydration and are covered by the Jest cases, not by the HTTP check.",
       "supersedes": {
         "id": "EVT-PUBLIC-001",
         "sourceRevision": "ce422263309d85ce7001e7dfe0f8c27f35e8c409",
@@ -7276,9 +7284,9 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows; the hold guard and expiry run in the database.",
+      "concurrency": "Review locks checkout, attempt and evidence rows FOR UPDATE and keeps the locks through the decision (savepoint, not commit); a concurrent reviewer waits and then sees the decided state. The hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
-      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
+      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail. A failed ticket issuance rolls the approval back (409) and leaves the evidence reviewable.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
       "observability": "Checkout audit events for selection, evidence and review; funnel observes initiation with provider bank_transfer.",
       "property": "An order is paid by bank transfer only with independently approved evidence bound to the exact checkout amount while its effective hold is alive.",
@@ -7307,20 +7315,25 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/api/eventTickets.test.ts"
+        "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq/test/TicketManualReviewMain.hs",
+        "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
-      "formalModels": [],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests.",
-      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence.",
+      "formalModels": [
+        "formal/event-operations/ManualBankTransfer.tla"
+      ],
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants are exercised directly; the Haskell review transaction is exercised end to end only through deployed HTTP verification.",
+      "confidence": "Database invariants and the Haskell review transaction are exercised on the production schema; HTTP admission (requireRefundManagedEvent), the issuance body (finalizePaidTicketOrder) and a real verified transfer are separate evidence.",
       "ambiguity": [
         "No bank API confirms deposits; staff verification against the statement is the authority."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented and tested at database and browser boundaries; production configuration and a real verified transfer are pending."
+        "reason": "Review transaction conforms on the production schema after the 2026-10-09 lock-scope fix; production deployment of the fix, configuration and a real verified transfer are pending."
       }
     },
     {
@@ -7410,8 +7423,10 @@
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
-      "formalModels": [],
-      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "formalModels": [
+        "formal/event-operations/TaxDocumentSubmission.tla"
+      ],
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls.",
       "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
@@ -8743,6 +8758,75 @@
       "verification": "Layout jest tests and browser geometry/contrast assertions at 360px.",
       "evidence": "PublicBookingPage, RadioWidget layout and LiveSessionPublicPage tests; e2e mobile-layout-regressions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "OPS-CI-REGISTRY-001",
+      "title": "Authenticate Docker Hub pulls in CI",
+      "domain": "OPS",
+      "critical": false,
+      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "authority": "User authorized CI authentication on 2026-10-09",
+      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "contract": ".github/workflows/ci.yml",
+      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "actors": [
+        "GitHub-hosted CI runner",
+        "Repository secret administrator"
+      ],
+      "preconditions": [
+        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+      ],
+      "inputs": [
+        "Repository secret references",
+        "Existing Docker Hub image tags and immutable digests"
+      ],
+      "state": {
+        "registry": [
+          "unauthenticated",
+          "authenticated",
+          "authentication-failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+      ],
+      "forbiddenTransitions": [
+        "Expose secret values in source or logs",
+        "Treat registry login as a passing test or merge approval",
+        "Use pull_request_target to expose secrets to fork code"
+      ],
+      "effects": [
+        "Authenticated test-image downloads in ephemeral CI runners"
+      ],
+      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
+      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
+      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
+      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
+      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
+      "implementation": [
+        ".github/workflows/build.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/event-operations-formal.yml",
+        ".github/workflows/event-raci-browser.yml",
+        ".github/workflows/interaction-verification.yml",
+        ".github/workflows/social-verification.yml"
+      ],
+      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
+      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "tests": [],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "ambiguity": [
+        "Authentication does not guarantee registry availability or unlimited pull quota."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+      }
     },
     {
       "id": "EVT-DISCOVERY-001",
