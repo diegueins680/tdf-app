@@ -3296,7 +3296,7 @@
     {
       "id": "SURFACE-80d1ebf94eae3fbb",
       "path": "scripts/__tests__/mobile-distribution-expiry.test.mjs",
-      "sha256": "ecd339c9b4d90552067e02c9683796014168529c566537399f0ac24589ea1d36",
+      "sha256": "5aeb81bf949107e22fc329a2d7e6618acf0a15a279e1955cbb793c7fbdc1c6e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3650,7 +3650,7 @@
     {
       "id": "SURFACE-7cf4797085be81ca",
       "path": "scripts/check-mobile-distribution.mjs",
-      "sha256": "ea7a2df3f888993078da75d09bccc970b75bb4e7f8f202c79ecab35a59b7781f",
+      "sha256": "7f001f01cfd6039c2a4a0946414f23680f76a8af94dd7b132da80c80aa15b9c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
