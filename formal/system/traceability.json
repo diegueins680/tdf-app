@@ -9806,7 +9806,7 @@
     "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
-    "tdf-hq/src/TDF/Routes/Courses.hs": "c0f9274cf149371b1526b8e4c07cc0d31359c30b40819722cfa7c65453c41ee8",
+    "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
     "tdf-hq/src/TDF/Server.hs": "0578f21cf100c4d9e6c3f127d13b5c04acc5cf24731ffb601cf128418657a696",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
@@ -9854,7 +9854,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/Spec.hs": "193978a343c6cb872c4e2938a8b9e23f900269d52358081afbab1ad275c40744",
-    "tdf-hq/test/TDF/APITypesSpec.hs": "a5de4160e0da070e6bcdedf78129f7aebf0917a4d101f6c920c71c4e45484a7c",
+    "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -33726,7 +33726,7 @@
     {
       "id": "SURFACE-52b73c408ae18bc0",
       "path": "tdf-hq/src/TDF/Routes/Courses.hs",
-      "sha256": "c0f9274cf149371b1526b8e4c07cc0d31359c30b40819722cfa7c65453c41ee8",
+      "sha256": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34847,7 +34847,7 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "a5de4160e0da070e6bcdedf78129f7aebf0917a4d101f6c920c71c4e45484a7c",
+      "sha256": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
