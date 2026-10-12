@@ -949,7 +949,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -963,7 +963,8 @@
       "inputs": [
         "Domain formal-model.yaml machines",
         "formal/system/state-machine-bindings.json",
-        "Migrated PostgreSQL catalog"
+        "Migrated PostgreSQL catalog",
+        "Bound Haskell validators and their state renderers"
       ],
       "state": {
         "machine": [
@@ -983,7 +984,8 @@
       ],
       "effects": [
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
-        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048)."
+        "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
+        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -999,21 +1001,23 @@
       "implementation": [
         "scripts/check-state-machines.py",
         "formal/system/state-machine-bindings.json",
-        "docs/revenue-platform/formal-model.yaml"
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison; application-enforced transitions, guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database and twelve negative controls",
+      "verification": "Catalog comparison, plus static comparison of four bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals); guards and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and seven database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest; no claim about Haskell-enforced transitions.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Fourteen machines enforce transitions only in application code."
+        "Ten machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -6717,7 +6721,8 @@
         "tdf-hq-ui/public/mobile-app/privacy.html",
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
-        "tdf-hq-ui/public/mobile-distribution.json"
+        "tdf-hq-ui/public/mobile-distribution.json",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
@@ -7526,11 +7531,11 @@
     },
     {
       "id": "PRIV-WHATSAPP-001",
-      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowed only when the number has no request in the last 24 hours, and simultaneous first requests for a number do not fail. A request the provider did not accept stays pending as undelivered: for 1 hour from the request the number can still confirm it by messaging first and a new public request may retry the send without changing the request instant; afterwards it waits for the 24-hour interval. Delivered requests to a number are therefore at least 23 hours apart. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request, within 7 days of a delivered request, and the request has not been withdrawn since; a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form, inbound STOP/SALIR/BAJA/CANCELAR or staff revocation) always withdraws consent and invalidates any pending request without resetting the 24-hour interval, and its stored instant is never earlier than the request it defeats; neither withdrawing, confirming nor staff capture lets anyone request another message early. The public opt-out notifies only a number that was subscribed. The failure of a superseded send attempt changes nothing. Staff consent capture remains admin-only.",
+      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
       "authority": "reconciled",
-      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052); request-interval and undelivered-request repair (AUTHORITY-055)",
-      "property": "Consent is active only after a timely reply from the same number to an unwithdrawn request, or admin capture; delivered requests are at least 23 hours apart",
-      "contract": "formal/system/whatsapp-consent.md",
+      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052)",
+      "property": "Consent is active only after a timely reply from the same number or admin capture",
+      "contract": "formal/system/public-route-admission.md",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/API.hs",
@@ -7542,12 +7547,10 @@
         "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
         "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
         "tdf-hq-ui/src/config/appConfig.ts",
-        "tdf-hq-ui/src/vite-env.d.ts",
-        "formal/event-operations/WhatsAppConsent.tla",
-        "scripts/test-whatsapp-consent.sh"
+        "tdf-hq-ui/src/vite-env.d.ts"
       ],
-      "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
-      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
+      "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
+      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7570,71 +7573,45 @@
       "state": {
         "consent": [
           "none",
-          "pending (delivered)",
-          "pending (undelivered)",
+          "pending",
           "active",
           "withdrawn"
         ]
       },
       "allowedTransitions": [
-        "none -> pending (public request)",
-        "withdrawn/expired/active-then-withdrawn -> pending (public request more than 24 hours after the previous request instant)",
-        "pending (delivered) -> pending (undelivered) (provider did not accept that exact request)",
-        "pending (undelivered) -> pending (delivered) (retry within 1 hour, same request instant, not withdrawn)",
-        "pending (delivered) -> active (affirmative reply within 7 days)",
-        "pending (undelivered) -> active (affirmative reply within 1 hour of the request)",
-        "any -> withdrawn (opt-out, STOP or staff revocation)",
+        "none/withdrawn -> pending (public request)",
+        "pending -> active (affirmative reply within 7 days)",
+        "any -> withdrawn (opt-out or STOP)",
         "admin capture -> active"
       ],
       "forbiddenTransitions": [
         "public request -> active",
-        "pending older than its window -> active",
-        "withdrawn -> active without a new request and reply",
-        "any -> new request within 24 hours of the previous request instant",
-        "undelivered retry -> later request instant",
-        "superseded attempt failure -> any change to a newer request, consent or withdrawal"
+        "pending older than 7 days -> active",
+        "withdrawn -> active without a new request and reply"
       ],
       "effects": [
         "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
-      "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
-      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
-      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
-      "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
-      "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
+      "concurrency": "Claim and confirmation are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits.",
+      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
+      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
+      "recovery": "A number can request again after 24 hours or after a request expires.",
+      "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
-        "scripts/test-whatsapp-consent.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [
-        "formal/event-operations/WhatsAppConsent.tla",
-        "formal/event-operations/WhatsAppConsent.cfg",
-        "formal/event-operations/WhatsAppConsentStaleReply.cfg",
-        "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
-        "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
-        "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
-        "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
-        "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
-        "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
-        "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg"
-      ],
-      "confidence": "High for the modeled and tested transitions; WhatsApp delivery, truthful provider outcomes and Meta webhook timing are external.",
+      "formalModels": [],
+      "confidence": "High for the tested transitions; WhatsApp delivery and Meta webhook timing are external.",
       "ambiguity": [
         "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
         "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
-        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window.",
-        "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
-        "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
-        "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
-        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
+        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Bounded model, unit and PostgreSQL tests pass on the candidate; not deployed, and production has no WhatsApp Cloud API configuration to exercise it."
+        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
       }
     },
     {
@@ -8577,7 +8554,7 @@
     {
       "id": "COURSE-ENROLL-001",
       "title": "Course enrollment opens immediately and accepts local phone formats",
-      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164.",
+      "statement": "Pressing Inscribirme opens the enrollment step in view without scrolling, prefilled for signed-in users, resumable after login, with field-adjacent validation; local Ecuador phone numbers are submitted as E.164. Server intake (legacy lead and checkout) normalizes phones with the same rules as the web normalizer (tdf-hq-ui/src/utils/phone.ts), checked against the same accept/reject table; the server is deliberately stricter in two ways: only the ASCII space separates digit groups (newlines and Unicode separators are rejected), and a 00 prefix needs at least 9 following digits.",
       "authority": "product owner request after real-user mobile test (2026-10-07)",
       "domain": "COURSE",
       "actors": [
@@ -8626,23 +8603,27 @@
       "implementation": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/utils/phone.ts",
-        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts"
+        "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
+        "tdf-hq/src/TDF/CoursePhone.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/utils/phone.test.ts",
         "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
-        "e2e/web/course-enrollment.spec.mjs"
+        "e2e/web/course-enrollment.spec.mjs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Synthetic component/browser evidence passes on Android-small, iPhone, desktop Chromium/Firefox/WebKit; physical-device and deployed verification pending.",
       "ambiguity": [
-        "Backend legacy path should also accept local EC formats; course terms URL not yet exposed by metadata."
+        "Course terms URL not yet exposed by course metadata."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Web behavior verified synthetically; backend normalization pending."
+        "reason": "Web flow verified synthetically and by read-only production smoke; server phone normalization covered by Haskell tests. A deployed backend release and a physical-device enrollment remain to be verified."
       },
       "critical": false,
       "property": "EnrollmentInView and E164Phone",
@@ -8729,6 +8710,83 @@
       "verification": "Layout jest tests and browser geometry/contrast assertions at 360px.",
       "evidence": "PublicBookingPage, RadioWidget layout and LiveSessionPublicPage tests; e2e mobile-layout-regressions.",
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
+    },
+    {
+      "id": "EVT-DISCOVERY-001",
+      "title": "One events entry in navigation and an upcoming-events carousel after login",
+      "domain": "EVT",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference.",
+      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in.",
+      "source": "tdf-hq-ui navigation and shells",
+      "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Signed-in session for the carousel"
+      ],
+      "inputs": [
+        "GET /social-events/upcoming",
+        "GET /social-events/events/{id}/rsvp",
+        "PUT /social-events/events/{id}/rsvp"
+      ],
+      "state": {
+        "carousel": [
+          "hidden",
+          "visible",
+          "dismissed for session"
+        ]
+      },
+      "allowedTransitions": [
+        "visible -> dismissed for session",
+        "no RSVP -> accepted via one tap"
+      ],
+      "forbiddenTransitions": [
+        "Carousel shown to anonymous visitors",
+        "Second events entry in the public navigation"
+      ],
+      "effects": [
+        "Viewer's RSVP upserted with their showEventRsvpsOnProfile preference"
+      ],
+      "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
+      "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
+      "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
+      "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
+      "observability": "None beyond existing RSVP and API telemetry.",
+      "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests",
+      "evidence": "Local Jest execution",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with mocked APIs; not yet exercised against production data.",
+      "ambiguity": [
+        "\"Eventos descubiertos\" remains a separate staff discovery tool in the sidebar."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
     },
     {
       "id": "LEGAL-DISCLOSURE-001",
@@ -8985,11 +9043,11 @@
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "5f765d9ea68d0ee69b47bf99c22a4ed52d8c28b77316971be415e3a2f0940708",
-    ".github/workflows/event-operations-formal.yml": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+    ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+    ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "5ee8ef85c53e4df4a29625734f9454a80f498ede08090b1f3e20ee0f998d42bb",
-    "docs/revenue-platform/formal-model.yaml": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
+    "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
@@ -9080,16 +9138,6 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
-    "formal/event-operations/WhatsAppConsent.cfg": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
-    "formal/event-operations/WhatsAppConsent.tla": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
-    "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
-    "formal/event-operations/WhatsAppConsentReleasedFailure.cfg": "96c5a3a384f45f1e9a6e28a19c6d1e24d6f07dce9a9ed91ec365ce9d149a03d1",
-    "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg": "7a80288380d6091257f5075a9b36c3edbbfc462b15f3fd903016e935e1ea3b34",
-    "formal/event-operations/WhatsAppConsentStaleReply.cfg": "3562ab6ee72465ea40c5dca690c1ca00ca3108f733ccc273ce605fbc2f207de7",
-    "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg": "730b2c17cbd520071cb7eeb845b2ed2cfb43c388c6792f9ff850a8f3bbdd1ee8",
-    "formal/event-operations/WhatsAppConsentUnboundFailure.cfg": "30f022a9bff35ad3e6760f3c45994fea034eb178b517b2ee4ea8e6d183422d87",
-    "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg": "34cc1751977ea8443e1573c240b29bdb22c2e87d89fd9e7345863af857709690",
-    "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg": "b96a20e18c648021f6794527b13d50fefaaf40f310ffab2e5147ef7bdd80201c",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
@@ -9102,7 +9150,7 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
-    "formal/system/state-machine-bindings.json": "e50438551f4dc63025b7da3fea6767b2caa8da82c6e9cd095bd794d74e55d26f",
+    "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
@@ -9180,7 +9228,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-state-machines.py": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+    "scripts/check-state-machines.py": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -9285,7 +9333,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
+    "scripts/test-state-machines.py": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -9293,13 +9341,12 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
-    "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "d8ce7a698906bb98d723235ff0cbb7160cfddbe3c1f6fcb2a58d625759da8cb3",
+    "scripts/verify-event-operations-formal.sh": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9316,7 +9363,7 @@
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
-    "tdf-hq-ui/public/mobile-distribution.json": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
+    "tdf-hq-ui/public/mobile-distribution.json": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
@@ -9362,10 +9409,11 @@
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx": "bbb0a57dccd78aa63d5380426e0aab0304d7735cfec9758b44c3d873d7f7128d",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
-    "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "a07a0f537aded9b0519eb2864340307f65a63bba0334e3293b12c8813cd58de4",
+    "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -9373,14 +9421,18 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
-    "tdf-hq-ui/src/components/SidebarNav.tsx": "2f38dd912bc7c9d4b0272aa782423da292a2379b5379cdc41f3d78eadfe78cf0",
+    "tdf-hq-ui/src/components/SidebarNav.tsx": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx": "2a49091cfcf2e83610c72a0372203f6552928576be5283399df5ce37959c1137",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "f342a2bad3450c04bcb599119ff0bbc4bf57a35ebbc3f55b92f36f54882d6aea",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "061a412a7c0a234879f4f9fcc0c66552ce49d9e379c6aa493b015b0f827a6cad",
+    "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
+    "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
@@ -9401,8 +9453,8 @@
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "8d01c1c708ed13445fb0b044b8c20e8d6fd5030c6cad7b6b0134674b60d0457d",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "d7b998a8a79bc28b9e83f45b634338fb57c7bafe69e7faceded0213902a8c993",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
@@ -9411,7 +9463,7 @@
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
     "tdf-hq-ui/src/main.tsx": "aa5242c86d81fd37529b80f1dd5ec507d58288fe8fc7547f80dd1530c59233e8",
-    "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
+    "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
     "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx": "6db6ff370e4f3d207168fdd7be610ac28c6e4a6f9f6da7e3930e9154aba2f2e6",
     "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
@@ -9445,6 +9497,7 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
+    "tdf-hq-ui/src/pages/MobileAppPage.tsx": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "329e773ad263a5409e3a38261da4775858977388cbd55a6f9c9838cf4955e332",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
@@ -9478,7 +9531,9 @@
     "tdf-hq-ui/src/player/sourceMetadata.ts": "2d2f6271f7718eb899b75b8afd5c1e1b73d77bf5db665438e42c5d3eea3dd55a",
     "tdf-hq-ui/src/player/types.ts": "469cc2cbcd256ea4f59b510e82e8d54927ca4081f372575822e0f2c375fd558f",
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
-    "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "502c2431f244468a68a3fa0f0ac0978649f7d32f4fa082b31cdac4b19987e690",
+    "tdf-hq-ui/src/routes/AppShell.test.tsx": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+    "tdf-hq-ui/src/routes/AppShell.tsx": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
+    "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
     "tdf-hq-ui/src/session/SessionContext.tsx": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
@@ -9611,12 +9666,13 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
-    "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
+    "tdf-hq/src/TDF/CampaignAutomation.hs": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "b330b3fa88c6f63de6bed83991e7f2356934d02fe5f4fc390dde8865dcb341dd",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
+    "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
@@ -9630,6 +9686,7 @@
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
+    "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
@@ -9660,8 +9717,9 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "0fc12ca61745a842ec4362a1d066036ef315f1c92c7c8d8fbe080d550d3035ce",
+    "tdf-hq/src/TDF/Server.hs": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
+    "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
@@ -9699,12 +9757,12 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "a06dfe8eded0c069a3df811cc0db9421902afd7269a5c0cfad58fd9687e3c78e",
+    "tdf-hq/tdf-hq.cabal": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "930f532856b6ede3ab6863e70d575d7a6c264b17f996085248f308c4f6f8bd40",
+    "tdf-hq/test/Spec.hs": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
     "tdf-hq/test/TDF/APITypesSpec.hs": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -9731,10 +9789,9 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
-    "tdf-hq/test/TDF/ServerSpec.hs": "4045baca7164b03f14db860136d8cfdbfddc13f0a8fc2e135cc74317b0e127fb",
+    "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
-    "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -9939,10 +9996,6 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "tests"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -9975,6 +10028,10 @@
       {
         "requirement": "SYS-INVENTORY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/lib/formal-result-summary.mjs": [
@@ -10145,6 +10202,10 @@
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -10222,6 +10283,10 @@
       },
       {
         "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-ENROLL-001",
         "relationship": "tests"
       }
     ],
@@ -10441,6 +10506,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-state-machines.py": [
       {
         "requirement": "SYS-STATE-001",
@@ -10631,6 +10702,10 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -10640,6 +10715,10 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -14091,6 +14170,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/pages/MobileAppPage.tsx": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/mobile/MobileApp.test.tsx": [
       {
         "requirement": "MOB-PUBLIC-001",
@@ -14200,6 +14285,10 @@
       },
       {
         "requirement": "MKT-CART-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -14729,86 +14818,6 @@
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsent.tla": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "scripts/test-whatsapp-consent.sh": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "tests"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsent.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentStaleReply.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentUnboundFailure.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentReleasedFailure.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg": [
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": [
@@ -15455,6 +15464,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/notificationTarget.ts": [
@@ -15945,6 +15958,10 @@
       {
         "requirement": "MKT-CART-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": [
@@ -15972,6 +15989,18 @@
       }
     ],
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": [
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/CoursePhone.hs": [
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/CourseCheckout.hs": [
       {
         "requirement": "COURSE-ENROLL-001",
         "relationship": "implementation"
@@ -16068,6 +16097,48 @@
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": [
       {
         "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/routes/AppShell.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/routes/AppShell.test.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
         "relationship": "tests"
       }
     ],
@@ -16337,7 +16408,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "5f765d9ea68d0ee69b47bf99c22a4ed52d8c28b77316971be415e3a2f0940708",
+      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16368,7 +16439,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+      "sha256": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16382,6 +16453,10 @@
         {
           "requirement": "SYS-INVENTORY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -18229,7 +18304,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+      "sha256": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21085,7 +21160,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
+      "sha256": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21232,22 +21307,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-da68a6be269c4e94",
-      "path": "scripts/test-whatsapp-consent.sh",
-      "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -21332,7 +21391,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d8ce7a698906bb98d723235ff0cbb7160cfddbe3c1f6fcb2a58d625759da8cb3",
+      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21386,10 +21445,6 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "tests"
         }
       ]
     },
@@ -21678,7 +21733,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
+      "sha256": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23269,11 +23324,15 @@
     {
       "id": "SURFACE-de5d7d4bb9406476",
       "path": "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
-      "sha256": "a07a0f537aded9b0519eb2864340307f65a63bba0334e3293b12c8813cd58de4",
+      "sha256": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-CART-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "tests"
         }
       ]
@@ -23396,14 +23455,19 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "8133459f78d91d5e24ff243c61163f5c9bf10703167f7aa4d59e8bc928d04c00",
+      "sha256": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
+      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23412,6 +23476,10 @@
         },
         {
           "requirement": "MKT-CART-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -23581,11 +23649,15 @@
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "2f38dd912bc7c9d4b0272aa782423da292a2379b5379cdc41f3d78eadfe78cf0",
+      "sha256": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -23795,9 +23867,14 @@
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "ce10f9c7746cc7d5e4dfce5ac87fdd32d59b27e8e5bb16593dae379176aa6120",
+      "sha256": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-151891803a9e4745",
@@ -23821,6 +23898,42 @@
       "requirements": [
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c608b83dcf4b5559",
+      "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+      "sha256": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2393bd3c8b025098",
+      "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "sha256": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-60f6d13fa85fffa5",
+      "path": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+      "sha256": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -24717,7 +24830,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "8d01c1c708ed13445fb0b044b8c20e8d6fd5030c6cad7b6b0134674b60d0457d",
+      "sha256": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24726,6 +24839,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -24733,7 +24850,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "d7b998a8a79bc28b9e83f45b634338fb57c7bafe69e7faceded0213902a8c993",
+      "sha256": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24742,6 +24859,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -24885,7 +25006,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
+      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26151,9 +26272,14 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "64d6270c6b48fcb9bd5af79ba337d67e45effcb9d319a02ed5dbff58926ebf63",
+      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5f2964f5ab118818",
@@ -27160,21 +27286,31 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "1c92ba33b7073ae1c39ba640848017f697a2792ff4802eba12303b16fc2bf4db",
+      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e21f5f9f9c9cf3d5",
       "path": "tdf-hq-ui/src/routes/AppShell.tsx",
-      "sha256": "24c46f7ebbf128fabf9681e91972f5f41081bf776f8fe15e3486276996aa1cd2",
+      "sha256": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a23a18e5ad13967c",
       "path": "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
-      "sha256": "502c2431f244468a68a3fa0f0ac0978649f7d32f4fa082b31cdac4b19987e690",
+      "sha256": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32253,7 +32389,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
+      "sha256": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32392,7 +32528,12 @@
       "path": "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
       "sha256": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-42d48212b5b3fd40",
@@ -32676,6 +32817,18 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7a17991a5f78eecb",
+      "path": "tdf-hq/src/TDF/CoursePhone.hs",
+      "sha256": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-ENROLL-001",
           "relationship": "implementation"
         }
       ]
@@ -33390,7 +33543,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "0fc12ca61745a842ec4362a1d066036ef315f1c92c7c8d8fbe080d550d3035ce",
+      "sha256": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33444,6 +33597,10 @@
         {
           "requirement": "PRIV-WHATSAPP-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -33469,9 +33626,14 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "15af66fb43c21a80f6e41f4ff67755fc0b8dda6867383496a1c6da3a2ab3e70a",
+      "sha256": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-988d54f382594f88",
@@ -34278,7 +34440,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a06dfe8eded0c069a3df811cc0db9421902afd7269a5c0cfad58fd9687e3c78e",
+      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34392,7 +34554,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "930f532856b6ede3ab6863e70d575d7a6c264b17f996085248f308c4f6f8bd40",
+      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34958,7 +35120,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "4045baca7164b03f14db860136d8cfdbfddc13f0a8fc2e135cc74317b0e127fb",
+      "sha256": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34987,6 +35149,10 @@
         },
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-ENROLL-001",
           "relationship": "tests"
         }
       ]
@@ -35070,18 +35236,6 @@
       "sha256": "a641f1c2e97c98891f2a295fb3ac96eb38a8790150dff92719929c6fedbd3d5a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
-    },
-    {
-      "id": "SURFACE-a7aa6fe1e1854ab6",
-      "path": "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
-      "sha256": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "PRIV-WHATSAPP-001",
-          "relationship": "tests"
-        }
-      ]
     },
     {
       "id": "SURFACE-0096fb04ca9db3fe",
@@ -39242,7 +39396,6 @@
     "SURFACE-2fd56cddd4894a6a",
     "SURFACE-e3d94a49085bdc41",
     "SURFACE-1ca0b4712a14943f",
-    "SURFACE-6838929c1edd8346",
     "SURFACE-f3829ea86f743f20",
     "SURFACE-e89e4f0a2bd61051",
     "SURFACE-6c3af6d67bd751d6",
@@ -39271,7 +39424,6 @@
     "SURFACE-615a78e009691805",
     "SURFACE-7bdff475261102de",
     "SURFACE-9b8b12c0260a498e",
-    "SURFACE-3fb10adaf67ec8d5",
     "SURFACE-151891803a9e4745",
     "SURFACE-f29c4e265dd61680",
     "SURFACE-6c08dcce1c9676c9",
@@ -39483,7 +39635,6 @@
     "SURFACE-689d1c649ef08997",
     "SURFACE-bee40b89d7a09a1d",
     "SURFACE-4a562abbc0b9c284",
-    "SURFACE-c6ff06a2e2277d3e",
     "SURFACE-a4131610c954eb01",
     "SURFACE-ce5da75bdb773e8c",
     "SURFACE-d3757406b3552635",
@@ -39566,8 +39717,6 @@
     "SURFACE-8d890473e2ac6c09",
     "SURFACE-77460de8941bcdf9",
     "SURFACE-85e8012c6e922277",
-    "SURFACE-65b783cd59e6037b",
-    "SURFACE-e21f5f9f9c9cf3d5",
     "SURFACE-b81f4ee712780e85",
     "SURFACE-dd805fb7a067baea",
     "SURFACE-06ba6461b3eb1e56",
@@ -40056,7 +40205,6 @@
     "SURFACE-ee01356d907d3fc2",
     "SURFACE-764d135c920e69a2",
     "SURFACE-6158a3005f97f9a6",
-    "SURFACE-27dffd9db92a2065",
     "SURFACE-42d48212b5b3fd40",
     "SURFACE-64cb8366887e5054",
     "SURFACE-1f329e23e5aba24d",
@@ -40113,7 +40261,6 @@
     "SURFACE-21573408c23f618c",
     "SURFACE-6076c182710c4ad6",
     "SURFACE-5cbf72ef8bf21ded",
-    "SURFACE-2834bdf776fa3c23",
     "SURFACE-436c77cb88490332",
     "SURFACE-06aae7ecd0fab607",
     "SURFACE-576775b1139a1557",
@@ -40595,6 +40742,7 @@
     "SOC-ABUSE-001",
     "EVT-TICKET-MANUAL-001",
     "EVT-TICKET-INVOICE-001",
+    "PRIV-WHATSAPP-001",
     "MEDIA-MUSIC-RELEASE-001",
     "MEDIA-MUSIC-ASSET-001",
     "MEDIA-MUSIC-DDEX-001",
@@ -40609,7 +40757,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#marketplace_sale_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "on_hold",
         "method_specific_transitions": {
@@ -40690,7 +40838,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "on_hold",
         "transitions": {
@@ -40722,14 +40870,16 @@
           ],
           "returned_pending_inspection": [
             "deposit_refund_due",
-            "damage_review"
+            "damage_review",
+            "disputed"
           ],
           "damage_review": [
             "deposit_refund_due",
             "disputed"
           ],
           "deposit_refund_due": [
-            "closed"
+            "closed",
+            "disputed"
           ],
           "cancellation_requested": [
             "cancelled"
@@ -40766,7 +40916,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "on_hold",
         "transitions": {
@@ -40840,7 +40990,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#event_ticket_fulfillment",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "seat_held",
         "transitions": {
@@ -40886,7 +41036,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#quote",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -40937,7 +41087,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#distribution",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -41030,7 +41180,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#royalty_statement",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "ingested",
         "transitions": {
@@ -41085,7 +41235,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#refund",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "requested",
         "transitions": {
@@ -41121,7 +41271,7 @@
     {
       "id": "docs/revenue-platform/formal-model.yaml#provider_event",
       "source": "docs/revenue-platform/formal-model.yaml",
-      "sourceSha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sourceSha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -41720,7 +41870,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4f4391f57a13224f2b0bb89bd8ea820b0381490b868c9482224c3b6237a4ac63",
+      "sourceSha256": "e8647a6a7ae2f8fa5be98072544a3aa55902b36b3862666022622b546c25802f",
       "definition": {
         "states": [
           "absent",
@@ -63917,7 +64067,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 112,
+    "PARTIAL": 113,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

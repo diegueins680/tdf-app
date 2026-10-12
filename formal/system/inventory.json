@@ -509,7 +509,6 @@
       "scripts/test-user-onboarding-progress-migration.sh",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
-      "scripts/test-whatsapp-consent.sh",
       "scripts/test_mail_deliverability_monitor.py",
       "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
@@ -802,6 +801,9 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+      "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+      "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
       "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
       "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
       "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
@@ -1848,6 +1850,7 @@
       "tdf-hq/src/TDF/Contracts/Server.hs",
       "tdf-hq/src/TDF/Contracts/Types.hs",
       "tdf-hq/src/TDF/Cors.hs",
+      "tdf-hq/src/TDF/CoursePhone.hs",
       "tdf-hq/src/TDF/Courses/Production.hs",
       "tdf-hq/src/TDF/Cron.hs",
       "tdf-hq/src/TDF/DB.hs",
@@ -2069,7 +2072,6 @@
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
-      "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
       "tdf-hq/test/TicketAdmissionMain.hs",
       "tdf-hq/test/TicketConfirmationMain.hs",
       "tdf-hq/test/TicketConfirmationSmtpMain.hs",
@@ -2565,7 +2567,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "5f765d9ea68d0ee69b47bf99c22a4ed52d8c28b77316971be415e3a2f0940708",
+      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2577,7 +2579,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "052ccefa1cf4cf173830b25d3fc8fe29d1e9e16c31194f80799bf66078a082cc",
+      "sha256": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3645,7 +3647,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "199ebabd5543694f5769817b3cfc5f3a0cee031c9a1bdb2c326a67115576a732",
+      "sha256": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5379,7 +5381,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "64039189bf9c56ce0e9b7496757749926aa148cd82589062ab8c3516e0f5c5fa",
+      "sha256": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5467,12 +5469,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-da68a6be269c4e94",
-      "path": "scripts/test-whatsapp-consent.sh",
-      "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -5517,7 +5513,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d8ce7a698906bb98d723235ff0cbb7160cfddbe3c1f6fcb2a58d625759da8cb3",
+      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5697,7 +5693,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
+      "sha256": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6819,7 +6815,7 @@
     {
       "id": "SURFACE-de5d7d4bb9406476",
       "path": "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
-      "sha256": "a07a0f537aded9b0519eb2864340307f65a63bba0334e3293b12c8813cd58de4",
+      "sha256": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6915,13 +6911,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "8133459f78d91d5e24ff243c61163f5c9bf10703167f7aa4d59e8bc928d04c00",
+      "sha256": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "cdb48ee9faeb2e643a8599dbdca61fb365acbc4b4b034651501275c1c943ca51",
+      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7029,7 +7025,7 @@
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "2f38dd912bc7c9d4b0272aa782423da292a2379b5379cdc41f3d78eadfe78cf0",
+      "sha256": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7179,7 +7175,7 @@
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "ce10f9c7746cc7d5e4dfce5ac87fdd32d59b27e8e5bb16593dae379176aa6120",
+      "sha256": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7198,6 +7194,24 @@
       "id": "SURFACE-32b83043961bf6cd",
       "path": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
       "sha256": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c608b83dcf4b5559",
+      "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+      "sha256": "f970f18ff3ca6992f619ef997b8903edc01ee737fafce75a32affb5f012f2cfd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2393bd3c8b025098",
+      "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+      "sha256": "94d9680fdcad3b85b257cedfb6dcb296a2c7bac96330d86ff9834d2475986cac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-60f6d13fa85fffa5",
+      "path": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+      "sha256": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7869,13 +7883,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "8d01c1c708ed13445fb0b044b8c20e8d6fd5030c6cad7b6b0134674b60d0457d",
+      "sha256": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "d7b998a8a79bc28b9e83f45b634338fb57c7bafe69e7faceded0213902a8c993",
+      "sha256": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7953,7 +7967,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
+      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8841,7 +8855,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "64d6270c6b48fcb9bd5af79ba337d67e45effcb9d319a02ed5dbff58926ebf63",
+      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9537,19 +9551,19 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "1c92ba33b7073ae1c39ba640848017f697a2792ff4802eba12303b16fc2bf4db",
+      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e21f5f9f9c9cf3d5",
       "path": "tdf-hq-ui/src/routes/AppShell.tsx",
-      "sha256": "24c46f7ebbf128fabf9681e91972f5f41081bf776f8fe15e3486276996aa1cd2",
+      "sha256": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a23a18e5ad13967c",
       "path": "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx",
-      "sha256": "502c2431f244468a68a3fa0f0ac0978649f7d32f4fa082b31cdac4b19987e690",
+      "sha256": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13221,7 +13235,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
+      "sha256": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13462,6 +13476,12 @@
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
       "sha256": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7a17991a5f78eecb",
+      "path": "tdf-hq/src/TDF/CoursePhone.hs",
+      "sha256": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13893,7 +13913,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "0fc12ca61745a842ec4362a1d066036ef315f1c92c7c8d8fbe080d550d3035ce",
+      "sha256": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13911,7 +13931,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "15af66fb43c21a80f6e41f4ff67755fc0b8dda6867383496a1c6da3a2ab3e70a",
+      "sha256": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14367,7 +14387,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a06dfe8eded0c069a3df811cc0db9421902afd7269a5c0cfad58fd9687e3c78e",
+      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14433,7 +14453,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "930f532856b6ede3ab6863e70d575d7a6c264b17f996085248f308c4f6f8bd40",
+      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14727,7 +14747,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "4045baca7164b03f14db860136d8cfdbfddc13f0a8fc2e135cc74317b0e127fb",
+      "sha256": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14788,12 +14808,6 @@
       "id": "SURFACE-60c6485e90430e4b",
       "path": "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "sha256": "a641f1c2e97c98891f2a295fb3ac96eb38a8790150dff92719929c6fedbd3d5a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a7aa6fe1e1854ab6",
-      "path": "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
-      "sha256": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17630,7 +17644,7 @@
     },
     {
       "path": "PAYMENT_AUDIT.md",
-      "sha256": "a6a490897076f5c0fc58ccea5bfd5bebe74d877f769293f5c6e99ae1235611cc",
+      "sha256": "d25a291b2b3ff55faca879d5a72597ac3fb8cfc01852fed61afed1e109a5ba22",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17679,7 +17693,7 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "e315cc7767f7c522dc99c90f195a4031a017c9edf676d74d5b3e43baafac3e0e",
+      "sha256": "6dc454b2589c5179830a8c99d994502150915f36ca65b4dca8fc8e908a02b07a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19450,7 +19464,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "197f55215f79c6b185f74a1271582f5142aef297f8c3ff82b8262a5c3d249a7c",
+      "sha256": "f44f84563e2e628bcb9844a72f2f9838a132cbd7703d19c145686d4794b3258f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20248,7 +20262,7 @@
     },
     {
       "path": "docs/revenue-platform/formal-model.yaml",
-      "sha256": "ef07c4329e29fc59ec80137ef2d510b11b9bb94904046a0ac0dc4072124526b2",
+      "sha256": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22250,7 +22264,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "9771ce046c08b77aed3b0f1febbfa16185552da35cda93ca698cc11e990c2177",
+      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23166,76 +23180,6 @@
       "kind": "model-configuration"
     },
     {
-      "path": "formal/event-operations/WhatsAppConsent.cfg",
-      "sha256": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsent.tla",
-      "sha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "formal-model"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
-      "sha256": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
-      "sha256": "96c5a3a384f45f1e9a6e28a19c6d1e24d6f07dce9a9ed91ec365ce9d149a03d1",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg",
-      "sha256": "7a80288380d6091257f5075a9b36c3edbbfc462b15f3fd903016e935e1ea3b34",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentStaleReply.cfg",
-      "sha256": "3562ab6ee72465ea40c5dca690c1ca00ca3108f733ccc273ce605fbc2f207de7",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
-      "sha256": "730b2c17cbd520071cb7eeb845b2ed2cfb43c388c6792f9ff850a8f3bbdd1ee8",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
-      "sha256": "30f022a9bff35ad3e6760f3c45994fea034eb178b517b2ee4ea8e6d183422d87",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
-      "sha256": "34cc1751977ea8443e1573c240b29bdb22c2e87d89fd9e7345863af857709690",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
-      "sha256": "b96a20e18c648021f6794527b13d50fefaaf40f310ffab2e5147ef7bdd80201c",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
       "path": "formal/event-operations/WorkerCompletionEvidence.cfg",
       "sha256": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
       "authority": "inferred",
@@ -23692,14 +23636,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f246d39be3c85079002d22b31290ec0f14446408791505ad888b23df0db36d85",
+      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "37e4427285505649b7af9c9e2fcbef823280efca7a3cfcf52f548edf31d8abc8",
+      "sha256": "d535216254f854f9bb872e6dcebce42edf9121ea581f2149e149f0fc94565c60",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23930,7 +23874,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "d077738973ba7897c198f7803181ec86cdcf2b0cc48e62c726a3ec9ef87f4859",
+      "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23972,7 +23916,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4f4391f57a13224f2b0bb89bd8ea820b0381490b868c9482224c3b6237a4ac63",
+      "sha256": "e8647a6a7ae2f8fa5be98072544a3aa55902b36b3862666022622b546c25802f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24007,7 +23951,7 @@
     },
     {
       "path": "formal/system/state-machine-correspondence.md",
-      "sha256": "828d8210024b9025e0fd727add568f4dc3e57e8d0f716d2f83dcb5ae7446c6d1",
+      "sha256": "33615982db681cd6ff8d2b083d551c6b5100cae58179953b35c5cf7245263f43",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24029,13 +23973,6 @@
     {
       "path": "formal/system/webhook-log-privacy.md",
       "sha256": "f4aad0ca7b00b52f4602aa60522282b7ada730d566b95ef9cfb14c33b67ffb17",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "formal/system/whatsapp-consent.md",
-      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34829,267 +34766,6 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK CurrentSessionOnly",
         "CHECK_DEADLOCK FALSE"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsent.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = FALSE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = FALSE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = FALSE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentStaleReply.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = FALSE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = FALSE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = FALSE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = TRUE",
-        "  WithdrawalKeepsInterval = FALSE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CHECK_DEADLOCK FALSE",
-        "CONSTANTS",
-        "  MaxTime = 6",
-        "  ResendInterval = 3",
-        "  Window = 3",
-        "  UnsentWindow = 1",
-        "  ReplyOrderGuard = TRUE",
-        "  WithdrawalGuard = FALSE",
-        "  WithdrawalKeepsInterval = TRUE",
-        "  SettleWithdrawalInstant = TRUE",
-        "  BindFailureToClaim = TRUE",
-        "  KeepUndeliveredPending = TRUE",
-        "  ShortUnsentWindow = TRUE",
-        "  RetryKeepsInstant = TRUE",
-        "INVARIANTS",
-        "  TypeOK",
-        "  ConfirmedByOwnLaterReply",
-        "  WithdrawalWins",
-        "  DeliveredRequestsSpaced",
-        "  ConfirmedInsideWindow",
-        "  UndeliveredStaysPending"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
