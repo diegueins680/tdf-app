@@ -5228,12 +5228,13 @@ loadBandForParty partyKey = do
       pure (Just (toBandDTO partyMap bandEnt members))
 
 -- Replies are sent from the account that received the message, which is read
--- from the stored metadata. Metadata without it (a backfilled row, a delivery
--- in the changes shape) gives way to metadata that names it.
+-- from the stored metadata with the same parser the reply uses. Metadata
+-- without a usable id (a backfilled row, a delivery in the changes shape, a
+-- null or nested value) gives way to metadata that names it.
 fillRecipient :: Maybe T.Text -> EntityField record (Maybe T.Text) -> Maybe T.Text -> [Update record]
 fillRecipient stored field incoming =
   [ field =. incoming
   | not (maybe False named stored), maybe False named incoming || maybe True (T.null . T.strip) stored
   , isJust incoming
   ]
-  where named = T.isInfixOf "\"recipient_id\""
+  where named = isJust . extractRecipientIdFromMetadata . Just
