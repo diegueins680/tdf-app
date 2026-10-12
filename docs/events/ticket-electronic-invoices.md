@@ -66,3 +66,17 @@ Only IVA 0% is supported; other rates are refused rather than guessed.
 Taxpayer regime legends (for example RIMPE) are not added automatically. The
 credit-note payload was validated against Dátil's schema with an invalid key
 (401 after schema validation); a real authorization still requires credentials.
+
+## Bounded model of submission (2026-10-09)
+
+`formal/event-operations/TaxDocumentSubmission.tla` models one document, two
+workers, expiring leases, crashes, staff retry and three provider outcomes:
+created and answered, created with the answer lost (5xx, timeout), and refused
+(4xx). `AtMostOneDocument` holds within the bounds (4 lease tokens, 2 retries,
+1,321 distinct states). Four mutations must each violate it: posting without
+persisting `submitted_at`, starting without the `submitted_at IS NULL`
+compare-and-set, treating a lost answer as refused, and letting staff retry an
+`uncertain` document. The compare-and-set, not the lease fence, prevents a
+stale worker from sending twice; the fence keeps a stale worker from
+overwriting a newer result. No liveness is claimed. Production invoicing stays
+inactive until `TAX_INVOICE_WORKER_ENABLED` and the Dátil credentials are set.
