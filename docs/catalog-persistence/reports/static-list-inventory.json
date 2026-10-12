@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-11T18:16:15.483Z",
+  "generatedAt": "2026-10-12T04:49:27.979Z",
   "repositoryRoot": ".",
   "filesScanned": 2243,
   "candidateCount": 1320,
@@ -50594,7 +50594,7 @@
       "lines": [
         50
       ],
-      "consumerCount": 5,
+      "consumerCount": 6,
       "backendConsumers": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql"
@@ -50604,9 +50604,13 @@
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx"
       ],
-      "mobileConsumers": [],
+      "mobileConsumers": [
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
       "automationConsumers": [],
-      "apiAndIntegrationConsumers": [],
+      "apiAndIntegrationConsumers": [
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
@@ -54642,7 +54646,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "roles",
-      "line": 341,
+      "line": 365,
       "values": [
         "Customer",
         "Artist"
@@ -54650,7 +54654,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        341
+        365
       ],
       "consumerCount": 190,
       "backendConsumers": [
@@ -54850,7 +54854,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "modules",
-      "line": 342,
+      "line": 366,
       "values": [
         "Packages",
         "Scheduling"
@@ -54858,7 +54862,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        342
+        366
       ],
       "consumerCount": 142,
       "backendConsumers": [
@@ -55040,7 +55044,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "roles",
-      "line": 387,
+      "line": 411,
       "values": [
         "customer",
         "artist"
@@ -55048,7 +55052,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        387
+        411
       ],
       "consumerCount": 252,
       "backendConsumers": [
@@ -56757,7 +56761,7 @@
       "domain": "payments-finance",
       "kind": "literal-union",
       "name": "MarketplacePaymentMethod",
-      "line": 193,
+      "line": 195,
       "values": [
         "stripe",
         "contact",
@@ -56767,7 +56771,7 @@
       "valueCount": 4,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        193
+        195
       ],
       "consumerCount": 97,
       "backendConsumers": [
@@ -56904,7 +56908,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "method",
-      "line": 196,
+      "line": 198,
       "values": [
         "stripe",
         "card",
@@ -56914,8 +56918,8 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        196,
-        211
+        198,
+        213
       ],
       "consumerCount": 277,
       "backendConsumers": [
@@ -57154,7 +57158,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "DEFAULT_MARKETPLACE_VIEW_STATE",
-      "line": 255,
+      "line": 257,
       "values": [
         "search",
         "category",
@@ -57166,7 +57170,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        255
+        257
       ],
       "consumerCount": 51,
       "backendConsumers": [
@@ -57256,7 +57260,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "sort",
-      "line": 1050,
+      "line": 1052,
       "values": [
         "relevance",
         "price-asc",
@@ -57266,7 +57270,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1050
+        1052
       ],
       "consumerCount": 307,
       "backendConsumers": [
@@ -57505,7 +57509,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 2019,
+      "line": 2021,
       "values": [
         "all",
         "relevance",
@@ -57519,7 +57523,7 @@
       "valueCount": 8,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        2019
+        2021
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -59108,7 +59112,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 46,
+      "line": 64,
       "values": [
         "android",
         "ios"
@@ -59116,7 +59120,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        46
+        64
       ],
       "consumerCount": 13,
       "backendConsumers": [
@@ -63627,7 +63631,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 1112,
+      "line": 1115,
       "values": [
         "expense",
         "income",
@@ -63638,7 +63642,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1112
+        1115
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -67625,7 +67629,7 @@
       "lines": [
         237
       ],
-      "consumerCount": 9,
+      "consumerCount": 10,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/src/TDF/API/DDEX.hs",
@@ -67636,6 +67640,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
         "tdf-hq-ui/src/utils/torrentAudio.ts"
       ],
       "mobileConsumers": [
@@ -148708,7 +148713,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "49d1c72ba174118670bf",
+      "id": "66c48cc059727856b6f1",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "sourceKind": "production",
       "surface": "mobile",
@@ -148877,11 +148882,9 @@
         "{id=merch.reputation.preferences, parentId=profile.self, webRoute=/merch/reputacion/preferencias, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=people, icon=format",
         "{id=merch.reputation.moderation, parentId=null, webRoute=/admin/merch/reputacion, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin, icon=gavel, breadcrumb, requ",
         "{id=experimental.future-stubs, parentId=null, webRoute=null, routeType=technical, classification=technical-route, label, synonyms, keywords, description, navigationGroup=null, icon=technical, breadcrumb, requiredAuth=authenticated, routeAct",
-        "{id=notifications.detail, parentId=null, webRoute=/notificaciones/:notificationId, routeType=contextual, classification=record-detail-contextual-action, label, synonyms, keywords, description, navigationGroup=help, icon=lock, breadcrumb, re",
-        "{id=music.public.catalog, parentId=null, webRoute=/musica, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=people, icon=album, breadcrumb, requiredAuth=public, routeAction=view,",
-        "{id=music.library, parentId=null, webRoute=/musica/biblioteca, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=people, icon=album, breadcrumb, requiredAuth=authenticated, routeA"
+        "{id=notifications.detail, parentId=null, webRoute=/notificaciones/:notificationId, routeType=contextual, classification=record-detail-contextual-action, label, synonyms, keywords, description, navigationGroup=help, icon=lock, breadcrumb, re"
       ],
-      "valueCount": 163,
+      "valueCount": 161,
       "recommendedClassification": "security-system-registry",
       "lines": [
         55
@@ -148904,7 +148907,7 @@
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The 163-entry generated registry retains the 161 reviewed definitions, relabels the social.events destination from 'Eventos sociales' / 'Social events' to 'Eventos' / 'Events' (the former names stay as search synonyms; route, permissions and API scopes are unchanged), and carries the two music destinations the parent registry already defines: music.public.catalog (public, opened on the web from the app) and music.library (signed-in, no role or module requirement). Neither adds a role, module, permission or API scope. The file is generated from tdf-hq/assets/feature-registry.json and its source digest matches.",
+      "justification": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
