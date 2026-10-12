@@ -62,7 +62,9 @@ import {
 } from '../features/marketplace/cartSummary';
 import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
+// The pure entry defers injecting js.stripe.com until checkout actually calls loadStripe.
+import { loadStripe } from '@stripe/stripe-js/pure';
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import type {

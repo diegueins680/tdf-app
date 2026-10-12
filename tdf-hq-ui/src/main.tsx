@@ -26,6 +26,13 @@ void import('./analytics/posthog')
   })
   .catch(() => undefined);
 
+// Campaign links land directly on /login inside in-app browsers on slow mobile
+// data. Fetch the page chunk alongside the route table instead of after it;
+// the routed lazy() import reuses this same module request.
+if (window.location.pathname === '/login') {
+  void import('./pages/LoginPage').catch(() => undefined);
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BootErrorBoundary>
