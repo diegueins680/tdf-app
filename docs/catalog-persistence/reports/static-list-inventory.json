@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T12:24:05.357Z",
+  "generatedAt": "2026-10-12T12:52:53.931Z",
   "repositoryRoot": ".",
   "filesScanned": 2245,
   "candidateCount": 1320,
@@ -15625,7 +15625,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "session",
-      "line": 615,
+      "line": 627,
       "values": [
         "checkoutId",
         "attemptId",
@@ -15639,7 +15639,7 @@
       "valueCount": 8,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        615
+        627
       ],
       "consumerCount": 604,
       "backendConsumers": [
@@ -61158,7 +61158,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 569,
+      "line": 578,
       "values": [
         "consumidor_final",
         "cedula",
@@ -61168,7 +61168,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        569
+        578
       ],
       "consumerCount": 14,
       "backendConsumers": [
