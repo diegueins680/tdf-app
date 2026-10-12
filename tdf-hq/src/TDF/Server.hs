@@ -12,6 +12,7 @@
 module TDF.Server where
 
 import qualified TDF.Social.Chat as SocialChat
+import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
@@ -93,7 +94,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawExecuteCount, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount)
 import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
@@ -238,6 +239,8 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , searchArtistProfilesDTO
                                      , resolvePublishedGenreSelections
                                      , activateOwnArtistProfile
+                                     , deadlineClockAfterLock
+                                     , lockPendingOnboardingRequests
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -1695,16 +1698,19 @@ publicRequestWhatsAppConsent WhatsAppConsentRequest{..} = do
   sourceClean <- either throwError pure (validateWhatsAppConsentSource "public" wcrSource)
   now <- liftIO getCurrentTime
   claimed <- runDB (claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean)
-  when claimed $ do
+  for_ claimed $ \requestedAt -> do
     result <- sendWhatsAppConfirmationRequest now phoneVal nameClean
-    -- A request that never reached the number must not block a retry.
+    -- A request that never reached the number must not block a prompt retry,
+    -- and the person can still confirm it by messaging SI themselves.
     when (isLeft result) $
-      runDB (releaseWhatsAppConfirmationClaim now phoneVal)
+      runDB (markWhatsAppConfirmationRequestUnsent requestedAt phoneVal)
   pure (publicWhatsAppConsentResponse phoneVal
     "Si el número es válido, recibirá un WhatsApp de TDF Records. Responde SI a ese mensaje para confirmar tu suscripción.")
 
 -- | Opting out needs no proof of control; a confirmation message is sent only
 -- to a number that was actually subscribed, so the form cannot message strangers.
+-- The withdrawal instant invalidates a pending request; the request instant is
+-- kept so that withdrawing cannot be used to request another message early.
 publicWhatsAppOptOut :: WhatsAppOptOutRequest -> AppM WhatsAppConsentResponse
 publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
   phoneVal <- either throwError pure (validateWhatsAppPhoneInput worPhone)
@@ -1729,9 +1735,9 @@ publicWhatsAppOptOut WhatsAppOptOutRequest{..} = do
       , ME.WhatsAppConsentNote =. reasonClean
       , ME.WhatsAppConsentConsentedAt =. Nothing
       , ME.WhatsAppConsentRevokedAt =. Just now
-      , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
       , ME.WhatsAppConsentUpdatedAt =. now
       ]
+    CampaignAutomation.settleWhatsAppWithdrawalInstant phoneVal
     pure (maybe False (ME.whatsAppConsentConsent . entityVal) existing)
   when wasActive $
     sendWhatsAppConsentNotice now phoneVal Nothing "opt_out_confirmation"
@@ -1802,47 +1808,74 @@ recordWhatsAppConsentNotice now phoneVal nameClean source message result =
       result
 
 -- | Claims the right to send one confirmation request: at most once per number
--- per resend interval, never for an active consent. One conditional update, so
--- concurrent submissions cannot both claim.
+-- per resend interval unless the previous request was not accepted by the
+-- provider, never for an active consent. One conditional update, so concurrent
+-- submissions cannot both claim. Returns the request instant the send is bound to.
 claimWhatsAppConfirmationRequest
-  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO Bool
+  :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO (Maybe UTCTime)
 claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
-  _ <- insertUnique ME.WhatsAppConsent
-    { ME.whatsAppConsentPhoneE164 = phoneVal
-    , ME.whatsAppConsentDisplayName = nameClean
-    , ME.whatsAppConsentConsent = False
-    , ME.whatsAppConsentSource = sourceClean
-    , ME.whatsAppConsentNote = Just "pending_confirmation"
-    , ME.whatsAppConsentConsentedAt = Nothing
-    , ME.whatsAppConsentRevokedAt = Nothing
-    , ME.whatsAppConsentConfirmationRequestedAt = Nothing
-    , ME.whatsAppConsentCreatedAt = now
-    , ME.whatsAppConsentUpdatedAt = now
-    }
-  changed <- updateWhereCount
-    ( [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
-      , ME.WhatsAppConsentConsent ==. False
-      ]
-      ++ ( [ME.WhatsAppConsentConfirmationRequestedAt ==. Nothing]
-           ||. [ME.WhatsAppConsentConfirmationRequestedAt <. Just (addUTCTime (negate whatsAppConfirmationResendInterval) now)] )
-    )
-    [ ME.WhatsAppConsentConfirmationRequestedAt =. Just now
-    , ME.WhatsAppConsentDisplayName =. nameClean
-    , ME.WhatsAppConsentSource =. sourceClean
-    , ME.WhatsAppConsentNote =. Just "pending_confirmation"
-    , ME.WhatsAppConsentUpdatedAt =. now
+  -- Simultaneous first requests for a number must not fail on its unique row.
+  rawExecute
+    "INSERT INTO whats_app_consent (phone_e164, display_name, consent, source, note, created_at, updated_at) \
+    \VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING"
+    [ toPersistValue phoneVal
+    , toPersistValue nameClean
+    , toPersistValue False
+    , toPersistValue sourceClean
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue now
+    , toPersistValue now
     ]
-  pure (changed == 1)
+  -- A withdrawal keeps the request instant, so withdrawing cannot reopen the
+  -- interval. An undelivered, unwithdrawn request may be sent again only inside
+  -- its short window and keeps its instant, so retries cannot extend the time
+  -- in which a number that saw no prompt could confirm.
+  let intervalStart = addUTCTime (negate whatsAppConfirmationResendInterval) now
+  changed <- rawExecuteCount
+    "UPDATE whats_app_consent \
+    \SET confirmation_requested_at = CASE \
+    \WHEN confirmation_requested_at IS NULL OR confirmation_requested_at < ? THEN ? \
+    \ELSE confirmation_requested_at END, \
+    \display_name = ?, source = ?, note = ?, updated_at = ? \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND (confirmation_requested_at IS NULL OR confirmation_requested_at < ? \
+    \OR (note = ? AND confirmation_requested_at >= ? \
+    \AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at)))"
+    [ toPersistValue intervalStart
+    , toPersistValue now
+    , toPersistValue nameClean
+    , toPersistValue sourceClean
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue now
+    , toPersistValue phoneVal
+    , toPersistValue intervalStart
+    , toPersistValue whatsAppUnsentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppUnsentConfirmationWindow) now)
+    ]
+  if changed /= 1
+    then pure Nothing
+    else fmap (>>= ME.whatsAppConsentConfirmationRequestedAt . entityVal)
+           (getBy (ME.UniqueWhatsAppConsent phoneVal))
 
--- | Undoes a claim whose request was not accepted by the provider.
-releaseWhatsAppConfirmationClaim :: UTCTime -> Text -> SqlPersistT IO ()
-releaseWhatsAppConfirmationClaim claimedAt phoneVal =
+-- | Records that the provider did not accept this exact claim's request. The
+-- request stays pending so the number can confirm it by messaging first, but
+-- only briefly, and it no longer blocks a new request. A later claim or a
+-- withdrawal is left untouched.
+markWhatsAppConfirmationRequestUnsent :: UTCTime -> Text -> SqlPersistT IO ()
+markWhatsAppConfirmationRequestUnsent claimedAt phoneVal =
   updateWhere
     [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
     , ME.WhatsAppConsentConsent ==. False
     , ME.WhatsAppConsentConfirmationRequestedAt ==. Just claimedAt
+    , ME.WhatsAppConsentNote ==. Just whatsAppSentRequestNote
     ]
-    [ME.WhatsAppConsentConfirmationRequestedAt =. Nothing]
+    [ME.WhatsAppConsentNote =. Just whatsAppUnsentRequestNote]
+
+whatsAppSentRequestNote :: Text
+whatsAppSentRequestNote = "pending_confirmation"
+
+whatsAppUnsentRequestNote :: Text
+whatsAppUnsentRequestNote = "pending_unsent"
 
 parseWhatsAppMessageTimestamp :: Maybe Text -> Maybe UTCTime
 parseWhatsAppMessageTimestamp rawTimestamp = do
@@ -1863,6 +1896,11 @@ whatsAppConfirmationResendInterval = 24 * 3600
 whatsAppConfirmationWindow :: NominalDiffTime
 whatsAppConfirmationWindow = 7 * 24 * 3600
 
+-- | The number never received a prompt for an unsent request, so only a reply
+-- made while the person is still completing the form may confirm it.
+whatsAppUnsentConfirmationWindow :: NominalDiffTime
+whatsAppUnsentConfirmationWindow = 3600
+
 isWhatsAppConsentConfirmationMessage :: Text -> Bool
 isWhatsAppConsentConfirmationMessage rawMessage =
   normalized `elem` ["si", "sí", "yes", "acepto", "confirmo"]
@@ -1870,24 +1908,31 @@ isWhatsAppConsentConfirmationMessage rawMessage =
     normalized = T.toCaseFold (T.dropAround (not . isAlphaNum) (T.strip rawMessage))
 
 -- | Activates consent only for a pending request on the replying number that is
--- inside the confirmation window and was created no later than the reply itself.
--- One conditional update: a concurrent opt-out that clears the request wins, and
--- a delayed or replayed earlier reply cannot confirm a newer request.
+-- inside its confirmation window (shorter when the request was never delivered),
+-- was created no later than the reply itself and has not been withdrawn since.
+-- One conditional update: a concurrent opt-out wins, and a delayed or replayed
+-- earlier reply cannot confirm a newer request. The request instant is kept so
+-- the per-number interval still applies after a confirmation or a withdrawal.
 applyWhatsAppConsentConfirmation :: UTCTime -> Maybe UTCTime -> Text -> SqlPersistT IO Bool
 applyWhatsAppConsentConfirmation _ Nothing _ = pure False
 applyWhatsAppConsentConfirmation now (Just sentAt) senderPhone = do
-  changed <- updateWhereCount
-    [ ME.WhatsAppConsentPhoneE164 ==. senderPhone
-    , ME.WhatsAppConsentConsent ==. False
-    , ME.WhatsAppConsentConfirmationRequestedAt >=. Just (addUTCTime (negate whatsAppConfirmationWindow) now)
-    , ME.WhatsAppConsentConfirmationRequestedAt <=. Just sentAt
-    ]
-    [ ME.WhatsAppConsentConsent =. True
-    , ME.WhatsAppConsentConsentedAt =. Just now
-    , ME.WhatsAppConsentRevokedAt =. Nothing
-    , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
-    , ME.WhatsAppConsentNote =. Just "confirmed_by_reply"
-    , ME.WhatsAppConsentUpdatedAt =. now
+  changed <- rawExecuteCount
+    "UPDATE whats_app_consent \
+    \SET consent = ?, consented_at = ?, revoked_at = NULL, note = ?, updated_at = ? \
+    \WHERE phone_e164 = ? AND NOT consent \
+    \AND confirmation_requested_at <= ? \
+    \AND (revoked_at IS NULL OR revoked_at < confirmation_requested_at) \
+    \AND ((note = ? AND confirmation_requested_at >= ?) OR (note = ? AND confirmation_requested_at >= ?))"
+    [ toPersistValue True
+    , toPersistValue now
+    , toPersistValue ("confirmed_by_reply" :: Text)
+    , toPersistValue now
+    , toPersistValue senderPhone
+    , toPersistValue sentAt
+    , toPersistValue whatsAppSentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppConfirmationWindow) now)
+    , toPersistValue whatsAppUnsentRequestNote
+    , toPersistValue (addUTCTime (negate whatsAppUnsentConfirmationWindow) now)
     ]
   pure (changed == 1)
 
@@ -1950,7 +1995,6 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
         , ME.WhatsAppConsentNote =. noteClean
         , ME.WhatsAppConsentConsentedAt =. Just now
         , ME.WhatsAppConsentRevokedAt =. Nothing
-        , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
         , ME.WhatsAppConsentUpdatedAt =. now
         ]
       getBy (ME.UniqueWhatsAppConsent phoneVal)
@@ -1976,9 +2020,9 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
         , ME.WhatsAppConsentNote =. reasonClean
         , ME.WhatsAppConsentConsentedAt =. Nothing
         , ME.WhatsAppConsentRevokedAt =. Just now
-        , ME.WhatsAppConsentConfirmationRequestedAt =. Nothing
         , ME.WhatsAppConsentUpdatedAt =. now
         ]
+      CampaignAutomation.settleWhatsAppWithdrawalInstant phoneVal
       getBy (ME.UniqueWhatsAppConsent phoneVal)
 
     sendConsentMessage phoneVal nameClean = do
@@ -3877,10 +3921,27 @@ accessRequestsServer user =
       Env pool _ <- ask
       now <- liftIO getCurrentTime
       result <- liftIO $ flip runSqlPool pool $ do
+        let ownOnboardingRequests =
+              [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+              , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+              , ME.FeatureAccessRequestAction ==. "create"
+              ]
+        -- Settle a lapsed onboarding request first, so self-service records a
+        -- fresh approval instead of resurrecting an expired request. The rows
+        -- are locked before the clock is read, in the same order activation and
+        -- a reviewer's decision use.
+        lockPendingOnboardingRequests (auPartyId user)
+        lockedAt <- deadlineClockAfterLock now
+        expirePendingAccessRequests lockedAt ownOnboardingRequests
         activated <- activateOwnArtistProfile (auPartyId user) now
         case activated of
           Left message -> pure (Left message)
           Right _ -> do
+            -- Activation leaves a request that lapsed while it waited untouched.
+            -- Settle it against the clock as it stands now, so the update below
+            -- can only meet a request that is still open.
+            activatedAt <- deadlineClockAfterLock now
+            expirePendingAccessRequests activatedAt ownOnboardingRequests
             existing <- selectFirst
               [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
               , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
@@ -4052,78 +4113,79 @@ accessRequestsServer user =
           provisioningCorrelation = "feature-access-request:" <> requestNumber
       Env{envPool} <- ask
       transactionResult <- liftIO $ try $ flip runSqlPool envPool $ do
-        changed <- updateWhereCount
-          [ ME.FeatureAccessRequestId ==. requestKey
-          , ME.FeatureAccessRequestStatus ==. "pending"
-          ]
+        changed <- transitionPendingAccessRequest now requestKey
           [ ME.FeatureAccessRequestStatus =. decisionValue
           , ME.FeatureAccessRequestReviewerPartyId =. Just (auPartyId user)
           , ME.FeatureAccessRequestReviewerNotes =. notesValue
           , ME.FeatureAccessRequestUpdatedAt =. now
           , ME.FeatureAccessRequestDecidedAt =. Just now
           ]
-        when (changed /= 1) $
-          liftIO (throwIO AccessRequestDecisionConflict)
-        provisionedRole <- case roleToProvision of
-          Nothing -> pure Nothing
-          Just roleCode -> do
-            result <- provisionReviewedSecurityRole
-              (ME.featureAccessRequestRequesterPartyId requestValue)
-              (auPartyId user)
-              roleCode
-              (ME.featureAccessRequestRequestedAt requestValue)
+        -- A request that is no longer pending (including one the sweep just
+        -- expired) is reported as a value, not thrown: throwing would roll the
+        -- expiry back and leave the lapsed request pending.
+        if changed /= 1
+          then pure Nothing
+          else fmap Just $ do
+            provisionedRole <- case roleToProvision of
+              Nothing -> pure Nothing
+              Just roleCode -> do
+                result <- provisionReviewedSecurityRole
+                  (ME.featureAccessRequestRequesterPartyId requestValue)
+                  (auPartyId user)
+                  roleCode
+                  (ME.featureAccessRequestRequestedAt requestValue)
+                  now
+                  generatedReviewNotes
+                  provisioningReason
+                  provisioningCorrelation
+                case result of
+                  Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
+                  Right _ -> pure (Just roleCode)
+            insert_ (featureAccessRequestHistoryRecord
+              requestKey
+              (Just (auPartyId user))
+              decisionValue
+              (Just "pending")
+              decisionValue
+              notesValue
+              now)
+            insert_ Notification
+              { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
+              , notificationNotifType = "access_request_decided"
+              , notificationTitle = if decisionValue == "approved"
+                  then "Solicitud de acceso aprobada"
+                  else "Solicitud de acceso rechazada"
+              , notificationBody = case provisionedRole of
+                  Just roleCode ->
+                    "La solicitud fue aprobada y el rol " <> roleToText roleCode
+                      <> " ya fue otorgado mediante una revisión auditable. "
+                      <> "Recarga tu sesión para verlo en la navegación."
+                  Nothing | decisionValue == "approved" ->
+                    "La solicitud fue aprobada para provisión manual mediante un permiso "
+                      <> "compatible y auditable."
+                  Nothing ->
+                    "La solicitud fue revisada. Consulta las notas del revisor "
+                      <> "para más información."
+              , notificationTargetType = Just "feature_access_request"
+              , notificationTargetId = Just (fromIntegral requestIdValue)
+              , notificationTargetKey = Nothing
+              , notificationIsRead = False
+              , notificationCreatedAt = now
+              }
+            writeFeatureAccessRequestAudit
+              (Just (auPartyId user))
+              requestKey
+              ("access_request_" <> decisionValue)
+              (ME.featureAccessRequestFeatureId requestValue)
+              (ME.featureAccessRequestAction requestValue)
+              decisionValue
               now
-              generatedReviewNotes
-              provisioningReason
-              provisioningCorrelation
-            case result of
-              Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
-              Right _ -> pure (Just roleCode)
-        insert_ (featureAccessRequestHistoryRecord
-          requestKey
-          (Just (auPartyId user))
-          decisionValue
-          (Just "pending")
-          decisionValue
-          notesValue
-          now)
-        insert_ Notification
-          { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
-          , notificationNotifType = "access_request_decided"
-          , notificationTitle = if decisionValue == "approved"
-              then "Solicitud de acceso aprobada"
-              else "Solicitud de acceso rechazada"
-          , notificationBody = case provisionedRole of
-              Just roleCode ->
-                "La solicitud fue aprobada y el rol " <> roleToText roleCode
-                  <> " ya fue otorgado mediante una revisión auditable. "
-                  <> "Recarga tu sesión para verlo en la navegación."
-              Nothing | decisionValue == "approved" ->
-                "La solicitud fue aprobada para provisión manual mediante un permiso "
-                  <> "compatible y auditable."
-              Nothing ->
-                "La solicitud fue revisada. Consulta las notas del revisor "
-                  <> "para más información."
-          , notificationTargetType = Just "feature_access_request"
-          , notificationTargetId = Just (fromIntegral requestIdValue)
-          , notificationTargetKey = Nothing
-          , notificationIsRead = False
-          , notificationCreatedAt = now
-          }
-        writeFeatureAccessRequestAudit
-          (Just (auPartyId user))
-          requestKey
-          ("access_request_" <> decisionValue)
-          (ME.featureAccessRequestFeatureId requestValue)
-          (ME.featureAccessRequestAction requestValue)
-          decisionValue
-          now
-        getJustEntity requestKey
+            getJustEntity requestKey
       updated <- case transactionResult of
-        Right value -> pure value
+        Right (Just value) -> pure value
+        Right Nothing ->
+          throwError err409 { errBody = "Access request is no longer pending" }
         Left exception -> case fromException exception of
-          Just AccessRequestDecisionConflict ->
-            throwError err409 { errBody = "Access request is no longer pending" }
           Just (AccessRequestProvisioningFailure message) ->
             throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
           Nothing -> liftIO (throwIO (exception :: SomeException))
@@ -4137,10 +4199,7 @@ accessRequestsServer user =
       unless (ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user) $
         throwError err404
       now <- liftIO getCurrentTime
-      changed <- runDB $ updateWhereCount
-        [ ME.FeatureAccessRequestId ==. requestKey
-        , ME.FeatureAccessRequestStatus ==. "pending"
-        ]
+      changed <- runDB $ transitionPendingAccessRequest now requestKey
         [ ME.FeatureAccessRequestStatus =. "cancelled"
         , ME.FeatureAccessRequestUpdatedAt =. now
         , ME.FeatureAccessRequestCancelledAt =. Just now
@@ -4252,9 +4311,8 @@ isFeatureAccessReviewer AuthedUser{..} =
   any (`elem` auRoles) [Admin, Manager, StudioManager]
     && auModules == modulesForRoles auRoles
 
-data AccessRequestDecisionFailure
-  = AccessRequestDecisionConflict
-  | AccessRequestProvisioningFailure Text
+newtype AccessRequestDecisionFailure
+  = AccessRequestProvisioningFailure Text
   deriving (Show)
 
 instance Exception AccessRequestDecisionFailure
@@ -4280,12 +4338,40 @@ encodeAccessContext = TE.decodeUtf8 . BL.toStrict . encode
 decodeAccessContext :: Text -> [Text]
 decodeAccessContext = fromMaybe [] . decodeStrict' . TE.encodeUtf8
 
+-- | Apply a decision or cancellation to a request that is still pending.
+-- Expiry is materialized lazily, so it is settled first in the same
+-- transaction: a request past its deadline becomes terminal ("expired") and
+-- the conditional update then changes no row. Returns the rows changed.
+transitionPendingAccessRequest
+  :: UTCTime
+  -> ME.FeatureAccessRequestId
+  -> [Update ME.FeatureAccessRequest]
+  -> SqlPersistT IO Int64
+transitionPendingAccessRequest now requestKey changes = do
+  -- Only the target is settled here: a later provisioning failure rolls this
+  -- transaction back, and must not undo expiry of unrelated requests.
+  -- The caller sampled `now` before this transaction could own the row. Lock
+  -- the target first and judge the deadline against the database clock read
+  -- afterwards, so a decision that waited past `expires_at` cannot approve.
+  _ <- rawSql "SELECT id FROM feature_access_requests WHERE id = ? FOR UPDATE"
+    [toPersistValue requestKey] :: SqlPersistT IO [Single Int64]
+  deadline <- deadlineClockAfterLock now
+  expirePendingAccessRequests deadline [ME.FeatureAccessRequestId ==. requestKey]
+  updateWhereCount
+    [ ME.FeatureAccessRequestId ==. requestKey
+    , ME.FeatureAccessRequestStatus ==. "pending"
+    ]
+    changes
+
 expireFeatureAccessRequests :: UTCTime -> SqlPersistT IO ()
-expireFeatureAccessRequests now = do
+expireFeatureAccessRequests now = expirePendingAccessRequests now []
+
+expirePendingAccessRequests :: UTCTime -> [Filter ME.FeatureAccessRequest] -> SqlPersistT IO ()
+expirePendingAccessRequests now scope = do
   expired <- selectList
-    [ ME.FeatureAccessRequestStatus ==. "pending"
-    , ME.FeatureAccessRequestExpiresAt <=. Just now
-    ] []
+    ([ ME.FeatureAccessRequestStatus ==. "pending"
+     , ME.FeatureAccessRequestExpiresAt <=. Just now
+     ] <> scope) []
   forM_ expired $ \(Entity requestId requestValue) -> do
     changed <- updateWhereCount
       [ ME.FeatureAccessRequestId ==. requestId
@@ -6986,35 +7072,7 @@ normalizePhone :: Text -> Maybe Text
 normalizePhone = normalizeWhatsAppPhone
 
 normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
-normalizeCourseRegistrationPhoneInput raw =
-  let trimmed = T.strip raw
-      onlyDigits = T.filter isAsciiPhoneDigit trimmed
-      digitCount = T.length onlyDigits
-      plusCount = T.count "+" trimmed
-      plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isAsciiPhoneDigit trimmed
-      allowedPhoneChar ch =
-        isAsciiPhoneDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
-      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
-      plusIsValid =
-        case plusIndex of
-          Nothing -> True
-          Just idx ->
-            case firstDigitIndex of
-              Nothing -> False
-              Just digitIdx -> plusCount == 1 && idx < digitIdx
-      hasInternationalPrefix =
-        T.isPrefixOf "+" trimmed
-          && maybe False (/= '0') (T.find isAsciiPhoneDigit trimmed)
-  in
-    if T.null onlyDigits
-         || digitCount < 8
-         || digitCount > 15
-         || hasInvalidChars
-         || not plusIsValid
-         || not hasInternationalPrefix
-      then Nothing
-      else Just ("+" <> onlyDigits)
+normalizeCourseRegistrationPhoneInput = CoursePhone.normalizeInternationalPhoneInput
 
 isAsciiPhoneDigit :: Char -> Bool
 isAsciiPhoneDigit ch = ch >= '0' && ch <= '9'
@@ -7086,7 +7144,8 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
   case cleanOptional (Just rawPhone) of
     Nothing -> Right Nothing
     Just _ ->
-      case normalizeCourseRegistrationPhoneInput rawPhone of
+      -- Course visitors may type an Ecuador national number (0988384849).
+      case CoursePhone.normalizeCoursePhone rawPhone of
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
 

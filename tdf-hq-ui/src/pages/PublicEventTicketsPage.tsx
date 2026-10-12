@@ -34,6 +34,7 @@ import type { DatafastCheckoutDTO } from '../api/types';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import TicketBankTransferPanel from '../components/payments/TicketBankTransferPanel';
 import TicketCredentialQR from '../components/TicketCredentialQR';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -106,8 +107,18 @@ export default function PublicEventTicketsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  // The order on screen could not be refreshed: its payment methods may be stale,
+  // so none is offered until the server answers again.
+  const [lookupFailed, setLookupFailed] = useState(false);
+  // A provider may have taken a payment the server could not confirm. Reading
+  // the order again does not ask the provider, so only a paid order clears this.
+  const [paymentUnconfirmed, setPaymentUnconfirmed] = useState(false);
+  const orderStale = lookupFailed || paymentUnconfirmed;
+  const flaggedOrder = useRef<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const liveLookup = useRef<{ eventId: number; orderId: number; token: string } | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastOpen, setDatafastOpen] = useState(false);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
@@ -152,16 +163,35 @@ export default function PublicEventTicketsPage() {
 
   const checkoutLookupToken = useMemo(() => {
     if (!checkout) return null;
-    return checkout.lookupToken ?? loadLookupToken(checkout.eventId, checkout.orderId);
+    const live = liveLookup.current;
+    return checkout.lookupToken
+      ?? (live?.eventId === checkout.eventId && live.orderId === checkout.orderId ? live.token : null)
+      ?? loadLookupToken(checkout.eventId, checkout.orderId);
   }, [checkout]);
 
   useEffect(() => {
     if (!validEventId || !validOrderId || routeOrderId == null) return;
-    const token = loadLookupToken(eventId, routeOrderId);
+    let active = true;
+    // A refresh of the same order keeps the receipt already on screen: a failed
+    // request must not take an issued ticket away from a buyer at the door.
+    setCheckout((current) => (
+      current?.eventId === eventId && current.orderId === routeOrderId ? current : null));
+    // Stale and unconfirmed-payment flags describe one order; another order
+    // starts without them.
+    const orderKey = `${eventId}:${routeOrderId}`;
+    if (flaggedOrder.current !== orderKey) {
+      flaggedOrder.current = orderKey;
+      setLookupFailed(false);
+      setPaymentUnconfirmed(false);
+    }
+    const live = liveLookup.current;
+    const token = live?.eventId === eventId && live.orderId === routeOrderId
+      ? live.token : loadLookupToken(eventId, routeOrderId);
     if (!token) {
+      setPaymentBusy(false);
       setMessage(english
-        ? 'This browser does not have the secure access token for that order.'
-        : 'Este navegador no tiene el acceso seguro de esa orden.');
+        ? 'Open this order in the browser where you bought your tickets, or use the ticket codes in your confirmation email.'
+        : 'Abre esta orden en el navegador donde compraste tus entradas o usa los códigos del correo de confirmación.');
       return;
     }
     const query = new URLSearchParams(location.search);
@@ -173,14 +203,23 @@ export default function PublicEventTicketsPage() {
       : EventTickets.getCheckout(eventId, routeOrderId, token);
     request
       .then((response) => {
+        if (!active) return;
         setCheckout(response);
+        setLookupFailed(false);
+        if (response.paymentStatus === 'paid') setPaymentUnconfirmed(false);
         if (resourcePath) navigate(location.pathname, { replace: true });
       })
-      .catch(() => setMessage(english
-        ? 'The server could not verify this order. No payment is shown as successful.'
-        : 'El servidor no pudo verificar esta orden. No mostramos ningún pago como exitoso.'))
-      .finally(() => setPaymentBusy(false));
-  }, [english, eventId, location.pathname, location.search, navigate, routeOrderId, validEventId, validOrderId]);
+      .catch(() => {
+        if (active) setLookupFailed(true);
+        // A provider return that could not be reconciled is not a plain read.
+        if (active && resourcePath) setPaymentUnconfirmed(true);
+        if (active) setMessage(english
+          ? 'We could not load your order. Check your connection and try again. Do not buy or pay again.'
+          : 'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.');
+      })
+      .finally(() => { if (active) setPaymentBusy(false); });
+    return () => { active = false; };
+  }, [english, eventId, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
 
   const title = storefront.data?.title ?? (english ? 'Event tickets' : 'Entradas para eventos');
   const description = storefront.data?.description
@@ -260,6 +299,7 @@ export default function PublicEventTicketsPage() {
         idempotency.current.key,
       );
       if (!response.lookupToken) throw new Error('Secure lookup token missing');
+      liveLookup.current = { eventId: response.eventId, orderId: response.orderId, token: response.lookupToken };
       saveLookupToken(response.eventId, response.orderId, response.lookupToken);
       setCheckout(response);
       navigate(`/eventos/${response.eventId}/orden/${response.orderId}`, { replace: false });
@@ -376,7 +416,7 @@ export default function PublicEventTicketsPage() {
   }, [datafastCheckout, datafastOpen, datafastWidgetKey, english]);
 
   useEffect(() => {
-    if (!checkout?.paymentMethods.includes('paypal') || !paypalClientId || typeof window === 'undefined') return;
+    if (orderStale || !checkout?.paymentMethods.includes('paypal') || !paypalClientId || typeof window === 'undefined') return;
     if (window.paypal) {
       setPaypalReady(true);
       return;
@@ -390,7 +430,7 @@ export default function PublicEventTicketsPage() {
       : 'PayPal no cargó. No se confirmó ningún pago.');
     document.body.appendChild(script);
     return () => script.remove();
-  }, [checkout?.paymentMethods, checkout?.quote.currency, english, paypalClientId]);
+  }, [checkout?.paymentMethods, checkout?.quote.currency, english, orderStale, paypalClientId]);
 
   useEffect(() => {
     if (!paypalOpen || !paypalReady || !paypalOrderId || !checkout || !checkoutLookupToken
@@ -420,6 +460,11 @@ export default function PublicEventTicketsPage() {
             ? 'PayPal returned, but the server has not confirmed payment.'
             : 'PayPal respondió, pero el servidor todavía no confirmó el pago.'));
         } catch {
+          // PayPal may have taken the payment even though the server could not
+          // confirm it: offer no other rail until the order is read again.
+          setPaymentUnconfirmed(true);
+          setPaypalOpen(false);
+          setPaypalOrderId(null);
           setMessage(english
             ? 'The server could not verify PayPal. The ticket is not shown as paid.'
             : 'El servidor no pudo verificar PayPal. No mostramos la entrada como pagada.');
@@ -441,17 +486,31 @@ export default function PublicEventTicketsPage() {
   if (!validEventId || !validOrderId) {
     return <Container sx={{ py: 8 }}><Alert severity="error">Invalid event or order.</Alert></Container>;
   }
-  if (storefront.isLoading) {
+  // Receipt access is authorized by the order capability, independently of the
+  // public sales lifecycle. Closing sales must not hide an issued admission QR.
+  if (routeOrderId != null && (checkout?.eventId !== eventId || checkout.orderId !== routeOrderId)) {
+    return <Container maxWidth="md" sx={{ py: 8 }}>
+      <Stack spacing={2}>
+        <Typography component="h1" variant="h4">{english ? 'Your ticket order' : 'Tu orden de entradas'}</Typography>
+        {message ? <>
+          <Alert severity="warning">{message}</Alert>
+          <Button onClick={() => setLookupRevision((revision) => revision + 1)}>{english ? 'Try again' : 'Intentar de nuevo'}</Button>
+        </> : <CircularProgress aria-label={english ? 'Loading order' : 'Cargando orden'} />}
+      </Stack>
+    </Container>;
+  }
+  if (routeOrderId == null && storefront.isLoading) {
     return <Stack minHeight="60vh" alignItems="center" justifyContent="center"><CircularProgress /></Stack>;
   }
-  if (storefront.isError || !storefront.data) {
+  if (routeOrderId == null && (storefront.isError || !storefront.data)) {
     return <Container sx={{ py: 8 }}><Alert severity="error">{english
       ? 'This event ticket storefront is not available.'
       : 'La boletería de este evento no está disponible.'}</Alert></Container>;
   }
 
-  const selectedTier = storefront.data.tiers.find((tier) => String(tier.tierId) === tierId);
+  const selectedTier = storefront.data?.tiers.find((tier) => String(tier.tierId) === tierId);
   const paid = checkout?.paymentStatus === 'paid';
+  const offeredPaymentMethods = orderStale ? [] : (checkout?.paymentMethods ?? []);
   const issued = checkout?.fulfillmentStatus === 'issued';
   const datafastReturnUrl = checkout && typeof window !== 'undefined'
     ? new URL(`/eventos/${checkout.eventId}/orden/${checkout.orderId}`, window.location.origin).toString()
@@ -464,7 +523,7 @@ export default function PublicEventTicketsPage() {
           <Button component={RouterLink} to={`/eventos/${eventId}`} sx={{ alignSelf: 'flex-start' }}>
             {english ? 'Back to event' : 'Volver al evento'}
           </Button>
-          <Card variant="outlined" sx={{ borderRadius: 4, overflow: 'hidden' }}>
+          {storefront.data ? <Card variant="outlined" sx={{ borderRadius: 4, overflow: 'hidden' }}>
             {storefront.data.imageUrl && (
               <Box
                 component="img"
@@ -488,9 +547,9 @@ export default function PublicEventTicketsPage() {
                   : 'Revisa el total antes de pagar. Tus entradas se reservan durante el tiempo indicado.'}</Alert>
               </Stack>
             </CardContent>
-          </Card>
+          </Card> : <Typography component="h1" variant="h4">{english ? 'Your ticket order' : 'Tu orden de entradas'}</Typography>}
 
-          {!checkout ? (
+          {!checkout && storefront.data ? (
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={2} component="form" onSubmit={(event) => { event.preventDefault(); void handleCreateCheckout(); }}>
@@ -546,10 +605,6 @@ export default function PublicEventTicketsPage() {
                         <Typography variant="subtitle2" fontWeight={800}>
                           {english ? 'Ticket terms and fees' : 'Términos y tarifas de las entradas'}
                         </Typography>
-                        <Typography variant="body2">{storefront.data.policy.termsSummary}</Typography>
-                        <Typography variant="body2">
-                          {english ? 'Refund policy' : 'Política de reembolso'}: {storefront.data.policy.refundPolicy}
-                        </Typography>
                         <Typography variant="body2">
                           {english ? 'Buyer fee' : 'Tarifa al comprador'}: {percentage(storefront.data.policy.buyerFeeBps, locale)} ·{' '}
                           {english ? 'Organizer fee (deducted from payout)' : 'Tarifa al organizador (descontada del pago)'}: {percentage(storefront.data.policy.organizerFeeBps, locale)} ·{' '}
@@ -568,9 +623,6 @@ export default function PublicEventTicketsPage() {
                               : `Transferencia bancaria disponible hasta el ${date(storefront.data.policy.bankTransferAvailableUntil)}; las entradas se emiten al confirmar el depósito.`}
                           </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
-                          {english ? 'Terms version' : 'Versión de términos'}: {storefront.data.policy.termsVersion}
-                        </Typography>
                       </Stack>
                     </Alert>
                   ) : (
@@ -580,9 +632,28 @@ export default function PublicEventTicketsPage() {
                         : 'Los términos de las entradas no están disponibles, por lo que el checkout no puede continuar.'}
                     </Alert>
                   )}
-                  <FormControlLabel control={<Checkbox disabled={!storefront.data.policy} checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />} label={english
-                    ? 'I accept the versioned ticket terms, fees, and refund policy shown above.'
-                    : 'Acepto los términos versionados, las tarifas y la política de reembolso mostrados arriba.'} />
+                  {storefront.data.policy && (
+                    <Stack spacing={1}>
+                      <LegalDisclosure
+                        id="ticket-terms"
+                        language={english ? 'en' : 'es'}
+                        title={english ? 'Ticket terms' : 'Términos de las entradas'}
+                        summary={`${english ? 'Terms version' : 'Versión de términos'}: ${storefront.data.policy.termsVersion}`}
+                      >
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.termsSummary}</Typography>
+                      </LegalDisclosure>
+                      <LegalDisclosure
+                        id="ticket-refund-policy"
+                        language={english ? 'en' : 'es'}
+                        title={english ? 'Refund policy' : 'Política de reembolso'}
+                      >
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{storefront.data.policy.refundPolicy}</Typography>
+                      </LegalDisclosure>
+                    </Stack>
+                  )}
+                  <FormControlLabel control={<Checkbox disabled={!storefront.data.policy} checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} inputProps={{ 'aria-describedby': storefront.data.policy ? 'ticket-terms-button ticket-refund-policy-button' : undefined }} />} label={english
+                    ? 'I accept the versioned ticket terms, fees, and refund policy above.'
+                    : 'Acepto los términos versionados, las tarifas y la política de reembolso indicados arriba.'} />
                   {message && <Alert severity="warning">{message}</Alert>}
                   <Button type="submit" variant="contained" size="large" disabled={!storefront.data.checkoutAvailable || !termsAccepted || submitting || !selectedTier || selectedTier.remaining <= 0}>
                     {submitting ? <CircularProgress size={22} color="inherit" /> : (english ? 'Hold tickets and review total' : 'Retener entradas y revisar total')}
@@ -590,11 +661,16 @@ export default function PublicEventTicketsPage() {
                 </Stack>
               </CardContent>
             </Card>
-          ) : (
+          ) : checkout ? (
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={2}>
                   <Typography variant="h5" fontWeight={800}>{english ? 'Order status' : 'Estado de la orden'} #{checkout.orderId}</Typography>
+                  {/* Reading the order again is safe while a hosted payment holds its lock: a
+                      payment the provider confirmed may only need this to show its tickets. */}
+                  <Button disabled={paymentBusy || datafastOpen || paypalOpen} onClick={() => setLookupRevision((revision) => revision + 1)}>
+                    {english ? 'Refresh order status' : 'Actualizar estado de la orden'}
+                  </Button>
                   {paid ? <Alert severity="success">{issued
                     ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'El servidor verificó el pago y emitió las entradas.')
                     : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'El pago fue verificado. La emisión de entradas todavía está pendiente.')}</Alert>
@@ -609,16 +685,21 @@ export default function PublicEventTicketsPage() {
                   </Stack>
                   {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
                   {message && <Alert severity="warning">{message}</Alert>}
-                  {!paid && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
+                  {!paid && paymentUnconfirmed && <Alert severity="warning">{english
+                    ? 'A payment for this order may have been taken but is not confirmed yet. Do not pay again; refresh the order status later or contact us.'
+                    : 'Es posible que ya se haya cobrado un pago de esta orden, pero aún no está confirmado. No vuelvas a pagar; actualiza el estado más tarde o contáctanos.'}</Alert>}
+                  {!paid && !orderStale && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
                   <Stack spacing={1.5}>
                     {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
-                        {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                        {checkout.paymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
+                        {offeredPaymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
+                        {offeredPaymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                        {offeredPaymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
                     </Stack>}
-                    {!paid && checkout.bankTransfer && (
+                    {/* A stale order may already be paid by another rail: no transfer
+                        instructions or evidence form until it is read again. */}
+                    {!paid && !orderStale && checkout.bankTransfer && (
                       <TicketBankTransferPanel
                         transfer={checkout.bankTransfer}
                         english={english}
@@ -635,7 +716,7 @@ export default function PublicEventTicketsPage() {
                             lookupToken: checkoutLookupToken,
                             returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
                           }}
-                          offeredMethods={paid ? [] : checkout.paymentMethods}
+                          offeredMethods={paid ? [] : offeredPaymentMethods}
                           disabled={paid || paymentBusy || datafastOpen || paypalOpen}
                           english={english}
                           initialBuyerPhone={buyerPhone}
@@ -674,7 +755,7 @@ export default function PublicEventTicketsPage() {
                 </Stack>
               </CardContent>
             </Card>
-          )}
+          ) : null}
         </Stack>
       </Container>
 

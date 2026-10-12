@@ -798,6 +798,162 @@ describe('PartiesPage', () => {
     }
   });
 
+  it('edits contact notes and sends only the fields changed in the dialog', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 7,
+        displayName: 'Quito Bohemio',
+        isOrg: false,
+        primaryEmail: null,
+        instagram: 'quitobohemio',
+        notes: 'Nota previa',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    const notesField = () => {
+      const label = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label')).find(
+        (element) => buttonText(element).trim() === 'Notas',
+      );
+      const field = label ? document.getElementById(label.htmlFor) : null;
+      if (!(field instanceof HTMLTextAreaElement)) throw new Error('Notes field not found');
+      return field;
+    };
+    const openEditor = async () => {
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Completar contacto')[0]!);
+        await flushPromises();
+      });
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Completar contacto'));
+        await flushPromises();
+        await flushPromises();
+      });
+    };
+    const save = async () => {
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Guardar')[0]!);
+        await flushPromises();
+        await flushPromises();
+      });
+    };
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
+      });
+
+      await openEditor();
+      await waitForExpectation(() => {
+        expect(notesField().value).toBe('Nota previa');
+      });
+      await save();
+      // Nothing was edited: no request, so no cached field can overwrite a newer stored value.
+      expect(updatePartyMock).not.toHaveBeenCalled();
+
+      await openEditor();
+      await act(async () => {
+        const field = notesField();
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(
+          field,
+          'Nota previa\n2026-10-07 invitación enviada',
+        );
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await save();
+      await waitForExpectation(() => {
+        expect(updatePartyMock).toHaveBeenCalledTimes(1);
+      });
+      // Only the edited field is sent; display name, email, phone and Instagram are omitted.
+      expect(updatePartyMock).toHaveBeenLastCalledWith(7, {
+        uNotes: 'Nota previa\n2026-10-07 invitación enviada',
+      });
+
+      updatePartyMock.mockRejectedValueOnce(new Error('This contact was archived. Open its current record before editing.'));
+      await openEditor();
+      await act(async () => {
+        const field = notesField();
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(
+          field,
+          'Nota previa\nseguimiento rechazado',
+        );
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await save();
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'No se guardaron los cambios: This contact was archived. Open its current record before editing.',
+        );
+      });
+      // The dialog stays open with the unsaved note so it is not lost.
+      expect(notesField().value).toBe('Nota previa\nseguimiento rechazado');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('clears a stored email with an empty string instead of an empty update', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 8,
+        displayName: 'Sala Norte',
+        isOrg: false,
+        primaryEmail: 'booking@salanorte.ec',
+        instagram: 'salanorte',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+      {
+        partyId: 9,
+        displayName: 'Sala Sur',
+        isOrg: false,
+        primaryEmail: 'hola@salasur.ec',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+      });
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Abrir acciones para Sala Norte'));
+        await flushPromises();
+        await flushPromises();
+      });
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Editar contacto'));
+        await flushPromises();
+        await flushPromises();
+      });
+      await act(async () => {
+        const label = Array.from(document.body.querySelectorAll<HTMLLabelElement>('label')).find(
+          (element) => buttonText(element).trim() === 'Email',
+        );
+        const field = label ? document.getElementById(label.htmlFor) : null;
+        if (!(field instanceof HTMLInputElement)) throw new Error('Email field not found');
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(field, '');
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Guardar')[0]!);
+        await flushPromises();
+        await flushPromises();
+      });
+      await waitForExpectation(() => {
+        expect(updatePartyMock).toHaveBeenCalledWith(8, { uPrimaryEmail: '' });
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the optional username empty until the admin asks for a custom login', async () => {
     listPartiesMock.mockResolvedValue([
       {

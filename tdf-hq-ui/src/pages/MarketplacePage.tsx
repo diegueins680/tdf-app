@@ -62,8 +62,11 @@ import {
 } from '../features/marketplace/cartSummary';
 import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
+// The pure entry defers injecting js.stripe.com until checkout actually calls loadStripe.
+import { loadStripe } from '@stripe/stripe-js/pure';
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import type {
   MarketplaceCartDTO,
   MarketplaceCartItemDTO,
@@ -3084,9 +3087,22 @@ export default function MarketplacePage() {
                 <Typography variant="caption" color="text.secondary">
                   Plazo permitido: {rentalDialogListing.miRentalMinDays ?? 1}–{rentalDialogListing.miRentalMaxDays ?? 366} días · zona horaria {rentalDialogListing.miRentalTimezone ?? 'America/Guayaquil'}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Términos {rentalDialogListing.miRentalTermsVersion}: {rentalDialogListing.miRentalTermsSummary}
-                </Typography>
+                {rentalDialogListing.miRentalTermsSummary ? (
+                  <LegalDisclosure
+                    dense
+                    id="rental-terms"
+                    title="Términos de renta"
+                    summary={rentalDialogListing.miRentalTermsVersion ? `Versión ${rentalDialogListing.miRentalTermsVersion}` : undefined}
+                  >
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {rentalDialogListing.miRentalTermsSummary}
+                    </Typography>
+                  </LegalDisclosure>
+                ) : rentalDialogListing.miRentalTermsVersion && (
+                  <Typography variant="caption" color="text.secondary">
+                    Términos {rentalDialogListing.miRentalTermsVersion}
+                  </Typography>
+                )}
               </Stack>
             </Stack>
           )}

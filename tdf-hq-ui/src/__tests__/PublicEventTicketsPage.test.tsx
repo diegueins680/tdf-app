@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
@@ -227,13 +227,133 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(getStorefrontMock).toHaveBeenCalledWith(41));
   };
 
+  it('retrieves issued tickets when public ticket sales are closed', async () => {
+    getStorefrontMock.mockRejectedValue(new Error('404: Tickets are not on sale'));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued', holderName: 'Comprador' }],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Entradas emitidas'));
+    expect(getCheckoutMock).toHaveBeenCalledWith(41, 92, 'secure-lookup-token');
+    expect(container.textContent).not.toContain('Elige tus entradas');
+  });
+
+  it('shows an unpaid order without any way to pay once the event stopped selling', async () => {
+    getStorefrontMock.mockRejectedValue(new Error('404: Tickets are not on sale'));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'awaiting_payment', paymentMethods: [] }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Estado de la orden'));
+    expect(container.textContent).toContain('La orden no está pagada');
+    const actions = Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
+    expect(actions.some((label) => /datafast|paypal|transferencia|tarjeta|pagar/i.test(label))).toBe(false);
+    expect(container.textContent).not.toContain('Elige tus entradas');
+  });
+
+  it('does not wait for a slow storefront before displaying an authorized order', async () => {
+    getStorefrontMock.mockImplementation(() => new Promise(() => {}));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+  });
+
+  it('retries a failed order lookup without creating a second purchase', async () => {
+    getCheckoutMock.mockRejectedValueOnce(new Error('Temporary outage'))
+      .mockResolvedValueOnce(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    const retry = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Intentar de nuevo')!;
+    await act(async () => { fireEvent.click(retry); });
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    expect(getCheckoutMock).toHaveBeenCalledTimes(2);
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('withdraws payment actions when an unpaid order cannot be refreshed, until the server answers again', async () => {
+    const unpaid = checkoutFixture({ paymentStatus: 'awaiting_payment' });
+    getCheckoutMock.mockResolvedValueOnce(unpaid)
+      .mockRejectedValueOnce(new Error('Temporary outage'))
+      .mockResolvedValueOnce(unpaid);
+    await renderTracking('/eventos/41/orden/92');
+    const labels = () => Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
+    const refresh = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
+    expect(labels()).not.toContain('Datafast');
+    expect(labels().some((label) => /paypal/i.test(label))).toBe(false);
+    expect(container.textContent).not.toContain('No hay un proveedor real habilitado');
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+  });
+
+  it('keeps an issued ticket on screen when refreshing the order fails', async () => {
+    getCheckoutMock.mockResolvedValueOnce(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued', holderName: 'Comprador' }],
+    })).mockRejectedValueOnce(new Error('Temporary outage'));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('TICKET-VERIFIED'));
+    const refresh = Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    await act(async () => { fireEvent.click(refresh); });
+    await waitForExpectation(() => expect(getCheckoutMock).toHaveBeenCalledTimes(2));
+    await waitForExpectation(() => expect(container.textContent).toContain('No pudimos cargar tu orden'));
+    expect(container.textContent).toContain('TICKET-VERIFIED');
+    expect(container.textContent).toContain('Entradas emitidas');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('explains missing order access without offering another purchase', async () => {
+    window.localStorage.clear();
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('navegador donde compraste'));
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    expect(getCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('ignores a late receipt after navigating to an order without its capability', async () => {
+    let resolveFirst!: (value: unknown) => void;
+    getCheckoutMock.mockImplementation(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/eventos/41/orden/92']}>
+        <QueryClientProvider client={queryClient}>
+          <Link to="/eventos/41/orden/93">Otra orden</Link>
+          <Routes><Route path="/eventos/:eventId/orden/:orderId" element={<PublicEventTicketsPage />} /></Routes>
+        </QueryClientProvider>
+      </MemoryRouter>);
+    });
+    await waitForExpectation(() => expect(getCheckoutMock).toHaveBeenCalledTimes(1));
+    expect(container.textContent).not.toContain('Elige tus entradas');
+    await act(async () => { fireEvent.click(container.querySelector('a')!); });
+    await waitForExpectation(() => expect(container.textContent).toContain('navegador donde compraste'));
+    await act(async () => {
+      resolveFirst(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued',
+        tickets: [{ ticketId: 501, ticketCode: 'TICKET-VERIFIED', status: 'issued' }] }));
+    });
+    expect(container.textContent).not.toContain('TICKET-VERIFIED');
+    expect(container.textContent).not.toContain('Entradas emitidas');
+  });
+
   it('shows the approved ticket policy before consent and checkout', async () => {
     await renderTracking('/eventos/41/entradas');
 
     await waitForExpectation(() => expect(container.textContent).toContain(
       'Aceptas el precio, las tarifas y las condiciones mostradas.',
     ));
-    expect(container.textContent).toContain('Política de reembolso: Reembolso total.');
+    const termsButton = container.querySelector<HTMLButtonElement>('#ticket-terms-button')!;
+    const refundButton = container.querySelector<HTMLButtonElement>('#ticket-refund-policy-button')!;
+    expect(termsButton.getAttribute('aria-expanded')).toBe('false');
+    expect(refundButton.getAttribute('aria-expanded')).toBe('false');
+    expect(refundButton.textContent).toContain('Política de reembolso');
+    const consent = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(consent.getAttribute('aria-describedby')).toBe('ticket-terms-button ticket-refund-policy-button');
+    await act(async () => { fireEvent.click(refundButton); });
+    expect(refundButton.getAttribute('aria-expanded')).toBe('true');
+    expect(termsButton.getAttribute('aria-expanded')).toBe('false');
+    expect(container.querySelector(`#${refundButton.getAttribute('aria-controls')}`)?.textContent).toBe('Reembolso total.');
     expect(container.textContent).toContain('Tarifa al comprador: 2%');
     expect(container.textContent).toContain('Tarifa al organizador (descontada del pago): 2%');
     expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
@@ -307,6 +427,16 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     const providers = funnelCaptureMock.mock.calls.map((call) => call[1]);
     expect(providers).toEqual(expect.arrayContaining([expect.objectContaining({ provider: 'bank_transfer' })]));
     providers.forEach(expectNoPrivateTicketData);
+
+    // A refresh that fails leaves the order stale: it may already be paid by
+    // another rail, so the transfer instructions and evidence form go away.
+    getCheckoutMock.mockRejectedValueOnce(new Error('Temporary outage'));
+    const refresh = Array.from(container.querySelectorAll('button'))
+      .find((candidate) => candidate.textContent === 'Actualizar estado de la orden')!;
+    await act(async () => { fireEvent.click(refresh); });
+    await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
+    expect(container.textContent).not.toContain('Banco Internacional ahorros 440781141');
+    expect(container.querySelector('input[maxlength="120"]')).toBeNull();
   });
 
   it('keeps a receipt out of search and its order reference out of canonical metadata', async () => {
@@ -347,6 +477,44 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(close).toHaveBeenCalled();
     expect(funnelCaptureMock).toHaveBeenCalledWith('ticketing_payment_initiated', expect.objectContaining({ provider: 'paypal' }));
     expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
+  });
+
+  it('offers no other payment rail after a PayPal capture the server could not verify', async () => {
+    readEnvMock.mockReturnValue('synthetic-public-client');
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'awaiting_payment' }));
+    createPaypalOrderMock.mockResolvedValue({ pcPaypalOrderId: 'BOUND-PAYPAL-ORDER' });
+    capturePaypalOrderMock.mockRejectedValue(new Error('502: readback failed'));
+    const render = jest.fn<(target: string | HTMLElement) => Promise<void>>().mockResolvedValue(undefined);
+    const close = jest.fn<() => void>();
+    const buttons = jest.fn<NonNullable<typeof window.paypal>['Buttons']>(() => ({ render, close }));
+    window.paypal = { Buttons: buttons };
+    await renderTracking('/eventos/41/orden/92');
+    const labels = () => Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
+    const paypalButton = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'PayPal')!;
+    await waitForExpectation(() => expect(paypalButton()?.disabled).toBe(false));
+    expect(labels()).toContain('Datafast');
+    await act(async () => fireEvent.click(paypalButton()));
+    await waitForExpectation(() => expect(render).toHaveBeenCalledTimes(1));
+    const options = buttons.mock.calls[0]![0];
+    await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor no pudo verificar PayPal'));
+    expect(labels()).not.toContain('Datafast');
+    // Reading the order again does not ask PayPal: an unpaid answer must not
+    // bring the other rails back.
+    const refresh = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    const lookups = getCheckoutMock.mock.calls.length;
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(getCheckoutMock.mock.calls.length).toBeGreaterThan(lookups));
+    await waitForExpectation(() => expect(refresh().disabled).toBe(false));
+    expect(labels()).not.toContain('Datafast');
+    expect(container.textContent).toContain('No vuelvas a pagar');
+    // Only a paid order settles it.
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    expect(container.textContent).not.toContain('No vuelvas a pagar');
   });
 
   it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {
@@ -448,7 +616,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await renderTracking('/eventos/41/orden/92?resourcePath=%2Fv1%2Fcheckouts%2Fprovider-1%2Fpayment');
 
     await waitForExpectation(() => expect(container.textContent).toContain(
-      'El servidor no pudo verificar esta orden. No mostramos ningún pago como exitoso.',
+      'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.',
     ));
     expect(container.textContent).not.toContain('El servidor verificó el pago');
     expect(container.textContent).not.toContain('TICKET-');
@@ -478,6 +646,16 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledWith(
       'ticketing_payment_initiated', expect.objectContaining({ event_id: 41, provider: 'placetopay' }),
     ));
+    if (state === 'prepared') {
+      // The session cannot be retried, so the hosted safety lock is held. Reading
+      // the order again must stay possible: a confirmed payment may only need it.
+      const refresh = () => [...container.querySelectorAll('button')]
+        .find((item) => item.textContent === 'Actualizar estado de la orden');
+      await waitForExpectation(() => expect(refresh()?.disabled).toBe(false));
+      const lookups = getCheckoutMock.mock.calls.length;
+      await act(async () => fireEvent.click(refresh()!));
+      await waitForExpectation(() => expect(getCheckoutMock.mock.calls.length).toBeGreaterThan(lookups));
+    }
     await renderTracking('/eventos/41/orden/92');
     expect(funnelCaptureMock.mock.calls.filter(([phase]) => phase === 'ticketing_payment_initiated')).toHaveLength(1);
     expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
