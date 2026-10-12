@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T12:52:53.931Z",
+  "generatedAt": "2026-10-12T13:21:12.672Z",
   "repositoryRoot": ".",
   "filesScanned": 2245,
   "candidateCount": 1320,
@@ -61158,7 +61158,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 578,
+      "line": 587,
       "values": [
         "consumidor_final",
         "cedula",
@@ -61168,7 +61168,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        578
+        587
       ],
       "consumerCount": 14,
       "backendConsumers": [
