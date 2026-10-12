@@ -4060,7 +4060,7 @@
       "id": "MEDIA-DRIVE-001",
       "title": "Bind Drive upload retries to actor and exact request",
       "statement": "An existing Drive idempotency entry may be reused only when its stored versioned fingerprint matches the authenticated Party and effective filename, MIME, destination and file bytes; missing or conflicting binding rejects before provider mutation.",
-      "authority": "implementation safety repair under authorized conformance audit",
+      "authority": "implementation safety repair under authorized conformance audit; AUTHORITY-071",
       "domain": "MEDIA",
       "actors": [
         "Authorized operations actor",
@@ -4103,7 +4103,7 @@
       "failure": "Conflicts409 before create/permission; provider failures502; missing configuration503. Successful file create can precede a failed permission operation.",
       "recovery": "Preserve legacy and conflicting objects. Reconcile their provenance explicitly or choose a new intentional upload; never silently attach actor ownership. No production provider mutation during verification.",
       "observability": "Retain exact test revision, synthetic wire trace, command and result; never log credentials or uploaded user content.",
-      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031",
+      "source": "Server.uploadToDrive and findDriveUploadByIdempotencyKey; scripts/artist-enrichment.mjs caller; AUTHORITY-031; formal/system/drive-replay.md",
       "property": "reuse implies stored fingerprint equals current actor-and-request fingerprint; conflict implies no subsequent provider mutation",
       "contract": "formal/system/drive-replay.md",
       "implementation": [
@@ -4111,7 +4111,7 @@
         "tdf-hq/src/TDF/API/Drive.hs",
         "tdf-hq/tdf-hq.cabal"
       ],
-      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh.",
+      "verification": "In-memory HTTP transport tests inspect real multipart metadata and provider-effect order without sockets, DNS or credential refresh. 2026-10-12: DriveReplay.tla states the reuse rule (ReuseBinds, NoForeignReuse, NoLegacyAdoption, ConflictNoMutation) with three single-guard controls; the Race configuration checks SingleObject and is an expected counterexample, recording that lookup-then-create gives no exactly-once guarantee. DriveReplaySpec: 9 examples pass on the built test binary (uploadToDrive unchanged since the binary's base).",
       "evidence": "tdf-hq/test/TDF/DriveReplaySpec.hs; current execution evidence pending",
       "status": "specified and implemented",
       "historicalStatus": "implementation-repair-awaiting-current-execution",
@@ -4119,7 +4119,14 @@
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/DriveReplay.tla",
+        "formal/event-operations/DriveReplay.cfg",
+        "formal/event-operations/DriveReplayUnchecked.cfg",
+        "formal/event-operations/DriveReplayActorIgnored.cfg",
+        "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+        "formal/event-operations/DriveReplayRace.cfg"
+      ],
       "confidence": "source-reviewed request binding; execution and deployment still pending",
       "ambiguity": [
         "Current production usage/legacy entry count unobserved.",
@@ -9179,6 +9186,12 @@
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/DriveReplay.cfg": "4269a173b57b22ee27491b3dcb2ac14d9eb2b06a4a4a7143cf2c2a062939fec6",
+    "formal/event-operations/DriveReplay.tla": "75cfbe203e463332a60143b9f06aeee469926c5f0b890d6237db35e73d60bc2d",
+    "formal/event-operations/DriveReplayActorIgnored.cfg": "6238ffd18f9c31777937297fa32be1800361705a989f315e291f3b56d15e8096",
+    "formal/event-operations/DriveReplayLegacyAdopted.cfg": "a3fe9971114d1f19c88d5aa45c6758d40b4a1c113873f9db1cee9cea52997462",
+    "formal/event-operations/DriveReplayRace.cfg": "39ee0bbce44c7b6b038b82d13fec38c6e4a410da7a27871d8a29a5bc97b024a1",
+    "formal/event-operations/DriveReplayUnchecked.cfg": "2bf51aafda6d0337f8422f35052aaecfd47c55de5e63c307906cb1623a9ce491",
     "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
@@ -9440,7 +9453,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "8989b28af9738f288bfd0e3ccdb8136fd6a7fae3b80c947455c8478036024b1e",
+    "scripts/verify-event-operations-formal.sh": "1b874471a9c56ec3807f9a5c24724a066b59ea77e23b913903e8ff4dbaa33686",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -12637,6 +12650,42 @@
       {
         "requirement": "MEDIA-DRIVE-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/DriveReplay.tla": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplay.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayUnchecked.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayActorIgnored.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayLegacyAdopted.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DriveReplayRace.cfg": [
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/main.tsx": [
@@ -21658,7 +21707,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "8989b28af9738f288bfd0e3ccdb8136fd6a7fae3b80c947455c8478036024b1e",
+      "sha256": "1b874471a9c56ec3807f9a5c24724a066b59ea77e23b913903e8ff4dbaa33686",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41054,7 +41103,6 @@
     "REC-DDEX-001",
     "PRIV-WEBHOOK-001",
     "AUTH-WEBHOOK-001",
-    "MEDIA-DRIVE-001",
     "MEDIA-STREAM-001",
     "OPS-WORKER-001",
     "OPS-METRICS-001",
@@ -42201,7 +42249,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f30603de70068e84404fc9025b7d18160aed4142bccce38f69dddf76b252c078",
+      "sourceSha256": "ddf2fdc9b8523364318d3fce3e33800d70e682d557721f97ae5b0d522aa91585",
       "definition": {
         "states": [
           "absent",

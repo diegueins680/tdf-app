@@ -42,3 +42,27 @@ revocation and historical provider-object reconciliation remain separate work.
 
 The primary-source decisions and their limits are recorded in `research.json`.
 No real Google operation is required by this verification.
+
+## Model (2026-10-12)
+
+`formal/event-operations/DriveReplay.tla`: one idempotency key, two requests
+from two actors with two request shapes (name, MIME, folder and bytes
+abstracted as one value), a provider entry that is absent, legacy (no
+fingerprint) or bound to an actor and shape. Each request looks the entry up,
+then creates, reuses or conflicts exactly as `uploadToDrive` does. Invariants:
+`ReuseBinds` (a reuse's entry carries the request's own shape),
+`NoForeignReuse` (and its actor), `NoLegacyAdoption`, `ConflictNoMutation`
+(objects exist only for requests that report a creation). Three controls
+remove one guard each: `Unchecked` (`FingerprintChecked` off: `ReuseBinds`),
+`ActorIgnored` (`ActorBound` off: `NoForeignReuse`), `LegacyAdopted`
+(`LegacyRejected` off: `NoLegacyAdoption`). A fourth configuration, `Race`,
+checks `SingleObject` (at most one provider object per key) with every guard
+on and is registered as an expected counterexample: two requests that both
+see no entry both create. That is the limitation the paragraph above records;
+the model makes it explicit rather than proving it away. Decision in
+AUTHORITY-071. The model does not cover provider visibility lag, process
+death after the create, out-of-band property changes or the best-effort
+sharing and metadata calls after the decision. `DriveReplaySpec` (nine
+examples) is the execution evidence for the three guards; it passed on the
+built test binary of 2026-10-12, whose `uploadToDrive` is byte-identical to
+main's.

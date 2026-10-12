@@ -576,6 +576,18 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-071",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/drive-replay.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/test/TDF/DriveReplaySpec.hs"
+      ],
+      "conflict": "MEDIA-DRIVE-001 had no formal model. Its concurrency text accepts that the provider lookup and the multipart create are separate requests, so two requests that both miss can both create; a model stating exactly-once reuse would contradict the implementation, and a model omitting the race would overstate it.",
+      "authority": "The requirement's own concurrency and ambiguity fields (no exactly-once guarantee; concurrent creation not covered) and the drive-replay note, which classify the race as outside the repair, not as a defect.",
+      "resolution": "DriveReplay.tla states what the implementation guarantees (a reuse is bound to the requester's actor and request shape, legacy entries are never adopted, a conflict or reuse mutates nothing) with three single-guard controls, and carries SingleObject as a documented non-invariant: the Race configuration is registered as an expected counterexample. No code change; the race remains an open obligation of MEDIA-DRIVE-001, closable only by a local claim before the provider create."
     }
   ]
 }
