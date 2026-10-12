@@ -4959,7 +4959,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsReadPolicy.tla evaluates the copied grant table and SQL scope filter over every role set, assignment flag and entity type (ReadersAgree, NoSecurityDisclosure, ReadOnlyNoWriteGain, SpecialistsAssigned, UnknownNothing) with five single-guard controls (formal/system/operations-read-policy.md); the table is copied by hand, so this checks the policy, not the Haskell or SQL text.",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsReadPolicy.tla evaluates the copied grant table and SQL scope filter over every role set, assignment flag and entity type (ReadersAgree, NoSecurityDisclosure, ReadOnlyNoWriteGain, SpecialistsAssigned, UnknownNothing) with five single-guard controls (formal/system/operations-read-policy.md); the table is copied by hand, so this checks the policy, not the Haskell or SQL text. The approval handler's linked-item check did not strip ReadOnly (Accounting plus ReadOnly could link an approval to a hidden item); fixed and covered by an Accounting-plus-ReadOnly harness case.",
       "id": "AUTH-OPS-READ-001",
       "title": "One action-specific Operations read capability policy",
       "domain": "AUTH",
@@ -5020,7 +5020,7 @@
       ],
       "ambiguity": [
         "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
-        "SQL/role conformance is empirical; not formally covered.",
+        "SQL text and role conformance are empirical; the model checks the copied policy only.",
         "The model's grant table is a hand copy of Model.hs and scopeFilterSql; a change to either must be mirrored (2026-10-12)."
       ]
     },
@@ -9365,7 +9365,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+    "scripts/lib/operations_conformance.py": "6e7d14c54bb4c47496790718cc4bb028ceacdce3b3c7d5bc887d1ef5f061847f",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -9822,7 +9822,7 @@
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
-    "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
+    "tdf-hq/src/TDF/Operations/Server.hs": "f7c4e81c910514746928c6844ca818a88620ed9e9641204f449d6edd044eb28b",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
@@ -19266,7 +19266,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+      "sha256": "6e7d14c54bb4c47496790718cc4bb028ceacdce3b3c7d5bc887d1ef5f061847f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33727,7 +33727,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
+      "sha256": "f7c4e81c910514746928c6844ca818a88620ed9e9641204f449d6edd044eb28b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42258,7 +42258,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "897f57d2412c0ccf2f8d07d574d7720b914b283b0098d71e09604254d0eda4a3",
+      "sourceSha256": "dac25657bc894d6c8ecf101851f0ddf7428a76b991fe0f1ee992aa63804e6ccf",
       "definition": {
         "states": [
           "absent",
