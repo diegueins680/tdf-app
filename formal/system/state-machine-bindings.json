@@ -12,26 +12,46 @@
       "source": "docs/revenue-platform/formal-model.yaml",
       "table": "marketplace_rental_order_runtime",
       "column": "rental_status",
-      "decision": "ADR-0108"
+      "decision": "ADR-0108",
+      "code": {
+        "file": "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
+        "validator": "validateMarketplaceRentalTransition",
+        "renderer": "marketplaceRentalStateText"
+      }
     },
     "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment": {
       "source": "docs/revenue-platform/formal-model.yaml",
       "table": "service_booking_checkout_runtime",
       "column": "fulfillment_status",
-      "decision": "ADR-0109"
+      "decision": "ADR-0109",
+      "code": {
+        "file": "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+        "validator": "validateServiceBookingTransition",
+        "renderer": "serviceBookingStateText"
+      }
     },
     "docs/revenue-platform/formal-model.yaml#event_ticket_fulfillment": {
       "source": "docs/revenue-platform/formal-model.yaml",
       "table": "event_ticket_checkout_runtime",
       "column": "fulfillment_status",
-      "decision": "ADR-0113"
+      "decision": "ADR-0113",
+      "code": {
+        "file": "tdf-hq/src/TDF/Commerce/EventTickets.hs",
+        "validator": "validateTicketFulfillmentTransition",
+        "renderer": "ticketFulfillmentStateText"
+      }
     },
     "docs/revenue-platform/formal-model.yaml#quote": {
       "source": "docs/revenue-platform/formal-model.yaml",
       "table": "domo_event_quote_runtime",
       "column": "quote_status",
       "transitionFunction": "domo_validate_quote_runtime_update",
-      "decision": "AUTHORITY-047"
+      "decision": "AUTHORITY-047",
+      "code": {
+        "file": "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "validator": "validateDomoQuoteTransition",
+        "renderer": "domoQuoteStateText"
+      }
     },
     "docs/revenue-platform/formal-model.yaml#distribution": {
       "source": "docs/revenue-platform/formal-model.yaml",
