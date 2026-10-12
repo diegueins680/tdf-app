@@ -4557,10 +4557,7 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-        "e2e/integration/ticket-retrieval.spec.mjs",
-        "playwright.ticket-retrieval.config.mjs",
-        "scripts/run-ticket-retrieval-browser.mjs"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -9126,7 +9123,6 @@
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
-    "e2e/integration/ticket-retrieval.spec.mjs": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
@@ -9252,7 +9248,6 @@
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
     "playwright.config.mjs": "a5c8481d89b2dabcb1b8f64766c8ab17a26b00877f8c27a4f06b52f24fc99779",
-    "playwright.ticket-retrieval.config.mjs": "610cb08dd1adc8a7c08b79dd63b9953c911581e43f13f9dcc5f7951dfe474f8d",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
@@ -9361,7 +9356,6 @@
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
-    "scripts/run-ticket-retrieval-browser.mjs": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -9805,7 +9799,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "9abdf5dfdbffa1fdd17d645275bbcf7a6451ed0fedb9118b429b28df34b0a8da",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
@@ -13192,24 +13186,6 @@
       }
     ],
     "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      }
-    ],
-    "e2e/integration/ticket-retrieval.spec.mjs": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      }
-    ],
-    "playwright.ticket-retrieval.config.mjs": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/run-ticket-retrieval-browser.mjs": [
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "tests"
@@ -16695,18 +16671,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-e48b174d71244c56",
-      "path": "e2e/integration/ticket-retrieval.spec.mjs",
-      "sha256": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "EVT-TICKET-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-b6a53fc19d550b31",
       "path": "e2e/interactions/interactions.spec.mjs",
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
@@ -19747,18 +19711,6 @@
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
           "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-b2a8d03352f6e0c4",
-      "path": "scripts/run-ticket-retrieval-browser.mjs",
-      "sha256": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "EVT-TICKET-001",
-          "relationship": "tests"
         }
       ]
     },
@@ -33891,7 +33843,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
+      "sha256": "9abdf5dfdbffa1fdd17d645275bbcf7a6451ed0fedb9118b429b28df34b0a8da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42073,7 +42025,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d123c8dc1811cbb83320464b49e70d5b7d538b8d6ff7c06ca1e9afa82d118376",
+      "sourceSha256": "a7fa79a35a00003e8962f5f2211c26fc40b2cfb2932302c0913ee115ce9ab2c1",
       "definition": {
         "states": [
           "absent",

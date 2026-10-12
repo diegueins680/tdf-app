@@ -24,7 +24,6 @@
     ],
     "e2e": [
       "e2e/integration/event-raci-browser.spec.mjs",
-      "e2e/integration/ticket-retrieval.spec.mjs",
       "e2e/interactions/interactions.spec.mjs",
       "e2e/web/account-deletion-rollout.spec.mjs",
       "e2e/web/account-deletion.spec.mjs",
@@ -327,7 +326,6 @@
       "scripts/run-instagram-follower-invite-2026-09-09.sh",
       "scripts/run-music-release-worker-once.sh",
       "scripts/run-music-release-worker.sh",
-      "scripts/run-ticket-retrieval-browser.mjs",
       "scripts/scan-music-legacy-releases.sh",
       "scripts/set-loop-github-polling.mjs",
       "scripts/social/ApiContractSpec.hs",
@@ -2633,12 +2631,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-e48b174d71244c56",
-      "path": "e2e/integration/ticket-retrieval.spec.mjs",
-      "sha256": "52720716e73d0763d68c52b625aaa08fe2f362f691887e47176423e0205eef2c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-b6a53fc19d550b31",
       "path": "e2e/interactions/interactions.spec.mjs",
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
@@ -4376,12 +4368,6 @@
       "id": "SURFACE-37d6eca3de4ae9a2",
       "path": "scripts/run-music-release-worker.sh",
       "sha256": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-b2a8d03352f6e0c4",
-      "path": "scripts/run-ticket-retrieval-browser.mjs",
-      "sha256": "9fb8ae56410c0f002470b8eaa0c1a753dea664a9d484b06e628c6c9ca6d0bcdf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13975,7 +13961,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
+      "sha256": "9abdf5dfdbffa1fdd17d645275bbcf7a6451ed0fedb9118b429b28df34b0a8da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23930,7 +23916,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d123c8dc1811cbb83320464b49e70d5b7d538b8d6ff7c06ca1e9afa82d118376",
+      "sha256": "a7fa79a35a00003e8962f5f2211c26fc40b2cfb2932302c0913ee115ce9ab2c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
