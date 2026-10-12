@@ -4215,10 +4215,11 @@ persistMetaInbound channel now incoming =
                     Nothing
                     now)
 
+    -- A deletion inserts its tombstone or changes nothing, in one statement,
+    -- and only an undeleted row takes the deletion time: two deletions of one
+    -- message at once neither fail nor move the time forward.
     tombstoneInstagram externalId senderId senderName meta = do
-      existing <- getBy (M.UniqueInstagramMessage externalId)
-      case existing of
-        Nothing -> insert_
+      Entity key stored <- upsert
           (M.InstagramMessage externalId
                     senderId
                     senderName
@@ -4239,15 +4240,16 @@ persistMetaInbound channel now incoming =
                     Nothing
                     (Just now)
                     now)
-        Just (Entity key stored) ->
-          update key $
-            [ M.InstagramMessageDeletedAt =. Just now | isNothing (M.instagramMessageDeletedAt stored) ]
-            ++ fillBlank (M.instagramMessageSenderName stored) M.InstagramMessageSenderName senderName
+          [M.InstagramMessageExternalId =. externalId]
+      updateWhere [M.InstagramMessageId ==. key, M.InstagramMessageDeletedAt ==. Nothing]
+        [M.InstagramMessageDeletedAt =. Just now]
+      update key $ fillBlank (M.instagramMessageSenderName stored) M.InstagramMessageSenderName senderName
 
+    -- A deletion inserts its tombstone or changes nothing, in one statement,
+    -- and only an undeleted row takes the deletion time: two deletions of one
+    -- message at once neither fail nor move the time forward.
     tombstoneFacebook externalId senderId senderName meta = do
-      existing <- getBy (ME.UniqueFacebookMessage externalId)
-      case existing of
-        Nothing -> insert_
+      Entity key stored <- upsert
           (ME.FacebookMessage externalId
                     senderId
                     senderName
@@ -4268,10 +4270,10 @@ persistMetaInbound channel now incoming =
                     Nothing
                     (Just now)
                     now)
-        Just (Entity key stored) ->
-          update key $
-            [ ME.FacebookMessageDeletedAt =. Just now | isNothing (ME.facebookMessageDeletedAt stored) ]
-            ++ fillBlank (ME.facebookMessageSenderName stored) ME.FacebookMessageSenderName senderName
+          [ME.FacebookMessageExternalId =. externalId]
+      updateWhere [ME.FacebookMessageId ==. key, ME.FacebookMessageDeletedAt ==. Nothing]
+        [ME.FacebookMessageDeletedAt =. Just now]
+      update key $ fillBlank (ME.facebookMessageSenderName stored) ME.FacebookMessageSenderName senderName
 
 -- | Stores an inbound Instagram message unless a message with its id is already
 -- stored. Meta delivers a message more than once and a backfill reads messages

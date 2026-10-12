@@ -35,8 +35,10 @@ text, set the direction to `incoming` and set the reply status to `pending`:
 
 `storeInstagramInboundOnce` and `storeFacebookInboundOnce` now insert the message
 when it is absent and otherwise leave it, in one statement, filling only what the
-rule allows. The webhooks and the backfill use them. The deletion path sets the
-deletion time only when none is stored.
+rule allows. The webhooks and the backfill use them. The deletion path inserts
+its tombstone or leaves the row, in one statement, and sets the deletion time
+with a conditional update that only an undeleted row takes, so simultaneous
+deletions neither fail nor move the time forward (asked by the Codex review).
 
 A backfill used to return every held or failed message it read to the worker. That
 side effect is gone; the unhold action is the way to retry.
@@ -58,7 +60,11 @@ side effect is gone; the unhold action is the way to retry.
   arrives first leaves no text; a missing sender name is filled and a stored one
   kept; metadata gains the receiving account once and then keeps it; the same
   holds for Facebook; eight simultaneous first deliveries all succeed and leave one
-  row. By reading, every case except the last fails against the previous upsert;
+  row; eight simultaneous deletions of a stored message all succeed and keep one
+  deletion time through a second simultaneous batch; eight simultaneous
+  deletions of an unknown message leave one tombstone (the two deletion cases
+  were not run against the previous check-then-write tombstone). By reading,
+  every case except the three simultaneous ones fails against the previous upsert;
   no run against the previous code was made.
 - `tdf-hq/test/TDF/ServerExtraSpec.hs`: the existing deletion case now expects the
   original text after a late repeat.
@@ -79,7 +85,8 @@ side effect is gone; the unhold action is the way to retry.
 - The backfill reports a message already stored as imported, as before. When no
   Instagram account id is configured it can also import the business's own
   messages as incoming ones; that was so before and is not changed here.
-- Not tested: filling advertising attribution, and the Facebook deletion path.
+- Not tested: filling advertising attribution. The Facebook deletion path is
+  exercised only by the unknown-message tombstone case.
 - The reply worker itself was read, not changed or tested. The capture triggers
   `operations_instagram_inbound_capture`, `operations_facebook_inbound_capture` and
   `operations_whatsapp_inbound_capture` test for the directions `inbound` and

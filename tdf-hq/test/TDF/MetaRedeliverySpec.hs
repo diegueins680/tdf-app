@@ -138,6 +138,28 @@ spec = describe "meta-redelivery-postgresql" $ do
           row <- instagram pool mid
           (M.instagramMessageText row, M.instagramMessageReplyStatus row) `shouldBe` (Just "hola", "pending")
 
+        it "keeps the first deletion time, and fails no deletion, when several deletions arrive at once" $ \pool -> do
+          mid <- newId
+          deliver pool MetaInstagram mid "hola"
+          first <- forConcurrently [1 .. 8 :: Int] $ \_ ->
+            try (delete pool MetaInstagram mid) :: IO (Either SqlError ())
+          length [() | Right () <- first] `shouldBe` 8
+          deletedAt <- M.instagramMessageDeletedAt <$> instagram pool mid
+          deletedAt `shouldSatisfy` (/= Nothing)
+          later <- forConcurrently [1 .. 8 :: Int] $ \_ ->
+            try (delete pool MetaInstagram mid) :: IO (Either SqlError ())
+          length [() | Right () <- later] `shouldBe` 8
+          row <- instagram pool mid
+          (M.instagramMessageDeletedAt row, M.instagramMessageText row) `shouldBe` (deletedAt, Just "hola")
+
+        it "stores one tombstone when several deletions of an unknown message arrive at once" $ \pool -> do
+          mid <- newId
+          outcomes <- forConcurrently [1 .. 8 :: Int] $ \_ ->
+            try (delete pool MetaFacebook mid) :: IO (Either SqlError ())
+          length [() | Right () <- outcomes] `shouldBe` 8
+          Just (Entity _ row) <- runSqlPool (getBy (ME.UniqueFacebookMessage mid)) pool
+          (ME.facebookMessageText row, ME.facebookMessageDeletedAt row /= Nothing) `shouldBe` (Nothing, True)
+
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
   && "_test" `isSuffixOf` value && any (`isPrefixOf` value)

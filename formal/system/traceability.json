@@ -9829,7 +9829,7 @@
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
-    "tdf-hq/src/TDF/ServerExtra.hs": "e7585df7e1dc7ca805e44f6604d8e6986577ca36ef7b9f238e161b6e58d5c0b6",
+    "tdf-hq/src/TDF/ServerExtra.hs": "181ccd61638069f82a2f4769a8adbc9dfe2bea4a53ad92a2bba8f91c46ae9daf",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
@@ -9868,7 +9868,7 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
-    "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "5d8850dc470901bac23d3d03b6193c352a572d583aabc89ad0695ec46a2fed7f",
+    "tdf-hq/test/TDF/MetaRedeliverySpec.hs": "4d6a6604fd0fa7aec4ffa7b0ac83ba3cda12f1f644476c3dcafca9abb3172156",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -34199,7 +34199,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "e7585df7e1dc7ca805e44f6604d8e6986577ca36ef7b9f238e161b6e58d5c0b6",
+      "sha256": "181ccd61638069f82a2f4769a8adbc9dfe2bea4a53ad92a2bba8f91c46ae9daf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35137,7 +35137,7 @@
     {
       "id": "SURFACE-1b3fd699697da8c7",
       "path": "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
-      "sha256": "5d8850dc470901bac23d3d03b6193c352a572d583aabc89ad0695ec46a2fed7f",
+      "sha256": "4d6a6604fd0fa7aec4ffa7b0ac83ba3cda12f1f644476c3dcafca9abb3172156",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
