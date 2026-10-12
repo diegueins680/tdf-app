@@ -67,7 +67,10 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         run pool (datafastCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` salesClosed)
         hostedSession pool order >>= (`shouldSatisfy` salesClosed)
 
-      it "still lets a repeated PayPal capture reconcile after sales close" $ \pool -> do
+      it "sends no new PayPal capture after sales close, even when an earlier attempt was recorded" $ \pool -> do
+        -- A recorded attempt does not prove the capture reached PayPal (it is
+        -- stored before the access token is fetched). Only PayPal reporting the
+        -- order completed may be reconciled; without that proof it is refused.
         order <- newOrder pool "capture-retry"
         runSqlPool (rawExecute
           "INSERT INTO commerce_payment_attempt (id, checkout_id, provider, environment, operation, status, amount_minor,\
@@ -77,7 +80,9 @@ spec = describe "ticket-payment-gate-postgresql" $ do
           [PersistText (oCheckout order)]) pool
         closeSales pool order "postponed"
         run pool (paypalCapture (oEvent order) (oOrder order) (Just (oToken order)) captureRequest)
-          >>= (`shouldNotSatisfy` salesClosed)
+          >>= (`shouldSatisfy` salesClosed)
+        attempts <- scalar pool "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid" [PersistText (oCheckout order)]
+        attempts `shouldBe` 1
 
       it "does not gate evidence for a transfer the buyer already made" $ \pool -> do
         order <- newOrder pool "evidence"

@@ -107,6 +107,9 @@ export default function PublicEventTicketsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  // The order on screen could not be refreshed: its payment methods may be stale,
+  // so none is offered until the server answers again.
+  const [orderStale, setOrderStale] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
@@ -189,9 +192,11 @@ export default function PublicEventTicketsPage() {
       .then((response) => {
         if (!active) return;
         setCheckout(response);
+        setOrderStale(false);
         if (resourcePath) navigate(location.pathname, { replace: true });
       })
       .catch(() => {
+        if (active) setOrderStale(true);
         if (active) setMessage(english
           ? 'We could not load your order. Check your connection and try again. Do not buy or pay again.'
           : 'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.');
@@ -395,7 +400,7 @@ export default function PublicEventTicketsPage() {
   }, [datafastCheckout, datafastOpen, datafastWidgetKey, english]);
 
   useEffect(() => {
-    if (!checkout?.paymentMethods.includes('paypal') || !paypalClientId || typeof window === 'undefined') return;
+    if (orderStale || !checkout?.paymentMethods.includes('paypal') || !paypalClientId || typeof window === 'undefined') return;
     if (window.paypal) {
       setPaypalReady(true);
       return;
@@ -409,7 +414,7 @@ export default function PublicEventTicketsPage() {
       : 'PayPal no cargó. No se confirmó ningún pago.');
     document.body.appendChild(script);
     return () => script.remove();
-  }, [checkout?.paymentMethods, checkout?.quote.currency, english, paypalClientId]);
+  }, [checkout?.paymentMethods, checkout?.quote.currency, english, orderStale, paypalClientId]);
 
   useEffect(() => {
     if (!paypalOpen || !paypalReady || !paypalOrderId || !checkout || !checkoutLookupToken
@@ -484,6 +489,7 @@ export default function PublicEventTicketsPage() {
 
   const selectedTier = storefront.data?.tiers.find((tier) => String(tier.tierId) === tierId);
   const paid = checkout?.paymentStatus === 'paid';
+  const offeredPaymentMethods = orderStale ? [] : (checkout?.paymentMethods ?? []);
   const issued = checkout?.fulfillmentStatus === 'issued';
   const datafastReturnUrl = checkout && typeof window !== 'undefined'
     ? new URL(`/eventos/${checkout.eventId}/orden/${checkout.orderId}`, window.location.origin).toString()
@@ -656,14 +662,14 @@ export default function PublicEventTicketsPage() {
                   </Stack>
                   {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
                   {message && <Alert severity="warning">{message}</Alert>}
-                  {!paid && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
+                  {!paid && !orderStale && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
                   <Stack spacing={1.5}>
                     {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
-                        {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                        {checkout.paymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
+                        {offeredPaymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
+                        {offeredPaymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                        {offeredPaymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
                     </Stack>}
                     {!paid && checkout.bankTransfer && (
                       <TicketBankTransferPanel
@@ -682,7 +688,7 @@ export default function PublicEventTicketsPage() {
                             lookupToken: checkoutLookupToken,
                             returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
                           }}
-                          offeredMethods={paid ? [] : checkout.paymentMethods}
+                          offeredMethods={paid ? [] : offeredPaymentMethods}
                           disabled={paid || paymentBusy || datafastOpen || paypalOpen}
                           english={english}
                           initialBuyerPhone={buyerPhone}

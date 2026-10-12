@@ -270,6 +270,25 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(createCheckoutMock).not.toHaveBeenCalled();
   });
 
+  it('withdraws payment actions when an unpaid order cannot be refreshed, until the server answers again', async () => {
+    const unpaid = checkoutFixture({ paymentStatus: 'awaiting_payment' });
+    getCheckoutMock.mockResolvedValueOnce(unpaid)
+      .mockRejectedValueOnce(new Error('Temporary outage'))
+      .mockResolvedValueOnce(unpaid);
+    await renderTracking('/eventos/41/orden/92');
+    const labels = () => Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
+    const refresh = () => Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent === 'Actualizar estado de la orden')!;
+    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
+    expect(labels()).not.toContain('Datafast');
+    expect(labels().some((label) => /paypal/i.test(label))).toBe(false);
+    expect(container.textContent).not.toContain('No hay un proveedor real habilitado');
+    await act(async () => { fireEvent.click(refresh()); });
+    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+  });
+
   it('keeps an issued ticket on screen when refreshing the order fails', async () => {
     getCheckoutMock.mockResolvedValueOnce(checkoutFixture({
       paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],

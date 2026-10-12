@@ -1041,19 +1041,6 @@ ticketOrderSalesOpen domainOrderId =
       mOrder <- get (toSqlKey rawOrderId :: SM.EventTicketOrderId)
       maybe (pure False) (ticketEventSalesOpen . SM.eventTicketOrderEventId) mOrder
 
--- | Whether this checkout already sent a capture to the provider. A retry then
--- reconciles a capture the provider may have accepted, and must not be refused.
-ticketCaptureAlreadyAttempted :: TicketPaymentContext -> Checkout.PaymentProvider -> AppM Bool
-ticketCaptureAlreadyAttempted context provider = do
-  rows <- runDB (rawSql
-    "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt\
-    \ WHERE checkout_id = ?::uuid AND provider = ? AND operation = ?)"
-    [ PersistText (Checkout.checkoutReferenceId (tpcCheckout context))
-    , PersistText (Checkout.paymentProviderText provider)
-    , PersistText (Checkout.paymentOperationText Checkout.OperationCapture)
-    ] :: SqlPersistT IO [Single Bool])
-  pure (rows == [Single True])
-
 -- | Refuse to start or take a payment once the event no longer sells tickets.
 -- Checkouts already processing or paid pass, so a payment in flight settles and
 -- retries stay idempotent; evidence for a transfer already made is not gated.
@@ -1072,8 +1059,12 @@ ticketCheckoutAwaitsPayment status = status `elem` ["holding", "awaiting_payment
 ticketPaymentAllowed :: Text -> Bool -> Either ServerError ()
 ticketPaymentAllowed status salesOpen
   | ticketCheckoutAwaitsPayment status && not salesOpen =
-      Left (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
+      Left ticketSalesClosedError
   | otherwise = Right ()
+
+ticketSalesClosedError :: ServerError
+ticketSalesClosedError =
+  conflict "Tickets are no longer on sale for this event; this order cannot be paid"
 
 -- | Whether an order view may list payment methods at all: only for an unpaid
 -- order with a live hold on an event that still sells tickets.
@@ -1449,30 +1440,49 @@ capturePublicEventTicketPaypalOrder
   -> AppM Routes.PublicEventTicketCheckoutResponse
 capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
-  -- A first capture is a new charge and needs open sales. A repeated one may be
-  -- reconciling a capture PayPal already accepted, so it always proceeds.
-  captureAttempted <- ticketCaptureAlreadyAttempted context Checkout.ProviderPayPal
-  unless captureAttempted (requireTicketSalesOpen context)
+  -- Once sales close no new capture is sent. A capture PayPal already accepted
+  -- (its readback or our recording failed earlier) must still be reconciled, so
+  -- the bound order is read back instead and recorded only if PayPal reports it
+  -- completed. Anything short of that proof is refused.
+  salesClosed <- if ticketCheckoutAwaitsPayment (tpcCheckoutStatus context)
+    then not <$> ticketSalesOpen (tpcEventKey context)
+    else pure False
+  let refuseWhenClosed :: ServerError -> AppM a
+      refuseWhenClosed providerError
+        | salesClosed = throwError ticketSalesClosedError
+        | otherwise = throwError providerError
   if tpcCheckoutStatus context == "paid"
     then finalizeVerifiedTicketOrder context >> loadTicketCheckoutDTO (tpcOrderKey context) Nothing
     else do
       suppliedOrderId <- either throwError pure $
         validatePaypalOrderId (Routes.paypalOrderId request)
       (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
-        ServiceStorefront.loadPaypalEnvForService
+        ServiceStorefront.loadPaypalEnvForService `catchError` refuseWhenClosed
       requireTicketProvider context paypalEnvironment Checkout.ProviderPayPal
+        `catchError` refuseWhenClosed
       existing <- loadTicketProviderBinding context Checkout.ProviderPayPal merchantRef "order"
       storedOrderId <- maybe
-        (throwError (conflict "This ticket order has no bound PayPal order"))
+        (refuseWhenClosed (conflict "This ticket order has no bound PayPal order"))
         (pure . fst) existing
       unless (storedOrderId == suppliedOrderId) $
         throwError (conflict "PayPal order does not match the immutable ticket binding")
+      alreadyCaptured <- if salesClosed
+        then do
+          known <- ServiceStorefront.getPaypalOrderRemoteForService
+            sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
+            `catchError` refuseWhenClosed
+          unless (ServiceStorefront.spcoStatus known == "COMPLETED") $
+            throwError ticketSalesClosedError
+          pure (Just known)
+        else pure Nothing
       attempt <- beginTicketPaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
-      outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
-        `catchError` failTicketPaymentAttempt context attempt
-          Checkout.ProviderPayPal "paypal_capture_request"
+      outcome <- case alreadyCaptured of
+        Just known -> pure known
+        Nothing -> ServiceStorefront.capturePaypalOrderRemoteForService
+          sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
+          `catchError` failTicketPaymentAttempt context attempt
+            Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
       case ServiceStorefront.spcoStatus outcome of
         "COMPLETED" -> do
