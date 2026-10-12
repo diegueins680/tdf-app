@@ -76,6 +76,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
   them instead of maintaining another handwritten copy of their transitions.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
 - [interaction-write-budget.md](interaction-write-budget.md): the per-account interaction write charge survives every outcome of the write, including database errors; bounded model, four negative controls and PostgreSQL tests.
+- [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification
