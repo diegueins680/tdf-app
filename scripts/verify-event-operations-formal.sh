@@ -101,6 +101,14 @@ run_negative_tlc WhatsAppRedeliveryDuplicateStore.cfg whatsapp-redelivery-duplic
 run_negative_tlc WhatsAppRedeliveryEffectAfterStore.cfg whatsapp-redelivery-effect-after-store 'Invariant StoredStopApplied is violated' WhatsAppRedelivery.tla
 run_negative_tlc WhatsAppRedeliveryEveryDeliveryReplies.cfg whatsapp-redelivery-every-delivery-replies 'Invariant RepliedOnce is violated' WhatsAppRedelivery.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
+run_tlc AccessGrant.tla AccessGrant.cfg accessgrant
+run_negative_tlc AccessGrantSelfApproval.cfg accessgrantselfapproval 'Invariant NoSelfApproval is violated' AccessGrant.tla
+run_negative_tlc AccessGrantNonAdmin.cfg accessgrantnonadmin 'Invariant AdminApprovesGrant is violated' AccessGrant.tla
+run_negative_tlc AccessGrantExpired.cfg accessgrantexpired 'Invariant NoApprovalAfterExpiry is violated' AccessGrant.tla
+run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeemer is violated' AccessGrant.tla
+run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
+run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
+run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla

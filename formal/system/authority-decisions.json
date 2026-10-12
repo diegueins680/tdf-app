@@ -578,6 +578,17 @@
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
     },
     {
+      "id": "AUTHORITY-054",
+      "sources": [
+        "formal/system/requirements.json#AUTH-ACCESS-PROVISION-001",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs"
+      ],
+      "conflict": "AUTH-ACCESS-PROVISION-001 stated that only an administrator distinct from the requester may approve artist.onboarding:create, while createRequest has self-activated that pair through the artist.self-service.artist policy since 2026-09-16.",
+      "authority": "Approved artist self-service decision (2026-09-16, recorded in AUTH-ARTIST-INVITE-001 ambiguity and the artist.self-service.artist policy migration).",
+      "resolution": "The requirement statement is corrected to the self-service product decision; the distinct-administrator rule is retained for every reviewed decision and model-checked in AccessGrant.tla. The implementation is unchanged on this point."
+    },
+    {
       "id": "AUTHORITY-060",
       "sources": [
         "tdf-hq/src/TDF/Server.hs",
