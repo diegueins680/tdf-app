@@ -31,30 +31,47 @@ cases, and the mechanism is a different one.
 
 ## The fix (`tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql`, manifest entry 203)
 
-Two triggers. `trg_commerce_checkout_created` fires `BEFORE INSERT` on
-`commerce_checkout_session` and appends the new id to the transaction-local
-setting `tdf.commerce_checkouts_created` (`set_config(..., true)`: SET LOCAL
-semantics, gone at commit or rollback, undone by a rollback to a savepoint).
+Two triggers. `trg_commerce_checkout_created` fires `AFTER INSERT`, per
+row, on `commerce_checkout_session` and appends the new id to the
+transaction-local setting `tdf.commerce_checkouts_created`
+(`set_config(..., true)`: SET LOCAL semantics, gone at commit or rollback,
+undone by a rollback to a savepoint). An AFTER row trigger fires only for
+rows actually inserted, so an `INSERT ... ON CONFLICT` that matches an
+existing header (and inserts nothing, or updates it) registers nothing; the
+review found that a BEFORE trigger did.
 `trg_commerce_checkout_line_fixed` fires `BEFORE INSERT` on
 `commerce_checkout_line_item` and refuses a line whose `checkout_id` is not
 in that setting ("was not created by this transaction; lines are created
 with their checkout", SQLSTATE 23514). So a header committed by any other
 transaction, whenever that transaction began; a header this transaction only
 updated; a header another session has not committed; a header this
-transaction inserted and rolled back to a savepoint; and an unknown id are
-all the same case. The deferred sum check of 2026-10-04 is unchanged and
+transaction inserted and rolled back to a savepoint; a header an upsert
+matched without inserting; and an unknown id are all the same case. One
+shape is refused that the 2026-10-04 rules accepted: a header and its line
+in one statement (a data-modifying CTE), because AFTER row triggers run at
+the end of the statement. No writer in the repository uses it; the test
+documents it. The deferred sum check of 2026-10-04 is unchanged and
 keeps validating the snapshot at commit; the 2026-10-04 line and header
-triggers are unchanged. The release gate expects both new triggers as
-`BEFORE INSERT` row triggers on their functions, with no column list and no
-`WHEN` clause, next to the three 2026-10-04 triggers. Rollback drops the two
+triggers are unchanged. The release gate expects both new triggers (`AFTER
+INSERT` on the header, `BEFORE INSERT` on the line) as row triggers on their
+functions, with no column list and no `WHEN` clause, next to the three
+2026-10-04 triggers. Rollback drops the two
 triggers and functions and leaves the 2026-10-04 rules in place. No Haskell
 change. Decision in AUTHORITY-070.
 
 The setting is per transaction, not per connection: a pooled connection
 carries nothing from one transaction into the next (the test reads it back
-empty outside a transaction). Ids are stored comma-delimited and matched
-with their delimiters; UUID text has a fixed width, so a match cannot
-straddle two ids.
+empty outside a transaction; the review confirmed it after COMMIT, ROLLBACK,
+a failed transaction, DISCARD ALL and a prepared transaction). Ids are
+stored comma-delimited and matched with their delimiters; UUID text has a
+fixed width, so a match cannot straddle two ids. The registry is not a
+privilege boundary: any role that can INSERT can also `set_config` the
+setting by hand and append a line (the review did, with a table-privileges
+role that could not disable the triggers). It guards against mistaken
+writers; a hostile SQL writer is outside the 2026-10-04 scope as before. A
+writer that issues `RESET ALL`, resets the setting, or calls a function
+declared with `SET tdf.commerce_checkouts_created` between its header and
+its lines refuses its own lines; neither Haskell writer does.
 
 ## Model
 
@@ -85,9 +102,10 @@ refused by the 2026-10-04 and 2026-08-13 rules and are not actions.
 | Check | Where | Result (2026-10-12, local) |
 | --- | --- | --- |
 | Model and three controls | `scripts/verify-event-operations-formal.sh` | PASS; controls fail on their named invariant; full runner exit 0 |
-| `checkout-amount-postgres.mjs` (2026-10-04 cases unchanged, run in a window without the new rule where they append to a committed checkout; new: header and lines in one transaction with a read first, a self-update and a subtransaction; header re-inserted after a subtransaction rollback; zero-total append refused, also as the first statement of a transaction, after a header update in the same transaction, and under repeatable read; unknown checkout and a header rolled back to a savepoint refused; the setting reads back empty outside a transaction; another session's uncommitted header refused while that session still commits with its own line; a session that began and wrote before the checkout was created and committed cannot append to it; two negative controls (the sum check alone admits a zero append, with and without a header update); the schema gate rejects either new trigger disabled) | CI step "Verify checkout monetary snapshots and invalid-schema controls" | PASS locally on a schema copy |
+| `checkout-amount-postgres.mjs` (2026-10-04 cases unchanged, run in a window without the new rule where they append to a committed checkout; new: header and lines in one transaction with a read first, a self-update and a subtransaction; header re-inserted after a subtransaction rollback; zero-total append refused, also as the first statement of a transaction, after a header update in the same transaction, and under repeatable read; unknown checkout and a header rolled back to a savepoint refused; the setting reads back empty outside a transaction; another session's uncommitted header refused while that session still commits with its own line; a session that began and wrote before the checkout was created and committed cannot append to it; two negative controls (the sum check alone admits a zero append, with and without a header update); upserts that insert nothing or update the header refused, an upsert of a new header commits, header and line in one statement refused; the schema gate rejects either new trigger disabled) | CI step "Verify checkout monetary snapshots and invalid-schema controls" | PASS locally on a schema copy |
 | Release-gate unit tests | `scripts/__tests__/production-release.test.mjs` | 61 pass |
 | Migration twice, rollback, forward again; probes before and after | schema copy | clean; the gap refused after, admitted after the rollback script |
+| Independent review probes (header updates, xid order, savepoints, EXCEPTION blocks, connection reuse, prepared transactions, 3,000 checkouts in one transaction, upserts, CTEs, a table-privileges role) | reviewer's scratch databases | two mechanisms rejected (`age(xmin)`, BEFORE registration); the final one holds except the documented forgery and CTE shape |
 | Automatic-migration production-schema test | `scripts/test-automatic-migrations-production-schema.sh` | see PR |
 
 ## Left open

@@ -7,9 +7,13 @@
 -- is accepted only for a checkout recorded there. The setting is scoped to
 -- the transaction (SET LOCAL semantics, rolled back with a subtransaction),
 -- so a header committed by any other transaction, a header this transaction
--- merely updated, and a header another session has not committed are all
--- equally "not created here". The deferred sum check keeps validating the
--- snapshot at commit. Safe to apply again.
+-- merely updated, a header another session has not committed, and a header
+-- an INSERT ... ON CONFLICT matched without inserting (the registration is an
+-- AFTER ROW trigger, which fires only for rows actually inserted) are all
+-- equally "not created here". The registry is a transaction-local setting any
+-- SQL writer could set by hand: it guards against mistaken writers, it is not
+-- a privilege boundary. The deferred sum check keeps validating the snapshot
+-- at commit. Safe to apply again.
 BEGIN;
 SET LOCAL lock_timeout = '10s';
 
@@ -24,7 +28,7 @@ END $$;
 
 DROP TRIGGER IF EXISTS trg_commerce_checkout_created ON commerce_checkout_session;
 CREATE TRIGGER trg_commerce_checkout_created
-  BEFORE INSERT ON commerce_checkout_session
+  AFTER INSERT ON commerce_checkout_session
   FOR EACH ROW EXECUTE FUNCTION commerce_register_checkout_creation();
 
 CREATE OR REPLACE FUNCTION commerce_reject_late_checkout_line()

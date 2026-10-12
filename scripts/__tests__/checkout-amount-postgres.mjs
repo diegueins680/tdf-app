@@ -186,6 +186,19 @@ reject(`BEGIN ISOLATION LEVEL REPEATABLE READ; ${line(fixedCheckout, '0', 3)} CO
 reject(`BEGIN; ${line(unknownCheckout, '0', 1)} COMMIT;`, /lines are created with their checkout/, 'line for an unknown checkout rejected');
 reject(`BEGIN; SAVEPOINT h; ${header(rolledBack)} ROLLBACK TO SAVEPOINT h; ${line(rolledBack)} COMMIT;`, /lines are created with their checkout/, 'header rolled back to a subtransaction is not a created checkout');
 assert.equal(pass(`SELECT count(*) FROM commerce_checkout_line_item WHERE checkout_id='${fixedCheckout}';`, 'fixed snapshot'), '2');
+// ON CONFLICT on an existing header inserts nothing and registers nothing;
+// the same statement on a new id is an ordinary creation. A header and its
+// line in one statement (a data-modifying CTE) is refused: registration is an
+// AFTER ROW trigger, run at the end of the statement. No writer uses it.
+const upsert = (id, action) => header(id).replace(/;\s*$/, ` ON CONFLICT (id) DO ${action};`);
+const upserted = randomUUID();
+reject(`BEGIN; ${upsert(fixedCheckout, 'NOTHING')} ${line(fixedCheckout, '0', 3)} COMMIT;`, /lines are created with their checkout/, 'append after an upsert that inserted nothing rejected');
+reject(`BEGIN; ${upsert(fixedCheckout, 'UPDATE SET updated_at=now()')} ${line(fixedCheckout, '0', 3)} COMMIT;`, /lines are created with their checkout/, 'append after an upsert that updated the header rejected');
+pass(`BEGIN; ${upsert(upserted, 'NOTHING')} ${line(upserted)} COMMIT;`, 'upsert of a new header with its line commits');
+reject(`BEGIN; WITH created AS (${header(randomUUID()).replace(/;\s*$/, ' RETURNING id')})
+  INSERT INTO commerce_checkout_line_item (checkout_id,line_number,product_type,product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
+  SELECT id,1,'synthetic','synthetic','1','Synthetic amount fixture',1,100,100,100,'{}' FROM created; COMMIT;`, /lines are created with their checkout/, 'header and line in one statement refused (documented)');
+assert.equal(pass(`SELECT count(*) FROM commerce_checkout_line_item WHERE checkout_id IN ('${fixedCheckout}','${upserted}');`, 'snapshots after upserts'), '3');
 assert.equal(pass(`SELECT coalesce(current_setting('tdf.commerce_checkouts_created', true), '');`, 'setting is transaction-local'), '');
 pass(`BEGIN; ${dropFixed} ${line(fixedCheckout, '0', 3)} SET CONSTRAINTS ALL IMMEDIATE; ROLLBACK;`, 'negative control: the sum check alone admits a zero-total append');
 pass(`BEGIN; ${dropFixed} UPDATE commerce_checkout_session SET updated_at=now() WHERE id='${fixedCheckout}'; ${line(fixedCheckout, '0', 3)} SET CONSTRAINTS ALL IMMEDIATE; ROLLBACK;`, 'negative control: the sum check alone admits a zero-total append after a header update');
@@ -225,4 +238,4 @@ const session = () => {
   assert.equal(pass(`SELECT count(*) FROM commerce_checkout_line_item WHERE checkout_id='${later}';`, 'later checkout keeps its snapshot'), '1');
   assert.equal(pass(`SELECT count(*) FROM commerce_checkout_session WHERE id='${earlier}';`, 'earlier session rolled back'), '0');
 }
-console.log('Checkout amount PostgreSQL: migration preflight/rollback, commit-time bounds, shipping compatibility, immutability, seven negative controls, structural drift rejection, six concurrent append transactions, pre-migration snapshot fence and the fixed line snapshot (header update, earlier session, subtransactions) passed.');
+console.log('Checkout amount PostgreSQL: migration preflight/rollback, commit-time bounds, shipping compatibility, immutability, seven negative controls, structural drift rejection, six concurrent append transactions, pre-migration snapshot fence and the fixed line snapshot (header update, upsert, earlier session, subtransactions) passed.');
