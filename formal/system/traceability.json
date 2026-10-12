@@ -9457,7 +9457,7 @@
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
-    "tdf-hq-ui/public/mobile-distribution.json": "9fe510b6d46ec3540e6464a5affab8984ffaea9e16fbbb9bdfbc031d18c3f5c8",
+    "tdf-hq-ui/public/mobile-distribution.json": "c173e0f9b9e4eb0d5e838ee1162b0c6cd6ff0decf715384392509722721014c7",
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
@@ -22048,7 +22048,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "9fe510b6d46ec3540e6464a5affab8984ffaea9e16fbbb9bdfbc031d18c3f5c8",
+      "sha256": "c173e0f9b9e4eb0d5e838ee1162b0c6cd6ff0decf715384392509722721014c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -2,7 +2,7 @@
 
 Registro de implementación y distribución. La actualización de analytics siguiente sustituye las observaciones anteriores de PostHog; se conserva el historial con sus horas para trazabilidad.
 
-## Estado verificado — 12 de octubre de 2026, ~19:05 UTC
+## Estado verificado — 12 de octubre de 2026, ~17:05 UTC
 
 Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada de lo descrito aquí se infiere de documentación anterior; cada punto indica cómo se observó. [Evidencia agregada sin datos personales](distribution-2026-10-12.json).
 
