@@ -50,7 +50,10 @@ export function validatePublishedDistribution(manifest) {
   return manifest;
 }
 
-// One finding per platform that links to a store: 'current', 'expiring' or 'expired'.
+// One finding per platform whose store link the landing can offer: 'current',
+// 'expiring' or 'expired'. Mirrors availableChannel in distribution.ts: a channel
+// verified in the future is hidden there, so it is an error here; a beta channel
+// whose capacity is not 'available' is withheld on purpose and cannot lapse.
 export function distributionExpiry(manifest, now, warningHours = DEFAULT_WARNING_HOURS) {
   if (!Number.isFinite(now) || !(warningHours > 0)) throw new Error('Invalid check time or warning window');
   validatePublishedDistribution(manifest);
@@ -58,6 +61,8 @@ export function distributionExpiry(manifest, now, warningHours = DEFAULT_WARNING
   for (const platform of ['ios', 'android']) {
     const channel = manifest[platform];
     if (!channel.url) continue; // A status that offers no link; validated above.
+    if (Date.parse(channel.verifiedAt) > now) throw new Error(`${platform} verifiedAt ${channel.verifiedAt} is in the future; /app hides the link until then`);
+    if (channel.status !== 'public' && channel.status !== 'store_preorder' && channel.capacity !== 'available') continue;
     const hoursLeft = (Date.parse(channel.validUntil) - now) / HOUR;
     const state = hoursLeft <= 0 ? 'expired' : hoursLeft < warningHours ? 'expiring' : 'current';
     findings.push({ platform, status: channel.status, validUntil: channel.validUntil, hoursLeft, state });
@@ -90,7 +95,7 @@ async function main(args) {
   for (const finding of findings) {
     console.log(`${finding.state === 'current' ? '' : '::error::'}${describeFinding(finding)}`);
   }
-  if (!findings.length) console.log('No store channel is offered; nothing can expire.');
+  if (!findings.length) console.log('No store link is offered; nothing can expire.');
   return findings.some(finding => finding.state !== 'current') ? 1 : 0;
 }
 

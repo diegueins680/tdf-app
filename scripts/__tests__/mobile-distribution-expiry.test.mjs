@@ -43,6 +43,20 @@ test('a channel whose status offers no store link cannot lapse', () => {
   assert.deepEqual(states(manifest(closed, android(later))), ['android:current']);
 });
 
+test('a channel verified in the future fails, because the landing hides it until then', () => {
+  const value = manifest(ios(later, { verifiedAt: '2026-10-11T18:00:01Z' }), android(later));
+  assert.throws(() => distributionExpiry(value, now), /ios verifiedAt 2026-10-11T18:00:01Z is in the future/);
+  assert.deepEqual(states(manifest(ios(later, { verifiedAt: '2026-10-11T18:00:00Z' }), android(later))), ['ios:current', 'android:current']);
+});
+
+test('a beta channel withheld for capacity cannot lapse; a public one needs no capacity', () => {
+  for (const capacity of ['full', 'unknown', undefined]) {
+    assert.deepEqual(states(manifest(ios('2026-10-12T00:00:00Z', { capacity }), android(later))), ['android:current']);
+  }
+  const store = ios('2026-10-12T00:00:00Z', { status: 'public', capacity: undefined, url: 'https://apps.apple.com/app/id6779786470' });
+  assert.deepEqual(states(manifest(store, android(later))), ['ios:expiring', 'android:current']);
+});
+
 test('the warning window is configurable and must be positive', () => {
   const value = manifest(ios('2026-10-13T18:00:00Z'), android('2026-10-13T18:00:00Z'));
   assert.deepEqual(distributionExpiry(value, now, 72).map(finding => finding.state), ['expiring', 'expiring']);
