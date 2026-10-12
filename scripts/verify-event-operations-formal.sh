@@ -104,6 +104,13 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+
+run_tlc WhatsAppConsent.tla WhatsAppConsent.cfg whatsapp-consent
+run_negative_tlc WhatsAppConsentStaleReply.cfg whatsapp-consent-stale-reply 'Invariant ConsentFromTimelyReply is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentExpired.cfg whatsapp-consent-expired 'Invariant ConsentFromTimelyReply is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentOptOutKeepsRequest.cfg whatsapp-consent-optout-keeps-request 'Invariant WithdrawalWins is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentReadThenWrite.cfg whatsapp-consent-read-then-write 'Invariant WithdrawalWins is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentNoInterval.cfg whatsapp-consent-no-interval 'Invariant OneMessagePerInterval is violated' WhatsAppConsent.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla

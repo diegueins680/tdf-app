@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `WhatsAppConsent.cfg` (2026-10-12) | One number; clock 0..6, resend interval 2, confirmation window 4, up to 2 opt-outs; replies delivered with any earlier sentAt, repeatable | PASS; 183,500 generated, 48,824 distinct states, depth 20; `ConsentFromTimelyReply`, `WithdrawalWins`, `OneMessagePerInterval`, `ConsentEvidenced` |
+| `WhatsAppConsentStaleReply.cfg`, `WhatsAppConsentExpired.cfg`, `WhatsAppConsentOptOutKeepsRequest.cfg`, `WhatsAppConsentReadThenWrite.cfg`, `WhatsAppConsentNoInterval.cfg` | Negative controls: reply-before-request accepted, window ignored, opt-out keeps the request, confirmation decides then writes, interval ignored | Expected non-zero exit with `ConsentFromTimelyReply`, `ConsentFromTimelyReply`, `WithdrawalWins`, `WithdrawalWins`, `OneMessagePerInterval` violated |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -614,3 +616,14 @@ invariant: `SelfApproval`, `NonAdmin`, `Expired`, `Rebind`, `RevokedLink`,
 `Reactivate`, `AdminInvite`. Local run with TLC 1.7.2 on Temurin 21: 212 distinct
 states for the intended model, and every control failed on its expected invariant.
 Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
+
+`WhatsAppConsent.tla` checks the WhatsApp consent double opt-in of
+PRIV-WHATSAPP-001 for one number: a claim that sends at most one confirmation
+message per interval, release of a refused message, confirmation only by a
+reply whose own timestamp is no earlier than the pending request and inside the
+window, withdrawal that clears the request, and admin capture. Replies may be
+delivered late and more than once. Five control configurations each remove one
+guard (`StaleReply`, `Expired`, `OptOutKeepsRequest`, `ReadThenWrite`,
+`NoInterval`) and must violate the named invariant. Row creation is below the
+model; `scripts/__tests__/whatsapp-consent-postgres.mjs` covers that race.
+Bounds and exclusions are in `formal/system/whatsapp-consent.md`.

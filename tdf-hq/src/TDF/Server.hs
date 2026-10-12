@@ -1810,18 +1810,22 @@ recordWhatsAppConsentNotice now phoneVal nameClean source message result =
 claimWhatsAppConfirmationRequest
   :: UTCTime -> Text -> Maybe Text -> Maybe Text -> SqlPersistT IO Bool
 claimWhatsAppConfirmationRequest now phoneVal nameClean sourceClean = do
-  _ <- insertUnique ME.WhatsAppConsent
-    { ME.whatsAppConsentPhoneE164 = phoneVal
-    , ME.whatsAppConsentDisplayName = nameClean
-    , ME.whatsAppConsentConsent = False
-    , ME.whatsAppConsentSource = sourceClean
-    , ME.whatsAppConsentNote = Just "pending_confirmation"
-    , ME.whatsAppConsentConsentedAt = Nothing
-    , ME.whatsAppConsentRevokedAt = Nothing
-    , ME.whatsAppConsentConfirmationRequestedAt = Nothing
-    , ME.whatsAppConsentCreatedAt = now
-    , ME.whatsAppConsentUpdatedAt = now
-    }
+  -- The row is created with ON CONFLICT DO NOTHING: concurrent first requests
+  -- for one number serialize on the unique phone index and the losers fall
+  -- through to the conditional claim below. (insertUnique checks and then
+  -- inserts, so a concurrent loser raised a duplicate-key error instead.)
+  rawExecute
+    "INSERT INTO whats_app_consent \
+    \(phone_e164, display_name, consent, source, note, consented_at, revoked_at, \
+    \confirmation_requested_at, created_at, updated_at) \
+    \VALUES (?, ?, FALSE, ?, 'pending_confirmation', NULL, NULL, NULL, ?, ?) \
+    \ON CONFLICT (phone_e164) DO NOTHING"
+    [ toPersistValue phoneVal
+    , toPersistValue nameClean
+    , toPersistValue sourceClean
+    , toPersistValue now
+    , toPersistValue now
+    ]
   changed <- updateWhereCount
     ( [ ME.WhatsAppConsentPhoneE164 ==. phoneVal
       , ME.WhatsAppConsentConsent ==. False

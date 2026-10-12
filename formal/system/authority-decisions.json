@@ -587,6 +587,19 @@
       "conflict": "AUTH-ACCESS-PROVISION-001 stated that only an administrator distinct from the requester may approve artist.onboarding:create, while createRequest has self-activated that pair through the artist.self-service.artist policy since 2026-09-16.",
       "authority": "Approved artist self-service decision (2026-09-16, recorded in AUTH-ARTIST-INVITE-001 ambiguity and the artist.self-service.artist policy migration).",
       "resolution": "The requirement statement is corrected to the self-service product decision; the distinct-administrator rule is retained for every reviewed decision and model-checked in AccessGrant.tla. The implementation is unchanged on this point."
+    },
+    {
+      "id": "AUTHORITY-074",
+      "sources": [
+        "formal/system/requirements.json#PRIV-WHATSAPP-001",
+        "tdf-hq/src/TDF/Server.hs",
+        "formal/system/whatsapp-consent.md",
+        "formal/event-operations/WhatsAppConsent.tla",
+        "scripts/__tests__/whatsapp-consent-postgres.mjs"
+      ],
+      "conflict": "PRIV-WHATSAPP-001 described the claim as one conditional update, but the consent row was created with insertUnique (a lookup, then a plain insert), so concurrent first requests for one number failed on the unique phone constraint and answered HTTP 500 (reproduced against the real backend on 2026-10-12: one 200, three 500). The requirement also says the reply must be within 7 days of the request, while the code measures the window from receipt.",
+      "authority": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052) and the requirement's single-statement concurrency claim.",
+      "resolution": "The code is corrected: the row is created with INSERT ... ON CONFLICT (phone_e164) DO NOTHING before the conditional claim, so every concurrent submitter is answered and at most one claims. The receipt-measured window is kept as the stricter reading and recorded as an ambiguity. Both are checked by the mirrored-statement PostgreSQL test, the real-backend harness section and the bounded WhatsAppConsent model."
     }
   ]
 }
