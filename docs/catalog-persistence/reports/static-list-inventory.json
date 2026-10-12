@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T04:49:27.979Z",
+  "generatedAt": "2026-10-12T08:56:35.851Z",
   "repositoryRoot": ".",
   "filesScanned": 2243,
   "candidateCount": 1320,
@@ -50594,7 +50594,7 @@
       "lines": [
         50
       ],
-      "consumerCount": 6,
+      "consumerCount": 5,
       "backendConsumers": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql"
@@ -50604,13 +50604,9 @@
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx"
       ],
-      "mobileConsumers": [
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
-      ],
+      "mobileConsumers": [],
       "automationConsumers": [],
-      "apiAndIntegrationConsumers": [
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
-      ],
+      "apiAndIntegrationConsumers": [],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
@@ -63631,7 +63627,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 1115,
+      "line": 1112,
       "values": [
         "expense",
         "income",
@@ -63642,7 +63638,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1115
+        1112
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -148713,7 +148709,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "66c48cc059727856b6f1",
+      "id": "49d1c72ba174118670bf",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "sourceKind": "production",
       "surface": "mobile",
@@ -148882,9 +148878,11 @@
         "{id=merch.reputation.preferences, parentId=profile.self, webRoute=/merch/reputacion/preferencias, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=people, icon=format",
         "{id=merch.reputation.moderation, parentId=null, webRoute=/admin/merch/reputacion, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin, icon=gavel, breadcrumb, requ",
         "{id=experimental.future-stubs, parentId=null, webRoute=null, routeType=technical, classification=technical-route, label, synonyms, keywords, description, navigationGroup=null, icon=technical, breadcrumb, requiredAuth=authenticated, routeAct",
-        "{id=notifications.detail, parentId=null, webRoute=/notificaciones/:notificationId, routeType=contextual, classification=record-detail-contextual-action, label, synonyms, keywords, description, navigationGroup=help, icon=lock, breadcrumb, re"
+        "{id=notifications.detail, parentId=null, webRoute=/notificaciones/:notificationId, routeType=contextual, classification=record-detail-contextual-action, label, synonyms, keywords, description, navigationGroup=help, icon=lock, breadcrumb, re",
+        "{id=music.public.catalog, parentId=null, webRoute=/musica, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=people, icon=album, breadcrumb, requiredAuth=public, routeAction=view,",
+        "{id=music.library, parentId=null, webRoute=/musica/biblioteca, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=people, icon=album, breadcrumb, requiredAuth=authenticated, routeA"
       ],
-      "valueCount": 161,
+      "valueCount": 163,
       "recommendedClassification": "security-system-registry",
       "lines": [
         55
@@ -148907,7 +148905,7 @@
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
+      "justification": "The 163-entry generated registry retains the 161 reviewed definitions, relabels the social.events destination from 'Eventos sociales' / 'Social events' to 'Eventos' / 'Events' (the former names stay as search synonyms; route, permissions and API scopes are unchanged), and carries the two music destinations the parent registry already defines: music.public.catalog (public, opened on the web from the app) and music.library (signed-in, no role or module requirement). Neither adds a role, module, permission or API scope. The file is generated from tdf-hq/assets/feature-registry.json and its source digest matches.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
