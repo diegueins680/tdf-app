@@ -493,14 +493,25 @@ validateEventDeletionCheckoutHistory hasTicketOrders
 -- | Terms version of the event's approved, active ticket policy (same predicate as
 -- the public storefront), or Nothing when the event has no such policy.
 loadActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
-loadActiveTicketTermsVersion now eventKey = do
+loadActiveTicketTermsVersion = selectActiveTicketTermsVersion ""
+
+-- | The same read, holding a share lock on the policy row until the transaction
+-- ends: a writer that withdraws or replaces the policy waits for the order, and
+-- one that got there first leaves no matching row (fail closed).
+lockActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+lockActiveTicketTermsVersion = selectActiveTicketTermsVersion " FOR SHARE"
+
+selectActiveTicketTermsVersion :: T.Text -> UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+selectActiveTicketTermsVersion lockClause now eventKey = do
     rows <-
         rawSql
-            "SELECT terms_version FROM event_ticket_checkout_policy\
-            \ WHERE event_id = ? AND active AND approval_status = 'approved'\
-            \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
-            \ AND (effective_from IS NULL OR effective_from <= ?)\
-            \ AND (effective_until IS NULL OR effective_until > ?)"
+            ( "SELECT terms_version FROM event_ticket_checkout_policy\
+              \ WHERE event_id = ? AND active AND approval_status = 'approved'\
+              \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
+              \ AND (effective_from IS NULL OR effective_from <= ?)\
+              \ AND (effective_until IS NULL OR effective_until > ?)"
+                <> lockClause
+            )
             [toPersistValue eventKey, PersistUTCTime now, PersistUTCTime now]
     pure $ case rows of
         [Single version] -> Just version
@@ -5078,8 +5089,9 @@ socialEventsServer user =
                                     fail "Event not found while reserving tickets"
                                 -- The acceptance was checked before this transaction. Read the
                                 -- policy again now that the hold is being taken: a policy
-                                -- replaced in between must not be recorded as accepted.
-                                termsVersionAtHold <- loadActiveTicketTermsVersion now eventKey
+                                -- replaced in between must not be recorded as accepted. The
+                                -- row stays share-locked until the order is committed.
+                                termsVersionAtHold <- lockActiveTicketTermsVersion now eventKey
                                 when (termsVersionAtHold /= mTermsVersion) $
                                     liftIO (throwIO ticketTermsChangedError)
                                 soldAcross <-

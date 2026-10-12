@@ -541,6 +541,7 @@ export default function CourseProductionLandingPage() {
     setCheckout(null);
     setPaymentError(null);
     setTermsAccepted(false);
+    setTermsStale(false);
     setFieldErrors({});
     checkoutIdempotency.current = null;
     lastAttemptRef.current = null;
