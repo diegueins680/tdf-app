@@ -77,6 +77,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
+- [ledger-posting.md](ledger-posting.md): commerce ledger posting rules in PostgreSQL (SYS-MONEY-003)
   and [identity-recovery.md](identity-recovery.md) define narrow verification
   boundaries. `formal/event-operations` and `formal/social` retain scoped
   TLA+/PlusCal/Alloy models and negative controls.

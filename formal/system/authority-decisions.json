@@ -576,6 +576,19 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-069",
+      "sources": [
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+        "formal/system/payment-arithmetic.md"
+      ],
+      "conflict": "The 2026-08-13 ledger rules promised balanced, immutable posted transactions but validated only the draft -> posted change and protected entries only against update and delete: a posted transaction could gain entries, return to draft, or be inserted already posted or reversed with no entries. SYS-MONEY-003 named SQL ledger correctness an open obligation.",
+      "authority": "SYS-MONEY-003 and the ledger's own stated rule (posted entries are immutable; create a reversing transaction), which every writer already follows by inserting a draft, its entries, then posting.",
+      "resolution": "The posting trigger fires on insert and on status/reversal_of changes and refuses every path but draft creation, validated posting and reversal by a posted transaction; the entry trigger fires on insert too and locks the transaction row. Sums compare as numeric. Drifted posted transactions are reported, not altered. No Haskell change; LedgerPosting.tla and the ledger-posting-postgresql spec are the evidence."
     }
   ]
 }

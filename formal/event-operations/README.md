@@ -108,6 +108,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
+| `LedgerPosting.cfg` (2026-10-12) | One commerce ledger transaction, two currencies, entries of -2..2, at most four entries, a reversing transaction with its own lifecycle; create, add entry, post, reopen, reverse | PASS; 3,272 generated, 747 distinct states; `PostedBalanced`, `PostedImmutable`, `PostedHistory`, `ReversedByPosted` |
+| `LedgerPostingAppend.cfg`, `LedgerPostingUnvalidated.cfg`, `LedgerPostingReopen.cfg`, `LedgerPostingInsertPosted.cfg` | Negative controls: entries added after posting, posting without validation, a posted transaction reopened, a transaction created already posted | Expected exit 12 with `PostedImmutable`, `PostedBalanced`, `PostedHistory`, `PostedBalanced` |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
 | `TaskReadStructure.als` assertions | Up to 4 atoms per top-level signature; owners abstracted as equivalent effective grants | PASS; all 5 checks UNSAT, including manager-gated and exact-task recipient options (no counterexample in scope) |
@@ -605,3 +607,13 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Ledger posting (2026-10-12)
+
+`LedgerPosting.tla` models the posting of one commerce ledger transaction in
+PostgreSQL (SYS-MONEY-003): created as draft, posted only with entries that
+sum to zero in every currency, entries fixed from then on, no return to draft,
+reversed only by a posted transaction. Bounded: small integer amounts, the
+reverser's own entries and concurrency are not modelled; the exact `numeric`
+sum and the row lock are tested by the `ledger-posting-postgresql` spec. See
+[ledger posting](../system/ledger-posting.md).
