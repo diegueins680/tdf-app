@@ -987,8 +987,10 @@ replayFailureHandler original failureId command = runOperationsWrite original $ 
     rejectCommand err409 {errBody = "No automatic retry exists for this failure"}
   -- The database re-queues the projection when the failure is marked retrying,
   -- or resolves the failure when nothing of the record is left to run. Without
-  -- that trigger this update would only relabel the row.
-  installed <- rawSql "SELECT to_regprocedure('operations_integration_failure_retry()') IS NOT NULL" []
+  -- that trigger, present and enabled (a function left behind by a dropped or
+  -- disabled trigger runs nothing), this update would only relabel the row.
+  installed <- rawSql
+    "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='operations_integration_failure'::regclass AND tgname='operations_integration_failure_retry' AND tgenabled IN ('O','A'))" []
     :: SqlPersistT IO [Single Bool]
   unless (installed == [Single True]) $
     rejectCommand err503 {errBody = "Failure retry is not installed"}

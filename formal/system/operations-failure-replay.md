@@ -50,7 +50,8 @@ The handler (no new route, same request and response shape):
 - refuses with 409 a failure that is not a dead-lettered projection
   (`provider <> 'internal_outbox'`), because the server has nothing to run for
   it; the worker is the only code that opens failures today;
-- refuses with 503 when the retry trigger is not installed, instead of
+- refuses with 503 when the retry trigger is absent or disabled (`pg_trigger`,
+  not only its function), instead of
   relabelling the row;
 - records in the audit the status the failure actually reached (`retrying` or
   `resolved`).
@@ -117,7 +118,7 @@ disabled in this harness, so the cases call the worker function themselves.
 | migration returns a stranded retry to dead letter, keeps one failure per record and keeps a queued retry | the three repairs touch only stale rows; index recreated |
 | retry with nothing left to run resolves the failure | 202 with `resolved` |
 | migration resolves a failure whose projections have all run | third repair |
-| retry is refused while its trigger is not installed | 503, queue unchanged |
+| retry is refused while its trigger is disabled | 503, queue unchanged |
 
 Local result on 2026-10-11: 636 checks passed, including these. Against the
 server binary built before this change the run stops at the first case above

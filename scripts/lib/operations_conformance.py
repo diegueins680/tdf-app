@@ -469,11 +469,11 @@ def verify_operations(sql, request, check, env, database, output, actors):
     sql("UPDATE operations_integration_failure SET status='dead_letter',resolved_at=NULL WHERE id=" + q(failures('c', 'id')))
     migrate()
     check('operations migration resolves a failure whose projections have all run', failures('c') == 'resolved')
-    sql('ALTER FUNCTION operations_integration_failure_retry() RENAME TO synthetic_ops_absent_retry')
+    sql('ALTER TABLE operations_integration_failure DISABLE TRIGGER operations_integration_failure_retry')
     try:
-        check('operations retry is refused while its trigger is not installed', replay_of(failures('b', "min(id::text) FILTER (WHERE status='dead_letter')"))()[0] == 503
+        check('operations retry is refused while its trigger is disabled', replay_of(failures('b', "min(id::text) FILTER (WHERE status='dead_letter')"))()[0] == 503
               and outbox(stranded) == 'dead_letter')
-    finally: sql('ALTER FUNCTION synthetic_ops_absent_retry() RENAME TO operations_integration_failure_retry')
+    finally: sql('ALTER TABLE operations_integration_failure ENABLE TRIGGER operations_integration_failure_retry')
     sql('DROP FUNCTION synthetic_ops_projection_failure()')
 
     view = {'organizationId': org, 'name': 'Synthetic owned view', 'shared': False, 'filters': {},

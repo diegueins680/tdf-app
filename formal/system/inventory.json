@@ -4081,7 +4081,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "fa3360ce81d091860ce57236677608513428d31fe1ce68e0de13ba48c5468cfc",
+      "sha256": "b8630e718d4e59d108496e72f681dc1a91012839741a9575a5af9d9d1c018e82",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12883,13 +12883,13 @@
     {
       "id": "SURFACE-b925364fa550109b",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
-      "sha256": "88300cc7f6a14dca19125f226431feb6ab8b696c5a3293259607833ca0212082",
+      "sha256": "b60bb3cc9391d3f44fe604177983428f13941c0167dcf8aae0747ff7f35158bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f1f2a0e3e6c50eef",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql",
-      "sha256": "f17f3d8da0088734fe6df3968e577d78680456e3aaa6bd51adef7ee03a21873c",
+      "sha256": "504c06c9aca68cf17fb96780d274ef79a52fc16da12d082ba5b250c1cc4001ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13855,7 +13855,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "fa53b1786d0b6936753f99b0318d9df61f42b01db5dd703737e3fd903b21b6d8",
+      "sha256": "195dcfb90a956b1d6bef01ece07d1e9e2261ab19913eea123647291297ac71c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23888,7 +23888,7 @@
     },
     {
       "path": "formal/system/operations-failure-replay.md",
-      "sha256": "05caa83d7ec8175879349a1564b5baddbdd375f68e98bc4d67946a9f7aad4d06",
+      "sha256": "445d5791d7a412c686fdf524670721a974a08ddb0a3e37caac636a88d9407ee6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

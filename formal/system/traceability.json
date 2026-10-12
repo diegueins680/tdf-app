@@ -9349,7 +9349,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "fa3360ce81d091860ce57236677608513428d31fe1ce68e0de13ba48c5468cfc",
+    "scripts/lib/operations_conformance.py": "b8630e718d4e59d108496e72f681dc1a91012839741a9575a5af9d9d1c018e82",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -9744,8 +9744,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
-    "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": "88300cc7f6a14dca19125f226431feb6ab8b696c5a3293259607833ca0212082",
-    "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql": "f17f3d8da0088734fe6df3968e577d78680456e3aaa6bd51adef7ee03a21873c",
+    "tdf-hq/sql/2026-10-11_operations_failure_replay.sql": "b60bb3cc9391d3f44fe604177983428f13941c0167dcf8aae0747ff7f35158bb",
+    "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql": "504c06c9aca68cf17fb96780d274ef79a52fc16da12d082ba5b250c1cc4001ae",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -9805,7 +9805,7 @@
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
-    "tdf-hq/src/TDF/Operations/Server.hs": "fa53b1786d0b6936753f99b0318d9df61f42b01db5dd703737e3fd903b21b6d8",
+    "tdf-hq/src/TDF/Operations/Server.hs": "195dcfb90a956b1d6bef01ece07d1e9e2261ab19913eea123647291297ac71c3",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
@@ -19107,7 +19107,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "fa3360ce81d091860ce57236677608513428d31fe1ce68e0de13ba48c5468cfc",
+      "sha256": "b8630e718d4e59d108496e72f681dc1a91012839741a9575a5af9d9d1c018e82",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31992,7 +31992,7 @@
     {
       "id": "SURFACE-b925364fa550109b",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
-      "sha256": "88300cc7f6a14dca19125f226431feb6ab8b696c5a3293259607833ca0212082",
+      "sha256": "b60bb3cc9391d3f44fe604177983428f13941c0167dcf8aae0747ff7f35158bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32004,7 +32004,7 @@
     {
       "id": "SURFACE-f1f2a0e3e6c50eef",
       "path": "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql",
-      "sha256": "f17f3d8da0088734fe6df3968e577d78680456e3aaa6bd51adef7ee03a21873c",
+      "sha256": "504c06c9aca68cf17fb96780d274ef79a52fc16da12d082ba5b250c1cc4001ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33559,7 +33559,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "fa53b1786d0b6936753f99b0318d9df61f42b01db5dd703737e3fd903b21b6d8",
+      "sha256": "195dcfb90a956b1d6bef01ece07d1e9e2261ab19913eea123647291297ac71c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
