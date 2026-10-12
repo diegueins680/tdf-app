@@ -5102,10 +5102,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-072",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-aux-write.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -5115,7 +5115,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsAuxiliaryWrite.tla (34,172 states, 13,744 distinct) states the four guards with four single-guard controls (formal/system/operations-aux-write.md); the handlers were read against the requirement with no discrepancy found; the conformance harness remains the execution evidence.",
       "id": "OPS-AUX-WRITE-001",
       "title": "Current authority and atomic evidence for auxiliary Operations mutations",
       "domain": "OPS",
@@ -5180,7 +5180,14 @@
         "scripts/test-booking-conformance.py",
         "scripts/__tests__/operations-api-schema.test.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsAuxiliaryWrite.tla",
+        "formal/event-operations/OperationsAuxiliaryWrite.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg",
+        "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg"
+      ],
       "ambiguity": [
         "Downstream failure replay execution and actual push delivery are not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
@@ -9191,6 +9198,12 @@
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+    "formal/event-operations/OperationsAuxiliaryWrite.cfg": "81f414ffc188615f356d2aff00d2e9b971da05724e2e817334a03ee8b93c6185",
+    "formal/event-operations/OperationsAuxiliaryWrite.tla": "57db796fdf3919b6f612e49fa616beb51dbf6edc07ac941f8580d57f63d95baf",
+    "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg": "ec90ea40b0dcee1870584ff668b482809f1f336b8a37ecb21b8c9acc79dd2759",
+    "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg": "0449597ef0da6ddb03a5874dd1bae0749696abe83d643da49c2d646427272946",
+    "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg": "fc5b4ae78ce540999df67d37bb838126764adf0a9ad67a8a6cc02015384a2514",
+    "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg": "e27c8b1d142ee1d97551d7a12a7da368d699b15534788063bc9071920dcc8131",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
     "formal/event-operations/OperationsManualReceipt.tla": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
     "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
@@ -13451,6 +13464,42 @@
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWrite.tla": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWrite.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-mobile/.github/workflows/mobile-validate.yml": [
@@ -41060,7 +41109,6 @@
     "OPS-METRICS-001",
     "AUTH-OPS-READ-001",
     "AUTH-PUBLIC-001",
-    "OPS-AUX-WRITE-001",
     "SYS-CI-001",
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
@@ -42201,7 +42249,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f30603de70068e84404fc9025b7d18160aed4142bccce38f69dddf76b252c078",
+      "sourceSha256": "f73707bb834d1e108d12a2abc1ba2e268aad688271415b3e982658a7f5ead6fb",
       "definition": {
         "states": [
           "absent",

@@ -22418,7 +22418,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "f1ca456e538ec8e3e0b4af1c661ebcea61ea7d5cb86a31a2e683019534f3e45f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23839,7 +23839,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "d535216254f854f9bb872e6dcebce42edf9121ea581f2149e149f0fc94565c60",
+      "sha256": "7e716efe87e05a7bdc1aae3837d921e15243da14edd1911c3e2d5454dd649e0b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24034,6 +24034,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/operations-aux-write.md",
+      "sha256": "7c93c5da7b52e5054eb880eea1a4f81a808bccf898ee67810ffbdd1824ef6e3e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-command-boundary.md",
       "sha256": "b8b856db3313d417afb450cc04f38f41b7f557f2da6b092b209e25b5d0630663",
       "authority": "inferred",
@@ -24119,7 +24126,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f30603de70068e84404fc9025b7d18160aed4142bccce38f69dddf76b252c078",
+      "sha256": "f73707bb834d1e108d12a2abc1ba2e268aad688271415b3e982658a7f5ead6fb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

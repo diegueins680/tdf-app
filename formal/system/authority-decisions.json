@@ -576,6 +576,18 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-072",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-aux-write.md",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "OPS-AUX-WRITE-001 had no formal model; its verification field limits formal coverage to explicitly mapped abstractions, and the four handlers' guards (current authority under locks, atomic result and audit, one retry admission, encrypted push token) were stated only in prose.",
+      "authority": "The requirement's property, transitions and concurrency fields, and the handlers as read on 2026-10-12 (runOperationsWrite, lockOperationsScope, withLockedWorkItem, retryFailureHandler, createSavedViewHandler, createPushSubscriptionHandler).",
+      "resolution": "OperationsAuxiliaryWrite.tla states the four guards as invariants under bounded checking (two commands, one actor, one scope) with one negative configuration per guard; correspondence to the Haskell is by reading, not refinement, and the PostgreSQL/HTTP conformance harness remains the execution evidence. No code change."
     }
   ]
 }
