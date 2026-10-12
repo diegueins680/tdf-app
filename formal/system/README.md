@@ -76,6 +76,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
   them instead of maintaining another handwritten copy of their transitions.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
+- [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification
   boundaries. `formal/event-operations` and `formal/social` retain scoped

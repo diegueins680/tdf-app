@@ -5138,10 +5138,10 @@
         "subscription": "owner/token-digest upsert"
       },
       "allowedTransitions": [
-        "open or dead_letter -> retrying once",
         "Append authorized note and mentions",
         "Replace owned view",
-        "Register/reactivate encrypted owned token"
+        "Register/reactivate encrypted owned token",
+        "Failure retry as specified by OPS-FAILURE-REPLAY-001"
       ],
       "forbiddenTransitions": [
         "Revoked or disabled-scope commit",
@@ -5158,7 +5158,7 @@
       "authorization": "Locked current grant and scope; notes require write-domain visibility and active mentioned memberships; failure retry requires manager grant; preference/subscription ownership is actor-bound.",
       "privacy": "No private exception data or plaintext device token in receipts/logs; shared layouts do not grant data permissions.",
       "concurrency": "Locks serialize failure retries and retain note assignment; same-owner upsert uniqueness serializes preferences; transaction decode precedes commit.",
-      "idempotency": "Failure retry repeats409 after admission; notes are append commands without receipt; preference/token replacements can produce an additional audit on repeat.",
+      "idempotency": "Failure retry repeats 409 while the retry is in the queue (OPS-FAILURE-REPLAY-001); notes are append commands without receipt; preference/token replacements can produce an additional audit on repeat.",
       "failure": "Reject invalid, denied or conflicting command with no effects; missing push key503; exception/decode/audit failure rolls back.",
       "property": "Current authority; atomic result/audit; one retry admission per eligible failure state",
       "implementation": [
@@ -5171,7 +5171,7 @@
       ],
       "formalModels": [],
       "ambiguity": [
-        "Downstream failure replay execution and actual push delivery are not established.",
+        "Actual push delivery is not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
       ]
     },
@@ -9036,6 +9036,94 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "authority": "AUTHORITY-065",
+      "contract": "formal/system/operations-failure-replay.md",
+      "critical": true,
+      "source": "tdf-hq/src/TDF/Operations/Server.hs replayFailureHandler; operations_process_outbox_batch; tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+      "status": "specified and implemented",
+      "confidence": "High for the tested and modelled transitions on one record. Not deployed; production failure rows not inspected.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
+      },
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
+      "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
+      "recovery": "The migration returns to dead_letter every failure that was relabelled retrying while its projection stayed dead-lettered; a manager can then retry it.",
+      "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
+      "id": "OPS-FAILURE-REPLAY-001",
+      "title": "A retried projection failure is run again and ends resolved or dead-lettered",
+      "domain": "OPS",
+      "statement": "A manager's retry of a dead-lettered projection failure must put that projection back in the worker's queue in the same transaction; when the projection runs the failure becomes resolved, when it dead-letters again the same failure returns to dead_letter, and a failure with nothing this server can run again is not admitted as retrying.",
+      "actors": [
+        "Scoped manager",
+        "Operations projection worker"
+      ],
+      "preconditions": [
+        "Current token and manager grant",
+        "Active scope membership in the failure's branch",
+        "Failure is retryable and open or dead_letter"
+      ],
+      "inputs": [
+        "Failure identifier",
+        "Reason, request and source identifiers"
+      ],
+      "state": {
+        "failure": [
+          "open",
+          "dead_letter",
+          "retrying",
+          "resolved"
+        ],
+        "projection": [
+          "pending",
+          "processing",
+          "processed",
+          "dead_letter"
+        ]
+      },
+      "allowedTransitions": [
+        "dead_letter -> retrying, with the dead-lettered projection returned to pending and its attempts reset",
+        "dead_letter -> resolved when no projection of the record is left unprocessed",
+        "retrying -> resolved when the projection is processed",
+        "retrying -> dead_letter when the projection dead-letters again"
+      ],
+      "forbiddenTransitions": [
+        "retrying while the projection is still dead-lettered",
+        "A second open failure for the same record",
+        "Retry of a failure that has no executor",
+        "Retry of a retrying or resolved failure"
+      ],
+      "effects": [
+        "Failure state, projection queue state and audit commit together",
+        "Resolving a failure records a terminal event that closes the work item announcing it",
+        "Later events of the record are projected once the head event is processed"
+      ],
+      "authorization": "Locked current grant and scope; manager, studio manager or administrator only.",
+      "privacy": "The failure keeps only the redacted summary and SQLSTATE; the retry adds nothing private.",
+      "concurrency": "The failure row is locked before the decision, so one of several simultaneous retries is admitted. The retry updates the projection row only while it is dead-lettered, a state in which the worker does not hold it; the worker takes the projection row before the failure row.",
+      "idempotency": "A repeated retry is refused with 409 while the failure is retrying or resolved. Applying the migration again changes nothing.",
+      "failure": "Refusals and an audit failure leave failure and queue unchanged. A projection that keeps failing dead-letters again after eight attempts and can be retried again.",
+      "property": "retrying implies the projection is queued; at most one open failure per record; a processed projection has no open failure; a retry ends resolved or dead-lettered",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+        "tdf-hq/sql/2026-10-11_operations_failure_replay_rollback.sql"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/OperationsFailureReplay.tla"
+      ],
+      "ambiguity": [
+        "Only dead-lettered projections have an executor; a future provider failure needs its own before it can be retried.",
+        "A projection that fails for a cause nobody repairs dead-letters again after each retry.",
+        "Whether Operations is enabled in production, and how many failures exist there, is unobserved."
+      ],
+      "historicalStatus": "retry-relabelled-without-execution"
     }
   ]
 }

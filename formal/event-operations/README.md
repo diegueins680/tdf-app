@@ -605,3 +605,13 @@ admission contract in [payment-retry.md](../system/payment-retry.md). The positi
 model and five named negative controls are mandatory in the formal runner. Bounds,
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
+
+## Operations failure retry
+
+`OperationsFailureReplay.tla` and four configurations check the rule in
+[operations-failure-replay.md](../system/operations-failure-replay.md): an admitted
+retry puts the dead-lettered projection back in the queue, a projection that runs
+closes its failure, and a second dead letter returns to the same failure. The
+positive configuration also checks, under weak fairness of the worker, that a
+retry ends resolved or dead-lettered. Each negative control removes one rule.
+

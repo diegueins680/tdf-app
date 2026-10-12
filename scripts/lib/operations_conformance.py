@@ -6,6 +6,7 @@ are witnessed in pg_stat_activity; a sleep alone never establishes a race.
 import concurrent.futures
 from contextlib import contextmanager
 import json
+from pathlib import Path
 import subprocess
 import time
 import uuid
@@ -379,13 +380,79 @@ def verify_operations(sql, request, check, env, database, output, actors):
         check('operations failure replay rejects a disabled branch after waiting', replies[0][0] == 403
               and sql('SELECT attempt_count FROM operations_integration_failure WHERE id=' + q(failure_id)) == '0')
     finally: sql('UPDATE operations_branch SET active=true WHERE id=' + q(branches[0]))
-    check('operations failure replay audit error rolls back state', audit_failure(replay)[0] == 500
-          and sql('SELECT status FROM operations_integration_failure WHERE id=' + q(failure_id)) == 'open')
-    sql("UPDATE operations_integration_failure SET status='dead_letter' WHERE id=" + q(failure_id))
-    replies = race('SELECT id FROM operations_integration_failure WHERE id=' + q(failure_id) + ' FOR UPDATE', [replay for _ in range(8)])
+    check('operations failure without an executor is not admitted as retrying', replay()[0] == 409
+          and sql('SELECT status,attempt_count FROM operations_integration_failure WHERE id=' + q(failure_id)) == 'open|0')
+
+    # A projection the worker itself dead-letters on its eighth failed attempt.
+    sql("CREATE FUNCTION synthetic_ops_projection_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic private data must not be logged'; END $$")
+    def refuse_projection():
+        sql("CREATE TRIGGER synthetic_ops_projection_failure BEFORE INSERT ON operations_work_item FOR EACH ROW WHEN (NEW.correlation_key LIKE 'synthetic-replay:%') EXECUTE FUNCTION synthetic_ops_projection_failure()")
+    def admit_projection():
+        sql('DROP TRIGGER synthetic_ops_projection_failure ON operations_work_item')
+    def replay_event(tag):
+        return sql("INSERT INTO operations_domain_event(organization_id,branch_id,event_type,aggregate_type,aggregate_id,source_system,source_channel,correlation_key,deduplication_key,occurred_at) VALUES ("
+                   + q(org) + "," + q(branches[0]) + ",'synthetic.replay','uncorrelated_inbound'," + q('synthetic-replay-' + tag.split('/')[0]) + ",'tdf-hq','internal'," + q('synthetic-replay:' + tag.split('/')[0]) + "," + q('synthetic-replay:' + tag) + ",now()) RETURNING id")
+    def project(event):
+        return sql("SELECT processed || '/' || dead_lettered FROM operations_process_outbox_batch(1,'conformance'," + q(event) + ")")
+    def exhaust(event):
+        sql('UPDATE operations_outbox SET attempt_count=7,next_attempt_at=now() WHERE event_id=' + q(event))
+        return project(event)
+    def outbox(event):
+        return sql('SELECT status FROM operations_outbox WHERE event_id=' + q(event))
+    def failures(tag, columns='status'):
+        return sql('SELECT ' + columns + ' FROM operations_integration_failure WHERE organization_id=' + q(org) + ' AND source_record_id=' + q('synthetic-replay-' + tag))
+    def replay_of(identity):
+        return lambda: request('/operations/integration-failures/' + identity + '/replay', replay_body, method='POST')
+
+    refuse_projection()
+    first, later = replay_event('a'), replay_event('a/later')
+    check('operations worker dead-letters the projection and opens one failure', exhaust(first) == '0/1'
+          and outbox(first) == 'dead_letter' and failures('a', "provider || '|' || status") == 'internal_outbox|dead_letter')
+    check('operations dead-lettered projection blocks later events of its record', project(later) == '0/0' and outbox(later) == 'pending')
+    projection_failure = failures('a', 'id')
+    retry = replay_of(projection_failure)
+    check('operations failure replay audit error rolls back state and queue', audit_failure(retry)[0] == 500
+          and failures('a') == 'dead_letter' and outbox(first) == 'dead_letter')
+    replies = race('SELECT id FROM operations_integration_failure WHERE id=' + q(projection_failure) + ' FOR UPDATE', [retry for _ in range(8)])
     check('operations failure retry admits exactly one request', sorted(reply[0] for reply in replies) == [202] + [409] * 7
-          and sql('SELECT attempt_count FROM operations_integration_failure WHERE id=' + q(failure_id)) == '1')
-    check('operations failure audit retains actual previous status', sql("SELECT previous_value->>'status' FROM operations_admin_audit WHERE correlation_id=" + q(failure_id)) == 'dead_letter')
+          and failures('a', "status || '|' || attempt_count") == 'retrying|9')
+    check('operations admitted retry puts the projection back in the queue',
+          sql('SELECT status FROM operations_outbox WHERE event_id=' + q(first) + ' AND attempt_count < 8') == 'pending')
+    check('operations failure audit retains actual statuses', sql("SELECT (previous_value->>'status') || '>' || (new_value->>'status') FROM operations_admin_audit WHERE correlation_id=" + q(projection_failure)) == 'dead_letter>retrying')
+    check('operations retried projection that fails again returns the same failure to dead letter', exhaust(first).endswith('/1')
+          and outbox(first) == 'dead_letter' and failures('a', "count(*) || '|' || min(status)") == '1|dead_letter')
+    check('operations failure can be retried again after a second dead letter', retry()[0] == 202 and failures('a') == 'retrying')
+    admit_projection()
+    project(first)
+    check('operations retried projection that succeeds resolves its failure', outbox(first) == 'processed'
+          and failures('a', "status || '|' || (resolved_at IS NOT NULL)") == 'resolved|true'
+          and count('operations_work_item', 'organization_id=' + q(org) + " AND correlation_key='synthetic-replay:a'") == 1)
+    project(later)
+    check('operations later events of the record flow after the retry', outbox(later) == 'processed')
+    check('operations resolved failure cannot be retried', retry()[0] == 409 and failures('a') == 'resolved')
+    for event in sql("SELECT event_id FROM operations_outbox WHERE aggregate_type='integration_failure' AND aggregate_id=" + q(projection_failure) + ' ORDER BY aggregate_sequence').split():
+        project(event)
+    check('operations resolving a failure closes the work item that announced it',
+          sql("SELECT string_agg(DISTINCT status, ',') FROM operations_work_item WHERE correlation_key=" + q('integration_failure:' + projection_failure)) == 'resolved')
+
+    # Failures relabelled before this repair: never re-queued, never left 'retrying'.
+    refuse_projection()
+    stranded, queued = replay_event('b'), replay_event('c')
+    for event in [stranded, queued]: exhaust(event)
+    sql("UPDATE operations_integration_failure SET status='retrying' WHERE id=" + q(failures('b', 'id')))
+    check('operations fixture has a second retry in the queue', replay_of(failures('c', 'id'))()[0] == 202 and outbox(queued) == 'pending')
+    with (output / 'operations-replay-migration.log').open('a') as log:
+        subprocess.run(['psql', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', str(Path(__file__).resolve().parents[2] / 'tdf-hq/sql/2026-10-11_operations_failure_replay.sql')],
+                       env=env, stdout=log, stderr=log, check=True)
+    check('operations migration returns a stranded retry to dead letter and keeps a queued one',
+          failures('b') == 'dead_letter' and failures('c') == 'retrying' and outbox(stranded) == 'dead_letter' and outbox(queued) == 'pending')
+    admit_projection()
+    project(queued)
+    sql("UPDATE operations_integration_failure SET status='dead_letter' WHERE id=" + q(failures('c', 'id')))
+    response = replay_of(failures('c', 'id'))()
+    check('operations retry with nothing left to run resolves the failure', response[0] == 202
+          and json.loads(response[1])['status'] == 'resolved' and failures('c') == 'resolved')
+    sql('DROP FUNCTION synthetic_ops_projection_failure()')
 
     view = {'organizationId': org, 'name': 'Synthetic owned view', 'shared': False, 'filters': {},
             'columns': ['status'], 'widgets': [], 'subscribedEventTypes': [], 'requestId': 'view', 'sourceClient': 'conformance'}

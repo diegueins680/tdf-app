@@ -347,6 +347,10 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc OperationsFailureReplay.tla OperationsFailureReplay.cfg operations-failure-replay
+run_negative_tlc OperationsFailureReplayRelabelOnly.cfg operations-failure-replay-relabel-only 'Invariant RetryingIsQueued is violated' OperationsFailureReplay.tla
+run_negative_tlc OperationsFailureReplayUnsettled.cfg operations-failure-replay-unsettled 'Invariant RunIsSettled is violated' OperationsFailureReplay.tla
+run_negative_tlc OperationsFailureReplayUnmerged.cfg operations-failure-replay-unmerged 'Invariant OneOpenFailure is violated' OperationsFailureReplay.tla
 run_tlc TaskRead.tla TaskRead.cfg task-read
 run_tlc TaskView.tla TaskView.cfg task-view
 expect_counterexample TaskViewLate.cfg CurrentView task-view-late TaskView.tla
