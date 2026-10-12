@@ -67,7 +67,9 @@ jest.unstable_mockModule('../utils/logger', () => ({
 
 
 
-const { default: LoginPage, isGoogleSignupConsentRequiredError } = await import('./LoginPage');
+const { default: LoginPage, isGoogleSignupConsentRequiredError, focusSignupEmailUnlessFieldActive } = await import(
+  './LoginPage'
+);
 
 function RouteStateProbe() { const location = useLocation(); return <output data-testid="route-state">{JSON.stringify(location.state)}</output>; }
 
@@ -182,6 +184,28 @@ describe('LoginPage Google signup consent flow', () => {
     expect(isGoogleSignupConsentRequiredError(new Error(` ${GOOGLE_CONSENT_ERROR} `))).toBe(true);
     expect(isGoogleSignupConsentRequiredError(new Error('Invalid Google token'))).toBe(false);
     expect(isGoogleSignupConsentRequiredError(GOOGLE_CONSENT_ERROR)).toBe(false);
+  });
+
+  it('does not pull focus back to email once the user is in another signup field', () => {
+    const dialog = document.createElement('div');
+    const email = document.createElement('input');
+    const password = document.createElement('input');
+    const createButton = document.createElement('button');
+    dialog.append(email, password, createButton);
+    document.body.appendChild(dialog);
+
+    password.focus();
+    focusSignupEmailUnlessFieldActive(dialog, email);
+    expect(document.activeElement).toBe(password);
+
+    createButton.focus();
+    focusSignupEmailUnlessFieldActive(dialog, email);
+    expect(document.activeElement).toBe(email);
+
+    password.blur();
+    (document.activeElement as HTMLElement | null)?.blur();
+    focusSignupEmailUnlessFieldActive(dialog, email);
+    expect(document.activeElement).toBe(email);
   });
 
   it('retains an artist claim and rejects Google callbacks that cannot carry it', async () => {

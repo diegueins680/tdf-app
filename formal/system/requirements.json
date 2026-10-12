@@ -4534,7 +4534,8 @@
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/fr.ts",
-        "tdf-hq-ui/src/i18n/locales/pt.ts"
+        "tdf-hq-ui/src/i18n/locales/pt.ts",
+        "tdf-hq-ui/src/utils/checkoutStripe.ts"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -4554,7 +4555,8 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
-        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -6720,7 +6722,8 @@
         "tdf-hq-ui/public/mobile-app/privacy.html",
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
-        "tdf-hq-ui/public/mobile-distribution.json"
+        "tdf-hq-ui/public/mobile-distribution.json",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
