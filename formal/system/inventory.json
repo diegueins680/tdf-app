@@ -5783,7 +5783,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "79778549159960c89c34d389defc0ac651e6503b066ba427c40061864f57816a",
+      "sha256": "c6b70b8b757541ad2e9794b1f0fbf0868f9881ed2a78857695f1140d4c40b2c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13961,7 +13961,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "9abdf5dfdbffa1fdd17d645275bbcf7a6451ed0fedb9118b429b28df34b0a8da",
+      "sha256": "77e8569bb8956a984e82b4bfb6eb06aa124a8a19d9b0f72d966aa649901cf590",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14453,7 +14453,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "15419f9d40ae53dcd9e1bc633be2f4d8899decbbb5e0582c0affcc14f930bdd8",
       "semanticConformance": "not-established-by-discovery"
     },
     {

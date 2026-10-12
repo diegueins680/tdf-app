@@ -9442,7 +9442,7 @@
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "79778549159960c89c34d389defc0ac651e6503b066ba427c40061864f57816a",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "c6b70b8b757541ad2e9794b1f0fbf0868f9881ed2a78857695f1140d4c40b2c8",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
@@ -9799,7 +9799,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "9abdf5dfdbffa1fdd17d645275bbcf7a6451ed0fedb9118b429b28df34b0a8da",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "77e8569bb8956a984e82b4bfb6eb06aa124a8a19d9b0f72d966aa649901cf590",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
@@ -9839,7 +9839,7 @@
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+    "tdf-hq/test/Spec.hs": "15419f9d40ae53dcd9e1bc633be2f4d8899decbbb5e0582c0affcc14f930bdd8",
     "tdf-hq/test/TDF/APITypesSpec.hs": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -22011,7 +22011,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "79778549159960c89c34d389defc0ac651e6503b066ba427c40061864f57816a",
+      "sha256": "c6b70b8b757541ad2e9794b1f0fbf0868f9881ed2a78857695f1140d4c40b2c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33843,7 +33843,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "9abdf5dfdbffa1fdd17d645275bbcf7a6451ed0fedb9118b429b28df34b0a8da",
+      "sha256": "77e8569bb8956a984e82b4bfb6eb06aa124a8a19d9b0f72d966aa649901cf590",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34713,7 +34713,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "15419f9d40ae53dcd9e1bc633be2f4d8899decbbb5e0582c0affcc14f930bdd8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
