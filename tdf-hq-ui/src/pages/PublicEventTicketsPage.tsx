@@ -114,6 +114,7 @@ export default function PublicEventTicketsPage() {
   // the order again does not ask the provider, so only a paid order clears this.
   const [paymentUnconfirmed, setPaymentUnconfirmed] = useState(false);
   const orderStale = lookupFailed || paymentUnconfirmed;
+  const flaggedOrder = useRef<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
@@ -175,6 +176,14 @@ export default function PublicEventTicketsPage() {
     // request must not take an issued ticket away from a buyer at the door.
     setCheckout((current) => (
       current?.eventId === eventId && current.orderId === routeOrderId ? current : null));
+    // Stale and unconfirmed-payment flags describe one order; another order
+    // starts without them.
+    const orderKey = `${eventId}:${routeOrderId}`;
+    if (flaggedOrder.current !== orderKey) {
+      flaggedOrder.current = orderKey;
+      setLookupFailed(false);
+      setPaymentUnconfirmed(false);
+    }
     const live = liveLookup.current;
     const token = live?.eventId === eventId && live.orderId === routeOrderId
       ? live.token : loadLookupToken(eventId, routeOrderId);
