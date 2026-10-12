@@ -6738,7 +6738,8 @@
       "tests": [
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
         "scripts/__tests__/app-smart-link.test.mjs",
-        "tdf-hq-ui/src/components/PublicBranding.test.tsx"
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "e2e/web/mobile-program.spec.mjs"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
