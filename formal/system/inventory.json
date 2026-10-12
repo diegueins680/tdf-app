@@ -24203,7 +24203,7 @@
     },
     {
       "path": "formal/system/operations-worker-tick.md",
-      "sha256": "5204c7c7847a422b7c0a9757e4a0be7f70c28689ae89305bdaee53e226c0ad8d",
+      "sha256": "b6cbbc586efbed898f4b81d6662a8c7f1e29c45c50eded9f30dc5f7a31be6160",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

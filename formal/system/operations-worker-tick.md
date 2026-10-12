@@ -57,7 +57,14 @@ states, 27 distinct, depth 9. Controls: `DeferredCheck` (the previous tick),
 `NoAttempt`, `UnboundedRetry`, each failing on the named invariant. The model
 has no clock, no aggregate ordering, no concurrent replicas (`SKIP LOCKED`),
 no SLA or archive content; the batch size and the real eight-attempt bound are
-not modelled.
+not modelled. In the positive configuration `NoAbortedTick` and
+`PoisonIsolated` are near-structural (an abort needs the deferred check, a
+constant, and healthy rows never lose their due flag); they discriminate only
+against the `DeferredCheck` control. What the model establishes, within its
+bounds, is that under the three guards healthy rows are processed, no tick
+aborts, a failed due poisoned row carries an attempt and dead-lettering
+coincides with the bound; it says nothing about `SET CONSTRAINTS` semantics or
+the PL/pgSQL handler, which the PostgreSQL test covers.
 
 ## Evidence
 
