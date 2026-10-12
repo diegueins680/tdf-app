@@ -875,8 +875,12 @@ loadTicketCheckoutDTO orderKey lookupToken = do
 loadPublicTicketPaymentMethods :: TicketRuntimeView -> AppM [Text]
 loadPublicTicketPaymentMethods runtime = do
   now <- liftIO getCurrentTime
+  -- An order stays readable after its event leaves the on-sale lifecycle, but it
+  -- must not offer a way to pay for it.
+  salesOpen <- ticketSalesOpen (toSqlKey (trvEventId runtime))
   if trvPaymentStatus runtime `notElem` ["holding", "awaiting_payment", "failed"]
       || trvHoldExpiresAt runtime <= now
+      || not salesOpen
     then pure []
     else do
       let checkout = Checkout.CheckoutReference (trvCheckoutId runtime)
@@ -1007,6 +1011,28 @@ requireTicketPaymentContext rawEventId rawOrderId mLookupToken = do
       ["holding", "awaiting_payment", "processing", "failed", "paid"]) $
     throwError (conflict "This ticket checkout no longer accepts payment actions")
   pure context
+
+-- | Whether the event still sells tickets: the same eligibility the storefront
+-- and order creation apply.
+ticketSalesOpen :: SM.SocialEventId -> AppM Bool
+ticketSalesOpen eventKey = runDB $ do
+  mEvent <- get eventKey
+  case mEvent of
+    Nothing -> pure False
+    Just eventRow -> do
+      purchaseEnabled <- SocialEvents.eventTicketPurchaseEnabledFor eventRow
+      pure . isRight $ SocialEvents.validateTicketPurchaseEventEligibility
+        (SM.socialEventMetadata eventRow) purchaseEnabled
+
+-- | Refuse to start or take a payment once the event no longer sells tickets.
+-- Checkouts already processing or paid pass, so a payment in flight settles and
+-- retries stay idempotent; evidence for a transfer already made is not gated.
+requireTicketSalesOpen :: TicketPaymentContext -> AppM ()
+requireTicketSalesOpen context =
+  when (tpcCheckoutStatus context `elem` ["holding", "awaiting_payment", "failed"]) $ do
+    salesOpen <- ticketSalesOpen (tpcEventKey context)
+    unless salesOpen $
+      throwError (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
 
 ticketReference :: TicketPaymentContext -> Text
 ticketReference = T.pack . show . fromSqlKey . tpcOrderKey
@@ -1173,6 +1199,7 @@ createPublicEventTicketDatafastCheckout
   -> AppM APITypes.DatafastCheckoutDTO
 createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   ensureNoOtherActiveTicketAttempt context Checkout.ProviderDatafast
@@ -1328,6 +1355,7 @@ createPublicEventTicketPaypalOrder
   -> AppM APITypes.PaypalCreateDTO
 createPublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   ensureNoOtherActiveTicketAttempt context Checkout.ProviderPayPal
@@ -1374,6 +1402,7 @@ capturePublicEventTicketPaypalOrder
   -> AppM Routes.PublicEventTicketCheckoutResponse
 capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   if tpcCheckoutStatus context == "paid"
     then finalizeVerifiedTicketOrder context >> loadTicketCheckoutDTO (tpcOrderKey context) Nothing
     else do
@@ -1600,6 +1629,7 @@ selectPublicEventTicketBankTransfer
   -> AppM Routes.PublicEventTicketCheckoutResponse
 selectPublicEventTicketBankTransfer rawEventId rawOrderId mLookupToken = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   when (tpcCheckoutStatus context == "processing") $

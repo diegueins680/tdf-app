@@ -4556,10 +4556,7 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-        "e2e/integration/ticket-retrieval.spec.mjs",
-        "playwright.ticket-retrieval.config.mjs",
-        "scripts/run-ticket-retrieval-browser.mjs"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
