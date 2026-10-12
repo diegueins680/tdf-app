@@ -30,7 +30,6 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.shop', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
   { label: 'authEntry.book', to: '/reservar' },
-  { label: 'DJ Booth', to: '/dj-booth' },
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
@@ -72,7 +71,6 @@ export default function PublicBranding({
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (
       location.pathname.startsWith('/reservar') ||
-      location.pathname.startsWith('/dj-booth') ||
       location.pathname.startsWith('/domo-del-pululahua')
     ) {
       return { label: t('authEntry.whatsappBookings'), kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -91,9 +89,6 @@ export default function PublicBranding({
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };
-    }
-    if (location.pathname.startsWith('/dj-booth')) {
-      return { label: t('authEntry.generalBooking'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
       return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };

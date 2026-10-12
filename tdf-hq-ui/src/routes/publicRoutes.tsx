@@ -57,6 +57,18 @@ const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
 const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
 
+const DJ_BOOTH_SERVICE_CODE = 'dj-booth-practice';
+
+// DJ booth is an ordinary service in the public booking form. Keep the old
+// dedicated URL alive for published links by sending it to /reservar with the
+// service preselected (and any tracking params preserved).
+export function LegacyDjBoothRedirect() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  params.set('servicio', DJ_BOOTH_SERVICE_CODE);
+  return <Navigate to={{ pathname: '/reservar', search: `?${params.toString()}`, hash: location.hash }} replace />;
+}
+
 export function LegacySocialEventsRedirect() {
   const location = useLocation();
   const target = canonicalizeLegacySocialEventsPath(
@@ -144,8 +156,8 @@ export function renderPublicRoutes() {
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
       <Route path="/reservas/orden/:bookingId" element={<PublicBranding><PublicBookingOrderTrackingPage /></PublicBranding>} />
-      <Route path="/dj-booth" element={<PublicBranding><PublicBookingPage preset="dj-booth" /></PublicBranding>} />
-      <Route path="/reservar/dj-booth" element={<Navigate to="/dj-booth" replace />} />
+      <Route path="/dj-booth" element={<LegacyDjBoothRedirect />} />
+      <Route path="/reservar/dj-booth" element={<LegacyDjBoothRedirect />} />
       <Route path="/domo-del-pululahua" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />
       <Route path="/domo-del-pululahua/cotizaciones/:quoteId" element={<PublicBranding><DomoQuoteCheckoutPage /></PublicBranding>} />
       <Route path="/venues/domo-del-pululahua" element={<Navigate to="/domo-del-pululahua" replace />} />

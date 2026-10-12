@@ -613,67 +613,6 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
-  it('uses the DJ Booth preset route copy and canonical service offering', async () => {
-    listPublicRoomsMock.mockResolvedValueOnce([
-      ...defaultPublicRooms,
-      { roomId: 'room-dj', rName: 'DJ Booth', rBookable: true },
-    ]);
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container, {
-      route: '/dj-booth',
-      props: { preset: 'dj-booth' },
-    });
-
-    expect(container.textContent).toContain('Reserva práctica en DJ Booth');
-    expect(container.textContent).toContain('Agenda horas de práctica o alquiler del DJ Booth');
-
-    await act(async () => {
-      setInputValue(getInputByLabel(container, 'Nombre completo'), 'DJ Test');
-      setInputValue(getInputByLabel(container, 'Correo'), 'dj@example.com');
-      clickButtonByText(container, 'Continuar');
-      await flushPromises();
-    });
-
-    expect(container.textContent).toContain('Práctica en DJ Booth');
-
-    await act(async () => {
-      const userZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-      const desiredStudio = DateTime.fromObject(
-        { year: 2030, month: 1, day: 1, hour: 12, minute: 0 },
-        { zone: 'America/Guayaquil' },
-      );
-      const desiredUser = desiredStudio.setZone(userZone);
-      setInputValue(getInputByLabel(container, 'Fecha y hora'), desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
-      await flushPromises();
-    });
-
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
-
-    await act(async () => {
-      const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
-      if (!submitButton) throw new Error('Submit button not found');
-      submitButton.click();
-      await flushPromises();
-    });
-
-    expect(createPublicMock).toHaveBeenCalledTimes(1);
-    expect(createPublicMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pbServiceOfferingId: DJ_PRACTICE_ID,
-        pbResourceIds: null,
-      }),
-      expect.stringMatching(/^service-booking-/),
-    );
-
-    await cleanup();
-    document.body.removeChild(container);
-  });
-
   it('can preselect DJ Booth from the public service query parameter', async () => {
     listPublicRoomsMock.mockResolvedValueOnce([
       ...defaultPublicRooms,

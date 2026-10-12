@@ -97,9 +97,6 @@ describe('PublicBranding', () => {
       expect(linkHrefByText(container, 'Reservar servicios')).toBe(
         '/reservar?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
       );
-      expect(linkHrefByText(container, 'DJ Booth')).toBe(
-        '/dj-booth?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
-      );
       expect(linkHrefByText(container, 'Inscribirme: cursos')).toBe(
         '/curso/produccion-musical?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links',
       );

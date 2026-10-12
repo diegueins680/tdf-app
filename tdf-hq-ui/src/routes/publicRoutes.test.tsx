@@ -2,7 +2,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
-import { renderPublicRoutes } from './publicRoutes';
+import { LegacyDjBoothRedirect, renderPublicRoutes } from './publicRoutes';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -40,6 +40,36 @@ describe('public routes', () => {
 
       expect(container.querySelector('[data-testid="location"]')?.textContent)
         .toBe('/social/eventos?city=Quito#agenda');
+    } finally {
+      await act(async () => {
+        root?.unmount();
+        await flushPromises();
+      });
+      root = null;
+      document.body.removeChild(container);
+    }
+  });
+
+  it('sends the legacy DJ booth URL to the general booking form with the service preselected', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let root: Root | null = createRoot(container);
+
+    try {
+      await act(async () => {
+        root?.render(
+          <MemoryRouter initialEntries={['/dj-booth?utm_source=instagram#horario']}>
+            <Routes>
+              <Route path="/dj-booth" element={<LegacyDjBoothRedirect />} />
+              <Route path="/reservar" element={<LocationProbe />} />
+            </Routes>
+          </MemoryRouter>,
+        );
+        await flushPromises();
+      });
+
+      expect(container.querySelector('[data-testid="location"]')?.textContent)
+        .toBe('/reservar?utm_source=instagram&servicio=dj-booth-practice#horario');
     } finally {
       await act(async () => {
         root?.unmount();
