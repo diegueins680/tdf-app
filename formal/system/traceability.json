@@ -7629,7 +7629,7 @@
       "title": "Canonical music releases with immutable approved versions",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions that handle each due candidate on its own: a candidate that fails at publication is suspended with its error and the other candidates still publish; publishing a version retires every other live version of its release and reopens a withdrawn release; the release points at a version exactly while it is published, suspended, replacement_pending or takedown_scheduled. Only a published, in-embargo-window, territory-allowed version is public.",
+      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions that handle each due candidate on its own: a candidate that fails at publication is suspended with its error and the other candidates still publish; publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled, and reopens a withdrawn release; a failure that is transient (deadlock, serialization failure, lock timeout) leaves the candidate scheduled for the next run; the release points at the version it last published only while that version is published, suspended, replacement_pending or takedown_scheduled. Only a published, in-embargo-window, territory-allowed version is public.",
       "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed; AUTHORITY-066 (scheduler isolation, retirement, reopening, pointer)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "docs/music-releases/architecture-and-data-model.md",
@@ -7668,7 +7668,7 @@
           "takedown_scheduled",
           "withdrawn"
         ],
-        "release": "published_version_id points at the live version or is null; withdrawn_at is set exactly while no version is live after one was",
+        "release": "published_version_id points at the version last published while it stays published, suspended, replacement_pending or takedown_scheduled, otherwise null; withdrawn_at is set while the release points at nothing after it pointed at something",
         "authority": "PostgreSQL triggers, music_valid_transition, music_publish_due, music_withdraw_due, trg_music_release_live_version"
       },
       "allowedTransitions": [
@@ -7677,7 +7677,8 @@
         "published -> takedown_scheduled -> withdrawn (takedown scheduler)",
         "published/scheduled -> suspended -> approved (re-approval re-validates)",
         "scheduled -> suspended with publication_failed audit when publication fails",
-        "publication of a version retires every other live version through replacement_pending -> takedown_scheduled -> withdrawn"
+        "publication of a version retires every other formerly published version still published, replacement_pending or takedown_scheduled through replacement_pending -> takedown_scheduled -> withdrawn; never-published and suspended versions stay",
+        "scheduled stays scheduled after a transient publication failure (SQLSTATE class 40, 55P03)"
       ],
       "forbiddenTransitions": [
         "Editing an approved snapshot in place",
@@ -7693,9 +7694,9 @@
       ],
       "authorization": "music_can(actor, artist, permission) re-checked by backend for every mutation; public reads require the public flag and territory rule.",
       "privacy": "Masters and quarantined uploads are never public; collaborator identifiers are only shown to authorized editors.",
-      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md). The schedulers lock candidate and release FOR UPDATE SKIP LOCKED and run each candidate in its own subtransaction.",
+      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md). The schedulers lock candidate and release FOR UPDATE SKIP LOCKED and run each candidate in its own subtransaction. The API handler locks the version row before the release row and the scheduler the other way round, so a handler move of a pointed sibling during the same release's publication can deadlock: the victim's candidate stays scheduled and publishes on the next run.",
       "idempotency": "Correction creation and publication are idempotent per request key and locked rows.",
-      "failure": "Invalid transitions raise database errors surfaced as actionable API errors. A publication that raises suspends only that version and records publication_failed (SQLSTATE, message); a withdrawal that raises stays takedown_scheduled, is recorded once as withdrawal_failed and retried next run.",
+      "failure": "Invalid transitions raise database errors surfaced as actionable API errors. A publication that raises a transient error (class 40, 55P03) leaves the candidate scheduled with a warning; any other failure suspends only that version and records publication_failed (SQLSTATE, message); a withdrawal that raises stays takedown_scheduled, is recorded once as withdrawal_failed unless transient, and retried next run.",
       "recovery": "Rollback SQL exists for each migration; corrections never rewrite history. 2026-10-11_music_publication_isolation repairs release rows pointing at non-live versions and releases marked withdrawn while a version is published.",
       "observability": "Editorial notifications and audit rows per transition.",
       "implementation": [
@@ -9122,9 +9123,9 @@
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
-    "formal/event-operations/MusicPublication.cfg": "059e20be366e808559724ec7b6aff1ef09a043e2b6acb4509348a0db6460b3bb",
-    "formal/event-operations/MusicPublication.tla": "a44fdc0c299b84e2362c7250a40adb6c347fc60a2f9abe848cc0ebb6d07cfb52",
-    "formal/event-operations/MusicPublicationBatch.cfg": "f8e137d12d01351a906684fcb53c80de41e1dcecc20b74549bdd87b55337ea69",
+    "formal/event-operations/MusicPublication.cfg": "0f2e7eb66feaa82e7c285a7d3fa5f6d1cad0042fe924f97e2e29d82fa3590640",
+    "formal/event-operations/MusicPublication.tla": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+    "formal/event-operations/MusicPublicationBatch.cfg": "9235cd26521de14679cda1db53049468bd322e1a199c5ab22681cbb26d894837",
     "formal/event-operations/MusicPublicationPointerStale.cfg": "2d5916c7039d9722e3fb586341a26e8bbd2ea1909098c51e5235700c08543866",
     "formal/event-operations/MusicPublicationReplacedOnly.cfg": "b9dfcafb16a72ecbd82cfbb0ed0cbfdb9d8e8888ff094d91ee3a5e67078c1a81",
     "formal/event-operations/MusicPublicationStayWithdrawn.cfg": "f5d20864b4e36d2421b54fae9dcf51606b749c1706358125f06981c522cc6bc7",
@@ -9682,7 +9683,7 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
-    "tdf-hq/sql/2026-10-11_music_publication_isolation.sql": "a20123c0abda4f66e63f8536df05a17d04b33c1f264e2887ce053bf254d992df",
+    "tdf-hq/sql/2026-10-11_music_publication_isolation.sql": "b3282b3da36e114d6a60458fef69f6e614977a314288d162d03f1cda1f2b4c0e",
     "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql": "573e361d381f0c8681d27224964da3ea081722c92a4a9b178b02ec88599a35fa",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -9814,7 +9815,7 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
-    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "5b0b2d81976f7b277b2f39729dbb0d4571592f2c668f7e134efd22684dbab560",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "6022c7d5e399b47cbc0d14bb8d5bddb9544b98ce3524925585ed2efabfc7fc59",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -31943,7 +31944,7 @@
     {
       "id": "SURFACE-2b565eda547a22ed",
       "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
-      "sha256": "a20123c0abda4f66e63f8536df05a17d04b33c1f264e2887ce053bf254d992df",
+      "sha256": "b3282b3da36e114d6a60458fef69f6e614977a314288d162d03f1cda1f2b4c0e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35072,7 +35073,7 @@
     {
       "id": "SURFACE-ec903fb64a682e18",
       "path": "tdf-hq/test/TDF/MusicPublicationSpec.hs",
-      "sha256": "5b0b2d81976f7b277b2f39729dbb0d4571592f2c668f7e134efd22684dbab560",
+      "sha256": "6022c7d5e399b47cbc0d14bb8d5bddb9544b98ce3524925585ed2efabfc7fc59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42012,7 +42013,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3c7445281daad25dd84388460dfdb3453efb105afc17d35e2c4aa79a5be1c38",
+      "sourceSha256": "283299a8df48dfe2e5c7da131f6e16c67c4b63baeaf43bfd32e555835cca7003",
       "definition": {
         "states": [
           "absent",

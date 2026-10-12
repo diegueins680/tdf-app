@@ -12891,7 +12891,7 @@
     {
       "id": "SURFACE-2b565eda547a22ed",
       "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
-      "sha256": "a20123c0abda4f66e63f8536df05a17d04b33c1f264e2887ce053bf254d992df",
+      "sha256": "b3282b3da36e114d6a60458fef69f6e614977a314288d162d03f1cda1f2b4c0e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14661,7 +14661,7 @@
     {
       "id": "SURFACE-ec903fb64a682e18",
       "path": "tdf-hq/test/TDF/MusicPublicationSpec.hs",
-      "sha256": "5b0b2d81976f7b277b2f39729dbb0d4571592f2c668f7e134efd22684dbab560",
+      "sha256": "6022c7d5e399b47cbc0d14bb8d5bddb9544b98ce3524925585ed2efabfc7fc59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19751,7 +19751,7 @@
     },
     {
       "path": "docs/music-releases/operations-runbook.md",
-      "sha256": "0faadfe6f65c61b7a6bee609490c1764d4a55b977897bfff57dfb77c0d48d1ab",
+      "sha256": "68ba6d089aad86ab99306287068c441abe02916eb70d629d33c486f4ee37d29d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21858,21 +21858,21 @@
     },
     {
       "path": "formal/event-operations/MusicPublication.cfg",
-      "sha256": "059e20be366e808559724ec7b6aff1ef09a043e2b6acb4509348a0db6460b3bb",
+      "sha256": "0f2e7eb66feaa82e7c285a7d3fa5f6d1cad0042fe924f97e2e29d82fa3590640",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/MusicPublication.tla",
-      "sha256": "a44fdc0c299b84e2362c7250a40adb6c347fc60a2f9abe848cc0ebb6d07cfb52",
+      "sha256": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
       "path": "formal/event-operations/MusicPublicationBatch.cfg",
-      "sha256": "f8e137d12d01351a906684fcb53c80de41e1dcecc20b74549bdd87b55337ea69",
+      "sha256": "9235cd26521de14679cda1db53049468bd322e1a199c5ab22681cbb26d894837",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -22334,7 +22334,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "0c69d8bc3cbdadb6d8e614ae652712cb5c4f41d9ce644f942fbf3ef00a546097",
+      "sha256": "258c756082d361377822a38ae66c20f5f844c2e6d489dcf9f435ba589c34e0a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23713,7 +23713,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "99d58b30cd92da0336efd93edd1fd50a4c6e349b2bcd49c990caf7d80d0004c3",
+      "sha256": "8d6ff65421c860b3686bf32a556a709dee4cc2dbced19d2ffa7088bd7d6a58a0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23902,7 +23902,7 @@
     },
     {
       "path": "formal/system/music-publication.md",
-      "sha256": "1403d569ddba8fdb4c7c442ae888193cb945692b7dc613ec23e59e3d46c9a1db",
+      "sha256": "897a24b4146ef82e0a14cdd88c6c93d1ff2ac92841dc488c9014b6cbd401cbe5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23993,7 +23993,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b3c7445281daad25dd84388460dfdb3453efb105afc17d35e2c4aa79a5be1c38",
+      "sha256": "283299a8df48dfe2e5c7da131f6e16c67c4b63baeaf43bfd32e555835cca7003",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32706,7 +32706,7 @@
         "CONSTANTS Isolate = TRUE RetireAll = TRUE Reopen = TRUE PointerTrigger = TRUE",
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK OnePublished PointerLive PublishedIsPointed WithdrawnConsistent OnlyInvalidFails",
-        "PROPERTY Progress",
+        "PROPERTIES Progress ValidProgress",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -32718,7 +32718,7 @@
         "CONSTANTS Isolate = FALSE RetireAll = TRUE Reopen = TRUE PointerTrigger = TRUE",
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK OnePublished",
-        "PROPERTY Progress",
+        "PROPERTY ValidProgress",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

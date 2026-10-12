@@ -37,31 +37,39 @@ CREATE OR REPLACE TRIGGER trg_music_release_live_version
   WHEN (OLD.state IS DISTINCT FROM NEW.state)
   EXECUTE FUNCTION music_release_live_version();
 
--- Every other live version of the release leaves through the lifecycle
--- (published -> replacement_pending -> takedown_scheduled -> withdrawn).
+-- Every other version of the release that was published and is still
+-- published, replacement_pending or takedown_scheduled leaves through the
+-- lifecycle (published -> replacement_pending -> takedown_scheduled ->
+-- withdrawn). Versions that were never published and suspended versions stay.
 CREATE OR REPLACE FUNCTION music_retire_live_versions(target_release_id UUID, keep_version_id UUID)
 RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
   UPDATE music_release_version
   SET state = 'replacement_pending', updated_at = NOW()
-  WHERE release_id = target_release_id AND id <> keep_version_id AND state = 'published';
+  WHERE release_id = target_release_id AND id <> keep_version_id
+    AND state = 'published' AND published_at IS NOT NULL;
 
   UPDATE music_release_version
   SET state = 'takedown_scheduled',
       takedown_at_utc = COALESCE(takedown_at_utc, NOW()),
       takedown_timezone = COALESCE(takedown_timezone, 'UTC'),
       updated_at = NOW()
-  WHERE release_id = target_release_id AND id <> keep_version_id AND state = 'replacement_pending';
+  WHERE release_id = target_release_id AND id <> keep_version_id
+    AND state = 'replacement_pending' AND published_at IS NOT NULL;
 
   UPDATE music_release_version
   SET state = 'withdrawn', updated_at = NOW()
-  WHERE release_id = target_release_id AND id <> keep_version_id AND state = 'takedown_scheduled';
+  WHERE release_id = target_release_id AND id <> keep_version_id
+    AND state = 'takedown_scheduled' AND published_at IS NOT NULL;
 END;
 $$;
 
--- Each candidate publishes or fails on its own. A failed candidate is
--- suspended with the error in its audit trail, so the next run does not
--- retry it and the other candidates still publish.
+-- Each candidate publishes or fails on its own. A candidate that fails for a
+-- transient reason (deadlock, serialization failure, lock timeout: the API
+-- handler locks the version row before the release row, the scheduler the
+-- other way round) stays scheduled for the next run. Any other failure
+-- suspends the candidate with the error in its audit trail, so the next run
+-- does not retry it; the other candidates still publish either way.
 CREATE OR REPLACE FUNCTION music_publish_due(batch_size INTEGER DEFAULT 100)
 RETURNS TABLE(release_id UUID, version_id UUID) LANGUAGE plpgsql AS $$
 DECLARE
@@ -96,6 +104,10 @@ BEGIN
       END IF;
     EXCEPTION WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS failure_state = RETURNED_SQLSTATE, failure_message = MESSAGE_TEXT;
+      IF failure_state LIKE '40%' OR failure_state = '55P03' THEN
+        RAISE WARNING 'music publication of version % postponed (%): %', candidate.id, failure_state, failure_message;
+        CONTINUE;
+      END IF;
       BEGIN
         UPDATE music_release_version
         SET state = 'suspended', updated_at = NOW()
@@ -115,8 +127,8 @@ BEGIN
 END;
 $$;
 
--- A failed withdrawal is recorded once and retried on the next run; the
--- other candidates still withdraw.
+-- A failed withdrawal is retried on the next run and, unless the failure was
+-- transient, recorded once; the other candidates still withdraw.
 CREATE OR REPLACE FUNCTION music_withdraw_due(batch_size INTEGER DEFAULT 100)
 RETURNS TABLE(release_id UUID, version_id UUID) LANGUAGE plpgsql AS $$
 DECLARE
@@ -149,6 +161,10 @@ BEGIN
       END IF;
     EXCEPTION WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS failure_state = RETURNED_SQLSTATE, failure_message = MESSAGE_TEXT;
+      IF failure_state LIKE '40%' OR failure_state = '55P03' THEN
+        RAISE WARNING 'music withdrawal of version % postponed (%): %', candidate.id, failure_state, failure_message;
+        CONTINUE;
+      END IF;
       BEGIN
         INSERT INTO music_release_audit_event(
           release_id, release_version_id, actor_party_id, event_type, prior_state, next_state, data
@@ -157,13 +173,13 @@ BEGIN
           jsonb_build_object('sqlstate', failure_state, 'message', failure_message)
         WHERE NOT EXISTS (
           SELECT 1 FROM music_release_audit_event latest
-          WHERE latest.release_version_id = candidate.id
+          WHERE latest.release_id = candidate.release_id AND latest.release_version_id = candidate.id
           ORDER BY latest.occurred_at DESC, latest.id DESC
           LIMIT 1
         ) OR (
           SELECT latest.event_type <> 'withdrawal_failed' OR latest.data->>'sqlstate' IS DISTINCT FROM failure_state
           FROM music_release_audit_event latest
-          WHERE latest.release_version_id = candidate.id
+          WHERE latest.release_id = candidate.release_id AND latest.release_version_id = candidate.id
           ORDER BY latest.occurred_at DESC, latest.id DESC
           LIMIT 1
         );

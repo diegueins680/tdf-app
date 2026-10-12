@@ -44,7 +44,7 @@ spec = describe "music-publication-postgresql" $ do
           (_, other) <- publishable pool "isolation-other"
           schedulePast pool failing
           schedulePast pool other
-          withPublicationFailure pool failing $ do
+          withPublicationFailure pool failing "P0001" $ do
             publishDue pool `shouldReturn` 1
             versionState pool failing `shouldReturn` "suspended"
             versionState pool other `shouldReturn` "published"
@@ -53,6 +53,29 @@ spec = describe "music-publication-postgresql" $ do
               [PersistText failing]) pool
             failures `shouldBe` [Single ("P0001" :: Text)]
             publishDue pool `shouldReturn` 0
+
+        it "leaves the live version and the release untouched when its correction fails to publish" $ \pool -> do
+          (release, v1) <- publishable pool "sibling"
+          schedulePast pool v1
+          publishDue pool `shouldReturn` 1
+          v2 <- correction pool release v1
+          schedulePast pool v2
+          withPublicationFailure pool v2 "P0001" $ do
+            publishDue pool `shouldReturn` 0
+            versionState pool v1 `shouldReturn` "published"
+            versionState pool v2 `shouldReturn` "suspended"
+            releaseRow pool release `shouldReturn` (Just v1, False)
+
+        it "keeps a candidate scheduled after a transient failure and publishes it on the next run" $ \pool -> do
+          (release, v1) <- publishable pool "transient"
+          schedulePast pool v1
+          withPublicationFailure pool v1 "40P01" $ do
+            publishDue pool `shouldReturn` 0
+            versionState pool v1 `shouldReturn` "scheduled"
+            failedPublications pool v1 `shouldReturn` 0
+          publishDue pool `shouldReturn` 1
+          versionState pool v1 `shouldReturn` "published"
+          releaseRow pool release `shouldReturn` (Just v1, False)
 
         it "retires every live version of the release when a later correction publishes" $ \pool -> do
           (release, v1) <- publishable pool "retire"
@@ -184,7 +207,7 @@ installFixture = do
     , "  PERFORM pg_sleep(0.06);"
     , "END $$;"
     ]) []
-  rawExecute "CREATE OR REPLACE FUNCTION music_spec_fail() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic music publication failure' USING ERRCODE='P0001'; END $$" []
+  rawExecute "CREATE OR REPLACE FUNCTION music_spec_fail() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic music publication failure' USING ERRCODE=TG_ARGV[0]; END $$" []
 
 dropFixture :: SqlPersistT IO ()
 dropFixture = forM_
@@ -233,6 +256,9 @@ publishedCount pool release = count pool "SELECT count(*) FROM music_release_ver
 publicRows :: ConnectionPool -> Text -> IO Int64
 publicRows pool release = count pool "SELECT count(*) FROM music_public_release WHERE id=?::uuid" [PersistText release]
 
+failedPublications :: ConnectionPool -> Text -> IO Int64
+failedPublications pool version = count pool "SELECT count(*) FROM music_release_audit_event WHERE release_version_id=?::uuid AND event_type='publication_failed'" [PersistText version]
+
 failedEvents :: ConnectionPool -> Text -> IO Int64
 failedEvents pool version = count pool "SELECT count(*) FROM music_release_audit_event WHERE release_version_id=?::uuid AND event_type='withdrawal_failed'" [PersistText version]
 
@@ -258,15 +284,16 @@ releaseRow pool release = do
     [(Single pointer, Single withdrawn)] -> pure (pointer, withdrawn)
     _ -> fail "release not found"
 
--- A trigger that makes publication of exactly this version raise.
-withPublicationFailure :: ConnectionPool -> Text -> IO a -> IO a
-withPublicationFailure pool version action = do
+-- A trigger that makes publication of exactly this version raise the given
+-- SQLSTATE (P0001 for a lasting failure, 40P01 for a synthetic deadlock).
+withPublicationFailure :: ConnectionPool -> Text -> Text -> IO a -> IO a
+withPublicationFailure pool version sqlstate action = do
   runSqlPool (rawExecute
-    ("CREATE TRIGGER music_spec_fail BEFORE UPDATE OF state ON music_release_version FOR EACH ROW WHEN (NEW.state='published' AND NEW.id='" <> version <> "'::uuid) EXECUTE FUNCTION music_spec_fail()") []) pool
+    ("CREATE TRIGGER music_spec_fail BEFORE UPDATE OF state ON music_release_version FOR EACH ROW WHEN (NEW.state='published' AND NEW.id='" <> version <> "'::uuid) EXECUTE FUNCTION music_spec_fail('" <> sqlstate <> "')") []) pool
   action `finally` runSqlPool (rawExecute "DROP TRIGGER IF EXISTS music_spec_fail ON music_release_version" []) pool
 
 withWithdrawalFailure :: ConnectionPool -> Text -> IO a -> IO a
 withWithdrawalFailure pool version action = do
   runSqlPool (rawExecute
-    ("CREATE TRIGGER music_spec_fail BEFORE UPDATE OF state ON music_release_version FOR EACH ROW WHEN (NEW.state='withdrawn' AND NEW.id='" <> version <> "'::uuid) EXECUTE FUNCTION music_spec_fail()") []) pool
+    ("CREATE TRIGGER music_spec_fail BEFORE UPDATE OF state ON music_release_version FOR EACH ROW WHEN (NEW.state='withdrawn' AND NEW.id='" <> version <> "'::uuid) EXECUTE FUNCTION music_spec_fail('P0001')") []) pool
   action `finally` runSqlPool (rawExecute "DROP TRIGGER IF EXISTS music_spec_fail ON music_release_version" []) pool

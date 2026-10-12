@@ -39,20 +39,29 @@ rules.
 
 | Definition | Rule |
 | --- | --- |
-| `music_publish_due` | Each candidate runs in its own subtransaction. On failure the candidate becomes `suspended` and an audit event `publication_failed` carries the SQLSTATE and message; the loop continues. Before publishing, `music_retire_live_versions` retires every other `published`/`replacement_pending`/`takedown_scheduled` version of the release through the lifecycle chain. The `withdrawn_at` filter is gone. |
-| `music_withdraw_due` | Same isolation. A failed withdrawal stays `takedown_scheduled`, is recorded once (`withdrawal_failed`, not repeated while the latest audit row already says so) and retried next run. |
+| `music_publish_due` | Each candidate runs in its own subtransaction. A transient failure (SQLSTATE class 40, `55P03`) leaves the candidate `scheduled` with a warning; any other failure makes it `suspended` with an audit event `publication_failed` carrying the SQLSTATE and message; the loop continues either way. Before publishing, `music_retire_live_versions` retires every other formerly published version of the release that is still `published`/`replacement_pending`/`takedown_scheduled` through the lifecycle chain (never-published and `suspended` versions stay). The `withdrawn_at` filter is gone. |
+| `music_withdraw_due` | Same isolation. A failed withdrawal stays `takedown_scheduled` and is retried next run; unless transient it is recorded once (`withdrawal_failed`, not repeated while the latest audit row already says so). |
 | `trg_music_release_live_version` | AFTER UPDATE OF state: `published` sets `published_version_id` and clears `withdrawn_at`; leaving the live states (`published`, `suspended`, `replacement_pending`, `takedown_scheduled`) through any path clears the pointer and sets `withdrawn_at`. The scheduler functions no longer write the release row themselves. |
 | Repairs | Release pointing at a non-live version → pointer null, `withdrawn_at` set. Release with a `published` version it does not point at, or marked withdrawn while one is published → pointer and `withdrawn_at` corrected. |
 
 Decisions recorded in AUTHORITY-066: a newer publication supersedes every
-other live version (not only the one it was created from); publication
-reopens a withdrawn release; a version that fails at publication is suspended
-for staff rather than retried blindly; `suspended` keeps the pointer (the
-version is held, not gone).
+other formerly published version still live (not only the one it was created
+from), including one whose staff-chosen takedown date lies in the future;
+never-published and `suspended` versions are left alone; publication reopens a
+withdrawn release; a version that fails at publication for a lasting reason is
+suspended for staff rather than retried blindly, a transient failure is retried
+next run; `suspended` keeps the pointer (the version is held, not gone); several
+due versions of one release publish in release-time order, each superseding the
+previous one (with the intermediate "published" notifications).
 
 Locks: `music_publish_due` keeps `FOR UPDATE OF v, r SKIP LOCKED` on the
 candidate and its release; retirement updates lock the sibling versions in the
-same transaction. `SET LOCAL lock_timeout = '10s'` on the migration.
+same transaction. The API handler locks only the version row and then, through
+the new trigger, the release row, so a handler move of a pointed sibling during
+publication of the same release can deadlock; the scheduler is the victim, the
+candidate stays `scheduled` and publishes on the next run (the independent
+review reproduced this; it is why transient errors do not suspend).
+`SET LOCAL lock_timeout = '10s'` on the migration.
 
 ## Model
 
@@ -60,10 +69,15 @@ same transaction. `SET LOCAL lock_timeout = '10s'` on the migration.
 (live), v2 and v3 (corrections of v1); staff actions without fairness; weak
 fairness on the two schedulers. Invariants `OnePublished`, `PointerLive`,
 `PublishedIsPointed`, `WithdrawnConsistent`, `OnlyInvalidFails`; property
-`Progress` (a due scheduled version eventually leaves `scheduled`). 32,257
+`Progress` (a due scheduled version eventually leaves `scheduled`, stated
+without the release's withdrawn mark so the `StayWithdrawn` control fails for
+the documented reason) and `ValidProgress` (a valid due version leaves
+`scheduled` even while a sibling fails; the `Batch` control fails on it).
+`Blocked` is derived from the retired state, so `OnlyInvalidFails` is checked,
+not assumed. 32,257
 states generated, 7,168 distinct, depth 18. Four controls remove one guard
-each: `Batch` and `StayWithdrawn` violate `Progress`; `ReplacedOnly` violates
-`OnlyInvalidFails`; `PointerStale` violates `PointerLive`. The model found
+each: `Batch` violates `ValidProgress`, `StayWithdrawn` violates `Progress`;
+`ReplacedOnly` violates `OnlyInvalidFails`; `PointerStale` violates `PointerLive`. The model found
 defect 3's `suspended -> approved` case before the trigger covered it.
 
 Not modelled: the chain `published -> replacement_pending -> takedown_scheduled
@@ -75,13 +89,16 @@ that may flip), several releases, and lock interleaving with the API handler.
 | Check | Where | Result (2026-10-11, local) |
 | --- | --- | --- |
 | Reproduction on the unmodified schema | SQL scenarios on a schema copy | batch aborts with `uq_music_release_one_published_version`, unrelated release stays `scheduled`; correction of withdrawn release stays `scheduled`; pointer stays on withdrawn version |
-| PostgreSQL spec | `tdf-hq/test/TDF/MusicPublicationSpec.hs` via `scripts/test-music-publication.sh` (CI step "Verify contact HTTP concurrency…") | 5 cases: isolation with a synthetic publication failure, retire-all with two corrections, reopen after withdrawal, pointer cleared on the API path, withdrawal isolation recorded once |
+| PostgreSQL spec | `tdf-hq/test/TDF/MusicPublicationSpec.hs` via `scripts/test-music-publication.sh` (CI step "Verify contact HTTP concurrency…") | 7 cases: isolation with a synthetic lasting failure, a failing correction leaving the live version and the release untouched, a synthetic transient failure leaving the candidate scheduled and publishing next run, retire-all with two corrections, reopen after withdrawal, pointer cleared on the API path, withdrawal isolation recorded once. Against the unmigrated schema all cases that depend on the migration fail (control). |
 | Migration twice, rollback twice, forward again | schema copy | clean |
 | TLC | the five configurations above | pass / expected failures |
 
-The synthetic failures are triggers raising `P0001` on one version; the
-reproducible real cause (unique violation) cannot occur once retirement covers
-every live version, so the exception path is exercised synthetically.
+The synthetic failures are triggers raising `P0001` or `40P01` on one version;
+the reproducible real cause (unique violation) cannot occur once retirement
+covers every live version, so the exception path is exercised synthetically. A
+real deadlock was reproduced by the independent review with two sessions. The
+spec's rows stay in the shared CI database (the audit table is append-only);
+no later CI step counts music rows.
 
 ## For the release
 
@@ -108,6 +125,9 @@ flag.
 
 - `transitionReleaseVersion` still offers `withdrawn` as a direct staff target;
   it now keeps the release consistent but bypasses the takedown schedule.
+- The handler/scheduler lock order differs (version then release vs. release
+  then siblings); the scheduler tolerates the deadlock but a lock-order fix in
+  the handler would remove it.
 - A suspended version has no in-app path to see `publication_failed`; staff
   read the audit trail.
 - The requirement's state list previously named 7 states; the column allows 15

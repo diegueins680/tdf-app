@@ -102,17 +102,9 @@ Candidate(v) ==
   /\ state[v] = "scheduled" /\ due[v]
   /\ Reopen \/ ~withdrawn
 
-(* Without RetireAll another published version that the candidate does not
-   replace stays published and the unique index rejects the candidate. *)
-Blocked(v) ==
-  ~RetireAll /\ \E u \in Versions \ {v} : state[u] = "published" /\ u # Replaces[v]
-
-Fails(v) == poison[v] \/ Blocked(v)
-
-(* Without Isolate one failing candidate aborts the whole batch, so no
-   candidate can publish while any due candidate fails. *)
-BatchStuck == ~Isolate /\ \E u \in Versions : Candidate(u) /\ Fails(u)
-
+(* The versions after v publishes: every other formerly published version
+   that is still published or takedown_scheduled is retired; without RetireAll
+   only the version v replaces. *)
 Retired(v) ==
   [u \in Versions |-> IF u = v THEN "published"
                       ELSE IF RetireAll /\ state[u] \in {"published", "takedown_scheduled"}
@@ -120,6 +112,16 @@ Retired(v) ==
                       ELSE IF ~RetireAll /\ u = Replaces[v] /\ state[u] = "published"
                         THEN "withdrawn"
                       ELSE state[u]]
+
+(* The partial unique index: publication fails when another version would
+   still be published afterwards. *)
+Blocked(v) == \E u \in Versions \ {v} : Retired(v)[u] = "published"
+
+Fails(v) == poison[v] \/ Blocked(v)
+
+(* Without Isolate one failing candidate aborts the whole batch, so no
+   candidate can publish while any due candidate fails. *)
+BatchStuck == ~Isolate /\ \E u \in Versions : Candidate(u) /\ Fails(u)
 
 PublishSucceeds(v) ==
   /\ Candidate(v) /\ ~Fails(v) /\ ~BatchStuck
@@ -169,7 +171,14 @@ WithdrawnConsistent == withdrawn => pointer = None
 (* The scheduler suspends only versions that are invalid. *)
 OnlyInvalidFails == \A v \in Versions : failed[v] => poison[v]
 
-(* Every due scheduled version eventually leaves 'scheduled'. *)
-Progress == \A v \in Versions : [](Candidate(v) => <>(state[v] # "scheduled"))
+(* Every due scheduled version eventually leaves 'scheduled', whatever the
+   release's withdrawn mark. *)
+Progress == \A v \in Versions :
+  [](state[v] = "scheduled" /\ due[v] => <>(state[v] # "scheduled"))
+
+(* A due scheduled version that is valid leaves 'scheduled' (or turns invalid
+   itself) even while a sibling candidate fails. *)
+ValidProgress == \A v \in Versions :
+  [](state[v] = "scheduled" /\ due[v] /\ ~poison[v] => <>(state[v] # "scheduled" \/ poison[v]))
 
 =============================================================================
