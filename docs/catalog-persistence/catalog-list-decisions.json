@@ -58901,6 +58901,24 @@
         "name": "actionCopy"
       },
       "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "22a8352d47846fdea0c9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "If this list drifts from the landing's distribution statuses, the read-only expiry monitor could fail on, or wrongly accept, a manifest the /app page treats differently.",
+      "justification": "Validation vocabulary of the read-only Mobile distribution expiry monitor. It mirrors the status union declared in tdf-hq-ui/src/mobile/distribution.ts so the monitor rejects the manifests the landing rejects; a test compares both lists. It is not an authority for which channels exist and nothing is persisted from it.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/check-mobile-distribution.mjs",
+        "line": 13,
+        "kind": "array",
+        "name": "STATUSES"
+      },
+      "reviewBatch": "mobile-distribution-expiry-check-2026-10-12",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

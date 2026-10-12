@@ -12,7 +12,7 @@ const HOUR = 3_600_000;
 
 const STATUSES = ['unavailable', 'coming_soon', 'internal_testing', 'closed_testing', 'open_testing', 'testflight_internal', 'testflight_external', 'store_preorder', 'public'];
 const ACCESSIBLE = ['closed_testing', 'open_testing', 'testflight_external', 'store_preorder', 'public'];
-export const DISTRIBUTION_STATUSES = { all: STATUSES, accessible: ACCESSIBLE };
+export { STATUSES as DISTRIBUTION_STATUSES, ACCESSIBLE as ACCESSIBLE_STATUSES };
 
 // The same invariants as validateDistribution in tdf-hq-ui/src/mobile/distribution.ts.
 // The landing rejects the whole manifest when one fails and then offers no store

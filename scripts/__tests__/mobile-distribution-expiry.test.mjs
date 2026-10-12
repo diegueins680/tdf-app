@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  describeFinding, distributionExpiry, DISTRIBUTION_STATUSES, PUBLISHED_MANIFEST_URL, validatePublishedDistribution,
+  ACCESSIBLE_STATUSES, describeFinding, distributionExpiry, DISTRIBUTION_STATUSES, PUBLISHED_MANIFEST_URL, validatePublishedDistribution,
 } from '../check-mobile-distribution.mjs';
 
 const script = fileURLToPath(new URL('../check-mobile-distribution.mjs', import.meta.url));
@@ -108,8 +108,8 @@ test('the status lists are the ones the landing declares', () => {
     const literal = landing.match(new RegExp(`const ${name} = new Set<DistributionStatus>\\(\\[([^\\]]+)\\]\\)`));
     return [...literal[1].matchAll(/'([a-z_]+)'/g)].map(match => match[1]);
   };
-  assert.deepEqual(DISTRIBUTION_STATUSES.all, declared('statuses'));
-  assert.deepEqual(DISTRIBUTION_STATUSES.accessible, declared('accessible'));
+  assert.deepEqual(DISTRIBUTION_STATUSES, declared('statuses'));
+  assert.deepEqual(ACCESSIBLE_STATUSES, declared('accessible'));
 });
 
 test('messages say what the visitor loses and what the operator does', () => {
