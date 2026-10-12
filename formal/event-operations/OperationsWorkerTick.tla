@@ -76,8 +76,8 @@ Next == TickCommits \/ TickAborts \/ \E r \in Rows : Elapse(r) \/ Done
 
 Spec == Init /\ [][Next]_vars
 
-(* A healthy due row is never left pending by a tick that ran: a poisoned row
-   cannot hold the healthy ones hostage. *)
+(* A healthy due row (another aggregate) is never left pending by a tick that
+   ran: a poisoned row cannot hold other aggregates' rows hostage. *)
 PoisonIsolated == ticks > 0 => \A r \in Rows \ Poisoned : status[r] = "processed"
 
 (* A tick never rolls back as a whole. *)

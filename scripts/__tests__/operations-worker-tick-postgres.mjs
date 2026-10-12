@@ -69,7 +69,9 @@ try {
   assert.equal(outbox(poison), 'pending,1,23503: projection failed,true');
   assert.equal(pass(`SELECT count(*) FROM operations_work_item WHERE correlation_key='${poisonKey}';`, 'no item for the missing entity'), '0');
 
-  // Backoff: the poisoned row is not retried before next_attempt_at.
+  // Backoff: the poisoned row is not retried before next_attempt_at (pinned
+  // explicitly: the recorded backoff is 2 s plus jitter, too short to rely on).
+  pass(`UPDATE operations_outbox SET next_attempt_at = now() + interval '1 hour' WHERE event_id='${poison}';`, 'pin backoff');
   out = pass(tick, 'tick during backoff');
   assert.match(out, /^batch:0,0,0\n/);
   assert.equal(outbox(poison), 'pending,1,23503: projection failed,true');

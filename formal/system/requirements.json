@@ -4726,7 +4726,7 @@
     {
       "id": "OPS-WORKER-001",
       "title": "Private and truthful Operations worker failure reporting",
-      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work. One outbox row whose projection fails, including a row whose entity no longer exists, must fail alone with its attempt, backoff and dead letter; it must never roll back the tick or block the other rows.",
+      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work. One outbox row whose projection fails, including a row whose entity no longer exists, must fail alone with its attempt, backoff and dead letter; it must never roll back the tick or block rows of other aggregates (later events of the same aggregate wait behind it, and behind a dead letter until an operator acts).",
       "domain": "OPS",
       "authority": "reconciled",
       "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
@@ -4803,11 +4803,13 @@
       "ambiguity": [
         "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof.",
         "SET CONSTRAINTS ALL IMMEDIATE covers every deferrable constraint in the tick transaction, not only the entity-reference trigger; none of the tick's writes relies on deferred checking.",
-        "A dead-lettered row for a deleted entity needs an operator decision (OPS-FAILURE-REPLAY-001); the worker never resolves it."
+        "A dead-lettered row for a deleted entity needs an operator decision (OPS-FAILURE-REPLAY-001); the worker never resolves it.",
+        "A poisoned row blocks later events of its own aggregate while it backs off and, once dead-lettered, until an operator replays or resolves it (OPS-FAILURE-REPLAY-001); other aggregates are unaffected.",
+        "Re-projection of an existing work item (ON CONFLICT DO UPDATE sets entity_type, entity_id and uncorrelated) also fires the reference trigger; with immediate checking an existing item whose entity was since deleted fails per row instead of failing the tick."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+        "reason": "Tick semantics tested on the migrated fixture and modelled within bounds; exact-candidate runtime validation and production enablement pending."
       },
       "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded TLC check of OperationsWorkerTick.tla (61 states, 27 distinct, depth 9) with three single-guard negative controls; the tick's statements run against the migrated fixture with a poisoned and a healthy row (operations-worker-tick-postgres.mjs), the deferred-check tick as a negative control.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence. The poisoned-row tick failure reproduced on the migrated fixture on 2026-10-12 before the fix."

@@ -628,7 +628,8 @@ staff capture, delivery and message content are outside the model.
 OPS-WORKER-001: every due outbox row is projected or fails alone with a
 recorded attempt and a backoff, and a row whose entity no longer exists is
 dead-lettered after the attempt bound, so one poisoned row never holds the
-batch hostage. The `DeferredCheck` control is the previous tick, in which the
+rows of other aggregates hostage (its own aggregate's successors wait, by
+design). The `DeferredCheck` control is the previous tick, in which the
 deferred reference trigger fired at commit and rolled the whole tick back;
 `NoAttempt` and `UnboundedRetry` remove the two retry guards.
 `scripts/__tests__/operations-worker-tick-postgres.mjs` runs the tick's

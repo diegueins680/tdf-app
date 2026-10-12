@@ -3374,7 +3374,7 @@
     {
       "id": "SURFACE-dd65ba8a0bea2565",
       "path": "scripts/__tests__/operations-worker-tick-postgres.mjs",
-      "sha256": "1e151ab5c0c1b1e6ceb9344539cd0f3d4359d3e0983b38e731658b90ffd2e227",
+      "sha256": "6dd40223f278a9650cd03efe95324498404d96252e27cd78f94fcd25457d5a0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22271,7 +22271,7 @@
     },
     {
       "path": "formal/event-operations/OperationsWorkerTick.tla",
-      "sha256": "016722c244af112209e7375ff1ab062b0e5621cc7fac735b1f675f1a06c51a64",
+      "sha256": "c1f0d0b89dedfaff412c01b0097720addf1456fd3c6c928f13d8749c2b7b2423",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -22495,7 +22495,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "fb594f82534839963733dcbc232e8c0c5e496edc5cb11f59f38d1d4dc950fc2d",
+      "sha256": "7a033541cfaa568de939f5b7c3e278bae7214bcc0fd96ac9ef13e61d1762990b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24203,7 +24203,7 @@
     },
     {
       "path": "formal/system/operations-worker-tick.md",
-      "sha256": "51f2a597d8e1c7a5caa25677ff4baa764a1c25ac9c495d7c904634b24ce3b612",
+      "sha256": "5204c7c7847a422b7c0a9757e4a0be7f70c28689ae89305bdaee53e226c0ad8d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24280,7 +24280,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b891e5e60090c1f9b04be5d565738dbcf7ec83d139a9b9f30239ee63fc18838d",
+      "sha256": "36061b967700f55d96c298730f471595d62ab877698215e295cc9cd2812a527f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

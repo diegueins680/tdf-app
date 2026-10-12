@@ -4727,7 +4727,7 @@
     {
       "id": "OPS-WORKER-001",
       "title": "Private and truthful Operations worker failure reporting",
-      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work. One outbox row whose projection fails, including a row whose entity no longer exists, must fail alone with its attempt, backoff and dead letter; it must never roll back the tick or block the other rows.",
+      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work. One outbox row whose projection fails, including a row whose entity no longer exists, must fail alone with its attempt, backoff and dead letter; it must never roll back the tick or block rows of other aggregates (later events of the same aggregate wait behind it, and behind a dead letter until an operator acts).",
       "domain": "OPS",
       "authority": "reconciled",
       "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
@@ -4804,11 +4804,13 @@
       "ambiguity": [
         "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof.",
         "SET CONSTRAINTS ALL IMMEDIATE covers every deferrable constraint in the tick transaction, not only the entity-reference trigger; none of the tick's writes relies on deferred checking.",
-        "A dead-lettered row for a deleted entity needs an operator decision (OPS-FAILURE-REPLAY-001); the worker never resolves it."
+        "A dead-lettered row for a deleted entity needs an operator decision (OPS-FAILURE-REPLAY-001); the worker never resolves it.",
+        "A poisoned row blocks later events of its own aggregate while it backs off and, once dead-lettered, until an operator replays or resolves it (OPS-FAILURE-REPLAY-001); other aggregates are unaffected.",
+        "Re-projection of an existing work item (ON CONFLICT DO UPDATE sets entity_type, entity_id and uncorrelated) also fires the reference trigger; with immediate checking an existing item whose entity was since deleted fails per row instead of failing the tick."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+        "reason": "Tick semantics tested on the migrated fixture and modelled within bounds; exact-candidate runtime validation and production enablement pending."
       },
       "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded TLC check of OperationsWorkerTick.tla (61 states, 27 distinct, depth 9) with three single-guard negative controls; the tick's statements run against the migrated fixture with a poisoned and a healthy row (operations-worker-tick-postgres.mjs), the deferred-check tick as a negative control.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence. The poisoned-row tick failure reproduced on the migrated fixture on 2026-10-12 before the fix."
@@ -9254,7 +9256,7 @@
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
     "formal/event-operations/OperationsManualReceipt.tla": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
     "formal/event-operations/OperationsWorkerTick.cfg": "9caf89b45ad803fe103f300e00436901f681e190b8f97fcdff88b4792998c9b1",
-    "formal/event-operations/OperationsWorkerTick.tla": "016722c244af112209e7375ff1ab062b0e5621cc7fac735b1f675f1a06c51a64",
+    "formal/event-operations/OperationsWorkerTick.tla": "c1f0d0b89dedfaff412c01b0097720addf1456fd3c6c928f13d8749c2b7b2423",
     "formal/event-operations/OperationsWorkerTickDeferredCheck.cfg": "2625c9d9d1041b567a94662529b3d50d018763fdb20b36b54a5ff74f260892ca",
     "formal/event-operations/OperationsWorkerTickNoAttempt.cfg": "e7621f5063764bbf75ce10d625e8bd52d3aef82b69ea1afd9b7435d79778084e",
     "formal/event-operations/OperationsWorkerTickUnboundedRetry.cfg": "5989bf03823d4c58fa8b6fc97963f1f6bc6bf17bb7e3a3d09cb9d5691a2987ed",
@@ -9376,7 +9378,7 @@
     "scripts/__tests__/music-worker-timing.test.mjs": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
     "scripts/__tests__/music-worker-upload.test.mjs": "85b62ef8c0264b420667a9c519c86cc73aaa926f585638fb97f9b5a70751d005",
     "scripts/__tests__/operations-api-schema.test.mjs": "6c1146cf1240e2a90f0f8e62da8e9e7f8abf12440eb4a3bf466e090b93e50f1f",
-    "scripts/__tests__/operations-worker-tick-postgres.mjs": "1e151ab5c0c1b1e6ceb9344539cd0f3d4359d3e0983b38e731658b90ffd2e227",
+    "scripts/__tests__/operations-worker-tick-postgres.mjs": "6dd40223f278a9650cd03efe95324498404d96252e27cd78f94fcd25457d5a0b",
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
@@ -18332,7 +18334,7 @@
     {
       "id": "SURFACE-dd65ba8a0bea2565",
       "path": "scripts/__tests__/operations-worker-tick-postgres.mjs",
-      "sha256": "1e151ab5c0c1b1e6ceb9344539cd0f3d4359d3e0983b38e731658b90ffd2e227",
+      "sha256": "6dd40223f278a9650cd03efe95324498404d96252e27cd78f94fcd25457d5a0b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42498,7 +42500,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b891e5e60090c1f9b04be5d565738dbcf7ec83d139a9b9f30239ee63fc18838d",
+      "sourceSha256": "36061b967700f55d96c298730f471595d62ab877698215e295cc9cd2812a527f",
       "definition": {
         "states": [
           "absent",

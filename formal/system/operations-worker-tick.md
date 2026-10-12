@@ -19,7 +19,8 @@ logging boundary: fixed text, no exception data, cancellation propagates, no
 retry on a failed sink). The batch locks due outbox rows `FOR UPDATE SKIP
 LOCKED` in aggregate order, projects each into a work item, and on any error
 in a row's `EXCEPTION WHEN OTHERS` block records the attempt, the SQLSTATE
-and a backoff (`2^attempts` seconds, at most an hour); the eighth attempt
+and a backoff (`2^attempts` seconds plus up to 14 seconds of jitter, at most an
+hour); the eighth attempt
 dead-letters the row and writes an `operations_integration_failure` with the
 SQLSTATE and a fixed summary, which is itself a domain event projected by the
 next tick.
@@ -76,6 +77,19 @@ not modelled.
   projection whose error is immediate (unchanged).
 
 ## Ambiguities recorded
+
+- The batch keeps aggregate order: later events of the aggregate whose row
+  failed wait behind it while it backs off and, once it is dead-lettered,
+  until an operator replays or resolves it. The fix isolates other
+  aggregates, not the poisoned aggregate's own successors.
+- Re-projection of an existing work item (`ON CONFLICT DO UPDATE` sets the
+  entity columns) fires the reference trigger too; an existing item whose
+  entity was since deleted now fails per row instead of failing the tick.
+- In CI the fixed worker commits every tick during the HTTP steps that boot
+  the backend against the shared fixture database (the worker starts
+  unconditionally; only the booking harness disables it), so the fixture's
+  poisoned rows accumulate attempts and eventually dead-letter during those
+  steps; none of them reads the operations tables.
 
 - `SET CONSTRAINTS ALL IMMEDIATE` applies to every deferrable constraint in
   the tick's transaction, not only the entity-reference trigger; the tick's
