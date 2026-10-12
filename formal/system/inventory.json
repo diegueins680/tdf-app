@@ -24056,7 +24056,7 @@
     },
     {
       "path": "formal/system/operations-read-policy.md",
-      "sha256": "55fb32d43df2e440f7d6b56e3d6b9fc4632532b0053454f488671dddf4432da5",
+      "sha256": "d8db6a5b8149d6dafd1892702afdd6e61a10d4ba215b298c103a5ad92bf47a58",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

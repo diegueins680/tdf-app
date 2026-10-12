@@ -19,8 +19,9 @@ actor AND entity_type in the assigned list)`, where the wildcard flag and the
 lists come from `visibleEntityTypes` with `assigned` false and true
 respectively; the stream applies it through an `EXISTS` on the work item and
 additionally honours `visible_to_party_id`. Writes call
-`canViewEntityType` on the roles without ReadOnly at three sites (locked
-work-item commands, manual work items, the mutation gate). The fourth, the
+`canViewEntityType` on the roles without ReadOnly at three sites in two
+functions (the locked work-item commands, and the manual work-item handler's
+pre-insert and post-projection checks). The fourth, the
 approval handler's check of a linked work item, did not strip ReadOnly
 (found by the independent review of this slice): Accounting plus ReadOnly
 could link an approval request to a work item that Accounting alone cannot
