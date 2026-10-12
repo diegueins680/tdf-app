@@ -9799,7 +9799,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "77e8569bb8956a984e82b4bfb6eb06aa124a8a19d9b0f72d966aa649901cf590",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "b44d4b498dd663d58ff49b3c761d428f2c97a49e8bbbb3d5a0220cf2d645041c",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
@@ -9808,7 +9808,7 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "ea4a7830815ea5d6f35c3c7a631b95bdd13f1b0032ac64c745414f5f888b1470",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "e6f07a0652427469128b84e9e9345d1c8c6e7253ee690e54047a1f1b33f242cc",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
@@ -33843,7 +33843,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "77e8569bb8956a984e82b4bfb6eb06aa124a8a19d9b0f72d966aa649901cf590",
+      "sha256": "b44d4b498dd663d58ff49b3c761d428f2c97a49e8bbbb3d5a0220cf2d645041c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33981,7 +33981,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
+      "sha256": "e6f07a0652427469128b84e9e9345d1c8c6e7253ee690e54047a1f1b33f242cc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
