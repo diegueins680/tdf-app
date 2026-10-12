@@ -9829,7 +9829,7 @@
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
-    "tdf-hq/src/TDF/ServerExtra.hs": "181ccd61638069f82a2f4769a8adbc9dfe2bea4a53ad92a2bba8f91c46ae9daf",
+    "tdf-hq/src/TDF/ServerExtra.hs": "baae31efd97a7d63d37f18c20514593abb1e568785deedfaec8b7aa543a61ba4",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
@@ -34199,7 +34199,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "181ccd61638069f82a2f4769a8adbc9dfe2bea4a53ad92a2bba8f91c46ae9daf",
+      "sha256": "baae31efd97a7d63d37f18c20514593abb1e568785deedfaec8b7aa543a61ba4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
