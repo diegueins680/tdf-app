@@ -322,10 +322,13 @@
       "property": "per-currency accumulated sum uses arbitrary precision",
       "contract": "formal/system/payment-arithmetic.md",
       "implementation": [
-        "tdf-hq/src/TDF/Commerce/StateMachine.hs"
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
       ],
-      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions. No proof of persisted SQL ledger or production use of this helper.",
-      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output",
+      "verification": "Integer type and inspected conversion before accumulation; 512 actual-module boundary sequences and Hspec regressions for the helper. Runtime SQL posting check exercised on the production schema (balanced, unbalanced, cross-currency, [M,M,2] wrap, extreme balanced, empty) with a disabled-trigger negative control.",
+      "evidence": "TDF.Commerce.PaymentArithmeticSpec and backend Hspec output; 2026-10-09 local PG16 run of ledger_posting_balance.sql via scripts/test-ticket-manual-review.sh.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -361,16 +364,19 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs"
+        "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+        "tdf-hq/test/integration/ledger_posting_balance.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "The database validates balance only on draft -> posted; a transaction inserted as posted, or an entry appended after posting, is not rejected. No live writer does either."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Live writers and the posting trigger conform; the database does not reject transactions inserted as posted or entries appended after posting."
       }
     },
     {
@@ -448,7 +454,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -494,7 +500,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -509,7 +515,7 @@
         "tdf-hq/src/TDF/API.hs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -555,7 +561,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -569,7 +575,7 @@
         "scripts/production-release.mjs"
       ],
       "verification": "Actual routed-handler Hspec, narrow source correspondence checker and negative controls; release source/ancestry guard regression. No whole-program proof.",
-      "evidence": "scripts/__tests__/legacy-escrow-contract.test.mjs; TDF.ServerSpec; exact-head CI and release receipts",
+      "evidence": "2026-10-09: createServiceMarketplaceBooking and releaseServiceMarketplaceEscrow reject unconditionally with 503 before any database access in main 7831b69 and in production backend 7ab3444; legacy-escrow-contract.test.mjs 7/7 and the backend Hspec suite (3,918 examples, 0 failures, including the ServerSpec escrow cases) passed on the #528 candidate. No formal model: an unconditional rejection has no state space to explore.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-verification-and-release",
       "critical": true,
@@ -614,7 +620,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Fresh execution on the current candidate and source identity with the deployed backend; an authenticated deployed request was not sent."
       }
     },
     {
@@ -4445,7 +4451,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4557,7 +4563,9 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "scripts/test-ticket-payment-gate.sh"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -5614,11 +5622,11 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
+        "reason": "Edge headers verified on the deployed site and in tests; hydrated canonical metadata is verified only in Jest, not in a deployed browser."
       },
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
-      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke.",
+      "evidence": "2026-10-09: deployed responses for https://www.tdfrecords.net/eventos/141/entradas and /eventos/141/orden/<id> returned Cache-Control 'private, no-store', X-Robots-Tag 'noindex, follow' and Referrer-Policy 'no-referrer'; the event page /eventos/141 publishes Event (no Offer) JSON-LD. Edge tests 7/7 and PublicEventTicketsPage/TicketBankTransferPanel Jest 30/30 on 3874e23. Canonical and robots metadata are set after hydration and are covered by the Jest cases, not by the HTTP check.",
       "supersedes": {
         "id": "EVT-PUBLIC-001",
         "sourceRevision": "ce422263309d85ce7001e7dfe0f8c27f35e8c409",
@@ -7245,9 +7253,9 @@
       ],
       "authorization": "Lookup token for buyer actions; strict administrator or event organizer for review, checked inside the review transaction.",
       "privacy": "Guests become new unverified contact parties with name and email only; account details are server configuration shown after selection; approval notes stay internal.",
-      "concurrency": "Review locks checkout, attempt and evidence rows; the hold guard and expiry run in the database.",
+      "concurrency": "Review locks checkout, attempt and evidence rows FOR UPDATE and keeps the locks through the decision (savepoint, not commit); a concurrent reviewer waits and then sees the decided state. The hold guard and expiry run in the database.",
       "idempotency": "Repeated selection replays the same attempt; repeated approval of a paid order returns success and issuance is idempotent.",
-      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail.",
+      "failure": "Expired holds are refused with a reconciliation exception; unavailable configuration hides the rail. A failed ticket issuance rolls the approval back (409) and leaves the evidence reviewable.",
       "recovery": "Late deposits are reconciled and refunded manually; no automatic reissue after expiry.",
       "observability": "Checkout audit events for selection, evidence and review; funnel observes initiation with provider bank_transfer.",
       "property": "An order is paid by bank transfer only with independently approved evidence bound to the exact checkout amount while its effective hold is alive.",
@@ -7276,20 +7284,25 @@
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/api/eventTickets.test.ts"
+        "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq/test/TicketManualReviewMain.hs",
+        "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
+        "scripts/test-ticket-manual-review.sh"
       ],
-      "formalModels": [],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; React buyer flow and API contract tests.",
-      "evidence": "Local disposable PostgreSQL 16 and Jest runs on 2026-10-06; hosted CI and a production transfer remain separate evidence.",
+      "formalModels": [
+        "formal/event-operations/ManualBankTransfer.tla"
+      ],
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Database invariants are exercised directly; the Haskell review transaction is exercised end to end only through deployed HTTP verification.",
+      "confidence": "Database invariants and the Haskell review transaction are exercised on the production schema; HTTP admission (requireRefundManagedEvent), the issuance body (finalizePaidTicketOrder) and a real verified transfer are separate evidence.",
       "ambiguity": [
         "No bank API confirms deposits; staff verification against the statement is the authority."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented and tested at database and browser boundaries; production configuration and a real verified transfer are pending."
+        "reason": "Review transaction conforms on the production schema after the 2026-10-09 lock-scope fix; production deployment of the fix, configuration and a real verified transfer are pending."
       }
     },
     {
@@ -7379,8 +7392,10 @@
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
       ],
-      "formalModels": [],
-      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "formalModels": [
+        "formal/event-operations/TaxDocumentSubmission.tla"
+      ],
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls.",
       "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
@@ -8714,6 +8729,75 @@
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
+      "id": "OPS-CI-REGISTRY-001",
+      "title": "Authenticate Docker Hub pulls in CI",
+      "domain": "OPS",
+      "critical": false,
+      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "authority": "User authorized CI authentication on 2026-10-09",
+      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "contract": ".github/workflows/ci.yml",
+      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "actors": [
+        "GitHub-hosted CI runner",
+        "Repository secret administrator"
+      ],
+      "preconditions": [
+        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+      ],
+      "inputs": [
+        "Repository secret references",
+        "Existing Docker Hub image tags and immutable digests"
+      ],
+      "state": {
+        "registry": [
+          "unauthenticated",
+          "authenticated",
+          "authentication-failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+      ],
+      "forbiddenTransitions": [
+        "Expose secret values in source or logs",
+        "Treat registry login as a passing test or merge approval",
+        "Use pull_request_target to expose secrets to fork code"
+      ],
+      "effects": [
+        "Authenticated test-image downloads in ephemeral CI runners"
+      ],
+      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
+      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
+      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
+      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
+      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
+      "implementation": [
+        ".github/workflows/build.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/event-operations-formal.yml",
+        ".github/workflows/event-raci-browser.yml",
+        ".github/workflows/interaction-verification.yml",
+        ".github/workflows/social-verification.yml"
+      ],
+      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
+      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "tests": [],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "ambiguity": [
+        "Authentication does not guarantee registry availability or unlimited pull quota."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+      }
+    },
+    {
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
@@ -9122,10 +9206,14 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
+    ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "087f244af9b982282d76c52a25a71c919075c5687c2e1b060106c843a228fc05",
-    ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
+    ".github/workflows/ci.yml": "e17075df7df580154a85a23f4092fea6364d6bc170b77c957c1e30c917b03eff",
+    ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+    ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+    ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
+    ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -9177,6 +9265,7 @@
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+    "formal/event-operations/ManualBankTransfer.tla": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
     "formal/event-operations/MetaRedelivery.cfg": "cf591fb7addfe8447ece3c9ce41981e7d84a8db4efff75dd04c80cf99b8f1277",
     "formal/event-operations/MetaRedelivery.tla": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
     "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg": "4d82b02dd6d3e28d462cecea8ded5df695474aced641ceec87b3eabb63e86ded",
@@ -9223,6 +9312,7 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+    "formal/event-operations/TaxDocumentSubmission.tla": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
@@ -9283,7 +9373,7 @@
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
-    "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
+    "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
     "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
@@ -9427,12 +9517,14 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
+    "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "4e76cff73880c20f9d2234cf7136df94e875f64b04b9b55ca1d223e9a941717e",
+    "scripts/verify-event-operations-formal.sh": "3a9637c60163dc79d2d352c5d63586ccd84eca80765e7a6e2f0150f6e4912193",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9453,7 +9545,7 @@
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
@@ -9597,7 +9689,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "6f2a936bad4b21eb04f3cf0ca2ea5a2d77576f7781f06f3706269ba71d6b15af",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
@@ -9673,6 +9765,7 @@
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
     "tdf-hq/scripts/create_artists_from_list.sh": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
+    "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
     "tdf-hq/sql/2026-09-11_music_release_platform.sql": "c33f6809232734b64685811d230c3d34d187cbab037b3d509ed58bc3f7e81fc2",
     "tdf-hq/sql/2026-09-11_music_release_platform_rollback.sql": "0edba6b1d000b2d11944a59fe3aaa02b616fef2c9713d7d19abd1192a15d1a95",
     "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql": "0e29380aaba2feaf34103c03c737f4eda6e21c9f0383fd1bb98a6102b467d09d",
@@ -9764,7 +9857,7 @@
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
-    "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
+    "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "ecb41cb484578984533f0363bb95cc2b9bb49255082f353a84c0251484a68b5b",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
@@ -9810,7 +9903,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "ca923ce0efbe3b8bebf51caf037d5ba99b07ba627c4188417811e79223353b8e",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
@@ -9819,12 +9912,12 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "ea4a7830815ea5d6f35c3c7a631b95bdd13f1b0032ac64c745414f5f888b1470",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
-    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "2d7f7fa13a6519c13e96884290fa679ef969b952409fcc38d34be0e8518d603a",
+    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
@@ -9845,12 +9938,12 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "a83f58b011e2e1459e8ff0d6ddb7a12c84a9a9511cb44ff1ae0bd8aea0a09c4e",
+    "tdf-hq/tdf-hq.cabal": "346912b5a99cea6c8353c1dea6be6f0cf28f6270a717c177d25d5661115a74d2",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "2d2fbe7c332183e450a7318491f6c354146817b63f212d6d2e252dcb1f5f69db",
+    "tdf-hq/test/Spec.hs": "99c286b6a67ae4a922e4d35fdf88be9fe637e92664f153d39eb7a66fd3242dca",
     "tdf-hq/test/TDF/APITypesSpec.hs": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -9863,7 +9956,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
+    "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -9882,18 +9975,22 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "5943fb47f0e2d62f04242c93b3948603a3cd6160e44e293f61c2552bed313b7f",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
+    "tdf-hq/test/TicketManualReviewMain.hs": "b6805c746f14039f482189a3ae4aba73e4c17748698d9778924226849bd615b9",
     "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql": "94e153abc6b0988aea61c282940760d6901e1bf740fa88b1547766bc30c3960e",
     "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
     "tdf-hq/test/integration/directory_event_search_sync.sql": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
+    "tdf-hq/test/integration/ledger_posting_balance.sql": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
     "tdf-hq/test/integration/ticket_inclusive_tax.sql": "dc597f4ee6c1f58e1ffb8436c7005921118a321f9c23eada0a660385d9461a93",
     "tdf-hq/test/integration/ticket_manual_bank_transfer.sql": "54f6292e7c514c4469d88e399becabb582ef6084919e27f2efa23095105273de",
+    "tdf-hq/test/integration/ticket_manual_review_fixture.sql": "6958af8af06ccb89a3f8fdc28b17493d5d4c590da5499b56033eb1c32ea549d5",
     "tdf-hq/test/integration/ticket_order_quantity_limit.sql": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
     "tdf-hq/test/integration/ticket_tax_invoices.sql": "42f6d4b99f5606dacdb33c7925b8c4e4756e05d5e1ebfaeb2b5882894ca219ea",
     "tdf-hq/test/sql/music_correction_asset_graph.sql": "38b7f28265b110df62c8dcfac76a88ce2c978b2a280b464c7229c08b0ae5175e",
@@ -10126,6 +10223,10 @@
       {
         "requirement": "SYS-STATE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/lib/formal-result-summary.mjs": [
@@ -10202,6 +10303,60 @@
       {
         "requirement": "SYS-MONEY-002",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/integration/ledger_posting_balance.sql": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-manual-review.sh": [
+      {
+        "requirement": "SYS-MONEY-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
       }
     ],
     "scripts/specification-inventory.py": [
@@ -10463,6 +10618,10 @@
       },
       {
         "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
       }
     ],
@@ -11102,24 +11261,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": [
-      {
-        "requirement": "PAY-CHECKOUT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-FULFILLMENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-RETRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": [
       {
         "requirement": "PAY-CHECKOUT-001",
@@ -11232,12 +11373,6 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
-      }
-    ],
-    "tdf-hq/src/TDF/Commerce/RefundStore.hs": [
-      {
-        "requirement": "REF-RECOVERY-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": [
@@ -13208,6 +13343,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-payment-gate.sh": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Operations/Server.hs": [
       {
         "requirement": "OPS-COMMAND-001",
@@ -14796,6 +14943,24 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TicketManualReviewMain.hs": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/integration/ticket_manual_review_fixture.sql": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/ManualBankTransfer.tla": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql": [
       {
         "requirement": "EVT-TICKET-INVOICE-001",
@@ -14860,6 +15025,12 @@
       {
         "requirement": "EVT-TICKET-INVOICE-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/TaxDocumentSubmission.tla": [
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq-ui/src/api/parties.ts": [
@@ -16214,6 +16385,30 @@
         "relationship": "tests"
       }
     ],
+    ".github/workflows/build.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/event-raci-browser.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/interaction-verification.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/social-verification.yml": [
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": [
       {
         "requirement": "EVT-DISCOVERY-001",
@@ -16537,9 +16732,14 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0606a73a2d9ce7e753f91c20009d0273bf1ea192f40d735f7c0aff0b4d531962",
+      "sha256": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e322a9d58d6bbd4b",
@@ -16570,7 +16770,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "087f244af9b982282d76c52a25a71c919075c5687c2e1b060106c843a228fc05",
+      "sha256": "e17075df7df580154a85a23f4092fea6364d6bc170b77c957c1e30c917b03eff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16588,6 +16788,10 @@
         {
           "requirement": "DEPLOY-ENVELOPE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -16601,7 +16805,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
+      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16619,22 +16823,36 @@
         {
           "requirement": "SYS-STATE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "83cb1fc70d4cd7cbebc540eeee25093b578f463d5dfb892924c6f0683707212a",
+      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "5c812f5a50e54395e87c5ecf2209cc2ec47158cc97849bb16edf394764904513",
+      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-305964459d20ce97",
@@ -16658,9 +16876,14 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "2296b25573ac27eb67fc51dd996a03e816471c0fb30cecd3746d21f0b8d3792d",
+      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bd2372888f0d24a0",
@@ -17853,7 +18076,7 @@
     {
       "id": "SURFACE-df80d476d03d210a",
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
-      "sha256": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
+      "sha256": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21439,6 +21662,34 @@
       ]
     },
     {
+      "id": "SURFACE-4c827aef16e690c3",
+      "path": "scripts/test-ticket-manual-review.sh",
+      "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c98eef3148a1eabf",
+      "path": "scripts/test-ticket-payment-gate.sh",
+      "sha256": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-75ed4534ce225e0f",
       "path": "scripts/test-trial-identity.sh",
       "sha256": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
@@ -21565,7 +21816,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "4e76cff73880c20f9d2234cf7136df94e875f64b04b9b55ca1d223e9a941717e",
+      "sha256": "3a9637c60163dc79d2d352c5d63586ccd84eca80765e7a6e2f0150f6e4912193",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22040,7 +22291,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
+      "sha256": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26695,7 +26946,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+      "sha256": "6f2a936bad4b21eb04f3cf0ca2ea5a2d77576f7781f06f3706269ba71d6b15af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29712,7 +29963,12 @@
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
       "sha256": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a4bebbd3725e94a7",
@@ -32661,6 +32917,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "PAY-CHECKOUT-001",
           "relationship": "implementation"
         },
@@ -32780,7 +33040,7 @@
     {
       "id": "SURFACE-f215d4911e9d9bef",
       "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-      "sha256": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
+      "sha256": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32919,6 +33179,10 @@
       "sha256": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "implementation"
+        },
         {
           "requirement": "REF-RECOVERY-001",
           "relationship": "implementation"
@@ -33876,7 +34140,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
+      "sha256": "ca923ce0efbe3b8bebf51caf037d5ba99b07ba627c4188417811e79223353b8e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34014,7 +34278,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
+      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34057,7 +34321,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
+      "sha256": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34080,7 +34344,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "7b03523912ca781eb93645032333ae869b40c280832d35f605192e3799038106",
+      "sha256": "2d7f7fa13a6519c13e96884290fa679ef969b952409fcc38d34be0e8518d603a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34115,7 +34379,7 @@
     {
       "id": "SURFACE-4f6a7b230d53af08",
       "path": "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-      "sha256": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
+      "sha256": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34636,7 +34900,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a83f58b011e2e1459e8ff0d6ddb7a12c84a9a9511cb44ff1ae0bd8aea0a09c4e",
+      "sha256": "346912b5a99cea6c8353c1dea6be6f0cf28f6270a717c177d25d5661115a74d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34750,7 +35014,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "2d2fbe7c332183e450a7318491f6c354146817b63f212d6d2e252dcb1f5f69db",
+      "sha256": "99c286b6a67ae4a922e4d35fdf88be9fe637e92664f153d39eb7a66fd3242dca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35024,7 +35288,7 @@
     {
       "id": "SURFACE-2109051a71e906d5",
       "path": "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
-      "sha256": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
+      "sha256": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35430,6 +35694,18 @@
       ]
     },
     {
+      "id": "SURFACE-b88bd7d333ae2b44",
+      "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+      "sha256": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6a608596a0a41e90",
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
@@ -35502,6 +35778,18 @@
         },
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-22495db6f5498450",
+      "path": "tdf-hq/test/TicketManualReviewMain.hs",
+      "sha256": "b6805c746f14039f482189a3ae4aba73e4c17748698d9778924226849bd615b9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
           "relationship": "tests"
         }
       ]
@@ -35907,6 +36195,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-6f930c6a7d3e8525",
+      "path": "tdf-hq/test/integration/ledger_posting_balance.sql",
+      "sha256": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-MONEY-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-819a82f0c31c3d37",
       "path": "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "sha256": "47a5bebb6e41a34ee49fc03c2ca4cef20965c5d090fe53600806599e7bcc3a91",
@@ -36028,6 +36328,18 @@
       "id": "SURFACE-dc667b127650730a",
       "path": "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
       "sha256": "54f6292e7c514c4469d88e399becabb582ef6084919e27f2efa23095105273de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ac5d073599fa02c9",
+      "path": "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
+      "sha256": "6958af8af06ccb89a3f8fdc28b17493d5d4c590da5499b56033eb1c32ea549d5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39157,14 +39469,10 @@
     }
   ],
   "unmappedSurfaces": [
-    "SURFACE-5c3fa597431eda03",
     "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-87abe6b969342c3c",
     "SURFACE-ab96c3ab21cf19fc",
-    "SURFACE-717dbf61c7979518",
-    "SURFACE-e705d7e36f8b46d9",
     "SURFACE-f9eb7b8efd30e406",
-    "SURFACE-40da7c383a8d6b30",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
     "SURFACE-b18780932504c8a1",
@@ -40148,7 +40456,6 @@
     "SURFACE-a2921da090dad9fd",
     "SURFACE-1118fecfd75870bf",
     "SURFACE-48269b6d50bc7c5c",
-    "SURFACE-6d69d2d118d7b862",
     "SURFACE-a4bebbd3725e94a7",
     "SURFACE-66b26f38206ee2c5",
     "SURFACE-69667f07127c8d7a",
@@ -40897,7 +41204,9 @@
     "SURFACE-b7c7359f0a4f26db",
     "SURFACE-21b31fbb27b536c4"
   ],
-  "untestedRequirements": [],
+  "untestedRequirements": [
+    "OPS-CI-REGISTRY-001"
+  ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
     "SYS-VERIFY-002",
@@ -40950,8 +41259,6 @@
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
-    "EVT-TICKET-MANUAL-001",
-    "EVT-TICKET-INVOICE-001",
     "PRIV-WHATSAPP-001",
     "MEDIA-MUSIC-RELEASE-001",
     "MEDIA-MUSIC-ASSET-001",
@@ -42080,7 +42387,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e8f29ad8dd38391f5e8aaca76439c83760b2a1703707fb59067709ff1115d8c7",
+      "sourceSha256": "c7b00724f5f2fe02d875704863c82999cd52ab0c7ca31c08c2f94ad496f1a71d",
       "definition": {
         "states": [
           "absent",
@@ -64277,7 +64584,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 114,
+    "PARTIAL": 115,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

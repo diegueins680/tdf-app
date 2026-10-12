@@ -10,7 +10,9 @@
 -- records without being presented as canonical online methods.
 module TDF.Commerce.PaymentRuntimeStore
   ( beginPaymentAttempt
+  , beginPaymentAttemptGuarded
   , beginPaymentAttemptForMethod
+  , beginPaymentAttemptForMethodGuarded
   , canonicalPaymentMethodForProvider
   , operationCapabilities
   , providerOperationCapabilities
@@ -37,10 +39,23 @@ import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
 beginPaymentAttempt
   :: Checkout.PaymentAttemptCreation
   -> SqlPersistT IO (Either Text Checkout.PaymentAttemptReference)
-beginPaymentAttempt creation =
+beginPaymentAttempt = beginPaymentAttemptGuarded (pure Nothing)
+
+-- | 'beginPaymentAttempt' with a domain precondition evaluated in the same
+-- uninterrupted transaction that inserts the attempt. The guard may take row
+-- locks; they are held until the attempt is committed or the work is undone,
+-- so whatever the guard read cannot change before the attempt exists. A guard
+-- returning a problem refuses the attempt.
+beginPaymentAttemptGuarded
+  :: SqlPersistT IO (Maybe Text)
+  -> Checkout.PaymentAttemptCreation
+  -> SqlPersistT IO (Either Text Checkout.PaymentAttemptReference)
+beginPaymentAttemptGuarded guard creation =
   case canonicalPaymentMethodForProvider (Checkout.pacProvider creation) of
-    Nothing -> Checkout.beginPaymentAttempt creation
-    Just paymentMethod -> beginPaymentAttemptForMethod paymentMethod creation
+    Nothing -> do
+      refusal <- guard
+      maybe (Checkout.beginPaymentAttempt creation) (pure . Left) refusal
+    Just paymentMethod -> beginPaymentAttemptForMethodGuarded guard paymentMethod creation
 
 -- | Start an attempt when the checkout surface selected an explicit method.
 -- This is mandatory for multi-method providers such as PlaceToPay: inferring a
@@ -52,7 +67,14 @@ beginPaymentAttemptForMethod
   :: PaymentMethod
   -> Checkout.PaymentAttemptCreation
   -> SqlPersistT IO (Either Text Checkout.PaymentAttemptReference)
-beginPaymentAttemptForMethod paymentMethod creation = do
+beginPaymentAttemptForMethod = beginPaymentAttemptForMethodGuarded (pure Nothing)
+
+beginPaymentAttemptForMethodGuarded
+  :: SqlPersistT IO (Maybe Text)
+  -> PaymentMethod
+  -> Checkout.PaymentAttemptCreation
+  -> SqlPersistT IO (Either Text Checkout.PaymentAttemptReference)
+beginPaymentAttemptForMethodGuarded guard paymentMethod creation = do
   routeResult <- validateCanonicalRoute creation paymentMethod
   case routeResult of
     Left problem -> pure (Left problem)
@@ -62,6 +84,13 @@ beginPaymentAttemptForMethod paymentMethod creation = do
       -- Returning Left alone would commit an orphan intent or attempt under
       -- Persistent's outer transaction, so this bridge owns a save boundary.
       transactionSave
+      -- The guard runs after that boundary: locks it took any earlier would
+      -- have been released by the save above.
+      refusal <- guard
+      case refusal of
+        Just problem -> transactionUndo >> pure (Left problem)
+        Nothing -> beginLocked
+    beginLocked = do
       -- Serialize same-checkout requests, including different idempotency keys.
       -- Replaying an existing attempt preserves pre-v2 intent/reference bindings.
       _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id = ?::uuid FOR UPDATE"
