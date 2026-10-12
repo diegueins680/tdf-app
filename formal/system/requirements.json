@@ -6721,10 +6721,13 @@
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
         "tdf-hq-ui/public/mobile-distribution.json",
+        ".github/workflows/check-mobile-distribution.yml",
+        "scripts/check-mobile-distribution.mjs",
         "tdf-hq-ui/src/pages/MobileAppPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+        "scripts/__tests__/mobile-distribution-expiry.test.mjs"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6746,7 +6749,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence. A daily read-only workflow reports a published store channel within 48 hours of its validUntil; it never renews the manifest."
     },
     {
       "id": "OPS-INTEGRATION-001",
