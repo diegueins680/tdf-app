@@ -616,6 +616,13 @@ invariant: `SelfApproval`, `NonAdmin`, `Expired`, `Rebind`, `RevokedLink`,
 `Reactivate`, `AdminInvite`. Local run with TLC 1.7.2 on Temurin 21: 212 distinct
 states for the intended model, and every control failed on its expected invariant.
 Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
+## WhatsApp consent confirmation
+
+`WhatsAppConsent.tla` and nine configurations check the double opt-in contract in
+[whatsapp-consent.md](../system/whatsapp-consent.md). The positive model and eight
+single-guard negative controls are mandatory in the formal runner. Bounds, provider
+assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
+staff capture, delivery and message content are outside the model.
 ## Operations read policy (2026-10-12)
 
 `OperationsReadPolicy.tla` is not a state machine: it copies the read grant
