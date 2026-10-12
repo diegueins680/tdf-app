@@ -523,6 +523,7 @@ jobs:
           bash scripts/test-auth-recovery-migration.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-credential-lifecycle.sh
+          sh scripts/test-whatsapp-consent.sh
           sh scripts/test-ledger-posting.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls
