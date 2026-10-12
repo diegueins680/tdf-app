@@ -998,19 +998,27 @@ test('buildMigrationBatchSql commits each ledger row together with its migration
   assert.equal((block.match(/INSERT INTO public\.tdf_schema_migration/g) ?? []).length, 1);
 });
 
-test('every manifest migration can run inside the batch transaction', () => {
+test('every manifest migration can run inside the batch transaction', async () => {
   // Precondition of the atomic ledger row: a file with its own transaction ends
-  // with its COMMIT (or an \endif whose branch does), so nothing escapes the
-  // transaction opened by the batch, and no statement refuses a transaction block.
+  // with its COMMIT, so nothing escapes the transaction opened by the batch, and
+  // no statement refuses a transaction block. Checked on the expanded SQL the
+  // batch runs, includes resolved.
   const manifest = JSON.parse(readFileSync(new URL('../production-migrations.json', import.meta.url), 'utf8'));
+  const read = relative => readFileSync(new URL(`../../${relative}`, import.meta.url), 'utf8');
   for (const entry of manifest.migrations) {
-    const content = readFileSync(new URL(`../../${entry.path}`, import.meta.url), 'utf8');
+    const content = await expandMigrationIncludes({ path: entry.path, content: read(entry.path) }, read);
     const lines = content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('--'));
-    assert.doesNotMatch(content, /\bCONCURRENTLY\b|^\s*VACUUM\b|^\s*REINDEX\b|^\s*CLUSTER\b|ALTER\s+SYSTEM|CREATE\s+DATABASE|^\s*(?:START\s+TRANSACTION|SET\s+TRANSACTION)\b/im,
+    assert.doesNotMatch(content, /\bCONCURRENTLY\b|^\s*(?:VACUUM|REINDEX|CLUSTER|DISCARD|LISTEN|UNLISTEN)\b|ALTER\s+SYSTEM|(?:CREATE|DROP)\s+(?:DATABASE|TABLESPACE|SUBSCRIPTION)|ALTER\s+TYPE[^;]*\bADD\s+VALUE|^\s*(?:START\s+TRANSACTION|SET\s+TRANSACTION)\b|^\s*BEGIN\s+(?:ISOLATION|READ|DEFERRABLE)|\r/im,
       `${entry.id} uses a statement that cannot run inside the batch transaction`);
-    assert.equal((content.match(/^\s*COMMIT\s*;/gim) ?? []).length <= 1, true, `${entry.id} commits more than once`);
-    if (/^\s*BEGIN\s*;/im.test(content)) {
-      assert.match(lines.at(-1), /^(?:COMMIT\s*;|\\endif)$/i, `${entry.id} has statements after its COMMIT`);
+    const begins = content.match(/^\s*BEGIN(?:\s+(?:TRANSACTION|WORK))?\s*;/gim) ?? [];
+    // END is not counted as COMMIT: PL/pgSQL blocks end with it. A file that
+    // used END as the commit synonym would fail the tail check below.
+    const commits = content.match(/^\s*COMMIT(?:\s+(?:TRANSACTION|WORK))?\s*;/gim) ?? [];
+    assert.ok(begins.length <= 1 && commits.length <= 1 && !lines.some(line => /^(?:ROLLBACK|SAVEPOINT|PREPARE\s+TRANSACTION)\b/i.test(line)),
+      `${entry.id} must hold at most one transaction and never roll it back`);
+    if (begins.length) {
+      assert.equal(commits.length, 1, `${entry.id} opens a transaction it does not commit`);
+      assert.match(lines.at(-1), /^COMMIT(?:\s+(?:TRANSACTION|WORK))?\s*;$/i, `${entry.id} has statements after its COMMIT`);
     }
   }
 });

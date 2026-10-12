@@ -46,11 +46,13 @@ expanded SQL and the candidate revision that applied it.
   unrecorded. Fixed: the batch opens a transaction, inserts the ledger row,
   then runs the file; a file's own `BEGIN` only warns and its `COMMIT` (or the
   batch's trailing one) commits row and effects together; a failure anywhere
-  leaves neither. Precondition, pinned by a unit test over the real manifest:
-  every file with a transaction ends with its COMMIT (or an `\endif` whose
-  branch does), no file commits twice, and no file uses a statement that
-  refuses a transaction block (`CONCURRENTLY`, `VACUUM`, ...). Applied entries
-  are skipped, so the change affects pending entries only.
+  leaves neither. Precondition, pinned by a unit test over the expanded SQL of every
+  registered entry (includes resolved): a file opens at most one transaction,
+  ends with its COMMIT, never rolls back, and uses no statement that refuses a
+  transaction block (`CONCURRENTLY`, `VACUUM`, `ALTER TYPE ... ADD VALUE`, ...).
+  Applied entries are skipped, so the change affects pending entries only.
+  `docs/automatic-production-migrations.md` already promised that a concurrent
+  runner exits non-zero; the batch did not deliver it.
 - **A held lock did not fail the batch.** The refusal branch ended with
   `\quit 3`; psql's `\quit` takes no argument (`warning: \quit: extra
   argument "3" ignored`) and the batch exited 0 after printing "refusing to
@@ -66,11 +68,12 @@ source versions, three batch runs, one runner (the lock is below the model).
 Actions: `Start`, `Skip`, `Halt`, `Apply` (atomic or not), `Record`, `Crash`,
 `Finish`, `ChangeSource` (with or without declaring the old checksum
 compatible), `Rollback`/`Restore` of an older image, `Prepare`. Invariants:
-`LedgerImpliesEffects`, `EffectsRecorded` (effects are recorded except while
-a non-atomic run is writing the row), `SingleApplication`, `NoRunPastDrift`
+`LedgerImpliesEffects` (sanity, holds by construction), `EffectsRecorded` (effects are recorded except while
+a non-atomic run is writing the row), `SingleApplication` (an entry's SQL runs at most once; after a crash under the
+previous layout the next run re-applies it), `NoRunPastDrift`
 (a run never walks past an applied entry whose recorded checksum is not
 allowed), `PreparationSound`. Positive run: 1,282,056 states, 334,720
-distinct, depth 25. Controls: `RecordAfterCommit` (the previous layout; a
+distinct, depth 26. Controls: `RecordAfterCommit` (the previous layout; a
 crash leaves effects unrecorded), `BatchUnchecked`, `PrepareUnchecked`,
 `UnknownAccepted`, each failing on the named invariant.
 
@@ -85,12 +88,19 @@ crash leaves effects unrecorded), `BatchUnchecked`, `PrepareUnchecked`,
   and rejected by preparation, a hole applied after the later entry and
   reported pending by preparation, atomic failure for a file with and without
   its own transaction (the previous layout as a negative control leaves the
-  partial table unrecorded), unrecorded effects re-applied (idempotent file
+  partial table unrecorded), the session dying right after a file's COMMIT
+  (ledger row kept with the atomic layout, lost with the previous one),
+  unrecorded effects re-applied (idempotent file
   recovers, strict file needs a forward repair), a held lock exits 3 before
   touching anything, ledger shape constraints.
 - `scripts/__tests__/production-release.test.mjs`: the apply block's order
   (BEGIN, ledger row, source, COMMIT), the lock refusal shape, and the
-  manifest precondition over every registered file.
+  manifest precondition over every registered entry's expanded SQL.
+- `scripts/__tests__/production-entrypoint.test.mjs`: a psql status 3 stops
+  the entrypoint before the success line and the server start.
+- `scripts/test-automatic-migrations-production-schema.sh` (CI, and run
+  locally on 2026-10-12): all 202 registered files applied on an empty
+  database through the atomic wrapper, verified, re-run idempotent.
 - `scripts/__tests__/hetzner-preparation.test.mjs`: preparation negative
   controls (unchanged).
 
@@ -102,11 +112,12 @@ crash leaves effects unrecorded), `BatchUnchecked`, `PrepareUnchecked`,
   order of pending work, not a prefix property); independent migrations are
   assumed. The seven open PRs that each add manifest entry 203 produce holes
   only if an entry is inserted before one already applied, which the
-  manifest's date-ordered ids make unlikely but do not prevent.
+  manifest's date-ordered ids make unlikely but do not prevent (several open
+  PRs on 2026-10-12 each append an entry 203; appending keeps the prefix).
 - A migration whose effects exist without a ledger row (a crash under the old
   layout, or a manual application) still needs a forward repair when its SQL
   is not idempotent; the atomic row prevents new occurrences, it does not
-  repair old ones. Production's ledger was at 188 of 202 entries when this was
-  written; the pending entries are applied with the atomic row.
+  repair old ones. Entries production has not applied yet are applied with the
+  atomic row.
 - Two concurrent batches are excluded by the advisory lock; with the atomic
   row the ledger's primary key would also roll back a second application.

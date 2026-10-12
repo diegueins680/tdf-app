@@ -2370,7 +2370,7 @@
         "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
         "formal/event-operations/MigrationLedgerUnknownAccepted.cfg"
       ],
-      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 25) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 26) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
       "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt. TLC runs registered in scripts/verify-event-operations-formal.sh; migration-batch-postgres.mjs in CI; the lock refusal exiting 0 reproduced with psql 16 on 2026-10-12.",
       "status": "specified and implemented",
       "confidence": "High for the tested source/ledger comparison and the batch semantics on the migrated fixture; live migration application and guarded recovery remain open.",
@@ -2379,7 +2379,7 @@
         "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison.",
         "The batch tolerates ledger rows its manifest does not know so an older image can start after a rollback; release preparation rejects them. A hole (a pending entry before an applied one) is applied after the later entry by the next batch; independence of such migrations is assumed (AUTHORITY-075).",
         "Effects applied without a ledger row under the previous batch layout (or by hand) are re-applied by the next batch and need a forward repair when the SQL is not idempotent; the atomic row prevents new occurrences only.",
-        "The atomic ledger row requires every manifest file to end with its COMMIT and to use no statement that refuses a transaction block; production-release.test.mjs checks the registered manifest."
+        "The atomic ledger row requires every manifest entry (expanded SQL) to open at most one transaction, end with its COMMIT, never roll back and use no statement that refuses a transaction block; production-release.test.mjs checks every registered entry."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2402,7 +2402,9 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/migration-batch-postgres.mjs",
+        "scripts/__tests__/production-entrypoint.test.mjs",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },

@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomInt } from 'node:crypto';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { disposablePostgresUrl } from '../lib/disposable-postgres-url.mjs';
@@ -113,6 +113,25 @@ try {
     pass(`DROP TABLE synthetic_batch.d;`, 'remove partial effects');
   }
 
+  // The window itself: the session dies right after the file's own COMMIT. With
+  // the atomic row the ledger row is already part of that commit; the previous
+  // layout lost it.
+  {
+    const g = migration('synthetic_batch_g', 'BEGIN;\nCREATE TABLE synthetic_batch.g (id integer PRIMARY KEY);\nCOMMIT;\nSELECT pg_terminate_backend(pg_backend_pid());');
+    const rendered = buildMigrationBatchSql([a, b, c, g], { sourceCommit: source });
+    const legacy = rendered.replace(/(\\echo Applying migration synthetic_batch_g)\nBEGIN;\n(INSERT INTO public\.tdf_schema_migration[^;]*;)\n([\s\S]*?)\nCOMMIT;\n\\else/,
+      (_m, echo, insert, body) => `${echo}\n${body}\n${insert}\n\\else`);
+    assert.notEqual(legacy, rendered);
+    for (const [label, text, expectedLedger] of [['legacy', legacy, 'none'], ['atomic', rendered, `${g.checksum},${source}`]]) {
+      const file = join(dir, `window-${label}.sql`); writeFileSync(file, text);
+      const died = spawnSync('psql', [db, '-X', '-v', 'ON_ERROR_STOP=1', '-f', file], { encoding: 'utf8' });
+      assert.notEqual(died.status, 0, `${label}: the session was terminated`);
+      assert.equal(table('g'), 't', `${label}: the file's COMMIT persisted its effects`);
+      assert.equal(ledger(g.id), expectedLedger, `${label}: ledger row after the crash`);
+      pass(`DROP TABLE synthetic_batch.g; DELETE FROM tdf_schema_migration WHERE migration_id='${g.id}';`, `${label}: reset`);
+    }
+  }
+
   // Effects present without a ledger row (the window the atomic row closes, or
   // a manual application): a re-run re-applies the file. Only an idempotent
   // migration recovers by itself; a non-idempotent one needs a forward repair.
@@ -130,6 +149,8 @@ try {
     const ready = new Promise((resolve, rejectPromise) => {
       let output = ''; holder.stdout.on('data', data => { output += data; if (output.includes('lock_ready')) resolve(); });
       holder.on('error', rejectPromise);
+      holder.on('close', status => rejectPromise(new Error(`lock holder exited: ${status}`)));
+      setTimeout(() => rejectPromise(new Error('lock holder did not report')), 20_000).unref();
     });
     holder.stderr.resume();
     holder.stdin.write(`SELECT pg_advisory_lock(hashtextextended('tdf-production-schema-migrations', 0)); SELECT 'lock_ready';\n`);
@@ -148,5 +169,6 @@ try {
   reject(`INSERT INTO tdf_schema_migration (migration_id, checksum, source_commit) VALUES ('${a.id}', '${a.checksum}', '${source}');`, /duplicate key/, 'one row per migration');
 } finally {
   pass(`DROP SCHEMA IF EXISTS synthetic_batch CASCADE; DELETE FROM tdf_schema_migration WHERE migration_id LIKE 'synthetic_batch_%';`, 'cleanup');
+  rmSync(dir, { recursive: true, force: true });
 }
 console.log('migration-batch-postgres: ok');

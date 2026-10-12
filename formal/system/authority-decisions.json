@@ -608,10 +608,11 @@
         "scripts/lib/migration-contract.mjs",
         "tdf-hq/production-entrypoint.sh",
         "formal/system/migration-correspondence.md",
-        "formal/event-operations/MigrationLedger.tla"
+        "formal/event-operations/MigrationLedger.tla",
+        "docs/automatic-production-migrations.md"
       ],
       "conflict": "DEPLOY-MIGRATION-001 requires immutable correspondence between applied history and the manifest, but the batch inserted each ledger row as a separate statement after the migration's own COMMIT (a crash between them left effects applied and unrecorded, re-applied by the next run) and its lock-refusal branch ended with \\quit 3, which psql ignores, so an active concurrent migration made the batch exit 0 and the entrypoint report success without applying or verifying. The batch also ignores ledger rows its manifest does not know while preparation rejects them.",
-      "authority": "The requirement statement and ops/hetzner/README.md (reviewed migrations, image rollback over a newer ledger).",
+      "authority": "The requirement statement and docs/automatic-production-migrations.md (\"A concurrent runner also exits nonzero\"); the batch's tolerance of unknown ledger rows is a code fact that image rollback relies on, recorded here as the decision, not a documented policy.",
       "resolution": "The batch opens a transaction before the ledger row so a file's own COMMIT commits row and effects together, and raises an SQL error under ON_ERROR_STOP (exit 3) while the lock is held; every manifest file is checked to end with its COMMIT and to avoid non-transactional statements. The batch keeps tolerating unknown ledger rows (image rollback) while preparation keeps rejecting them; holes are applied after later entries and reported pending by preparation. Both recorded as ambiguities; checked by the bounded MigrationLedger model and the psql batch test."
     }
   ]

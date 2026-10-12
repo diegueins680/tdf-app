@@ -2371,7 +2371,7 @@
         "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg",
         "formal/event-operations/MigrationLedgerUnknownAccepted.cfg"
       ],
-      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 25) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
+      "verification": "Deterministic reconciliation and negative controls for unknown, changed, duplicate and malformed history, provenance/target/clock drift and unsafe flags; bounded TLC check of MigrationLedger.tla (1,282,056 states, 334,720 distinct, depth 26) with four single-guard negative controls; the rendered batch run through psql against the migrated fixture (migration-batch-postgres.mjs): atomic ledger rows for files with and without their own transaction, the previous layout as a negative control, checksum drift, compatible checksums, unknown rows, holes, unrecorded effects, lock refusal status. No model-to-whole-system proof.",
       "evidence": "Exact-candidate test logs and preparation receipt; preparation is not a deployment receipt. TLC runs registered in scripts/verify-event-operations-formal.sh; migration-batch-postgres.mjs in CI; the lock refusal exiting 0 reproduced with psql 16 on 2026-10-12.",
       "status": "specified and implemented",
       "confidence": "High for the tested source/ledger comparison and the batch semantics on the migrated fixture; live migration application and guarded recovery remain open.",
@@ -2380,7 +2380,7 @@
         "Provider flag changes caused by pending migrations still require restored-database rehearsal and comparison.",
         "The batch tolerates ledger rows its manifest does not know so an older image can start after a rollback; release preparation rejects them. A hole (a pending entry before an applied one) is applied after the later entry by the next batch; independence of such migrations is assumed (AUTHORITY-075).",
         "Effects applied without a ledger row under the previous batch layout (or by hand) are re-applied by the next batch and need a forward repair when the SQL is not idempotent; the atomic row prevents new occurrences only.",
-        "The atomic ledger row requires every manifest file to end with its COMMIT and to use no statement that refuses a transaction block; production-release.test.mjs checks the registered manifest."
+        "The atomic ledger row requires every manifest entry (expanded SQL) to open at most one transaction, end with its COMMIT, never roll back and use no statement that refuses a transaction block; production-release.test.mjs checks every registered entry."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2403,7 +2403,9 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/__tests__/migration-batch-postgres.mjs"
+        "scripts/__tests__/migration-batch-postgres.mjs",
+        "scripts/__tests__/production-entrypoint.test.mjs",
+        "scripts/test-automatic-migrations-production-schema.sh"
       ],
       "critical": true
     },
@@ -9253,7 +9255,7 @@
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/ManualBankTransfer.tla": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
     "formal/event-operations/MigrationLedger.cfg": "0f757c07e56c045be149f4b14e41ad0ea03b04f550078df4c4ed3014cfc5312c",
-    "formal/event-operations/MigrationLedger.tla": "054740b9f0b72abb895c8d3336c00c00dd5f318d719e45b1d4d6d70599e0a38d",
+    "formal/event-operations/MigrationLedger.tla": "0e981a312edb48d9359c3637e174a77c301aab66b2e7ff966c025d66b0d8e1d2",
     "formal/event-operations/MigrationLedgerBatchUnchecked.cfg": "abe5ed5ea3e04133aed1a588f93db73bf13561e46734c626f341e04b4efd32ec",
     "formal/event-operations/MigrationLedgerPrepareUnchecked.cfg": "d58398e2d189544d7ebe65580e7c5cd4eac0740210f30744f530b289cfc5dc92",
     "formal/event-operations/MigrationLedgerRecordAfterCommit.cfg": "1df67107dc4f8d5061101506c7fa85b691cd7a838036030f862c872fce0fecb9",
@@ -9371,7 +9373,7 @@
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
-    "scripts/__tests__/migration-batch-postgres.mjs": "42331eb9dc4666bd706d92a39778be407725c3e820831d32b791f96778c45b7d",
+    "scripts/__tests__/migration-batch-postgres.mjs": "198271c553feb4278eed494aa3bf01da43343b86c67901028eecfc41407e797d",
     "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
@@ -9385,8 +9387,8 @@
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
     "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
-    "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
-    "scripts/__tests__/production-release.test.mjs": "d99e088c7026739b5f0c6b80497aedb1b620209d594282a413bd0b015d54aadf",
+    "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
+    "scripts/__tests__/production-release.test.mjs": "a9a77caed6cab0dd8e2f8b60f4a47af5c690cd25de9475fba0d3921ba7314e1c",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
@@ -11807,6 +11809,26 @@
         "relationship": "tests"
       }
     ],
+    "scripts/__tests__/production-entrypoint.test.mjs": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-PERSIST-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-automatic-migrations-production-schema.sh": [
+      {
+        "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/MigrationLedger.tla": [
       {
         "requirement": "DEPLOY-MIGRATION-001",
@@ -12137,12 +12159,6 @@
         "relationship": "formalModels"
       }
     ],
-    "scripts/test-automatic-migrations-production-schema.sh": [
-      {
-        "requirement": "DEPLOY-STARTUP-001",
-        "relationship": "tests"
-      }
-    ],
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
       {
         "requirement": "AUTH-BOOK-001",
@@ -12326,12 +12342,6 @@
       }
     ],
     "scripts/__tests__/persistent-uploads.test.mjs": [
-      {
-        "requirement": "MEDIA-PERSIST-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/__tests__/production-entrypoint.test.mjs": [
       {
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "tests"
@@ -18198,7 +18208,7 @@
     {
       "id": "SURFACE-e9849b3ef51bdb0f",
       "path": "scripts/__tests__/migration-batch-postgres.mjs",
-      "sha256": "42331eb9dc4666bd706d92a39778be407725c3e820831d32b791f96778c45b7d",
+      "sha256": "198271c553feb4278eed494aa3bf01da43343b86c67901028eecfc41407e797d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18420,9 +18430,13 @@
     {
       "id": "SURFACE-bd35aa30f70923f7",
       "path": "scripts/__tests__/production-entrypoint.test.mjs",
-      "sha256": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
+      "sha256": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "MEDIA-PERSIST-001",
           "relationship": "tests"
@@ -18432,7 +18446,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "d99e088c7026739b5f0c6b80497aedb1b620209d594282a413bd0b015d54aadf",
+      "sha256": "a9a77caed6cab0dd8e2f8b60f4a47af5c690cd25de9475fba0d3921ba7314e1c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20700,6 +20714,10 @@
       "sha256": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "DEPLOY-STARTUP-001",
           "relationship": "tests"
@@ -42525,7 +42543,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ed708b33a980c730ba0e7140a2fb898fd21fa3e6fb56ae5d377696e1c8596e0e",
+      "sourceSha256": "cc196a8715a0fdc71f7db94989f8ff8728c59d436b68711fcf807176a0f4276f",
       "definition": {
         "states": [
           "absent",
