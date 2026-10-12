@@ -287,6 +287,7 @@
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
       "scripts/lib/verification-evidence.mjs",
+      "scripts/lib/whatsapp_consent_conformance.py",
       "scripts/mail-deliverability-monitor.py",
       "scripts/merge-admission.py",
       "scripts/meta-app-review-packet.mjs",
@@ -4145,6 +4146,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c1661bacc266994d",
+      "path": "scripts/lib/whatsapp_consent_conformance.py",
+      "sha256": "c2ca6510660530e66d029ac1c8e73274c97b9dc89533a7ba76dcc3b179b8ed66",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a0fd8416fa83358e",
       "path": "scripts/mail-deliverability-monitor.py",
       "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -4843,7 +4850,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13939,7 +13946,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "444952b81279d70ec99488a35b7fe494d8806a1438dde548a77faf5d8e52ed02",
+      "sha256": "4d82c49744fc30c33bb7278e1259e175ce460431547ffede427eb7a28dd787a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23937,7 +23944,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "a6cbbcc4c9f376e0d5e167a3c1e93f097e8cef4a995c19b948eb18bbee943ec4",
+      "sha256": "3e4edce42fa3807b6a946a3dc35150bba2c7bceb94ce5fbeca551f00bdf033fa",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -23951,7 +23958,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "12768137e250654b823402b00ffecdb33003c7ea09ca7afa99d54e5e6a7af338",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24231,7 +24238,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dbd23d2eaa92f238c7a5cbdb23e48c891f2d34afcd5174ceb6140447b1f7a0ac",
+      "sha256": "5f2e111b404d927d022ef5a89f14561e44e4038ea236945703f47006f6127fce",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24294,7 +24301,7 @@
     },
     {
       "path": "formal/system/whatsapp-consent.md",
-      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
+      "sha256": "663092c19a8df226fc1968222890792880ee73504928e4e8a0d808016f8db691",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

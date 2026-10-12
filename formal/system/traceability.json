@@ -7569,7 +7569,7 @@
         "scripts/test-whatsapp-consent.sh"
       ],
       "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
-      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
+      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone; real-backend HTTP harness section (simultaneous public requests all answered, signed webhook confirmation answering 200 with the notice recorded, the (phone_e164, created_at) collision pinned). The notice collision was reproduced against the real backend on 2026-10-12 before the fix.",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7617,20 +7617,22 @@
         "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
-        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
+        "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages; the confirmation notice is recorded with its own timestamp because whats_app_message is unique on (phone_e164, created_at) and the inbound reply is recorded for the same number at the handler timestamp."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
       "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
       "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
-      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
+      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected. A confirming reply answers 200 to Meta after the one-statement activation and the notice record; before 2026-10-12 the notice insert collided with the inbound reply row on (phone_e164, created_at), the webhook answered 500 and no notice was recorded. The notice timestamp is read separately, which removes the deterministic collision but not the constraint (best-effort until the follow-up migration).",
       "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
       "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "scripts/test-whatsapp-consent.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "scripts/lib/whatsapp_consent_conformance.py",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [
         "formal/event-operations/WhatsAppConsent.tla",
@@ -7652,7 +7654,8 @@
         "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
         "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
         "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
-        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered.",
+        "whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration, not an index (index_whats_app_message_party on (party_id, created_at) is declared the same way). Two paths still share the hazard and are outside this fix: a Meta delivery batching two text messages from one number (both inbound rows take the handler timestamp, so the whole batch answers 500) and the course-registration reply in the same webhook handler. Follow-up: plain index migration and model change."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9415,6 +9418,7 @@
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+    "scripts/lib/whatsapp_consent_conformance.py": "c2ca6510660530e66d029ac1c8e73274c97b9dc89533a7ba76dcc3b179b8ed66",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
@@ -9447,7 +9451,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
-    "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+    "scripts/test-booking-conformance.py": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -9876,7 +9880,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "444952b81279d70ec99488a35b7fe494d8806a1438dde548a77faf5d8e52ed02",
+    "tdf-hq/src/TDF/Server.hs": "4d82c49744fc30c33bb7278e1259e175ce460431547ffede427eb7a28dd787a0",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -12180,6 +12184,10 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-WHATSAPP-001",
         "relationship": "tests"
       }
     ],
@@ -15100,6 +15108,12 @@
       }
     ],
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": [
+      {
+        "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/lib/whatsapp_consent_conformance.py": [
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "tests"
@@ -19536,6 +19550,18 @@
       ]
     },
     {
+      "id": "SURFACE-c1661bacc266994d",
+      "path": "scripts/lib/whatsapp_consent_conformance.py",
+      "sha256": "c2ca6510660530e66d029ac1c8e73274c97b9dc89533a7ba76dcc3b179b8ed66",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a0fd8416fa83358e",
       "path": "scripts/mail-deliverability-monitor.py",
       "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -20610,7 +20636,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20691,6 +20717,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-WHATSAPP-001",
           "relationship": "tests"
         }
       ]
@@ -34040,7 +34070,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "444952b81279d70ec99488a35b7fe494d8806a1438dde548a77faf5d8e52ed02",
+      "sha256": "4d82c49744fc30c33bb7278e1259e175ce460431547ffede427eb7a28dd787a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42424,7 +42454,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dbd23d2eaa92f238c7a5cbdb23e48c891f2d34afcd5174ceb6140447b1f7a0ac",
+      "sourceSha256": "5f2e111b404d927d022ef5a89f14561e44e4038ea236945703f47006f6127fce",
       "definition": {
         "states": [
           "absent",
