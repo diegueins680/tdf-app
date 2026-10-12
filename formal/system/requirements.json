@@ -9039,6 +9039,88 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "BOOK-SERVICE-PICKER-001",
+      "title": "Every published service is selectable from the first step of the public booking form",
+      "domain": "BOOK",
+      "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector.",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Public service catalog reachable (GET /services/catalog/public)"
+      ],
+      "inputs": [
+        "GET /services/catalog/public",
+        "?servicio= / ?service= query parameter",
+        "legacy /dj-booth and /reservar/dj-booth URLs"
+      ],
+      "state": {
+        "serviceSelector": [
+          "catalog loading",
+          "first active offering selected",
+          "visitor-selected offering",
+          "catalog unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "catalog loading -> first active offering selected",
+        "first active offering selected -> visitor-selected offering (any step before confirmation)",
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+      ],
+      "forbiddenTransitions": [
+        "Service selector hidden until the schedule step",
+        "Service selector locked by a route preset",
+        "A second booking entry point dedicated to one service in public navigation or landing cards"
+      ],
+      "effects": [
+        "Estimate banner and quote follow the selected offering",
+        "Booking submissions carry the selected canonical offering id"
+      ],
+      "authorization": "Not applicable: the public catalog endpoint is anonymous; booking authorization is unchanged.",
+      "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
+      "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise.",
+      "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
+      "recovery": "Reloading the page refetches the catalog.",
+      "observability": "Existing booking and API telemetry; no new events.",
+      "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry.",
+      "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with a mocked catalog; production catalog verified to return 11 active offerings on 2026-10-12, deployed behaviour not yet re-verified.",
+      "ambiguity": [
+        "Whether the DJ booth marketing copy should reappear as a generic service highlight is a product decision outside this requirement."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
     }
   ]
 }

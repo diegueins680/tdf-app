@@ -9040,6 +9040,88 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "BOOK-SERVICE-PICKER-001",
+      "title": "Every published service is selectable from the first step of the public booking form",
+      "domain": "BOOK",
+      "statement": "The public booking form at /reservar shows the service selector on its first step (contact) as well as on the schedule step, listing every active offering returned by the public service catalog (recording, voice, podcast, mixing, mastering, rehearsal, DJ booth practice, classes, event production, ...). DJ booth practice is an ordinary offering: there is no dedicated booking page, header entry, Instagram entry link, platform or commerce card for it. The legacy /dj-booth and /reservar/dj-booth URLs redirect to /reservar with the DJ booth service preselected and tracking parameters preserved; a ?servicio= or ?service= query preselects a service without locking the selector.",
+      "authority": "User request 2026-10-12: all TDF services (rehearsal, mixing, mastering, podcast, ...) must be selectable on tdfrecords.net/reservar, and DJ booth is a service like any other with no exclusive link.",
+      "source": "tdf-hq-ui public booking form, public navigation and landing links",
+      "contract": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "Public service catalog reachable (GET /services/catalog/public)"
+      ],
+      "inputs": [
+        "GET /services/catalog/public",
+        "?servicio= / ?service= query parameter",
+        "legacy /dj-booth and /reservar/dj-booth URLs"
+      ],
+      "state": {
+        "serviceSelector": [
+          "catalog loading",
+          "first active offering selected",
+          "visitor-selected offering",
+          "catalog unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "catalog loading -> first active offering selected",
+        "first active offering selected -> visitor-selected offering (any step before confirmation)",
+        "/dj-booth -> /reservar?servicio=dj-booth-practice (replace navigation, query and hash preserved)"
+      ],
+      "forbiddenTransitions": [
+        "Service selector hidden until the schedule step",
+        "Service selector locked by a route preset",
+        "A second booking entry point dedicated to one service in public navigation or landing cards"
+      ],
+      "effects": [
+        "Estimate banner and quote follow the selected offering",
+        "Booking submissions carry the selected canonical offering id"
+      ],
+      "authorization": "Not applicable: the public catalog endpoint is anonymous; booking authorization is unchanged.",
+      "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
+      "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise.",
+      "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
+      "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
+      "recovery": "Reloading the page refetches the catalog.",
+      "observability": "Existing booking and API telemetry; no new events.",
+      "property": "AllActiveOfferingsSelectableOnContactStep and LegacyDjBoothUrlRedirects",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry.",
+      "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with a mocked catalog; production catalog verified to return 11 active offerings on 2026-10-12, deployed behaviour not yet re-verified.",
+      "ambiguity": [
+        "Whether the DJ booth marketing copy should reappear as a generic service highlight is a product decision outside this requirement."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -9048,7 +9130,7 @@
     ".github/workflows/ci.yml": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
     ".github/workflows/event-operations-formal.yml": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f5faa677ceacfca0769bf31f408befe248edfeb3d0779376874dbdfae7a75469",
+    "docs/catalog-persistence/catalog-list-decisions.json": "b1a52ad894dcf5804a4cdcb66aedcec0cd787cef3a0dd55c7f20725a667879b0",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9368,7 +9450,7 @@
     "tdf-hq-ui/public/mobile-distribution.json": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "b9819af15b9095e39c9506704848d20140e9e5ef874ab675690322b0eaaad160",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "a7e077b080ca25001794f43af1107b3040ce3b48c1d3ac3922769267ef9dd9ac",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
@@ -9409,13 +9491,14 @@
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "e44b0092e64730479c4742b9d1e0ba8719d6dd9d835e628f31ac6de1362436f3",
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx": "ff19281d3869bde4c70c51cdbcc5f75d260a06e190963429cca242d03dea6ec7",
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx": "bbb0a57dccd78aa63d5380426e0aab0304d7735cfec9758b44c3d873d7f7128d",
+    "tdf-hq-ui/src/components/InstagramEntryLinks.tsx": "b0f7c70bc37e4178d5a33e4104ad4083402da01262505a13d424f3299664fbfa",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "3fbc54d073524e958bbd2b600b9dbddd206668ad0e8cd618b406d1b4cceee514",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "7aae86b51bb02c0d511ff47c592875e051e7fcc752cd6bee16ec2025e66b777c",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -9456,8 +9539,8 @@
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
@@ -9473,6 +9556,7 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
+    "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "dce127c6cfc3b448c5fa22199f81ff4a1c71ad63dfc66928a2bd874260243b0f",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "d7fbfc076396110f24cfa7cacc218b8eb371077b3ba93fa7b88567cf44a037ed",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -9487,7 +9571,7 @@
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "48c13eb38ff9b9f373d8eac478ae3da0c837f42df02ead11a3000bc8ea371c53",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "35f4745492b8e77bc992165523b95452668b1fd206ed1422769db7b3ae3b600a",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "2c028fdc64f8638118d0825876568b3d5cbaa06631f1fd13a4bd814117f9fb1a",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "03322f3298b11910303c2721e93e8f9a438b76670adc76e57751224b2731b86e",
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "524cdce972c0eeaa93a803ed7b2d2fc38e2c1d9128a170a08fa0705acc2e6d1b",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
@@ -9512,13 +9596,14 @@
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "88a11a1c2fb41893f985bfb7c92cb72cdb76a1c7e18d9ca397606292c9a2d8b2",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "f65878e0267a1d4a781b5b93e44f47ba4d99f2bd911c633e92e49ae3b57fceb4",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
@@ -9538,7 +9623,8 @@
     "tdf-hq-ui/src/routes/AppShell.tsx": "1e29ad2f3dd421cfece747856c1c212658e5a9bb61dbaa10c7a44355f7f5e35f",
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
-    "tdf-hq-ui/src/routes/publicRoutes.tsx": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
+    "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "db57e41f1aa1499be772db5cbf7e5bec75f626d0ff2c47ed4f590481aeca1544",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "aaa72a665aa8f4a96a48226c7394dbce124262562f3c8ce84c9b586f8e8d1782",
     "tdf-hq-ui/src/session/SessionContext.tsx": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
     "tdf-hq-ui/src/session/SessionProvider.bootstrapTimeout.test.tsx": "d73f62bb5fd41d238f3b9b894dc9e935a525e51885dfd75b6c0efe1b7fd2a2f4",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
@@ -9569,7 +9655,7 @@
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
     "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "4fc6a2d58724ce481dc6b6a35c51ad3a32e19f843389d70b406979b3caee6ed1",
-    "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "192c36ea04bb9b223d2f9d73dfd2ca628d79dc2e615be0fba30ab12767ff8a7f",
+    "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "d64b0791128645c24fe39a5abb49b1a0c32b2d9fa193248b8e44e8cc514b7d87",
     "tdf-hq-ui/src/utils/signupFields.ts": "6f819b6c1897ad2440ecddf4c863887db3b6011481b64fb68b60d6abfea44f70",
@@ -10710,6 +10796,10 @@
       {
         "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -10723,6 +10813,10 @@
       },
       {
         "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
       }
     ],
@@ -14306,6 +14400,10 @@
       {
         "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": [
@@ -14351,6 +14449,10 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
       }
     ],
@@ -15458,6 +15560,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/App.tsx": [
@@ -15523,6 +15629,10 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "implementation"
       }
     ],
@@ -16050,6 +16160,10 @@
       {
         "requirement": "SYS-WEB-LAYOUT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": [
@@ -16089,6 +16203,10 @@
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": [
       {
         "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "tests"
       }
     ],
@@ -16149,6 +16267,10 @@
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": [
       {
         "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "tests"
       }
     ],
@@ -16371,6 +16493,30 @@
     "tdf-mobile/__tests__/directoryPreviewImage.test.tsx": [
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/InstagramEntryLinks.tsx": [
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": [
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CommerceHubPage.tsx": [
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/routes/publicRoutes.test.tsx": [
+      {
+        "requirement": "BOOK-SERVICE-PICKER-001",
         "relationship": "tests"
       }
     ]
@@ -21866,11 +22012,15 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "d19d89af41ebb1fc77a1521c069c308151e4dbbab694383ff56f26d443de3290",
+      "sha256": "a7e077b080ca25001794f43af1107b3040ce3b48c1d3ac3922769267ef9dd9ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "tests"
         }
       ]
@@ -23302,9 +23452,14 @@
     {
       "id": "SURFACE-19cebc297ff26373",
       "path": "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
-      "sha256": "edddb1aad7f779cb797f6a835cef66adac043417dff2ebddda5f1d7a7a1e1863",
+      "sha256": "b0f7c70bc37e4178d5a33e4104ad4083402da01262505a13d424f3299664fbfa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-38bb7b3066524a69",
@@ -23471,11 +23626,15 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
+      "sha256": "3fbc54d073524e958bbd2b600b9dbddd206668ad0e8cd618b406d1b4cceee514",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "tests"
         }
       ]
@@ -23483,7 +23642,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
+      "sha256": "7aae86b51bb02c0d511ff47c592875e051e7fcc752cd6bee16ec2025e66b777c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23496,6 +23655,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -24851,7 +25014,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
+      "sha256": "1b31939d6d1fcc0eb9b62ff6a53773934a458990464be84c1d8ed4fa729bcfb1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24864,6 +25027,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -24871,7 +25038,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "c29a63d86c4c7e6cf530b161369a5e54af75c5b815e40e4c8f6192a1e0757452",
+      "sha256": "3260bcde29c6fc5ce2e623c7f66f50b3c763c0239985b0f928982e03c61d05a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24884,6 +25051,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -25389,9 +25560,14 @@
     {
       "id": "SURFACE-db7880fb35bd421c",
       "path": "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
-      "sha256": "c82c3e9f4f36e3809500c0b254371f1326400c14076305812a1254ffdb8da528",
+      "sha256": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-39fe3c9e56197ba9",
@@ -25751,7 +25927,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "2c028fdc64f8638118d0825876568b3d5cbaa06631f1fd13a4bd814117f9fb1a",
+      "sha256": "03322f3298b11910303c2721e93e8f9a438b76670adc76e57751224b2731b86e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25760,6 +25936,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -26521,11 +26701,15 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "edb6660d98c58ddb0a7d0f79d82022e92c1e3b732cf13b69b0b8e091dc87bc04",
+      "sha256": "88a11a1c2fb41893f985bfb7c92cb72cdb76a1c7e18d9ca397606292c9a2d8b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -26885,9 +27069,14 @@
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "7cb3734cdf65fd66e880b6fde8cc7460da6dc0b4018aa5a3c5a1c95b316ab066",
+      "sha256": "f65878e0267a1d4a781b5b93e44f47ba4d99f2bd911c633e92e49ae3b57fceb4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-42ebeaafc13e0e5c",
@@ -27362,14 +27551,19 @@
     {
       "id": "SURFACE-dd805fb7a067baea",
       "path": "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
-      "sha256": "f572895cdb3b7965abbab1364ef480e9cce4e9e9247f55826bfddd546d6c9295",
+      "sha256": "db57e41f1aa1499be772db5cbf7e5bec75f626d0ff2c47ed4f590481aeca1544",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "47b1ac30ba2505c4ce36dfc98d5402c0486dc829586ee90b7534c7c66e97f636",
+      "sha256": "aaa72a665aa8f4a96a48226c7394dbce124262562f3c8ce84c9b586f8e8d1782",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27378,6 +27572,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -28198,11 +28396,15 @@
     {
       "id": "SURFACE-ee5ba63310165c5c",
       "path": "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
-      "sha256": "192c36ea04bb9b223d2f9d73dfd2ca628d79dc2e615be0fba30ab12767ff8a7f",
+      "sha256": "66d5ec3d66762d3e3af53bd9d29ef8a59c0a847194ff836ebbb2de8e278dcd9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-SERVICE-PICKER-001",
           "relationship": "implementation"
         }
       ]
@@ -39407,7 +39609,6 @@
     "SURFACE-7caa67891da35c66",
     "SURFACE-08e710fa5e7786c7",
     "SURFACE-0918e49c017af22f",
-    "SURFACE-19cebc297ff26373",
     "SURFACE-38bb7b3066524a69",
     "SURFACE-df42e6ad7db6be04",
     "SURFACE-0c704471f2e1ce6c",
@@ -39584,7 +39785,6 @@
     "SURFACE-9ec3af8f42eacde2",
     "SURFACE-0c8ff6c8d35d5bd5",
     "SURFACE-d5fb23b5eb7efa5e",
-    "SURFACE-db7880fb35bd421c",
     "SURFACE-39fe3c9e56197ba9",
     "SURFACE-4863f94a96956295",
     "SURFACE-d340c53f92e0fc7d",
@@ -39708,7 +39908,6 @@
     "SURFACE-294273454f1df4be",
     "SURFACE-791bf979002005a3",
     "SURFACE-94ed138833ff9be9",
-    "SURFACE-a8a994f85758ab3a",
     "SURFACE-42ebeaafc13e0e5c",
     "SURFACE-eb3a22474b1541ad",
     "SURFACE-b3708173ec172c34",
@@ -39743,7 +39942,6 @@
     "SURFACE-77460de8941bcdf9",
     "SURFACE-85e8012c6e922277",
     "SURFACE-b81f4ee712780e85",
-    "SURFACE-dd805fb7a067baea",
     "SURFACE-06ba6461b3eb1e56",
     "SURFACE-533fde17d26f7770",
     "SURFACE-f33f3db01ba04d18",
@@ -41894,7 +42092,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73cfc3feb0cfbc50a153906b4c673a527e3636b8e3cbcc55cf91bddc7cd5686",
+      "sourceSha256": "1ca1df6f7250789f42d98ec95d6491cb4b9faa9a20a0d6d90482ac2b4ff44b82",
       "definition": {
         "states": [
           "absent",
@@ -64091,7 +64289,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 113,
+    "PARTIAL": 114,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
