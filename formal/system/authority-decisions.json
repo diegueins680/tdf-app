@@ -576,6 +576,18 @@
       "conflict": "The marketplace_rental_fulfillment model omitted returned_pending_inspection -> disputed and deposit_refund_due -> disputed, which validateMarketplaceRentalTransition and the 2026-08-17 database transition table both allow.",
       "authority": "ADR-0110 (accepted): customers may raise a rental dispute from the public order, and staff settle deposits from deposit_refund_due.",
       "resolution": "The model gains both edges, matching the implementation and the database. The Haskell transition tables of the four commerce machines that render stored state names are now bound in state-machine-bindings.json and compared with the model by check-state-machines.py in both modes."
+    },
+    {
+      "id": "AUTHORITY-067",
+      "sources": [
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-asset-processing.md"
+      ],
+      "conflict": "MEDIA-MUSIC-ASSET-001 listed four asset states (quarantined, processing, promoted, failed) and transitions 'processing -> failed -> retried'; music_asset.processing_state allows nine values and the worker never writes 'failed' or 'promoted' (a promoted master is 'valid' and immutable, a derivative is 'ready'). Retry and dead-letter live on music_processing_job, not on the asset.",
+      "authority": "The column CHECK constraints and the worker script, which the requirement's own tests exercise.",
+      "resolution": "Decided 2026-10-12: the requirement lists the column's asset states and the job statuses; the lease guard (worker name, claimed attempt as fencing token, lease age on the job row, reclaim only after expiry) and checksum-gated promotion are the stated concurrency rules and are modelled in MusicAssetProcessing.tla. The three gaps (no purge of abandoned uploads, checksum mismatch retried until max_attempts, dead-lettered asset left 'inspecting') are recorded as ambiguities, not fixed."
     }
   ]
 }
