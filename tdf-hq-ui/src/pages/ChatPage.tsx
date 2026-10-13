@@ -203,7 +203,7 @@ function ChatWorkspace() {
   const [bannerError, setBannerError] = useState(null as string | null);
   const [sendError, setSendError] = useState(null as string | null);
   const messagesEndRef = useRef(null as HTMLDivElement | null);
-  const requestParamConsumed = useRef(false);
+  const requestParamConsumed = useRef<string | null>(null);
   const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
@@ -332,12 +332,27 @@ function ChatWorkspace() {
   });
 
   useEffect(() => {
-    if (requestParamConsumed.current) return;
+    if (requestParamConsumed.current === location.key) return;
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(location.search);
+    const rawThread = params.get('threadId');
+    if (rawThread !== null) {
+      // Wait for a fresh authorized list; a link never opens or creates a thread.
+      if (threadsQuery.isPending || threadsQuery.isFetching) return;
+      requestParamConsumed.current = location.key;
+      navigate('/chat', { replace: true });
+      const numeric = parsePositiveInt(rawThread);
+      if (numeric === null || !threads.some((thread) => thread.ctThreadId === numeric)) {
+        setBannerError('La conversación de esta notificación no está disponible.');
+        return;
+      }
+      setBannerError(null);
+      setSelectedThreadId(numeric);
+      return;
+    }
     const rawParty = params.get('partyId');
     if (!rawParty) return;
-    requestParamConsumed.current = true;
+    requestParamConsumed.current = location.key;
     navigate('/chat', { replace: true });
     const numeric = parsePositiveInt(rawParty);
     if (numeric == null) {
@@ -347,7 +362,7 @@ function ChatWorkspace() {
     createThreadMutation.mutate(numeric, {
       onError: (err) => setBannerError(err.message),
     });
-  }, [createThreadMutation, location.search, navigate]);
+  }, [createThreadMutation, location.key, location.search, navigate, threads, threadsQuery.isFetching, threadsQuery.isPending]);
 
   const sendMutation = useMutation({
     mutationFn: ({ threadId, body }: { threadId: number; body: string }) => ChatAPI.sendMessage(threadId, body),

@@ -9645,13 +9645,89 @@
         "classification": "PARTIAL",
         "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
       }
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "explicit operator requirement",
+      "source": "Operator confirmation on 2026-10-13; docs/notifications/chat-delivery-2026-10-13.md",
+      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "In-app notice has generic content; canonical chat read authority gates list/detail/count.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Preserve notices, mappings, visibility policy and non-unique history index across application rollback; never reintroduce one-message uniqueness.",
+      "observability": "Synthetic regression evidence and aggregate read-only incident facts only.",
+      "confidence": "SQL runtime and web regression evidence; external delivery and production rollout remain unverified.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "In-app implementation has local SQL/web evidence; required CI, production rollout and recipient-side verification remain pending."
+      },
+      "id": "MSG-NOTIFY-001",
+      "title": "Atomic recipient inbox notifications and multi-message conversations",
+      "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
+      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. A block, revoked consent, inactive account or message deletion hides the notice.",
+      "preconditions": [
+        "Governed production migration installed; existing chat session/consent authority remains in force."
+      ],
+      "inputs": [
+        "Authorized message insert",
+        "Recipient notification reads and typed thread links"
+      ],
+      "state": {
+        "variables": [
+          "Persisted messages, recipient notices and one-to-one mappings",
+          "Current consent, block and account lifecycle"
+        ],
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof."
+      },
+      "allowedTransitions": [
+        "Authorized send atomically stores a message, notice and mapping.",
+        "Recipient follows a notice to an already authorized thread.",
+        "Current policy denial hides an old notice."
+      ],
+      "forbiddenTransitions": [
+        "A second message is rejected solely because a thread already has one message.",
+        "Notification text contains private message contents.",
+        "A failed send leaves a notice or a notice-storage failure leaves a message."
+      ],
+      "effects": [
+        "Durable recipient notice; repeatable migration; no historical replay or external sends."
+      ],
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
+      "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
+      "failure": "Notification insert failure aborts the send; unavailable/foreign thread links show a generic unavailable state.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "scripts/production-migrations.json",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-chat-notifications.sh",
+        "scripts/social/chat-notifications.sql",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
+      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "ambiguity": [
+        "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
+      ]
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
+    ".github/workflows/ci.yml": "b9b90a2cb1dff0236b6ce45ddac522beacd74cd9857094b14a5eeb022fb106b9",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
@@ -9946,6 +10022,7 @@
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
+    "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
@@ -9958,6 +10035,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+    "scripts/test-chat-notifications.sh": "0fbfd3d9cba591f0e5113df80dd6abffae5deda94301acbbc1a5c686d2327287",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -10117,8 +10195,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "7d62d164ca1a01e7f59dcfbafc6a2e23a2f16e36ecf2293e999563dbcd6916da",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "8eedd6fc0b3c12ba8448053b1304fe5b9d50c3946b0b45a8b36dd6e885086a85",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -10152,6 +10230,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "05cfff3159f5b4b1b96e2a31e100b696abe4e414181492b7cecdd953f233349f",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "dbb762e061ff086b5398244c9e750eb224eda82f3b3c816a24beb9a6e2222b18",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -10334,6 +10414,7 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
+    "tdf-hq/sql/2026-10-13_chat_message_notifications.sql": "b24e728909a6e8454f59860e4479914dba31bf3cfbfb688887fbaa11facb1647",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10385,7 +10466,7 @@
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
     "tdf-hq/src/TDF/Invoice/Receipt.hs": "22f118abad48bb9e92a8abb6edaf3364613bfa8ed5397b6eb28a777b0f12f142",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
-    "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
+    "tdf-hq/src/TDF/Models.hs": "d54ccc2b1992865566ae71d7cf875605e4b792d21cb8611e45ac069167e9b92a",
     "tdf-hq/src/TDF/ModelsExtra.hs": "88d571f82c7883b151c3e3292d8219ac753c74af520cae7518e8bb97b693aa3f",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
@@ -11177,6 +11258,10 @@
       {
         "requirement": "OPS-CI-REGISTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/generated/types.ts": [
@@ -11720,6 +11805,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
         "relationship": "implementation"
       }
     ],
@@ -14443,6 +14532,10 @@
       {
         "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/DTO.hs": [
@@ -16677,6 +16770,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
@@ -16776,6 +16873,10 @@
     "tdf-hq-ui/src/components/notificationTarget.test.ts": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
         "relationship": "tests"
       }
     ],
@@ -17894,6 +17995,36 @@
         "requirement": "MSG-META-REDELIVERY-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/sql/2026-10-13_chat_message_notifications.sql": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ChatPage.tsx": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-chat-notifications.sh": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/chat-notifications.sql": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -17950,7 +18081,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
+      "sha256": "b9b90a2cb1dff0236b6ce45ddac522beacd74cd9857094b14a5eeb022fb106b9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17971,6 +18102,10 @@
         },
         {
           "requirement": "OPS-CI-REGISTRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -20923,6 +21058,10 @@
         {
           "requirement": "MKT-ARTIST-LISTING-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -21323,6 +21462,18 @@
       "sha256": "de2c24e9524e62fcae978eac8390507be2cb49544c4deccdb7bc0e9b066ea07d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-fd6a709b91c00b14",
+      "path": "scripts/social/chat-notifications.sql",
+      "sha256": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2e0e93e57b6c8565",
@@ -21898,6 +22049,18 @@
       "sha256": "04656c31ef9f3e5c34dbb70c1a3d82cf851a43e07af5f1ec0b67a9875d178b64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-325b7de63b17b31f",
+      "path": "scripts/test-chat-notifications.sh",
+      "sha256": "0fbfd3d9cba591f0e5113df80dd6abffae5deda94301acbbc1a5c686d2327287",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1910077a9107778a",
@@ -25816,11 +25979,15 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "37f0a06226e1f81208416a1e33ddaae9e4235ca8932eb767b29fe0b7d51fdb6d",
+      "sha256": "7d62d164ca1a01e7f59dcfbafc6a2e23a2f16e36ecf2293e999563dbcd6916da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-NOTIFY-001",
           "relationship": "tests"
         }
       ]
@@ -25828,11 +25995,15 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "170f6a854078d866df645bb72d09a1f34296249d489667ebde4dce951af84c23",
+      "sha256": "8eedd6fc0b3c12ba8448053b1304fe5b9d50c3946b0b45a8b36dd6e885086a85",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -27147,16 +27318,26 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "f0af38ca2b084257aaf7155b1f28511f79739077abc79ad726d8449212aae0f8",
+      "sha256": "05cfff3159f5b4b1b96e2a31e100b696abe4e414181492b7cecdd953f233349f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "bdc1c46558aec39ba26cedaefac9c3d385f51920df1ecd7bc6cee5c14a790635",
+      "sha256": "dbb762e061ff086b5398244c9e750eb224eda82f3b3c816a24beb9a6e2222b18",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-79ffba0a412d33ff",
@@ -33704,6 +33885,18 @@
       ]
     },
     {
+      "id": "SURFACE-08a4bdf7ae24c182",
+      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+      "sha256": "b24e728909a6e8454f59860e4479914dba31bf3cfbfb688887fbaa11facb1647",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -35146,11 +35339,15 @@
     {
       "id": "SURFACE-a97719441b71656b",
       "path": "tdf-hq/src/TDF/Models.hs",
-      "sha256": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
+      "sha256": "d54ccc2b1992865566ae71d7cf875605e4b792d21cb8611e45ac069167e9b92a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -41696,8 +41893,6 @@
     "SURFACE-cb26a654f47a190f",
     "SURFACE-57945788e4512e48",
     "SURFACE-7dcbd0bbd9154a13",
-    "SURFACE-2db984964b19dd3c",
-    "SURFACE-57bb44e2fffdfbce",
     "SURFACE-79ffba0a412d33ff",
     "SURFACE-10a1b2ad11b92606",
     "SURFACE-9ec3af8f42eacde2",
@@ -42875,7 +43070,8 @@
     "MEDIA-MUSIC-DDEX-001",
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
-    "AUTH-ENTRY-002"
+    "AUTH-ENTRY-002",
+    "MSG-NOTIFY-001"
   ],
   "stateMachines": [
     {
@@ -43994,7 +44190,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
+      "sourceSha256": "6a1df2511f3746e99e9c38bc28b58685239ed831036bdbc83d8fadde47bfdcd4",
       "definition": {
         "states": [
           "absent",
@@ -66191,7 +66387,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 119,
+    "PARTIAL": 120,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -7,7 +7,7 @@ configure({ asyncUtilTimeout: 15000 });
 jest.setTimeout(30000);
 let partyId = 1;
 const listThreads = jest.fn<() => Promise<ChatThreadDTO[]>>();
-const listMessages = jest.fn<() => Promise<ChatMessageDTO[]>>();
+const listMessages = jest.fn<(threadId: number, options: { limit: number }) => Promise<ChatMessageDTO[]>>();
 const sendMessage = jest.fn<(thread: number, body: string) => Promise<ChatMessageDTO>>();
 const getOrCreateDmThread = jest.fn<() => Promise<ChatThreadDTO>>();
 jest.unstable_mockModule('../api/chat', () => ({ ChatAPI: { listThreads, listMessages, sendMessage, getOrCreateDmThread } }));
@@ -23,10 +23,10 @@ const thread: ChatThreadDTO = { ctThreadId: 10, ctOtherPartyId: 2, ctOtherDispla
 const message: ChatMessageDTO = { cmId: 1, cmThreadId: 10, cmSenderPartyId: 2, cmBody: 'Private body', cmCreatedAt: '2026-09-15T12:00:00Z' };
 const clients: QueryClient[] = [];
 function Unread() { const { unreadCount } = useChatUnreadCount(); return <span data-testid="badge">{unreadCount}</span>; }
-function setup() {
+function setup(path = '/chat') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   clients.push(client);
-  const tree = () => <QueryClientProvider client={client}><MemoryRouter><ChatPage /><Unread /></MemoryRouter></QueryClientProvider>;
+  const tree = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><ChatPage /><Unread /></MemoryRouter></QueryClientProvider>;
   const view = render(tree());
   return { client, ...view, refresh: () => view.rerender(tree()) };
 }
@@ -80,4 +80,17 @@ it('keeps the API send contract and trims through its existing adapter', async (
   fireEvent.change(screen.getByRole('textbox', { name: 'Escribe un mensaje' }), { target: { value: 'Booking follow-up' } });
   fireEvent.click(screen.getByRole('button', { name: 'Enviar mensaje' }));
   await waitFor(() => expect(sendMessage).toHaveBeenCalledWith(10, 'Booking follow-up'));
+});
+
+it('opens the notification thread instead of the newest conversation without creating one', async () => {
+  listThreads.mockResolvedValue([{ ...thread, ctThreadId: 20 }, thread]);
+  setup('/chat?threadId=10');
+  await waitFor(() => expect(listMessages).toHaveBeenLastCalledWith(10, { limit: 80 }));
+  expect(getOrCreateDmThread).not.toHaveBeenCalled();
+});
+it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects an unavailable notification thread %s', async (id) => {
+  setup(`/chat?threadId=${encodeURIComponent(id)}`);
+  await screen.findByText('La conversación de esta notificación no está disponible.');
+  expect(getOrCreateDmThread).not.toHaveBeenCalled();
+  expect(listMessages.mock.calls.every(([threadId]) => threadId === 10)).toBe(true);
 });
