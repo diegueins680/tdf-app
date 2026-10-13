@@ -4094,7 +4094,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+      "sha256": "6e7d14c54bb4c47496790718cc4bb028ceacdce3b3c7d5bc887d1ef5f061847f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5546,7 +5546,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "5c007c628247c0380a64ec398ce5874efd0b41c73e017cd35db754a6a906c7b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13874,7 +13874,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
+      "sha256": "f7c4e81c910514746928c6844ca818a88620ed9e9641204f449d6edd044eb28b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22270,6 +22270,55 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/OperationsReadPolicy.cfg",
+      "sha256": "ebee5b1beb7e2d7e4f746882f4bf5246c844f831a3b66e77a4787c1fca60b1f4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsReadPolicy.tla",
+      "sha256": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg",
+      "sha256": "812f7bc1b1b84cec274a9d13d73066c5188f35364db12375cafe8649c2471971",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsReadPolicySqlDrift.cfg",
+      "sha256": "b080e561a8f8eb912b7d343239a94d5be135f6a27b89b9a27aeec519f3d6538c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsReadPolicyUnassigned.cfg",
+      "sha256": "31ffde6476d4c98cae054882aa984842d1d23a67f7e0dee2811a00ad4b2e56f1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg",
+      "sha256": "a503c2ee99bef71b9d19b02af5ccaffc4fe79899aa0ed81083021bbfbcee8be5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg",
+      "sha256": "a25ab171cfeae3f193e47c9ecc3bc97095532dae36e29d571834e925039811f0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/OptionalTokenRecovery.cfg",
       "sha256": "f3ca0562255d81aaac483b10f2a7e2b7bc832ff2f5a0ccd6ea3f8d75ef2a4809",
       "authority": "inferred",
@@ -22467,7 +22516,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "97265617534d6a867c9a6f4152cf1aeac3964274b72905d5114c8d429a59a59b",
+      "sha256": "31119c0449f59d0a24a22e70048720d5d5b9f5ac41fcd708420b75042ced8557",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23965,7 +24014,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "0b3d41cace635093a1388261eb544349480628dd1b9f7df389d6bc7d2704248e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24174,6 +24223,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/operations-read-policy.md",
+      "sha256": "d8db6a5b8149d6dafd1892702afdd6e61a10d4ba215b298c103a5ad92bf47a58",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c43590d32b2a99a4e4c0da0fb480e3ac7cf555a3a8ed99aed666ae1e1890f916",
       "authority": "inferred",
@@ -24245,7 +24301,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sha256": "3997e82f61b9542660805601c03cbf3b937266db2b5dc060466fafce3085d33c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33672,6 +33728,112 @@
         "  PartialCommit = FALSE",
         "INVARIANTS SourceSeparation BoundReplay AtomicCreation",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsReadPolicy.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  WildcardExcludesSecurity = TRUE",
+        "  SqlExcludesSecurity = TRUE",
+        "  AssignmentRestricts = TRUE",
+        "  ReadOnlyNoWrite = TRUE",
+        "  UnknownDenies = TRUE",
+        "INVARIANTS",
+        "  ReadersAgree",
+        "  NoSecurityDisclosure",
+        "  ReadOnlyNoWriteGain",
+        "  SpecialistsAssigned",
+        "  UnknownNothing",
+        ""
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  WildcardExcludesSecurity = TRUE",
+        "  SqlExcludesSecurity = TRUE",
+        "  AssignmentRestricts = TRUE",
+        "  ReadOnlyNoWrite = FALSE",
+        "  UnknownDenies = TRUE",
+        "INVARIANTS",
+        "  ReadOnlyNoWriteGain",
+        ""
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsReadPolicySqlDrift.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  WildcardExcludesSecurity = TRUE",
+        "  SqlExcludesSecurity = FALSE",
+        "  AssignmentRestricts = TRUE",
+        "  ReadOnlyNoWrite = TRUE",
+        "  UnknownDenies = TRUE",
+        "INVARIANTS",
+        "  ReadersAgree",
+        ""
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsReadPolicyUnassigned.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  WildcardExcludesSecurity = TRUE",
+        "  SqlExcludesSecurity = TRUE",
+        "  AssignmentRestricts = FALSE",
+        "  ReadOnlyNoWrite = TRUE",
+        "  UnknownDenies = TRUE",
+        "INVARIANTS",
+        "  SpecialistsAssigned",
+        ""
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  WildcardExcludesSecurity = TRUE",
+        "  SqlExcludesSecurity = TRUE",
+        "  AssignmentRestricts = TRUE",
+        "  ReadOnlyNoWrite = TRUE",
+        "  UnknownDenies = FALSE",
+        "INVARIANTS",
+        "  UnknownNothing",
+        ""
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  WildcardExcludesSecurity = FALSE",
+        "  SqlExcludesSecurity = TRUE",
+        "  AssignmentRestricts = TRUE",
+        "  ReadOnlyNoWrite = TRUE",
+        "  UnknownDenies = TRUE",
+        "INVARIANTS",
+        "  NoSecurityDisclosure",
+        ""
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

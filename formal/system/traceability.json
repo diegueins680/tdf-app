@@ -4946,10 +4946,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-073",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-read-policy.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -4959,7 +4959,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsReadPolicy.tla evaluates the copied grant table and SQL scope filter over every role set, assignment flag and entity type (ReadersAgree, NoSecurityDisclosure, ReadOnlyNoWriteGain, SpecialistsAssigned, UnknownNothing) with five single-guard controls (formal/system/operations-read-policy.md); the table is copied by hand, so this checks the policy, not the Haskell or SQL text. The approval handler's linked-item check did not strip ReadOnly (Accounting plus ReadOnly could link an approval to a hidden item); fixed and covered by an Accounting-plus-ReadOnly harness case.",
       "id": "AUTH-OPS-READ-001",
       "title": "One action-specific Operations read capability policy",
       "domain": "AUTH",
@@ -5009,10 +5009,19 @@
         "scripts/lib/operations_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsReadPolicy.tla",
+        "formal/event-operations/OperationsReadPolicy.cfg",
+        "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg",
+        "formal/event-operations/OperationsReadPolicySqlDrift.cfg",
+        "formal/event-operations/OperationsReadPolicyUnassigned.cfg",
+        "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg",
+        "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg"
+      ],
       "ambiguity": [
         "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
-        "SQL/role conformance is empirical; not formally covered."
+        "SQL text and role conformance are empirical; the model checks the copied policy only.",
+        "The model's grant table is a hand copy of Model.hs and scopeFilterSql; a change to either must be mirrored (2026-10-12)."
       ]
     },
     {
@@ -9418,6 +9427,13 @@
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
     "formal/event-operations/OperationsManualReceipt.tla": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
+    "formal/event-operations/OperationsReadPolicy.cfg": "ebee5b1beb7e2d7e4f746882f4bf5246c844f831a3b66e77a4787c1fca60b1f4",
+    "formal/event-operations/OperationsReadPolicy.tla": "d823b776c62cdeff218027c077a0bbd8d39f28b67d1749502be20c3b8f819ea0",
+    "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg": "812f7bc1b1b84cec274a9d13d73066c5188f35364db12375cafe8649c2471971",
+    "formal/event-operations/OperationsReadPolicySqlDrift.cfg": "b080e561a8f8eb912b7d343239a94d5be135f6a27b89b9a27aeec519f3d6538c",
+    "formal/event-operations/OperationsReadPolicyUnassigned.cfg": "31ffde6476d4c98cae054882aa984842d1d23a67f7e0dee2811a00ad4b2e56f1",
+    "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg": "a503c2ee99bef71b9d19b02af5ccaffc4fe79899aa0ed81083021bbfbcee8be5",
+    "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg": "a25ab171cfeae3f193e47c9ecc3bc97095532dae36e29d571834e925039811f0",
     "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
     "formal/event-operations/PaymentRecovery.tla": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
     "formal/event-operations/PaymentRecoveryCompleted.cfg": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
@@ -9588,7 +9604,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+    "scripts/lib/operations_conformance.py": "6e7d14c54bb4c47496790718cc4bb028ceacdce3b3c7d5bc887d1ef5f061847f",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -9682,7 +9698,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+    "scripts/verify-event-operations-formal.sh": "5c007c628247c0380a64ec398ce5874efd0b41c73e017cd35db754a6a906c7b6",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10057,7 +10073,7 @@
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
-    "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
+    "tdf-hq/src/TDF/Operations/Server.hs": "f7c4e81c910514746928c6844ca818a88620ed9e9641204f449d6edd044eb28b",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
@@ -13725,6 +13741,48 @@
       {
         "requirement": "AUTH-OPS-READ-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicy.tla": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicy.cfg": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicySqlDrift.cfg": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicyUnassigned.cfg": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "formalModels"
       }
     ],
     "formal/system/public-routes.json": [
@@ -19839,7 +19897,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+      "sha256": "6e7d14c54bb4c47496790718cc4bb028ceacdce3b3c7d5bc887d1ef5f061847f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22319,7 +22377,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "5c007c628247c0380a64ec398ce5874efd0b41c73e017cd35db754a6a906c7b6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34413,7 +34471,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
+      "sha256": "f7c4e81c910514746928c6844ca818a88620ed9e9641204f449d6edd044eb28b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41888,7 +41946,6 @@
     "MEDIA-STREAM-001",
     "OPS-WORKER-001",
     "OPS-METRICS-001",
-    "AUTH-OPS-READ-001",
     "AUTH-PUBLIC-001",
     "OPS-AUX-WRITE-001",
     "SYS-CI-001",
@@ -43028,7 +43085,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sourceSha256": "3997e82f61b9542660805601c03cbf3b937266db2b5dc060466fafce3085d33c",
       "definition": {
         "states": [
           "absent",
