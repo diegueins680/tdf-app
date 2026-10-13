@@ -30,7 +30,7 @@ Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada
 1. **Android → Open/Production:** faltan 7 opt-ins (5/12) y 14 días continuos. Acción del operador: admitir en Play Console los correos consentidos recibidos por `/app` → "Solicitar acceso" (bandeja de feedback) y, cuando el contador llegue a 12, esperar los 14 días y pulsar "Apply for production". Hasta entonces la web sigue mostrando Closed testing con solicitud.
 2. **iOS build 32 → TestFlight externo:** requiere sesión en App Store Connect (o clave API) para enviar a Beta App Review y asignarlo al grupo del enlace público. El gate previo (backend de eliminación) ya se cumplió. Acción del propietario.
 3. **iOS App Store:** resolver el rechazo (2.1 login en iPhone 17 Pro Max/iOS 27 y 4.8 Sign in with Apple) y aportar prueba física de Google OAuth. Trabajo de producto nativo, fuera de este incremento.
-4. **Dominio canónico:** #508 se fusionó el 13 de octubre (`a52d7eab5`, con `functions/_middleware.js` que redirige `tdf-app.pages.dev` a `www.tdfrecords.net`). Falta comprobar el redirect en producción tras el despliegue y fusionar Mobile #150.
+4. **Dominio canónico:** #508 se fusionó el 13 de octubre (`a52d7eab5`, con `functions/_middleware.js` que redirige `tdf-app.pages.dev` a `www.tdfrecords.net`). Redirect comprobado en producción el 13 de octubre (~01:05 UTC): `tdf-app.pages.dev/eventos/141?utm_source=tdf_mobile` → 301 a `www.tdfrecords.net` con la query intacta; `/.well-known/assetlinks.json` sigue respondiendo 200 en el host antiguo. Queda fusionar Mobile #150.
 5. **Pin de Mobile:** fusionar Mobile #155/#156 para que el pin de main sea alcanzable desde `TDF-mobile/main`.
 
 ## Analytics y privacidad — 5 de octubre, actualización posterior a las 17:00 UTC
