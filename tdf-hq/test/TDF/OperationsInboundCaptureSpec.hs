@@ -78,6 +78,26 @@ spec = describe "operations-inbound-capture-postgresql" $ do
           runSqlPool (insert_ (instagramRow mid "incoming" (addUTCTime (-3 * 86400) now))) pool
           events pool mid `shouldReturn` []
 
+        it "records nothing for a recent message the backfill imported" $ \pool -> do
+          mid <- newId
+          now <- getCurrentTime
+          -- The metadata the backfill writes, on a message sent a minute ago.
+          let backfilled = (instagramRow mid "incoming" (addUTCTime (-60) now))
+                { M.instagramMessageMetadata = Just
+                    "{\"backfilled\":true,\"conversationId\":\"t_1\",\"source\":\"meta-graph\"}" }
+          runSqlPool (insert_ backfilled) pool
+          events pool mid `shouldReturn` []
+
+        it "still records a recent message whose metadata is not a backfill marker" $ \pool -> do
+          mid <- newId
+          now <- getCurrentTime
+          let webhook = (instagramRow mid "incoming" now)
+                { M.instagramMessageMetadata =
+                    Just "{\"backfilled\":false,\"recipient_id\":\"biz-1\"}" }
+          runSqlPool (insert_ webhook) pool
+          events pool mid `shouldReturn`
+            [("communication.instagram.received", "uncorrelated_inbound", "instagram")]
+
         it "stores a message whose capture fails, without an event" $ \pool -> do
           mid <- newId
           now <- getCurrentTime
@@ -91,9 +111,14 @@ spec = describe "operations-inbound-capture-postgresql" $ do
 
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
-  && "_test" `isSuffixOf` value && any (`isPrefixOf` value)
+  && "_test" `isSuffixOf` value && any local
   ["postgresql://127.0.0.1/", "postgresql://127.0.0.1:", "postgresql://localhost/",
    "postgresql://localhost:", "postgresql://postgres:postgres@postgres:5432/"]
+  where
+    -- The accepted prefix must name the host: nothing after it may introduce
+    -- another authority ("postgresql://localhost:secret@db.example/x_test"
+    -- has localhost as the user name and db.example as the host).
+    local prefix = prefix `isPrefixOf` value && '@' `notElem` drop (length prefix) value
 
 newIdIn :: IORef [Text] -> IO Text
 newIdIn used = do

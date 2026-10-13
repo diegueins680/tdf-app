@@ -14,8 +14,9 @@ per sender and channel ("message needs a response", priority high).
 - The application's own outgoing messages produce none.
 - For Instagram and Facebook, two kinds of row are stored like an inbound message
   without being a new request, and produce none: the record of a deletion that
-  arrived before its message, and a message imported from history (stored more than
-  a day after it was sent, which only the backfill does).
+  arrived before its message, and a message imported from history (a row whose
+  metadata carries the backfill's `"backfilled": true`, whatever its age, or one
+  stored more than a day after it was sent).
 - A message delivered again finds its row, inserts nothing, and produces nothing.
   That is a property of how the application stores messages, not of the trigger.
 
@@ -79,9 +80,12 @@ ever captured.
   outgoing and history rows are inserted directly. One event for a WhatsApp message
   and none more when it is delivered again; one for an Instagram and one for a
   Facebook message; none for an outgoing message, a deletion that arrives first, or
-  a row three days old; a message whose capture fails is stored without an event.
+  a row three days old, or a minute-old row carrying the backfill marker (a row
+  whose metadata says `"backfilled": false` is still captured); a message whose
+  capture fails is stored without an event.
   With the rollback applied the first three cases fail (run locally on 2026-10-11).
-  Not covered: a WhatsApp sender matched to a party, the backfill route, the
+  Not covered: a WhatsApp sender matched to a party, the backfill HTTP route itself
+  (its rows are represented by the metadata it writes), the
   one-day boundary, outgoing WhatsApp messages, and the projection into work items
   (the existing HTTP test below covers the WhatsApp projection).
 - `scripts/lib/operations_conformance.py`: the existing HTTP test of the WhatsApp
@@ -92,11 +96,10 @@ ever captured.
 
 - The model is bounded and checks the capture decision only. It does not cover the
   outbox worker, the projection into work items, or service-level clocks.
-- "Imported from history" is decided by age: a row whose time is more than one day
-  before its insertion. Webhook rows carry the server's time and are always
-  captured, however late Meta delivers them. Backfill rows carry the message's own
-  time, so a backfilled message less than a day old is captured, and its item can
-  be at or past its timers when created. The model treats history as a kind of
+- "Imported from history" is decided by origin and by age: a row the backfill marked
+  in its metadata is never captured, and neither is a row whose time is more than
+  one day before its insertion. Webhook rows carry the server's time and are always
+  captured, however late Meta delivers them. The model treats history as a kind of
   row and does not model the one-day boundary.
 - A capture failure is contained with a savepoint per stored message, and the
   event is then missing with only a log line to show for it.

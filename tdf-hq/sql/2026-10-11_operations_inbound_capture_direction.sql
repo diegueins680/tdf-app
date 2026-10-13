@@ -7,8 +7,9 @@
 --
 -- Two kinds of Instagram and Facebook rows are stored as 'incoming' without
 -- being a new request, and are not captured: the record of a deletion that
--- arrived before its message, and a message imported from history (stored
--- more than a day after it was sent, which only the backfill does).
+-- arrived before its message, and a message imported from history: a row the
+-- backfill marked in its metadata ("backfilled": true), whatever its age, or
+-- one stored more than a day after it was sent.
 --
 -- The capture now runs for every inbound message, inside the transaction that
 -- stores it. Storing the message matters more than recording it for
@@ -41,12 +42,24 @@ BEGIN
 END;
 $$;
 
+-- The backfill writes its origin into the row's metadata; anything that is
+-- not a JSON object carrying "backfilled": true is not a backfill.
+CREATE OR REPLACE FUNCTION operations_message_is_backfill(raw_metadata TEXT)
+RETURNS boolean LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE
+    WHEN raw_metadata IS NULL OR NOT pg_input_is_valid(raw_metadata, 'jsonb') THEN FALSE
+    WHEN jsonb_typeof(raw_metadata::jsonb) <> 'object' THEN FALSE
+    ELSE COALESCE((raw_metadata::jsonb -> 'backfilled') = 'true'::jsonb, FALSE)
+  END;
+$$;
+
 CREATE OR REPLACE FUNCTION operations_social_inbound_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE provider_name TEXT := CASE WHEN TG_TABLE_NAME = 'instagram_message' THEN 'instagram' ELSE 'facebook' END;
 BEGIN
   IF lower(NEW.direction) NOT IN ('incoming', 'inbound', 'received') THEN RETURN NEW; END IF;
   IF NEW.deleted_at IS NOT NULL OR NEW.created_at < now() - interval '1 day' THEN RETURN NEW; END IF;
+  IF operations_message_is_backfill(NEW.metadata) THEN RETURN NEW; END IF;
   BEGIN
     PERFORM operations_record_event(
       'communication.' || provider_name || '.received', 'uncorrelated_inbound', NEW.sender_id,

@@ -42,4 +42,6 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS operations_message_is_backfill(TEXT);
+
 COMMIT;
