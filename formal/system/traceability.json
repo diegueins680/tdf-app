@@ -10541,8 +10541,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
-    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "5d4adbc5caeddbaeefcd6c532ea3e76d35fbf371e7331b78cac4bfdda6ccfcdb",
-    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "49b28baf6b42e9eb37b0b50ff0e2452ac73ccd79c4ee00d664f3e7eb47d622c8",
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10685,7 +10685,7 @@
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
-    "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "753f4744496f82539597a581beca6dc175fa4842d24f31f164835510b24d6d98",
+    "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
@@ -34330,7 +34330,7 @@
     {
       "id": "SURFACE-672fc61c890788b0",
       "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
-      "sha256": "5d4adbc5caeddbaeefcd6c532ea3e76d35fbf371e7331b78cac4bfdda6ccfcdb",
+      "sha256": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34342,7 +34342,7 @@
     {
       "id": "SURFACE-1f2645f2629f4bbe",
       "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
-      "sha256": "49b28baf6b42e9eb37b0b50ff0e2452ac73ccd79c4ee00d664f3e7eb47d622c8",
+      "sha256": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37649,7 +37649,7 @@
     {
       "id": "SURFACE-eba437673d8ebcc8",
       "path": "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
-      "sha256": "753f4744496f82539597a581beca6dc175fa4842d24f31f164835510b24d6d98",
+      "sha256": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -13037,13 +13037,13 @@
     {
       "id": "SURFACE-672fc61c890788b0",
       "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
-      "sha256": "5d4adbc5caeddbaeefcd6c532ea3e76d35fbf371e7331b78cac4bfdda6ccfcdb",
+      "sha256": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1f2645f2629f4bbe",
       "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
-      "sha256": "49b28baf6b42e9eb37b0b50ff0e2452ac73ccd79c4ee00d664f3e7eb47d622c8",
+      "sha256": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14867,7 +14867,7 @@
     {
       "id": "SURFACE-eba437673d8ebcc8",
       "path": "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
-      "sha256": "753f4744496f82539597a581beca6dc175fa4842d24f31f164835510b24d6d98",
+      "sha256": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24679,7 +24679,7 @@
     },
     {
       "path": "formal/system/operations-inbound-capture.md",
-      "sha256": "c6060042744dc4e506c78c70082b29dfe71c43117fd8578af00c112221c39600",
+      "sha256": "9fefac5a1360942411fec3831c39517af72460bd03221b5f4f182ecc0d099cc4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
