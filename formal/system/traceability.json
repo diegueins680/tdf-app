@@ -3037,11 +3037,11 @@
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
-      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
-      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
         "tdf-hq/src/TDF/RagStore.hs"
@@ -3049,7 +3049,9 @@
       "tests": [
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeRead.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
@@ -3058,14 +3060,14 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+        "reason": "Bounded model and source-mapped HTTP regressions cover the retrieval boundary; final candidate execution and deployed/channel/provider/retention evidence remain separate obligations."
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
-      "contract": "formal/system/bookings.md",
-      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
-      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof.",
+      "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
       "id": "MEDIA-PERSIST-001",
@@ -9755,6 +9757,7 @@
     "formal/event-operations/ProviderRetryAdmissionLate.cfg": "e8f74982567c8bfe974e9d7ab168d45043bbb8826a6e9b99f1805e99ee6f79d2",
     "formal/event-operations/ProviderRetryAdmissionPayload.cfg": "e45311f9c71bbcfe46171a0fba4bde38f656f8a5781fc6efbc8eb53fa86e86dd",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
+    "formal/event-operations/PublicKnowledgeRead.tla": "112d5cf4a069ee8e7369dd62ea196058f688afee91db6233b928a9e177879f96",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
     "formal/event-operations/RefundRecovery.cfg": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
     "formal/event-operations/RefundRecovery.tla": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
@@ -9957,7 +9960,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
-    "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+    "scripts/test-booking-conformance.py": "a7c9553f695b3398c1f1e8f876a5f29916c535fe22488b1d9bcec5e64d3472c5",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -10018,7 +10021,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+    "scripts/verify-event-operations-formal.sh": "baeba0cf3df3692e549fcae3f43aa6e74072ed655bac22356309d032220e7acb",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -12811,6 +12814,12 @@
       {
         "requirement": "SYS-UX-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/PublicKnowledgeRead.tla": [
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/persistent-uploads.sh": [
@@ -21800,7 +21809,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "a7c9553f695b3398c1f1e8f876a5f29916c535fe22488b1d9bcec5e64d3472c5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23135,7 +23144,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+      "sha256": "baeba0cf3df3692e549fcae3f43aa6e74072ed655bac22356309d032220e7acb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42842,7 +42851,6 @@
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
     "DEPLOY-STARTUP-001",
-    "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
     "SYS-VERIFY-004",
@@ -43994,7 +44002,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
+      "sourceSha256": "14f1434fbbe3eec448cdee2285074ad8569732af76562899f57c15b1f3dace8c",
       "definition": {
         "states": [
           "absent",

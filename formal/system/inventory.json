@@ -4870,7 +4870,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "a7c9553f695b3398c1f1e8f876a5f29916c535fe22488b1d9bcec5e64d3472c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5602,7 +5602,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+      "sha256": "baeba0cf3df3692e549fcae3f43aa6e74072ed655bac22356309d032220e7acb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22774,8 +22774,50 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/PublicKnowledgeRead.cfg",
+      "sha256": "5f4c43cd22e06836c95df4ee1870716346f08069dec380e5bafe73bb20cb9a9a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeRead.tla",
+      "sha256": "112d5cf4a069ee8e7369dd62ea196058f688afee91db6233b928a9e177879f96",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeReadCachedMetadata.cfg",
+      "sha256": "2a74a790c24fbb72495c448b83372dbcafb6735cd7e8c7166ff326b80deb76e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeReadMissingFallback.cfg",
+      "sha256": "43d6bfb174fac6a64655c7f6f472a198c90a03f82b725753cba975eafbb60097",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeReadRawText.cfg",
+      "sha256": "0fe8675cf2e412eb6b71b1e0904d7f7bef18d214175ef9092895be66bec8f136",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeReadUnfiltered.cfg",
+      "sha256": "012f91bf3cc6f6d4f68e068b092013e01197cde51ea6df22b7491e80e7ef4272",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/README.md",
-      "sha256": "e31602f38ddfb988e055b03317d0033a8aea15701c4f5000984462d4254a2b62",
+      "sha256": "ac5d957f7ce82968f8eab322d65458660d7f4e64633a6b752e70ca5a78fd32d9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24301,7 +24343,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "cf91b1a38ca3f69bfc27d2ba6dbb84f16fc7d12912849878f088b41622458888",
+      "sha256": "c03c54016fb50f261f5b6f1f89176731bb195f516846c101fe5f73cc9008cfe1",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24322,7 +24364,7 @@
     },
     {
       "path": "formal/system/bookings.md",
-      "sha256": "6dd115e381604f1b68cb16044440e9ce24242fcceb5029b57964d0a03bbb542f",
+      "sha256": "39a90741bfb9d3a0f6ff199680be4a03d7576aaa50e51ad89c72fbb12c4f8e81",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24580,6 +24622,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/public-knowledge-retrieval.md",
+      "sha256": "ee7092b29788457712d8fb84c814666de115225615785ef372792e5615397464",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-route-admission.md",
       "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
       "authority": "inferred",
@@ -24623,14 +24672,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
+      "sha256": "14f1434fbbe3eec448cdee2285074ad8569732af76562899f57c15b1f3dace8c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3d6630e4dfe2b3c36d2f95617616e0cb602345c8e7811a1b099bce530799dc76",
+      "sha256": "ad5e1e18c5ff284ecee79b0ffc36036bf66147acd49a213bc43fcb34692f50b8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -35034,6 +35083,81 @@
         "CONSTANTS RecoverUntouched = TRUE Unsafe = TRUE PriorSafe = {} InitialSafe = {}",
         "INVARIANTS NoUnsafeRestoration ModernNeverDowngrades",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeRead.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  FilterSource = TRUE",
+        "  RenderCurrent = TRUE",
+        "  DropMissing = TRUE",
+        "  ExcludeRaw = TRUE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeReadCachedMetadata.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  FilterSource = TRUE",
+        "  RenderCurrent = FALSE",
+        "  DropMissing = TRUE",
+        "  ExcludeRaw = TRUE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeReadMissingFallback.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  FilterSource = TRUE",
+        "  RenderCurrent = TRUE",
+        "  DropMissing = FALSE",
+        "  ExcludeRaw = TRUE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeReadRawText.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  FilterSource = TRUE",
+        "  RenderCurrent = TRUE",
+        "  DropMissing = TRUE",
+        "  ExcludeRaw = FALSE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeReadUnfiltered.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  FilterSource = FALSE",
+        "  RenderCurrent = TRUE",
+        "  DropMissing = TRUE",
+        "  ExcludeRaw = TRUE",
+        "INVARIANTS TypeOK AllowedSource NoPrivateText ExistingAtRead CurrentMetadata"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

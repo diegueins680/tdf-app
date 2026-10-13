@@ -3036,11 +3036,11 @@
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
       "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
-      "concurrency": "Candidate course identities and metadata are read during one retrieval transaction; deletion committed after a read may precede response delivery and is not linearized here.",
+      "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
       "recovery": "Public metadata changes take effect on the next read; stale raw text need not be purged to enforce this retrieval boundary.",
-      "observability": "Synthetic anonymous HTTP checks observe private-source exclusion, poisoned-cache rejection, metadata freshness and deleted-course exclusion.",
+      "observability": "Synthetic staff-authenticated HTTP checks observe private-source exclusion including colliding course slugs, poisoned-cache rejection, metadata freshness and deleted-course exclusion. Anonymous and unprivileged assistant calls are denied.",
       "source": "Observed anonymous private-booking-content disclosure; formal/system/bookings.md customer-facing retrieval boundary.",
       "implementation": [
         "tdf-hq/src/TDF/RagStore.hs"
@@ -3048,7 +3048,9 @@
       "tests": [
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeRead.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
@@ -3057,14 +3059,14 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Old-binary disclosure was reproduced; repaired HTTP checks and all channel integrations need execution evidence. No formal deletion linearization proof is claimed."
+        "reason": "Bounded model and source-mapped HTTP regressions cover the retrieval boundary; final candidate execution and deployed/channel/provider/retention evidence remain separate obligations."
       },
       "critical": true,
       "authority": "Private booking object scope and current public-course retrieval boundary in formal/system/bookings.md",
-      "property": "Every returned document is freshly rendered from an existing public course, never raw private indexed content.",
-      "contract": "formal/system/bookings.md",
-      "verification": "Anonymous HTTP on a fresh synthetic PostgreSQL database with private, poisoned, updated and deleted index fixtures.",
-      "evidence": "Preserved old-backend anonymous disclosure reproduction and exact-candidate booking-conformance HTTP artifact; repaired execution remains pending."
+      "property": "AllowedSource, NoPrivateText, ExistingAtRead and CurrentMetadata in the bounded read model; every returned document is rendered from the existing course metadata snapshot, never raw indexed text.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Disposable PostgreSQL/HTTP fixture with private, colliding-identity, poisoned, updated and deleted index entries; bounded TLC model with four named negative controls. Neither is a whole-program refinement proof.",
+      "evidence": "Historical disclosure reproduction is retained separately; exact candidate model/HTTP/CI receipts are required. New coverage must not inherit a historical green result."
     },
     {
       "id": "MEDIA-PERSIST-001",

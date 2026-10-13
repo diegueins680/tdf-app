@@ -645,6 +645,16 @@
       "decision": "adopted",
       "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-RAG-SNAPSHOT-001",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED",
+      "title": "PostgreSQL17 Read Committed statement snapshots",
+      "recommendation": "Successive statements in one transaction may observe different committed versions. State the observation point for a current-data guarantee.",
+      "applicability": "PRIV-RAG-001 ranking followed by course metadata reads",
+      "decision": "adopted",
+      "rationale": "Model edits/deletion between ranking, metadata read and delivery. Require current public data at metadata read, not deletion-linearized delivery. Do not infer production isolation configuration from the default or claim full SQL/Haskell refinement.",
+      "checkedAt": "2026-10-13"
     }
   ]
 }
