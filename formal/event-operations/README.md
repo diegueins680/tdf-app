@@ -638,6 +638,13 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.
 ## Ticket invoice submission
 
 `InvoiceSubmission.tla` and five configurations check the worker rules in

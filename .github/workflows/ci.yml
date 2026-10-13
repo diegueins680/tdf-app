@@ -529,6 +529,7 @@ jobs:
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-interaction-write-budget.sh
 
       - name: Verify single assignment of an event without an organizer
         env:
