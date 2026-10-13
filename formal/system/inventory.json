@@ -4291,7 +4291,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "562c90449a87663e7e6e56b6b3eb13a46bc0e671155e0981db9b5b7c8ecdd441",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19989,7 +19989,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "6f83f6530692a3896f99c5844f52020bb45d6d480938759eb7befabd67264986",
+      "sha256": "dc15219062eae9e1b8b2c8779ef2a4bd09789b684eab07a809552d9f6f98e7ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
