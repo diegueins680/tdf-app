@@ -128,16 +128,19 @@
       "id": "SYS-VERIFY-002",
       "statement": "A failed, incomplete or source-stale formal execution must never be admitted as passing evidence; relevant changes must trigger fresh checks.",
       "authority": "approved",
-      "source": "User audit instruction 2026-09-18 section 8",
+      "source": "User audit instruction 2026-09-18 section 8; user consolidated audit 2026-10-13 sections 8, 9, 24",
       "property": "admit iff successful exit, no signal/error, completed suite, unchanged source digest",
-      "contract": "scripts/__tests__/verification-evidence.test.mjs",
+      "contract": "formal/system/alloy-negative-controls.md",
       "implementation": [
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
-        "scripts/lib/formal-result-summary.mjs"
+        "scripts/lib/formal-result-summary.mjs",
+        "scripts/lib/alloy-controls.mjs",
+        "scripts/verify-alloy-controls.mjs",
+        "scripts/quality-repo.sh"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
       "evidence": "formal CI source/result manifests and regression output",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -172,15 +175,17 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label. Retain original/mutated Alloy source hashes, exact command scopes, named results, solver receipts and counterexample instances.",
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
-        "scripts/__tests__/formal-result-summary.test.mjs"
+        "scripts/__tests__/formal-result-summary.test.mjs",
+        "scripts/__tests__/alloy-controls.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "Alloy mutation sensitivity is not a proof that the modeled facts correspond to every implementation guard. Other formal suites retain their separate verification obligations."
       ],
       "conformance": {
         "classification": "PARTIAL",

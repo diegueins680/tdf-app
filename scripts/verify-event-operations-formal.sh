@@ -402,39 +402,8 @@ expect_counterexample ArtistFollowConsentUnknown.cfg NoUnconfirmedMutation artis
 expect_counterexample ArtistFollowConsentStale.cfg CurrentTargetReceipt artist-follow-stale ArtistFollowConsent.tla
 
 
-scenario_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
-  -c 0 -s sat4j -t none -o "${run_root}/alloy-scenario" EventStructure.als 2>&1)"
-printf '%s\n' "${scenario_output}"
-if grep -q 'UNSAT' <<<"${scenario_output}" || ! grep -q 'SAT' <<<"${scenario_output}"; then
-  echo "Alloy integrated scenario must be satisfiable." >&2
-  exit 1
-fi
-
-for command_index in 1 2 3 4 5 6 7 8; do
-  check_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
-    -c "${command_index}" -s sat4j -t none \
-    -o "${run_root}/alloy-check-${command_index}" EventStructure.als 2>&1)"
-  printf '%s\n' "${check_output}"
-  if ! grep -q 'UNSAT' <<<"${check_output}"; then
-    echo "Alloy command ${command_index} found a counterexample or did not complete." >&2
-    exit 1
-  fi
-done
-
-for command_index in 0 1 2 3 4 5; do
-  task_output="$("${JAVA_BIN}" -jar "${ALLOY_JAR}" exec \
-    -c "${command_index}" -s sat4j -t none \
-    -o "${run_root}/alloy-task-read-${command_index}" TaskReadStructure.als 2>&1)"
-  printf '%s\n' "${task_output}"
-  if [[ "${command_index}" = 0 ]]; then
-    if grep -q 'UNSAT' <<<"${task_output}" || ! grep -q 'SAT' <<<"${task_output}"; then
-      echo 'Alloy task read scenario must be satisfiable.' >&2
-      exit 1
-    fi
-  elif ! grep -q 'UNSAT' <<<"${task_output}"; then
-    echo "Alloy task read assertion ${command_index} failed." >&2
-    exit 1
-  fi
-done
+# Preserve original scopes and require a detected mutation for every Alloy assertion.
+node --test "${SCRIPT_DIR}/__tests__/alloy-controls.test.mjs"
+node "${SCRIPT_DIR}/verify-alloy-controls.mjs" --output "${TDF_ALLOY_EVIDENCE_DIR:-${run_root}/alloy}"
 
 echo "Event operations formal verification passed within the documented finite bounds."
