@@ -1,7 +1,8 @@
 ----------------------------- MODULE StartupGates -----------------------------
 (* Startup capability-gate policy (DEPLOY-STARTUP-001): the revenue_feature_flag
    assertions of buildSchemaVerificationSql in scripts/lib/production-release.mjs,
-   which tdf-hq/production-entrypoint.sh runs before the server accepts traffic.
+   which tdf-hq/production-entrypoint.sh runs before the server accepts traffic
+   whenever AUTO_APPLY_PRODUCTION_MIGRATIONS is true (the shipped default).
 
    Not a state machine: one state, and every invariant quantifies over every
    assignment of the asserted production flags to {missing, disabled,

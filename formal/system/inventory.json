@@ -3446,7 +3446,7 @@
     {
       "id": "SURFACE-8599bbddd15faa14",
       "path": "scripts/__tests__/startup-gates-postgres.mjs",
-      "sha256": "511b0acf0840defef3304cafaacb4146961eb6682a5cba500cb4cd20cf86f1e8",
+      "sha256": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22460,7 +22460,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "5ee30b189190f1edee6c337f7dbd647d8b06981581af34c110201c44df273bf4",
+      "sha256": "5fe5a92dcfce1974c4442c99fa9c2747e905bbc208d61ad5461c6fcad87e0364",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22992,7 +22992,7 @@
     },
     {
       "path": "formal/event-operations/StartupGates.tla",
-      "sha256": "b6a35e1948881d4d315a382bd8a12450d17e112486ea2a5f53e3f0b4ba1ebc81",
+      "sha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -24000,7 +24000,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "01fabd15bda74b87daf1e41c807cfbc10eb5b079473aa1128941c6cb258eb86f",
+      "sha256": "b5df3e5f0e6aacf3d75652b18d4c86b71a7dc55b3471f69a2fbf9df367f01257",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24280,7 +24280,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9930824d4a7be036a62b239998aba1595a676c7214ca042289db333b4c85658e",
+      "sha256": "6e060cb01afa93316d5af4e95e59ddfafac517d34232841757435723e90bdea0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24315,7 +24315,7 @@
     },
     {
       "path": "formal/system/startup-gates.md",
-      "sha256": "94a2a694071d68ccda18a74ebe43d1ae0f30f1f064e88419c68a27ce0c2fbb2f",
+      "sha256": "326b5b7a555c0e571bc0b1387daaa134450e2bc7a70ed2493fdf2d163e10dba2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -2754,7 +2754,7 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
       "formalModels": [
         "formal/event-operations/StartupGates.tla",
@@ -2770,7 +2770,9 @@
       "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
       "ambiguity": [
         "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
-        "Production flag states are not observable from the repository; the policy is a precondition for flag changes."
+        "Production flag states are not observable from the repository; the policy is a precondition for flag changes.",
+        "The verifier also blocks startup on data toggles outside revenue_feature_flag: interaction_entity_kind artist_update must be disabled, security_role_assignment_policy artist.invitation.artist and classified_category artist-profile must be active, the directory artist-listing audit must report nothing, no suppressed imported directory event, catalog backfill run statuses and minimum active-row counts; each is a restart hazard of the same class and needs the same release discipline.",
+        "The startup verification runs only when AUTO_APPLY_PRODUCTION_MIGRATIONS is true (the shipped default); with it false the container starts with no verification at all."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9287,7 +9289,7 @@
     "formal/event-operations/SessionCacheIsolation.tla": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StartupGates.cfg": "e3f5eda4b6a1011d4c1833e16c3c3a9c3bc7417cd919b5bd27daf0a1b761c569",
-    "formal/event-operations/StartupGates.tla": "b6a35e1948881d4d315a382bd8a12450d17e112486ea2a5f53e3f0b4ba1ebc81",
+    "formal/event-operations/StartupGates.tla": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
     "formal/event-operations/StartupGatesEitherRejected.cfg": "e5e1a9fc40d148fda964643f67d80228047b81b8dc9bb8e6da764d44287fc973",
     "formal/event-operations/StartupGatesMissingAccepted.cfg": "b27c55fa854977daf2534febd1f16aefb44fee9c16048a27c31b4b0bcf3c9d3f",
     "formal/event-operations/StartupGatesRequiredUnchecked.cfg": "fe98e3e81f68e2cb507b9729aea5a45e8f3f080a5a7736470a22f2ce7a72eca5",
@@ -9383,7 +9385,7 @@
     "scripts/__tests__/production-release.test.mjs": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
-    "scripts/__tests__/startup-gates-postgres.mjs": "511b0acf0840defef3304cafaacb4146961eb6682a5cba500cb4cd20cf86f1e8",
+    "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
@@ -18466,7 +18468,7 @@
     {
       "id": "SURFACE-8599bbddd15faa14",
       "path": "scripts/__tests__/startup-gates-postgres.mjs",
-      "sha256": "511b0acf0840defef3304cafaacb4146961eb6682a5cba500cb4cd20cf86f1e8",
+      "sha256": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42493,7 +42495,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9930824d4a7be036a62b239998aba1595a676c7214ca042289db333b4c85658e",
+      "sourceSha256": "6e060cb01afa93316d5af4e95e59ddfafac517d34232841757435723e90bdea0",
       "definition": {
         "states": [
           "absent",

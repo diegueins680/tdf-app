@@ -3,7 +3,10 @@
 Reconstructed on 2026-10-12 from `buildSchemaVerificationSql` in
 `scripts/lib/production-release.mjs` (the `revenue_feature_flag` assertions)
 and `tdf-hq/production-entrypoint.sh`, which runs that verification after the
-migration batch and before the server accepts traffic. The requirement text
+migration batch and before the server accepts traffic whenever
+`AUTO_APPLY_PRODUCTION_MIGRATIONS` is true (the shipped image, Dockerfile and
+`fly.toml` default; the precheck requires it). With it false the container
+starts with no verification at all. The requirement text
 was read against the code, not the other way round.
 
 ## The policy as coded
@@ -20,9 +23,17 @@ and raises a fixed message; the verification never writes a flag.
 | `checkout.paypal.webhooks`, `checkout.paypal.refunds`, `checkout.datafast.webhooks`, `checkout.datafast.refunds` | enabled or disabled (AUTHORITY-050) | Production provider capability gates must exist; PlaceToPay and Payphone must remain staged |
 | `checkout.placetopay.webhooks`, `checkout.payphone.notifications` | disabled | same |
 
-A missing row fails in every group. No other production flag is asserted at
-startup (the hetzner preparation observes more flags; it does not gate
-startup).
+A missing row fails in every group. No other `revenue_feature_flag` row is
+asserted at startup (the hetzner preparation observes more flags; it does not
+gate startup). The verifier does assert other data toggles of the same
+class, outside this table: `interaction_entity_kind` `artist_update` must be
+disabled, `security_role_assignment_policy` `artist.invitation.artist` and
+`classified_category` `artist-profile` must be active, the directory
+artist-listing audit must report nothing, no suppressed imported directory
+event may exist, catalog backfill runs must hold their expected statuses and
+several tables must hold minimum active-row counts. Each blocks every later
+start in the same way; they are listed here as hazards and are not swept by
+this slice's test.
 
 ## What this means for operations (the restart hazard)
 
@@ -46,14 +57,15 @@ is completed with the full asserted set (AUTHORITY-077); the code is unchanged.
   baseline and the two joint extremes of the either-state gates accepted, then
   each of the fourteen flags alone in each of its three states (42 runs):
   every state accepted or rejected exactly as the table says, with the fixed
-  message; the sweep restores the fixture's rows and checks the verification
-  wrote none.
+  message; the sweep restores the fixture's rows and checks, by comparing every
+  production flag row before and after each run, that the verification wrote
+  none.
 - `formal/event-operations/StartupGates.tla` (+4 controls): one state; the
   policy copied per flag, guard by guard; `ApprovedStarts` (every approved
   configuration verifies) and `StartImpliesApproved` (a verifying configuration
   is approved) over all 3^14 = 4,782,969 assignments. Controls
-  `StagedAccepted`, `MissingAccepted`, `EitherRejected` (the pre-AUTHORITY-050
-  verifier) and `RequiredUnchecked` each fail on the named invariant.
+  `StagedAccepted`, `MissingAccepted`, `EitherRejected` (a coarser stand-in for the pre-AUTHORITY-050
+  verifier, which required the PayPal refund and Datafast gates disabled) and `RequiredUnchecked` each fail on the named invariant.
 - `scripts/__tests__/production-release.test.mjs` and
   `scripts/test-automatic-migrations-production-schema.sh` (unchanged):
   structure of the verification and its acceptance of the fixture.

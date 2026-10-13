@@ -42,7 +42,9 @@ const states = ['missing', 'disabled', 'enabled'];
 const dir = mkdtempSync(join(tmpdir(), 'startup-gates-'));
 const verification = join(dir, 'verify.sql');
 writeFileSync(verification, buildSchemaVerificationSql({ includePsqlHeader: true }));
-const verify = () => spawnSync('psql', [db, '-X', '-v', 'ON_ERROR_STOP=1', '-f', verification], { encoding: 'utf8' });
+const rows = () => pass(`SELECT coalesce(string_agg(flag_key||'='||enabled||'|'||reason||'|'||coalesce(updated_by::text,'')||'|'||updated_at, ';' ORDER BY flag_key), '') FROM revenue_feature_flag WHERE environment='production';`, 'rows');
+// Every run compares all production flag rows before and after: the verification writes none.
+const verify = () => { const before = rows(); const r = spawnSync('psql', [db, '-X', '-v', 'ON_ERROR_STOP=1', '-f', verification], { encoding: 'utf8' }); assert.equal(rows(), before, 'the verification must not write a flag'); return r; };
 
 const snapshot = JSON.parse(pass(`SELECT coalesce(json_agg(json_build_object('flag_key', flag_key, 'enabled', enabled, 'reason', reason, 'updated_by', updated_by, 'updated_at', updated_at)), '[]')
   FROM revenue_feature_flag WHERE environment='production' AND flag_key IN (${flags.map(f => `'${f}'`).join(',')});`, 'snapshot'));
@@ -53,7 +55,7 @@ const set = (flag, state) => pass(state === 'missing'
 const restore = () => {
   pass(`DELETE FROM revenue_feature_flag WHERE environment='production' AND flag_key IN (${flags.map(f => `'${f}'`).join(',')});`, 'restore: clear');
   for (const row of snapshot) {
-    pass(`INSERT INTO revenue_feature_flag (flag_key, enabled, environment, reason, updated_by, updated_at) VALUES ('${row.flag_key}', ${row.enabled}, 'production', ${row.reason === null ? 'NULL' : `'${String(row.reason).replaceAll("'", "''")}'`}, ${row.updated_by ?? 'NULL'}, '${row.updated_at}');`, 'restore: row');
+    pass(`INSERT INTO revenue_feature_flag (flag_key, enabled, environment, reason, updated_by, updated_at) VALUES ('${row.flag_key}', ${row.enabled}, 'production', '${String(row.reason).replaceAll("'", "''")}', ${row.updated_by ?? 'NULL'}, '${row.updated_at}');`, 'restore: row');
   }
 };
 const baseline = () => { for (const flag of flags) set(flag, policy[flag].allowed[0] === 'enabled' ? 'enabled' : 'disabled'); };
@@ -85,8 +87,6 @@ try {
       set(flag, policy[flag].allowed[0] === 'enabled' ? 'enabled' : 'disabled');
     }
   }
-  // Verification never writes a gate.
-  assert.equal(pass(`SELECT count(*) FROM revenue_feature_flag WHERE environment='production' AND reason='startup gate test' AND flag_key NOT IN (${flags.map(f => `'${f}'`).join(',')});`, 'no stray rows'), '0');
 } finally {
   restore();
   rmSync(dir, { recursive: true, force: true });

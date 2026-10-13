@@ -610,8 +610,8 @@
         "scripts/__tests__/startup-gates-postgres.mjs"
       ],
       "conflict": "DEPLOY-STARTUP-001 described only the six provider gates, while the startup verifier also requires the three manual-settlement gates and the two marketplace gates enabled and the service-booking and two course gates disabled; a flag change in any of those nine would pass unnoticed by the requirement and fail every later container start, as checkout.paypal.refunds did on 2026-10-07 (AUTHORITY-050).",
-      "authority": "The verifier as reviewed and the product decisions behind each gate (AUTHORITY-050 for PayPal and Datafast; the service-booking, course and staged-provider gates remain disabled until approved).",
-      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state."
+      "authority": "The verifier as reviewed, read as the current policy (AUTHORITY-050 for the PayPal and Datafast gates; no separate product decision is on record for the service-booking, course and staged-provider gates, whose disabled state is taken from the code).",
+      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state. The verifier also asserts data toggles outside revenue_feature_flag (artist_update interaction kind disabled, artist invitation policy and artist-profile category active, directory audit clean, catalog backfill statuses, minimum row counts); they are listed with the flag policy as restart hazards."
     }
   ]
 }

@@ -2753,7 +2753,7 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
       "formalModels": [
         "formal/event-operations/StartupGates.tla",
@@ -2769,7 +2769,9 @@
       "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
       "ambiguity": [
         "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
-        "Production flag states are not observable from the repository; the policy is a precondition for flag changes."
+        "Production flag states are not observable from the repository; the policy is a precondition for flag changes.",
+        "The verifier also blocks startup on data toggles outside revenue_feature_flag: interaction_entity_kind artist_update must be disabled, security_role_assignment_policy artist.invitation.artist and classified_category artist-profile must be active, the directory artist-listing audit must report nothing, no suppressed imported directory event, catalog backfill run statuses and minimum active-row counts; each is a restart hazard of the same class and needs the same release discipline.",
+        "The startup verification runs only when AUTO_APPLY_PRODUCTION_MIGRATIONS is true (the shipped default); with it false the container starts with no verification at all."
       ],
       "conformance": {
         "classification": "PARTIAL",
