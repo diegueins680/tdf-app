@@ -288,6 +288,7 @@
       "scripts/lib/ui-static-audit.mjs",
       "scripts/lib/ux-quality-audit.mjs",
       "scripts/lib/verification-evidence.mjs",
+      "scripts/lib/whatsapp_consent_conformance.py",
       "scripts/mail-deliverability-monitor.py",
       "scripts/merge-admission.py",
       "scripts/meta-app-review-packet.mjs",
@@ -4112,7 +4113,7 @@
     {
       "id": "SURFACE-f9884c5ddfa3d37d",
       "path": "scripts/lib/readiness_conformance.py",
-      "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+      "sha256": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4149,6 +4150,12 @@
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
       "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c1661bacc266994d",
+      "path": "scripts/lib/whatsapp_consent_conformance.py",
+      "sha256": "c2ca6510660530e66d029ac1c8e73274c97b9dc89533a7ba76dcc3b179b8ed66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4850,7 +4857,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "967d94758aaf4213b9b18711886f6e5996345ebd2c50482e97f812311f371be3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5546,7 +5553,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "5a8b932b3b7a66903ff0c6a2ef6b950b5a4ec1b371c9c604432865e2ac604cce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5582,7 +5589,7 @@
     {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
-      "sha256": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
+      "sha256": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13226,7 +13233,7 @@
     {
       "id": "SURFACE-9b25f2b06da83696",
       "path": "tdf-hq/src/TDF/App/Readiness.hs",
-      "sha256": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+      "sha256": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13946,7 +13953,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "85cf2977b605a92d3c6108ebec9389a4c38fa4cd45f4e04852f3e9f0f43386f2",
+      "sha256": "43e3042825dbfcdd5330005effa99bc6a1d0389119ea978070a2190b7f162464",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14720,7 +14727,7 @@
     {
       "id": "SURFACE-e54fcc9334870c9b",
       "path": "tdf-hq/test/TDF/ReadinessSpec.hs",
-      "sha256": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
+      "sha256": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22467,7 +22474,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "97265617534d6a867c9a6f4152cf1aeac3964274b72905d5114c8d429a59a59b",
+      "sha256": "7acbf211b92ec4dbb366e43200a08215f357646713510304aea9aedcd3038052",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22608,6 +22615,34 @@
     {
       "path": "formal/event-operations/RaciWebEditorRetry.cfg",
       "sha256": "4931120eb43ea3951f6210b4569bdee4e299eaae28bf1e284d02c7eb9d067d69",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbe.cfg",
+      "sha256": "50fdf327a71210086792e372d3e52923958d19b93560ee24316b4dbf7f42607f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbe.tla",
+      "sha256": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbePoolSizeAttempts.cfg",
+      "sha256": "7d3bd4fc94504e3ff55d6bb101eeb2ef55841ebb0f16b0a5af4994bd67ff2d00",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbeSingleAttempt.cfg",
+      "sha256": "344c666a1c21e44c31f82dee303358d020ee0411a3964182145eb79549d74910",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23951,7 +23986,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "a6cbbcc4c9f376e0d5e167a3c1e93f097e8cef4a995c19b948eb18bbee943ec4",
+      "sha256": "3e4edce42fa3807b6a946a3dc35150bba2c7bceb94ce5fbeca551f00bdf033fa",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -23965,7 +24000,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "33b77c0193dae2ca94aa757fd78d57f2cecaba60db1f050e1c6e5ac5e64ad2d2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24210,7 +24245,7 @@
     },
     {
       "path": "formal/system/readiness.md",
-      "sha256": "fd34f26c5e93981f72f61d8ee8af479e612bf6ce79123c37e19187d4d0a7d4ed",
+      "sha256": "d92b8c520e561e337bd055b6cbc5821a1ec8aec80c4acd667115dddbf0a763f1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24245,7 +24280,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sha256": "a2c7d01cd951cc2655e250ce9bf400ed1b0451a4eadb9fcc0c9c2764862fcf90",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24308,7 +24343,7 @@
     },
     {
       "path": "formal/system/whatsapp-consent.md",
-      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
+      "sha256": "663092c19a8df226fc1968222890792880ee73504928e4e8a0d808016f8db691",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34226,6 +34261,51 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbe.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 5",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbePoolSizeAttempts.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 4",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbeSingleAttempt.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 1",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

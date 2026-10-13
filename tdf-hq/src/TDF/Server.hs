@@ -1460,8 +1460,12 @@ whatsappWebhookServer =
         when (isWhatsAppConsentConfirmationMessage waInboundText) $ do
           confirmed <- liftIO $ flip runSqlPool envPool $
             applyWhatsAppConsentConfirmation now waInboundSentAt waInboundSenderId
-          when confirmed $
-            sendWhatsAppConsentNotice now waInboundSenderId waInboundSenderName "consent_confirmation"
+          when confirmed $ do
+            -- The notice takes its own timestamp: whats_app_message is unique
+            -- on (phone_e164, created_at) and the reply itself was recorded
+            -- for this number at `now`.
+            noticeAt <- liftIO getCurrentTime
+            sendWhatsAppConsentNotice noticeAt waInboundSenderId waInboundSenderName "consent_confirmation"
               "Gracias, confirmamos tu suscripción a los mensajes de TDF Records por WhatsApp. Responde STOP para dejar de recibirlos."
         let lowerBody = T.toLower (T.strip waInboundText)
         when ("inscribirme" `T.isInfixOf` lowerBody) $ do
