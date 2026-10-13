@@ -566,4 +566,59 @@ describe('DirectorySearchPage', () => {
       queryClient.clear();
     }
   }, 15_000);
+
+  it('drops nearby coordinates when back restores an earlier city search', async () => {
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const { useLocation, useNavigate } = await import('react-router-dom');
+    function HistoryProbe() {
+      const location = useLocation();
+      const navigate = useNavigate();
+      return <div><span data-testid="search">{location.search}</span><button type="button" onClick={() => navigate(-1)}>history back</button></div>;
+    }
+    const geolocation = Object.getOwnPropertyDescriptor(navigator, 'geolocation');
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -0.18, longitude: -78.48 } } as GeolocationPosition) },
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const currentSearch = () => container.querySelector('[data-testid="search"]')?.textContent ?? '';
+    const button = (label: string) => Array.from(container.querySelectorAll('button')).find((candidate) => candidate.textContent?.includes(label))!;
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?cityId=${quito}`]}><DirectorySearchPage /><HistoryProbe /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      // An older city entry stays in history behind the one nearby mode rewrites.
+      const eventsTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find((tab) => tab.textContent?.startsWith('Eventos'))!;
+      await act(async () => { fireEvent.click(eventsTab); });
+      await waitFor(() => expect(currentSearch()).toBe(`?entityType=event&cityId=${quito}`));
+
+      // Entering nearby mode on a city URL keeps the coordinates and replaces the entry.
+      await act(async () => { fireEvent.click(button(esDirectory.useLocation)); });
+      await waitFor(() => expect(currentSearch()).toBe('?entityType=event&radiusKm=25'));
+      await waitFor(() => expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ latitude: -0.18, longitude: -78.48, radiusKm: 25 })));
+      expect(container.querySelector('input[type="number"]')).not.toBeNull();
+
+      // Back restores the earlier city search instead of rewriting it as nearby.
+      await act(async () => { fireEvent.click(button('history back')); });
+      await waitFor(() => expect(currentSearch()).toBe(`?cityId=${quito}`));
+      await waitFor(() => expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Todo'));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(currentSearch()).toBe(`?cityId=${quito}`);
+      // The city results come from the query cache; the radius field, shown
+      // only while coordinates are held, is gone.
+      expect(container.querySelector('input[type="number"]')).toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+      if (geolocation) Object.defineProperty(navigator, 'geolocation', geolocation);
+      else delete (navigator as { geolocation?: unknown }).geolocation;
+    }
+  }, 15_000);
 });

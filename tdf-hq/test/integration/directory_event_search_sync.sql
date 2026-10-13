@@ -347,6 +347,34 @@ BEGIN
   IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
     RAISE EXCEPTION 'removing the genre membership did not resync the event';
   END IF;
+  -- A genre id reached only through a legacy word follows the catalog row
+  -- too: retiring it drops the id, restoring it and renaming towards or away
+  -- from the word resync the event, with no membership involved.
+  UPDATE social_artist_profile SET genres = ARRAY[upper(catalog_genre_name)] WHERE id = lineup_artist_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) IS DISTINCT FROM ARRAY[catalog_genre_id] THEN
+    RAISE EXCEPTION 'legacy genre word was not mapped before the catalog change';
+  END IF;
+  UPDATE genre SET active = FALSE WHERE id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
+    RAISE EXCEPTION 'retiring the catalog genre left its id on a legacy-genre event';
+  END IF;
+  UPDATE genre SET active = TRUE WHERE id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) IS DISTINCT FROM ARRAY[catalog_genre_id] THEN
+    RAISE EXCEPTION 'restoring the catalog genre did not resync a legacy-genre event';
+  END IF;
+  UPDATE social_artist_profile SET genres = ARRAY['synthetic legacy rename target'] WHERE id = lineup_artist_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
+    RAISE EXCEPTION 'an unmapped legacy word carried a genre id';
+  END IF;
+  UPDATE genre SET name_es = 'Synthetic Legacy Rename Target' WHERE id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) IS DISTINCT FROM ARRAY[catalog_genre_id] THEN
+    RAISE EXCEPTION 'renaming the catalog genre towards a legacy word did not resync the event';
+  END IF;
+  UPDATE genre SET name_es = catalog_genre_name WHERE id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
+    RAISE EXCEPTION 'renaming the catalog genre away from a legacy word left its id on the event';
+  END IF;
+  UPDATE social_artist_profile SET genres = NULL WHERE id = lineup_artist_id;
 
   -- 8c'. A saved search for events that still carries a people-only filter
   -- is notified about a new event, as /directory/search would list it.

@@ -37,7 +37,7 @@ import LoginIcon from '@mui/icons-material/Login';
 import EventIcon from '@mui/icons-material/Event';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, NavigationType, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 
 import {
   Directory,
@@ -176,6 +176,18 @@ export default function DirectorySearchPage() {
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'grid' | 'map'>('list');
   const personFilters = PERSON_FILTER_KINDS.has(entityType);
+
+  // Back or forward restored a city search while nearby coordinates are still
+  // held: the restored entry wins. The coordinates are dropped during this
+  // render, before the canonicalisation effect below could rewrite the entry
+  // as a nearby one, so Back returns to the earlier city search. Only a
+  // history move does this; entering nearby mode on a city URL keeps them.
+  const navigationType = useNavigationType();
+  const [handledLocationKey, setHandledLocationKey] = useState(location.key);
+  if (handledLocationKey !== location.key) {
+    setHandledLocationKey(location.key);
+    if (navigationType === NavigationType.Pop && coordinates && urlState.cityId !== null) setCoordinates(null);
+  }
 
   // User actions push a history entry, so back and forward move between
   // searches; normalisations (default city, canonical path) replace it. In

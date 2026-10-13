@@ -499,7 +499,12 @@ CREATE CONSTRAINT TRIGGER trg_directory_sync_artist_genre_events_search
 
 -- The projection also depends on the genre catalog row itself (active flag
 -- and name), which the catalog API can retire or rename without touching any
--- membership; such a change resyncs the events of every artist on that genre.
+-- membership; such a change resyncs every event the genre reaches:
+--   * through a canonical membership of a lineup artist;
+--   * through a legacy social_artist_profile.genres word that names the
+--     changed row now (a rename towards the word, or a restored genre);
+--   * through the id its document already carries (a rename away from the
+--     word, or a retired genre, where the word no longer maps).
 CREATE OR REPLACE FUNCTION directory_sync_genre_events_search_trigger()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -508,11 +513,23 @@ DECLARE
   genre_event_id BIGINT;
 BEGIN
   FOR genre_event_id IN
-    SELECT DISTINCT lineup.event_id
+    SELECT lineup.event_id
     FROM artist_genre_membership membership
     JOIN event_artist lineup ON lineup.artist_id = membership.artist_id
     WHERE membership.genre_id = NEW.id
-    ORDER BY lineup.event_id
+    UNION
+    SELECT lineup.event_id
+    FROM event_artist lineup
+    JOIN social_artist_profile artist ON artist.id = lineup.artist_id
+    WHERE cardinality(coalesce(artist.genres, '{}'::text[])) > 0
+      AND NEW.id = ANY (directory_social_event_genre_ids(artist.genres))
+    UNION
+    SELECT event.id
+    FROM directory_search_document document
+    JOIN social_event event ON event.id::text = document.entity_id
+    WHERE document.entity_kind = 'event'
+      AND NEW.id = ANY (document.genre_ids)
+    ORDER BY 1
   LOOP
     PERFORM directory_sync_event_search(genre_event_id);
   END LOOP;
