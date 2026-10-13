@@ -44,6 +44,17 @@ class AssuranceTests(unittest.TestCase):
             result = report.build_report(self.requirements, self.provenance, False, reason)
             self.assertTrue(all(o['status'] == 'UNPROVEN' for o in result['obligations']))
 
+    def test_ci_keeps_report_attempt_after_an_earlier_failure(self):
+        import yaml
+        workflow = yaml.safe_load((ROOT/'.github/workflows/event-operations-formal.yml').read_text())
+        steps = workflow['jobs']['specification-contracts']['steps']
+        generation = next(s for s in steps if s.get('name') == 'Generate formal assurance and release decision')
+        self.assertEqual(generation['if'], '${{ !cancelled() }}')
+        self.assertTrue(generation['run'].startswith('python scripts/verification-report.py --output '))
+        self.assertNotIn('test-verification-report.py', generation['run'])
+        archive = next(s for s in steps if s.get('name') == 'Preserve formal assurance report')
+        self.assertEqual(archive['if'], 'always()')
+
     def test_unknown_status_is_rejected(self):
         with self.assertRaises(ValueError):
             report.count_status([{'status': 'PASS'}])

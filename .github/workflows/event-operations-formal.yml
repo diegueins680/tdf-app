@@ -56,9 +56,10 @@ jobs:
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
       - name: Generate formal assurance and release decision
-        run: |
-          python scripts/test-verification-report.py
-          python scripts/verification-report.py --output "${{ runner.temp }}/assurance-report"
+        if: ${{ !cancelled() }}
+        run: python scripts/verification-report.py --output "${{ runner.temp }}/assurance-report"
+      - name: Test assurance reporting and counterexample retention
+        run: python scripts/test-verification-report.py
       - name: Preserve formal assurance report
         if: always()
         uses: actions/upload-artifact@v7

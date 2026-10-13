@@ -9654,7 +9654,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
-    ".github/workflows/event-operations-formal.yml": "2fdfd525d212c046eaa6ebdb254ed98fb7211e0793fb1930fc6b8a8759e27893",
+    ".github/workflows/event-operations-formal.yml": "63bd106c7d3514e7555b5ecef94b8aa818341857ecfb8db8a4ef1ca0314d31bb",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10013,7 +10013,7 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "0abf7679a8678e8cde198ff3424945430b95bf3748a5fd9b82e821c122d8fc84",
+    "scripts/test-verification-report.py": "5d105dde1a00ca47af1a3d37ef3392bdda9b6f501f6ff9183171a974b9f4cfe4",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -18001,7 +18001,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "2fdfd525d212c046eaa6ebdb254ed98fb7211e0793fb1930fc6b8a8759e27893",
+      "sha256": "63bd106c7d3514e7555b5ecef94b8aa818341857ecfb8db8a4ef1ca0314d31bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23023,7 +23023,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "0abf7679a8678e8cde198ff3424945430b95bf3748a5fd9b82e821c122d8fc84",
+      "sha256": "5d105dde1a00ca47af1a3d37ef3392bdda9b6f501f6ff9183171a974b9f4cfe4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
