@@ -281,6 +281,7 @@
       "scripts/lib/operations_conformance.py",
       "scripts/lib/postgres-test-database.sh",
       "scripts/lib/production-release.mjs",
+      "scripts/lib/public_routes_conformance.py",
       "scripts/lib/readiness_conformance.py",
       "scripts/lib/requirement_declarations.py",
       "scripts/lib/sri-invoice.mjs",
@@ -4110,6 +4111,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a3554db132982020",
+      "path": "scripts/lib/public_routes_conformance.py",
+      "sha256": "f7dfbd70c0660581273a2e27edab1aa6cc5d9d7fc3f9c2af9b653f50f7dd723d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f9884c5ddfa3d37d",
       "path": "scripts/lib/readiness_conformance.py",
       "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -4850,7 +4857,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "139721e60622e0643666226e1ba1f75d3c06d5a218578d74add7929b28c084ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5546,7 +5553,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "edbd045219731849e63b545de90e67a840c9d661e13f8cf360af0d9b26c0bdaa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14096,7 +14103,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "f0b0d8b2e99dbd40fb265f5278617873cc9303bb84b8f8554deaa64428863669",
+      "sha256": "ba9c4104ee54db558a7ee154dc545cff6dbe2ac5c53303ccbbcf6af9f916b799",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22466,8 +22473,50 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/PublicRouteAdmission.cfg",
+      "sha256": "1b3de23d072992eaeddcc7ff81085b8a3791fce58a00726a101088700710c97c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicRouteAdmission.tla",
+      "sha256": "df68c2524239e05f17fb3c1d479cab887803a606cda6bc145a18d23bad0752c7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PublicRouteAdmissionDebtConformant.cfg",
+      "sha256": "13aa887c70b0d08f9bfe53dc63faecd009e9d6d8177994dcbcba8f2fca5307a8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicRouteAdmissionStale.cfg",
+      "sha256": "8253b4ac345429d3cc7c822c2fcd2f9246224421fee430aef4218112ace48732",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicRouteAdmissionUnregistered.cfg",
+      "sha256": "95b497a6d8631f800cdc99dff0e8281cc846654f0c06d20275932e1c18fc4e51",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicRouteAdmissionUnreviewedMutation.cfg",
+      "sha256": "61f02cc2412dea3c880a237d58e7b94dd9daff473425bbf9c57688988c04b62d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/README.md",
-      "sha256": "97265617534d6a867c9a6f4152cf1aeac3964274b72905d5114c8d429a59a59b",
+      "sha256": "694a5960d0c8733371c7aafd36f45fe162773534599a99be860ae1f8fba92514",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23965,7 +24014,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "54d57fe6b45b2a60542d0af296916576bd0bb8779eb2727c139ee3a00bce7967",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24203,7 +24252,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
+      "sha256": "b7fc247e5a2e1ab3d5d3739d325d6b5d13f60a698339b2c45e8b136646b861a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24245,7 +24294,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sha256": "8a1d5c850c93c999102a46d79e38681756d2cca0932e6721c8a353a4d300b7bc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -34032,6 +34081,106 @@
         "CONSTANTS RecoverUntouched = TRUE Unsafe = TRUE PriorSafe = {} InitialSafe = {}",
         "INVARIANTS NoUnsafeRestoration ModernNeverDowngrades",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicRouteAdmission.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  N = 3",
+        "  CheckUnregistered = TRUE",
+        "  CheckStale = TRUE",
+        "  CheckMutating = TRUE",
+        "  DebtExcluded = TRUE",
+        "INVARIANTS",
+        "  ServedRoutesRegistered",
+        "  NoStaleEntries",
+        "  MutationReviewed",
+        "  DebtNeverConformant"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicRouteAdmissionDebtConformant.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  N = 3",
+        "  CheckUnregistered = TRUE",
+        "  CheckStale = TRUE",
+        "  CheckMutating = TRUE",
+        "  DebtExcluded = FALSE",
+        "INVARIANTS",
+        "  ServedRoutesRegistered",
+        "  NoStaleEntries",
+        "  MutationReviewed",
+        "  DebtNeverConformant"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicRouteAdmissionStale.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  N = 3",
+        "  CheckUnregistered = TRUE",
+        "  CheckStale = FALSE",
+        "  CheckMutating = TRUE",
+        "  DebtExcluded = TRUE",
+        "INVARIANTS",
+        "  ServedRoutesRegistered",
+        "  NoStaleEntries",
+        "  MutationReviewed",
+        "  DebtNeverConformant"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicRouteAdmissionUnregistered.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  N = 3",
+        "  CheckUnregistered = FALSE",
+        "  CheckStale = TRUE",
+        "  CheckMutating = TRUE",
+        "  DebtExcluded = TRUE",
+        "INVARIANTS",
+        "  ServedRoutesRegistered",
+        "  NoStaleEntries",
+        "  MutationReviewed",
+        "  DebtNeverConformant"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicRouteAdmissionUnreviewedMutation.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  N = 3",
+        "  CheckUnregistered = TRUE",
+        "  CheckStale = TRUE",
+        "  CheckMutating = FALSE",
+        "  DebtExcluded = TRUE",
+        "INVARIANTS",
+        "  ServedRoutesRegistered",
+        "  NoStaleEntries",
+        "  MutationReviewed",
+        "  DebtNeverConformant"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

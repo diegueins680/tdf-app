@@ -5023,12 +5023,12 @@
       "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Admission gate, negative controls and served HTTP denial checks exist; two registered debts remain open."
+        "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
       },
-      "evidence": "Gate output, fourteen negative controls, served-application HTTP status checks and the PostgreSQL-backed booking conformance assistant checks",
+      "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison plus scoped HTTP tests; no handler-level proof for unrepaired routes",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states the gate over every situation of three routes with four single-guard controls; the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires denial, no server fault, no fixture-private content, the anonymous answer for a wrong session token and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5076,7 +5076,7 @@
       "privacy": "Public routes must not disclose staff knowledge, schedules, client names, payment instruments or other parties' records.",
       "concurrency": "Static declaration check; no runtime concurrency assumption.",
       "idempotency": "Deterministic over the committed snapshot and register.",
-      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI.",
+      "failure": "Any unregistered, stale, duplicate or inconsistent entry fails CI. A deny-boundary route that answers a caller without its capability with success, a server fault or private content fails the booking conformance harness.",
       "property": "Unauthenticated compiled surface equals the reviewed register and each entry satisfies its boundary's structural rule",
       "implementation": [
         "tdf-hq/src/TDF/API.hs",
@@ -5086,18 +5086,22 @@
         "scripts/check-public-routes.py",
         "tdf-hq/src/TDF/Handlers/InputList.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/src/TDF/Routes/Academy.hs"
+        "tdf-hq/src/TDF/Routes/Academy.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/test-public-routes.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/lib/public_routes_conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/PublicRouteAdmission.tla"
+      ],
       "ambiguity": [
-        "Handler enforcement of each registered capability is not mechanically verified.",
-        "Raw mounts may serve paths beyond their prefix."
+        "Raw mounts may serve paths beyond their prefix.",
+        "Handler enforcement is swept mechanically for denial without the capability; positive enforcement on provider-created records is covered per family by their suites."
       ]
     },
     {

@@ -621,3 +621,15 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
+## Public route admission
+
+`PublicRouteAdmission.tla` states the admission gate of
+[public-route-admission.md](../system/public-route-admission.md) over every
+situation of three abstract routes (served unauthenticated or not, registered or
+not, boundary read/mutating/debt, mutating or not): an admitted register has no
+unregistered served route, no stale entry and no mutating route on a read
+boundary, and a known-debt entry is never conformant. Four single-guard
+controls (`Unregistered`, `Stale`, `UnreviewedMutation`, `DebtConformant`) each
+fail the named invariant at the constant level. Handler enforcement is not in
+the model; the booking conformance harness checks it against the real backend.

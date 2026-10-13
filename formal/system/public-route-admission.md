@@ -88,3 +88,35 @@ mutation, not about database reads: verifiers that compare against the stored
 record, such as the storefront one, load the row by its identifier first and
 reject before anything is returned or written. This is a point-in-time review, not a
 mechanical gate; a route-to-handler correspondence check remains future work.
+
+## Handler denial sweep (2026-10-13, AUTHORITY-079)
+
+`scripts/lib/public_routes_conformance.py`, a section of
+`scripts/test-booking-conformance.py` (real backend, PostgreSQL fixture), requests
+every route registered under `capability-header`, `capability-path`,
+`handler-session`, `operator-secret`, `signed-provider-callback` and
+`provider-verification-challenge` (90 routes) twice: without the capability and
+with a wrong one (random lookup token, random bearer token, zero signature, wrong
+verify token). Sequential identifiers probe the first record, capability paths
+and slugs values no record carries. Every answer must deny (400, 401, 403, 404,
+405, 415, 422, or 503 when the provider is unconfigured), none may be a server
+fault, none may carry fixture-private content, a wrong verify token must not echo
+the challenge, and a wrong session token must receive exactly the anonymous
+answer. The marketplace cart (`capability-path`) is created and then read with its
+own identifier (200), another random UUID (404) and a sequential one (400), and the
+identifier is checked to be a random version-4 UUID.
+
+Two findings. `GET /session` and `POST /session/logout` answer an anonymous caller
+200 with the anonymous value (`null`, empty); a wrong bearer token receives the same.
+The `handler-session` rule said "rejects missing sessions"; the rule now reads:
+rejects, or answers the anonymous value without resolving any session (AUTHORITY-079).
+`POST /social-events/stripe/webhook` answered 500 "Stripe is not configured" to an
+unsigned caller when the provider was unconfigured, a server fault for a public
+unauthenticated POST where its sibling callbacks answer 503; it now answers 503.
+
+Bounds. The sweep shows that no deny-boundary route succeeds without its
+capability on the fixture; for records that exist only after a provider-backed
+intake (orders, registrations, quotes, storefront orders) the wrong-token path is
+exercised by their own suites, not by this sweep, because the fixture configures
+no provider and holds no such record. Query-back callbacks (Datafast, Payphone,
+PlaceToPay) answer 503 unconfigured; their body authentication is AUTH-WEBHOOK-001.
