@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-13T04:41:26.706Z",
+  "generatedAt": "2026-10-13T15:26:20.865Z",
   "repositoryRoot": ".",
   "filesScanned": 2253,
   "candidateCount": 1320,
@@ -138217,7 +138217,7 @@
       "domain": "payments-finance",
       "kind": "haskell-sum-type",
       "name": "PreparationProblem",
-      "line": 456,
+      "line": 459,
       "values": [
         "Deferred",
         "Refused"
@@ -138225,7 +138225,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        456
+        459
       ],
       "consumerCount": 0,
       "backendConsumers": [],

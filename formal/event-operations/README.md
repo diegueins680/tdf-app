@@ -105,6 +105,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `CommandPrivacyExistenceLeak.cfg`, `CommandPrivacyReceiptLeak.cfg` | Negative controls: distinct hidden-event error / receipt response before visibility | Expected exit 12 with `OpaqueTarget`; both detected |
 | `SessionFence.cfg` | 1 authentication/transaction; 32 token records; 2 actors; witness present/absent; read/new/replay | PASS; 12,685 generated, 1,153 distinct states, depth 5 |
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
+| `MusicDdexExport.cfg` (2026-10-13) | One export, one job or none (legacy), two worker processes sharing a name, rules flipping at any time, 2 attempts plus one reclaim past the bound; replay, claim, expiry, crash, fenced stop, recover, two gates, succeed, fail | PASS; 5,348 generated, 1,272 distinct states; `ValidForever`, `CurrentWriter`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
+| `MusicDdexExportUnfenced/Reopen/NoCommitGate/ReplayFailed/SplitDeadLetter.cfg` | Negative controls: no attempt token, valid regenerated, no rule check at commit, replay re-enqueues a failed export, dead letter split from the export's failed status | Expected exit 12 with `CurrentWriter`, `ValidForever`, `ValidOnlyUnderRules`, `FailedIsFinal`, `PendingHasLiveJob` |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -230,6 +232,12 @@ The runner requires the exact named failures from all three negative controls.
 - `CommandPrivacy.tla`: paired absent/unreadable status/body equality for fresh commands and all
   receipt classes, while retaining read-only mutation denial. The atomic observation assumes the
   existing current-authorization fence; it does not prove session revocation or constant-time access.
+- `MusicDdexExport.tla` (2026-10-13): DDEX export and job lifecycle under
+  leased worker runs that may share a name; the attempt is the fencing token,
+  a valid export is final, gate 2 re-checks the rules, the replay repairs only
+  a queued export, the dead letter and the export's failed status are one
+  write. See [music DDEX export](../system/music-ddex-export.md). Rendering,
+  object storage, the API locks and the heartbeat are outside the model.
 - `SessionFence.tla`: request-local token/party/credential binding, recheck after token locking and
   lock retention through the event decision. It models current validity, not permanent revocation
   epochs: explicit reactivation of the same credential reauthorizes it. Global role/catalog changes
@@ -628,3 +636,11 @@ staff capture, delivery and message content are outside the model.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+## Music DDEX export
+
+`MusicDdexExport.tla` and six configurations check the export lifecycle rules in
+[music-ddex-export.md](../system/music-ddex-export.md): leased claims with the attempt
+as fencing token, the two rule gates, valid and failed finality, queued-only replay
+repair and the atomic dead letter. The positive model and five negative controls are
+mandatory in the formal runner. Bounds, abstractions and the recovery gap found are
+stated there.

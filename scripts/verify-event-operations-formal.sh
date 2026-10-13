@@ -228,6 +228,12 @@ run_negative_tlc InvoiceSubmissionUnknownAsRefused.cfg invoice-submission-unknow
 run_negative_tlc InvoiceSubmissionRetryUncertain.cfg invoice-submission-retry-uncertain 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
+run_tlc MusicDdexExport.tla MusicDdexExport.cfg music-ddex-export
+run_negative_tlc MusicDdexExportUnfenced.cfg music-ddex-export-unfenced 'Invariant CurrentWriter is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportReopen.cfg music-ddex-export-reopen 'Invariant ValidForever is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportNoCommitGate.cfg music-ddex-export-no-commit-gate 'Invariant ValidOnlyUnderRules is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportReplayFailed.cfg music-ddex-export-replay-failed 'Invariant FailedIsFinal is violated' MusicDdexExport.tla
+run_negative_tlc MusicDdexExportSplitDeadLetter.cfg music-ddex-export-split-dead-letter 'Invariant PendingHasLiveJob is violated' MusicDdexExport.tla
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
 run_negative_tlc OptionalTokenRecoveryUnsafeStorage.cfg optional-token-storage 'Temporal properties were violated' OptionalTokenRecovery.tla
 run_negative_tlc OptionalTokenRecoveryUnsafeFragment.cfg optional-token-fragment 'Invariant FragmentPrecedence is violated' OptionalTokenRecovery.tla

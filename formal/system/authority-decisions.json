@@ -611,6 +611,20 @@
       "conflict": "EVT-TICKET-INVOICE-001 says a provider refusal becomes failed (resendable), status query failures retry, and an invoiced event cannot sell until invoicing is configured. The worker turned a refusal with a long message, an unreadable status answer or any internal error while polling into uncertain, which has no in-app recovery, and sales opened while the submission worker was switched off.",
       "authority": "The 2026-10-06 invoicing decision and the requirement's failure rules govern; the worker behavior was a defect.",
       "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
+    },
+    {
+      "id": "AUTHORITY-082",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
+        "docs/music-releases/ddex-queued-validation.md",
+        "docs/music-releases/ddex-atomic-enqueue.md",
+        "formal/system/music-ddex-export.md"
+      ],
+      "conflict": "MEDIA-MUSIC-DDEX-001 listed export states queued, rendering, validated, failed, retired and a transition 'suspended -> retired'; music_ddex_export.status allows queued, generating, validation_failed, valid, failed and nothing is ever retired. ddex-queued-validation.md promises that export failure messages contain no object keys, SQL or secrets, but mark_failed copied the last twenty lines of the worker's stderr into the export's validation_report for every failure that was not a gate refusal, and that report is served to every release downloader.",
+      "authority": "The column CHECK constraint and the worker script for the state set; the queued-validation ADR's privacy rule and PRIV-ERROR-001 for the report.",
+      "resolution": "Decided 2026-10-13: the requirement lists the column's export states and the job statuses with the worker's transition relation; the lease guard, the two gates, valid finality, failed finality and the queued-only replay repair are the stated rules and are modelled in MusicDdexExport.tla with five single-guard controls. The worker now stores a fixed message with the error code for non-gate failures and keeps the stderr summary on the job row; the runtime test covers it. The absence of any recovery for a dead-lettered export is recorded as an open product decision, not changed."
     }
   ]
 }
