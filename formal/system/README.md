@@ -72,6 +72,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [compiled-api-boundary.md](compiled-api-boundary.md): compiler-derived route discovery, OpenAPI correspondence and unresolved handler/codec boundaries.
 - [private-upload-persistence.md](private-upload-persistence.md): private attachment mount admission, legacy-file preservation and remaining coordinated recovery obligations.
 - [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks.
+- [operations-worker-tick.md](operations-worker-tick.md): Operations worker maintenance tick: poisoned outbox rows fail alone with attempts, backoff and dead letter (AUTHORITY-076), bounded negative controls.
 - [access-grant.md](access-grant.md): reviewed access-request decisions, self-service correction (AUTHORITY-054), invitation-link claims, expiry repair and bounded negative controls.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
