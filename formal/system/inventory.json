@@ -2584,7 +2584,7 @@
     {
       "id": "SURFACE-ab96c3ab21cf19fc",
       "path": ".github/workflows/datadog-synthetics.yml",
-      "sha256": "5b7e4cf9d6d027848d5c0c3d8bddd300e73f64b729de8741223de7a9a3e80c3e",
+      "sha256": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3058,7 +3058,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
+      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17875,7 +17875,7 @@
     },
     {
       "path": "docs/DATADOG_SYNTHETICS.md",
-      "sha256": "0973c0b1c40082a5b34d1ada1504d8c8e361337b165379cd36fd9e124aa61941",
+      "sha256": "e382329424bdeab28501541b46537452674d6dc7b65cf9ecf1af77b0616b9592",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24301,7 +24301,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "621b3586ab097e760c3f416d418b0762f5c89d5b255b6b1bf3af409617d729ee",
+      "sha256": "50cc237296316957eb1486216851e7a51c55eb34865963bbfc7c64a0901df5c3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
