@@ -6739,13 +6739,17 @@
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "functions/_shared/app-smart-link.mjs",
         "functions/descargar.js",
-        "functions/download.js"
+        "functions/download.js",
+        "tdf-hq-ui/src/analytics/growthAttribution.ts",
+        "tdf-hq-ui/src/i18n/index.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
         "scripts/__tests__/app-smart-link.test.mjs",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "e2e/web/mobile-program.spec.mjs"
+        "e2e/web/mobile-program.spec.mjs",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",

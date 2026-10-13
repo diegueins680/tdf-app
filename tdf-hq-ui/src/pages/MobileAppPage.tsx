@@ -55,12 +55,19 @@ export default function MobileAppPage() {
   useEffect(() => { captureGrowthAttribution({ search, pathname }); }, [search, pathname]);
   useEffect(() => { if (new URLSearchParams(search).get('feedback') === '1') setForm('feedback'); }, [search]);
   const channel = distribution.data?.[platform];
-  // Exposure is reported once per visit, after the manifest answered, with the state the visitor actually saw.
+  // Exposure is reported once per visit, after the manifest answered, with the state the visitor actually saw:
+  // distribution_status is the manifest's raw status; effective_status is what rendered (the same status when the
+  // channel is open, otherwise full/unavailable, e.g. expired evidence or a verifiedAt still in the future).
   useEffect(() => {
     if (viewed.current || distribution.isPending) return;
     viewed.current = true;
-    track('mobile_landing_viewed', { platform, distribution_status: distribution.data?.[platform]?.status ?? 'unknown', detected_platform: detected });
-  }, [distribution.isPending, distribution.data, platform, detected, track]);
+    const seen = distribution.data?.[platform];
+    const open = Boolean(seen && availableChannel(seen, now));
+    track('mobile_landing_viewed', {
+      platform, detected_platform: detected, distribution_status: seen?.status ?? 'unknown',
+      effective_status: !seen ? 'unknown' : open ? seen.status : seen.capacity === 'full' ? 'full' : 'unavailable', channel_available: open,
+    });
+  }, [distribution.isPending, distribution.data, platform, detected, now, track]);
   // Desktop visitors scan the smart link with the phone they will install on; phones already are the phone.
   const showQr = detected === 'desktop';
   const qrUrl = smartLink(search, 'qr');
