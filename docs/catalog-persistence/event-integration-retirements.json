@@ -656,8 +656,8 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "155c8ba51c7e002c10d0",
-      "reason": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
+      "replacementId": "8a6e9ce11b67f2ddf32a",
+      "reason": "The reviewed 203-entry manifest keeps all 202 existing migrations unchanged and appends the chat notification/reply correction. Historical decisions remain preserved; rollout and recovery are separately gated.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
         "mainRevision": "3a2ab395c233e16641eb3d574afc941809ac43f1",
@@ -41724,7 +41724,16 @@
         "previousId": "e69bb0b8d1949d201d8a",
         "recordSha256": "049e972465248f7f3c1103677501c873b1554b8f7ca4995a499cd524f57d90ef",
         "reason": "All existing nested history fields remain present; current pointer advances to the combined 184-entry manifest."
-      }
+      },
+      "subsequentResolutions": [
+        {
+          "sourceCommit": "b02c4d1493810a2cdfea4094ddb89f98ef7262c3",
+          "previousReplacementId": "155c8ba51c7e002c10d0",
+          "replacementId": "8a6e9ce11b67f2ddf32a",
+          "valueCount": 203,
+          "reason": "Review the additive chat notification/reply migration; original decision hashes and historical evidence remain unchanged."
+        }
+      ]
     }
   ]
 }

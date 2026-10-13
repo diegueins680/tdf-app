@@ -334,12 +334,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "155c8ba51c7e002c10d0",
+      "currentId": "8a6e9ce11b67f2ddf32a",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 202,
-      "change": "append 2026-10-07_directory_artist_derived_listings and 2026-10-07_directory_artist_listing_backfill_apply",
+      "valueCount": 203,
+      "change": "Append the governed chat notification/reply migration; all 202 predecessor entries remain unchanged. This mapping is not permission to apply the migration.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "f185683a8f6a6532b802",
@@ -50483,7 +50483,15 @@
             }
           }
         }
-      }
+      },
+      "subsequentResolutions": [
+        {
+          "sourceRevision": "b02c4d1493810a2cdfea4094ddb89f98ef7262c3",
+          "previousId": "155c8ba51c7e002c10d0",
+          "previousValueCount": 202,
+          "reason": "Previous complete resolution retained in Git; earlier nested provenance is unchanged."
+        }
+      ]
     }
   ]
 }
