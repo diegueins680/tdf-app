@@ -870,7 +870,9 @@ stripeWebhookServer mSignature rawBody = do
                                 )
                                 envPool
                     pure dispatchResult
-        _ -> throwError err500{errBody = "Stripe is not configured"}
+        -- Public unsigned callback on an unconfigured provider: unavailable, not a
+        -- server fault, like the other provider callbacks (AUTH-PUBLIC-001).
+        _ -> throwError err503{errBody = "Stripe is not configured"}
 
 handleStripePaymentIntentSucceeded :: UTCTime -> Aeson.Value -> AppM NoContent
 handleStripePaymentIntentSucceeded now payload =
