@@ -82,7 +82,9 @@ const directorySearch = {
   "shareCopied": "Enlace copiado.",
   "shareCompleted": "Acción de compartir completada.",
   "shareCancelled": "El contenido no se compartió.",
-  "shareError": "No se pudo compartir el enlace. Abre el detalle y copia su dirección."
+  "shareError": "No se pudo compartir el enlace. Abre el detalle y copia su dirección.",
+  "eventDate": "Fecha del evento: {{date}}",
+  "placeFiltersHint": "Los filtros de profesión, servicio, instrumento y disponibilidad no aplican a eventos ni venues."
 } as const;
 
 export default directorySearch;

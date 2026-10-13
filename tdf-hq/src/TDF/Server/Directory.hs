@@ -169,6 +169,26 @@ directorySourceProfileSql :: Text
 directorySourceProfileSql =
   "(SELECT raw.source_profile_id FROM directory_search_document raw WHERE raw.entity_kind=document.entity_kind AND raw.entity_id=document.entity_id)"
 
+-- The filters every search query shares, after the entity-type and derived
+-- listing predicates, which the facet query applies differently. The
+-- profession, service, instrument, availability and remote filters describe
+-- people and listings; an event or a venue neither carries nor is excluded by
+-- them, so "Eventos" with a profession left selected still lists events. The
+-- genre filter applies to events as well (their genres are mapped to catalog
+-- ids), and the city, text, radius and date filters apply to every kind.
+directoryFilterClause :: Text
+directoryFilterClause =
+  directoryVisibleEventDocumentClause <>
+  "AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
+  "AND (input.q='' OR document.search_vector @@ plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
+  "AND (document.entity_kind IN ('event','venue') OR ((input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.remote_only IS DISTINCT FROM TRUE OR document.remote) AND (input.available_only IS DISTINCT FROM TRUE OR document.availability_score>0))) " <>
+  "AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
+  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
+  "AND (input.date_from IS NULL OR document.expires_at IS NULL OR document.expires_at>=input.date_from) AND (input.date_to IS NULL OR document.effective_at IS NULL OR document.effective_at<=input.date_to) "
+
+directoryEntityTypeClause :: Text
+directoryEntityTypeClause = "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) "
+
 searchSql :: Bool -> Text
 searchSql sponsoredOnly =
   "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
@@ -176,39 +196,30 @@ searchSql sponsoredOnly =
   "CASE WHEN input.q='' THEN .5 ELSE greatest(ts_rank_cd(document.search_vector,plainto_tsquery('simple',directory_normalize_text(input.q))),directory_text_similarity(document.title,input.q)) END text_score," <>
   "CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%')) THEN 1 ELSE 0 END semantic_score " <>
   "FROM directory_public_search_document document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
-  directoryVisibleEventDocumentClause <>
-  "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
+  directoryEntityTypeClause <>
   directoryDerivedListingDedupClause <>
-  "AND (input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) " <>
-  "AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
-  "AND (input.q='' OR document.search_vector @@ plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
-  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
-  "AND (input.remote_only IS DISTINCT FROM TRUE OR document.remote) AND (input.available_only IS DISTINCT FROM TRUE OR document.availability_score>0) " <>
-  "AND (input.date_from IS NULL OR document.expires_at IS NULL OR document.expires_at>=input.date_from) AND (input.date_to IS NULL OR document.effective_at IS NULL OR document.effective_at<=input.date_to)), " <>
+  directoryFilterClause <> "), " <>
   "ranked AS (SELECT scored.*,round((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)::numeric,6) organic_score FROM scored), " <>
   "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
   "page AS (SELECT ranked.* FROM ranked WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE ranked.organic_score<b.organic_score OR (ranked.organic_score=b.organic_score AND (ranked.source_updated_at<b.source_updated_at OR (ranked.source_updated_at=b.source_updated_at AND (ranked.entity_kind>b.entity_kind OR (ranked.entity_kind=b.entity_kind AND ranked.entity_id>b.entity_id)))))) ORDER BY organic_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
   "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'cursor',entity_kind||':'||entity_id) FROM page"
 
+-- `total` and `cities` describe the current query (its entity type included),
+-- so "Resultados orgánicos · N" is the full match count, not the page size.
+-- `entityTypes` counts every kind under the same filters but without the
+-- entity type, each as its own tab would list it (a derived artist listing
+-- counts under "classified"), plus `all` for the mixed tab, where derived
+-- listings are folded into their profile. The tab counts therefore do not
+-- vanish once a tab is selected.
 facetsSql :: Text
 facetsSql =
   "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
-  "filtered AS (SELECT document.* FROM directory_public_search_document document CROSS JOIN input WHERE NOT document.sponsored " <>
-  directoryVisibleEventDocumentClause <>
-  directoryDerivedListingDedupClause <>
-  "AND (input.q='' OR document.search_vector@@plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 " <>
-  "OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) " <>
-  "AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
-  "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
-  "AND (input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) " <>
-  "AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
-  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
-  "AND (input.remote_only IS DISTINCT FROM TRUE OR document.remote) AND (input.available_only IS DISTINCT FROM TRUE OR document.availability_score>0) " <>
-  "AND (input.date_from IS NULL OR document.expires_at IS NULL OR document.expires_at>=input.date_from) " <>
-  "AND (input.date_to IS NULL OR document.effective_at IS NULL OR document.effective_at<=input.date_to)) " <>
-  "SELECT jsonb_build_object('entityTypes',coalesce((SELECT jsonb_object_agg(entity_kind,total) FROM (SELECT entity_kind,count(*) total FROM filtered GROUP BY entity_kind) counts),'{}'::jsonb)," <>
-  "'cities',coalesce((SELECT jsonb_agg(jsonb_build_object('id',city_id,'name',city_name,'count',total) ORDER BY total DESC,city_name) FROM (SELECT city_id,max(city_name) city_name,count(*) total FROM filtered WHERE city_id IS NOT NULL GROUP BY city_id ORDER BY total DESC LIMIT 20) cities),'[]'::jsonb)," <>
-  "'total',(SELECT count(*) FROM filtered))"
+  "filtered AS (SELECT document.entity_kind,document.city_id,document.city_name," <> directorySourceProfileSql <> " source_profile_id FROM directory_public_search_document document CROSS JOIN input WHERE NOT document.sponsored " <>
+  directoryFilterClause <> "), " <>
+  "selected AS (SELECT filtered.* FROM filtered CROSS JOIN input WHERE (input.entity_type IS NULL OR filtered.entity_kind=input.entity_type) AND (input.entity_type IS NOT NULL OR filtered.source_profile_id IS NULL)) " <>
+  "SELECT jsonb_build_object('entityTypes',coalesce((SELECT jsonb_object_agg(entity_kind,total) FROM (SELECT entity_kind,count(*) total FROM filtered GROUP BY entity_kind) counts),'{}'::jsonb)||jsonb_build_object('all',(SELECT count(*) FROM filtered WHERE source_profile_id IS NULL))," <>
+  "'cities',coalesce((SELECT jsonb_agg(jsonb_build_object('id',city_id,'name',city_name,'count',total) ORDER BY total DESC,city_name) FROM (SELECT city_id,max(city_name) city_name,count(*) total FROM selected WHERE city_id IS NOT NULL GROUP BY city_id ORDER BY total DESC LIMIT 20) cities),'[]'::jsonb)," <>
+  "'total',(SELECT count(*) FROM selected))"
 
 valueCursor :: Value -> Maybe Text
 valueCursor (Object value) = case KeyMap.lookup (Key.fromText "cursor") value of

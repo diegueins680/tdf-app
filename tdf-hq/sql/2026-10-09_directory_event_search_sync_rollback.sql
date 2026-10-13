@@ -65,6 +65,14 @@ WHERE document.source_status = 'published'
   END;
 
 
+DROP TRIGGER IF EXISTS trg_directory_sync_genre_events_search ON genre;
+DROP FUNCTION IF EXISTS directory_sync_genre_events_search_trigger();
+DROP TRIGGER IF EXISTS trg_directory_sync_artist_genre_events_search ON artist_genre_membership;
+DROP TRIGGER IF EXISTS trg_directory_sync_artist_events_search ON social_artist_profile;
+DROP TRIGGER IF EXISTS trg_directory_sync_event_lineup_search ON event_artist;
+DROP FUNCTION IF EXISTS directory_sync_artist_genre_events_search_trigger();
+DROP FUNCTION IF EXISTS directory_sync_artist_events_search_trigger();
+DROP FUNCTION IF EXISTS directory_sync_event_lineup_search_trigger();
 DROP TRIGGER IF EXISTS trg_directory_sync_external_event_search ON external_event_ref;
 DROP TRIGGER IF EXISTS trg_directory_sync_venue_search ON venue;
 DROP TRIGGER IF EXISTS trg_directory_sync_social_event_search ON social_event;
@@ -106,8 +114,11 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS directory_event_search_reindex();
 DROP FUNCTION IF EXISTS directory_sync_event_search(BIGINT);
 DROP FUNCTION IF EXISTS directory_sync_venue_search(BIGINT);
+DROP FUNCTION IF EXISTS directory_social_event_lineup_terms(BIGINT);
+DROP FUNCTION IF EXISTS directory_social_event_genre_ids(TEXT[]);
 DROP FUNCTION IF EXISTS directory_social_event_metadata_image(TEXT);
 DROP FUNCTION IF EXISTS directory_resolve_city_reference(TEXT);
 DROP FUNCTION IF EXISTS directory_search_sync_lock();
