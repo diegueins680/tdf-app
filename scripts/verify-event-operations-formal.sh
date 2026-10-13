@@ -104,6 +104,12 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+
+run_tlc StartupGates.tla StartupGates.cfg startup-gates
+run_negative_tlc StartupGatesStagedAccepted.cfg startup-gates-staged-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesMissingAccepted.cfg startup-gates-missing-accepted 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesEitherRejected.cfg startup-gates-either-rejected 'The invariant of ApprovedStarts is equal to FALSE' StartupGates.tla
+run_negative_tlc StartupGatesRequiredUnchecked.cfg startup-gates-required-unchecked 'The invariant of StartImpliesApproved is equal to FALSE' StartupGates.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
