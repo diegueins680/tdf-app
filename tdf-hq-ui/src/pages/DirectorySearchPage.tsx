@@ -215,7 +215,7 @@ export default function DirectorySearchPage() {
 
   const searchBase: DirectorySearchQuery = {
     q: query || undefined,
-    profileKind: urlState.profileKind,
+    profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
     entityType: entityType === 'all' ? undefined : entityType,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,
@@ -419,7 +419,7 @@ export default function DirectorySearchPage() {
                 </>
               )}
               {!personFilters && <Typography variant="body2" color="text.secondary">{t('directorySearch.placeFiltersHint')}</Typography>}
-              <Button onClick={() => updateSearch({ professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
+              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
           </Paper>
 
@@ -433,7 +433,7 @@ export default function DirectorySearchPage() {
           ) : null}
 
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
-            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && isEntityTypeKey(value)) updateSearch({ entityType: value }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
+            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && isEntityTypeKey(value)) updateSearch({ entityType: value, profileKind: value === 'profile' || value === 'artist' ? urlState.profileKind : undefined }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
               {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'artist' | 'all')[]).map((type) => {
                 // Every tab is counted under the current filters whichever tab
                 // is selected; `all` is the mixed tab's own count.

@@ -8489,13 +8489,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "23e453cb1b37f9a14269e8ab46c82aeaa5de939d3a2378105a85944e75bd7e2f",
+      "sha256": "0d88f1cb2a534ca742147e821578b297c0c12f37ad66569cc5cad9da6f26408f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "bb0702a4e932a0f074d2bfcd0adf96afc1bdbe47fb2c23e8fc0c2d9b633c4d81",
+      "sha256": "01b3b5cf78791e627b85188e4bd211b37b7f1f88389d6b81bc5526110cd65ebd",
       "semanticConformance": "not-established-by-discovery"
     },
     {

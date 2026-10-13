@@ -474,11 +474,11 @@ describe('DirectorySearchPage', () => {
     try {
       await act(async () => {
         root.render(<QueryClientProvider client={queryClient}>
-          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}`]}><DirectorySearchPage /></MemoryRouter>
+          <MemoryRouter initialEntries={[`/buscar?entityType=event&cityId=${quito}&profileKind=band`]}><DirectorySearchPage /></MemoryRouter>
         </QueryClientProvider>);
       });
       await waitFor(() => expect(container.textContent).toContain('Synthetic Event'));
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito }), expect.any(AbortSignal));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ entityType: 'event', cityId: quito, profileKind: undefined }), expect.any(AbortSignal));
       const selectedTab = container.querySelector('[role="tab"][aria-selected="true"]');
       expect(selectedTab?.textContent).toBe('Eventos (1)');
       const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((tab) => tab.textContent);
