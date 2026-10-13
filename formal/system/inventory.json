@@ -24028,7 +24028,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "82573d7f6c52159dda9a98471cf71ef668a17c5da3521ffa8b3ccc31627f7935",
+      "sha256": "0ab220af7a0b9c88a620c54451de176691db249aa175d375fab18a189cdfe527",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"

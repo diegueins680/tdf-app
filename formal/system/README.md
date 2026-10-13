@@ -115,7 +115,7 @@ paths identify ADRs: the two historical ADR-0105 filenames are distinct decision
 ## Current audit checkpoint
 
 The October13 isolated audit starts at root
-`75f1a7ce85cdbf062b13b31e7f79d9efa62ed290`, with exact shipped Mobile
+`75f1a7ce85cdbf062b13b31e7f79d9efa62ed290`, with exact pinned Mobile gitlink
 `67ee1afac203741aac5771d130a18498c4d4835a`. Fresh read-only inspection observed
 backend `7ab344400d0878838b9b12742ca4cc5cd7f38f94` (`0.1.0.0`), 188 applied
 migrations and 14 pending in the candidate manifest. The public web entry bundle
