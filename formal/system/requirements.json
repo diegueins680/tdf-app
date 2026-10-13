@@ -7308,7 +7308,7 @@
       "id": "EVT-TICKET-INVOICE-001",
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
-      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
+      "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
       "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
@@ -7352,9 +7352,9 @@
       ],
       "authorization": "Event organizer or administrator views invoices; only strict administrators resend failed ones.",
       "privacy": "Identification only when required by the SRI USD 50 rule; credentials stay in server configuration and are redacted from stored errors.",
-      "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims with lease fencing.",
+      "concurrency": "Issuer point row lock for numbering; SKIP LOCKED claims; a submission starts only through one statement bound to the claimer's lease and an unset submission mark; every result is written under the claimer's lease token.",
       "idempotency": "Unique invoice per order; stable access key per document; paid re-transitions do not enqueue again.",
-      "failure": "Validation refusal -> failed; unknown transport outcome -> uncertain; status query failures retry.",
+      "failure": "Validation refusal -> failed, whatever the length of the provider's message; unknown transport outcome of a submission -> uncertain; a status query that fails, is refused or is unreadable, or an internal error while polling, leaves the document submitted for a later query.",
       "recovery": "Administrators resend failed documents after fixing configuration; uncertain documents are reconciled in the provider.",
       "observability": "Staff invoice list with status, number, access key, authorization and last error.",
       "property": "Every paid order of an invoiced policy has exactly one invoice document whose identity never changes.",
@@ -7382,29 +7382,46 @@
         "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes_rollback.sql",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
-        "tdf-hq-ui/src/components/RefundManagementPanel.tsx"
+        "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
+        "formal/event-operations/InvoiceSubmission.tla",
+        "scripts/test-invoice-worker.sh"
       ],
       "tests": [
         "tdf-hq/test/integration/ticket_tax_invoices.sql",
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
+        "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
+        "scripts/test-invoice-worker.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
-        "formal/event-operations/TaxDocumentSubmission.tla"
+        "formal/event-operations/TaxDocumentSubmission.tla",
+        "formal/event-operations/InvoiceSubmission.tla",
+        "formal/event-operations/InvoiceSubmission.cfg",
+        "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg",
+        "formal/event-operations/InvoiceSubmissionStaleFinish.cfg",
+        "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
+        "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg"
       ],
-      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls.",
-      "evidence": "Local PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
+      "verification": "PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests. Bounded TaxDocumentSubmission model: at most one provider document under crashes, lease expiry, lost answers and staff retry, with four mutation controls. Bounded TLA+ worker model with four negative controls (formal/system/ticket-invoice-worker.md); PostgreSQL worker tests with a substitute transport; PostgreSQL enqueue/numbering/immutability/gate tests; Hspec access key (SRI sheet vector), identification, payload and response interpretation; React billing payload tests.",
+      "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
-        "Regime legends (e.g. RIMPE) are not automated."
+        "Regime legends (e.g. RIMPE) are not automated.",
+        "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
+        "Status transitions other than the finality of authorized are enforced by the worker, not by the database.",
+        "That an HTTP 4xx other than 408/429 means the provider created nothing was observed only with an invalid key on 2026-10-06.",
+        "A paid transition is refused after capture if the issuer point was disabled or its counter lowered by hand after checkout creation; no application path edits the point.",
+        "Whether the SRI accepts a credit note addressed to consumidor final is unverified.",
+        "The selling rule requires the worker flag in each serving process; a separate worker process is not supported."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implemented and tested locally; Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -7547,11 +7564,11 @@
     },
     {
       "id": "PRIV-WHATSAPP-001",
-      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowing at most one per number per 24 hours, and a request the provider did not accept releases the claim. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request and within 7 days of it, so a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form or inbound STOP/SALIR/BAJA/CANCELAR) always withdraws consent and clears any pending request; the public opt-out notifies only a number that was subscribed. Staff consent capture remains admin-only.",
+      "statement": "A public consent request must not activate WhatsApp consent. It records a pending request; claiming a confirmation request is one conditional update allowed only when the number has no request in the last 24 hours, and simultaneous first requests for a number do not fail. A request the provider did not accept stays pending as undelivered: for 1 hour from the request the number can still confirm it by messaging first and a new public request may retry the send without changing the request instant; afterwards it waits for the 24-hour interval. Delivered requests to a number are therefore at least 23 hours apart. Consent becomes active only through one conditional update when the same number sends an affirmative keyword whose Meta message timestamp is no earlier than the pending request, within 7 days of a delivered request, and the request has not been withdrawn since; a concurrent withdrawal wins and a delayed or replayed earlier reply cannot confirm a newer request. The confirmation request uses the approved template named by WHATSAPP_CONSENT_TEMPLATE when configured; the person may also message SI first (VITE_WHATSAPP_OPTIN_URL). Public responses never disclose a number's consent state; the public consent lookup returns 410 without reading consent data. Opt-out (public form, inbound STOP/SALIR/BAJA/CANCELAR or staff revocation) always withdraws consent and invalidates any pending request without resetting the 24-hour interval, and its stored instant is never earlier than the request it defeats; neither withdrawing, confirming nor staff capture lets anyone request another message early. The public opt-out notifies only a number that was subscribed. The failure of a superseded send attempt changes nothing. Staff consent capture remains admin-only.",
       "authority": "reconciled",
-      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052)",
-      "property": "Consent is active only after a timely reply from the same number or admin capture",
-      "contract": "formal/system/public-route-admission.md",
+      "source": "Product decision 2026-10-06 (double opt-in, AUTHORITY-052); request-interval and undelivered-request repair (AUTHORITY-055)",
+      "property": "Consent is active only after a timely reply from the same number to an unwithdrawn request, or admin capture; delivered requests are at least 23 hours apart",
+      "contract": "formal/system/whatsapp-consent.md",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/API.hs",
@@ -7563,10 +7580,12 @@
         "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
         "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
         "tdf-hq-ui/src/config/appConfig.ts",
-        "tdf-hq-ui/src/vite-env.d.ts"
+        "tdf-hq-ui/src/vite-env.d.ts",
+        "formal/event-operations/WhatsAppConsent.tla",
+        "scripts/test-whatsapp-consent.sh"
       ],
-      "verification": "Unit and database tests; PostgreSQL migration rehearsal in CI",
-      "evidence": "Keyword unit test, SQLite confirmation-window test, served-app check that the public lookup is gone",
+      "verification": "Bounded TLA+ model with eight negative controls; unit tests; PostgreSQL concurrency tests on the migrated fixture in CI",
+      "evidence": "Keyword unit test, SQLite window/withdrawal/undelivered tests, PostgreSQL simultaneous-claim, duplicate-reply and withdrawal-lock tests, served-app check that the public lookup is gone",
       "status": "specified and implemented",
       "historicalStatus": null,
       "critical": true,
@@ -7589,45 +7608,71 @@
       "state": {
         "consent": [
           "none",
-          "pending",
+          "pending (delivered)",
+          "pending (undelivered)",
           "active",
           "withdrawn"
         ]
       },
       "allowedTransitions": [
-        "none/withdrawn -> pending (public request)",
-        "pending -> active (affirmative reply within 7 days)",
-        "any -> withdrawn (opt-out or STOP)",
+        "none -> pending (public request)",
+        "withdrawn/expired/active-then-withdrawn -> pending (public request more than 24 hours after the previous request instant)",
+        "pending (delivered) -> pending (undelivered) (provider did not accept that exact request)",
+        "pending (undelivered) -> pending (delivered) (retry within 1 hour, same request instant, not withdrawn)",
+        "pending (delivered) -> active (affirmative reply within 7 days)",
+        "pending (undelivered) -> active (affirmative reply within 1 hour of the request)",
+        "any -> withdrawn (opt-out, STOP or staff revocation)",
         "admin capture -> active"
       ],
       "forbiddenTransitions": [
         "public request -> active",
-        "pending older than 7 days -> active",
-        "withdrawn -> active without a new request and reply"
+        "pending older than its window -> active",
+        "withdrawn -> active without a new request and reply",
+        "any -> new request within 24 hours of the previous request instant",
+        "undelivered retry -> later request instant",
+        "superseded attempt failure -> any change to a newer request, consent or withdrawal"
       ],
       "effects": [
         "Confirmation request, confirmation and opt-out notices are recorded as outgoing WhatsApp messages."
       ],
       "authorization": "Only the number's own reply (verified Meta webhook signature) or an Admin can activate consent.",
       "privacy": "Public responses are identical regardless of prior state; display names are not returned publicly.",
-      "concurrency": "Claim and confirmation are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits.",
-      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours send nothing.",
-      "failure": "WhatsApp send failures are recorded on the outgoing message; consent state is unaffected.",
-      "recovery": "A number can request again after 24 hours or after a request expires.",
-      "observability": "whatsapp_consent note (pending_confirmation, confirmed_by_reply), outgoing message sources.",
+      "concurrency": "Claim, confirmation and the undelivered mark are single conditional UPDATE statements on the unique phone row; PostgreSQL re-evaluates the predicate after a concurrent writer commits. Row creation uses ON CONFLICT DO NOTHING. A withdrawal raises revoked_at to the request instant inside its own transaction, so a clock read before the row lock cannot predate the request.",
+      "idempotency": "Repeated replies after activation are no-ops; repeated requests within 24 hours of a request send nothing unless they retry an undelivered request inside its hour; a send failure is bound to its own request instant.",
+      "failure": "A WhatsApp send failure is recorded on the outgoing message and marks only its own request undelivered; consent is unaffected.",
+      "recovery": "A number can request again 24 hours after its last request instant, or retry an undelivered, unwithdrawn request within 1 hour.",
+      "observability": "whats_app_consent note (pending_confirmation, pending_unsent, confirmed_by_reply), confirmation_requested_at, revoked_at, outgoing message sources.",
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
+        "scripts/test-whatsapp-consent.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
-      "confidence": "High for the tested transitions; WhatsApp delivery and Meta webhook timing are external.",
+      "formalModels": [
+        "formal/event-operations/WhatsAppConsent.tla",
+        "formal/event-operations/WhatsAppConsent.cfg",
+        "formal/event-operations/WhatsAppConsentStaleReply.cfg",
+        "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+        "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
+        "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
+        "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
+        "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
+        "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+        "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg"
+      ],
+      "confidence": "High for the modeled and tested transitions; WhatsApp delivery, truthful provider outcomes and Meta webhook timing are external.",
       "ambiguity": [
         "Affirmative keywords are exact single-word matches; free-text consent is not inferred.",
         "OpenAPI still documents a 200 response for GET /public/whatsapp/consent and the previous POST description; correcting it regenerates the web and Mobile clients and is deferred to the next Mobile client regeneration.",
-        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window."
+        "Production has no WhatsApp Cloud API configuration (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN), so no confirmation can be sent or received until it is configured; an approved template (WHATSAPP_CONSENT_TEMPLATE) is required for business-initiated requests outside a 24-hour window.",
+        "The 1-hour window for an undelivered request is an engineering default chosen because the number never saw a prompt; the product owner has not confirmed the duration.",
+        "A provider failure that hides an actual delivery (ambiguous timeout) is treated as undelivered and could allow a second request inside the interval.",
+        "A withdrawn request cannot be replaced until 24 hours after its request instant. Because opting out needs no proof of control, a third party can impose that wait on someone else's pending request; this is accepted so that the unauthenticated opt-out cannot be used to message a number repeatedly. Staff capture remains available.",
+        "An undelivered request that is neither confirmed nor retried within 1 hour waits for the 24-hour interval even though nothing was delivered."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local tests pass; CI migration rehearsal and production verification pending."
+        "reason": "Bounded model, unit and PostgreSQL tests pass on the candidate; not deployed, and production has no WhatsApp Cloud API configuration to exercise it."
       }
     },
     {
@@ -8749,6 +8794,91 @@
       "historicalStatus": "observed-defect-repaired-awaiting-final-gates"
     },
     {
+      "id": "WEB-CANONICAL-001",
+      "title": "Public links use the canonical tdfrecords.net origin",
+      "domain": "WEB",
+      "statement": "Links TDF generates for people outside the app (event shares from web and Mobile, link-preview canonical and og:url, sitemap, legal pages, course landings) use https://www.tdfrecords.net. Requests to the production Pages host tdf-app.pages.dev are permanently redirected to the same path and query on the canonical origin, except branch previews and /.well-known app-link files.",
+      "authority": "User instruction of 2026-10-06: shared RSVP links used tdf-app.pages.dev; only use the tdfrecords.net URL everywhere in the app",
+      "source": "docs/web/canonical-public-origin.md",
+      "contract": "docs/web/canonical-public-origin.md",
+      "actors": [
+        "Visitor",
+        "Event attendee sharing an RSVP",
+        "Link-preview crawler"
+      ],
+      "preconditions": [
+        "www.tdfrecords.net is a custom domain of the same Pages project"
+      ],
+      "inputs": [
+        "Request URL host, path and query"
+      ],
+      "state": {
+        "boundary": "Cloudflare Pages Functions middleware and generated link builders",
+        "authority": "functions/_shared/event-preview.mjs PUBLIC_ORIGIN"
+      },
+      "allowedTransitions": [
+        "tdf-app.pages.dev/<path>?<query> -> 301 www.tdfrecords.net/<path>?<query>",
+        "Canonical or branch-preview host -> served unchanged"
+      ],
+      "forbiddenTransitions": [
+        "Generated public link or preview canonical on tdf-app.pages.dev",
+        "Redirecting branch previews or /.well-known files",
+        "Dropping the query string (attribution, OAuth code/state) on redirect"
+      ],
+      "effects": [
+        "Permanent redirect",
+        "Canonical preview metadata"
+      ],
+      "authorization": "Public; no credentials are involved in the redirect.",
+      "privacy": "Query parameters are forwarded only to the same organization's canonical origin.",
+      "concurrency": "Stateless.",
+      "idempotency": "Redirect is a pure function of the request URL.",
+      "failure": "Hosts other than the exact production Pages host fall through to normal serving.",
+      "recovery": "Removing the middleware restores direct serving on the Pages host.",
+      "observability": "Shared links carry utm attribution on the canonical origin.",
+      "property": "No public link or preview generated by TDF names tdf-app.pages.dev, and every legacy production-host request lands on the same resource at www.tdfrecords.net.",
+      "implementation": [
+        "functions/_middleware.js",
+        "functions/_shared/event-preview.mjs",
+        "functions/eventos/[eventId].js",
+        "tdf-hq-ui/src/config/appConfig.ts",
+        "tdf-hq-ui/public/sitemap.xml",
+        "tdf-hq-ui/public/robots.txt",
+        "tdf-mobile/src/lib/eventSharing.ts",
+        "scripts/mobile-publishing-admin-audit.sh",
+        "scripts/upsert-course.mjs",
+        "screencast/meta-app-review/run.mjs",
+        "screencast/meta-app-review/review.env.example",
+        "tdf-hq-ui/public/account/privacy-es.html",
+        "tdf-hq-ui/public/account/privacy.html",
+        "tdf-hq-ui/public/account/terms-es.html",
+        "tdf-hq-ui/public/account/terms.html",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/src/features/featureRegistry.ts"
+      ],
+      "tests": [
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Node tests for redirect location, exclusions and preview canonical origin.",
+      "evidence": "Local node --test run on 2026-10-06; Mobile share origin fix lands with the Mobile pin.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Pure URL functions are exercised directly; the edge deployment is verified after release.",
+      "ambiguity": [
+        "Google OAuth redirect URIs registered on the old host keep working through the redirect until they are re-registered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Web and preview links fixed here; Mobile share origin ships with the Mobile release that includes the fix."
+      }
+    },
+    {
       "id": "OPS-CI-REGISTRY-001",
       "title": "Authenticate Docker Hub pulls in CI",
       "domain": "OPS",
@@ -8976,6 +9106,96 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Implementation and tests are mapped; an exact-revision execution receipt is still required."
+      }
+    },
+    {
+      "id": "LEGAL-CONSENT-001",
+      "title": "Buyers read the exact versioned terms they accept, and the server binds that version",
+      "statement": "Course registration and ticket checkouts that require acceptance show the approved policy's terms and cancellation/refund text before the acceptance control, send the accepted terms version, and the server rejects a missing (tickets) or stale (courses and tickets) version for the policy it is about to bind.",
+      "domain": "LEGAL",
+      "authority": "Product owner request 2026-10-07 ('Fix them': course terms never shown; mobile ticket checkout without terms)",
+      "source": "tdf-app PR (fix/terms-consent-gaps); TDF-mobile PR (fix/terms-consent-gaps)",
+      "property": "No acceptance is recorded for a terms version that was not displayed.; Events with an approved ticket policy cannot hold seats on the legacy endpoint without the current accepted version.",
+      "contract": "tdf-hq/docs/openapi/api.yaml",
+      "actors": [
+        "Course registrant",
+        "Ticket buyer (web modal or mobile app)",
+        "Checkout server"
+      ],
+      "preconditions": [
+        "An approved, active checkout policy exists for the course or event; without one no acceptance is requested."
+      ],
+      "inputs": [
+        "CourseMetadata.checkoutTerms",
+        "CourseRegistrationRequest.acceptedTermsVersion",
+        "TicketPurchaseWithPromoDTO.ticketPurchaseAcceptedTermsVersion",
+        "Public event ticket policy"
+      ],
+      "state": {
+        "display": "terms collapsed with visible version and acceptance control",
+        "binding": [
+          "accepted version equals active policy version",
+          "otherwise 400/409 and re-acceptance"
+        ]
+      },
+      "allowedTransitions": [
+        "Shown version accepted -> checkout/seat hold bound to that policy",
+        "Policy changed after display -> 409 -> new terms shown and acceptance cleared"
+      ],
+      "forbiddenTransitions": [
+        "Acceptance requested for terms that are never displayed",
+        "Legacy ticket hold for an event with an approved policy without the accepted version",
+        "Course checkout bound to a terms version different from the one the buyer accepted"
+      ],
+      "effects": [
+        "Course metadata exposes checkoutTerms from the same approval query checkout uses",
+        "Clients send the accepted version; mismatch returns 409 with a review-again message"
+      ],
+      "authorization": "Unchanged: public course registration and authenticated ticket purchase keep their existing guards.",
+      "privacy": "Terms text is public policy content; no personal data added.",
+      "concurrency": "Policy is re-read at checkout; a concurrent policy change surfaces as 409 rather than binding stale terms.",
+      "idempotency": "Accepted version is validated before the existing idempotent hold logic; replays with the same version behave as before.",
+      "failure": "Missing ticket acceptance returns 400; stale version returns 409; clients reload the policy and clear acceptance.",
+      "recovery": "Buyer reviews the new terms and accepts again.",
+      "observability": "Haskell decode specs, web/mobile unit tests for display, gating and version binding.",
+      "implementation": [
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/courses.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-mobile/app/ticketCheckout.tsx",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/types/index.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-mobile/__tests__/TicketCheckout.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Unit/decode tests plus compiled backend; runtime receipt against a database with approved course and event policies still required.",
+      "evidence": "Exact-revision CI receipt required before claiming conformance.",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": false,
+      "confidence": "medium: server-side enforcement is covered by compile and decode tests, not yet by a database-backed handler test",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Display and binding are implemented and unit-tested; a database-backed runtime receipt is still required."
       }
     },
     {

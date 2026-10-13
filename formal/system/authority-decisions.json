@@ -587,6 +587,30 @@
       "conflict": "AUTH-ACCESS-PROVISION-001 stated that only an administrator distinct from the requester may approve artist.onboarding:create, while createRequest has self-activated that pair through the artist.self-service.artist policy since 2026-09-16.",
       "authority": "Approved artist self-service decision (2026-09-16, recorded in AUTH-ARTIST-INVITE-001 ambiguity and the artist.self-service.artist policy migration).",
       "resolution": "The requirement statement is corrected to the self-service product decision; the distinct-administrator rule is retained for every reviewed decision and model-checked in AccessGrant.tla. The implementation is unchanged on this point."
+    },
+    {
+      "id": "AUTHORITY-055",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs",
+        "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
+      "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
+      "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-056",
+      "sources": [
+        "tdf-hq/src/TDF/Invoice/Datil.hs",
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "docs/events/ticket-electronic-invoices.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-INVOICE-001 says a provider refusal becomes failed (resendable), status query failures retry, and an invoiced event cannot sell until invoicing is configured. The worker turned a refusal with a long message, an unreadable status answer or any internal error while polling into uncertain, which has no in-app recovery, and sales opened while the submission worker was switched off.",
+      "authority": "The 2026-10-06 invoicing decision and the requirement's failure rules govern; the worker behavior was a defect.",
+      "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
     }
   ]
 }
