@@ -889,6 +889,8 @@ jobs:
 
       - name: Rehearse course checkout runtime migration
         run: ./scripts/test-course-checkout-runtime-migration.sh
+      - name: Verify checkout policy terms identity migration
+        run: ./scripts/test-checkout-policy-terms-identity-migration.sh
 
       - name: Rehearse Domo quote and deposit checkout runtime migration
         run: ./scripts/test-domo-quote-checkout-runtime-migration.sh
