@@ -130,6 +130,18 @@ spec = describe "meta-redelivery-postgresql" $ do
           deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"backfilled\":true}")
           M.instagramMessageMetadata <$> instagram pool mid `shouldReturn` Just "{\"recipient_id\":\"biz-1\"}"
 
+        it "lets the real recipient replace a referral source stored first, then keeps it" $
+          \pool -> do
+          mid <- newId
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"source_id\":\"ad-9\"}")
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"source_id\":\"ad-8\"}")
+          M.instagramMessageMetadata <$> instagram pool mid
+            `shouldReturn` Just "{\"source_id\":\"ad-9\"}"
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"recipient_id\":\"biz-1\"}")
+          deliverWith pool MetaInstagram mid "hola" Nothing (Just "{\"source_id\":\"ad-9\"}")
+          M.instagramMessageMetadata <$> instagram pool mid
+            `shouldReturn` Just "{\"recipient_id\":\"biz-1\"}"
+
         it "stores one message, and fails no delivery, when several first deliveries arrive at once" $ \pool -> do
           mid <- newId
           outcomes <- forConcurrently [1 .. 8 :: Int] $ \_ ->
