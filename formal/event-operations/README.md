@@ -531,6 +531,15 @@ dispatch and eventual success/failure response; terminal quiescence is permitted
 Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
 [Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
 
+## Music entitlement and downloads
+
+`MusicEntitlement.tla` and seven configurations check the rules in
+[music-purchase-entitlement.md](../system/music-purchase-entitlement.md): paid only on
+verified evidence, one entitlement per order, the download limit, replay of a request
+identifier only inside its URL lifetime, a replayed URL that ends with the original one,
+and no URL without an active entitlement. The positive model and six negative controls
+are mandatory in the formal runner.
+
 ## Marketplace optional storage boundary (2026-09-18)
 
 `MarketplaceStorage.tla` connects UX-260917-007 to the page's optional
@@ -605,6 +614,13 @@ existing payment models and HTTP contracts remain separate evidence.
 once, what it asks for is applied at most once, an enrolment message is answered at
 most once, and a stored opt-out has been applied. The positive model and four
 negative controls are mandatory in the formal runner.
+## Organizer assignment
+
+`EventOrganizer.tla` and four configurations check the rule in
+[event-organizer-assignment.md](../system/event-organizer-assignment.md): an event
+without an organizer is assigned at most once, only to a caller allowed to be
+assigned, and nobody manages an event whose stored organizer is another party. The
+positive model and three negative controls are mandatory in the formal runner.
 
 ## Provider retry admission
 
@@ -629,3 +645,17 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.
+## Ticket invoice submission
+
+`InvoiceSubmission.tla` and five configurations check the worker rules in
+[ticket-invoice-worker.md](../system/ticket-invoice-worker.md): leased claims, the
+persisted submission mark, lease-fenced results and administrator resend. The positive
+model and four negative controls are mandatory in the formal runner. Bounds, provider
+assumptions and the recovery gaps found are stated there.

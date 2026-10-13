@@ -128,6 +128,9 @@ before domain authorization executes, including commands denied by that authoriz
 The existing SQL limiter admits at most 90 budget increments per database calendar
 minute and rejects increment 91 with HTTP 429. Budget commitment is separate from
 a denied domain mutation; rejection cannot roll back the consumed attempt.
+A write that raises a database error is undone to a savepoint taken after the charge,
+so that outcome keeps the charge as well; see
+[interaction-write-budget.md](../system/interaction-write-budget.md).
 The HTTP regression probes at most two windows (181 requests in less than 60 seconds)
 and verifies the persisted rejection counter is exactly 91. Crossing a minute
 boundary must neither produce a false test failure nor relax the actual threshold.
