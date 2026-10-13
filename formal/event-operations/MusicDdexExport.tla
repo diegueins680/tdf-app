@@ -21,7 +21,8 @@
      Fence          the guard compares the claimed attempt with the job's
                     current attempt, so a reclaimed process cannot write
      ValidIsFinal   a valid export is never regenerated or failed again
-                    (gate 1 excludes valid; mark_failed excludes valid)
+                    (one rule applied at two sites: gate 1 excludes valid and
+                    mark_failed excludes valid)
      CommitGate     gate 2 re-checks the rules before marking valid
      RepairQueued   the replay recreates a missing job only for a queued
                     export and never for a failed one
@@ -162,7 +163,8 @@ Gate1(p) ==
   /\ phase[p] = "claimed"
   /\ Guard(p)
   /\ rules
-  /\ export # "valid" \/ ~ValidIsFinal
+  /\ export \in {"queued", "validation_failed", "generating"}
+     \/ (~ValidIsFinal /\ export = "valid")
   /\ export' = "generating"
   /\ phase' = [phase EXCEPT ![p] = "generating"]
   /\ Written(p)
@@ -202,7 +204,8 @@ Succeed(p) ==
 
 (* mark_failed, for any reason (a gate that refused, a renderer or transfer
    error, a crash handler): the job is retried or dead-lettered and the
-   export records the failure unless it is valid. *)
+   export records the failure unless it is valid or already failed. Flip is
+   always enabled, so the model has no terminal state and needs no stutter. *)
 NextJob(p) == IF token[p] >= MaxAttempts THEN "dead_letter" ELSE "retry"
 
 Fail(p) ==
@@ -212,16 +215,12 @@ Fail(p) ==
   /\ owner' = None
   /\ leaseLive' = FALSE
   /\ export' = (IF export = "valid" /\ ValidIsFinal THEN "valid"
+                ELSE IF export = "failed" THEN "failed"
                 ELSE IF NextJob(p) = "dead_letter" /\ AtomicDeadLetter THEN "failed"
                 ELSE "validation_failed")
   /\ phase' = [phase EXCEPT ![p] = "idle"]
   /\ Written(p)
   /\ UNCHANGED <<attempt, token, rules, everValid, validUnderRules>>
-
-Done ==
-  /\ \A p \in Processes : phase[p] = "idle"
-  /\ job \in {"succeeded", "dead_letter"}
-  /\ UNCHANGED vars
 
 Next ==
   \/ Flip
@@ -230,7 +229,6 @@ Next ==
   \/ \E p \in Processes :
        Claim(p) \/ Crash(p) \/ Fenced(p) \/ Recover(p) \/ Gate1(p)
        \/ Upload(p) \/ Gate2(p) \/ Succeed(p) \/ Fail(p)
-  \/ Done
 
 Spec == Init /\ [][Next]_vars
 

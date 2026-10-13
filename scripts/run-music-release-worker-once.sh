@@ -184,7 +184,9 @@ mark_failed() {
       # The export report is read by every release downloader; a failure that is
       # not a field-level gate report gets a fixed message, never the worker's
       # stderr (hosts, users, SQL context). The job keeps the operator summary.
-      export_failure_sql="UPDATE music_ddex_export SET status=CASE WHEN :'next_status'='dead_letter' THEN 'failed' ELSE 'validation_failed' END,validation_report=COALESCE(NULLIF(:'validation_report','')::jsonb,jsonb_build_object('valid',FALSE,'code',:'error_code','message','La generación del paquete falló por un error de procesamiento; el equipo revisará el trabajo antes de reintentar.','checkedAt',NOW())) WHERE id=:'export_id'::uuid AND release_version_id=:'version_id'::uuid AND status<>'valid';"
+      # valid and failed are terminal: a job an operator re-queues by hand never
+      # moves a failed export back to validation_failed.
+      export_failure_sql="UPDATE music_ddex_export SET status=CASE WHEN :'next_status'='dead_letter' THEN 'failed' ELSE 'validation_failed' END,validation_report=COALESCE(NULLIF(:'validation_report','')::jsonb,jsonb_build_object('valid',FALSE,'code',:'error_code','message','La generación del paquete falló por un error de procesamiento; se reintenta automáticamente mientras queden intentos y, si se agotan, el equipo revisará el trabajo.','checkedAt',NOW())) WHERE id=:'export_id'::uuid AND release_version_id=:'version_id'::uuid AND status NOT IN ('valid','failed');"
     fi
   fi
   psql_db -v job_id="$job_id" -v version_id="$version_id" -v export_id="$export_id" -v next_status="$next_status" -v error_code="$error_code" -v validation_report="${ddex_validation_report:-}" -v error_summary="$(printf '%.1000s' "$error_summary")" -v delay_seconds="$delay_seconds" -c "UPDATE music_processing_job SET status=:'next_status',locked_at=NULL,locked_by=NULL,error_code=:'error_code',error_summary=:'error_summary',run_after=NOW()+(:'delay_seconds' || ' seconds')::interval,updated_at=NOW() WHERE id=:'job_id'::uuid; $export_failure_sql" >/dev/null || return 1

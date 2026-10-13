@@ -51,13 +51,20 @@ process holding the current attempt), `ValidOnlyUnderRules` (valid is
 written only while the rules hold), `FailedIsFinal` (a failed export has its
 dead-lettered job and gets no new one), `PendingHasLiveJob` (a pending export
 always has a job the worker can still run; only the legacy queued export
-lacks one until the replay repairs it). 5,348 states generated, 1,272
-distinct.
+lacks one until the replay repairs it, under the job statuses the code
+writes: `cancelled` and `failed` are never written by any path, and a job
+cancelled by hand leaves a non-queued export as stuck as a dead letter).
+5,284 states generated, 1,272 distinct. `CurrentWriter` and
+`ValidOnlyUnderRules` hold by construction of the positive model (the
+guard is conjoined with every write), so the positive run is a consistency
+check of the guards; the five controls are the evidence that each invariant
+can fail.
 
-Five controls remove one guard each and fail the named invariant:
+Five controls remove one rule each and fail the named invariant:
 `Unfenced` (name and lease only, no attempt token — `CurrentWriter`),
-`Reopen` (gate 1 and `mark_failed` no longer exclude `valid` —
-`ValidForever`), `NoCommitGate` (gate 2 does not re-check the rules —
+`Reopen` (the valid exclusion, which the code applies at two sites, gate 1
+and `mark_failed`, is dropped at both; TLC's counterexample goes through
+`mark_failed` — `ValidForever`), `NoCommitGate` (gate 2 does not re-check the rules —
 `ValidOnlyUnderRules`), `ReplayFailed` (the replay re-enqueues a failed
 export — `FailedIsFinal`), `SplitDeadLetter` (the dead letter and the
 export's `failed` are separate writes — `PendingHasLiveJob`).
@@ -86,17 +93,24 @@ carry no object keys, SQL or secrets. That stderr holds libpq connection
 errors (host, port, user), psql statement context, curl transport errors
 and temporary paths. The export now receives a fixed message with its error
 code; the stderr summary stays on `music_processing_job.error_summary`, the
-operator read model. Covered by the new scenario in
+operator read model, until the next claim clears it and permanently once
+dead-lettered. In the same write, `status NOT IN ('valid','failed')` now
+keeps a failed export failed when an operator re-queues its dead-lettered
+job by hand (before, that path moved it to `validation_failed` and a later
+attempt could produce a package, contradicting the declared relation).
+Covered by the new scenario in
 `scripts/test-music-release-worker-runtime.mjs` (a renderer double that
 fails with a libpq-style message; the report must not contain it, the job
-must, and a retry with the working renderer reaches `valid`).
+must, and a retry with the working renderer reaches `valid`), and by the
+extended `queued DDEX` scenario (a re-queued dead letter dead-letters again
+and leaves the failed export row unchanged).
 
 ## Evidence
 
 | Check | Where | Result |
 | --- | --- | --- |
 | TLC positive model and five controls | `scripts/verify-event-operations-formal.sh` (CI formal runner) | pass / expected failures (TLC 1.7.2 on Temurin 21, 2026-10-13, local) |
-| Commit gate, revocation during rendering, processing-failure report, retry to valid, valid recovery, queued revalidation | `scripts/test-music-release-worker-runtime.mjs` (`npm run test:music-worker-runtime`; local PostgreSQL 16 on 5432 and the pipeline tools; not a CI step) | `complete audio release`, `valid DDEX retry`, `queued DDEX` scenarios pass on the patched worker (2026-10-13, local); the new scenario fails on the unpatched worker |
+| Commit gate, revocation during rendering, processing-failure report, retry to valid, valid recovery, queued revalidation, failed stays failed under a hand re-queue | `scripts/test-music-release-worker-runtime.mjs` (`npm run test:music-worker-runtime`; local PostgreSQL 16 on 5432 and the pipeline tools; not a CI step) | `complete audio release`, `valid DDEX retry`, `queued DDEX` scenarios pass on the patched worker (2026-10-13, local); the new scenario fails on the unpatched worker |
 | Declared states equal the column CHECK | `scripts/check-state-machines.py` (CI, migrated PostgreSQL) | bound under AUTHORITY-082; transitions are enforced by the worker's conditional UPDATEs, not by a trigger, so only the state set is compared |
 
 The requirement previously listed export states `queued`, `rendering`,
@@ -114,7 +128,9 @@ column's states, the job statuses and the worker's transition relation.
    re-enqueues a failed export (by design, ADR-018). Five attempts with the
    quadratic delay take about fifteen minutes, so an XSD-directory, renderer
    or object-storage outage of that length blocks that operation for that
-   version and recipient until an operator edits the rows. An audited
+   version and recipient until an operator edits the rows (export and job
+   both: the worker no longer reopens a failed export). The same holds for
+   any non-queued export whose job was cancelled by hand. An audited
    operator retry is an open product decision.
 2. **The job's stderr summary is served to the uploader** through the upload
    status endpoint (`MusicReleaseUpload.hs`); that surface belongs to

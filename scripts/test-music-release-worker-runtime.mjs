@@ -711,6 +711,13 @@ try {
       assert.equal(sql(`SELECT row_to_json(a)::text FROM music_asset a WHERE id='${f.asset}'`), original);
     }
     assert.equal(sql(`SELECT status FROM music_ddex_export WHERE id='${exportId}'`), 'failed');
+    // failed is terminal: a dead-lettered job re-queued by hand runs again, is
+    // refused at gate 1 and dead-letters, but never reopens the export.
+    const failedBefore = sql(`SELECT row_to_json(e)::text FROM music_ddex_export e WHERE id='${exportId}'`);
+    sql(`UPDATE music_processing_job SET status='retry',run_after=NOW()-INTERVAL '1 second' WHERE id='${f.job}'`);
+    assert.notEqual(worker({ MUSIC_DDEX_RENDER_BIN: '/not-a-renderer', MUSIC_DDEX_SCHEMA_DIR: '/not-a-schema' }).status, 0);
+    assert.equal(jobState(f), 'dead_letter:3:true');
+    assert.equal(sql(`SELECT row_to_json(e)::text FROM music_ddex_export e WHERE id='${exportId}'`), failedBefore);
   });
   console.log(`Music worker runtime: ${passed} scenarios passed (transport fault injector; no S3 compatibility claim).`);
 } finally {
