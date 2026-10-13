@@ -3139,7 +3139,7 @@
     {
       "id": "SURFACE-2207a12e65c74d0d",
       "path": "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
-      "sha256": "5f415a2937bca32f151458a47b9535ec868398b9bcd70524ddbe38aec7896f8c",
+      "sha256": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24329,7 +24329,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0562f6d68397fff532d2774ef7ab93b413f01a76fff1469961e93b334ea0b0ab",
+      "sha256": "01762327abd8172d275ae4417ade58e9ff15f6c118cdbd1dcf8b136866bf450a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -180,7 +180,8 @@
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
         "scripts/__tests__/formal-result-summary.test.mjs",
-        "scripts/__tests__/alloy-controls.test.mjs"
+        "scripts/__tests__/alloy-controls.test.mjs",
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -9547,6 +9548,7 @@
     "scripts/__tests__/disposable-postgres-url.test.mjs": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
+    "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
     "scripts/__tests__/fixtures/provider-retry-ledger-base.sql": "186495b321cdc2ac067af786a72dffa740b289eb1ac22429c1d6e5c14ce85a9c",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
@@ -10519,6 +10521,12 @@
       }
     ],
     "scripts/__tests__/alloy-controls.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/event-raci-editor-context-runner.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -18397,9 +18405,14 @@
     {
       "id": "SURFACE-2207a12e65c74d0d",
       "path": "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
-      "sha256": "5f415a2937bca32f151458a47b9535ec868398b9bcd70524ddbe38aec7896f8c",
+      "sha256": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-97975ba39673dd5b",
@@ -40357,7 +40370,6 @@
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-39a576584c31ee3c",
-    "SURFACE-2207a12e65c74d0d",
     "SURFACE-97975ba39673dd5b",
     "SURFACE-5b7249f002376b56",
     "SURFACE-eb025c512ef7ddad",
@@ -43215,7 +43227,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0562f6d68397fff532d2774ef7ab93b413f01a76fff1469961e93b334ea0b0ab",
+      "sourceSha256": "01762327abd8172d275ae4417ade58e9ff15f6c118cdbd1dcf8b136866bf450a",
       "definition": {
         "states": [
           "absent",

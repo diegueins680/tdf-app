@@ -179,7 +179,8 @@
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
         "scripts/__tests__/formal-result-summary.test.mjs",
-        "scripts/__tests__/alloy-controls.test.mjs"
+        "scripts/__tests__/alloy-controls.test.mjs",
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
