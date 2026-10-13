@@ -955,7 +955,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list or targets function enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list, targets function or membership relation enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -992,7 +992,8 @@
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
         "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
         "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053).",
-        "Operations work item bound through its targets function; twenty transitions equal the declared machine (AUTHORITY-080)."
+        "Operations work item bound through its targets function; twenty transitions equal the declared machine (AUTHORITY-080).",
+        "Directory profile, claim, classified, application and invitation bound through their membership relations; each equals the declared machine (AUTHORITY-081)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -1011,7 +1012,9 @@
         "docs/revenue-platform/formal-model.yaml",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
-        "tdf-hq/src/TDF/Operations/Types.hs"
+        "tdf-hq/src/TDF/Operations/Types.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
@@ -1019,18 +1022,18 @@
         ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison, plus static comparison of five bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items); guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and thirty-four database-free validator controls",
+      "verification": "Catalog comparison, plus static comparison of ten bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items, directory profiles, claims, classifieds, applications and invitations); guards, actors and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and forty-seven database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the five bound validators' transition relations; no claim about guards, effects or unbound application code.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the ten bound validators' transition relations; no claim about guards, actors, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "At least seven machines still enforce a transition relation only in unbound application code (profile, claim, classified, application and invitation in TDF.Directory.Policy; marketplace sale fulfillment; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
+        "Two machines still enforce a transition relation only in unbound application code (marketplace sale fulfillment, whose validator is method-specific; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; five validators compared; application-level evidence for the remaining machines remains."
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; ten validators compared; application-level evidence for the remaining machines remains."
       }
     },
     {
@@ -9480,7 +9483,7 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
-    "formal/system/state-machine-bindings.json": "3cfec4deaa00447810439f2a38c1096e637a7f93a2d438d67bbf1a29919f3957",
+    "formal/system/state-machine-bindings.json": "3ac0e484ece9deb16ec4a8b85338805dfe9a86cdbadd31103b2f528d932de846",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
@@ -9562,7 +9565,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-state-machines.py": "4e6087d51a5a7c8ff6b730bbd46d8ba842f7fae361fb339dddfa671c1e96e5ef",
+    "scripts/check-state-machines.py": "24a6df413489588b5e1605fba4a2d68827eb909572f0cc22011e54b5a97edf0d",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -9669,7 +9672,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "df13cc12d9dfc4e424c0b5b0d15228c9f6ff4f00665291e7bbcdb3ae45dadadd",
+    "scripts/test-state-machines.py": "28305027f371808f8d9ac862b36ec3e513255aebe23aa6e575331c5fa3d0558a",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -10988,6 +10991,34 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Directory/Policy.hs": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/Directory.hs": [
+      {
+        "requirement": "SYS-STATE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-ARTIST-CLAIM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-state-machines.py": [
       {
         "requirement": "SYS-STATE-001",
@@ -11117,20 +11148,6 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Server/Directory.hs": [
-      {
-        "requirement": "ID-ARTIST-CLAIM-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-CLAIM-REVIEW-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "implementation"
       }
     ],
@@ -11329,12 +11346,6 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Directory/Policy.hs": [
-      {
-        "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
       }
     ],
@@ -19185,7 +19196,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "4e6087d51a5a7c8ff6b730bbd46d8ba842f7fae361fb339dddfa671c1e96e5ef",
+      "sha256": "24a6df413489588b5e1605fba4a2d68827eb909572f0cc22011e54b5a97edf0d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22051,7 +22062,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "df13cc12d9dfc4e424c0b5b0d15228c9f6ff4f00665291e7bbcdb3ae45dadadd",
+      "sha256": "28305027f371808f8d9ac862b36ec3e513255aebe23aa6e575331c5fa3d0558a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34088,6 +34099,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "SYS-STATE-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "ID-CLAIM-REVIEW-001",
           "relationship": "implementation"
         }
@@ -34726,6 +34741,10 @@
       "sha256": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-STATE-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "ID-ARTIST-CLAIM-001",
           "relationship": "implementation"
@@ -43047,7 +43066,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "41cf5aafda5e005fe87953335ad03c7a7ec18b053cd7efa8099f5326cd1f3016",
+      "sourceSha256": "5d873fd923fc7a9521b95530587e17de5cb011069296fdc6a0290ede8bbe5fe2",
       "definition": {
         "states": [
           "absent",

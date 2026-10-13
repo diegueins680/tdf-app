@@ -26,6 +26,7 @@ CLAIM = "docs/music-directory/formal-model.yaml#claim"
 DISTRIBUTION = "docs/revenue-platform/formal-model.yaml#distribution"
 RENTAL = "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment"
 OPERATIONS = "docs/operations-control-center/formal-model.yaml#operations.control-center"
+PROFILE = "docs/music-directory/formal-model.yaml#profile"
 
 
 def expect(name, errors, fragment):
@@ -128,7 +129,7 @@ def code_controls(bindings, machines):
     del unbound["machines"][RENTAL]["code"]
     expect("required validator binding removed", gate.check_code(unbound, machines),
            "required backend validator binding is missing")
-    return 18 + targets_controls(bindings, machines)
+    return 18 + targets_controls(bindings, machines) + relation_controls(bindings, machines)
 
 
 
@@ -194,6 +195,69 @@ def targets_controls(bindings, machines):
     expect("required targets binding removed", gate.check_code(unbound, machines),
            f"{OPERATIONS}: required backend validator binding is missing")
     return 16
+
+
+def relation_controls(bindings, machines):
+    """The directory profile and claim bindings: a membership relation with a
+    parse-table renderer, and one with string-literal pairs."""
+    spec = bindings["machines"][PROFILE]["code"]
+    assert gate.compare_code(PROFILE, spec, machines[PROFILE]) == []
+    assert gate.compare_code(CLAIM, bindings["machines"][CLAIM]["code"], machines[CLAIM]) == []
+    renamed = copy.deepcopy(bindings)
+    renamed["machines"][PROFILE]["code"]["relation"] = "retiredProfileTransition"
+    expect("relation not found", gate.check_code(renamed, machines), "relation retiredProfileTransition not found")
+    identity = copy.deepcopy(bindings)
+    identity["machines"][PROFILE]["code"]["renderer"] = "identity"
+    expect("identity renderer on constructor pairs", gate.check_code(identity, machines),
+           "allowedProfileTransition transitions has an entry that is not a literal pair")
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch)
+        for relative in (spec["file"], spec["rendererFile"]):
+            (root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (root / relative).write_text((gate.ROOT / relative).read_text())
+        policy = (gate.ROOT / spec["file"]).read_text()
+        server = (gate.ROOT / spec["rendererFile"]).read_text()
+        target, renderer = root / spec["file"], root / spec["rendererFile"]
+        edge = "      , (ProfileSuspended, ProfilePublished), (ProfileSuspended, ProfileArchived)\n"
+        assert policy.count(edge) == 1
+        target.write_text(policy.replace(edge, "      , (ProfileSuspended, ProfileArchived)\n", 1))
+        expect("edge removed from the relation", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['suspended', 'published']]")
+        target.write_text(policy.replace(edge, edge + "      , (ProfileArchived, ProfileDraft)\n", 1))
+        expect("edge added to the relation", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyImplemented is [['archived', 'draft']]")
+        target.write_text(policy.replace(edge, "      , (ProfileSuspended, ProfilePublished), (ProfileSuspended, ProfileRetired)\n", 1))
+        expect("relation constructor without stored name", gate.check_code(bindings, machines, root),
+               "ProfileRetired has no stored name")
+        target.write_text(policy.replace(edge, "      , (ProfileSuspended, ProfilePublished), (ProfileSuspended, ProfileArchived)\n      ] <> reopenTransitions\n      where reopenTransitions = [\n", 1))
+        expect("relation set extended by another expression", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition transitions is not a single literal set")
+        target.write_text(policy.replace(edge, "      , (ProfileSuspended, ProfilePublished), reopen\n", 1))
+        expect("named entry inside the relation set", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition transitions has an entry that is not a literal pair")
+        target.write_text(policy.replace("  fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions\n  where\n    transitions = Set.fromList\n      [ (ProfileDraft, ProfilePendingReview)",
+                                         "  fromStatus == toStatus || True\n  where\n    transitions = Set.fromList\n      [ (ProfileDraft, ProfilePendingReview)", 1))
+        expect("relation that ignores its set", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition does not decide membership in transitions")
+        target.write_text(policy.replace(edge, "      -- , (ProfileSuspended, ProfilePublished)\n      , (ProfileSuspended, ProfileArchived)\n", 1))
+        expect("relation edge kept only in a comment", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['suspended', 'published']]")
+        target.write_text(policy)
+        mapping = '("suspended",ProfileSuspended)'
+        assert server.count(mapping) == 1
+        renderer.write_text(server.replace(mapping, '("suspended",ProfileSuspended),("suspended",ProfileMerged)', 1))
+        expect("parse table maps a stored name twice", gate.check_code(bindings, machines, root),
+               "parseProfileStatus maps a stored name more than once")
+        renderer.write_text(server.replace(mapping, 'suspendedEntry', 1))
+        expect("parse table entry that is not a literal pair", gate.check_code(bindings, machines, root),
+               "parseProfileStatus parse table has an entry that is not a literal pair")
+        renderer.write_text(server.replace(mapping + ",", "", 1))
+        expect("parse table entry removed", gate.check_code(bindings, machines, root), "ProfileSuspended has no stored name")
+    unbound = copy.deepcopy(bindings)
+    del unbound["machines"][CLAIM]["code"]
+    expect("required relation binding removed", gate.check_code(unbound, machines),
+           f"{CLAIM}: required backend validator binding is missing")
+    return 13
 
 def main():
     parser = argparse.ArgumentParser()

@@ -74,3 +74,24 @@ requirements; SYS-STATE-001 compares transition pairs only, so those (enforced b
 proves the validator's relation, not that every writer passes through it: the
 first view (`new` to `seen`) and assignment (`new`/`seen` to `assigned`) are
 written directly in `TDF.Operations.Server`; both are declared edges.
+
+## Membership relations and parse tables (AUTHORITY-081)
+
+The directory machines are enforced by membership predicates in
+`TDF.Directory.Policy` (`allowed<Machine>Transition from to = from == to ||
+(from, to) `Set.member` transitions`, with `transitions = Set.fromList [ ... ]`
+in the `where`), bound as `code: {file, relation, renderer, rendererFile?}`. The
+checker requires the predicate to decide membership in `transitions`, the set to
+be a single literal list of pairs, and the renderer to be a parse table
+`name value = lookup value [("stored", Constructor), ...]` (no stored name
+mapped twice) or `identity` when the pairs are string literals (the claim
+relation). Identity transitions (`from == to`) are not declared and not
+compared, as for the validators. Bound and required: profile, claim,
+classified, application and invitation; on 2026-10-13 each relation equals its
+declared machine (15, 11, 22, 17 and 12 transitions), no deviation. Thirteen
+database-free controls cover the shape (edge removed or added, unnamed
+constructor, set extended or holding a named entry, predicate that ignores its
+set, edge kept in a comment, parse table doubled, non-literal or missing an
+entry, identity renderer on constructor pairs, relation not found, required
+binding removed). Actor permissions over these edges (which party may request
+which status, in `TDF.Server.Directory`) are outside the compared relation.
