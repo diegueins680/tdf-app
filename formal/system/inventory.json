@@ -2938,7 +2938,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+      "sha256": "5ae47f442f22033847fa7b7b7f1e21e1eabe73e3d600b258302c1334b416767c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5074,7 +5074,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+      "sha256": "a224448f3cc9cacb92814c92646cc29aeb1f9d54156651bedd8dd6f287d450e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24315,7 +24315,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "822bc4afd1c4a8e35cbc83c2bee3fa37c060b798dc5c2f042cb3d819ae0a0b12",
+      "sha256": "003daf1882a9d7eca867fc4d0a000faaaa8accca206e6f28556d6fdd2a9a8f7c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24357,7 +24357,7 @@
     },
     {
       "path": "formal/system/cors-boundary.md",
-      "sha256": "f38d760a8c5c331767874b7c35c91760d9b09055a7b2670f825d859a79b4da3d",
+      "sha256": "d426b708f015c87949a58f254dbbad3dbdc39aea26e92a2131e5808123a9c019",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24574,7 +24574,7 @@
     },
     {
       "path": "formal/system/private-upload-persistence.md",
-      "sha256": "f9df2f2590f3136486125ceb63a0ac6a36c329cd89d4063a6d7c34882d46a9cc",
+      "sha256": "9642bde8dc6272a601667f5eeb0c3f6d36bcce12451ea573ea5c25df93ba882b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24623,7 +24623,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
+      "sha256": "99e5b92f8d8f1dee1bf427ccb85f79836bb2656a41a8802f54b70ae5827d57c3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24728,7 +24728,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "c0b4f744077846415c10d950ab37f72d55ebf955f697cc43b4e0cc326869d93d",
+      "sha256": "5effcf6ef7408fe0600e7c04c92702187a2796f579f9f9d6471a0b60f5572762",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
