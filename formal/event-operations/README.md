@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `StartupGates.cfg` (2026-10-12) | One state; the fourteen production flags the startup verifier asserts, each over {missing, disabled, enabled} (4,782,969 configurations per invariant) | PASS; `ApprovedStarts`, `StartImpliesApproved` |
+| `StartupGatesStagedAccepted.cfg`, `StartupGatesMissingAccepted.cfg`, `StartupGatesEitherRejected.cfg`, `StartupGatesRequiredUnchecked.cfg` | Negative controls: an enabled staged provider accepted, a missing gate accepted, PayPal/Datafast gates required disabled (the 2026-10-07 incident), required states unchecked | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `StartImpliesApproved`, `StartImpliesApproved`, `ApprovedStarts`, `StartImpliesApproved` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -621,3 +623,14 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+
+`StartupGates.tla` is not a state machine: it copies the capability-gate policy
+of the startup schema verification (DEPLOY-STARTUP-001) for the fourteen
+production flags it asserts and checks, over every assignment of those flags
+to missing, disabled or enabled, that every approved configuration starts and
+that a configuration that starts has every flag in an approved state. Four
+controls each remove one guard and must violate the named invariant (these are
+constant-level failures, reported by TLC as "The invariant of X is equal to
+FALSE"). `scripts/__tests__/startup-gates-postgres.mjs` runs the real
+verification SQL for each flag in each state. Bounds are in
+`formal/system/startup-gates.md`.

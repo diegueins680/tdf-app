@@ -2717,7 +2717,7 @@
     {
       "authority": "reconciled",
       "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
-      "contract": "docs/automatic-production-migrations.md",
+      "contract": "formal/system/startup-gates.md",
       "domain": "DEPLOY",
       "actors": [
         "Production entrypoint",
@@ -2756,13 +2756,21 @@
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
       "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
       "observability": "Fixed exception text names the violated gate class.",
-      "formalModels": [],
-      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
-      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "formalModels": [
+        "formal/event-operations/StartupGates.tla",
+        "formal/event-operations/StartupGates.cfg",
+        "formal/event-operations/StartupGatesStagedAccepted.cfg",
+        "formal/event-operations/StartupGatesMissingAccepted.cfg",
+        "formal/event-operations/StartupGatesEitherRejected.cfg",
+        "formal/event-operations/StartupGatesRequiredUnchecked.cfg"
+      ],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database; every asserted production flag run through the real verification in each of its three states (42 runs, startup-gates-postgres.mjs) plus the approved baseline and both joint extremes of the either-state gates; one-state exhaustive TLC check of StartupGates.tla over all 4,782,969 flag assignments with four single-guard negative controls.",
+      "evidence": "Automatic-migrations rehearsal; startup-gates-postgres.mjs in CI; TLC runs registered in scripts/verify-event-operations-formal.sh.",
       "status": "specified and implemented",
-      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
       "ambiguity": [
-        "Other startup assertions may encode states that later become approved; each needs the same review."
+        "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
+        "Production flag states are not observable from the repository; the policy is a precondition for flag changes."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2770,7 +2778,7 @@
       },
       "id": "DEPLOY-STARTUP-001",
       "title": "Startup schema verification accepts approved production state",
-      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate. The verifier also requires the manual-settlement gates (checkout.bank_transfer, checkout.cash, checkout.pos) and the marketplace sales and rentals gates to exist enabled, and the service-booking and course checkout and recurring-billing gates to exist disabled; enabling or disabling any of these in production is a verifier change in the same release.",
       "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
       "implementation": [
         "scripts/lib/production-release.mjs",
@@ -2778,7 +2786,8 @@
       ],
       "tests": [
         "scripts/test-automatic-migrations-production-schema.sh",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/startup-gates-postgres.mjs"
       ],
       "critical": true
     },
@@ -9179,7 +9188,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+    ".github/workflows/ci.yml": "22c52165d377b1dc77a73499520882a3a853cb9a687c98779823621f248f6dc3",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
@@ -9277,6 +9286,12 @@
     "formal/event-operations/RestoreIsolationSourceTarget.cfg": "2855814fc67299069d73cf6430c98a2ed486c3ffd265676e315d3843fa90e1c5",
     "formal/event-operations/SessionCacheIsolation.tla": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+    "formal/event-operations/StartupGates.cfg": "e3f5eda4b6a1011d4c1833e16c3c3a9c3bc7417cd919b5bd27daf0a1b761c569",
+    "formal/event-operations/StartupGates.tla": "b6a35e1948881d4d315a382bd8a12450d17e112486ea2a5f53e3f0b4ba1ebc81",
+    "formal/event-operations/StartupGatesEitherRejected.cfg": "e5e1a9fc40d148fda964643f67d80228047b81b8dc9bb8e6da764d44287fc973",
+    "formal/event-operations/StartupGatesMissingAccepted.cfg": "b27c55fa854977daf2534febd1f16aefb44fee9c16048a27c31b4b0bcf3c9d3f",
+    "formal/event-operations/StartupGatesRequiredUnchecked.cfg": "fe98e3e81f68e2cb507b9729aea5a45e8f3f080a5a7736470a22f2ce7a72eca5",
+    "formal/event-operations/StartupGatesStagedAccepted.cfg": "1328c90cee0acd0a6097ebbae6048ba63d76a184d148f7e647b42dacad72f83c",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
     "formal/event-operations/TaxDocumentSubmission.tla": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
@@ -9368,6 +9383,7 @@
     "scripts/__tests__/production-release.test.mjs": "03542f10f973a508cf0f9ba30f5f55308aa9a3291d2d1515684a66afcd87e8dc",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
+    "scripts/__tests__/startup-gates-postgres.mjs": "511b0acf0840defef3304cafaacb4146961eb6682a5cba500cb4cd20cf86f1e8",
     "scripts/__tests__/ticket-admission-model.test.mjs": "bf3c37d25c37fa8f769e897f505fef66677b7a885b67795bcd08f65ab85793ae",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
@@ -9502,7 +9518,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+    "scripts/verify-event-operations-formal.sh": "5037912ac868e1161ae41df0c296a7a839fa6424f2718d3962d042798b595ea4",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -12063,6 +12079,48 @@
       {
         "requirement": "DEPLOY-STARTUP-001",
         "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/startup-gates-postgres.mjs": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/StartupGates.tla": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/StartupGates.cfg": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/StartupGatesStagedAccepted.cfg": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/StartupGatesMissingAccepted.cfg": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/StartupGatesEitherRejected.cfg": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/StartupGatesRequiredUnchecked.cfg": [
+      {
+        "requirement": "DEPLOY-STARTUP-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": [
@@ -16802,7 +16860,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+      "sha256": "22c52165d377b1dc77a73499520882a3a853cb9a687c98779823621f248f6dc3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18404,6 +18462,18 @@
       "sha256": "98ea9a01d47c1ca5e033f7a6ab686ccbf41b2f84e7aa213f8bd461ed2865cfee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-8599bbddd15faa14",
+      "path": "scripts/__tests__/startup-gates-postgres.mjs",
+      "sha256": "511b0acf0840defef3304cafaacb4146961eb6682a5cba500cb4cd20cf86f1e8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-STARTUP-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-80b41740576c6c1f",
@@ -21857,7 +21927,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "5037912ac868e1161ae41df0c296a7a839fa6424f2718d3962d042798b595ea4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41269,7 +41339,6 @@
     "PAY-CHECKOUT-003",
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
-    "DEPLOY-STARTUP-001",
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
     "SYS-API-003",
@@ -42424,7 +42493,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dbd23d2eaa92f238c7a5cbdb23e48c891f2d34afcd5174ceb6140447b1f7a0ac",
+      "sourceSha256": "9930824d4a7be036a62b239998aba1595a676c7214ca042289db333b4c85658e",
       "definition": {
         "states": [
           "absent",

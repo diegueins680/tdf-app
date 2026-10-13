@@ -2716,7 +2716,7 @@
     {
       "authority": "reconciled",
       "source": "Production outage 2026-10-07 (restart rejected by the verifier after checkout.paypal.refunds was enabled); AUTHORITY-050",
-      "contract": "docs/automatic-production-migrations.md",
+      "contract": "formal/system/startup-gates.md",
       "domain": "DEPLOY",
       "actors": [
         "Production entrypoint",
@@ -2755,13 +2755,21 @@
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
       "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips verification only when the ledger is complete.",
       "observability": "Fixed exception text names the violated gate class.",
-      "formalModels": [],
-      "verification": "Executable SQL verification against a fully migrated PostgreSQL database",
-      "evidence": "Automatic-migration test accept/reject assertions and a failing run against the previous verifier",
+      "formalModels": [
+        "formal/event-operations/StartupGates.tla",
+        "formal/event-operations/StartupGates.cfg",
+        "formal/event-operations/StartupGatesStagedAccepted.cfg",
+        "formal/event-operations/StartupGatesMissingAccepted.cfg",
+        "formal/event-operations/StartupGatesEitherRejected.cfg",
+        "formal/event-operations/StartupGatesRequiredUnchecked.cfg"
+      ],
+      "verification": "Executable SQL verification against a fully migrated PostgreSQL database; every asserted production flag run through the real verification in each of its three states (42 runs, startup-gates-postgres.mjs) plus the approved baseline and both joint extremes of the either-state gates; one-state exhaustive TLC check of StartupGates.tla over all 4,782,969 flag assignments with four single-guard negative controls.",
+      "evidence": "Automatic-migrations rehearsal; startup-gates-postgres.mjs in CI; TLC runs registered in scripts/verify-event-operations-formal.sh.",
       "status": "specified and implemented",
-      "confidence": "High for the provider gate rule under the tested schema; other verifier checks are unchanged.",
+      "confidence": "High for the provider gate rule and the other asserted flags on the tested schema; production flag states unobserved.",
       "ambiguity": [
-        "Other startup assertions may encode states that later become approved; each needs the same review."
+        "The fourteen asserted flags and their accepted states are the complete startup gate policy as of 2026-10-12 (formal/system/startup-gates.md); enabling a staged, service-booking or course gate, or disabling a manual-settlement or marketplace gate, fails every later container start until the verifier changes (the 2026-10-07 incident class).",
+        "Production flag states are not observable from the repository; the policy is a precondition for flag changes."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2769,7 +2777,7 @@
       },
       "id": "DEPLOY-STARTUP-001",
       "title": "Startup schema verification accepts approved production state",
-      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate.",
+      "statement": "The production entrypoint's schema verification must accept every approved production configuration, so that a restart or release cannot fail solely because an approved capability is enabled. All provider capability gates must exist; PayPal webhooks/refunds and Datafast webhooks/refunds may be enabled or disabled (AUTHORITY-050); PlaceToPay and Payphone must remain disabled until approved. Verification never enables or alters a gate. The verifier also requires the manual-settlement gates (checkout.bank_transfer, checkout.cash, checkout.pos) and the marketplace sales and rentals gates to exist enabled, and the service-booking and course checkout and recurring-billing gates to exist disabled; enabling or disabling any of these in production is a verifier change in the same release.",
       "property": "Every approved provider gate state passes startup verification; staged providers and missing gates fail",
       "implementation": [
         "scripts/lib/production-release.mjs",
@@ -2777,7 +2785,8 @@
       ],
       "tests": [
         "scripts/test-automatic-migrations-production-schema.sh",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/startup-gates-postgres.mjs"
       ],
       "critical": true
     },

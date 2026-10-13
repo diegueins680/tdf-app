@@ -599,6 +599,19 @@
       "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
       "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-077",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-STARTUP-001",
+        "scripts/lib/production-release.mjs",
+        "formal/system/startup-gates.md",
+        "formal/event-operations/StartupGates.tla",
+        "scripts/__tests__/startup-gates-postgres.mjs"
+      ],
+      "conflict": "DEPLOY-STARTUP-001 described only the six provider gates, while the startup verifier also requires the three manual-settlement gates and the two marketplace gates enabled and the service-booking and two course gates disabled; a flag change in any of those nine would pass unnoticed by the requirement and fail every later container start, as checkout.paypal.refunds did on 2026-10-07 (AUTHORITY-050).",
+      "authority": "The verifier as reviewed and the product decisions behind each gate (AUTHORITY-050 for PayPal and Datafast; the service-booking, course and staged-provider gates remain disabled until approved).",
+      "resolution": "The requirement is completed with the full asserted set and the rule that enabling or disabling an asserted gate is a verifier change in the same release; the code is unchanged. The policy is pinned by the exhaustive one-state model and by running the real verification for every flag in every state."
     }
   ]
 }
