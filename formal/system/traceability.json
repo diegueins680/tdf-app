@@ -5102,10 +5102,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-072",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-aux-write.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -5115,7 +5115,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsAuxiliaryWrite.tla (34,172 states, 13,744 distinct) states the four guards with four single-guard controls (formal/system/operations-aux-write.md); the handlers were read against the requirement with no discrepancy found; the conformance harness remains the execution evidence.",
       "id": "OPS-AUX-WRITE-001",
       "title": "Current authority and atomic evidence for auxiliary Operations mutations",
       "domain": "OPS",
@@ -5180,7 +5180,14 @@
         "scripts/test-booking-conformance.py",
         "scripts/__tests__/operations-api-schema.test.mjs"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsAuxiliaryWrite.tla",
+        "formal/event-operations/OperationsAuxiliaryWrite.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg",
+        "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg",
+        "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg"
+      ],
       "ambiguity": [
         "Downstream failure replay execution and actual push delivery are not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
@@ -9416,6 +9423,12 @@
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
+    "formal/event-operations/OperationsAuxiliaryWrite.cfg": "81f414ffc188615f356d2aff00d2e9b971da05724e2e817334a03ee8b93c6185",
+    "formal/event-operations/OperationsAuxiliaryWrite.tla": "c38da2f0e47da088880d71dc8f73d940a914f071361e3093dbe732eee24f8d37",
+    "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg": "ec90ea40b0dcee1870584ff668b482809f1f336b8a37ecb21b8c9acc79dd2759",
+    "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg": "0449597ef0da6ddb03a5874dd1bae0749696abe83d643da49c2d646427272946",
+    "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg": "fc5b4ae78ce540999df67d37bb838126764adf0a9ad67a8a6cc02015384a2514",
+    "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg": "e27c8b1d142ee1d97551d7a12a7da368d699b15534788063bc9071920dcc8131",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
     "formal/event-operations/OperationsManualReceipt.tla": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
     "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
@@ -9682,7 +9695,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+    "scripts/verify-event-operations-formal.sh": "50839e86f968b825b6576ea1611e648149793e8d0b96ffdd1cac3613452e1c90",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -13761,6 +13774,42 @@
       {
         "requirement": "AUTH-PUBLIC-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWrite.tla": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWrite.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWriteUnlocked.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWritePartialAudit.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWriteRetryTwice.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/OperationsAuxiliaryWriteUnencrypted.cfg": [
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-mobile/.github/workflows/mobile-validate.yml": [
@@ -22319,7 +22368,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "50839e86f968b825b6576ea1611e648149793e8d0b96ffdd1cac3613452e1c90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41890,7 +41939,6 @@
     "OPS-METRICS-001",
     "AUTH-OPS-READ-001",
     "AUTH-PUBLIC-001",
-    "OPS-AUX-WRITE-001",
     "SYS-CI-001",
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
@@ -43028,7 +43076,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sourceSha256": "bfbd6fb69d9f372fdb072c5fd0c5afbdbd962f660c0202dd1ff2f6e4875eea96",
       "definition": {
         "states": [
           "absent",

@@ -348,6 +348,11 @@ run_negative_tlc CheckoutCancellationPaymentUnsafe.cfg checkout-payment-unsafe '
 run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invariant ReadyBeforeReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
+run_tlc OperationsAuxiliaryWrite.tla OperationsAuxiliaryWrite.cfg operations-auxiliary-write
+run_negative_tlc OperationsAuxiliaryWriteUnlocked.cfg operations-auxiliary-write-unlocked 'Invariant CurrentAuthority is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWritePartialAudit.cfg operations-auxiliary-write-partial-audit 'Invariant AtomicEvidence is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWriteRetryTwice.cfg operations-auxiliary-write-retry-twice 'Invariant OneRetry is violated' OperationsAuxiliaryWrite.tla
+run_negative_tlc OperationsAuxiliaryWriteUnencrypted.cfg operations-auxiliary-write-unencrypted 'Invariant EncryptedPush is violated' OperationsAuxiliaryWrite.tla
 run_tlc NavigationVisit.tla NavigationVisit.cfg navigation-visit
 run_negative_tlc NavigationVisitUnsafe.cfg navigation-visit-unsafe 'Invariant NoFailedVisits is violated' NavigationVisit.tla
 run_tlc ProviderRollback.tla ProviderRollback.cfg provider-rollback

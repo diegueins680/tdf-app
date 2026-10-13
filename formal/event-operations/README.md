@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `OperationsAuxiliaryWrite.cfg` (2026-10-12) | Two auxiliary Operations commands (note, retry, view or push) of one actor; session, grant, membership, assignment-dependent visibility, failure state and push key as the environment; lock, commit with audit, reject | PASS; 34,172 generated, 13,744 distinct states, depth 10; `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
+| `OperationsAuxiliaryWriteUnlocked.cfg`, `OperationsAuxiliaryWritePartialAudit.cfg`, `OperationsAuxiliaryWriteRetryTwice.cfg`, `OperationsAuxiliaryWriteUnencrypted.cfg` | Negative controls: environment moves while a command holds its locks, a result without its audit, a second retry admitted, a push token stored without the key | Expected exit 12 with `CurrentAuthority`, `AtomicEvidence`, `OneRetry`, `EncryptedPush` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -621,3 +623,13 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Operations auxiliary writes (2026-10-12)
+
+`OperationsAuxiliaryWrite.tla` models the four auxiliary Operations
+mutations (OPS-AUX-WRITE-001): a command takes its locks, reads session,
+grant, membership, assignment, failure state and push key under them, then
+commits its result together with its audit row or is rejected with no
+effect. Four single-guard controls. The model states the guards the
+handlers are read to apply; the PostgreSQL/HTTP conformance harness is the
+execution evidence. See
+[operations-aux-write.md](../system/operations-aux-write.md).
