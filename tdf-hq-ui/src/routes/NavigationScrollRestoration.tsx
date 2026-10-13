@@ -85,13 +85,6 @@ export default function NavigationScrollRestoration() {
       if (settled) persist();
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(attempt); };
-    const onScroll = () => {
-      // Browser anchoring/native history can run after our layout callback,
-      // notably for nested containers in WebKit. Retain the intended target
-      // until actual user input hands control back to the visitor.
-      if (!interrupted && (target || anchorHash)) schedule();
-      else persist();
-    };
     const resize = new ResizeObserver(schedule);
     const mutation = new MutationObserver(schedule);
     mutation.observe(document.body, { childList: true, subtree: true });
@@ -101,7 +94,7 @@ export default function NavigationScrollRestoration() {
     document.addEventListener('pointerdown', interrupt, { passive: true });
     document.addEventListener('click', interrupt, true);
     document.addEventListener('keydown', interrupt);
-    document.addEventListener('scroll', onScroll, true);
+    document.addEventListener('scroll', persist, true);
     const save = () => { persist(); flush(); };
     document.addEventListener('click', persist, true);
     window.addEventListener('pagehide', save);
@@ -120,7 +113,7 @@ export default function NavigationScrollRestoration() {
       document.removeEventListener('pointerdown', interrupt);
       document.removeEventListener('click', interrupt, true);
       document.removeEventListener('keydown', interrupt);
-      document.removeEventListener('scroll', onScroll, true);
+      document.removeEventListener('scroll', persist, true);
       document.removeEventListener('click', persist, true);
       window.removeEventListener('pagehide', save);
       history.scrollRestoration = nativeRestoration;

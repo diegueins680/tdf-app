@@ -117,7 +117,7 @@ separate device evidence; viewport emulation does not establish those outcomes.
 | Global artist search | Published directory documents omitted unmapped legacy artists; implicit city hid results | `Server/Directory.hs`, `DirectorySearchPage.tsx`, API/OpenAPI types | Real SQL ranking, privacy, band/project, pagination and facet assertions; component tests |
 | Search state preservation | Local state and unconditional URL replacement could lose history intent | Shared query cache, URL query/filter state; integrated main's URL-driven global search | Component regressions and browser discovery/history scenario |
 | New-route scroll reset | Public document and protected persistent main used different scroll roots | `NavigationScrollRestoration.tsx`, `AppShell.tsx`, `App.tsx` | Browser assertions for both scrolling roots |
-| Browser history restoration | No centralized per-entry restoration; async layout/native anchoring could override position | Bounded history-key positions, rendering observers, scroll-event coordination until user input | Back/Forward, refresh and async-container browser scenarios; final matrix status recorded in PR |
+| Browser history restoration | No centralized per-entry restoration; async layout/native anchoring could override position | Bounded history-key positions, rendering observers and restoration handoff on user input | Back/Forward, refresh and async-container browser scenarios; final matrix status recorded in PR |
 | Deep-link navigation | Mount effects and generic scroll resets competed with intended anchors | Fragment precedence, late-target observers, `navigation.css` scroll margins | Delayed fragment target and 16px offset assertions |
 | Mobile/responsive compatibility | Search entry hidden in mobile menu; no narrow discovery layout | Public/header search affordances and responsive MUI cards/filters | Chromium desktop/Pixel 7/834px tablet/360px Android and iPhone 13 WebKit configurations; no physical-device claim |
 | Accessibility | Missing search landmark/status and discoverable keyboard entry | Named search form, labels, live status, retry/clear controls, bounded image geometry | Scoped axe serious/critical checks plus component/browser interactions; not a whole-site WCAG certification |
@@ -145,3 +145,10 @@ production-sized query plans/load testing, live-backend browser journeys,
 protected hosted CI, independent review and post-release functional smoke tests.
 The new indexes are transactional with bounded lock/statement timeouts; large
 production tables still require the existing deployment rehearsal and lock review.
+
+Hosted CI initially rejected two stale catalog successor references; both now
+point to the 203-entry migration manifest and all six provenance tests pass
+locally. The external Datadog production-web test checks the legacy
+`tdf-app.pages.dev/` URL and received HTTP301 while expecting HTTP200. Its API
+health check passed. This external failure is not hidden or reclassified as a
+success for this PR.

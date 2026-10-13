@@ -23,6 +23,7 @@ async function fixture(page, baseURL, authenticated = false) {
     if (/^\/directory\/profiles\/[^/]+$/.test(url.pathname)) return route.fulfill({ json: { id: 'synthetic-12', slug: 'luna-12', name: 'Lúna 12', kind: 'artist', bio: 'Perfil sintético de prueba. '.repeat(200), location: { city: 'Quito' }, links: [], portfolio: [] } });
     if (url.pathname === '/directory/suggestions') return route.fulfill({ json: [] });
     if (url.pathname === '/fans/artists') return route.fulfill({ json: [] });
+    if (url.pathname === '/parties') return route.fulfill({ json: [] });
     if (url.pathname === '/records/feed') return route.fulfill({ json: { collections: [], releases: [], recordings: [], sessions: [] } });
     if (url.pathname.startsWith('/catalogs/')) return route.fulfill({ json: { items: [] } });
     return route.fulfill({ status: 404, json: {} });
@@ -109,13 +110,15 @@ test('protected scrolling container restores after async layout and public navig
   const main = page.locator('[data-navigation-scroll-container]');
   await expect(main).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Contactos', exact: true })).toBeVisible();
+  await expect(page.getByText('Sin contactos aún', { exact: true })).toBeVisible();
   const addContent = () => page.evaluate(() => {
     const element = document.createElement('div'); element.style.minHeight = '4000px'; element.style.flexShrink = '0'; element.textContent = 'Synthetic async list';
     document.querySelector('[data-navigation-scroll-container]').append(element);
   });
   await addContent();
-  await main.dispatchEvent('wheel', { deltaY: 1200 });
-  await main.evaluate((element) => { element.scrollTop = 1200; });
+  await expect.poll(() => main.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(2000);
+  await main.dispatchEvent('wheel', { deltaY: 1200, bubbles: true });
+  await main.evaluate((element) => new Promise((resolve) => requestAnimationFrame(() => { element.scrollTo({ top: 1200, behavior: 'instant' }); resolve(); })));
   await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBe(1200);
   await page.getByRole('link', { name: 'Buscar artistas y comunidad' }).click();
   await expect(page).toHaveURL(/\/buscar/);
@@ -124,6 +127,7 @@ test('protected scrolling container restores after async layout and public navig
   await page.goBack();
   await expect(main).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Contactos', exact: true })).toBeVisible();
+  await expect(page.getByText('Sin contactos aún', { exact: true })).toBeVisible();
   await addContent();
   await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBe(1200);
 });

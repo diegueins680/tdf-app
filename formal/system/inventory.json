@@ -2711,7 +2711,7 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "60ba8178d9bafc48f086a64141e52bb5feae2058bf3ab455d2ae15454dbb8301",
+      "sha256": "49f3cf501dab378720c421391170e6c6aa6890ec6d6e3edda777512ca517eab2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9689,7 +9689,7 @@
     {
       "id": "SURFACE-3ca49ec1ca84b9a6",
       "path": "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx",
-      "sha256": "7d37f387fb10f6789022e0ad9ed4750c0bf586f91bbd4a8d604e54f0c66d966d",
+      "sha256": "10be673969a77e0bf71eff0af6e32aa79a9630af4cdbd9c01d1753f7f766f12a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18603,7 +18603,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "dfb4b34a5e029112e4eca42d4a3971f972063c6c63571ee9e21645fa5325f8d6",
+      "sha256": "44624e72d71d322482a26dab3cd313d2870c458640185d548ad637d85eeec061",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

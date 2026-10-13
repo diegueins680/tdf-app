@@ -9763,7 +9763,7 @@
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
     "e2e/web/auth-landing.spec.mjs": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
-    "e2e/web/community-discovery.spec.mjs": "60ba8178d9bafc48f086a64141e52bb5feae2058bf3ab455d2ae15454dbb8301",
+    "e2e/web/community-discovery.spec.mjs": "49f3cf501dab378720c421391170e6c6aa6890ec6d6e3edda777512ca517eab2",
     "e2e/web/course-enrollment.spec.mjs": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
@@ -10323,7 +10323,7 @@
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
     "tdf-hq-ui/src/routes/AppShell.test.tsx": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
     "tdf-hq-ui/src/routes/AppShell.tsx": "44a60a3805ce0af4a4c5a1254482b9bcc140e2b247a120bb5b98abc5b9ad8bc2",
-    "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx": "7d37f387fb10f6789022e0ad9ed4750c0bf586f91bbd4a8d604e54f0c66d966d",
+    "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx": "10be673969a77e0bf71eff0af6e32aa79a9630af4cdbd9c01d1753f7f766f12a",
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
     "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx": "d6d3fe537c86d2159ded28cdc4f56543137a55fe1002acc8eb8381bf73b5b4ef",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "7b30fe9684172ea1ce741dfa17b650a75e30d7f04bfbfa1a6e6b8134db4f1761",
@@ -18435,7 +18435,7 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "60ba8178d9bafc48f086a64141e52bb5feae2058bf3ab455d2ae15454dbb8301",
+      "sha256": "49f3cf501dab378720c421391170e6c6aa6890ec6d6e3edda777512ca517eab2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -29551,7 +29551,7 @@
     {
       "id": "SURFACE-3ca49ec1ca84b9a6",
       "path": "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx",
-      "sha256": "7d37f387fb10f6789022e0ad9ed4750c0bf586f91bbd4a8d604e54f0c66d966d",
+      "sha256": "10be673969a77e0bf71eff0af6e32aa79a9630af4cdbd9c01d1753f7f766f12a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

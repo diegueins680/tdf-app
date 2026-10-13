@@ -334,12 +334,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "155c8ba51c7e002c10d0",
+      "currentId": "a680f26cbce66889d70a",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 202,
-      "change": "append 2026-10-07_directory_artist_derived_listings and 2026-10-07_directory_artist_listing_backfill_apply",
+      "valueCount": 203,
+      "change": "Retains the 202 reviewed migration entries and appends only the normalized community-search indexes introduced by 08f3bcf50319983193d37ccec87d1c664c8ef21d. Existing SQL and introduction identities are unchanged.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "f185683a8f6a6532b802",
