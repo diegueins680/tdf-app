@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T22:08:10.475Z",
+  "generatedAt": "2026-10-13T01:05:28.216Z",
   "repositoryRoot": ".",
   "filesScanned": 2252,
   "candidateCount": 1320,
@@ -4970,7 +4970,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "publicEvent",
-      "line": 6,
+      "line": 7,
       "values": [
         "id",
         "title",
@@ -4987,7 +4987,7 @@
       "valueCount": 11,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6
+        7
       ],
       "consumerCount": 128,
       "backendConsumers": [
@@ -13426,7 +13426,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 785,
+      "consumerCount": 786,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -13592,6 +13592,7 @@
         "scripts/__tests__/checkout-amount-postgres.mjs",
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -13631,8 +13632,7 @@
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
         "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs",
-        "scripts/lib/instagram-token-lifecycle.mjs"
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14178,7 +14178,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 786,
+      "consumerCount": 787,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14343,6 +14343,7 @@
         "scripts/__tests__/checkout-amount-postgres.mjs",
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -14383,8 +14384,7 @@
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
         "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs",
-        "scripts/lib/instagram-token-lifecycle.mjs"
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14468,7 +14468,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 786,
+      "consumerCount": 787,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14633,6 +14633,7 @@
         "scripts/__tests__/checkout-amount-postgres.mjs",
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -14673,8 +14674,7 @@
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
         "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs",
-        "scripts/lib/instagram-token-lifecycle.mjs"
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -21828,7 +21828,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 838,
+      "consumerCount": 839,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -21995,6 +21995,7 @@
         "scripts/__tests__/checkout-amount-postgres.mjs",
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
@@ -22034,8 +22035,7 @@
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
         "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs",
-        "scripts/lib/instagram-token-lifecycle.mjs"
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -42641,7 +42641,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 876,
+      "consumerCount": 877,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -42808,6 +42808,7 @@
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
@@ -42847,8 +42848,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs",
-        "scripts/lib/continuous-improvement-loop.mjs"
+        "scripts/lib/compiled-api-surface.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -51840,7 +51840,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 876,
+      "consumerCount": 877,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -52007,6 +52007,7 @@
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
@@ -52046,8 +52047,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs",
-        "scripts/lib/continuous-improvement-loop.mjs"
+        "scripts/lib/compiled-api-surface.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -61313,7 +61313,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 876,
+      "consumerCount": 877,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61480,6 +61480,7 @@
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
@@ -61519,8 +61520,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs",
-        "scripts/lib/continuous-improvement-loop.mjs"
+        "scripts/lib/compiled-api-surface.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -61613,7 +61613,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 876,
+      "consumerCount": 877,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61780,6 +61780,7 @@
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
@@ -61819,8 +61820,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs",
-        "scripts/lib/continuous-improvement-loop.mjs"
+        "scripts/lib/compiled-api-surface.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -63009,7 +63009,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 876,
+      "consumerCount": 877,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -63176,6 +63176,7 @@
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
@@ -63215,8 +63216,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs",
-        "scripts/lib/continuous-improvement-loop.mjs"
+        "scripts/lib/compiled-api-surface.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -75050,7 +75050,7 @@
       "lines": [
         10620
       ],
-      "consumerCount": 866,
+      "consumerCount": 867,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -75217,6 +75217,7 @@
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -75256,8 +75257,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/codex-loop-worker.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
-        "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.codex.json"
+        "scripts/continuous-improvement-loop-supervisor.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -83174,7 +83174,7 @@
       "lines": [
         18116
       ],
-      "consumerCount": 863,
+      "consumerCount": 864,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -83341,6 +83341,7 @@
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
@@ -83380,8 +83381,7 @@
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/codex-loop-worker.sh",
         "scripts/continuous-improvement-loop-forever.mjs",
-        "scripts/continuous-improvement-loop-supervisor.sh",
-        "scripts/continuous-improvement-loop.codex.json"
+        "scripts/continuous-improvement-loop-supervisor.sh"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -145726,7 +145726,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 876,
+      "consumerCount": 877,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -145893,6 +145893,7 @@
         "scripts/__tests__/ci-change-scope.test.mjs",
         "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-reassignment-runner.test.mjs",
         "scripts/__tests__/event-task-completion-runner.test.mjs",
         "scripts/__tests__/fixtures/artist-management-claim.sql",
@@ -145932,8 +145933,7 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
         "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs",
-        "scripts/lib/continuous-improvement-loop.mjs"
+        "scripts/lib/compiled-api-surface.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
