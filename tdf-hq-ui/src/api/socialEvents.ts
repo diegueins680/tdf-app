@@ -401,6 +401,8 @@ export interface TicketPurchaseWithPromoDTO {
   ticketPurchaseBuyerEmail?: string | null;
   ticketPurchasePromoCode?: string | null;
   ticketPurchaseMobileSdkStripeVersion?: string | null;
+  /** Terms version of the event's approved ticket policy that the buyer accepted. */
+  ticketPurchaseAcceptedTermsVersion?: string | null;
 }
 
 export interface StripePaymentIntentDTO {
