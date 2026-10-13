@@ -518,6 +518,7 @@
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test-whatsapp-consent.sh",
+      "scripts/test-whatsapp-redelivery.sh",
       "scripts/test_mail_deliverability_monitor.py",
       "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
@@ -2087,6 +2088,7 @@
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
+      "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
       "tdf-hq/test/TicketAdmissionMain.hs",
       "tdf-hq/test/TicketConfirmationMain.hs",
       "tdf-hq/test/TicketConfirmationSmtpMain.hs",
@@ -2586,7 +2588,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "bc676120ddd8126a01bbb1a609bbcecfa0a8c5824cdd07cd6369d1eed713be9e",
+      "sha256": "c964353df8e8b6359fe819f1560e6567f488d7d351c6d2fa454d6105e6117c76",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5542,6 +5544,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ee9a013c20ac0030",
+      "path": "scripts/test-whatsapp-redelivery.sh",
+      "sha256": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -5586,7 +5594,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "13cacac6baf266e9bef95dd5a02039f60f2afec4e6a1308938cd061219c8d03b",
+      "sha256": "3f08862a49b8a78d4c1c89dc2288d96f3e21b4fe68fc5229b1b4d236008d3957",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13986,7 +13994,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "85cf2977b605a92d3c6108ebec9389a4c38fa4cd45f4e04852f3e9f0f43386f2",
+      "sha256": "8a35cdf4b3e16fd56591447c66d052356446f357c5000a873c75c1f56886e184",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14430,7 +14438,7 @@
     {
       "id": "SURFACE-9070029de4202bc2",
       "path": "tdf-hq/src/TDF/WhatsApp/History.hs",
-      "sha256": "7088ca90378f4f0da612e0129a1cf0fbbc4c6ae0b8e635d50101b7a657da1a57",
+      "sha256": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14460,7 +14468,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "e9029083034d93e7f8818a8c1137c1fafa7ddfb65e9857a838291285c565e0df",
+      "sha256": "184f18f7d328099aea9fec0390cd6557176a1b570f91e8dcd1faff978ab67e22",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14526,7 +14534,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1cbfe6158bac3a8349dcdf1da6a603520c751316846a49b49f3caddda992adca",
+      "sha256": "257e08b50b076164c356a19f608d002aa768fa5acb9e34704588a577a79fe098",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14917,6 +14925,12 @@
       "id": "SURFACE-a7aa6fe1e1854ab6",
       "path": "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
       "sha256": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-da468ce284927c10",
+      "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22712,7 +22726,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "16d1726c5a49eddc1481282db9562fac9db507f5f76eacaea4c2801c7ab57ad1",
+      "sha256": "adb706dc7b61f14d3f0b5d0621fc18d63cc404ce2e02e9c29a56add55a3925ea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23740,6 +23754,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/WhatsAppRedelivery.cfg",
+      "sha256": "9db8bd7a24495d762b38f20a92bdb551c9b6129b5ce8928ed678b7dc8ff1c0cb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedelivery.tla",
+      "sha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+      "sha256": "e83c566e96cd54c2515ee5e19d39d88d12eba827090cb8798b5c806956c6456f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+      "sha256": "d6b0afaa05315513388cd6e299e1e88ee8c9f2b85e9523dfac056c0e85f889c7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+      "sha256": "68c1aece036e6d1b5eb2af04a7fa597f8a4fc976781a29efb6ed0522a28bf789",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg",
+      "sha256": "898af974ec689664240af4da2d5b54a0a9a7c415ab751d1c78e0131c6b210423",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WorkerCompletionEvidence.cfg",
       "sha256": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
       "authority": "inferred",
@@ -24196,7 +24252,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "746373bed96cb3db2275155c62b2f9e352048c1d23ea3febf4b6a178d9e7eabf",
+      "sha256": "d9428b037db49d275a5307b3a1cc4731e5cd812390d49b17affad32b01c4aee5",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24210,7 +24266,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e8fcd1edfa77cbae5249ac120e141a26fec277206b251c52e5c2ef6bd5e13644",
+      "sha256": "eb0c49e130b44207e1550698f4a88dba68ce898e75503c7a2ede16a3cec8d6fa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24511,7 +24567,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "36c161149be3d9fbd5068c195b4d527d71ad9df236b5611ee5f9e7aa9bf93f79",
+      "sha256": "648953aa6a7266cb276f361fff3941df40ef5f4ebe49c5bf1930aceecbd2ed4d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24582,6 +24638,13 @@
     {
       "path": "formal/system/whatsapp-consent.md",
       "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/whatsapp-redelivery.md",
+      "sha256": "511952600e257a7c455da7e149a2f4fd63dc4926674bcf29bef8db8efeb7b644",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -36586,6 +36649,131 @@
         "  DeliveredRequestsSpaced",
         "  ConfirmedInsideWindow",
         "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedelivery.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = FALSE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = FALSE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = FALSE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

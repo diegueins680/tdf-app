@@ -628,6 +628,7 @@ import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
+import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -17891,6 +17892,7 @@ main = hspec $ do
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec
     DriveReplaySpec.spec
+    WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec

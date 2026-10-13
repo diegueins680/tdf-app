@@ -9492,6 +9492,80 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "MSG-WHATSAPP-REDELIVERY-001",
+      "title": "A redelivered WhatsApp message changes nothing and is not answered again",
+      "domain": "MSG",
+      "statement": "The webhook delivery that stores an inbound WhatsApp message applies what it asks for (opt-out keyword, consent confirmation) in the same transaction and sends its automatic reply; a delivery that finds the message already stored applies nothing again. An enrolment message is registered once and answered by the one delivery that claims its reply.",
+      "authority": "AUTHORITY-060; Meta delivers webhooks at least once and a signed body stays valid.",
+      "source": "formal/system/whatsapp-redelivery.md",
+      "contract": "formal/system/whatsapp-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "WhatsApp sender"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001)"
+      ],
+      "inputs": [
+        "Provider message id, sender number, text and sent time"
+      ],
+      "state": {
+        "boundary": "whats_app_message.external_id, whats_app_consent",
+        "authority": "PostgreSQL unique index, advisory lock and one transaction"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored, opt-out or confirmation applied, reply sent once"
+      ],
+      "forbiddenTransitions": [
+        "Stored message delivered again -> consent withdrawn again",
+        "Stored message delivered again -> automatic reply sent again",
+        "Opt-out message stored without its opt-out applied",
+        "Two stored copies of one provider message"
+      ],
+      "effects": [
+        "One whats_app_message row and one received audit entry per provider message",
+        "Consent withdrawn or confirmed at most once per message"
+      ],
+      "authorization": "Unauthenticated route admitted only by the Meta signature; the effect is limited to the sender's own number.",
+      "privacy": "No new data; the stored message and consent rows are unchanged in shape.",
+      "concurrency": "Deliveries of one provider message take a transaction-scoped advisory lock on its id; the unique index on external_id refuses a second copy.",
+      "idempotency": "Keyed by the provider message id, or for a message without one by an id derived from sender, sent time and body. The course registration is keyed by the stored message; the reply by an auto_reply_claimed audit entry.",
+      "failure": "A failed transaction stores nothing and applies nothing, so the next delivery is again the first.",
+      "recovery": "Meta redelivers; a registration that failed is retried by the next delivery. A reply already claimed, or a notice whose confirmation already committed, is not sent later.",
+      "observability": "whats_app_message row, its received audit entry and whats_app_consent.",
+      "property": "What a message asks for is applied at most once however often it is delivered, a stored opt-out has been applied, and an enrolment message is answered at most once.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+        "scripts/test-whatsapp-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/WhatsAppRedelivery.tla",
+        "formal/event-operations/WhatsAppRedelivery.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+        "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+        "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the function the webhook calls, including redelivery after a new subscription and simultaneous deliveries.",
+      "evidence": "formal/system/whatsapp-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Handler and storage read; database behaviour run locally against PostgreSQL 16 on 2026-10-11; the handler's use of the reply claim is covered by reading only.",
+      "ambiguity": [
+        "Whether a delayed first delivery of an old STOP should defeat a later subscription is undecided; it currently does."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Database effects repaired and tested; no signed HTTP test, and the reply worker, delivery updates and other Meta channels were not examined."
+      }
     }
   ]
 }

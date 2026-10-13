@@ -95,6 +95,11 @@ run_negative_tlc() {
 run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandfence
 run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
+run_tlc WhatsAppRedelivery.tla WhatsAppRedelivery.cfg whatsapp-redelivery
+run_negative_tlc WhatsAppRedeliveryEveryDeliveryApplies.cfg whatsapp-redelivery-every-delivery-applies 'Invariant AppliedOnce is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryDuplicateStore.cfg whatsapp-redelivery-duplicate-store 'Invariant StoredOnce is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryEffectAfterStore.cfg whatsapp-redelivery-effect-after-store 'Invariant StoredStopApplied is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryEveryDeliveryReplies.cfg whatsapp-redelivery-every-delivery-replies 'Invariant RepliedOnce is violated' WhatsAppRedelivery.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
 run_tlc AccessGrant.tla AccessGrant.cfg accessgrant
 run_negative_tlc AccessGrantSelfApproval.cfg accessgrantselfapproval 'Invariant NoSelfApproval is violated' AccessGrant.tla

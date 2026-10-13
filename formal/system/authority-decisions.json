@@ -646,6 +646,17 @@
       "conflict": "The interaction contract states that a rejected write cannot roll back its consumed budget, while the HTTP boundary ran the charge and the write in one transaction, so any write that raised a database error (for example a payload with a NUL escape, or a deadlock) aborted the charge and cost the account nothing.",
       "authority": "The interaction contract and SOC-ABUSE-001 govern; the refund on database errors was an unexamined consequence of transaction scope, never a decision.",
       "resolution": "The write runs after a savepoint taken once the charge is made; a database error returns to the savepoint and the transaction commits the counter. A NUL escape refused by jsonb is answered 400 instead of 500; other statuses are unchanged. No schema change. Charging requests rejected before database work and pruning past counters remain open."
+    },
+    {
+      "id": "AUTHORITY-060",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
+      ],
+      "conflict": "Inbound WhatsApp storage treats a repeated provider message as a duplicate delivery that must not change the stored message, while the webhook handler applied the opt-out keyword and sent the enrolment reply on every delivery, so a redelivered STOP withdrew a later subscription and a redelivered enrolment message was answered again.",
+      "authority": "The storage rule governs: a provider message is one event however often it is delivered. Re-running effects on redelivery was never a decision.",
+      "resolution": "The delivery that stores the message applies its opt-out or consent confirmation in the same transaction and alone sends the confirmation notice; a delivery that finds the message stored applies nothing again. The course registration still runs on every delivery (it is idempotent) and the automatic reply is sent by the one delivery that claims it. Deliveries of one message are serialized by an advisory lock. No schema change. Delayed first delivery of an old STOP, the reply worker, delivery updates and other Meta channels remain open."
     }
   ]
 }

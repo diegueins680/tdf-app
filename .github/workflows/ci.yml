@@ -527,6 +527,7 @@ jobs:
         run: |
           bash scripts/test-auth-recovery-migration.sh
           node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-whatsapp-consent.sh
           sh scripts/test-interaction-write-budget.sh
