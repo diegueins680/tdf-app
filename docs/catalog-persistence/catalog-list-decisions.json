@@ -14744,19 +14744,19 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "9de842d0529aa06faf6b",
+      "id": "4beaac5c476079656a0a",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+      "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "chat-notifications-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
         "id": "2c23d0fa2bac40b01a98",
@@ -14772,7 +14772,15 @@
           "line": 15
         },
         "reviewBatch": "universal-interactions-2026-09-28"
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+          "sourceDecisionId": "9de842d0529aa06faf6b",
+          "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+          "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+        }
+      ]
     },
     {
       "id": "108f31d1bc07c62d8551",
@@ -15657,19 +15665,19 @@
       }
     },
     {
-      "id": "155c8ba51c7e002c10d0",
+      "id": "8a6e9ce11b67f2ddf32a",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 203-entry production migration protocol preserves the existing 202 entries and appends the chat reply/recipient notification migration with its exact introduction commit. No historical replay or external delivery is enabled; rollout and recovery remain independently gated.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "directory-artist-listings-2026-10-10",
+      "reviewBatch": "chat-notifications-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57229,7 +57237,15 @@
         },
         "reviewBatch": "directory-event-search-sync-2026-10-10",
         "reviewMethod": "successor-of-reviewed-decision"
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+          "sourceDecisionId": "155c8ba51c7e002c10d0",
+          "sourceDecisionSha256": "a27fb1d4e1c89dc02016e20376b299af523c056404412d47beb52d817528ce6c",
+          "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+        }
+      ]
     },
     {
       "id": "8d92943abad9c2a47c8f",

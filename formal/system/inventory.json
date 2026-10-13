@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "c93df7ecc7b2aeee8bb3e9d78ddc24cb752c8e48",
+  "mobileRevision": "f38561288398cf8aceb4df6eabe34871bc1a031e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -8299,13 +8299,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "05cfff3159f5b4b1b96e2a31e100b696abe4e414181492b7cecdd953f233349f",
+      "sha256": "ad2656623345183648fd7808d5890cc0a25be7cf6d78ee307d73107eb2254fcc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "dbb762e061ff086b5398244c9e750eb224eda82f3b3c816a24beb9a6e2222b18",
+      "sha256": "f14bee1cbedc5b756c1736e529c7afd02b976eff2d5ca4f192fe61c6612a06e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17497,7 +17497,7 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "b9a8dc89fb624e2f30f371ff4fe8a2213e2358cdb2f3aacd119071aa00dd8153",
+      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17509,7 +17509,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+      "sha256": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19989,7 +19989,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "dc15219062eae9e1b8b2c8779ef2a4bd09789b684eab07a809552d9f6f98e7ac",
+      "sha256": "e05f2a459ad48520e4884e1c2a118dbd7199e66995f4be6e09cbff339fa272de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24651,7 +24651,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6a1df2511f3746e99e9c38bc28b58685239ed831036bdbc83d8fadde47bfdcd4",
+      "sha256": "45e3c4b1f8612f57c7aab709c11aa19ff1bf2d567c4446e5b2598933f383f67b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

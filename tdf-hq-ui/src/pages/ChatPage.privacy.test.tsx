@@ -84,8 +84,10 @@ it('keeps the API send contract and trims through its existing adapter', async (
 
 it('opens the notification thread instead of the newest conversation without creating one', async () => {
   listThreads.mockResolvedValue([{ ...thread, ctThreadId: 20 }, thread]);
+  window.localStorage.setItem('tdf-chat-selected-thread-v1:party:1', '20');
   setup('/chat?threadId=10');
   await waitFor(() => expect(listMessages).toHaveBeenLastCalledWith(10, { limit: 80 }));
+  expect(listMessages.mock.calls.every(([threadId]) => threadId === 10)).toBe(true);
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
 it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects an unavailable notification thread %s', async (id) => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "c93df7ecc7b2aeee8bb3e9d78ddc24cb752c8e48",
+  "mobileRevision": "f38561288398cf8aceb4df6eabe34871bc1a031e",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -9670,7 +9670,7 @@
       "id": "MSG-NOTIFY-001",
       "title": "Atomic recipient inbox notifications and multi-message conversations",
       "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
-      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. A block, revoked consent, inactive account or message deletion hides the notice.",
+      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. Current chat read authority (including canonical block, revoked consent and inactive-account rules) and message deletion govern notice visibility.",
       "preconditions": [
         "Governed production migration installed; existing chat session/consent authority remains in force."
       ],
@@ -9707,13 +9707,15 @@
         "tdf-hq-ui/src/components/notificationTarget.ts",
         "tdf-hq-ui/src/pages/ChatPage.tsx",
         "scripts/production-migrations.json",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
       ],
       "tests": [
         "scripts/test-chat-notifications.sh",
         "scripts/social/chat-notifications.sql",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
-        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx"
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts"
       ],
       "formalModels": [],
       "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
@@ -9733,7 +9735,7 @@
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1d6a7541058ffc9d6be1591b96bff77036b7e2ae2b84e8364d0f444a5a2e52d3",
+    "docs/catalog-persistence/catalog-list-decisions.json": "a1d9c4215cc28d49a1010ec57acb6111b6bd5b1cfec9239b82c609837203a829",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10230,8 +10232,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "05cfff3159f5b4b1b96e2a31e100b696abe4e414181492b7cecdd953f233349f",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "dbb762e061ff086b5398244c9e750eb224eda82f3b3c816a24beb9a6e2222b18",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "ad2656623345183648fd7808d5890cc0a25be7cf6d78ee307d73107eb2254fcc",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "f14bee1cbedc5b756c1736e529c7afd02b976eff2d5ca4f192fe61c6612a06e5",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -10674,7 +10676,8 @@
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
@@ -16838,6 +16841,10 @@
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": [
@@ -18021,6 +18028,12 @@
       }
     ],
     "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": [
       {
         "requirement": "MSG-NOTIFY-001",
         "relationship": "tests"
@@ -27318,7 +27331,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "05cfff3159f5b4b1b96e2a31e100b696abe4e414181492b7cecdd953f233349f",
+      "sha256": "ad2656623345183648fd7808d5890cc0a25be7cf6d78ee307d73107eb2254fcc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27330,7 +27343,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "dbb762e061ff086b5398244c9e750eb224eda82f3b3c816a24beb9a6e2222b18",
+      "sha256": "f14bee1cbedc5b756c1736e529c7afd02b976eff2d5ca4f192fe61c6612a06e5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40999,9 +41012,14 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "b9a8dc89fb624e2f30f371ff4fe8a2213e2358cdb2f3aacd119071aa00dd8153",
+      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1d9d50d0957c7af7",
@@ -41013,11 +41031,15 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+      "sha256": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-NOTIFY-001",
           "relationship": "implementation"
         }
       ]
@@ -42984,7 +43006,6 @@
     "SURFACE-67d021717b413c4f",
     "SURFACE-e4d65d8b68003724",
     "SURFACE-ab2f22b78d9a1a9a",
-    "SURFACE-335f0e863443a35b",
     "SURFACE-1d9d50d0957c7af7",
     "SURFACE-861d18c6230228f5",
     "SURFACE-8610f72192678eb2",
@@ -44190,7 +44211,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6a1df2511f3746e99e9c38bc28b58685239ed831036bdbc83d8fadde47bfdcd4",
+      "sourceSha256": "45e3c4b1f8612f57c7aab709c11aa19ff1bf2d567c4446e5b2598933f383f67b",
       "definition": {
         "states": [
           "absent",

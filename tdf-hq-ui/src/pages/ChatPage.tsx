@@ -194,7 +194,9 @@ function ChatWorkspace() {
   const location = useLocation();
   const navigate = useNavigate();
   const myPartyId = session?.partyId ?? null;
-  const [selectedThreadId, setSelectedThreadId] = useState(() => loadSelectedThreadId(myPartyId));
+  const requestedThread = new URLSearchParams(location.search).get('threadId');
+  const [selectedThreadId, setSelectedThreadId] = useState(() => requestedThread === null
+    ? loadSelectedThreadId(myPartyId) : parsePositiveInt(requestedThread));
   const [draftByThread, setDraftByThread] = useState({} as DraftByThread);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatInput, setNewChatInput] = useState('');
@@ -255,11 +257,13 @@ function ChatWorkspace() {
   }, [friendProfilesQuery.data, friendsQuery.data]);
 
   useEffect(() => {
+    // A notification must not briefly open/mark another conversation as seen.
+    if (requestedThread !== null) return;
     const first = threads[0];
     if (!first) return;
     if (selectedThreadId && threads.some((t) => t.ctThreadId === selectedThreadId)) return;
     setSelectedThreadId(first.ctThreadId);
-  }, [selectedThreadId, threads]);
+  }, [requestedThread, selectedThreadId, threads]);
 
   const selectedThread: ChatThreadDTO | null = useMemo(() => {
     if (!selectedThreadId) return null;
@@ -269,7 +273,8 @@ function ChatWorkspace() {
   const messagesQuery = useQuery({
     queryKey: ['chat-messages', myPartyId, selectedThreadId],
     queryFn: () => ChatAPI.listMessages(selectedThreadId!, { limit: 80 }),
-    enabled: selectedThread !== null && Boolean(myPartyId),
+    enabled: selectedThread !== null && Boolean(myPartyId)
+      && (requestedThread === null || parsePositiveInt(requestedThread) === selectedThreadId),
     refetchInterval: 3_000,
   });
 

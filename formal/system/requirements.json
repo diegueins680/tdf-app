@@ -9669,7 +9669,7 @@
       "id": "MSG-NOTIFY-001",
       "title": "Atomic recipient inbox notifications and multi-message conversations",
       "statement": "Every newly committed direct message must have one minimized notice for the other participant, and a conversation must support subsequent messages and replies. Inbox reads apply current chat visibility and links select only an authorized existing thread.",
-      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. A block, revoked consent, inactive account or message deletion hides the notice.",
+      "property": "Accepted message and recipient notice commit together; a rejected or rolled-back send leaves neither. Current chat read authority (including canonical block, revoked consent and inactive-account rules) and message deletion govern notice visibility.",
       "preconditions": [
         "Governed production migration installed; existing chat session/consent authority remains in force."
       ],
