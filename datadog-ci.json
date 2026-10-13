@@ -1,0 +1,5 @@
+{
+  "defaultTestOverrides": {
+    "followRedirects": true
+  }
+}
