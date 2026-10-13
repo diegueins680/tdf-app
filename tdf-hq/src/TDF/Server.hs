@@ -1304,7 +1304,10 @@ coursesPublicServer =
   :<|> paypalCreateH
   :<|> paypalCaptureH
   where
-    courseMetadataH slug = loadCourseMetadata slug
+    courseMetadataH slug = do
+      meta <- loadCourseMetadata slug
+      terms <- CourseCheckoutServer.loadPublicCourseCheckoutTerms (normalizeSlug (courseMetaSlug meta))
+      pure meta { Courses.checkoutTerms = terms }
     registrationH slug idempotencyKey payload =
       CourseCheckoutServer.createCourseCheckoutRegistration
         createOrUpdateRegistration slug idempotencyKey payload
@@ -1482,6 +1485,7 @@ whatsappWebhookServer =
                   , howHeard = Just "whatsapp"
                   , utm = Nothing
                   , termsAccepted = Nothing
+                  , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
                 (replyTxt, replyRes) <- sendWhatsappReply cfg phone
@@ -5400,6 +5404,7 @@ productionCourseMetadataForStartDate cfg mWaContact slugVal startDate mTemplate 
       , syllabus = syllabus
       , whatsappCtaUrl = buildWhatsappCtaFor mWaContact titleVal landing
       , landingUrl = landing
+      , checkoutTerms = Nothing
       }
 
 firstSaturdayOfConfiguredProductionSlug :: Text -> Day
@@ -5702,6 +5707,7 @@ toCourseMetadata cfg waEnv course sessions syllabus =
       , syllabus = map toSyllabus syllabus
       , whatsappCtaUrl = whatsappUrl
       , landingUrl = landingUrlVal
+      , checkoutTerms = Nothing
       }
 
 buildLandingUrlFor :: AppConfig -> Text -> Text
