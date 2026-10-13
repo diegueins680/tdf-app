@@ -261,6 +261,16 @@ def verify_operations(sql, request, check, env, database, output, actors):
             response = request('/operations/work-items/' + key + '/seen', {'expectedVersion': 1, 'reason': None, 'requestId': 'mixed-role', 'sourceClient': 'conformance'}, token='fixture-teacher', method='PATCH')
             check('operations read-only grant cannot expand teacher writes', response[0] == 404 and sql('SELECT version FROM operations_work_item WHERE id=' + q(key)) == '1')
         finally: sql('UPDATE party_security_role SET active=false WHERE id=' + q(extra))
+    if 'read-only' in actors and 'accounting' in actors:
+        # A write site: linking an approval to a work item the writer cannot
+        # see. ReadOnly widens reads, never the writer's visibility (2026-10-12).
+        hidden = policy_items['booking']
+        check('operations Accounting cannot link an approval to a hidden item', create(approval_body(workItemId=hidden), 'fixture-accounting')[0] == 404)
+        extra = sql("INSERT INTO party_security_role(party_id,role_id,approval_mode,active) SELECT " + actors['accounting'] + ",id,'bootstrap',true FROM security_role WHERE code='read-only' RETURNING id")
+        try:
+            check('operations ReadOnly plus Accounting permits reading the item', request('/operations/work-items/' + hidden, token='fixture-accounting')[0] == 200)
+            check('operations ReadOnly plus Accounting still cannot link an approval to it', create(approval_body(workItemId=hidden), 'fixture-accounting')[0] == 404)
+        finally: sql('UPDATE party_security_role SET active=false WHERE id=' + q(extra))
 
     # Manual keys are receipt identifiers, never trusted source correlation keys.
     def manual(**changes):

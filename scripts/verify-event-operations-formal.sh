@@ -104,6 +104,13 @@ run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeem
 run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
 run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
 run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
+# AUTH-OPS-READ-001: one state; every invariant quantifies over the whole finite policy, so TLC reports a constant-level failure.
+run_tlc OperationsReadPolicy.tla OperationsReadPolicy.cfg operations-read-policy
+run_negative_tlc OperationsReadPolicyWildcardSecurity.cfg operations-read-policy-wildcard-security 'The invariant of NoSecurityDisclosure is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicySqlDrift.cfg operations-read-policy-sql-drift 'The invariant of ReadersAgree is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyUnassigned.cfg operations-read-policy-unassigned 'The invariant of SpecialistsAssigned is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyReadOnlyWrites.cfg operations-read-policy-readonly-writes 'The invariant of ReadOnlyNoWriteGain is equal to FALSE' OperationsReadPolicy.tla
+run_negative_tlc OperationsReadPolicyUnknownGrant.cfg operations-read-policy-unknown-grant 'The invariant of UnknownNothing is equal to FALSE' OperationsReadPolicy.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla

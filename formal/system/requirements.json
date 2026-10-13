@@ -4945,10 +4945,10 @@
       ]
     },
     {
-      "authority": "reconciled",
+      "authority": "reconciled; AUTHORITY-073",
       "contract": "formal/system/operations-projection-boundary.md",
       "critical": true,
-      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05; formal/system/operations-read-policy.md",
       "status": "specified and implemented",
       "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
       "conformance": {
@@ -4958,7 +4958,7 @@
       "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
       "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
       "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
-      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions. 2026-10-12: OperationsReadPolicy.tla evaluates the copied grant table and SQL scope filter over every role set, assignment flag and entity type (ReadersAgree, NoSecurityDisclosure, ReadOnlyNoWriteGain, SpecialistsAssigned, UnknownNothing) with five single-guard controls (formal/system/operations-read-policy.md); the table is copied by hand, so this checks the policy, not the Haskell or SQL text. The approval handler's linked-item check did not strip ReadOnly (Accounting plus ReadOnly could link an approval to a hidden item); fixed and covered by an Accounting-plus-ReadOnly harness case.",
       "id": "AUTH-OPS-READ-001",
       "title": "One action-specific Operations read capability policy",
       "domain": "AUTH",
@@ -5008,10 +5008,19 @@
         "scripts/lib/operations_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/OperationsReadPolicy.tla",
+        "formal/event-operations/OperationsReadPolicy.cfg",
+        "formal/event-operations/OperationsReadPolicyWildcardSecurity.cfg",
+        "formal/event-operations/OperationsReadPolicySqlDrift.cfg",
+        "formal/event-operations/OperationsReadPolicyUnassigned.cfg",
+        "formal/event-operations/OperationsReadPolicyReadOnlyWrites.cfg",
+        "formal/event-operations/OperationsReadPolicyUnknownGrant.cfg"
+      ],
       "ambiguity": [
         "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
-        "SQL/role conformance is empirical; not formally covered."
+        "SQL text and role conformance are empirical; the model checks the copied policy only.",
+        "The model's grant table is a hand copy of Model.hs and scopeFilterSql; a change to either must be mirrored (2026-10-12)."
       ]
     },
     {

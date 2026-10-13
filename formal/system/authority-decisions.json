@@ -599,6 +599,19 @@
       "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
       "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-073",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/operations-read-policy.md",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "docs/operations-control-center/rbac.md"
+      ],
+      "conflict": "AUTH-OPS-READ-001 had no formal model; the read policy exists twice (the Haskell predicate for detail and writes, the SQL scope filter for list, metrics and stream) and their agreement, the Admin-only security rule and ReadOnly's write neutrality were stated in prose and three Hspec examples. The independent review found the approval handler's linked-item check calling canViewEntityType with ReadOnly still present, unlike the three other write sites: Accounting plus ReadOnly could link an approval to a work item Accounting alone cannot see.",
+      "authority": "The requirement's property and forbidden transitions, docs/operations-control-center/rbac.md, and the two evaluators as read on 2026-10-12.",
+      "resolution": "OperationsReadPolicy.tla copies the grant table and both evaluators and checks the five invariants exhaustively over the finite policy (ten roles, two assignment flags, fifteen entity types) with one negative configuration per guard. The copy is by hand: it establishes the policy's properties, not the Haskell or SQL text, which ModelSpec and the conformance harness keep covering. One code change: the approval handler strips ReadOnly before the linked-item check, as docs/operations-control-center/rbac.md requires (ReadOnly cannot enlarge another role's write scope); the conformance harness gains the Accounting-plus-ReadOnly case. ReadOnlyNoWriteGain holds by construction once every write site strips ReadOnly; it records the rule, the harness checks the sites."
     }
   ]
 }

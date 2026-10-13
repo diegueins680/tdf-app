@@ -107,6 +107,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `SessionFenceStale/Unlocked/Party/Credential/Purpose/Witness.cfg` | Six negative configurations remove recheck, lock, actor binding, credential binding, purpose or witness requirement | Expected exit 12 with `CurrentBoundSession`; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
+| `OperationsReadPolicy.cfg` (2026-10-12) | One state; the grant table of `Model.hs` and the SQL scope filter evaluated over every subset of ten roles, both assignment flags and fifteen entity types (up to 30,720 cases per invariant) | PASS; `ReadersAgree`, `NoSecurityDisclosure`, `ReadOnlyNoWriteGain`, `SpecialistsAssigned`, `UnknownNothing` |
+| `OperationsReadPolicyWildcardSecurity.cfg`, `OperationsReadPolicySqlDrift.cfg`, `OperationsReadPolicyUnassigned.cfg`, `OperationsReadPolicyReadOnlyWrites.cfg`, `OperationsReadPolicyUnknownGrant.cfg` | Negative controls: the Haskell wildcard includes security, the SQL wildcard includes security, specialists see unassigned items, ReadOnly kept for write visibility, an unlisted role granted the wildcard | Expected non-zero exit with "The invariant of ... is equal to FALSE" for `NoSecurityDisclosure`, `ReadersAgree`, `SpecialistsAssigned`, `ReadOnlyNoWriteGain`, `UnknownNothing` |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
@@ -621,3 +623,16 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Operations read policy (2026-10-12)
+
+`OperationsReadPolicy.tla` is not a state machine: it copies the read grant
+table of `tdf-hq/src/TDF/Operations/Model.hs` and the SQL scope filter of
+`tdf-hq/src/TDF/Operations/Server.hs` and evaluates five invariants over
+every role set, assignment flag and entity type (AUTH-OPS-READ-001): detail
+(Haskell predicate) and list, metrics and stream (SQL filter) agree; only an
+Admin sees security incidents; ReadOnly adds no write visibility (by
+construction of the stripping rule each write site applies; the slice fixed
+the one site that did not); Teacher, Engineer and unlisted roles see
+nothing unassigned. Five controls each break one guard. The table is copied by hand; a change to `Model.hs` or
+`scopeFilterSql` must be mirrored here. See
+[operations-read-policy.md](../system/operations-read-policy.md).
