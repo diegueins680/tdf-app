@@ -10258,7 +10258,7 @@
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
-    "tdf-hq/test/TDF/ServerAuthSpec.hs": "c9fed383105abbe5c3dd03880275f8492f18222cbecd1b1b665fd30b7dd6759d",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs": "2971d30870f2f6cda634429f0f7d20d345041aa981899ceb66fd974d4d1db666",
     "tdf-hq/test/TDF/ServerSpec.hs": "0bfa435f1a242525f2b051c3787dcdddaf975b27a38755ea77020389145dff0c",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "efbc9f72dfba851e1d42ebefcfd0ca2ee053e65edc903d3a5671f0cbf43236c3",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
@@ -36548,7 +36548,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "c9fed383105abbe5c3dd03880275f8492f18222cbecd1b1b665fd30b7dd6759d",
+      "sha256": "2971d30870f2f6cda634429f0f7d20d345041aa981899ceb66fd974d4d1db666",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

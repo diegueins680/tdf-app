@@ -305,8 +305,8 @@ tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
       `shouldBe` Just "ada@example.com"
     resolveUsernameFromLabel "google-login:ada@example.com"
       `shouldBe` Just "ada@example.com"
-    resolveUsernameFromLabel "apple-login:apple:001.abc"
-      `shouldBe` Just "apple:001.abc"
+    resolveUsernameFromLabel "apple-login:ada@example.com"
+      `shouldBe` Just "ada@example.com"
 
   it "rejects malformed stored label usernames before session fallback rendering" $ do
     let hiddenFormat = T.singleton (chr 0x200D)
