@@ -5252,7 +5252,9 @@
       "property": "Validation selected for main and release; configured provider failures cannot be green.",
       "implementation": [
         "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        "datadog-ci.json"
       ],
       "tests": [
         "scripts/__tests__/ci-pipeline.test.mjs"
@@ -9372,11 +9374,13 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "21e08b4813ead09b682fa37075980cd99361b56637c2fe47d9f8c289961c353b",
+    ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+    "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/catalog-persistence/catalog-list-decisions.json": "9f04ca96d41002fbd06ccf45e30708acb54aa9082b86b7ccd27a576cdb7ae753",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -9534,7 +9538,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
-    "scripts/__tests__/ci-pipeline.test.mjs": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
+    "scripts/__tests__/ci-pipeline.test.mjs": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -13812,6 +13816,18 @@
         "relationship": "implementation"
       }
     ],
+    ".github/workflows/datadog-synthetics.yml": [
+      {
+        "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      }
+    ],
+    "datadog-ci.json": [
+      {
+        "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": [
       {
         "requirement": "NOTIF-TICKET-001",
@@ -17343,9 +17359,14 @@
     {
       "id": "SURFACE-ab96c3ab21cf19fc",
       "path": ".github/workflows/datadog-synthetics.yml",
-      "sha256": "5b7e4cf9d6d027848d5c0c3d8bddd300e73f64b729de8741223de7a9a3e80c3e",
+      "sha256": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cdbc3458d7b8029f",
@@ -18208,7 +18229,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
+      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40258,7 +40279,6 @@
   "unmappedSurfaces": [
     "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-87abe6b969342c3c",
-    "SURFACE-ab96c3ab21cf19fc",
     "SURFACE-f9eb7b8efd30e406",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
@@ -43153,7 +43173,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "621b3586ab097e760c3f416d418b0762f5c89d5b255b6b1bf3af409617d729ee",
+      "sourceSha256": "50cc237296316957eb1486216851e7a51c55eb34865963bbfc7c64a0901df5c3",
       "definition": {
         "states": [
           "absent",
