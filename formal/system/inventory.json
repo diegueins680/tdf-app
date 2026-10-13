@@ -408,6 +408,7 @@
       "scripts/test-canonical-payment-lifecycle-migration.sh",
       "scripts/test-catalog-production-cutover.sh",
       "scripts/test-checkout-event-refund-runtime-migration.sh",
+      "scripts/test-checkout-policy-terms-identity-migration.sh",
       "scripts/test-contextual-reputation-worker-migration.sh",
       "scripts/test-course-checkout-runtime-migration.sh",
       "scripts/test-course-identity.sh",
@@ -1755,6 +1756,8 @@
       "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql",
       "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
       "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+      "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+      "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2578,7 +2581,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "21e08b4813ead09b682fa37075980cd99361b56637c2fe47d9f8c289961c353b",
+      "sha256": "ab24659d75314d5a7103fe5eadd76365a8685e6af35d9755013de3ab5cf2eb63",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4270,7 +4273,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "19cedae7fd1b65d8cca7646b58805bf982958497c0119649d9f40880638ce414",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4871,6 +4874,12 @@
       "id": "SURFACE-1910077a9107778a",
       "path": "scripts/test-checkout-event-refund-runtime-migration.sh",
       "sha256": "32324ad3adc0f2b943284b71637548b54ee2e9d38adf68b483037dd0555e8710",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-408b8094f29cfa84",
+      "path": "scripts/test-checkout-policy-terms-identity-migration.sh",
+      "sha256": "53f2192b1a0bdcfa5a827f27a1315b6fe3d8273beaf7d0c16f09013202cc0b14",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12920,6 +12929,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ab4db726d3ade85c",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+      "sha256": "ba1da2657e619192501243a78779f069a10878fbb1ffc894430e4f7a3c1e0b8d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c2b5995601d0ee06",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity_rollback.sql",
+      "sha256": "5d3e3eb01ef0fda54f7c3496705f691b6385c592e80369ae90dd7714ff40ebc8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -18177,6 +18198,13 @@
     {
       "path": "docs/adr/0130-known-id-refund-query-recovery.md",
       "sha256": "77381f295932b971424581e6d3c9109f72ff98213dc9871483ec22d51b37e721",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0131-checkout-terms-version-identity.md",
+      "sha256": "9ce301ba3ba8f90a48fa9b35b7e9a3d1aab7a2d6cc1d22eab8a6a7a9dddb2cde",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24301,7 +24329,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "621b3586ab097e760c3f416d418b0762f5c89d5b255b6b1bf3af409617d729ee",
+      "sha256": "695c6201d80091cafd42808b83a4883d502a8865aa466b25e2d7b8021c3a68f7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25853,6 +25881,51 @@
       "id": "0129-atomic-canonical-refund-accounting:b340f7569ba7",
       "statement": "Compare sums using unbounded `Integer` before materializing an `Int64` result. Reject negative stored refunded balances. Full/partial classification and all external currency/minor-unit contracts stay unchanged.",
       "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0131-checkout-terms-version-identity:059b803c7e5f",
+      "statement": "Within a course or event, a `terms_version` identifies exactly one terms text:",
+      "source": "docs/adr/0131-checkout-terms-version-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0131-checkout-terms-version-identity:a7ff44c8f822",
+      "statement": "- `course_checkout_policy`: `(terms_summary, cancellation_policy)`; - `event_ticket_checkout_policy`: `(terms_summary, refund_policy)`.",
+      "source": "docs/adr/0131-checkout-terms-version-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0131-checkout-terms-version-identity:368c2569dc67",
+      "statement": "`BEFORE INSERT OR UPDATE` triggers reject a row whose `(scope, terms_version)` already names different text. Rows with identical text may share a version, so a price-only or fee-only replacement keeps the version the buyer already accepted. Each trigger takes a transaction-scoped advisory lock on `(scope, terms_version)` before the existence check, so two concurrent writers of differing rows cannot both pass under `READ COMMITTED`.",
+      "source": "docs/adr/0131-checkout-terms-version-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0131-checkout-terms-version-identity:4103708dfcb0",
+      "statement": "The migration first checks existing rows and raises if any scope already reuses a version for different text; the operator assigns new versions before the triggers are installed. The rollback drops the triggers and leaves rows intact.",
+      "source": "docs/adr/0131-checkout-terms-version-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0131-checkout-terms-version-identity:d2b170bf8d79",
+      "statement": "A plain uniqueness constraint on `(scope, terms_version)` was rejected because it would forbid the legitimate same-text reuse above and force a new acceptance round for buyers whose terms did not change. Sending a content digest from the client was rejected as a larger contract change with no additional protection once the version is guaranteed to name one text.",
+      "source": "docs/adr/0131-checkout-terms-version-identity.md#decision",
       "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
