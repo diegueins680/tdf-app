@@ -9723,7 +9723,7 @@
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
-    "tdf-hq-ui/public/mobile-distribution.json": "c173e0f9b9e4eb0d5e838ee1162b0c6cd6ff0decf715384392509722721014c7",
+    "tdf-hq-ui/public/mobile-distribution.json": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
@@ -22855,7 +22855,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "c173e0f9b9e4eb0d5e838ee1162b0c6cd6ff0decf715384392509722721014c7",
+      "sha256": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

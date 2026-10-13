@@ -2,8 +2,8 @@
   "ios": {
     "status": "testflight_external",
     "capacity": "available",
-    "verifiedAt": "2026-10-12T17:05:00Z",
-    "validUntil": "2026-10-19T17:05:00Z",
+    "verifiedAt": "2026-10-13T14:55:00Z",
+    "validUntil": "2026-10-20T14:55:00Z",
     "version": "1.0.1",
     "build": "31",
     "url": "https://testflight.apple.com/join/7k3VE2JJ"
@@ -11,8 +11,8 @@
   "android": {
     "status": "closed_testing",
     "capacity": "available",
-    "verifiedAt": "2026-10-12T17:02:00Z",
-    "validUntil": "2026-10-19T17:02:00Z",
+    "verifiedAt": "2026-10-13T15:02:00Z",
+    "validUntil": "2026-10-20T15:02:00Z",
     "admission": "approval_required",
     "url": "https://play.google.com/apps/testing/com.tdf.records",
     "version": "1.0.1",

@@ -2,9 +2,11 @@
 
 Registro de implementación y distribución. La actualización de analytics siguiente sustituye las observaciones anteriores de PostHog; se conserva el historial con sus horas para trazabilidad.
 
-## Estado verificado — 12 de octubre de 2026, ~17:05 UTC
+## Estado verificado — 13 de octubre de 2026, ~15:05 UTC
 
-Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada de lo descrito aquí se infiere de documentación anterior; cada punto indica cómo se observó. [Evidencia agregada sin datos personales](distribution-2026-10-12.json).
+Auditoría del 12 de octubre sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`, **repetida el 13 de octubre** sobre `tdf-app/main` `c0420c9e2` (mismo `TDF-mobile/main` `ece5245e`). Nada de lo descrito aquí se infiere de documentación anterior; cada punto indica cómo se observó. Evidencia agregada sin datos personales: [13 de octubre](distribution-2026-10-13.json), [12 de octubre](distribution-2026-10-12.json).
+
+**Reverificación del 13 de octubre (~14:55–15:05 UTC).** Play Console (sesión del operador, solo lectura; la primera cuenta de Google de Chrome ya no es la de desarrollador, la segunda sí): Closed testing «Alpha» 1.0.1 (24) del 5 de octubre, Production inactivo, **5 de 12 opt-ins**, «Apply for production» deshabilitado: sin cambios. TestFlight público 200 con «View in TestFlight» y sin aviso de cupo; `itunes.apple.com/lookup?id=6779786470` devuelve 0 resultados y la ficha pública 404. App Store Connect abierto en el mismo Chrome: página de inicio de sesión (`authResult=FAILED`); el agente no inicia sesión. `eas build:list` sigue parado en el 18 de septiembre; `TDF-mobile/main` lleva 96 commits desde el último build firmado (`6ebe6c5f`). `tdf-app.pages.dev/` ya responde 301 a `www.tdfrecords.net/` (#508 desplegado). El manifiesto se renueva hasta el **20 de octubre** con esta observación.
 
 **Android — `com.tdf.records`, 1.0.1 (24), Closed testing (Alpha).** Observado en Play Console con la sesión del operador, solo lectura: track cerrado "Alpha" con release 1.0.1 (24) publicada el 5 de octubre; Production **inactivo**. La lista de requisitos para solicitar acceso a producción marca cumplida la publicación cerrada y muestra **5 testers con opt-in de los 12 requeridos durante 14 días continuos**; el botón "Apply for production" está deshabilitado. Open Testing exige ese acceso, así que el canal comunitario sigue siendo Closed testing con admisión por listas de correo (`approval_required`). La ficha pública de Play devuelve 404 (no hay publicación pública). El AAB 24 procede de `TDF-mobile` `6ebe6c5f`, [run 37325943662](https://github.com/diegueins680/TDF-mobile/actions/runs/37325943662).
 
@@ -14,7 +16,7 @@ Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada
 
 **Web.** `www.tdfrecords.net/app` 200; `/.well-known/apple-app-site-association` y `assetlinks.json` 200 con team `83J23NPXG7`, bundle `com.tdfrecords.app`, package `com.tdf.records` y dos huellas. En el momento de la auditoría `tdf-app.pages.dev` servía `/app` y `/eventos/*` sin redirigir; el redirect del host antiguo llegó después con [PR #508](https://github.com/diegueins680/tdf-app/pull/508) (fusionado el 13 de octubre, `a52d7eab5`); `TDF-mobile` #150 sigue abierto. Este incremento no lo duplica.
 
-**Pin de Mobile.** `tdf-app/main` fija `tdf-mobile` en `e1dada9b`, que es la cabeza de `TDF-mobile` #155 (sin fusionar). Cuatro commits (LegalDisclosure, tipos regenerados) existen solo en esa rama. Orden pendiente: Mobile #155 → #156 → `tdf-app` #542.
+**Pin de Mobile.** El 12 de octubre `tdf-app/main` fijaba `tdf-mobile` en `e1dada9b` (cabeza de `TDF-mobile` #155). Desde la fusión de #532 (13 de octubre, `c0420c9e2`) fija `67ee1afa`, cabeza de `TDF-mobile` #154 (`fix/terms-consent-gaps`, sin aprobación), que contiene a su vez #153 y #155. Ninguno de esos commits es alcanzable desde `TDF-mobile/main` `ece5245e`. Orden pendiente en Mobile: #153 → #155 → #154 → #156 → #150 → #157; después `tdf-app` #542.
 
 ### Qué añade este incremento
 
@@ -23,15 +25,16 @@ Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada
 - **Exposición medida:** `mobile_landing_viewed` se envía una vez por visita, tras responder el manifiesto, con `platform`, `distribution_status` real (o `unknown`) y `detected_platform`. El enlace "TDF Mobile" de la navegación y el del menú de sesión ahora llevan `surface=nav` / `surface=settings` y emiten `mobile_testing_interest_clicked`.
 - **Atribución:** al entrar en `/app` se guardan primero las etiquetas UTM (solo valores con forma de etiqueta; un correo, URL o token en un `utm_*` se descarta) en el almacenamiento first-party ya existente (`tdf:growth-attribution:v1`), y cada evento lee ese almacenamiento al emitirse. `mobile_landing_viewed` informa `distribution_status` (manifiesto) y `effective_status`/`channel_available` (lo que se mostró), de modo que el clic a TestFlight/Play o el feedback posterior sigue atribuido tras navegar por TDF. `entry_surface` solo acepta la lista cerrada (`nav`, `qr`, `share`, `ticket_confirmation` añadidos). Sigue sin existir Install Referrer ni atribución diferida: un clic no es una instalación.
 - `?feedback=1` (enlace de feedback registrado en Play) abre el formulario también al cambiar la URL dentro de la SPA.
-- Manifiesto renovado hasta el **19 de octubre** con la evidencia de arriba. El estándar iOS (solo página pública) es el que el propietario aceptó el 11 de octubre; vuelve a ser su decisión al aprobar el PR. [PR #547](https://github.com/diegueins680/tdf-app/pull/547) añade el aviso 48 h antes de caducar.
+- Manifiesto renovado hasta el **20 de octubre** con la evidencia de arriba (reverificación del 13 de octubre). El estándar iOS (solo página pública) es el que el propietario aceptó el 11 de octubre; vuelve a ser su decisión al aprobar el PR. [PR #547](https://github.com/diegueins680/tdf-app/pull/547) añade el aviso 48 h antes de caducar.
 
-### Gates reales (12 de octubre)
+### Gates reales (12 de octubre, vigentes el 13)
 
 1. **Android → Open/Production:** faltan 7 opt-ins (5/12) y 14 días continuos. Acción del operador: admitir en Play Console los correos consentidos recibidos por `/app` → "Solicitar acceso" (bandeja de feedback) y, cuando el contador llegue a 12, esperar los 14 días y pulsar "Apply for production". Hasta entonces la web sigue mostrando Closed testing con solicitud.
 2. **iOS build 32 → TestFlight externo:** requiere sesión en App Store Connect (o clave API) para enviar a Beta App Review y asignarlo al grupo del enlace público. El gate previo (backend de eliminación) ya se cumplió. Acción del propietario.
 3. **iOS App Store:** resolver el rechazo (2.1 login en iPhone 17 Pro Max/iOS 27 y 4.8 Sign in with Apple) y aportar prueba física de Google OAuth. Trabajo de producto nativo, fuera de este incremento.
 4. **Dominio canónico:** #508 se fusionó el 13 de octubre (`a52d7eab5`, con `functions/_middleware.js` que redirige `tdf-app.pages.dev` a `www.tdfrecords.net`). Redirect comprobado en producción el 13 de octubre (~01:05 UTC): `tdf-app.pages.dev/eventos/141?utm_source=tdf_mobile` → 301 a `www.tdfrecords.net` con la query intacta; `/.well-known/assetlinks.json` sigue respondiendo 200 en el host antiguo. Queda fusionar Mobile #150 y actualizar en Datadog el test sintético «TDF production web entry contract» (etiqueta `e2e-tests`, id `rv2-x2n-epx`), que hace GET a `https://tdf-app.pages.dev/` y desde el despliegue de #508 falla por el 301; debe apuntar a `https://www.tdfrecords.net/`. No es un check requerido, pero marca en rojo cada push del repositorio.
-5. **Pin de Mobile:** fusionar Mobile #155/#156 para que el pin de main sea alcanzable desde `TDF-mobile/main`.
+5. **Pin de Mobile:** fusionar Mobile #153/#155/#154 (el pin actual `67ee1afa`) y después #156, #150 y #157 (`device_class` en el feedback nativo; CI verde, pendiente de aprobación) para que el pin de main sea alcanzable desde `TDF-mobile/main` y el siguiente build firmado incluya el feedback con clase de dispositivo. Aprobaciones y fusiones son del propietario (`tdfrecords`).
+6. **Cola de admisión web:** este PR (#553) espera detrás de los PR abiertos de menor número; cada fusión por delante mueve `main` y obliga a re-sincronizar, lo que descarta la aprobación (`dismiss_stale_reviews`). El propietario debe volver a aprobar tras cada re-sincronización.
 
 ## Analytics y privacidad — 5 de octubre, actualización posterior a las 17:00 UTC
 
