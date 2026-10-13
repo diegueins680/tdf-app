@@ -8412,13 +8412,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "2ff6956d2cf45c927701553651c04e426745031264c650e7c5aeeda0539bfba2",
+      "sha256": "5892539ff3d07401737716dc6b38f77e6c80e254835997183aa6f69087548746",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "3b74b807d692599811a399be3d0f764caf50e8883814f5ae83d33cef94482d26",
+      "sha256": "1f7c304f849c5c67bf1bb4c710af33d6e4b6ef867a25196a001cce7d6f8f022d",
       "semanticConformance": "not-established-by-discovery"
     },
     {

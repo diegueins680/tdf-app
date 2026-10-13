@@ -9861,8 +9861,8 @@
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "4faca98825a44ea0db53f41d5cbe0ade76d8762b78b217d72343dc4481f9fa90",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "1ef3395beeb19393557b6de5755e49947c814e8d8c4c6797bff0c6bdcacee3a5",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "6526adc142fd93c8335d76f7cf4bffc4ef7aaeb6e551a7a563db1bec92f9e69b",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "2ff6956d2cf45c927701553651c04e426745031264c650e7c5aeeda0539bfba2",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "3b74b807d692599811a399be3d0f764caf50e8883814f5ae83d33cef94482d26",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "5892539ff3d07401737716dc6b38f77e6c80e254835997183aa6f69087548746",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "1f7c304f849c5c67bf1bb4c710af33d6e4b6ef867a25196a001cce7d6f8f022d",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "48c13eb38ff9b9f373d8eac478ae3da0c837f42df02ead11a3000bc8ea371c53",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "35f4745492b8e77bc992165523b95452668b1fd206ed1422769db7b3ae3b600a",
@@ -26739,7 +26739,7 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "2ff6956d2cf45c927701553651c04e426745031264c650e7c5aeeda0539bfba2",
+      "sha256": "5892539ff3d07401737716dc6b38f77e6c80e254835997183aa6f69087548746",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26759,7 +26759,7 @@
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "3b74b807d692599811a399be3d0f764caf50e8883814f5ae83d33cef94482d26",
+      "sha256": "1f7c304f849c5c67bf1bb4c710af33d6e4b6ef867a25196a001cce7d6f8f022d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
