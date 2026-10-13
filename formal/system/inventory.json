@@ -5589,7 +5589,7 @@
     {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
-      "sha256": "2d5d4deec87afe18d8aa56d8bd771e8db96d94f24bf114c5ca486a377f595e1f",
+      "sha256": "c1db0b9d64151547969116233c66a3160c2ab97327b51c679d0a86af8e7acaeb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14727,7 +14727,7 @@
     {
       "id": "SURFACE-e54fcc9334870c9b",
       "path": "tdf-hq/test/TDF/ReadinessSpec.hs",
-      "sha256": "b267e252cb4a209a511577e5ac12b1a597829ac738c245d0450db43a5ec00856",
+      "sha256": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {

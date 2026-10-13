@@ -59,6 +59,16 @@ spec = describe "database readiness boundary" $ do
     (probe, calls) <- staleThen 0 (pure True)
     probeUntil 0 probe `shouldReturn` False
     calls `shouldReturn` 0
+  -- Before the real-pool example: a retry that swallowed cancellation would
+  -- block that example forever (the verifier runs controls with --fail-fast).
+  it "propagates cancellation through a retry instead of spending attempts on it" $ do
+    calls <- newIORef (0 :: Int)
+    let probe = atomicModifyIORef' calls (\n -> (n + 1, ())) >> throwIO ThreadKilled
+    result <- try (probeUntil 3 probe) :: IO (Either SomeException Bool)
+    case result of
+      Left caught -> fromException caught `shouldBe` Just ThreadKilled
+      Right _ -> expectationFailure "Cancellation became a readiness result"
+    readIORef calls `shouldReturn` 1
   it "times out an exhausted real pool and recovers after its connection is released" $
     bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
       acquired <- newEmptyMVar
@@ -78,11 +88,3 @@ spec = describe "database readiness boundary" $ do
     case result of
       Left caught -> fromException caught `shouldBe` Just exception
       Right _ -> expectationFailure "Cancellation became a readiness result") [ThreadKilled, UserInterrupt]
-  it "propagates cancellation through a retry instead of spending attempts on it" $ do
-    calls <- newIORef (0 :: Int)
-    let probe = atomicModifyIORef' calls (\n -> (n + 1, ())) >> throwIO ThreadKilled
-    result <- try (probeUntil 3 probe) :: IO (Either SomeException Bool)
-    case result of
-      Left caught -> fromException caught `shouldBe` Just ThreadKilled
-      Right _ -> expectationFailure "Cancellation became a readiness result"
-    readIORef calls `shouldReturn` 1
