@@ -516,6 +516,7 @@
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
+      "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test-whatsapp-consent.sh",
@@ -525,6 +526,7 @@
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
+      "scripts/verification-report.py",
       "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
@@ -2602,7 +2604,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "2fdfd525d212c046eaa6ebdb254ed98fb7211e0793fb1930fc6b8a8759e27893",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4006,7 +4008,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+      "sha256": "3fd7f1cbdc667677e1d6a11619976a0b44ed4897b2f196b390f28fede4f3c6fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5534,6 +5536,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-896ad45b385c665d",
+      "path": "scripts/test-verification-report.py",
+      "sha256": "0abf7679a8678e8cde198ff3424945430b95bf3748a5fd9b82e821c122d8fc84",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-306ef04f302e88df",
       "path": "scripts/test-verified-experience-reviews-migration.sh",
       "sha256": "b0f35c6a469f8e3a7cc3c9db787bb73f05579eecd12219d6face386fa573e9e2",
@@ -5588,6 +5596,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3383da3a4aa57dc1",
+      "path": "scripts/verification-report.py",
+      "sha256": "2b9dbad2cd48cc35d9914706e5ae614d452f48e6e4cd691cbdeb3e1d5e57bb6c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
       "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
@@ -5632,7 +5646,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24301,7 +24315,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "cf91b1a38ca3f69bfc27d2ba6dbb84f16fc7d12912849878f088b41622458888",
+      "sha256": "9f3d591d24f46439bcec5f4aa40db3e423eb53f557df7f86c9e86e9277ed334c",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24311,6 +24325,13 @@
       "sha256": "e6cf9fa209d51e97e68d4fbf92d51a46e2cd060288a5c4deca589a16b40080d9",
       "authority": "inferred",
       "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/assurance-report.md",
+      "sha256": "6c322bb37745bff5ee9dc3563c93b6b155488e9e15a8bf7bc0f221f833d1e2c9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -24623,7 +24644,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
+      "sha256": "e840256db52ae7a305431a7d87225c6a296c3ed0139a5cb818228ae408d8637f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
