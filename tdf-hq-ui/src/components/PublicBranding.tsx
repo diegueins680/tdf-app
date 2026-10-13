@@ -155,6 +155,7 @@ export default function PublicBranding({
       {showHeader && (
         <Box
           component="header"
+          data-navigation-sticky-header={stickyHeader ? 'true' : undefined}
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',

@@ -73,10 +73,11 @@ functional without those indexes. All SQL parameters remain Persistent-bound.
 A single `NavigationScrollRestoration` lives above route Suspense boundaries.
 AppShell marks its scroll container explicitly; public routes use the document.
 Path-changing PUSH/REPLACE starts at zero. POP restores the history-entry key's
-position, with a bounded session-storage map across refresh. Query-only changes
+position, scoped by pathname to avoid collisions between fresh document loads,
+with a bounded session-storage map across refresh. Query-only changes
 preserve in-page position. Refresh without a saved position retains native
 behavior. Anchors wait for their DOM target through rendering observers and use
-scroll margins. Resize/Mutation observers retry restoration for asynchronous
+scroll margins including the measured public sticky-header height. Resize/Mutation observers retry restoration for asynchronous
 layout, not a timer. User scrolling or keyboard input ends pending restoration.
 Outgoing position is captured from scroll/click events before the route DOM is
 replaced. Inline mutations do not trigger a navigation reset.

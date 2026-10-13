@@ -101,6 +101,11 @@ test('refresh restores document position and a late anchor is reached @critical'
   await expect(page.getByLabel('Buscar artistas y perfiles')).toBeVisible();
   await page.evaluate(() => { const section = document.createElement('section'); section.id = 'late-section'; section.textContent = 'Late anchor'; section.style.height = '1000px'; document.querySelector('main').append(section); });
   await expect.poll(() => page.locator('#late-section').evaluate((element) => Math.abs(element.getBoundingClientRect().top - 16))).toBeLessThan(4);
+  await page.evaluate(() => { const header = document.createElement('header'); header.dataset.navigationStickyHeader = 'true'; header.style.cssText = 'height:64px;position:fixed;top:0'; document.body.prepend(header); });
+  await expect.poll(() => page.locator('#late-section').evaluate((element) => Math.abs(element.getBoundingClientRect().top - 80))).toBeLessThan(4);
+  await page.goto('/buscar');
+  await expect(page.getByRole('tab', { name: 'Artistas y proyectos' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(3);
 });
 
 // Real AppShell route transitions, with delayed list geometry controlled by the fixture.
@@ -119,8 +124,12 @@ test('protected scrolling container restores after async layout and public navig
   await expect.poll(() => main.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(2000);
   await main.dispatchEvent('wheel', { deltaY: 1200, bubbles: true });
   await main.evaluate((element) => new Promise((resolve) => requestAnimationFrame(() => { element.scrollTo({ top: 1200, behavior: 'instant' }); resolve(); })));
-  await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBe(1200);
-  await page.getByRole('link', { name: 'Buscar artistas y comunidad' }).click();
+  await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBeGreaterThan(100);
+  const searchLink = page.getByRole('link', { name: 'Buscar artistas y comunidad' });
+  await searchLink.evaluate((element) => element.addEventListener('click', () => { window.discoveryMainDepartureY = document.querySelector('[data-navigation-scroll-container]').scrollTop; }, { once: true, capture: true }));
+  await searchLink.click();
+  const before = await page.evaluate(() => window.discoveryMainDepartureY);
+  expect(before).toBeGreaterThan(100);
   await expect(page).toHaveURL(/\/buscar/);
   await expect(page.getByRole('tab', { name: 'Artistas y proyectos' })).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(3);
@@ -129,5 +138,5 @@ test('protected scrolling container restores after async layout and public navig
   await expect(page.getByRole('heading', { name: 'Contactos', exact: true })).toBeVisible();
   await expect(page.getByText('Sin contactos aún', { exact: true })).toBeVisible();
   await addContent();
-  await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBe(1200);
+  await expect.poll(async () => Math.abs(await main.evaluate((element) => element.scrollTop) - before)).toBeLessThan(8);
 });

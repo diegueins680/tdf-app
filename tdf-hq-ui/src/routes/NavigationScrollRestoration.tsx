@@ -34,7 +34,10 @@ export default function NavigationScrollRestoration() {
     previous.current = location;
     const initial = old === null;
     const changedPage = old !== null && old.pathname !== location.pathname;
-    const saved = positions.current[location.key];
+    // Fresh document loads can share Router's "default" key; never restore
+    // another page's position merely because it was opened in the same tab.
+    const positionKey = `${location.key}:${location.pathname}`;
+    const saved = positions.current[positionKey];
     // Query/filter replacements are in-page actions; history entries retain their own positions.
     const restore = navigationType === NavigationType.Pop ? saved : undefined;
     const reset = !initial && changedPage && navigationType !== NavigationType.Pop;
@@ -54,7 +57,7 @@ export default function NavigationScrollRestoration() {
       if (window.location.pathname !== location.pathname) return;
       if (!settled && (target || anchorHash)) return;
       const element = scrollContainer();
-      positions.current[location.key] = { x: element.scrollLeft, y: element.scrollTop };
+      positions.current[positionKey] = { x: element.scrollLeft, y: element.scrollTop };
     };
     const flush = () => {
       positions.current = Object.fromEntries(Object.entries(positions.current).slice(-MAX_ENTRIES));
@@ -63,11 +66,16 @@ export default function NavigationScrollRestoration() {
     const attempt = () => {
       if (interrupted) return;
       const element = scrollContainer();
+      const stickyHeader = document.querySelector<HTMLElement>('[data-navigation-sticky-header]');
+      const headerOffset = element === document.scrollingElement && stickyHeader
+        ? stickyHeader.getBoundingClientRect().height + Math.max(0, Number.parseFloat(getComputedStyle(stickyHeader).top) || 0) : 0;
+      document.documentElement.style.setProperty('--tdf-navigation-anchor-offset', `${headerOffset}px`);
       if (observed !== element) {
         observed = element;
         resize.observe(element);
         for (const child of element.children) resize.observe(child);
       }
+      if (stickyHeader) resize.observe(stickyHeader);
       if (document.querySelector('[data-route-loading], [data-scroll-restoration-pending]')) return;
       if (anchorHash) {
         let id: string;

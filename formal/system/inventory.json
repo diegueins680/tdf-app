@@ -2711,7 +2711,7 @@
     {
       "id": "SURFACE-e304a20b61d5c193",
       "path": "e2e/web/community-discovery.spec.mjs",
-      "sha256": "49f3cf501dab378720c421391170e6c6aa6890ec6d6e3edda777512ca517eab2",
+      "sha256": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7025,7 +7025,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "0b2b6e017821a8cd428e49931b2781772cab9b8e6eb7f1153ab7afecefbed09d",
+      "sha256": "0ee76b574e949619eeebe5fb4a8b4658507fbddda9a0ba08aa3caaecf93cc23b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9689,7 +9689,7 @@
     {
       "id": "SURFACE-3ca49ec1ca84b9a6",
       "path": "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx",
-      "sha256": "10be673969a77e0bf71eff0af6e32aa79a9630af4cdbd9c01d1753f7f766f12a",
+      "sha256": "b6d064b5d995cbefe03f29c130e2acf93c562508615ddea4d180e93ca3b3025a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18603,7 +18603,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "44624e72d71d322482a26dab3cd313d2870c458640185d548ad637d85eeec061",
+      "sha256": "410ceab43fb3bf4eda367cb64a86155e49178e37aa112d7432f5d781d1219729",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
