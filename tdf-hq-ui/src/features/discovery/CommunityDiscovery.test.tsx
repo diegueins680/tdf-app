@@ -57,3 +57,12 @@ test('rejects external or malformed canonical destinations', () => {
   const item = response('Artist').items[0]!;
   expect(directoryResultPath({ ...item, canonicalPath: '//evil.example', slug: 'a/b' })).toBe('/directorio/a%2Fb');
 });
+
+test('recovers from a failed search without losing the query', async () => {
+  search.mockRejectedValueOnce(new Error('Temporary fixture failure'));
+  mount('/fans?q=Luna');
+  await screen.findByText('No pudimos cargar los perfiles. Intenta de nuevo.');
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+  await screen.findByText('Initial');
+  expect(screen.getByLabelText('Buscar artistas y perfiles')).toHaveProperty('value', 'Luna');
+});

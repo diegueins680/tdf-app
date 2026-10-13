@@ -19,7 +19,8 @@ async function fixture(page, baseURL, authenticated = false) {
       const items = url.searchParams.get('q') === 'missing' ? [] : profiles;
       return route.fulfill({ json: { items, sponsoredItems: [], facets: { total: items.length, entityTypes: { profile: items.length }, cities: [] } } });
     }
-    if (url.pathname.startsWith('/directory/profiles/')) return route.fulfill({ json: { id: 'synthetic-12', slug: 'luna-12', name: 'Lúna 12', kind: 'artist', bio: 'Perfil sintético de prueba. '.repeat(200), location: { city: 'Quito' }, links: [], portfolio: [] } });
+    if (/^\/directory\/profiles\/[^/]+\/reviews$/.test(url.pathname)) return route.fulfill({ json: { items: [], nextCursor: null } });
+    if (/^\/directory\/profiles\/[^/]+$/.test(url.pathname)) return route.fulfill({ json: { id: 'synthetic-12', slug: 'luna-12', name: 'Lúna 12', kind: 'artist', bio: 'Perfil sintético de prueba. '.repeat(200), location: { city: 'Quito' }, links: [], portfolio: [] } });
     if (url.pathname === '/directory/suggestions') return route.fulfill({ json: [] });
     if (url.pathname === '/fans/artists') return route.fulfill({ json: [] });
     if (url.pathname === '/records/feed') return route.fulfill({ json: { collections: [], releases: [], recordings: [], sessions: [] } });
