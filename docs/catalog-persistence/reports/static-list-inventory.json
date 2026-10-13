@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-13T01:05:14.590Z",
+  "generatedAt": "2026-10-13T05:46:34.279Z",
   "repositoryRoot": ".",
-  "filesScanned": 2251,
+  "filesScanned": 2252,
   "candidateCount": 1320,
   "byClassification": {
     "dynamic-business-catalog": 849,
@@ -4400,7 +4400,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1000,
+      "consumerCount": 1001,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4597,6 +4597,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -4606,8 +4607,7 @@
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs",
-        "scripts/__tests__/payment-staging-inspection.test.mjs"
+        "scripts/__tests__/payment-readiness-helper.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -4688,7 +4688,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1000,
+      "consumerCount": 1001,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -4885,6 +4885,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -4894,8 +4895,7 @@
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs",
-        "scripts/__tests__/payment-staging-inspection.test.mjs"
+        "scripts/__tests__/payment-readiness-helper.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -6038,7 +6038,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1000,
+      "consumerCount": 1001,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6236,6 +6236,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -6244,8 +6245,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -12126,7 +12126,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 2800,
+      "line": 2810,
       "values": [
         "{id=local-preflight, mutating=false}",
         "{id=remote-preflight, mutating=false}",
@@ -12139,7 +12139,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2800
+        2810
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -12881,7 +12881,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 71,
+      "consumerCount": 72,
       "backendConsumers": [
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
@@ -12925,6 +12925,7 @@
         "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
@@ -13425,7 +13426,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 784,
+      "consumerCount": 785,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -13600,6 +13601,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
@@ -13630,8 +13632,7 @@
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
-        "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs"
+        "scripts/lib/formal-methods-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14177,7 +14178,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 785,
+      "consumerCount": 786,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14351,6 +14352,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -14382,8 +14384,7 @@
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
-        "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs"
+        "scripts/lib/formal-methods-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -14467,7 +14468,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 785,
+      "consumerCount": 786,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -14641,6 +14642,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -14672,8 +14674,7 @@
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
-        "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs"
+        "scripts/lib/formal-methods-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -15643,7 +15644,7 @@
       "lines": [
         627
       ],
-      "consumerCount": 606,
+      "consumerCount": 607,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -15792,6 +15793,7 @@
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
@@ -15827,8 +15829,7 @@
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
-        "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs"
+        "scripts/social/ProfileBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -21831,7 +21832,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 837,
+      "consumerCount": 838,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -22007,6 +22008,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
@@ -22037,8 +22039,7 @@
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
         "scripts/lib/discovery.mjs",
-        "scripts/lib/formal-methods-audit.mjs",
-        "scripts/lib/hetzner-preparation.mjs"
+        "scripts/lib/formal-methods-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -23196,7 +23197,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 639,
+      "consumerCount": 640,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -23349,6 +23350,7 @@
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
@@ -23383,8 +23385,7 @@
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
         "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs",
-        "scripts/social/SessionSpec.hs"
+        "scripts/social/SessionModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -26833,7 +26834,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 615,
+      "consumerCount": 616,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -26984,6 +26985,7 @@
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
@@ -27019,8 +27021,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -30052,7 +30053,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 615,
+      "consumerCount": 616,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30203,6 +30204,7 @@
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
@@ -30238,8 +30240,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -33840,7 +33841,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33990,6 +33991,7 @@
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
@@ -34025,8 +34027,7 @@
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
         "scripts/social/FanEffectsModelCases.hs",
         "scripts/social/HttpSpec.hs",
-        "scripts/social/ProfileBenchmark.hs",
-        "scripts/social/SessionModelCases.hs"
+        "scripts/social/ProfileBenchmark.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -34338,7 +34339,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 65,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_apply.sql",
@@ -34402,6 +34403,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/artist-management-claim.sql",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/generate-feature-audit-reports.mjs",
         "scripts/interactions/test-api.py",
         "scripts/test-artist-claim-target-http.sh",
@@ -36597,7 +36599,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 336,
+      "consumerCount": 337,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -36733,6 +36735,7 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/legacy-escrow-contract.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
         "scripts/__tests__/music-worker-timing.test.mjs",
@@ -36762,8 +36765,7 @@
         "scripts/lib/hetzner-migration-rehearsal.mjs",
         "scripts/lib/hetzner-preparation.mjs",
         "scripts/lib/invoice_receipt_conformance.py",
-        "scripts/lib/legacy-escrow-contract.mjs",
-        "scripts/lib/migration-contract.mjs"
+        "scripts/lib/legacy-escrow-contract.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -36878,7 +36880,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 342,
+      "consumerCount": 343,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -37014,6 +37016,7 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/legacy-escrow-contract.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
         "scripts/__tests__/music-worker-timing.test.mjs",
@@ -37043,8 +37046,7 @@
         "scripts/install-recovery-tools.py",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/lib/hetzner-migration-rehearsal.mjs",
-        "scripts/lib/hetzner-preparation.mjs"
+        "scripts/lib/hetzner-migration-rehearsal.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -42645,7 +42647,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 875,
+      "consumerCount": 876,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -42822,6 +42824,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -42851,8 +42854,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/interactions/test-native.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -49524,7 +49526,7 @@
       "lines": [
         147
       ],
-      "consumerCount": 1022,
+      "consumerCount": 1023,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -49722,6 +49724,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -49730,8 +49733,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -51031,7 +51033,7 @@
       "lines": [
         380
       ],
-      "consumerCount": 1002,
+      "consumerCount": 1003,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -51229,6 +51231,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -51237,8 +51240,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -51844,7 +51846,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 875,
+      "consumerCount": 876,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -52021,6 +52023,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -52050,8 +52053,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/interactions/test-native.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -59521,7 +59523,7 @@
       "lines": [
         258
       ],
-      "consumerCount": 83,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -59594,6 +59596,7 @@
       "automationConsumers": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
         "scripts/__tests__/music-worker-timing.test.mjs",
         "scripts/codex-logical-correctness-loop.sh",
@@ -61313,7 +61316,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 875,
+      "consumerCount": 876,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61490,6 +61493,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -61519,8 +61523,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/interactions/test-native.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -61613,7 +61616,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 875,
+      "consumerCount": 876,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61790,6 +61793,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -61819,8 +61823,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/interactions/test-native.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -62384,7 +62387,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1007,
+      "consumerCount": 1008,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -62582,6 +62585,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -62590,8 +62594,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -63009,7 +63012,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 875,
+      "consumerCount": 876,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -63186,6 +63189,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -63215,8 +63219,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/interactions/test-native.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -67062,7 +67065,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 615,
+      "consumerCount": 616,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -67213,6 +67216,7 @@
         "scripts/__tests__/legacy-auth-provider-storage.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/public-catalog-http-runtime.mjs",
@@ -67248,8 +67252,7 @@
         "scripts/production-catalog-inventory.mjs",
         "scripts/run-event-raci-browser.mjs",
         "scripts/run-instagram-follower-invite-2026-09-09.sh",
-        "scripts/social/FanEffectsModelCases.hs",
-        "scripts/social/HttpSpec.hs"
+        "scripts/social/FanEffectsModelCases.hs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/music-ddex-enqueue-probe.mjs",
@@ -73730,7 +73733,7 @@
         2954,
         3056
       ],
-      "consumerCount": 305,
+      "consumerCount": 306,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -73887,6 +73890,7 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
@@ -73909,8 +73913,7 @@
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/hetzner-migration-rehearsal.mjs",
         "scripts/lib/hetzner-preparation.mjs",
-        "scripts/lib/identity-inventory.sql",
-        "scripts/lib/invoice_receipt_conformance.py"
+        "scripts/lib/identity-inventory.sql"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -74239,7 +74242,7 @@
       "lines": [
         7723
       ],
-      "consumerCount": 397,
+      "consumerCount": 398,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -74398,6 +74401,7 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
@@ -74420,8 +74424,7 @@
         "scripts/interactions/test-schema.sh",
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/hetzner-migration-rehearsal.mjs",
-        "scripts/lib/hetzner-preparation.mjs",
-        "scripts/lib/identity-inventory.sql"
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -78415,7 +78418,7 @@
       "lines": [
         13780
       ],
-      "consumerCount": 1001,
+      "consumerCount": 1002,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -78613,6 +78616,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -78621,8 +78625,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -79408,7 +79411,7 @@
       "lines": [
         14182
       ],
-      "consumerCount": 1001,
+      "consumerCount": 1002,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -79606,6 +79609,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -79614,8 +79618,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -81437,7 +81440,7 @@
         16643,
         16695
       ],
-      "consumerCount": 1000,
+      "consumerCount": 1001,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -81635,6 +81638,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -81643,8 +81647,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -83553,7 +83556,7 @@
       "lines": [
         18178
       ],
-      "consumerCount": 1007,
+      "consumerCount": 1008,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -83751,6 +83754,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -83759,8 +83763,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -93639,7 +93642,7 @@
       "lines": [
         279
       ],
-      "consumerCount": 147,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -93766,6 +93769,7 @@
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/build-catalog-decisions.mjs",
@@ -100456,7 +100460,7 @@
       "lines": [
         564
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -100507,6 +100511,7 @@
       "automationConsumers": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/codex-logical-correctness-loop.sh",
         "scripts/continuous-improvement-loop.mjs",
@@ -120704,7 +120709,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 77,
+      "consumerCount": 78,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -120772,6 +120777,7 @@
       "automationConsumers": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/studio-internship-audit.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/codex-logical-correctness-loop.sh",
@@ -127674,7 +127680,7 @@
         110,
         196
       ],
-      "consumerCount": 63,
+      "consumerCount": 64,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -127728,6 +127734,7 @@
       "automationConsumers": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
         "scripts/__tests__/music-worker-timing.test.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -128047,7 +128054,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 85,
+      "consumerCount": 86,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
@@ -128124,6 +128131,7 @@
       "automationConsumers": [
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/codex-logical-correctness-loop.sh",
@@ -133248,7 +133256,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 111,
+      "consumerCount": 112,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -133349,6 +133357,7 @@
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/identity-reconciliation.mjs",
@@ -145423,7 +145432,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 493,
+      "consumerCount": 494,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -145567,6 +145576,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/legacy-escrow-contract.test.mjs",
         "scripts/__tests__/local-api-fixture.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-config.test.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
@@ -145589,8 +145599,7 @@
         "scripts/capture-feature-audit-visuals.mjs",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/check-new-specification-surfaces.py",
-        "scripts/continuous-improvement-loop.test.mjs",
-        "scripts/generate-feature-audit-reports.mjs"
+        "scripts/continuous-improvement-loop.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -145730,7 +145739,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 875,
+      "consumerCount": 876,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -145907,6 +145916,7 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/identity-reconciliation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/payment-staging-inspection.test.mjs",
@@ -145936,8 +145946,7 @@
         "scripts/instagram-lifecycle-artifact.mjs",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-concurrency.py",
-        "scripts/interactions/test-native.py",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/interactions/test-native.py"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -147399,7 +147408,7 @@
       "lines": [
         1197
       ],
-      "consumerCount": 1000,
+      "consumerCount": 1001,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -147597,6 +147606,7 @@
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/__tests__/music-browser-probe.test.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
         "scripts/__tests__/music-preview-pipeline.test.mjs",
@@ -147605,8 +147615,7 @@
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/operations-api-schema.test.mjs",
-        "scripts/__tests__/payment-query-report-contract.test.mjs",
-        "scripts/__tests__/payment-readiness-helper.test.mjs"
+        "scripts/__tests__/payment-query-report-contract.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -148430,7 +148439,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 65,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_apply.sql",
@@ -148494,6 +148503,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/artist-management-claim.sql",
+        "scripts/__tests__/migration-batch-postgres.mjs",
         "scripts/generate-feature-audit-reports.mjs",
         "scripts/interactions/test-api.py",
         "scripts/test-artist-claim-target-http.sh",

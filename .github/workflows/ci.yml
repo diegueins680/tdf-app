@@ -530,6 +530,11 @@ jobs:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: node scripts/__tests__/checkout-amount-postgres.mjs
 
+      - name: Verify the production migration batch, ledger atomicity and lock refusal
+        env:
+          TDF_MIGRATION_BATCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/migration-batch-postgres.mjs
+
       - name: Verify artist claim preparation concurrency and privacy
         env:
           TDF_CLAIM_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
