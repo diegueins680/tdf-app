@@ -110,10 +110,18 @@ AS $$
   WHERE needle.normalized IS NOT NULL;
 $$;
 
--- The lineup's genre words and artist names, projected into the event
--- document (genre ids and search text).
-CREATE OR REPLACE FUNCTION directory_social_event_lineup_terms(
+-- The lineup's genres and artist names, projected into the event document.
+-- Genres come from the canonical membership table (artist_genre_membership,
+-- written by the current artist API) as catalog ids, and from the legacy
+-- social_artist_profile.genres text array as words; both feed genre_ids
+-- (the words through the catalog mapping) and the search text.
+-- Dropped first: OUT parameters are part of the return type, which
+-- CREATE OR REPLACE cannot change; callers are PL/pgSQL bodies resolved at
+-- run time.
+DROP FUNCTION IF EXISTS directory_social_event_lineup_terms(BIGINT);
+CREATE FUNCTION directory_social_event_lineup_terms(
   target_event_id BIGINT,
+  OUT genre_ids UUID[],
   OUT genre_terms TEXT[],
   OUT artist_names TEXT[]
 )
@@ -121,6 +129,13 @@ LANGUAGE sql
 STABLE
 AS $$
   SELECT
+    coalesce((
+      SELECT array_agg(DISTINCT membership.genre_id ORDER BY membership.genre_id)
+      FROM event_artist lineup
+      JOIN artist_genre_membership membership ON membership.artist_id = lineup.artist_id
+      JOIN genre catalog_genre ON catalog_genre.id = membership.genre_id AND catalog_genre.active
+      WHERE lineup.event_id = target_event_id
+    ), '{}'::uuid[]),
     coalesce((
       SELECT array_agg(terms.term ORDER BY terms.term)
       FROM (
@@ -130,6 +145,12 @@ AS $$
         CROSS JOIN LATERAL unnest(coalesce(artist.genres, '{}'::text[])) AS genre_term
         WHERE lineup.event_id = target_event_id
           AND nullif(btrim(genre_term), '') IS NOT NULL
+        UNION
+        SELECT DISTINCT catalog_genre.name_es
+        FROM event_artist lineup
+        JOIN artist_genre_membership membership ON membership.artist_id = lineup.artist_id
+        JOIN genre catalog_genre ON catalog_genre.id = membership.genre_id AND catalog_genre.active
+        WHERE lineup.event_id = target_event_id
       ) terms
     ), '{}'::text[]),
     coalesce((
@@ -255,7 +276,8 @@ BEGIN
     event.description, directory_social_event_metadata_image(source.metadata),
     event.city_id, event.city_name, event.country_code, event.public_latitude,
     event.public_longitude, 'city',
-    directory_social_event_genre_ids(lineup.genre_terms),
+    (SELECT coalesce(array_agg(DISTINCT lineup_genre ORDER BY lineup_genre), '{}'::uuid[])
+       FROM unnest(lineup.genre_ids || directory_social_event_genre_ids(lineup.genre_terms)) AS lineup_genre),
     directory_normalize_text(concat_ws(' ', event.title, event.description, event.venue_name, event.city_name, array_to_string(lineup.artist_names, ' '), array_to_string(lineup.genre_terms, ' '), 'evento eventos')),
     to_tsvector('simple', directory_normalize_text(concat_ws(' ', event.title, event.description, event.venue_name, event.city_name, array_to_string(lineup.artist_names, ' '), array_to_string(lineup.genre_terms, ' '), 'evento eventos'))),
     'published', 'public', 'allowed', event.start_time,
@@ -445,6 +467,35 @@ CREATE CONSTRAINT TRIGGER trg_directory_sync_artist_events_search
   AFTER UPDATE OF genres, name ON social_artist_profile
   DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_artist_events_search_trigger();
+
+-- The canonical genre memberships (written by the artist API) feed the same
+-- projection, so a membership change resyncs the artist's events.
+CREATE OR REPLACE FUNCTION directory_sync_artist_genre_events_search_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  artist_event_id BIGINT;
+BEGIN
+  FOR artist_event_id IN
+    SELECT DISTINCT lineup.event_id FROM event_artist lineup
+    WHERE lineup.artist_id IN (
+      CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN OLD.artist_id END,
+      CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN NEW.artist_id END
+    )
+    ORDER BY lineup.event_id
+  LOOP
+    PERFORM directory_sync_event_search(artist_event_id);
+  END LOOP;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_directory_sync_artist_genre_events_search ON artist_genre_membership;
+CREATE CONSTRAINT TRIGGER trg_directory_sync_artist_genre_events_search
+  AFTER INSERT OR UPDATE OR DELETE ON artist_genre_membership
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION directory_sync_artist_genre_events_search_trigger();
 
 -- The full refresh now reuses the same projection, so a manual rebuild and the
 -- incremental triggers can never disagree.

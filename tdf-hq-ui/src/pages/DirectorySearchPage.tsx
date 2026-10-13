@@ -349,7 +349,8 @@ export default function DirectorySearchPage() {
                 />
                 <FormControl sx={{ minWidth: { sm: 220 } }}>
                   <InputLabel id="directory-city-label">{t('directorySearch.city')}</InputLabel>
-                  <Select labelId="directory-city-label" label={t('directorySearch.city')} value={citySelectValue} onChange={(event) => { setCoordinates(null); updateSearch({ cityId: event.target.value }, 'push', false); }}>
+                  {/* Leaving nearby mode replaces the entry: the consented coordinates are held in memory only, so a nearby URL cannot be restored by Back. */}
+                  <Select labelId="directory-city-label" label={t('directorySearch.city')} value={citySelectValue} onChange={(event) => { setCoordinates(null); updateSearch({ cityId: event.target.value }, coordinates ? 'replace' : 'push', false); }}>
                     {coordinates && <MenuItem value="__nearby">{t('directorySearch.nearby')}</MenuItem>}
                     {(taxonomies.data?.cities ?? []).map((city) => <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>)}
                   </Select>

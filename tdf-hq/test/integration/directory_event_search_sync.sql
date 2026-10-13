@@ -318,6 +318,21 @@ BEGIN
   IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
     RAISE EXCEPTION 'changing the artist''s genres did not resync the event';
   END IF;
+  -- An artist created through the current API has only canonical memberships
+  -- (artist_genre_membership) and a NULL legacy array; those count the same.
+  UPDATE social_artist_profile SET genres = NULL WHERE id = lineup_artist_id;
+  INSERT INTO artist_genre_membership (artist_id, genre_id) VALUES (lineup_artist_id, catalog_genre_id);
+  SELECT * INTO doc FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text;
+  IF doc.genre_ids IS DISTINCT FROM ARRAY[catalog_genre_id] THEN
+    RAISE EXCEPTION 'canonical genre membership was not projected (got %)', doc.genre_ids;
+  END IF;
+  IF NOT doc.search_vector @@ plainto_tsquery('simple', directory_normalize_text(catalog_genre_name)) THEN
+    RAISE EXCEPTION 'canonical genre name is missing from the event search text';
+  END IF;
+  DELETE FROM artist_genre_membership WHERE artist_id = lineup_artist_id AND genre_id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
+    RAISE EXCEPTION 'removing the genre membership did not resync the event';
+  END IF;
   DELETE FROM event_artist WHERE event_id = genre_event_id AND artist_id = lineup_artist_id;
   IF (SELECT search_vector FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text)
      @@ plainto_tsquery('simple', directory_normalize_text('Lineup Headliner')) THEN
