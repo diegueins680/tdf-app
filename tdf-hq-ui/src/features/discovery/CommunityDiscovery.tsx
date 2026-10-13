@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Alert, Avatar, Box, Button, Card, CardActionArea, CardContent, LinearProgress, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -11,6 +11,7 @@ export default function CommunityDiscovery() {
   const query = params.get('q') ?? '';
   const [draft, setDraft] = useState(query);
   const debounced = useDebouncedSearch(draft);
+  const previousQuery = useRef(query);
   useEffect(() => { setDraft(query); }, [query]);
   const update = (key: string, value: string) => setParams((current) => {
     const next = new URLSearchParams(current);
@@ -18,6 +19,7 @@ export default function CommunityDiscovery() {
     return next;
   }, { replace: true });
   useEffect(() => {
+    if (previousQuery.current !== query) { previousQuery.current = query; return; }
     if (debounced !== query && debounced === draft.trim().replace(/\s+/gu, ' ')) update('q', debounced);
   }, [debounced, draft, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const profileKind = params.get('profileKind') ?? '';

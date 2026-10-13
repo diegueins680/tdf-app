@@ -16,10 +16,10 @@ assert (parsed.hostname in ('127.0.0.1', 'localhost') or (os.environ.get('CI') =
 source = (root / 'tdf-hq/src/TDF/Server/Directory.hs').read_text()
 
 def expression(name):
-    start = name + (' sponsoredOnly' if name == 'searchSql' else '') + ' =\n'
+    start = name + (' sponsoredOnly' if name == 'searchSql' else '') + ' ='
     block = source.split(start, 1)[1].split('\n\n', 1)[0]
     block = block.replace('(if sponsoredOnly then "TRUE " else "FALSE ")', '"FALSE "')
-    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|\b(?:searchDocumentsSql|directoryVisibleEventDocumentClause|directoryDerivedListingDedupClause|directorySourceProfileSql)\b', block)
+    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|\b(?:searchDocumentsSql|directoryVisibleEventDocumentClause|directoryDerivedListingDedupClause|directorySourceProfileSql|directoryFilterClause|directoryEntityTypeClause)\b', block)
     return ''.join(json.loads(token) if token.startswith('"') else expression(token) for token in tokens)
 
 sql = expression('searchSql')
@@ -41,9 +41,10 @@ INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,
 SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990005;
 """
 
-def query(q='', entity=None, kind=None, cursor=None, limit=20):
+def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False):
     params = [q, entity, None, None, None, None, None, None, None, None, None, None, None, None, kind, 'suppressed', cursor, limit]
-    chunks = sql.split('?')
+    if facets: params = params[:-2]
+    chunks = (expression('facetsSql') if facets else sql).split('?')
     assert len(chunks) == len(params) + 1
     def quote(value):
         if value is None: return 'NULL'
@@ -76,3 +77,8 @@ assert len([row for row in query('Luna') if row['title'] == 'Luna Extended']) ==
 assert query('Fixture Banda', 'artist', 'band')[0]['profileKind'] == 'band'
 assert query('Fixture Proyecto', 'artist', 'project')[0]['profileKind'] == 'project'
 print('PASS: canonical deduplication, published bands and musical projects')
+
+facets = query('Luna', 'artist', facets=True)[0]
+assert facets['total'] == len(query('Luna', 'artist')), facets
+assert facets['entityTypes']['artist'] >= facets['total'], facets
+print('PASS: shared artist facet totals and category counts')

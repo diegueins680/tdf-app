@@ -379,10 +379,21 @@ run_negative_tlc LiveIntakeStale.cfg live-intake-stale 'Invariant CurrentReceipt
 run_negative_tlc LiveIntakeUnpersisted.cfg live-intake-unpersisted 'Invariant PersistedReceipt is violated' LiveIntakeAuthority.tla
 run_tlc ArtistActivation.tla ArtistActivation.cfg artist-activation
 run_negative_tlc ArtistActivationUnsafe.cfg artist-activation-unsafe 'Invariant CurrentContext is violated' ArtistActivation.tla
+run_tlc MusicEntitlement.tla MusicEntitlement.cfg music-entitlement
+run_negative_tlc MusicEntitlementForgedPaid.cfg music-entitlement-forged-paid 'Invariant PaidNeedsEvidence is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementRepeatedGrant.cfg music-entitlement-repeated-grant 'Invariant OneEntitlement is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementNoLimit.cfg music-entitlement-no-limit 'Invariant LimitHolds is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementEndlessReplay.cfg music-entitlement-endless-replay 'Invariant UrlsInsideLifetime is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementFreshReplayUrl.cfg music-entitlement-fresh-replay-url 'Invariant UrlsEndWithAuthorization is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementRefundedDownload.cfg music-entitlement-refunded-download 'Invariant ActiveWhenIssued is violated' MusicEntitlement.tla
 run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc EventOrganizer.tla EventOrganizer.cfg event-organizer
+run_negative_tlc EventOrganizerAnyoneClaims.cfg event-organizer-anyone-claims 'Invariant OnlyAllowedAssigned is violated' EventOrganizer.tla
+run_negative_tlc EventOrganizerUnconditionalWrite.cfg event-organizer-unconditional-write 'Invariant OrganizerStable is violated' EventOrganizer.tla
+run_negative_tlc EventOrganizerTrustEarlierRead.cfg event-organizer-trust-earlier-read 'Invariant ManagersAreOrganizer is violated' EventOrganizer.tla
 run_tlc TaskRead.tla TaskRead.cfg task-read
 run_tlc TaskView.tla TaskView.cfg task-view
 expect_counterexample TaskViewLate.cfg CurrentView task-view-late TaskView.tla

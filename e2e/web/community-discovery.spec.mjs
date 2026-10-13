@@ -41,9 +41,12 @@ test('community discovery preserves query, genre and scroll through profile/hist
   await expect(page).toHaveURL(new RegExp(`genreId=${genre}`));
   const artist = page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Lúna 12', exact: true }) });
   await artist.scrollIntoViewIfNeeded();
-  const before = await page.evaluate(() => window.scrollY);
-  expect(before).toBeGreaterThan(100);
+  // Capture the departure viewport after the browser's focus/actionability
+  // scrolling, rather than before Playwright positions the click target.
+  await artist.evaluate((element) => element.addEventListener('click', () => { window.discoveryDepartureY = window.scrollY; }, { capture: true, once: true }));
   await artist.click({ position: { x: 12, y: 12 } });
+  const before = await page.evaluate(() => window.discoveryDepartureY);
+  expect(before).toBeGreaterThan(100);
 
   await expect(page).toHaveURL(/\/directorio\/luna-12$/);
   await expect(page.getByRole('heading', { name: 'Lúna 12', exact: true })).toBeVisible();
@@ -101,6 +104,7 @@ test('protected scrolling container restores after async layout and public navig
   await page.goto('/crm/contactos');
   const main = page.locator('[data-navigation-scroll-container]');
   await expect(main).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Contactos', exact: true })).toBeVisible();
   const addContent = () => page.evaluate(() => {
     const element = document.createElement('div'); element.style.height = '4000px'; element.textContent = 'Synthetic async list';
     document.querySelector('[data-navigation-scroll-container]').append(element);
@@ -115,6 +119,7 @@ test('protected scrolling container restores after async layout and public navig
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(3);
   await page.goBack();
   await expect(main).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Contactos', exact: true })).toBeVisible();
   await addContent();
   await expect.poll(() => main.evaluate((element) => element.scrollTop)).toBe(1200);
 });
