@@ -4113,7 +4113,7 @@
     {
       "id": "SURFACE-a3554db132982020",
       "path": "scripts/lib/public_routes_conformance.py",
-      "sha256": "f7dfbd70c0660581273a2e27edab1aa6cc5d9d7fc3f9c2af9b653f50f7dd723d",
+      "sha256": "9fa6fd7cedda3015cb887281e9712ba2d5ffd3658b9da7c84a17a2294d621dc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24014,7 +24014,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "54d57fe6b45b2a60542d0af296916576bd0bb8779eb2727c139ee3a00bce7967",
+      "sha256": "32bd8e0beb4504d59b83246817ed2af3e6521ba90f210e67fd3e7eba610d1048",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24252,7 +24252,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "b7fc247e5a2e1ab3d5d3739d325d6b5d13f60a698339b2c45e8b136646b861a8",
+      "sha256": "4aab42a88660a7d71a33ed9f597012be47b67a52de321848ff58683486e54fb3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24294,7 +24294,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8a1d5c850c93c999102a46d79e38681756d2cca0932e6721c8a353a4d300b7bc",
+      "sha256": "64d44da1fe5671a862e6b4a6372c728cd303c7fa52c39f6ea634092f170988c5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

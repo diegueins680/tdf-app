@@ -5021,7 +5021,7 @@
       "critical": true,
       "source": "formal/system/public-route-admission.md; audit of main 1f99d143900a67aa9b82f4138630684afbd7db2f on 2026-10-06; OWASP API Security Top 10 2023 API1 and API5",
       "status": "specified and implemented",
-      "confidence": "High for structural admission; handler enforcement verified only for repaired routes.",
+      "confidence": "High for structural admission; handler behaviour bounded by the denial sweep, with the capability comparison observed only where the probe reaches it.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
@@ -5029,7 +5029,7 @@
       "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks",
       "observability": "Gate output names each offending method and path.",
       "recovery": "Register with a reviewed boundary, repair the handler or record debt; never regenerate solely to silence the gate.",
-      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states the gate over every situation of three routes with four single-guard controls; the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires denial, no server fault, no fixture-private content, the anonymous answer for a wrong session token and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites.",
+      "verification": "Deterministic declaration comparison with fourteen gate controls; PublicRouteAdmission.tla states three of the gate's rules (unregistered, stale, mutating boundary) over every situation of three routes with four single-guard controls (header, query, body-shape, raw-mount, duplicate and debt-reference rules are not modelled); the PostgreSQL-backed booking conformance harness requests every registered deny-boundary route (90) without and with a wrong capability on the real backend and requires no success, no server fault, no fixture-private content (denial for most routes arises before the capability check: parsing, absent record, unconfigured provider), the anonymous status for a wrong bearer token on session routes and the anonymous value on the two anonymous-answer routes, and the marketplace cart readable only through its random UUIDv4 identifier. Records behind provider-backed intakes are not created by the sweep; their token checks rest on their own suites.",
       "id": "AUTH-PUBLIC-001",
       "title": "Reviewed admission of every unauthenticated route",
       "domain": "AUTH",
@@ -5102,7 +5102,7 @@
       ],
       "ambiguity": [
         "Raw mounts may serve paths beyond their prefix.",
-        "Handler enforcement is swept mechanically for denial without the capability; positive enforcement on provider-created records is covered per family by their suites."
+        "The sweep bounds every deny-boundary route to denial without success, fault or disclosure for a fixed probe; it observes the capability comparison only on routes the probe reaches (signatures, sessions, random identifiers, one header); enforcement on provider-created records rests on their suites."
       ]
     },
     {
@@ -9596,7 +9596,7 @@
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
-    "scripts/lib/public_routes_conformance.py": "f7dfbd70c0660581273a2e27edab1aa6cc5d9d7fc3f9c2af9b653f50f7dd723d",
+    "scripts/lib/public_routes_conformance.py": "9fa6fd7cedda3015cb887281e9712ba2d5ffd3658b9da7c84a17a2294d621dc8",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -19945,7 +19945,7 @@
     {
       "id": "SURFACE-a3554db132982020",
       "path": "scripts/lib/public_routes_conformance.py",
-      "sha256": "f7dfbd70c0660581273a2e27edab1aa6cc5d9d7fc3f9c2af9b653f50f7dd723d",
+      "sha256": "9fa6fd7cedda3015cb887281e9712ba2d5ffd3658b9da7c84a17a2294d621dc8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43065,7 +43065,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8a1d5c850c93c999102a46d79e38681756d2cca0932e6721c8a353a4d300b7bc",
+      "sourceSha256": "64d44da1fe5671a862e6b4a6372c728cd303c7fa52c39f6ea634092f170988c5",
       "definition": {
         "states": [
           "absent",

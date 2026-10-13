@@ -97,26 +97,36 @@ every route registered under `capability-header`, `capability-path`,
 `handler-session`, `operator-secret`, `signed-provider-callback` and
 `provider-verification-challenge` (90 routes) twice: without the capability and
 with a wrong one (random lookup token, random bearer token, zero signature, wrong
-verify token). Sequential identifiers probe the first record, capability paths
-and slugs values no record carries. Every answer must deny (400, 401, 403, 404,
-405, 415, 422, or 503 when the provider is unconfigured), none may be a server
+verify token). Sequential identifiers probe the first record; UUID-typed
+identifiers, capability paths and slugs get values no record carries. No answer
+may succeed (every one is 400, 401, 403, 404, 405, 415 or 422; provider callbacks
+and challenges, and the provider-gated storefront Stripe payment-intent route,
+may also answer 503 while the provider is unconfigured), none may be a server
 fault, none may carry fixture-private content, a wrong verify token must not echo
-the challenge, and a wrong session token must receive exactly the anonymous
-answer. The marketplace cart (`capability-path`) is created and then read with its
+the challenge, and a wrong bearer token must receive the anonymous status on every
+session route and, on the two anonymous-answer routes, exactly the anonymous body. The marketplace cart (`capability-path`) is created and then read with its
 own identifier (200), another random UUID (404) and a sequential one (400), and the
 identifier is checked to be a random version-4 UUID.
 
 Two findings. `GET /session` and `POST /session/logout` answer an anonymous caller
-200 with the anonymous value (`null`, empty); a wrong bearer token receives the same.
+200 with the anonymous value (`null`, empty); a wrong bearer token receives the same
+(the handler resolves no session for it).
 The `handler-session` rule said "rejects missing sessions"; the rule now reads:
 rejects, or answers the anonymous value without resolving any session (AUTHORITY-079).
 `POST /social-events/stripe/webhook` answered 500 "Stripe is not configured" to an
 unsigned caller when the provider was unconfigured, a server fault for a public
 unauthenticated POST where its sibling callbacks answer 503; it now answers 503.
 
-Bounds. The sweep shows that no deny-boundary route succeeds without its
-capability on the fixture; for records that exist only after a provider-backed
-intake (orders, registrations, quotes, storefront orders) the wrong-token path is
-exercised by their own suites, not by this sweep, because the fixture configures
-no provider and holds no such record. Query-back callbacks (Datafast, Payphone,
+Bounds. The sweep shows that no deny-boundary route answers these two requests
+with success, a server fault or fixture-private content. It observes the
+capability comparison itself only where the request reaches it: the four
+Meta/WhatsApp signatures, the session routes, the random-identifier paths and the
+merch cart header. Every other route denies earlier (body, path or query parsing,
+absent record, unconfigured provider or disabled endpoint), so for those the
+sweep bounds the outcome, not the check; for records that exist only after a
+provider-backed intake (orders, registrations, quotes, storefront orders) the
+wrong-token path is exercised by their own suites. Sessions are probed with a
+bearer token only, not a cookie. Other "Stripe is not configured" 500s remain on
+authenticated routes (artist tips, ticket checkout reuse, admin), outside this
+register. The OpenAPI document does not list the social-events Stripe webhook. Query-back callbacks (Datafast, Payphone,
 PlaceToPay) answer 503 unconfigured; their body authentication is AUTH-WEBHOOK-001.

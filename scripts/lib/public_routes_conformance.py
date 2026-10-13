@@ -16,9 +16,14 @@ import uuid
 
 DENY_BOUNDARIES = {'capability-header', 'capability-path', 'handler-session', 'operator-secret',
                    'signed-provider-callback', 'provider-verification-challenge'}
-# Answers that deny: client errors, or the provider itself being unavailable
-# (the fixture configures no payment provider or Meta verify token).
-DENIED = {400, 401, 403, 404, 405, 415, 422, 503}
+# Answers that deny: client errors. Provider callbacks and challenges may also
+# answer 503 (the fixture configures no payment provider or Meta verify token),
+# as does one capability-header route that is provider-gated before its token.
+DENIED = {400, 401, 403, 404, 405, 415, 422}
+PROVIDER_BOUNDARIES = {'signed-provider-callback', 'provider-verification-challenge'}
+PROVIDER_GATED = {'POST /services/storefront/order/{orderId}/stripe/payment-intent'}
+# Session routes that answer an anonymous caller with the anonymous value.
+ANONYMOUS_ANSWER = {'GET /session', 'POST /session/logout'}
 PRIVATE_MARKERS = ('PRIVATE_SYNTHETIC_NOTE', 'fixture-admin', 'lookup_token_hash')
 
 
@@ -39,13 +44,14 @@ def verify_public_route_denial(root, port, check):
             return error.code, error.read().decode()
 
     def concrete(path):
-        # Sequential identifiers probe the first record; capability paths and
-        # slugs get values no record can carry.
+        # Sequential identifiers probe the first record; UUID-typed identifiers,
+        # capability paths and slugs get values no record carries.
+        uuid_typed = {'cartId', 'token', 'variantId', 'checkoutId', 'attemptId'} | ({'orderId'} if path.startswith('/merch/') else set())
         out = ''
         for piece in path.split('/'):
             if piece.startswith('{') and piece.endswith('}'):
                 name = piece[1:-1]
-                piece = str(uuid.uuid4()) if name in ('cartId', 'token') else 'synthetic-slug' if name == 'slug' else '1'
+                piece = str(uuid.uuid4()) if name in uuid_typed else 'synthetic-slug' if name == 'slug' else '1'
             out += ('/' if out or path.startswith('/') else '') + piece if piece else ''
         return out or '/'
 
@@ -60,7 +66,7 @@ def verify_public_route_denial(root, port, check):
             return {}, '?hub.mode=subscribe&hub.verify_token=' + str(uuid.uuid4()) + '&hub.challenge=synthetic-challenge'
         return {}, ''
 
-    faults, successes, leaks = [], [], []
+    faults, successes, leaks, mismatches = [], [], [], []
     for entry in routes:
         method, path = entry['method'], concrete(entry['path'])
         body = {} if method in ('POST', 'PUT', 'PATCH') else None
@@ -73,18 +79,22 @@ def verify_public_route_denial(root, port, check):
                 faults.append(label + ' ' + name + ' ' + str(status))
             if any(marker in text for marker in PRIVATE_MARKERS):
                 leaks.append(label + ' ' + name)
-        if entry['boundary'] == 'handler-session':
-            # A wrong session token is no session: the anonymous answer, and
-            # when that answer succeeds it carries no session (null or empty).
-            if wrong[0] != anonymous[0] or (anonymous[0] < 300 and (wrong[1] != anonymous[1] or anonymous[1].strip() not in ('', 'null'))):
-                successes.append(label + ' wrong-token ' + str(wrong[0]) + ' anonymous ' + str(anonymous[0]))
+        denied = DENIED | ({503} if entry['boundary'] in PROVIDER_BOUNDARIES or label in PROVIDER_GATED else set())
+        if label in ANONYMOUS_ANSWER:
+            # The anonymous value (null, empty) for an anonymous caller; a wrong
+            # bearer token is no session and receives exactly the same answer.
+            if not (anonymous[0] == 200 and anonymous[1].strip() in ('', 'null') and wrong == anonymous):
+                mismatches.append(label + ' anonymous ' + str(anonymous[0]) + ' wrong-token ' + str(wrong[0]))
         else:
             for name, (status, _) in (('none', anonymous), ('wrong', wrong)):
-                if status not in DENIED:
+                if status not in denied and status < 500:
                     successes.append(label + ' ' + name + ' ' + str(status))
+            if entry['boundary'] == 'handler-session' and wrong[0] != anonymous[0]:
+                mismatches.append(label + ' anonymous ' + str(anonymous[0]) + ' wrong-token ' + str(wrong[0]))
         if entry['boundary'] == 'provider-verification-challenge' and 'synthetic-challenge' in wrong[1]:
             successes.append(label + ' echoed the challenge for a wrong verify token')
-    check('every registered deny-boundary public route refuses a caller without its capability and with a wrong one (' + str(len(routes)) + ' routes) ' + ', '.join(successes), not successes)
+    check('no registered deny-boundary public route answers a caller without its capability, or with a wrong one, with success (' + str(len(routes)) + ' routes) ' + ', '.join(successes), not successes)
+    check('a wrong bearer token receives the anonymous status on every session route, and the anonymous value on the two anonymous-answer routes ' + ', '.join(mismatches), not mismatches)
     check('no deny-boundary public route answers a missing or wrong capability with a server fault ' + ', '.join(faults), not faults)
     check('no deny-boundary public route discloses fixture-private content ' + ', '.join(leaks), not leaks)
 
