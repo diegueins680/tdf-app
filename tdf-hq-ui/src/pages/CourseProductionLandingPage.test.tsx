@@ -95,7 +95,7 @@ const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata 
   locationLabel: 'TDF Records - Quito',
   locationMapUrl: 'https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6',
   whatsappCtaUrl: 'https://wa.me/?text=INSCRIBIRME',
-  landingUrl: 'https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026',
+  landingUrl: 'https://www.tdfrecords.net/curso/bateria-guillermo-diaz-abr-2026',
   daws: ['Bateria acustica', 'Groove'],
   includes: ['8 sesiones presenciales con Guillermo Diaz'],
   sessions: [{ label: 'Nivel 1', date: '2026-04-25' }],
@@ -107,7 +107,7 @@ const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata 
   sessionDurationHours: 2,
   instructorName: 'Guillermo Diaz',
   instructorBio: 'Baterista e instructor.',
-  instructorAvatarUrl: 'https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg',
+  instructorAvatarUrl: 'https://www.tdfrecords.net/assets/tdf-ui/guillermo-diaz-bateria.jpg',
   ...overrides,
 } as CourseMetadata);
 
@@ -313,7 +313,7 @@ describe('CourseProductionLandingPage', () => {
         expect(text(container)).toContain('Guillermo Diaz');
         expect(text(container)).toContain('Enfoque: Bateria acustica, Groove');
         expect(text(container)).toContain('Nivel 8 - Ensamble, performance y proyecto final');
-        expect(container.querySelector('img[src="https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg"]')).not.toBeNull();
+        expect(container.querySelector('img[src="https://www.tdfrecords.net/assets/tdf-ui/guillermo-diaz-bateria.jpg"]')).not.toBeNull();
       });
     } finally {
       await cleanup();
@@ -633,6 +633,157 @@ describe('CourseProductionLandingPage', () => {
         expect(text(alert)).toContain('No pudimos conectarnos. Revisa tu conexión a internet e intenta de nuevo.');
         expect(alert?.querySelector('a[href="https://wa.me/?text=INSCRIBIRME"]')).not.toBeNull();
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  const approvedTerms = {
+    termsVersion: 'course-terms-v3',
+    termsSummary: 'El cupo se confirma al verificar el pago.',
+    cancellationPolicy: 'Reembolso total hasta 7 días antes de la primera sesión.',
+  };
+  const termsCheckbox = () => {
+    const checkbox = getDialog()?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!checkbox) throw new Error('Expected terms checkbox');
+    return checkbox;
+  };
+
+  it('shows the approved course terms collapsed next to the consent and sends the version that was shown', async () => {
+    getMetadataMock.mockResolvedValue(buildMetadata({ checkoutTerms: approvedTerms }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      const dialog = await openEnrollmentFromHero(container);
+      const termsButton = dialog.querySelector<HTMLButtonElement>('#course-terms-button')!;
+      const cancellationButton = dialog.querySelector<HTMLButtonElement>('#course-cancellation-policy-button')!;
+      expect(termsButton.getAttribute('aria-expanded')).toBe('false');
+      expect(cancellationButton.getAttribute('aria-expanded')).toBe('false');
+      expect(text(termsButton)).toContain('Versión course-terms-v3');
+      expect(text(dialog.querySelector(`#${cancellationButton.getAttribute('aria-controls')}`)))
+        .toBe('Reembolso total hasta 7 días antes de la primera sesión.');
+      expect(termsCheckbox().getAttribute('aria-describedby'))
+        .toBe('course-terms-button course-cancellation-policy-button');
+      expect(text(dialog)).toContain('Acepto los términos del curso (versión course-terms-v3)');
+
+      await fillGuestEnrollment();
+      await submitEnrollment();
+      await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(1));
+      expect(registerMock.mock.calls[0]?.[1]).toMatchObject({
+        termsAccepted: true,
+        acceptedTermsVersion: 'course-terms-v3',
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('sends no terms version when the course has no approved checkout policy', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      const dialog = await openEnrollmentFromHero(container);
+      expect(dialog.querySelector('#course-terms-button')).toBeNull();
+      await fillGuestEnrollment();
+      await submitEnrollment();
+      await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(1));
+      expect(registerMock.mock.calls[0]?.[1]).not.toHaveProperty('acceptedTermsVersion');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps consent cleared and locked until the changed course terms arrive, then asks again', async () => {
+    getMetadataMock.mockResolvedValue(buildMetadata({ checkoutTerms: approvedTerms }));
+    registerMock.mockRejectedValueOnce(
+      apiError('Course terms changed; review the current terms and accept them again', 409),
+    );
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await openEnrollmentFromHero(container);
+      await fillGuestEnrollment();
+      const refreshedMetadata = createDeferred<CourseMetadata>();
+      getMetadataMock.mockReturnValue(refreshedMetadata.promise);
+      await submitEnrollment();
+
+      await waitForExpectation(() => {
+        expect(text(getDialog())).toContain('Los términos del curso se actualizaron');
+      });
+      expect(text(getDialog())).not.toContain('Course terms changed');
+      // The old version is still on screen while the new one loads: it must not be acceptable.
+      expect(termsCheckbox().checked).toBe(false);
+      expect(termsCheckbox().disabled).toBe(true);
+      await submitEnrollment();
+      expect(registerMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        refreshedMetadata.resolve(buildMetadata({
+          checkoutTerms: {
+            termsVersion: 'course-terms-v4',
+            termsSummary: 'Nuevos términos.',
+            cancellationPolicy: 'Nueva política.',
+          },
+        }));
+        await flushPromises();
+      });
+      await waitForExpectation(() => {
+        expect(text(getDialog())).toContain('versión course-terms-v4');
+        expect(termsCheckbox().disabled).toBe(false);
+      });
+      expect(termsCheckbox().checked).toBe(false);
+
+      await click(termsCheckbox());
+      await submitEnrollment();
+      await waitForExpectation(() => expect(registerMock).toHaveBeenCalledTimes(2));
+      expect(registerMock.mock.calls[1]?.[1]).toMatchObject({ acceptedTermsVersion: 'course-terms-v4' });
+      expect(registerMock.mock.calls[1]?.[2]).not.toBe(registerMock.mock.calls[0]?.[2]);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps consent blocked when the changed terms cannot be reloaded, and offers a retry', async () => {
+    getMetadataMock.mockResolvedValue(buildMetadata({ checkoutTerms: approvedTerms }));
+    registerMock.mockRejectedValueOnce(
+      apiError('Course terms changed; review the current terms and accept them again', 409),
+    );
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await openEnrollmentFromHero(container);
+      await fillGuestEnrollment();
+      getMetadataMock.mockRejectedValue(new Error('offline'));
+      await submitEnrollment();
+
+      await waitForExpectation(() => {
+        expect(text(getDialog())).toContain('No pudimos cargar los términos actualizados');
+      });
+      // The superseded version is still cached and on screen; it must not be acceptable.
+      expect(termsCheckbox().disabled).toBe(true);
+      expect(termsCheckbox().checked).toBe(false);
+      await submitEnrollment();
+      expect(registerMock).toHaveBeenCalledTimes(1);
+
+      getMetadataMock.mockResolvedValue(buildMetadata({
+        checkoutTerms: { termsVersion: 'course-terms-v4', termsSummary: 'Nuevos términos.', cancellationPolicy: 'Nueva política.' },
+      }));
+      const retry = Array.from(getDialog().querySelectorAll('button')).find((b) => b.textContent === 'Reintentar');
+      expect(retry).toBeTruthy();
+      await click(retry as HTMLElement);
+      await waitForExpectation(() => {
+        expect(text(getDialog())).toContain('versión course-terms-v4');
+        expect(termsCheckbox().disabled).toBe(false);
+      });
+      expect(text(getDialog())).not.toContain('No pudimos cargar los términos actualizados');
     } finally {
       await cleanup();
     }
