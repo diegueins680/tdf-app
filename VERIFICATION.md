@@ -121,7 +121,7 @@ Look for:
 
 ### Test PayPal Buttons in Marketplace
 
-1. Navigate to the Marketplace page: https://tdf-app.pages.dev/marketplace
+1. Navigate to the Marketplace page: https://www.tdfrecords.net/marketplace
 2. Add items to cart
 3. Proceed to checkout
 4. Verify PayPal button appears as a payment option
