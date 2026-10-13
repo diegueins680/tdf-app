@@ -8075,6 +8075,7 @@
         "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
         "formal/event-operations/MusicEntitlementNoLimit.cfg",
         "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+        "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
         "formal/event-operations/MusicEntitlementRefundedDownload.cfg"
       ],
       "status": "specified and implemented",

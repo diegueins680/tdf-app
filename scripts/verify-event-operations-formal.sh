@@ -384,6 +384,7 @@ run_negative_tlc MusicEntitlementForgedPaid.cfg music-entitlement-forged-paid 'I
 run_negative_tlc MusicEntitlementRepeatedGrant.cfg music-entitlement-repeated-grant 'Invariant OneEntitlement is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementNoLimit.cfg music-entitlement-no-limit 'Invariant LimitHolds is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementEndlessReplay.cfg music-entitlement-endless-replay 'Invariant UrlsInsideLifetime is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementFreshReplayUrl.cfg music-entitlement-fresh-replay-url 'Invariant UrlsEndWithAuthorization is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementRefundedDownload.cfg music-entitlement-refunded-download 'Invariant ActiveWhenIssued is violated' MusicEntitlement.tla
 run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla

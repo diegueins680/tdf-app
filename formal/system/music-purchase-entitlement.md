@@ -56,11 +56,11 @@ environment. The data model and product decisions are in
 
 - `formal/event-operations/MusicEntitlement.tla`: one order, its checkout, the
   entitlement and three request identifiers over bounded time (limit 2, lifetime 2,
-  five instants): 1,160 distinct states, five invariants (`PaidNeedsEvidence`,
-  `OneEntitlement`, `LimitHolds`, `UrlsInsideLifetime`, `ActiveWhenIssued`). Five
-  controls each violate one invariant: paid without evidence, a grant on every
-  record, no limit, replay without a window, download without an active
-  entitlement. The grant control removes two guards together (status-change-only
+  five instants): 1,160 distinct states, six invariants (`PaidNeedsEvidence`,
+  `OneEntitlement`, `LimitHolds`, `UrlsInsideLifetime`, `UrlsEndWithAuthorization`,
+  `ActiveWhenIssued`). Six controls each violate one invariant: paid without
+  evidence, a grant on every record, no limit, replay without a window, a replay
+  signed from the current instant, download without an active entitlement. The grant control removes two guards together (status-change-only
   trigger and upsert); either alone still holds the invariant.
 - `tdf-hq/test/TDF/MusicPurchaseSpec.hs` (`scripts/test-music-purchase.sh`,
   PostgreSQL, fully migrated schema, eleven cases): the real purchase handler, the
@@ -123,9 +123,10 @@ off until they are closed.
 - The model has one order and no failed or cancelled state. Its statement that an
   active entitlement implies a paid order holds only without failed attempts (see
   above).
-- A replay inside the window issues a new 300-second URL, so one counted download
-  gives access for just under 600 seconds. Signed URLs are bearer links; the limit
-  counts authorizations, not bytes transferred.
+- A replay inside the window signs from the original authorization time, so its URL
+  and reported `expiresAt` end with the first one: one counted download gives access
+  for 300 seconds. Signed URLs are bearer links; the limit counts authorizations, not
+  bytes transferred.
 - The repeated-payment case is absorbed by the checkout store before the trigger
   runs; the trigger's own upsert is not exercised.
 - The fixture inserts a published release with triggers bypassed. Publication,

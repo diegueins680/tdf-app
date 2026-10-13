@@ -533,11 +533,12 @@ Unsafe dispatch/receipt variants must violate their named invariants (29/63state
 
 ## Music entitlement and downloads
 
-`MusicEntitlement.tla` and six configurations check the rules in
+`MusicEntitlement.tla` and seven configurations check the rules in
 [music-purchase-entitlement.md](../system/music-purchase-entitlement.md): paid only on
 verified evidence, one entitlement per order, the download limit, replay of a request
-identifier only inside its URL lifetime, and no URL without an active entitlement. The
-positive model and five negative controls are mandatory in the formal runner.
+identifier only inside its URL lifetime, a replayed URL that ends with the original one,
+and no URL without an active entitlement. The positive model and six negative controls
+are mandatory in the formal runner.
 
 ## Marketplace optional storage boundary (2026-09-18)
 

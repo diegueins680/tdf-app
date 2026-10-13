@@ -2,23 +2,26 @@
 (* PAY-MUSIC-DOWNLOAD-001: one music purchase order, its checkout, the       *)
 (* entitlement the checkout trigger grants, and download authorizations      *)
 (* identified by client request identifiers. Time is a bounded counter; a    *)
-(* signed URL issued at t is usable until t + Lifetime.                      *)
+(* signed URL is usable for Lifetime from the moment it is signed from. A    *)
+(* replayed request signs from its original authorization, so its URL ends   *)
+(* with the first one.                                                       *)
 EXTENDS Naturals, FiniteSets, TLC
 CONSTANTS Requests, Limit, Lifetime, MaxTime, Never,
           RequireEvidence, StatusChangeOnly, UpsertGrant,
-          EnforceLimit, ReplayWindow, ActiveOnly
+          EnforceLimit, ReplayWindow, ActiveOnly, SignFromOriginal
 VARIABLES checkout, evidence, order, grants, entitlement,
-          now, authorized, lastIssued, issuedInactive
+          now, authorized, lastIssued, urlExpiry, issuedInactive
 vars == <<checkout, evidence, order, grants, entitlement,
-          now, authorized, lastIssued, issuedInactive>>
+          now, authorized, lastIssued, urlExpiry, issuedInactive>>
 
 Init == /\ checkout = "awaiting" /\ evidence = FALSE /\ order = "awaiting"
         /\ grants = 0 /\ entitlement = "none" /\ now = 0
         /\ authorized = [r \in Requests |-> Never]
         /\ lastIssued = [r \in Requests |-> Never]
+        /\ urlExpiry = [r \in Requests |-> Never]
         /\ issuedInactive = FALSE
 
-downloads == <<authorized, lastIssued, issuedInactive>>
+downloads == <<authorized, lastIssued, urlExpiry, issuedInactive>>
 
 (* The provider confirmed the payment server to server and the result was    *)
 (* bound to the attempt.                                                     *)
@@ -49,7 +52,12 @@ Tick == /\ now < MaxTime /\ now' = now + 1
 
 Counted == {r \in Requests : authorized[r] # Never}
 
+(* The URL answered for r: signed from the request's (possibly just         *)
+(* recorded) authorization, or from the current instant when the guard is    *)
+(* removed, and usable until one Lifetime later.                             *)
 Issue(r) == /\ lastIssued' = [lastIssued EXCEPT ![r] = now]
+            /\ urlExpiry' = [urlExpiry EXCEPT ![r] =
+                 (IF SignFromOriginal THEN authorized'[r] ELSE now) + Lifetime]
             /\ issuedInactive' = (issuedInactive \/ entitlement # "active")
 
 (* One authorization request. A new identifier is counted against the limit; *)
@@ -72,6 +80,7 @@ TypeOK == /\ checkout \in {"awaiting", "paid", "refunded"} /\ evidence \in BOOLE
           /\ order \in {"awaiting", "paid", "refunded"} /\ grants \in 0..3
           /\ entitlement \in {"none", "active", "refunded"} /\ now \in 0..MaxTime
           /\ authorized \in [Requests -> Times] /\ lastIssued \in [Requests -> Times]
+          /\ urlExpiry \in [Requests -> (0..(MaxTime + Lifetime)) \cup {Never}]
           /\ issuedInactive \in BOOLEAN
 
 (* Paid only on verified provider evidence.                                  *)
@@ -82,10 +91,13 @@ OneEntitlement == /\ grants <= 1
                   /\ order = "paid" => entitlement = "active"
 (* Counted downloads never exceed the entitlement limit.                     *)
 LimitHolds == Cardinality(Counted) <= Limit
-(* Every URL is issued inside the lifetime of its counted authorization, so  *)
-(* a counted download gives access for less than two lifetimes.              *)
+(* Every URL is issued inside the lifetime of its counted authorization.     *)
 UrlsInsideLifetime ==
   \A r \in Requests : lastIssued[r] # Never => lastIssued[r] < authorized[r] + Lifetime
+(* Every URL ends with its counted authorization: a replay never extends     *)
+(* access beyond one lifetime.                                               *)
+UrlsEndWithAuthorization ==
+  \A r \in Requests : urlExpiry[r] # Never => urlExpiry[r] = authorized[r] + Lifetime
 (* No URL is issued for an entitlement that is not active.                   *)
 ActiveWhenIssued == ~issuedInactive
 ====
