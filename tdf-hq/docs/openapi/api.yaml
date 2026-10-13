@@ -16571,6 +16571,21 @@ components:
         landingUrl:
           type: string
           format: uri
+        checkoutTerms:
+          allOf:
+            - $ref: '#/components/schemas/CourseCheckoutTerms'
+          nullable: true
+          description: Terms of the approved active checkout policy, shown before the buyer accepts them. Null when the course has no approved policy.
+    CourseCheckoutTerms:
+      type: object
+      required: [termsVersion, termsSummary, cancellationPolicy]
+      properties:
+        termsVersion:
+          type: string
+        termsSummary:
+          type: string
+        cancellationPolicy:
+          type: string
     UTMTags:
       type: object
       properties:
@@ -16613,6 +16628,10 @@ components:
           type: boolean
           nullable: true
           description: Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads.
+        acceptedTermsVersion:
+          type: string
+          nullable: true
+          description: The CourseMetadata.checkoutTerms.termsVersion the buyer was shown. Required for a canonical checkout (400 when absent); checkout returns 409 if the active policy now has a different terms version.
     CourseRegistrationResponse:
       type: object
       properties:

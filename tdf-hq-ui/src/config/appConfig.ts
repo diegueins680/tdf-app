@@ -1,7 +1,7 @@
 const stripTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 
 const sanitizeBase = (raw?: string | null): string => {
-  const fallback = 'https://tdf-app.pages.dev';
+  const fallback = 'https://www.tdfrecords.net';
   if (!raw) return fallback;
   const trimmed = stripTrailingSlash(raw.trim());
   return trimmed.length ? trimmed : fallback;
