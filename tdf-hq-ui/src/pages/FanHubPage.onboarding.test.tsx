@@ -27,9 +27,12 @@ let sessionMock: SessionUser | null = {
   partyId: 42,
 };
 
+jest.unstable_mockModule('../api/directory', () => ({ Directory: { taxonomies: async () => ({ cities: [], genres: [] }), search: async () => ({ items: [], sponsoredItems: [], facets: { total: 0, entityTypes: {}, cities: [] } }) } }));
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: sessionMock, loading: sessionLoading }),
   getActiveSession: () => sessionMock,
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({
@@ -399,7 +402,7 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     expect(completeOnboardingProgressMock).toHaveBeenCalledTimes(1);
     expect(completeOnboardingProgressMock).toHaveBeenCalledWith(undefined, 'synthetic-exit-token');
     expect(loadOnboardingProgressMock).toHaveBeenCalledWith('synthetic-exit-token');
-    expect((await screen.findByRole('status')).textContent).toBe(es.fanHubOnboarding.saving);
+    expect((await screen.findByText(es.fanHubOnboarding.saving)).textContent).toBe(es.fanHubOnboarding.saving);
     expect(screen.getByText('Primeros pasos')).toBeTruthy();
     await act(async () => { resolveExit?.({ newlyCompleted: false, progress: completedProgress }); });
     await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());

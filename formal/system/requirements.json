@@ -9364,6 +9364,105 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "DISCOVERY-NAV-001",
+      "title": "Shared community artist discovery and history-aware navigation",
+      "statement": "Community and Global Search discover publicly eligible artists, bands, projects and profiles through shared normalized bounded server queries. New pages start at the top; history, refresh, anchors and inline actions preserve their appropriate context.",
+      "authority": "Explicit product owner implementation and deployment request, 2026-10-13",
+      "domain": "UX",
+      "source": "docs/discovery/community-search-navigation.md",
+      "contract": "docs/discovery/community-search-navigation.md",
+      "actors": [
+        "Public visitor",
+        "Authenticated community member"
+      ],
+      "preconditions": [
+        "Existing directory schema and public artist profiles",
+        "Browser supports History, ResizeObserver and MutationObserver"
+      ],
+      "inputs": [
+        "Search query and supported taxonomy filters",
+        "Router location and navigation type"
+      ],
+      "state": {
+        "boundary": "Public search projection, query cache and history-entry scroll positions",
+        "authority": "Database visibility and identity links; React Router history keys"
+      },
+      "allowedTransitions": [
+        "Query edit -> debounced bounded search",
+        "New route -> top",
+        "History POP -> prior scroll",
+        "Valid fragment -> rendered anchor"
+      ],
+      "forbiddenTransitions": [
+        "Private directory identity exposed through legacy artist fallback",
+        "Obsolete query response replacing current results",
+        "Inline filter change resetting page scroll"
+      ],
+      "effects": [
+        "Read-only profile projection",
+        "Abort obsolete search requests",
+        "URL filter updates",
+        "Scroll restoration"
+      ],
+      "authorization": "Existing public directory visibility and artist public-read surfaces; no new private account lookup.",
+      "privacy": "Any directory identity or legacy link suppresses the legacy fallback; private fields are absent from results.",
+      "concurrency": "Query keys and AbortSignal isolate concurrent requests. Observers retry pending restoration until content renders or the visitor interacts.",
+      "idempotency": "Read-only projection and same-position scrolling are repeatable.",
+      "failure": "Recoverable search alerts; optional session storage failure does not block navigation.",
+      "recovery": "Retry failed search, clear filters or use browser history.",
+      "observability": "Search result and API errors through existing UI; isolated SQL, component and browser regression evidence.",
+      "property": "Textual exact matches outrank other textual tiers; private fallback remains absent; route changes never deliberately retain the old page offset.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/App.tsx",
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx",
+        "tdf-hq-ui/src/styles/navigation.css",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/components/TopBar.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-community-search.py",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        "e2e/web/community-discovery.spec.mjs",
+        "playwright.discovery.config.mjs",
+        "tdf-hq-ui/src/api/directory.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Real PostgreSQL SQL cases, Jest component regressions, Playwright browser integration; no formal proof claimed.",
+      "evidence": "Local validation recorded in delivery report; hosted and production verification pending.",
+      "status": "specified and implemented",
+      "openQuestions": [
+        "Legacy typo-only matches are outside the indexed candidate prefilter.",
+        "Physical mobile/PWA and production evidence remain separate from browser emulation."
+      ],
+      "confidence": "Runtime regressions and local compiler validation; no proof or production claim.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
+      }
     }
   ]
 }

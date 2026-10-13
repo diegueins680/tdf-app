@@ -1,4 +1,6 @@
 const directorySearch = {
+  entityArtist: 'Artists and projects',
+  allCities: 'All cities',
   "title": "Music directory and classifieds",
   "description": "Find musicians, professionals, bands, services, events, venues and opportunities by city in Ecuador and Latin America.",
   "structuredName": "TDF Music Directory and Classifieds",

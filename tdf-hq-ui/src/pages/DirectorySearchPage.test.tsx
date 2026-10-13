@@ -111,7 +111,7 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
       expect(container.querySelector('input')?.value).toBe('music');
       expect(container.textContent).not.toContain('Arrival failed');
-      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }));
+      expect(searchMock).toHaveBeenCalledWith(expect.objectContaining({ q: 'music' }), expect.any(AbortSignal));
     } finally {
       await act(async () => root.unmount());
       container.remove();

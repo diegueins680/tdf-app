@@ -1,3 +1,4 @@
+import NavigationScrollRestoration from './routes/NavigationScrollRestoration';
 import { Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -30,6 +31,7 @@ export default function App() {
     <AppErrorBoundary resetKey={location.pathname}>
       {/* Playback outlives route transitions, so the provider wraps the routes. */}
       <PlayerProvider>
+        <NavigationScrollRestoration />
         <OnboardingRecovery />
         <Suspense fallback={<RouteLoadingFallback />}>
           <AppRoutes />

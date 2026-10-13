@@ -91,9 +91,12 @@ directoryPublicServer =
 
 searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
   mProfessionId mServiceId mInstrumentId mGenreId mRemote mAvailable
-  mDateFrom mDateTo mCursor mLimit = do
+  mDateFrom mDateTo mCursor mLimit mProfileKind = do
   query <- validateQuery mQuery
   entityType <- validateEntityType mEntityType
+  let profileKind = normalizeOptional mProfileKind
+  when (maybe False (`notElem` ["person","artist","band","project"]) profileKind) $
+    throwError err400 { errBody = "unsupported profileKind" }
   (latitude, longitude, radiusKm) <- validateGeo mLatitude mLongitude mRadiusKm
   let limit = min 50 (max 1 (fromMaybe 20 mLimit))
       cursor = normalizeOptional mCursor
@@ -103,7 +106,7 @@ searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
         , optionalUuid mProfessionId, optionalUuid mServiceId
         , optionalUuid mInstrumentId, optionalUuid mGenreId
         , maybe PersistNull PersistBool mRemote, maybe PersistNull PersistBool mAvailable
-        , optionalTime mDateFrom, optionalTime mDateTo
+        , optionalTime mDateFrom, optionalTime mDateTo, optionalText profileKind
         ]
       eventVisibilityParams = [PersistText Social.externalEventRefSuppressedStatus]
   ranked <- jsonRows (searchSql False) (commonParams <> eventVisibilityParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
@@ -131,7 +134,7 @@ validateEntityType :: Maybe Text -> AppM (Maybe Text)
 validateEntityType raw =
   case normalizeOptional raw of
     Nothing -> pure Nothing
-    Just value | value `Set.member` Set.fromList ["profile","classified","event","venue"] -> pure (Just value)
+    Just value | value `Set.member` Set.fromList ["profile","artist","classified","event","venue"] -> pure (Just value)
     _ -> throwError err400 { errBody = "unsupported entityType" }
 
 validateGeo :: Maybe Double -> Maybe Double -> Maybe Double -> AppM (Maybe Double,Maybe Double,Maybe Double)
@@ -169,37 +172,56 @@ directorySourceProfileSql :: Text
 directorySourceProfileSql =
   "(SELECT raw.source_profile_id FROM directory_search_document raw WHERE raw.entity_kind=document.entity_kind AND raw.entity_id=document.entity_id)"
 
+-- Both discovery surfaces use this projection. Directory identities win even when
+-- private, draft, moderated or merged; fallback must never re-publish them.
+searchDocumentsSql :: Text
+searchDocumentsSql =
+  "documents AS (SELECT document.*,profile.profile_kind,('/directorio/'||document.slug)::text canonical_path FROM directory_public_search_document document LEFT JOIN directory_profile profile ON document.entity_kind='profile' AND profile.id::text=document.entity_id WHERE document.entity_kind<>'profile' OR (profile.profile_status='published' AND profile.visibility='public' AND profile.moderation_status='allowed' AND profile.canonical_profile_id IS NULL) " <>
+  "UNION ALL SELECT 'profile','artist-'||artist.artist_party_id::text,artist.artist_party_id::text,party.display_name,NULL,artist.bio,artist.hero_image_url,city.id,artist.city,artist.country_code,NULL::float8,NULL::float8,'city'," <>
+  "'{}'::uuid[],'{}'::uuid[],'{}'::uuid[],ARRAY(SELECT genre_id FROM artist_profile_genre_membership WHERE artist_party_id=artist.artist_party_id)," <>
+  "text.content,to_tsvector('simple',text.content),0::numeric,0::numeric,0::numeric,artist.created_at,NULL::timestamptz,coalesce(artist.updated_at,artist.created_at),1::bigint,FALSE,NULL,FALSE,FALSE,FALSE,'artist','/artista/'||artist.artist_party_id::text " <>
+  "FROM artist_profile artist JOIN party ON party.id=artist.artist_party_id " <>
+  "LEFT JOIN LATERAL (SELECT (array_agg(id))[1] id FROM city_reference WHERE active AND directory_normalize_text(name_es)=directory_normalize_text(artist.city) HAVING count(*)=1) city ON TRUE " <>
+  "CROSS JOIN LATERAL (SELECT directory_normalize_text(concat_ws(' ',party.display_name,artist.slug,artist.bio,artist.city,artist.country_code,artist.genres,artist.highlights)) content) text " <>
+  "WHERE ((SELECT q FROM input)='' OR artist.artist_party_id IN (" <>
+  "SELECT id FROM party WHERE directory_normalize_text(display_name) LIKE '%'||directory_normalize_text((SELECT q FROM input))||'%' " <>
+  "UNION SELECT artist_party_id FROM artist_profile WHERE directory_normalize_text(coalesce(slug,'')||' '||coalesce(bio,'')||' '||coalesce(city,'')||' '||coalesce(country_code,'')||' '||coalesce(genres,'')||' '||coalesce(highlights,'')) LIKE '%'||directory_normalize_text((SELECT q FROM input))||'%')) " <>
+  "AND NOT EXISTS (SELECT 1 FROM directory_profile profile WHERE profile.subject_party_id=artist.artist_party_id) " <>
+  "AND NOT EXISTS (SELECT 1 FROM directory_legacy_link link WHERE link.legacy_kind='artist_profile' AND link.legacy_id=artist.id::text)), "
+
 searchSql :: Bool -> Text
 searchSql sponsoredOnly =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
+  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  searchDocumentsSql <>
   "scored AS (SELECT document.*," <> directorySourceProfileSql <> " source_profile_id,directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude) distance_km," <>
-  "CASE WHEN input.q='' THEN .5 ELSE greatest(ts_rank_cd(document.search_vector,plainto_tsquery('simple',directory_normalize_text(input.q))),directory_text_similarity(document.title,input.q)) END text_score," <>
+  "CASE WHEN input.q='' THEN .5 WHEN directory_normalize_text(document.title)=directory_normalize_text(input.q) THEN 10 WHEN directory_normalize_text(document.title) LIKE directory_normalize_text(input.q)||'%' THEN 7 WHEN position(directory_normalize_text(input.q) in directory_normalize_text(document.title))>0 THEN 4 ELSE least(1,greatest(ts_rank_cd(document.search_vector,plainto_tsquery('simple',directory_normalize_text(input.q))),directory_text_similarity(document.title,input.q))) END text_score," <>
   "CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%')) THEN 1 ELSE 0 END semantic_score " <>
-  "FROM directory_public_search_document document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
+  "FROM documents document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
   directoryVisibleEventDocumentClause <>
-  "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
+  "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type OR (input.entity_type='artist' AND document.profile_kind IN ('artist','band','project'))) AND (input.profile_kind IS NULL OR document.profile_kind=input.profile_kind) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
   directoryDerivedListingDedupClause <>
   "AND (input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) " <>
   "AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
-  "AND (input.q='' OR document.search_vector @@ plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
+  "AND (input.q='' OR document.search_vector @@ plainto_tsquery('simple',directory_normalize_text(input.q)) OR document.search_text LIKE '%'||directory_normalize_text(input.q)||'%' OR directory_text_similarity(document.title,input.q)>=.2 OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
   "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
   "AND (input.remote_only IS DISTINCT FROM TRUE OR document.remote) AND (input.available_only IS DISTINCT FROM TRUE OR document.availability_score>0) " <>
   "AND (input.date_from IS NULL OR document.expires_at IS NULL OR document.expires_at>=input.date_from) AND (input.date_to IS NULL OR document.effective_at IS NULL OR document.effective_at<=input.date_to)), " <>
-  "ranked AS (SELECT scored.*,round((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)::numeric,6) organic_score FROM scored), " <>
+  "ranked AS (SELECT scored.*,round(((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)/5)::numeric,6) organic_score FROM scored), " <>
   "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
   "page AS (SELECT ranked.* FROM ranked WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE ranked.organic_score<b.organic_score OR (ranked.organic_score=b.organic_score AND (ranked.source_updated_at<b.source_updated_at OR (ranked.source_updated_at=b.source_updated_at AND (ranked.entity_kind>b.entity_kind OR (ranked.entity_kind=b.entity_kind AND ranked.entity_id>b.entity_id)))))) ORDER BY organic_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
-  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'cursor',entity_kind||':'||entity_id) FROM page"
+  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'cursor',entity_kind||':'||entity_id) FROM page"
 
 facetsSql :: Text
 facetsSql =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
-  "filtered AS (SELECT document.* FROM directory_public_search_document document CROSS JOIN input WHERE NOT document.sponsored " <>
+  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  searchDocumentsSql <>
+  "filtered AS (SELECT document.* FROM documents document CROSS JOIN input WHERE NOT document.sponsored " <>
   directoryVisibleEventDocumentClause <>
   directoryDerivedListingDedupClause <>
-  "AND (input.q='' OR document.search_vector@@plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 " <>
+  "AND (input.q='' OR document.search_vector@@plainto_tsquery('simple',directory_normalize_text(input.q)) OR document.search_text LIKE '%'||directory_normalize_text(input.q)||'%' OR directory_text_similarity(document.title,input.q)>=.2 " <>
   "OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) " <>
   "AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
-  "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
+  "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type OR (input.entity_type='artist' AND document.profile_kind IN ('artist','band','project'))) AND (input.profile_kind IS NULL OR document.profile_kind=input.profile_kind) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
   "AND (input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) " <>
   "AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
   "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>

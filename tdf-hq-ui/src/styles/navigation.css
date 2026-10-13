@@ -1,0 +1,2 @@
+/* Headers sit outside the scrolling main; retain breathing room for anchor and validation focus. */
+#main-content [id], #main-content :invalid { scroll-margin-block-start: 1rem; }

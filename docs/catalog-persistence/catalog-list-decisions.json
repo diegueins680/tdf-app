@@ -15641,19 +15641,19 @@
       }
     },
     {
-      "id": "155c8ba51c7e002c10d0",
+      "id": "a680f26cbce66889d70a",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 203-entry manifest retains all previous entries and adds only the indexed community discovery migration introduced by 08f3bcf50319983193d37ccec87d1c664c8ef21d. Deployment protocol, not configurable business content.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "directory-artist-listings-2026-10-10",
+      "reviewBatch": "community-discovery-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57213,7 +57213,8 @@
         },
         "reviewBatch": "directory-event-search-sync-2026-10-10",
         "reviewMethod": "successor-of-reviewed-decision"
-      }
+      },
+      "previousManifestDecisionId": "155c8ba51c7e002c10d0"
     },
     {
       "id": "8d92943abad9c2a47c8f",
@@ -58901,6 +58902,21 @@
         "name": "actionCopy"
       },
       "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "9c81a0d1656a3da224d8",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Unsupported profile kinds would expose filters the search handler cannot fulfill.",
+      "justification": "Subset of existing directory profile_kind schema values accepted by the profileKind query contract: artist, band, project, person. Genres and cities are loaded from server taxonomies. No new profile taxonomy is introduced.",
+      "reviewed": true,
+      "reviewBatch": "community-discovery-2026-10-13",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "line": 47
+      }
     }
   ]
 }
