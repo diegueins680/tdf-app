@@ -612,6 +612,20 @@
       "conflict": "PRIV-WHATSAPP-001 requires the confirmation notice to be recorded as an outgoing message and the webhook to accept a valid confirmation. A confirming reply activated consent but the webhook then answered HTTP 500 and recorded no notice: the notice row was inserted with the handler timestamp, which the inbound reply row already holds for that number, and whats_app_message is unique on (phone_e164, created_at) because the model line IndexWhatsAppMessagePhone is a Persistent unique declaration (production constraint index_whats_app_message_phone). Reproduced against the real backend on 2026-10-12.",
       "authority": "The requirement's effects and the 2026-10-06 double opt-in decision (AUTHORITY-052); the unique constraint is an accident of the model declaration syntax, not a rule.",
       "resolution": "The confirmation notice takes its own timestamp, so a valid confirmation answers 200 and the notice is recorded; the real-backend harness section checks it and pins the collision. The separate timestamp is best-effort while the constraint exists. The unique declaration is applied production schema and is left for a follow-up migration (plain index) with its model change; a batched Meta delivery with two messages from one number and the course-registration reply share the hazard and go with that follow-up."
+    },
+    {
+      "id": "AUTHORITY-078",
+      "sources": [
+        "formal/system/requirements.json#DEPLOY-READINESS-001",
+        "tdf-hq/src/TDF/App/Readiness.hs",
+        "tdf-hq/src/TDF/DB.hs",
+        "scripts/lib/readiness_conformance.py",
+        "formal/system/readiness.md"
+      ],
+      "conflict": "DEPLOY-READINESS-001 required a fresh request after database recovery to answer ready and the harness checked it with one probe. The probe made one attempt through the pool; a pooled connection PostgreSQL had closed (restart, failover, terminated sessions) failed that attempt and the probe answered 503 although the database was back, once per stale connection. Reproduced on 2026-10-12 against the real backend: after four simultaneous requests the pool held more terminated connections than the three degraded probes consumed and the recovery probe failed (CI run 38316698853 on PR #559 and locally).",
+      "authority": "The requirement's recovery clause and the operational intent of a readiness probe: it reports the database, not the pool's history. The probe now retries up to the pool size plus one (the pool bounds the stale connections; one attempt must remain for a live connection, a bound the model found) inside its unchanged two-second deadline, discarding each failed connection; a result, ready or not, is final and cancellation propagates through every attempt. The attempt budget is bound to the pool size plus one by the source-bound verifier. An unavailable database still answers 503 within the deadline, now after at most pool-size-plus-one connection attempts per probe.",
+      "decidedOn": "2026-10-12",
+      "status": "applied"
     }
   ]
 }

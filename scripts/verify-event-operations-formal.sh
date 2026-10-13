@@ -220,6 +220,9 @@ run_negative_tlc WhatsAppConsentUnboundFailure.cfg whatsapp-consent-unbound-fail
 run_negative_tlc WhatsAppConsentReleasedFailure.cfg whatsapp-consent-released-failure 'Invariant UndeliveredStaysPending is violated' WhatsAppConsent.tla
 run_negative_tlc WhatsAppConsentLongUnsentWindow.cfg whatsapp-consent-long-unsent-window 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
 run_negative_tlc WhatsAppConsentRenewedUnsent.cfg whatsapp-consent-renewed-unsent 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
+run_tlc ReadinessProbe.tla ReadinessProbe.cfg readiness-probe
+run_negative_tlc ReadinessProbeSingleAttempt.cfg readiness-probe-single-attempt 'Invariant ProbeReportsDatabase is violated' ReadinessProbe.tla
+run_negative_tlc ReadinessProbePoolSizeAttempts.cfg readiness-probe-pool-size-attempts 'Invariant ProbeReportsDatabase is violated' ReadinessProbe.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla

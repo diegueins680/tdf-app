@@ -4106,7 +4106,7 @@
     {
       "id": "SURFACE-f9884c5ddfa3d37d",
       "path": "scripts/lib/readiness_conformance.py",
-      "sha256": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
+      "sha256": "ae05ca15ad3df68eeb55f5c2d1fe535b8c740ec153b70491a243b4134869f94e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5546,7 +5546,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "5a8b932b3b7a66903ff0c6a2ef6b950b5a4ec1b371c9c604432865e2ac604cce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5582,7 +5582,7 @@
     {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
-      "sha256": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
+      "sha256": "7feb59ff8de2a0d2b4903bd71ec277cfdf6529ad033cf119734f267aab113981",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13226,7 +13226,7 @@
     {
       "id": "SURFACE-9b25f2b06da83696",
       "path": "tdf-hq/src/TDF/App/Readiness.hs",
-      "sha256": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
+      "sha256": "9efed474627621c1e9616ef9ac4983fa5c499fc8421ec292ed2d9e021fb7fde1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14720,7 +14720,7 @@
     {
       "id": "SURFACE-e54fcc9334870c9b",
       "path": "tdf-hq/test/TDF/ReadinessSpec.hs",
-      "sha256": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
+      "sha256": "0d94a05895ab0ab2ade96b5e7e7039b65eae8e14ec2d7bd389571a41e5e48f8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22460,7 +22460,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "97265617534d6a867c9a6f4152cf1aeac3964274b72905d5114c8d429a59a59b",
+      "sha256": "7acbf211b92ec4dbb366e43200a08215f357646713510304aea9aedcd3038052",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22601,6 +22601,34 @@
     {
       "path": "formal/event-operations/RaciWebEditorRetry.cfg",
       "sha256": "4931120eb43ea3951f6210b4569bdee4e299eaae28bf1e284d02c7eb9d067d69",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbe.cfg",
+      "sha256": "50fdf327a71210086792e372d3e52923958d19b93560ee24316b4dbf7f42607f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbe.tla",
+      "sha256": "5c084b53a4928a9e99594febc6998ab2bd403f8aab8cce3e1ad4272eb58237ec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbePoolSizeAttempts.cfg",
+      "sha256": "7d3bd4fc94504e3ff55d6bb101eeb2ef55841ebb0f16b0a5af4994bd67ff2d00",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ReadinessProbeSingleAttempt.cfg",
+      "sha256": "344c666a1c21e44c31f82dee303358d020ee0411a3964182145eb79549d74910",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23958,7 +23986,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "12768137e250654b823402b00ffecdb33003c7ea09ca7afa99d54e5e6a7af338",
+      "sha256": "57f4c7384e0c449429faba1896c2d3a8a9376d67e3cee0e44338036c970191be",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24203,7 +24231,7 @@
     },
     {
       "path": "formal/system/readiness.md",
-      "sha256": "fd34f26c5e93981f72f61d8ee8af479e612bf6ce79123c37e19187d4d0a7d4ed",
+      "sha256": "23af4140a382d1343ff018d3c4c827a1247f74091cca8c2c10a7e2d20408d5f7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24238,7 +24266,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5f2e111b404d927d022ef5a89f14561e44e4038ea236945703f47006f6127fce",
+      "sha256": "701d65c62c6225dc5d2aaff197165536a414ce509bc299013154fd6e12dc79d6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -34219,6 +34247,51 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK ExplicitConfirmation CurrentEditor OneFlight SameRetry ValidatedSuccess",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbe.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 5",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbePoolSizeAttempts.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 4",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ReadinessProbeSingleAttempt.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PoolSize = 4",
+        "  Attempts = 1",
+        "INVARIANTS",
+        "  AttemptsBounded",
+        "  ProbeReportsDatabase"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

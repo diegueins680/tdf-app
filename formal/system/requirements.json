@@ -5836,7 +5836,7 @@
     {
       "id": "DEPLOY-READINESS-001",
       "title": "Fresh database readiness without private failure detail",
-      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. Pool or query failure and expiry of the two-second cooperative deadline return503 with fixed non-private fields; every readiness response forbids caching.",
+      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. A probe discards pooled connections PostgreSQL has closed, retrying up to the pool size plus one inside its deadline, so one request answers ready once the database is back. Pool or query failure of every attempt and expiry of the two-second cooperative deadline return 503 with fixed non-private fields; every readiness response forbids caching.",
       "domain": "DEPLOY",
       "authority": "User deployment verification and failed-worker success requirements; existing documented health intent",
       "source": "tdf-hq/docs/openapi/api.yaml; formal/system/readiness.md",
@@ -5867,6 +5867,7 @@
       "allowedTransitions": [
         "starting -> probing after boot succeeds",
         "probing -> ready only after fresh successful query",
+        "probing -> probing on a synchronous failure while attempts (the pool size plus one) remain: the failed pooled connection is destroyed",
         "probing -> unavailable on synchronous error, false result or deadline",
         "A subsequent request independently probes current state"
       ],
@@ -5882,10 +5883,10 @@
       ],
       "authorization": "Public non-mutating fixed SELECT1; no caller SQL or chosen database target.",
       "privacy": "Fixed JSON fields exclude database errors, credentials and hostnames; no probe exception rendering.",
-      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
+      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion. The attempt budget is the pool size of TDF.DB.makePool plus one (source-bound check): a pool cannot hold more stale connections than its size, and one attempt must remain for a live connection.",
       "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
-      "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
-      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "failure": "Synchronous exception on every attempt (at most the pool size plus one), negative probe or expired deadline yields 503. Runtime cancellation propagates through every attempt.",
+      "recovery": "A fresh request after database/pool recovery answers ready at once: stale pooled connections are consumed by that request's own attempts. Health does not establish migration, worker, provider, backup or whole-system readiness.",
       "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
       "implementation": [
         "tdf-hq/src/TDF/App/Readiness.hs",
@@ -5906,14 +5907,16 @@
         "scripts/lib/readiness_conformance.py",
         "scripts/test-booking-conformance.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/ReadinessProbe.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery.",
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Attempt retry: Haskell probe tests (stale-then-live, budget exhaustion, final negative result, cancellation through retry) and two further detected mutations (single attempt, no retry); the PostgreSQL harness first leaves more idle pooled connections than it makes degraded probes, so the single recovery probe must discard the terminated connections itself (the previous code failed this on 2026-10-12). ReadinessProbe.tla: ProbeReportsDatabase over every stale count and database state for PoolSize 4; the one-attempt and pool-size budgets fail it (the model found that a budget of the pool size is one short).",
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
+        "reason": "Deployed validation of the handler remains outstanding; the stale-connection recovery is fixed and checked at the Haskell, PostgreSQL-harness and model levels (AUTHORITY-078)."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
       "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
