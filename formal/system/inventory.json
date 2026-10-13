@@ -935,6 +935,7 @@
       "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
       "tdf-hq-ui/src/i18n/locales/pt.ts",
       "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
+      "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
       "tdf-hq-ui/src/lib/schemas.ts",
       "tdf-hq-ui/src/main.tsx",
       "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -5886,13 +5887,13 @@
     {
       "id": "SURFACE-c5154d27c146520e",
       "path": "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
-      "sha256": "70a1323759455c593a2873dd7e70e1c127dacf288ba02d6ac2ee7c4c0b2c0d8c",
+      "sha256": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c2453e0acd284799",
       "path": "tdf-hq-ui/src/analytics/growthAttribution.ts",
-      "sha256": "30d68adfb4dea8353f9212f28f9766ed6e2ff181a1d0be4bd2e6f6664732700e",
+      "sha256": "3eae34e72a50e70261d8ff2880f1ec43dfcaeef5f963013f480f1a72a7c09789",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7926,7 +7927,7 @@
     {
       "id": "SURFACE-4349420430226168",
       "path": "tdf-hq-ui/src/i18n/index.ts",
-      "sha256": "290ee93c32ea51d1ff32e0231c21ab0709194e3b8e5d8a8425b49527b0b91f30",
+      "sha256": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8014,6 +8015,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2036de947313ac6e",
+      "path": "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
+      "sha256": "4eed0d18de4e5f1299bbda26efe96b5c89a2785c5e587a27da5905ce36637f9b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f2804d98461b2053",
       "path": "tdf-hq-ui/src/lib/schemas.ts",
       "sha256": "734fe01d81e3684a9413f64623593ba227ff6aaa7ffdfcd793a545ba8eb6573f",
@@ -8028,7 +8035,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "270373cf50b8a1095e939eafa98f702b94d9f4afde7b76a796a5a38e3ddc854e",
+      "sha256": "5552f5503d43af12991039ea9250796b92b91445dea4d441c7c5a762e2100900",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8070,7 +8077,7 @@
     {
       "id": "SURFACE-171c838f0fbd4380",
       "path": "tdf-hq-ui/src/mobile/telemetry.ts",
-      "sha256": "009324e02986508e1d20a8309912d494f387716265bbe76057792459a72183e2",
+      "sha256": "e30c3c227420f3219e1d6ac58552f2f8e4a7a6b6121bad6094541ac7ecb8af2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8916,7 +8923,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "01aa2d2aecc3137c615d6097f3703cb043c7d1dde1c9944f247e4f18b440f5c5",
+      "sha256": "8e0337a8f0fc24f4a5a41ca8b62dc4d9d8e625cde923ad748bce566352a00abd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19555,7 +19562,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "fc02fcd6a965e11c5340c7b25ffd07cbe6e425b4095a73f4821f5ac8ce28080a",
+      "sha256": "17a6370c02b438291b2a2f51a77c981b3fc1f72538e31358d1352a911c9627cf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24273,7 +24280,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9cb5b46e159663b5a36c9215f468cc2a50e818a8da3d20f42cb199a6bb704193",
+      "sha256": "eea241e105ce8863424d55122efbe4a9df73443f25302a30553c9efb9746c636",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
