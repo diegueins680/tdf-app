@@ -4378,7 +4378,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
+      "sha256": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5200,7 +5200,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "f5628439aa2d4d8b33b9f79eeaa256afeb677f8d817f810c84c85b4869ecd159",
+      "sha256": "1748d2bd75e4d37ddd4e0bcf32d60c7cec38076d1f182bef411f037d52f339ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5554,7 +5554,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "b6e3dcac86e397231889b052a553be8227c75d57b06c30a2780fbcd311bfe6b5",
+      "sha256": "228b02f399282f21ed0454b9c4c86c28d75a00c6498eaf48d440728ccf161871",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22088,6 +22088,55 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MusicDdexExport.cfg",
+      "sha256": "982e2b1826d915e7fce174a635279f9d1b3109e1735fec2d9be0d1852107dda2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicDdexExport.tla",
+      "sha256": "c7389586297018f37fbdddeaaeaf139dad2164a717165fc6e95334b67f093761",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicDdexExportNoCommitGate.cfg",
+      "sha256": "fdc38f54e748f48a0fce2febffe44d63703aa5a964bc35cad1fbd96c8591a5e6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicDdexExportReopen.cfg",
+      "sha256": "99d76377ccaa53ae43d7659709a99baa384b69d54450a7027b27ec99b922df78",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicDdexExportReplayFailed.cfg",
+      "sha256": "61e84b96ef4854d32351ae51e166df0fee6cf3c1b9d5e36e900e1a1758440d00",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicDdexExportSplitDeadLetter.cfg",
+      "sha256": "a6bf2a93ea00235265a4b017625e1a7f5834120bca4cb67511d6d6c678c7940e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicDdexExportUnfenced.cfg",
+      "sha256": "ee19b53731ebf5347212970aaacf18926013260723ca13a99be25edc082b323f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/NativeArtistFollow.cfg",
       "sha256": "dfef4ecafcf1daf1a0811e78feebd12644ca0d8561fe81c385380611b0af5c09",
       "authority": "inferred",
@@ -22523,7 +22572,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "a119a3e875eaf963b984344bfed5db0982f7b0815830ae25fc82d80d8e22f102",
+      "sha256": "e5b5351810911645bc2dca2f45f2d53db0d04f2b63a8a2ffd7f8e1430927fed8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24007,7 +24056,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "b9d0bc2a003d10dd0f168a8eb5384424e010e296bcb2a01f411103059e81bf63",
+      "sha256": "5791b33d39c30bf2d8fb4592649576c60ba44e8936f1f3855d905f9abada9b71",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24021,7 +24070,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "1b8abf26b1f48f9d6a25c0a983b044b5afebb770c8f9ea3b8138586da29db72c",
+      "sha256": "41f51e3b8a518fde8da4a1c458fc9344280001a10c94899722cc80106a64fc95",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24216,6 +24265,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-ddex-export.md",
+      "sha256": "b7e3d655ba9b4490fe516617a3f550e9a620dac2e6650e4ed5866fa9ee24fc1f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-command-boundary.md",
       "sha256": "b8b856db3313d417afb450cc04f38f41b7f557f2da6b092b209e25b5d0630663",
       "authority": "inferred",
@@ -24301,7 +24357,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "621b3586ab097e760c3f416d418b0762f5c89d5b255b6b1bf3af409617d729ee",
+      "sha256": "5a8c9c11c1fdcefa0b646d2c93c0c1eb682064b28024d493741174deb03a01c4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33479,6 +33535,144 @@
         "          RequireDurableKey = FALSE",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT NoDispatchWithoutDurableKey"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicDdexExport.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  Fence = TRUE",
+        "  ValidIsFinal = TRUE",
+        "  CommitGate = TRUE",
+        "  RepairQueued = TRUE",
+        "  AtomicDeadLetter = TRUE",
+        "  MaxAttempts = 2",
+        "  MaxClaims = 3",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ValidForever",
+        "  CurrentWriter",
+        "  ValidOnlyUnderRules",
+        "  FailedIsFinal",
+        "  PendingHasLiveJob"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicDdexExportNoCommitGate.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  Fence = TRUE",
+        "  ValidIsFinal = TRUE",
+        "  CommitGate = FALSE",
+        "  RepairQueued = TRUE",
+        "  AtomicDeadLetter = TRUE",
+        "  MaxAttempts = 2",
+        "  MaxClaims = 3",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ValidForever",
+        "  CurrentWriter",
+        "  ValidOnlyUnderRules",
+        "  FailedIsFinal",
+        "  PendingHasLiveJob"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicDdexExportReopen.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  Fence = TRUE",
+        "  ValidIsFinal = FALSE",
+        "  CommitGate = TRUE",
+        "  RepairQueued = TRUE",
+        "  AtomicDeadLetter = TRUE",
+        "  MaxAttempts = 2",
+        "  MaxClaims = 3",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ValidForever",
+        "  CurrentWriter",
+        "  ValidOnlyUnderRules",
+        "  FailedIsFinal",
+        "  PendingHasLiveJob"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicDdexExportReplayFailed.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  Fence = TRUE",
+        "  ValidIsFinal = TRUE",
+        "  CommitGate = TRUE",
+        "  RepairQueued = FALSE",
+        "  AtomicDeadLetter = TRUE",
+        "  MaxAttempts = 2",
+        "  MaxClaims = 3",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ValidForever",
+        "  CurrentWriter",
+        "  ValidOnlyUnderRules",
+        "  FailedIsFinal",
+        "  PendingHasLiveJob"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicDdexExportSplitDeadLetter.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  Fence = TRUE",
+        "  ValidIsFinal = TRUE",
+        "  CommitGate = TRUE",
+        "  RepairQueued = TRUE",
+        "  AtomicDeadLetter = FALSE",
+        "  MaxAttempts = 2",
+        "  MaxClaims = 3",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ValidForever",
+        "  CurrentWriter",
+        "  ValidOnlyUnderRules",
+        "  FailedIsFinal",
+        "  PendingHasLiveJob"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicDdexExportUnfenced.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  Fence = FALSE",
+        "  ValidIsFinal = TRUE",
+        "  CommitGate = TRUE",
+        "  RepairQueued = TRUE",
+        "  AtomicDeadLetter = TRUE",
+        "  MaxAttempts = 2",
+        "  MaxClaims = 3",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ValidForever",
+        "  CurrentWriter",
+        "  ValidOnlyUnderRules",
+        "  FailedIsFinal",
+        "  PendingHasLiveJob"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
