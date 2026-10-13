@@ -10226,7 +10226,7 @@
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
-    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "11c62627a222291bcd22071cb7e684c4f6b2582fa1ecf669ead7f6da21304cb2",
+    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "2e6a9789ac6d5804a83e4ec0677155792062f9f0b218950c3816ab6ed5d093b2",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -36510,7 +36510,7 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "11c62627a222291bcd22071cb7e684c4f6b2582fa1ecf669ead7f6da21304cb2",
+      "sha256": "2e6a9789ac6d5804a83e4ec0677155792062f9f0b218950c3816ab6ed5d093b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

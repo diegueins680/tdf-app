@@ -18,7 +18,7 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Random (randomRIO)
 import Test.Hspec
-import TDF.Server (WhatsAppReceipt(..), claimWhatsAppAutoReply, receiveWhatsAppInbound)
+import TDF.Server (WhatsAppReceipt(..), claimWhatsAppAutoReply, receiveWhatsAppInbound, whatsAppSentRequestNote)
 import qualified TDF.ModelsExtra as ME
 import TDF.WhatsApp.History (IncomingWhatsAppRecord(..))
 
@@ -219,21 +219,22 @@ claim pool key = do
 subscribe :: ConnectionPool -> Text -> IO ()
 subscribe pool phone = do
   now <- getCurrentTime
-  setConsent pool phone True (Just now) Nothing
+  setConsent pool phone True (Just now) Nothing Nothing
 
--- A pending request made a minute ago.
+-- A delivered pending request made a minute ago: confirmation requires the
+-- request note as well as the request instant (PRIV-WHATSAPP-001).
 request :: ConnectionPool -> Text -> IO ()
 request pool phone = do
   now <- getCurrentTime
-  setConsent pool phone False Nothing (Just (addUTCTime (-60) now))
+  setConsent pool phone False Nothing (Just (addUTCTime (-60) now)) (Just whatsAppSentRequestNote)
 
-setConsent :: ConnectionPool -> Text -> Bool -> Maybe UTCTime -> Maybe UTCTime -> IO ()
-setConsent pool phone consent consentedAt requestedAt = runSqlPool (rawExecute
-  "INSERT INTO whats_app_consent(phone_e164,consent,consented_at,revoked_at,confirmation_requested_at,created_at,updated_at) \
-  \VALUES(?,?,?,NULL,?,now(),now()) \
+setConsent :: ConnectionPool -> Text -> Bool -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> IO ()
+setConsent pool phone consent consentedAt requestedAt note = runSqlPool (rawExecute
+  "INSERT INTO whats_app_consent(phone_e164,consent,consented_at,revoked_at,confirmation_requested_at,note,created_at,updated_at) \
+  \VALUES(?,?,?,NULL,?,?,now(),now()) \
   \ON CONFLICT(phone_e164) DO UPDATE SET consent=excluded.consent,consented_at=excluded.consented_at, \
-  \revoked_at=NULL,confirmation_requested_at=excluded.confirmation_requested_at,updated_at=now()"
-  [PersistText phone, PersistBool consent, toPersistValue consentedAt, toPersistValue requestedAt]) pool
+  \revoked_at=NULL,confirmation_requested_at=excluded.confirmation_requested_at,note=excluded.note,updated_at=now()"
+  [PersistText phone, PersistBool consent, toPersistValue consentedAt, toPersistValue requestedAt, toPersistValue note]) pool
 
 consentOf :: ConnectionPool -> Text -> IO [Bool]
 consentOf pool phone = do
