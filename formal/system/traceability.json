@@ -9561,7 +9561,7 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
-    "formal/event-operations/InteractionWriteBudget.tla": "3bea029ff02ff65271074dd13f7450207a499c605166459e49e1e586c0b899e0",
+    "formal/event-operations/InteractionWriteBudget.tla": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/InvoiceSubmission.cfg": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
     "formal/event-operations/InvoiceSubmission.tla": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",

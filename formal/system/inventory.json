@@ -21893,7 +21893,7 @@
     },
     {
       "path": "formal/event-operations/InteractionWriteBudget.tla",
-      "sha256": "3bea029ff02ff65271074dd13f7450207a499c605166459e49e1e586c0b899e0",
+      "sha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -24336,7 +24336,7 @@
     },
     {
       "path": "formal/system/interaction-write-budget.md",
-      "sha256": "dfa28de7fb2fb30ed64213edaad7f9886fc74abdf2cc7173657440c2df850a1b",
+      "sha256": "3b4d2a2df4c8a0faa2668efc68f8143414fd3bec96c772c765a1ae7ad3b688bc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
