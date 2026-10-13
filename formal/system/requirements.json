@@ -7782,7 +7782,7 @@
       "domain": "MEDIA",
       "critical": true,
       "statement": "Audio and artwork uploads go by scoped SigV4 multipart to a quarantine bucket under a UUID key. The worker re-downloads, recomputes SHA-256, inspects the real type, produces reproducible derivatives (AAC/FLAC/preview/artwork) with a versioned manifest, and only then promotes the original bytes as immutable. Public asset URLs are signed for five minutes only after music_public_asset_accessible re-resolves version, embargo, territory and policy; masters are never publicly signed.",
-      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md",
+      "authority": "Unreviewed recovered local implementation; ADR-002/ADR-003 in docs/music-releases/architecture-and-data-model.md; AUTHORITY-068 (re-upload rebinding)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/worker-multipart.md",
       "contract": "docs/music-releases/api-and-configuration.md",
       "property": "Every served derivative is traceable to a checksum-verified, promoted original; no master is signable for public access.",
@@ -7825,9 +7825,9 @@
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
       "concurrency": "Worker claims jobs with row locks; multipart completion is idempotent per upload.",
-      "idempotency": "Re-running a job reproduces identical derivatives for identical input.",
+      "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
       "failure": "Type, size or checksum mismatch fails the job without promotion.",
-      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md.",
+      "recovery": "Failed jobs are retried; orphan multipart uploads are aborted per worker-multipart.md. After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
       "observability": "Worker logs and job status rows; worker-regression-diagnostics.md.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
@@ -7842,7 +7842,9 @@
         "scripts/run-music-release-worker.sh",
         "scripts/run-music-release-worker-once.sh",
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
-        "tdf-hq-ui/src/utils/incrementalSha256.ts"
+        "tdf-hq-ui/src/utils/incrementalSha256.ts",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -7870,7 +7872,7 @@
         "tdf-hq-ui/src/utils/incrementalSha256.test.ts"
       ],
       "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3",
-      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16)",
+      "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); re-upload scenario of scripts/test-music-release-worker-runtime.mjs and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, local)",
       "confidence": "Medium: local-only evidence; no deployed worker or real buckets.",
       "ambiguity": [
         "No production bucket, worker host or cost decision is recorded (infrastructure-cost-matrix-2026-09-12.md lists options only)."

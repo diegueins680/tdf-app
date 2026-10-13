@@ -599,6 +599,18 @@
       "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
       "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-068",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/system/music-upload-rebind.md"
+      ],
+      "conflict": "confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing asset row (unique on version, role, sha256) but leaves the row's quarantine object, so after a checksum-mismatch dead letter the corrected bytes were never inspected; the requirement's recovery text ('failed jobs are retried') assumed a retry could succeed.",
+      "authority": "MEDIA-MUSIC-ASSET-001's statement that the worker re-downloads and recomputes the hash of the uploaded bytes, and its idempotency rule (identical input, identical result).",
+      "resolution": "Decided 2026-10-12: enqueueing a processing job for an upload session re-points the session's non-promoted asset (same version, same declared hash, different object) at the session's object, resets it to uploaded, records the previous key in provenance and cancels the asset's queued, retry, running and dead-lettered jobs (the lease guard stops a cancelled run before it writes; a running final attempt left alone would dead-letter and keep the version validation_failed); promoted assets are never re-pointed; the trigger runs AFTER INSERT so a conflicting insert that creates no job changes nothing, and locks the version row first like the worker. Migration 2026-10-12_music_upload_rebind (manifest entry 203). No handler change."
     }
   ]
 }
