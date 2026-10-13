@@ -1305,7 +1305,10 @@ coursesPublicServer =
   :<|> paypalCreateH
   :<|> paypalCaptureH
   where
-    courseMetadataH slug = loadCourseMetadata slug
+    courseMetadataH slug = do
+      meta <- loadCourseMetadata slug
+      terms <- CourseCheckoutServer.loadPublicCourseCheckoutTerms (normalizeSlug (courseMetaSlug meta))
+      pure meta { Courses.checkoutTerms = terms }
     registrationH slug idempotencyKey payload =
       CourseCheckoutServer.createCourseCheckoutRegistration
         createOrUpdateRegistration slug idempotencyKey payload
@@ -1553,6 +1556,7 @@ whatsappWebhookServer =
                   , howHeard = Just "whatsapp"
                   , utm = Nothing
                   , termsAccepted = Nothing
+                  , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
                 claimed <- liftIO $ flip runSqlPool envPool $
@@ -5474,6 +5478,7 @@ productionCourseMetadataForStartDate cfg mWaContact slugVal startDate mTemplate 
       , syllabus = syllabus
       , whatsappCtaUrl = buildWhatsappCtaFor mWaContact titleVal landing
       , landingUrl = landing
+      , checkoutTerms = Nothing
       }
 
 firstSaturdayOfConfiguredProductionSlug :: Text -> Day
@@ -5776,6 +5781,7 @@ toCourseMetadata cfg waEnv course sessions syllabus =
       , syllabus = map toSyllabus syllabus
       , whatsappCtaUrl = whatsappUrl
       , landingUrl = landingUrlVal
+      , checkoutTerms = Nothing
       }
 
 buildLandingUrlFor :: AppConfig -> Text -> Text
@@ -14918,7 +14924,7 @@ buildRagMessages kb examples userMsg mChannel =
       systemIntro = T.intercalate "\n"
         [ "Eres un asistente de marketing de TDF Records."
         , "Responde en el idioma del usuario con un tono cálido y conciso."
-        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://tdf-app.pages.dev/curso/produccion-musical-jun-2026"
+        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://www.tdfrecords.net/curso/produccion-musical-jun-2026"
         , "REGLA CRÍTICA DE FORMATO: responde SOLO con una de estas dos formas:"
         , "1) SEND: <tu respuesta final para enviar al usuario>"
         , "2) HOLD: <por qué no puedes responder todavía>\\nNEED: <lista corta de datos que faltan>"
