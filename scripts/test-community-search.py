@@ -27,7 +27,7 @@ sql = expression('searchSql')
 fixture = """
 BEGIN;
 INSERT INTO party(id,display_name,is_org,created_at) VALUES
-(990001,'Lúna',false,now()),(990002,'Luna Extended',false,now()),(990003,'Hidden Luna',false,now()),(990004,'Fixture Banda',true,now()),(990005,'Fixture Proyecto',true,now());
+(990001,'Lúna',false,now()),(990002,'Luna Extended',false,now()),(990003,'Hidden Luna',false,now()),(990004,'Fixture Banda',true,now()),(990005,'Fixture Proyecto',true,now()),(990006,'Ana',false,now());
 INSERT INTO artist_profile(artist_party_id,slug,bio,city,created_at) VALUES
 (990001,'luna-fixture','Ambient music project','Quito',now()),
 (990002,'luna-extended-fixture','Music','Quito',now()),
@@ -38,7 +38,8 @@ VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',990003,'artist','Hidden Luna','pr
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status) VALUES
 ('cccccccc-cccc-4ccc-8ccc-cccccccccccc',990004,'band','Fixture Banda','fixture-banda','published','public','allowed'),
 ('dddddddd-dddd-4ddd-8ddd-dddddddddddd',990005,'project','Fixture Proyecto','fixture-proyecto','published','public','allowed');
-SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990005;
+INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,bio,profile_status,visibility,moderation_status) VALUES ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',990006,'artist','Ana','ana-fixture','productor','published','public','allowed');
+SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990006;
 """
 
 def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False):
@@ -82,3 +83,6 @@ facets = query('Luna', 'artist', facets=True)[0]
 assert facets['total'] == len(query('Luna', 'artist')), facets
 assert facets['entityTypes']['artist'] >= facets['total'], facets
 print('PASS: shared artist facet totals and category counts')
+
+assert any(row['title'] == 'Ana' for row in query('productro', 'artist')), 'Directory biography typo tolerance regressed'
+print('PASS: existing non-title directory typo matching is preserved')

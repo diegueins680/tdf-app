@@ -4907,7 +4907,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "01e34c0bb3861a753ab9a673f0069988e9041af4fddfa75f6b836b31df231f07",
+      "sha256": "95b8120ec7093a826f66ce292f9039f6991cecb1a29bbc02a6a2da1f75dbe92c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14081,7 +14081,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "5081d3550ec47bd4cc4f134f6e2416c5f12a7026fdeef10bf5b44a63e47ed311",
+      "sha256": "ec50d740c9ce6feed30d1bc67f03fc8d91af097e7e2940bae666c2150e5246ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
