@@ -2686,7 +2686,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
+      "sha256": "df8aa3fa28eccea18ef3baf960b86c773fd20f18cd2836e2f157eafe9596f078",
       "semanticConformance": "not-established-by-discovery"
     },
     {

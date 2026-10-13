@@ -88,7 +88,7 @@ test('email signup asks only for email and password and lands on artist-first Co
   }
 });
 
-test('login returns to the interrupted action and rejects external redirects @mobile-flow', async ({ page, baseURL }) => {
+test('login returns to the interrupted action @mobile-flow', async ({ page, baseURL }) => {
   await fixture(page, baseURL);
   await page.goto('/login?redirect=%2Fmarketplace', { waitUntil: 'domcontentloaded' });
   await page.getByLabel('Usuario o correo').fill('llamaestepez@gmail.com');
@@ -96,9 +96,12 @@ test('login returns to the interrupted action and rejects external redirects @mo
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
   await expect(page).toHaveURL(/\/marketplace$/);
   await expectRenderedApp(page);
+});
 
-  await page.context().clearCookies();
-  await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+// Each login scenario needs a fresh browser context and synthetic session.
+// Clearing storage in a live app does not retire its React state or pending
+// navigation; WebKit can otherwise interrupt this request with the prior route.
+test('login rejects external redirects @mobile-flow', async ({ page, baseURL }) => {
   await fixture(page, baseURL);
   await page.goto('/login?returnTo=https%3A%2F%2Fevil.example%2Fphish', { waitUntil: 'domcontentloaded' });
   await page.getByLabel('Usuario o correo').fill('llamaestepez@gmail.com');
