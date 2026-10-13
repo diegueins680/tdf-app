@@ -8,6 +8,10 @@
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
     collectMatchingRows,
+    decodeTicketAcceptedTermsVersion,
+    encodeTicketCheckoutMetadata,
+    ticketPlatformFeeBreakdown,
+    ticketTermsAcceptance,
     replaceLogisticsActivityDependencies,
     socialEventsServer,
     stripeWebhookServer,
@@ -486,6 +490,33 @@ validateEventDeletionCheckoutHistory hasTicketOrders
                 }
     | otherwise = Right ()
 
+-- | Terms version of the event's approved, active ticket policy (same predicate as
+-- the public storefront), or Nothing when the event has no such policy.
+loadActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+loadActiveTicketTermsVersion = selectActiveTicketTermsVersion ""
+
+-- | The same read, holding a share lock on the policy row until the transaction
+-- ends: a writer that withdraws or replaces the policy waits for the order, and
+-- one that got there first leaves no matching row (fail closed).
+lockActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+lockActiveTicketTermsVersion = selectActiveTicketTermsVersion " FOR SHARE"
+
+selectActiveTicketTermsVersion :: T.Text -> UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+selectActiveTicketTermsVersion lockClause now eventKey = do
+    rows <-
+        rawSql
+            ( "SELECT terms_version FROM event_ticket_checkout_policy\
+              \ WHERE event_id = ? AND active AND approval_status = 'approved'\
+              \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
+              \ AND (effective_from IS NULL OR effective_from <= ?)\
+              \ AND (effective_until IS NULL OR effective_until > ?)"
+                <> lockClause
+            )
+            [toPersistValue eventKey, PersistUTCTime now, PersistUTCTime now]
+    pure $ case rows of
+        [Single version] -> Just version
+        _ -> Nothing
+
 removeSocialEventAssets :: FilePath -> SocialEventId -> IO ()
 removeSocialEventAssets assetsRoot eventKey = do
     let eventAssetsDir =
@@ -764,6 +795,17 @@ runStripeRequestSafely action = do
 
 tryAny :: IO a -> IO (Either SomeException a)
 tryAny = try
+
+-- Like tryAny, but cancellation and other asynchronous exceptions propagate.
+trySynchronous :: IO a -> IO (Either SomeException a)
+trySynchronous action = do
+    result <- try action
+    case result of
+        Left err ->
+            case fromException err :: Maybe SomeAsyncException of
+                Just _ -> throwIO err
+                Nothing -> pure (Left err)
+        Right value -> pure (Right value)
 
 isEventTicketCheckoutConflict :: SomeException -> Bool
 isEventTicketCheckoutConflict exception =
@@ -1121,12 +1163,13 @@ ticketPlatformFeeBreakdown faceValue =
             , ticketCheckoutTotalCents = faceValue + buyerFee
             }
 
-encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> TicketPlatformFeeBreakdown -> Maybe T.Text
-encodeTicketCheckoutMetadata mIdempotencyKey mPromoCode TicketPlatformFeeBreakdown{..} =
+encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> TicketPlatformFeeBreakdown -> Maybe T.Text
+encodeTicketCheckoutMetadata mIdempotencyKey mPromoCode mAcceptedTermsVersion TicketPlatformFeeBreakdown{..} =
     Just . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
         Aeson.object
             [ "checkout_idempotency_key" Aeson..= mIdempotencyKey
             , "promo_code" Aeson..= mPromoCode
+            , "accepted_terms_version" Aeson..= mAcceptedTermsVersion
             , "face_value_cents" Aeson..= ticketFaceValueCents
             , "buyer_platform_fee_cents" Aeson..= ticketBuyerPlatformFeeCents
             , "organizer_platform_fee_cents" Aeson..= ticketOrganizerPlatformFeeCents
@@ -1143,6 +1186,44 @@ decodeTicketCheckoutMetadata mRawMetadata = do
                 <*> obj Aeson..:? "promo_code"
         )
         metadata
+
+-- | Terms version the buyer accepted when this order was created, when the event
+-- had an approved ticket policy. Orders older than this evidence decode to Nothing.
+decodeTicketAcceptedTermsVersion :: Maybe T.Text -> Maybe T.Text
+decodeTicketAcceptedTermsVersion mRawMetadata = do
+    rawMetadata <- mRawMetadata
+    metadata <- Aeson.decodeStrict' (TE.encodeUtf8 rawMetadata)
+    join $
+        parseMaybe
+            (Aeson.withObject "ticket_terms_metadata" (Aeson..:? "accepted_terms_version"))
+            metadata
+
+-- | Terms acceptance to record for a legacy ticket purchase. A new order must
+-- accept the policy that is active now. A replay stays bound to the acceptance
+-- its order recorded, so a later policy change neither blocks the retry nor
+-- lets it claim a version the buyer did not accept for that order.
+ticketTermsAcceptance ::
+    -- | Terms version of the approved active policy, if the event has one.
+    Maybe T.Text ->
+    -- | Version submitted with this request.
+    Maybe T.Text ->
+    -- | Acceptance recorded by the existing order for this idempotency key.
+    Maybe (Maybe T.Text) ->
+    Either ServerError (Maybe T.Text)
+ticketTermsAcceptance _ submitted (Just recorded)
+    | maybe True ((== submitted) . Just) recorded = Right recorded
+    | otherwise =
+        Left err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
+ticketTermsAcceptance Nothing _ Nothing = Right Nothing
+ticketTermsAcceptance (Just _) Nothing Nothing =
+    Left err400{errBody = "Ticket terms must be accepted before seats can be held"}
+ticketTermsAcceptance (Just active) (Just accepted) Nothing
+    | accepted == active = Right (Just active)
+    | otherwise = Left ticketTermsChangedError
+
+ticketTermsChangedError :: ServerError
+ticketTermsChangedError =
+    err409{errBody = "Ticket terms changed; review the current terms and accept them again"}
 
 decodeTicketPlatformFeeBreakdown :: EventTicketOrder -> TicketPlatformFeeBreakdown
 decodeTicketPlatformFeeBreakdown order =
@@ -4811,6 +4892,9 @@ socialEventsServer user =
         purchaseEnabled <- liftIO $ runSqlPool (eventTicketPurchaseEnabledFor eventVal) envPool
         either throwError pure $
             validateTicketPurchaseEventEligibility (socialEventMetadata eventVal) purchaseEnabled
+        -- Events with an approved ticket policy need the buyer to accept its current terms,
+        -- exactly as the public storefront checkout does.
+        mTermsVersion <- liftIO $ runSqlPool (loadActiveTicketTermsVersion now eventKey) envPool
         when (ticketPurchaseQuantity <= 0) $ throwError err400{errBody = "Quantity must be > 0"}
         when (not (isTicketTierSaleOpen now tier)) $
             throwError err400{errBody = "Ticket sales are closed for this tier"}
@@ -4864,6 +4948,12 @@ socialEventsServer user =
                         && storedPromoCode == tpwpPromoCode
             unless requestMatches $
                 throwError err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
+        acceptedTermsVersion <-
+            either throwError pure $
+                ticketTermsAcceptance
+                    mTermsVersion
+                    tpwpAcceptedTermsVersion
+                    (decodeTicketAcceptedTermsVersion . eventTicketOrderMetadata . entityVal <$> mExistingCheckout)
         baseAmountCents <-
             either throwError pure $
                 validateTicketCheckoutAmount
@@ -4977,6 +5067,7 @@ socialEventsServer user =
                                                 encodeTicketCheckoutMetadata
                                                     tpwpIdempotencyKey
                                                     tpwpPromoCode
+                                                    acceptedTermsVersion
                                                     feeBreakdown
                                             , eventTicketOrderCheckoutIdempotencyKey = tpwpIdempotencyKey
                                             , eventTicketOrderPurchasedAt = now
@@ -5007,6 +5098,13 @@ socialEventsServer user =
                                         [toPersistValue eventKey]
                                 when (null (lockedEvents :: [Entity SocialEvent])) $
                                     fail "Event not found while reserving tickets"
+                                -- The acceptance was checked before this transaction. Read the
+                                -- policy again now that the hold is being taken: a policy
+                                -- replaced in between must not be recorded as accepted. The
+                                -- row stays share-locked until the order is committed.
+                                termsVersionAtHold <- lockActiveTicketTermsVersion now eventKey
+                                when (termsVersionAtHold /= mTermsVersion) $
+                                    liftIO (throwIO ticketTermsChangedError)
                                 soldAcross <-
                                     selectList [EventTicketTierEventId ==. eventKey] []
                                 let soldCount =
@@ -5042,6 +5140,8 @@ socialEventsServer user =
                         case fromException createErr :: Maybe SomeAsyncException of
                             Just _ -> liftIO (throwIO createErr)
                             Nothing
+                                | Just serverError <- fromException createErr ->
+                                    throwError (serverError :: ServerError)
                                 | isEventTicketCheckoutConflict createErr ->
                                     case tpwpIdempotencyKey of
                                         Nothing -> liftIO (throwIO createErr)
@@ -5113,6 +5213,10 @@ socialEventsServer user =
                     && eventTicketOrderCheckoutIdempotencyKey orderRecord
                         == tpwpIdempotencyKey
                     && storedPromoCode == tpwpPromoCode
+                    && maybe
+                        True
+                        ((== tpwpAcceptedTermsVersion) . Just)
+                        (decodeTicketAcceptedTermsVersion (eventTicketOrderMetadata orderRecord))
         when (reusedCheckout && not canonicalRequestMatches) $
             throwError err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
         when
@@ -5546,12 +5650,19 @@ socialEventsServer user =
                     { ManualPayments.mrPartyId = fromSqlKey (auPartyId user)
                     , ManualPayments.mrStrictAdmin = hasStrictAdminAccess user
                     }
-        result <- liftIO $
-            runSqlPool (ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now) envPool
-        paid <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
-        -- Issuance is idempotent and runs after the payment commit, as for provider captures.
-        when paid $
-            void $ liftIO $ runSqlPool (finalizePaidTicketOrder now orderKey) envPool
+        -- Approval and the idempotent issuance commit together; a failed
+        -- issuance leaves the transfer reviewable instead of paid without tickets.
+        outcome <- liftIO $ trySynchronous $
+            runSqlPool
+                ( ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now
+                    (void (finalizePaidTicketOrder now orderKey))
+                )
+                envPool
+        result <- either
+            (const (throwError err409{errBody = "Tickets could not be issued, so the transfer was not approved; try again"}))
+            pure
+            outcome
+        _ <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
         rows <- liftIO $ runSqlPool (ManualPayments.listTicketManualPayments eventKey) envPool
         case filter ((== T.pack (show (fromSqlKey orderKey))) . tmpOrderId) rows of
             dto : _ -> pure dto

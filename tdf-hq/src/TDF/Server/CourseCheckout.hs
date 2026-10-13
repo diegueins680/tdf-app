@@ -10,11 +10,12 @@ module TDF.Server.CourseCheckout
   , confirmPublicCourseDatafastStatus
   , createPublicCoursePaypalOrder
   , capturePublicCoursePaypalOrder
+  , loadPublicCourseCheckoutTerms
   ) where
 
 import           Control.Exception
   ( SomeAsyncException, SomeException, fromException, throwIO, try )
-import           Control.Monad (unless, void, when)
+import           Control.Monad (forM_, unless, void, when)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
@@ -40,6 +41,7 @@ import           Servant
 import           System.Environment (lookupEnv)
 
 import qualified TDF.API.Types as APITypes
+import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.CourseCheckout as CourseDomain
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
@@ -65,6 +67,8 @@ data ApprovedCourseCheckoutPolicy = ApprovedCourseCheckoutPolicy
   , accpDepositBps      :: Int
   , accpHoldMinutes     :: Int
   , accpTermsVersion    :: Text
+  , accpTermsSummary    :: Text
+  , accpCancellationPolicy :: Text
   } deriving (Eq, Show)
 
 data CourseCheckoutRuntimeView = CourseCheckoutRuntimeView
@@ -150,6 +154,12 @@ normalizeRequiredText fieldName maxLength raw =
           Left (badRequestError (fieldName <> " contains unsupported characters"))
       | otherwise -> Right clean
 
+-- | Store the same E.164 form as the legacy lead path, accepting Ecuador
+-- national numbers (0988384849) as typed by local visitors.
+normalizeBuyerPhone :: Text -> Either ServerError Text
+normalizeBuyerPhone raw =
+  maybe (Left (badRequestError "phoneE164 is invalid")) Right (CoursePhone.normalizeCoursePhone raw)
+
 normalizeOptionalText :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 normalizeOptionalText fieldName maxLength raw = case T.strip <$> raw of
   Nothing -> Right Nothing
@@ -197,7 +207,8 @@ loadApprovedCourseCheckoutPolicy now courseKey = do
   rows <- (rawSql
     "SELECT policy.id::text, policy.policy_version, policy.currency,\
     \ policy.price_minor, policy.tax_bps, policy.payment_mode, policy.deposit_bps,\
-    \ policy.hold_minutes, policy.terms_version\
+    \ policy.hold_minutes, policy.terms_version, policy.terms_summary,\
+    \ policy.cancellation_policy\
     \ FROM course_checkout_policy policy\
     \ JOIN course course ON course.id = policy.course_id\
     \ WHERE policy.course_id = ? AND policy.active\
@@ -211,11 +222,13 @@ loadApprovedCourseCheckoutPolicy now courseKey = do
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int64, Single Int
        , Single Text, Single Int, Single Int, Single Text
+       , Single Text, Single Text
        )])
   pure $ case rows of
     [( Single policyId, Single version, Single currency, Single priceMinor
      , Single taxBps, Single paymentModeText, Single depositBps
      , Single holdMinutes, Single termsVersion
+     , Single termsSummary, Single cancellationPolicy
      )] -> do
       paymentMode <- case paymentModeText of
         "full" -> Just CourseDomain.CourseFullPayment
@@ -232,8 +245,28 @@ loadApprovedCourseCheckoutPolicy now courseKey = do
         , accpDepositBps = depositBps
         , accpHoldMinutes = holdMinutes
         , accpTermsVersion = termsVersion
+        , accpTermsSummary = termsSummary
+        , accpCancellationPolicy = cancellationPolicy
         }
     _ -> Nothing
+
+-- | Terms of the policy a checkout started now would bind, for display before
+-- acceptance. Uses the same approval query as checkout so the two never diverge.
+loadPublicCourseCheckoutTerms :: Text -> AppM (Maybe Courses.CourseCheckoutTerms)
+loadPublicCourseCheckoutTerms slugVal = do
+  now <- liftIO getCurrentTime
+  runDB $ do
+    mCourse <- getBy (Trials.UniqueCourseSlug slugVal)
+    case mCourse of
+      Nothing -> pure Nothing
+      Just (Entity courseKey _) ->
+        fmap toTerms <$> loadApprovedCourseCheckoutPolicy now courseKey
+  where
+    toTerms policy = Courses.CourseCheckoutTerms
+      { Courses.termsVersion = accpTermsVersion policy
+      , Courses.termsSummary = accpTermsSummary policy
+      , Courses.cancellationPolicy = accpCancellationPolicy policy
+      }
 
 courseCheckoutUnavailableResponse
   :: Text
@@ -299,7 +332,7 @@ createCourseCheckoutRegistrationUnrecorded
   -> AppM Courses.CourseCheckoutResponse
 createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempotency request = do
   let Courses.CourseRegistrationRequest
-        _ _ _ registrationSource _ registrationUtm _ = request
+        _ _ _ registrationSource _ registrationUtm _ _ = request
   slugVal <- either throwError pure (normalizeSlug rawSlug)
   checkoutEnvironment <- loadCheckoutEnvironment
   domainEnabled <- runDB $
@@ -318,8 +351,13 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
       buyerName <- either throwError pure $
         normalizeRequiredText "fullName" 160 (Courses.fullName request)
       buyerEmail <- either throwError pure (normalizeEmail (Courses.email request))
-      buyerPhone <- either throwError pure $
+      buyerPhoneText <- either throwError pure $
         normalizeOptionalText "phoneE164" 24 (Courses.phoneE164 request)
+      -- Stored as E.164. The idempotency hash below keeps the trimmed text
+      -- exactly as earlier releases hashed it, so a retry of a checkout created
+      -- before this normalization (or served by an older replica during a
+      -- rollout) still matches its stored create_request_sha256.
+      buyerPhone <- either throwError pure (traverse normalizeBuyerPhone buyerPhoneText)
       sourceClean <- either throwError pure (normalizeSource registrationSource)
       howHeardClean <- either throwError pure $
         normalizeOptionalText "howHeard" 256 (Courses.howHeard request)
@@ -338,6 +376,16 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
       policy <- runDB (loadApprovedCourseCheckoutPolicy now courseKey)
         >>= maybe (throwError (conflictError
               "This course has no approved active checkout price and policy")) pure
+      -- The order records this policy's terms as accepted, so the buyer must name
+      -- the version they were shown; an absent version is never taken as acceptance.
+      case T.strip <$> Courses.acceptedTermsVersion request of
+        Nothing ->
+          throwError err400
+            { errBody = "Course terms version is required; review the current terms and accept them" }
+        Just accepted ->
+          unless (accepted == accpTermsVersion policy) $
+            throwError (conflictError
+              "Course terms changed; review the current terms and accept them again")
       price <- either (throwError . conflictError) pure $
         CourseDomain.calculateCoursePrice
           (accpPriceMinor policy)
@@ -348,7 +396,7 @@ createCourseCheckoutRegistrationUnrecorded legacyRegistration rawSlug mIdempoten
             [ "course_slug" .= slugVal
             , "full_name" .= buyerName
             , "email" .= buyerEmail
-            , "phone" .= buyerPhone
+            , "phone" .= buyerPhoneText
             , "source" .= sourceClean
             , "how_heard" .= howHeardClean
             , "utm_source" .= utmSourceVal
@@ -467,6 +515,15 @@ createCourseCheckoutTransaction
         [toPersistValue courseKey] :: SqlPersistT IO [Single Int64])
       _ <- (rawSql "SELECT id::text FROM course_checkout_policy WHERE id = ?::uuid FOR SHARE"
         [PersistText (accpId policy)] :: SqlPersistT IO [Single Text])
+      -- The buyer's accepted version was compared before this transaction. With
+      -- the course locked, read the active policy again: one replaced in between
+      -- must not be bound to this order as accepted.
+      policyAtHold <- loadApprovedCourseCheckoutPolicy now courseKey
+      if policyAtHold == Just policy
+        then holdSeat
+        else pure (Left (conflictError
+          "Course terms changed; review the current terms and accept them again"))
+    holdSeat = do
       _ <- (rawSql "SELECT course_checkout_expire_holds(?, ?)"
         [PersistUTCTime now, toPersistValue courseKey]
         :: SqlPersistT IO [Single Int])

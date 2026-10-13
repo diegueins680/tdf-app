@@ -3,6 +3,7 @@
 
 module TDF.ServerSpec (spec) where
 
+import qualified TDF.CoursePhone as CoursePhone
 import Control.Monad (forM_)
 import Control.Exception (bracket, toException, try)
 import Control.Monad.IO.Class (liftIO)
@@ -801,14 +802,20 @@ spec = describe "TDF.Server helpers" $ do
                 now <- getCurrentTime
                 runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
                 let hourAgo = addUTCTime (-3600) now
-                    row phone requested consent =
-                        ME.WhatsAppConsent phone Nothing consent (Just "public") Nothing
+                    twoHoursAgo = addUTCTime (-7200) now
+                    rowNoted note phone requested consent =
+                        ME.WhatsAppConsent phone Nothing consent (Just "public") note
                             (if consent then Just now else Nothing) Nothing requested now now
+                    row = rowNoted (Just "pending_confirmation")
+                    unsent = rowNoted (Just "pending_unsent")
                 runSqlPool (do
                     _ <- insert (row "+593990000001" (Just hourAgo) False)
                     _ <- insert (row "+593990000002" (Just (addUTCTime (-8 * 86400) now)) False)
                     _ <- insert (row "+593990000003" Nothing False)
                     _ <- insert (row "+593990000004" (Just hourAgo) False)
+                    _ <- insert (unsent "+593990000005" (Just (addUTCTime (-600) now)) False)
+                    _ <- insert (unsent "+593990000006" (Just twoHoursAgo) False)
+                    _ <- insert (rowNoted (Just "staff note") "+593990000007" (Just hourAgo) False)
                     pure ()) pool
                 let confirm sentAt phone =
                         runSqlPool (NotificationServer.applyWhatsAppConsentConfirmation now sentAt phone) pool
@@ -820,19 +827,43 @@ spec = describe "TDF.Server helpers" $ do
                 confirm (Just now) "+593990000002" `shouldReturn` False
                 confirm (Just now) "+593990000003" `shouldReturn` False
                 confirm (Just now) "+593990000099" `shouldReturn` False
+                -- A request the provider did not deliver stays confirmable, but only briefly.
+                confirm (Just (addUTCTime (-900) now)) "+593990000005" `shouldReturn` False
+                confirm (Just now) "+593990000005" `shouldReturn` True
+                confirm (Just now) "+593990000006" `shouldReturn` False
+                -- Only the two recognised pending states can be confirmed.
+                confirm (Just now) "+593990000007" `shouldReturn` False
                 confirmed <- runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000001")) pool
                 fmap (ME.whatsAppConsentConsent . entityVal) confirmed `shouldBe` Just True
-                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) confirmed `shouldBe` Just Nothing
-        it "claims one confirmation request per interval and releases a failed claim" $
+                -- The request instant survives so the per-number interval still applies.
+                fmap ((/= Nothing) . ME.whatsAppConsentConfirmationRequestedAt . entityVal) confirmed `shouldBe` Just True
+                -- A withdrawal after the request invalidates it, even for a later reply.
+                runSqlPool (rawExecute "UPDATE whats_app_consent SET revoked_at=? WHERE phone_e164='+593990000004'" [PersistUTCTime now]) pool
+                confirm (Just now) "+593990000004" `shouldReturn` False
+        it "claims one confirmation request per interval and keeps an undelivered request retryable" $
             bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
                 now <- getCurrentTime
                 runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
-                let claim at = runSqlPool
+                let claim at = (/= Nothing) <$> runSqlPool
                         (NotificationServer.claimWhatsAppConfirmationRequest at "+593990000010" Nothing (Just "public")) pool
+                    pendingRow = runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000010")) pool
                 claim now `shouldReturn` True
                 claim (addUTCTime 60 now) `shouldReturn` False
-                runSqlPool (NotificationServer.releaseWhatsAppConfirmationClaim now "+593990000010") pool
+                -- A failure reported for another request instant changes nothing.
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent (addUTCTime 1 now) "+593990000010") pool
+                claim (addUTCTime 90 now) `shouldReturn` False
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
+                unsent <- pendingRow
+                fmap (ME.whatsAppConsentNote . entityVal) unsent `shouldBe` Just (Just "pending_unsent")
+                -- A prompt retry is allowed and keeps the original request instant.
                 claim (addUTCTime 120 now) `shouldReturn` True
+                retried <- pendingRow
+                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) retried
+                    `shouldBe` fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) unsent
+                claim (addUTCTime 180 now) `shouldReturn` False
+                -- After the short window an undelivered request waits for the interval.
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
+                claim (addUTCTime 3700 now) `shouldReturn` False
                 claim (addUTCTime (25 * 3600) now) `shouldReturn` True
                 runSqlPool (rawExecute "UPDATE whats_app_consent SET consent=1, consented_at=? WHERE phone_e164='+593990000010'" [PersistUTCTime now]) pool
                 claim (addUTCTime (50 * 3600) now) `shouldReturn` False
@@ -11063,6 +11094,47 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationPhoneE164 Nothing `shouldBe` Right Nothing
             validateCourseRegistrationPhoneE164 (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationPhoneE164 (Just " +593 99 123 4567 ") `shouldBe` Right (Just "+593991234567")
+
+        it "accepts Ecuador national numbers as typed by local visitors and stores E.164" $ do
+            validateCourseRegistrationPhoneE164 (Just "0988384849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just " 098 838 4849 ") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "098-838-4849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "(02) 234-5678") `shouldBe` Right (Just "+59322345678")
+
+        it "normalizes course phones exactly like the web form (tdf-hq-ui/src/utils/phone.test.ts)" $ do
+            -- Same table as the web test, so server and web store the same E.164 value.
+            forM_
+              [ ("0988384849", "+593988384849"), ("098 838 4849", "+593988384849")
+              , ("098-838-4849", "+593988384849"), ("(098) 838.4849", "+593988384849")
+              , ("988384849", "+593988384849"), ("+593988384849", "+593988384849")
+              , ("+593 98 838 4849", "+593988384849"), ("+593 098 838 4849", "+593988384849")
+              , ("00593988384849", "+593988384849"), ("593988384849", "+593988384849")
+              , ("022345678", "+59322345678"), ("(02) 234-5678", "+59322345678")
+              , ("072345678", "+59372345678"), ("+593 2 234 5678", "+59322345678")
+              , ("+44 20 7946 0018", "+442079460018"), ("0044 20 7946 0018", "+442079460018")
+              , ("+1 (415) 555-0100", "+14155550100")
+              ] $ \(input, expected) ->
+                (input, CoursePhone.normalizeCoursePhone input) `shouldBe` (input, Just expected)
+            forM_
+              [ "", "   ", "call me at 099 123 4567", "12345", "0812345678", "012345678"
+              , "+0988384849", "+593 98 838 48", "099+1234567", "++593988384849"
+              , "+1234567890123456", "098838484912"
+              ] $ \input ->
+                (input, CoursePhone.normalizeCoursePhone input) `shouldBe` (input, Nothing)
+            -- Both registration paths use it: the legacy lead path stores the same value.
+            validateCourseRegistrationPhoneE164 (Just "+593 098 838 4849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "988384849") `shouldBe` Right (Just "+593988384849")
+
+        it "keeps rejecting local-looking numbers with the wrong length or prefix" $ do
+            let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right phoneVal ->
+                        expectationFailure ("Expected invalid local phone to be rejected, got: " <> show phoneVal)
+            assertInvalid "098838484"
+            assertInvalid "09883848490"
+            assertInvalid "0188384849"
+            assertInvalid "0088384849"
+            assertInvalid "099 123 4567 ext"
 
         it "rejects explicitly invalid or implausible phones instead of silently discarding them" $ do
             let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of

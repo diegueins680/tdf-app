@@ -96,6 +96,14 @@ run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandf
 run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
+run_tlc AccessGrant.tla AccessGrant.cfg accessgrant
+run_negative_tlc AccessGrantSelfApproval.cfg accessgrantselfapproval 'Invariant NoSelfApproval is violated' AccessGrant.tla
+run_negative_tlc AccessGrantNonAdmin.cfg accessgrantnonadmin 'Invariant AdminApprovesGrant is violated' AccessGrant.tla
+run_negative_tlc AccessGrantExpired.cfg accessgrantexpired 'Invariant NoApprovalAfterExpiry is violated' AccessGrant.tla
+run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeemer is violated' AccessGrant.tla
+run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
+run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
+run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
@@ -118,6 +126,20 @@ run_negative_tlc NotificationLeaseStaleClock.cfg notificationleasestale 'Invaria
 run_negative_tlc NotificationLeaseForeign.cfg notificationleaseforeign 'Invariant CurrentLease is violated' NotificationLease.tla
 run_negative_tlc NotificationLeaseClaimClock.cfg notificationleaseclaimclock 'Invariant FreshClaim is violated' NotificationLease.tla
 run_tlc OperationsManualReceipt.tla OperationsManualReceipt.cfg operationsmanualreceipt
+run_tlc ManualBankTransfer.tla ManualBankTransfer.cfg manualbanktransfer
+run_negative_tlc ManualBankTransferSharedReviewer.cfg manualbanktransfersharedreviewer 'Invariant IndependentApproval is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferOutsider.cfg manualbanktransferoutsider 'Invariant IndependentApproval is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferExpired.cfg manualbanktransferexpired 'Invariant LiveApproval is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferUnbounded.cfg manualbanktransferunbounded 'Invariant HoldBound is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferSecondRail.cfg manualbanktransfersecondrail 'Invariant NoSecondCharge is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferReplay.cfg manualbanktransferreplay 'Invariant SingleCharge is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferReopen.cfg manualbanktransferreopen 'Invariant ExpiryFinal is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferSplitIssuance.cfg manualbanktransfersplitissuance 'Invariant PaidHasTickets is violated' ManualBankTransfer.tla
+run_tlc TaxDocumentSubmission.tla TaxDocumentSubmission.cfg taxdocumentsubmission
+run_negative_tlc TaxDocumentSubmissionSkipStart.cfg taxdocumentsubmissionskipstart 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
+run_negative_tlc TaxDocumentSubmissionUnguardedStart.cfg taxdocumentsubmissionunguardedstart 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
+run_negative_tlc TaxDocumentSubmissionLostAsRejected.cfg taxdocumentsubmissionlostasrejected 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
+run_negative_tlc TaxDocumentSubmissionRetryUncertain.cfg taxdocumentsubmissionretryuncertain 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
 run_negative_tlc OperationsManualReceiptReuseSourceKey.cfg operationsmanualreusesourcekey 'Invariant SourceSeparation is violated' OperationsManualReceipt.tla
 run_negative_tlc OperationsManualReceiptUnboundReplay.cfg operationsmanualunboundreplay 'Invariant BoundReplay is violated' OperationsManualReceipt.tla
 run_negative_tlc OperationsManualReceiptPartialCommit.cfg operationsmanualpartialcommit 'Invariant AtomicCreation is violated' OperationsManualReceipt.tla
@@ -189,6 +211,15 @@ run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant
 run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleEarlyCommit.cfg credential-early-commit 'Invariant AtomicChallengeConsumption is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleGoogleSession.cfg credential-google-session 'Invariant NoSessionsAfterDisable is violated' CredentialLifecycle.tla
+run_tlc WhatsAppConsent.tla WhatsAppConsent.cfg whatsapp-consent
+run_negative_tlc WhatsAppConsentStaleReply.cfg whatsapp-consent-stale-reply 'Invariant ConfirmedByOwnLaterReply is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentWithdrawnReply.cfg whatsapp-consent-withdrawn-reply 'Invariant WithdrawalWins is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentStaleWithdrawalClock.cfg whatsapp-consent-stale-withdrawal-clock 'Invariant WithdrawalWins is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentWithdrawalReset.cfg whatsapp-consent-withdrawal-reset 'Invariant DeliveredRequestsSpaced is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentUnboundFailure.cfg whatsapp-consent-unbound-failure 'Invariant DeliveredRequestsSpaced is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentReleasedFailure.cfg whatsapp-consent-released-failure 'Invariant UndeliveredStaysPending is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentLongUnsentWindow.cfg whatsapp-consent-long-unsent-window 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentRenewedUnsent.cfg whatsapp-consent-renewed-unsent 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
