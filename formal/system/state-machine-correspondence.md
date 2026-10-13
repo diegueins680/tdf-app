@@ -32,9 +32,9 @@ AUTHORITY-048 records them as reviewed SPECIFICATION AMBIGUITY.
 
 ## Limits
 
-Only state sets and SQL-trigger transitions are checked. Fourteen machines enforce
-transitions in Haskell; their transition relations need separate evidence (for
-example `TDF.Directory.Policy` for directory claims). Guards, actors and side effects
+State sets, SQL-trigger transitions and bound Haskell validators are checked
+(sections below). Machines whose Haskell transition relation is still unbound
+need separate evidence (for example `TDF.Directory.Policy` for directory claims). Guards, actors and side effects
 are not checked. A matching CHECK constraint does not prove every writer is legal.
 `PAY-INVOICE-001` is abstract receipt presence and is explicitly unbound.
 
@@ -50,3 +50,27 @@ A difference must equal `code.deviation` exactly. Bound: event ticket
 fulfillment, Domo quote, service booking fulfillment and marketplace rental
 fulfillment. Course enrollment is enforced in code but has no declared model;
 distribution renders states with `show` and waits on AUTHORITY-048.
+
+## Targets functions and clause renderers (AUTHORITY-080)
+
+A validator may also be a targets function, bound as `code: {file, targets,
+renderer, rendererFile?}`: one clause per source constructor returning the
+literal list of admitted targets (`allowedTargets WorkNew = [WorkSeen, ...]`).
+The renderer may be `case` form or one literal clause per constructor, in
+`rendererFile` when it lives in another module. The checker requires a clause
+for every constructor the renderer names (a wildcard or missing clause would
+hide edges), exactly one clause per constructor, literal lists only, and reads
+comment-stripped source. Bound this way: the operations work item
+(`TDF.Operations.Model.allowedTargets`, rendered by
+`TDF.Operations.Types.workStatusText`): its twenty implemented transitions equal
+the declared `operations.control-center` machine, no deviation. Sixteen
+database-free controls cover the new shape (edge removed or added, clause
+missing, doubled, non-literal, continued on the next line, tab-separated or a
+wildcard, unnamed constructor, edge kept in a comment, renderer clause repeated,
+non-literal or removed, both binding kinds at once, targets not found, required
+binding removed). The machine's edges also declare roles, guards and reason
+requirements; SYS-STATE-001 compares transition pairs only, so those (enforced by
+`validateTransition`) are not compared. As with CHECK constraints, the binding
+proves the validator's relation, not that every writer passes through it: the
+first view (`new` to `seen`) and assignment (`new`/`seen` to `assigned`) are
+written directly in `TDF.Operations.Server`; both are declared edges.

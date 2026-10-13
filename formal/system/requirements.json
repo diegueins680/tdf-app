@@ -954,7 +954,7 @@
     {
       "id": "SYS-STATE-001",
       "title": "Declared lifecycle machines correspond to the migrated schema",
-      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
+      "statement": "Every declared lifecycle machine must be bound to the column that stores it or explicitly excluded. Its state set must equal the column's effective CHECK constraint after the full production migration manifest, and, where a SQL trigger encodes the transition relation, the declared and implemented transitions must be equal. Any difference must be a reviewed, exactly recorded deviation with an authority decision. Where a backend validator's allowedTransitions list or targets function enforces a machine and is bound, its transitions (rendered to stored state names) must equal the declared transitions under the same exact-deviation rule.",
       "domain": "SYS",
       "actors": [
         "Reviewer",
@@ -990,7 +990,8 @@
       "effects": [
         "Domo quote model corrected to ADR-0114 (AUTHORITY-047).",
         "Distribution and royalty statement divergences recorded as SPECIFICATION AMBIGUITY (AUTHORITY-048).",
-        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053)."
+        "Marketplace rental model gains returned_pending_inspection -> disputed and deposit_refund_due -> disputed, matching the validator and the ADR-0110 database table (AUTHORITY-053).",
+        "Operations work item bound through its targets function; twenty transitions equal the declared machine (AUTHORITY-080)."
       ],
       "authorization": "Not applicable; schema and declaration check only.",
       "privacy": "Uses schema catalog only; no row data.",
@@ -1007,7 +1008,9 @@
         "scripts/check-state-machines.py",
         "formal/system/state-machine-bindings.json",
         "docs/revenue-platform/formal-model.yaml",
-        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs"
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs"
       ],
       "tests": [
         "scripts/test-state-machines.py",
@@ -1015,18 +1018,18 @@
         ".github/workflows/event-operations-formal.yml"
       ],
       "formalModels": [],
-      "verification": "Catalog comparison, plus static comparison of four bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals); guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and seven database-free validator controls",
+      "verification": "Catalog comparison, plus static comparison of five bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items); guards and effects are not covered",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and thirty-four database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the five bound validators' transition relations; no claim about guards, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Ten machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
+        "At least seven machines still enforce a transition relation only in unbound application code (profile, claim, classified, application and invitation in TDF.Directory.Policy; marketplace sale fulfillment; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; application-level transition evidence remains."
+        "reason": "Gate and controls pass on local PG16 and CI PG17 migration-tests; five validators compared; application-level evidence for the remaining machines remains."
       }
     },
     {
