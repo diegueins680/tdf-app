@@ -622,6 +622,7 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
@@ -17894,6 +17895,7 @@ main = hspec $ do
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
+    MetaRedeliverySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     TicketPaymentGateSpec.spec

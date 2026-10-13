@@ -453,6 +453,7 @@
       "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
       "scripts/test-merch-reputation-migration.sh",
       "scripts/test-merge-admission.py",
+      "scripts/test-meta-redelivery.sh",
       "scripts/test-music-correction-concurrency.mjs",
       "scripts/test-music-ddex-credits.sh",
       "scripts/test-music-ddex-package.mjs",
@@ -2056,6 +2057,7 @@
       "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
+      "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
       "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -2588,7 +2590,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c964353df8e8b6359fe819f1560e6567f488d7d351c6d2fa454d6105e6117c76",
+      "sha256": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4772,7 +4774,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
+      "sha256": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5151,6 +5153,12 @@
       "id": "SURFACE-56631cee05d8221c",
       "path": "scripts/test-merge-admission.py",
       "sha256": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2e227af058b0eed4",
+      "path": "scripts/test-meta-redelivery.sh",
+      "sha256": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5594,7 +5602,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "3f08862a49b8a78d4c1c89dc2288d96f3e21b4fe68fc5229b1b4d236008d3957",
+      "sha256": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13994,7 +14002,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "8a35cdf4b3e16fd56591447c66d052356446f357c5000a873c75c1f56886e184",
+      "sha256": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14186,7 +14194,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
+      "sha256": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14468,7 +14476,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "184f18f7d328099aea9fec0390cd6557176a1b570f91e8dcd1faff978ab67e22",
+      "sha256": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14534,7 +14542,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "257e08b50b076164c356a19f608d002aa768fa5acb9e34704588a577a79fe098",
+      "sha256": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14736,6 +14744,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1b3fd699697da8c7",
+      "path": "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
+      "sha256": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
       "sha256": "493863cd4117580ed376fd872342880fec5e569d809fd69e87a857987b9d0d1c",
@@ -14834,7 +14848,7 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "f30063d0ed9fc0892bcc904b2a8644d7ac6e15e024ca938ee50cee89a619dde2",
+      "sha256": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22235,6 +22249,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MetaRedelivery.cfg",
+      "sha256": "cf591fb7addfe8447ece3c9ce41981e7d84a8db4efff75dd04c80cf99b8f1277",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedelivery.tla",
+      "sha256": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg",
+      "sha256": "4d82b02dd6d3e28d462cecea8ded5df695474aced641ceec87b3eabb63e86ded",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+      "sha256": "f287a45782f040f7b03ca47d26f9e08a640cd18fd7465698ab9b90113331a865",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+      "sha256": "2aa32978ce8cf5bcf9131559d75f6f9512d2a8a7cafad20ae1d4ef5a5272cfad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/MusicEntitlement.cfg",
       "sha256": "1d01c4e7c22ffb65fdcd11c272eb6ffa9266ed87f46ad1493abd5b28bfb74ee5",
       "authority": "inferred",
@@ -22726,7 +22775,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "adb706dc7b61f14d3f0b5d0621fc18d63cc404ce2e02e9c29a56add55a3925ea",
+      "sha256": "e31602f38ddfb988e055b03317d0033a8aea15701c4f5000984462d4254a2b62",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24252,7 +24301,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "d9428b037db49d275a5307b3a1cc4731e5cd812390d49b17affad32b01c4aee5",
+      "sha256": "cf91b1a38ca3f69bfc27d2ba6dbb84f16fc7d12912849878f088b41622458888",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24266,7 +24315,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "eb0c49e130b44207e1550698f4a88dba68ce898e75503c7a2ede16a3cec8d6fa",
+      "sha256": "822bc4afd1c4a8e35cbc83c2bee3fa37c060b798dc5c2f042cb3d819ae0a0b12",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24440,6 +24489,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/meta-redelivery.md",
+      "sha256": "3b5e7f6bbfbf9b1a8c6deff5e254968884d3eb768b51e0d8e6d97fc1fb182cbc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/meta-webhook-admission.md",
       "sha256": "4e9d077ac4101e9738664dfc81a6545942eca624d1607dc0c59f2547686ff838",
       "authority": "inferred",
@@ -24567,7 +24623,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "648953aa6a7266cb276f361fff3941df40ef5f4ebe49c5bf1930aceecbd2ed4d",
+      "sha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33951,6 +34007,102 @@
         "          RequireDurableKey = FALSE",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT NoDispatchWithoutDurableKey"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedelivery.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = TRUE",
+        "  KeepText = TRUE",
+        "  KeepDeletionTime = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = TRUE",
+        "  KeepText = TRUE",
+        "  KeepDeletionTime = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = FALSE",
+        "  KeepText = TRUE",
+        "  KeepDeletionTime = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = TRUE",
+        "  KeepText = FALSE",
+        "  KeepDeletionTime = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

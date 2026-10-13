@@ -33,6 +33,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 - [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.
 
+- [meta-redelivery.md](meta-redelivery.md): a repeated or backfilled Instagram or Facebook message keeps its stored text, deletion and reply state; bounded model, three negative controls and PostgreSQL tests.
 - [logical-backup.md](logical-backup.md): scheduled archive source admission, private completion evidence and explicit recovery exclusions.
 
 - [mobile-query-isolation.md](mobile-query-isolation.md): shipped Mobile per-occurrence query cache isolation and actual-screen late-response regression.
