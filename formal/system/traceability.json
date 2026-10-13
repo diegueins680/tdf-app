@@ -7019,8 +7019,8 @@
     {
       "id": "SOC-ABUSE-001",
       "title": "Rejected interaction writes consume the exact per-account minute budget",
-      "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
-      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; CI regression preserves the existing threshold.",
+      "statement": "Authenticated interaction write attempts consume a durable per-account calendar-minute counter after the session is confirmed and before the write runs. The charge is kept whether the write is answered, refused by a domain rule or refused by the database with an error; increment 91 returns HTTP 429 without running the write.",
+      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; AUTHORITY-059 for database-error outcomes.",
       "domain": "SOC",
       "actors": [
         "Authenticated interaction actor"
@@ -7035,10 +7035,12 @@
         "boundary": "directory_rate_limit interaction:write scope and HTTP queryWith"
       },
       "allowedTransitions": [
-        "Increment budget before domain command; return HTTP 429 when the minute counter exceeds 90"
+        "Increment budget before the write; return HTTP 429 when the minute counter exceeds 90",
+        "Write raises a database error -> write undone to a savepoint, charge committed"
       ],
       "forbiddenTransitions": [
         "Rejected domain writes roll back their consumed budget",
+        "A write refused by the database with an error rolls back its consumed budget",
         "Allow increment 91 within a minute",
         "Treat a fixed-minute rollover as a missing budget"
       ],
@@ -7047,32 +7049,38 @@
       ],
       "authorization": "Current HTTP session remains required; rate limiting never grants domain authority.",
       "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
-      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute.",
+      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute; the row stays locked until the attempt's transaction ends.",
       "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
-      "failure": "Domain rejection preserves the committed budget; quota exhaustion returns 429.",
+      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge.",
       "recovery": "The next database calendar-minute bucket has its own budget.",
       "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
-      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; scripts/interactions/test-api.py",
-      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; regression spans at most two calendar windows.",
-      "contract": "formal/interactions/README.md",
+      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; tdf-hq/src/TDF/Interactions/Server.hs; scripts/interactions/test-api.py",
+      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; ChargeCounted, LimitHolds and RefusedOnlyWhenSpent in the bounded model; the charge survives a raised write in PostgreSQL.",
+      "contract": "formal/system/interaction-write-budget.md",
       "implementation": [
         "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
         "tdf-hq/src/TDF/Interactions/Server.hs"
       ],
       "tests": [
         "scripts/interactions/test-api.py",
-        "scripts/interactions/test-http.sh"
+        "scripts/interactions/test-http.sh",
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+        "scripts/test-interaction-write-budget.sh"
       ],
-      "formalModels": [],
-      "verification": "Isolated real HTTP/PostgreSQL test checks 429 and exact persisted counter; no simulated payment or production evidence.",
-      "evidence": "CI run 37380322736 crossed 22:22 to 22:23 UTC during the old single-window assertion; corrected HTTP regression awaits execution.",
+      "formalModels": [
+        "formal/event-operations/InteractionWriteBudget.tla"
+      ],
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter.",
+      "evidence": "formal/system/interaction-write-budget.md",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Actual SQL and HTTP boundary inspected; revised runtime test pending.",
-      "ambiguity": [],
+      "confidence": "SQL limiter and HTTP boundary inspected; savepoint repair run locally against PostgreSQL 16 on 2026-10-11; pre-database rejections and uncommittable transactions are documented as uncharged.",
+      "ambiguity": [
+        "Whether requests rejected before database work (malformed identifier, oversized payload) should also be charged is undecided."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+        "reason": "Charge durability repaired and tested at the database boundary; the HTTP boundary's commit after a raised write and its 400 mapping have no HTTP test and counter rows are never pruned."
       }
     },
     {
@@ -9491,7 +9499,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "3884bab0bab26b211ced0f96f58127c9254f76091bb31229d7be99be954ab729",
+    ".github/workflows/ci.yml": "bc676120ddd8126a01bbb1a609bbcecfa0a8c5824cdd07cd6369d1eed713be9e",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
@@ -9553,6 +9561,7 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/InteractionWriteBudget.tla": "3bea029ff02ff65271074dd13f7450207a499c605166459e49e1e586c0b899e0",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/InvoiceSubmission.cfg": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
     "formal/event-operations/InvoiceSubmission.tla": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
@@ -9792,6 +9801,7 @@
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+    "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
@@ -9843,7 +9853,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "88d5b0264fc4128ace75fdd8bfed246761e45d8fb4357fb5e341081ec0c8f666",
+    "scripts/verify-event-operations-formal.sh": "13cacac6baf266e9bef95dd5a02039f60f2afec4e6a1308938cd061219c8d03b",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10204,7 +10214,7 @@
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
-    "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
+    "tdf-hq/src/TDF/Interactions/Server.hs": "8472ae6cfaf2da6304c37faa268ccca8894e0399bbed23c0f41d8c65548fc27a",
     "tdf-hq/src/TDF/Invoice/AccessKey.hs": "dd2e63c42a8107b7c5eb12f9d9442da59988969254f58eb0515b790626de4b3f",
     "tdf-hq/src/TDF/Invoice/BuyerIdentity.hs": "6d4f8227ace8821694e85016823f3e66174a9fa36bd74ab7e572f9a2fd2ca2be",
     "tdf-hq/src/TDF/Invoice/Datil.hs": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
@@ -10266,12 +10276,12 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "ebbcde0de0fb8d707ae8e7c3fcb6ea6b0c6272e3093eb6d7466739e838b6d3dd",
+    "tdf-hq/tdf-hq.cabal": "e9029083034d93e7f8818a8c1137c1fafa7ddfb65e9857a838291285c565e0df",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "cc8c36db2593051e0566b26d2278b05d0d06be0d71f266dc880da793dd067a57",
+    "tdf-hq/test/Spec.hs": "1cbfe6158bac3a8349dcdf1da6a603520c751316846a49b49f3caddda992adca",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10289,6 +10299,7 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+    "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
     "tdf-hq/test/TDF/InvoiceWorkerSpec.hs": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
@@ -14983,6 +14994,24 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-interaction-write-budget.sh": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/InteractionWriteBudget.tla": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/API/Feedback.hs": [
       {
         "requirement": "PRIV-INTAKE-001",
@@ -17630,7 +17659,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3884bab0bab26b211ced0f96f58127c9254f76091bb31229d7be99be954ab729",
+      "sha256": "bc676120ddd8126a01bbb1a609bbcecfa0a8c5824cdd07cd6369d1eed713be9e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21872,6 +21901,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-38e572568da4fe30",
+      "path": "scripts/test-interaction-write-budget.sh",
+      "sha256": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-180b5ac69cd86e73",
       "path": "scripts/test-invitation-update-concurrency.sh",
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
@@ -22779,7 +22820,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "88d5b0264fc4128ace75fdd8bfed246761e45d8fb4357fb5e341081ec0c8f666",
+      "sha256": "13cacac6baf266e9bef95dd5a02039f60f2afec4e6a1308938cd061219c8d03b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34675,7 +34716,7 @@
     {
       "id": "SURFACE-f944f6a148e07793",
       "path": "tdf-hq/src/TDF/Interactions/Server.hs",
-      "sha256": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
+      "sha256": "8472ae6cfaf2da6304c37faa268ccca8894e0399bbed23c0f41d8c65548fc27a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35990,7 +36031,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "ebbcde0de0fb8d707ae8e7c3fcb6ea6b0c6272e3093eb6d7466739e838b6d3dd",
+      "sha256": "e9029083034d93e7f8818a8c1137c1fafa7ddfb65e9857a838291285c565e0df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36104,7 +36145,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "cc8c36db2593051e0566b26d2278b05d0d06be0d71f266dc880da793dd067a57",
+      "sha256": "1cbfe6158bac3a8349dcdf1da6a603520c751316846a49b49f3caddda992adca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36467,6 +36508,18 @@
       "requirements": [
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-33e5f75ed002393a",
+      "path": "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+      "sha256": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
           "relationship": "tests"
         }
       ]
@@ -42450,7 +42503,6 @@
     "OPS-CLIENT-001",
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
-    "SOC-ABUSE-001",
     "MEDIA-MUSIC-RELEASE-001",
     "MEDIA-MUSIC-ASSET-001",
     "MEDIA-MUSIC-DDEX-001",
@@ -43575,7 +43627,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e98a88cf344b7b01db6f9163571ec9f4e549351a424a567aa6d1420391b4b53d",
+      "sourceSha256": "36c161149be3d9fbd5068c195b4d527d71ad9df236b5611ee5f9e7aa9bf93f79",
       "definition": {
         "states": [
           "absent",

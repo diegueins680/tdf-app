@@ -442,6 +442,7 @@
       "scripts/test-hetzner-inspection.py",
       "scripts/test-hetzner-restore.py",
       "scripts/test-identity-reconciliation.sh",
+      "scripts/test-interaction-write-budget.sh",
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-invoice-worker.sh",
       "scripts/test-isolated-application-canary.py",
@@ -2048,6 +2049,7 @@
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "tdf-hq/test/TDF/EventOrganizerSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+      "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
       "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
       "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
@@ -2584,7 +2586,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3884bab0bab26b211ced0f96f58127c9254f76091bb31229d7be99be954ab729",
+      "sha256": "bc676120ddd8126a01bbb1a609bbcecfa0a8c5824cdd07cd6369d1eed713be9e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5084,6 +5086,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-38e572568da4fe30",
+      "path": "scripts/test-interaction-write-budget.sh",
+      "sha256": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-180b5ac69cd86e73",
       "path": "scripts/test-invitation-update-concurrency.sh",
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
@@ -5578,7 +5586,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "88d5b0264fc4128ace75fdd8bfed246761e45d8fb4357fb5e341081ec0c8f666",
+      "sha256": "13cacac6baf266e9bef95dd5a02039f60f2afec4e6a1308938cd061219c8d03b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13786,7 +13794,7 @@
     {
       "id": "SURFACE-f944f6a148e07793",
       "path": "tdf-hq/src/TDF/Interactions/Server.hs",
-      "sha256": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
+      "sha256": "8472ae6cfaf2da6304c37faa268ccca8894e0399bbed23c0f41d8c65548fc27a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14452,7 +14460,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "ebbcde0de0fb8d707ae8e7c3fcb6ea6b0c6272e3093eb6d7466739e838b6d3dd",
+      "sha256": "e9029083034d93e7f8818a8c1137c1fafa7ddfb65e9857a838291285c565e0df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14518,7 +14526,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "cc8c36db2593051e0566b26d2278b05d0d06be0d71f266dc880da793dd067a57",
+      "sha256": "1cbfe6158bac3a8349dcdf1da6a603520c751316846a49b49f3caddda992adca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14681,6 +14689,12 @@
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-33e5f75ed002393a",
+      "path": "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+      "sha256": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21871,6 +21885,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/InteractionWriteBudget.cfg",
+      "sha256": "086c31c178692802cafdd7277b1249d51366fdaff415a7b6b37b54a8a362f1c8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudget.tla",
+      "sha256": "3bea029ff02ff65271074dd13f7450207a499c605166459e49e1e586c0b899e0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetErrorRefunds.cfg",
+      "sha256": "70122b16cd0d9168ca44894cfcc30979bf5a7d683ce46e3f30486b58ab0964ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetOneCounter.cfg",
+      "sha256": "987e3abf110f15b562209e6d8190c8a0a9270caff51e068882fc7a04a23c9471",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetOneExtra.cfg",
+      "sha256": "e58b11517278d49a941353c7653155f4df5f57f292328a9061a1bd6fc86e60ed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetUnlockedIncrement.cfg",
+      "sha256": "eb792a2cd1a29a13fdfb158b5a99a16398f01bd0b6e60ff02e3600e9c36697c8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/InvitationSafety.cfg",
       "sha256": "61505b22d7a3915f744f75b8b376137c26c4bb28da08ed56cd91e1485adaa831",
       "authority": "inferred",
@@ -22656,7 +22712,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "c95f1767c5c6f9aff2cc73ca6ed63a5e6653b1e81ba292f5b68a1d5c52ea3be4",
+      "sha256": "16d1726c5a49eddc1481282db9562fac9db507f5f76eacaea4c2801c7ab57ad1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23720,7 +23776,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "9608db1c42268b2cc12b5d126aa4b0dbd20d4977d42036eccc52bcd00f03e39d",
+      "sha256": "b07396c956f65c75fa026fdd8d5babee6aa3043689180c2dda99404d2d9e7063",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24140,7 +24196,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7cf9bfc43fad11eec8d7008827bfa8bf8f32dc828d28f50afb6eebb0d757892d",
+      "sha256": "746373bed96cb3db2275155c62b2f9e352048c1d23ea3febf4b6a178d9e7eabf",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24154,7 +24210,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "c98ec349a993753731b62e0b9519000357733aad01c88c2b226283c8e7d27ad4",
+      "sha256": "e8fcd1edfa77cbae5249ac120e141a26fec277206b251c52e5c2ef6bd5e13644",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24274,6 +24330,13 @@
     {
       "path": "formal/system/identity-recovery.md",
       "sha256": "08ddf5bbeb66849b8383db3df14429d0ea43d8e3d193b25c6d81f0991cddfeea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/interaction-write-budget.md",
+      "sha256": "dfa28de7fb2fb30ed64213edaad7f9886fc74abdf2cc7173657440c2df850a1b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24448,7 +24511,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e98a88cf344b7b01db6f9163571ec9f4e549351a424a567aa6d1420391b4b53d",
+      "sha256": "36c161149be3d9fbd5068c195b4d527d71ad9df236b5611ee5f9e7aa9bf93f79",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33104,6 +33167,121 @@
         "CHECK_DEADLOCK FALSE",
         "INVARIANTS",
         "  ExactlyOnePaidAudit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudget.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetErrorRefunds.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = FALSE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetOneCounter.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetOneExtra.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = FALSE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetUnlockedIncrement.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = FALSE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

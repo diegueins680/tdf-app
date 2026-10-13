@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-13T18:52:42.577Z",
+  "generatedAt": "2026-10-13T20:07:50.696Z",
   "repositoryRoot": ".",
-  "filesScanned": 2259,
+  "filesScanned": 2261,
   "candidateCount": 1320,
   "byClassification": {
     "dynamic-business-catalog": 849,
@@ -5918,7 +5918,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 67,
+      "consumerCount": 68,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -5992,7 +5992,8 @@
         "scripts/test-automatic-migrations-production-schema.sh",
         "scripts/test-canonical-payment-lifecycle-migration.sh",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
-        "scripts/test-marketplace-operations-migration.sh"
+        "scripts/test-marketplace-operations-migration.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -8762,7 +8763,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 330,
+      "consumerCount": 331,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -18271,7 +18272,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/interactions.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -18301,6 +18302,7 @@
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
         "tdf-hq/test/integration/interactions/moderation-properties.sql",
         "tdf-hq/test/integration/interactions/navigation-properties.sql",
         "tdf-hq/test/integration/interactions/notification-properties.sql"
@@ -47575,7 +47577,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 294,
+      "consumerCount": 295,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -47821,7 +47823,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48066,7 +48068,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 355,
+      "consumerCount": 356,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48321,7 +48323,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 280,
+      "consumerCount": 281,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48571,7 +48573,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 266,
+      "consumerCount": 267,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48813,7 +48815,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 279,
+      "consumerCount": 280,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49057,7 +49059,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 273,
+      "consumerCount": 274,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49301,7 +49303,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 268,
+      "consumerCount": 269,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -75097,7 +75099,7 @@
       "lines": [
         10620
       ],
-      "consumerCount": 870,
+      "consumerCount": 871,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -83226,7 +83228,7 @@
       "lines": [
         18135
       ],
-      "consumerCount": 866,
+      "consumerCount": 867,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -144695,7 +144697,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 732,
+      "line": 733,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -144707,7 +144709,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        732
+        733
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -145524,7 +145526,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 498,
+      "consumerCount": 499,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -147872,7 +147874,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/docs/openapi/interactions.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
@@ -147902,6 +147904,7 @@
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
+        "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
         "tdf-hq/test/integration/interactions/moderation-properties.sql",
         "tdf-hq/test/integration/interactions/navigation-properties.sql",
         "tdf-hq/test/integration/interactions/notification-properties.sql"
