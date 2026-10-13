@@ -110,6 +110,10 @@ spec = describe "Electronic invoices through Datil" $ do
     interpretDatilDocument (document "AUTORIZADO" authorization)
       `shouldSatisfy` either (const False) isAuthorized
     interpretDatilDocument (document "AUTORIZADO" []) `shouldBe` Right (DatilPending "abc123")
+    interpretDatilDocument (document "AUTORIZADO" [ "autorizacion" A..= A.object [ "numero" A..= ("12-34" :: String) ] ])
+      `shouldSatisfy` isLeft
+    interpretDatilDocument (document "AUTORIZADO" [ "autorizacion" A..= A.object [ "numero" A..= (replicate 50 '7' :: String) ] ])
+      `shouldSatisfy` isLeft
     interpretDatilDocument (document "RECIBIDO" []) `shouldBe` Right (DatilPending "abc123")
     interpretDatilDocument (document "NO AUTORIZADO" [])
       `shouldSatisfy` either (const False) isRejected

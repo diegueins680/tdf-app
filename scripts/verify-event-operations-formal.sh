@@ -95,7 +95,20 @@ run_negative_tlc() {
 run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandfence
 run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
+run_tlc WhatsAppRedelivery.tla WhatsAppRedelivery.cfg whatsapp-redelivery
+run_negative_tlc WhatsAppRedeliveryEveryDeliveryApplies.cfg whatsapp-redelivery-every-delivery-applies 'Invariant AppliedOnce is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryDuplicateStore.cfg whatsapp-redelivery-duplicate-store 'Invariant StoredOnce is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryEffectAfterStore.cfg whatsapp-redelivery-effect-after-store 'Invariant StoredStopApplied is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryEveryDeliveryReplies.cfg whatsapp-redelivery-every-delivery-replies 'Invariant RepliedOnce is violated' WhatsAppRedelivery.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
+run_tlc AccessGrant.tla AccessGrant.cfg accessgrant
+run_negative_tlc AccessGrantSelfApproval.cfg accessgrantselfapproval 'Invariant NoSelfApproval is violated' AccessGrant.tla
+run_negative_tlc AccessGrantNonAdmin.cfg accessgrantnonadmin 'Invariant AdminApprovesGrant is violated' AccessGrant.tla
+run_negative_tlc AccessGrantExpired.cfg accessgrantexpired 'Invariant NoApprovalAfterExpiry is violated' AccessGrant.tla
+run_negative_tlc AccessGrantRebind.cfg accessgrantrebind 'Invariant SingleRedeemer is violated' AccessGrant.tla
+run_negative_tlc AccessGrantRevokedLink.cfg accessgrantrevokedlink 'Invariant RedeemedNeverRevoked is violated' AccessGrant.tla
+run_negative_tlc AccessGrantReactivate.cfg accessgrantreactivate 'Invariant NoAutomaticReactivation is violated' AccessGrant.tla
+run_negative_tlc AccessGrantAdminInvite.cfg accessgrantadmininvite 'Invariant InvitationNeverAdministrative is violated' AccessGrant.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
 run_tlc ApplicationCanary.tla ApplicationCanary.cfg applicationcanary
 run_negative_tlc ApplicationCanaryNetwork.cfg applicationcanarynetwork 'Invariant NoProductionConnectivity is violated' ApplicationCanary.tla
@@ -118,6 +131,20 @@ run_negative_tlc NotificationLeaseStaleClock.cfg notificationleasestale 'Invaria
 run_negative_tlc NotificationLeaseForeign.cfg notificationleaseforeign 'Invariant CurrentLease is violated' NotificationLease.tla
 run_negative_tlc NotificationLeaseClaimClock.cfg notificationleaseclaimclock 'Invariant FreshClaim is violated' NotificationLease.tla
 run_tlc OperationsManualReceipt.tla OperationsManualReceipt.cfg operationsmanualreceipt
+run_tlc ManualBankTransfer.tla ManualBankTransfer.cfg manualbanktransfer
+run_negative_tlc ManualBankTransferSharedReviewer.cfg manualbanktransfersharedreviewer 'Invariant IndependentApproval is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferOutsider.cfg manualbanktransferoutsider 'Invariant IndependentApproval is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferExpired.cfg manualbanktransferexpired 'Invariant LiveApproval is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferUnbounded.cfg manualbanktransferunbounded 'Invariant HoldBound is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferSecondRail.cfg manualbanktransfersecondrail 'Invariant NoSecondCharge is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferReplay.cfg manualbanktransferreplay 'Invariant SingleCharge is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferReopen.cfg manualbanktransferreopen 'Invariant ExpiryFinal is violated' ManualBankTransfer.tla
+run_negative_tlc ManualBankTransferSplitIssuance.cfg manualbanktransfersplitissuance 'Invariant PaidHasTickets is violated' ManualBankTransfer.tla
+run_tlc TaxDocumentSubmission.tla TaxDocumentSubmission.cfg taxdocumentsubmission
+run_negative_tlc TaxDocumentSubmissionSkipStart.cfg taxdocumentsubmissionskipstart 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
+run_negative_tlc TaxDocumentSubmissionUnguardedStart.cfg taxdocumentsubmissionunguardedstart 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
+run_negative_tlc TaxDocumentSubmissionLostAsRejected.cfg taxdocumentsubmissionlostasrejected 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
+run_negative_tlc TaxDocumentSubmissionRetryUncertain.cfg taxdocumentsubmissionretryuncertain 'Invariant AtMostOneDocument is violated' TaxDocumentSubmission.tla
 run_negative_tlc OperationsManualReceiptReuseSourceKey.cfg operationsmanualreusesourcekey 'Invariant SourceSeparation is violated' OperationsManualReceipt.tla
 run_negative_tlc OperationsManualReceiptUnboundReplay.cfg operationsmanualunboundreplay 'Invariant BoundReplay is violated' OperationsManualReceipt.tla
 run_negative_tlc OperationsManualReceiptPartialCommit.cfg operationsmanualpartialcommit 'Invariant AtomicCreation is violated' OperationsManualReceipt.tla
@@ -145,6 +172,10 @@ run_tlc PrivacyDeletionWorkflow.tla PrivacyDeletionWorkflow.cfg privacy-deletion
 run_negative_tlc PrivacyDeletionEarlyClose.cfg privacy-deletion-earlyclose 'Invariant ClosureEvidence is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionDeadlineReset.cfg privacy-deletion-deadline 'Invariant FixedDeadline is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionStaleWrite.cfg privacy-deletion-stale 'Invariant NoStaleCommit is violated' PrivacyDeletionWorkflow.tla
+run_tlc MetaRedelivery.tla MetaRedelivery.cfg meta-redelivery
+run_negative_tlc MetaRedeliveryRepeatResetsReply.cfg meta-redelivery-repeat-resets-reply 'Invariant ConsideredOnce is violated' MetaRedelivery.tla
+run_negative_tlc MetaRedeliveryRepeatRewritesText.cfg meta-redelivery-repeat-rewrites-text 'Invariant TextKept is violated' MetaRedelivery.tla
+run_negative_tlc MetaRedeliveryRepeatMovesDeletion.cfg meta-redelivery-repeat-moves-deletion 'Invariant DeletionTimeKept is violated' MetaRedelivery.tla
 run_tlc SessionCacheIsolation.tla SessionCacheIsolation.cfg session-cache
 run_negative_tlc SessionCacheShared.cfg session-cache-shared "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
 run_negative_tlc SessionCacheActorReuse.cfg session-cache-actor-reuse "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
@@ -189,7 +220,21 @@ run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant
 run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleEarlyCommit.cfg credential-early-commit 'Invariant AtomicChallengeConsumption is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleGoogleSession.cfg credential-google-session 'Invariant NoSessionsAfterDisable is violated' CredentialLifecycle.tla
+run_tlc WhatsAppConsent.tla WhatsAppConsent.cfg whatsapp-consent
+run_negative_tlc WhatsAppConsentStaleReply.cfg whatsapp-consent-stale-reply 'Invariant ConfirmedByOwnLaterReply is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentWithdrawnReply.cfg whatsapp-consent-withdrawn-reply 'Invariant WithdrawalWins is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentStaleWithdrawalClock.cfg whatsapp-consent-stale-withdrawal-clock 'Invariant WithdrawalWins is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentWithdrawalReset.cfg whatsapp-consent-withdrawal-reset 'Invariant DeliveredRequestsSpaced is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentUnboundFailure.cfg whatsapp-consent-unbound-failure 'Invariant DeliveredRequestsSpaced is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentReleasedFailure.cfg whatsapp-consent-released-failure 'Invariant UndeliveredStaysPending is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentLongUnsentWindow.cfg whatsapp-consent-long-unsent-window 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
+run_negative_tlc WhatsAppConsentRenewedUnsent.cfg whatsapp-consent-renewed-unsent 'Invariant ConfirmedInsideWindow is violated' WhatsAppConsent.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
+run_tlc InvoiceSubmission.tla InvoiceSubmission.cfg invoice-submission
+run_negative_tlc InvoiceSubmissionUnfencedStart.cfg invoice-submission-unfenced-start 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
+run_negative_tlc InvoiceSubmissionStaleFinish.cfg invoice-submission-stale-finish 'Invariant AuthorizedIsFinal is violated' InvoiceSubmission.tla
+run_negative_tlc InvoiceSubmissionUnknownAsRefused.cfg invoice-submission-unknown-as-refused 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
+run_negative_tlc InvoiceSubmissionRetryUncertain.cfg invoice-submission-retry-uncertain 'Invariant AtMostOneProviderDocument is violated' InvoiceSubmission.tla
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
 run_tlc OptionalTokenRecovery.tla OptionalTokenRecovery.cfg optional-token-recovery
@@ -343,10 +388,26 @@ run_negative_tlc LiveIntakeStale.cfg live-intake-stale 'Invariant CurrentReceipt
 run_negative_tlc LiveIntakeUnpersisted.cfg live-intake-unpersisted 'Invariant PersistedReceipt is violated' LiveIntakeAuthority.tla
 run_tlc ArtistActivation.tla ArtistActivation.cfg artist-activation
 run_negative_tlc ArtistActivationUnsafe.cfg artist-activation-unsafe 'Invariant CurrentContext is violated' ArtistActivation.tla
+run_tlc MusicEntitlement.tla MusicEntitlement.cfg music-entitlement
+run_negative_tlc MusicEntitlementForgedPaid.cfg music-entitlement-forged-paid 'Invariant PaidNeedsEvidence is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementRepeatedGrant.cfg music-entitlement-repeated-grant 'Invariant OneEntitlement is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementNoLimit.cfg music-entitlement-no-limit 'Invariant LimitHolds is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementEndlessReplay.cfg music-entitlement-endless-replay 'Invariant UrlsInsideLifetime is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementFreshReplayUrl.cfg music-entitlement-fresh-replay-url 'Invariant UrlsEndWithAuthorization is violated' MusicEntitlement.tla
+run_negative_tlc MusicEntitlementRefundedDownload.cfg music-entitlement-refunded-download 'Invariant ActiveWhenIssued is violated' MusicEntitlement.tla
 run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc InteractionWriteBudget.tla InteractionWriteBudget.cfg interaction-write-budget
+run_negative_tlc InteractionWriteBudgetErrorRefunds.cfg interaction-write-budget-error-refunds 'Invariant ChargeCounted is violated' InteractionWriteBudget.tla
+run_negative_tlc InteractionWriteBudgetOneExtra.cfg interaction-write-budget-one-extra 'Invariant LimitHolds is violated' InteractionWriteBudget.tla
+run_negative_tlc InteractionWriteBudgetUnlockedIncrement.cfg interaction-write-budget-unlocked-increment 'Invariant ChargeCounted is violated' InteractionWriteBudget.tla
+run_negative_tlc InteractionWriteBudgetOneCounter.cfg interaction-write-budget-one-counter 'Invariant RefusedOnlyWhenSpent is violated' InteractionWriteBudget.tla
+run_tlc EventOrganizer.tla EventOrganizer.cfg event-organizer
+run_negative_tlc EventOrganizerAnyoneClaims.cfg event-organizer-anyone-claims 'Invariant OnlyAllowedAssigned is violated' EventOrganizer.tla
+run_negative_tlc EventOrganizerUnconditionalWrite.cfg event-organizer-unconditional-write 'Invariant OrganizerStable is violated' EventOrganizer.tla
+run_negative_tlc EventOrganizerTrustEarlierRead.cfg event-organizer-trust-earlier-read 'Invariant ManagersAreOrganizer is violated' EventOrganizer.tla
 run_tlc TaskRead.tla TaskRead.cfg task-read
 run_tlc TaskView.tla TaskView.cfg task-view
 expect_counterexample TaskViewLate.cfg CurrentView task-view-late TaskView.tla

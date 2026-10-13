@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "e1dada9b4a7440ad1d68f3dff13973cffd62cb48",
+  "mobileRevision": "c93df7ecc7b2aeee8bb3e9d78ddc24cb752c8e48",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -63,6 +63,7 @@
     "functions": [
       "functions/.well-known/apple-app-site-association.js",
       "functions/.well-known/assetlinks.json.js",
+      "functions/_middleware.js",
       "functions/_shared/event-preview.mjs",
       "functions/_shared/ticket-page.mjs",
       "functions/eventos/[eventId].js",
@@ -109,6 +110,7 @@
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/diagnose-social.test.mjs",
+      "scripts/__tests__/directory-event-search-http.mjs",
       "scripts/__tests__/disposable-postgres-url.test.mjs",
       "scripts/__tests__/event-draft-plan.test.mjs",
       "scripts/__tests__/event-operations-http-runner.test.mjs",
@@ -423,6 +425,7 @@
       "scripts/test-event-operations-http-ci.sh",
       "scripts/test-event-operations-http.sh",
       "scripts/test-event-operations-schema-rehearsal.sh",
+      "scripts/test-event-organizer.sh",
       "scripts/test-event-raci-browser.sh",
       "scripts/test-event-raci-editor-context-migration.sh",
       "scripts/test-event-raci-reassignment-migration.sh",
@@ -439,7 +442,9 @@
       "scripts/test-hetzner-inspection.py",
       "scripts/test-hetzner-restore.py",
       "scripts/test-identity-reconciliation.sh",
+      "scripts/test-interaction-write-budget.sh",
       "scripts/test-invitation-update-concurrency.sh",
+      "scripts/test-invoice-worker.sh",
       "scripts/test-isolated-application-canary.py",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
@@ -448,6 +453,7 @@
       "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
       "scripts/test-merch-reputation-migration.sh",
       "scripts/test-merge-admission.py",
+      "scripts/test-meta-redelivery.sh",
       "scripts/test-music-correction-concurrency.mjs",
       "scripts/test-music-ddex-credits.sh",
       "scripts/test-music-ddex-package.mjs",
@@ -455,6 +461,7 @@
       "scripts/test-music-directory-migration.sh",
       "scripts/test-music-download-predicate.mjs",
       "scripts/test-music-playback-identity.mjs",
+      "scripts/test-music-purchase.sh",
       "scripts/test-music-release-api-e2e.mjs",
       "scripts/test-music-release-api-e2e.sh",
       "scripts/test-music-release-artwork-pipeline.sh",
@@ -503,12 +510,16 @@
       "scripts/test-ticket-confirmation-lease.py",
       "scripts/test-ticket-confirmation-smtp.py",
       "scripts/test-ticket-confirmation.sh",
+      "scripts/test-ticket-manual-review.sh",
+      "scripts/test-ticket-payment-gate.sh",
       "scripts/test-trial-identity.sh",
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
+      "scripts/test-whatsapp-consent.sh",
+      "scripts/test-whatsapp-redelivery.sh",
       "scripts/test_mail_deliverability_monitor.py",
       "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
@@ -2038,11 +2049,16 @@
       "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
       "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
+      "tdf-hq/test/TDF/EventOrganizerSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+      "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
       "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
+      "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
+      "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
+      "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
       "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
       "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
@@ -2069,13 +2085,17 @@
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
       "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+      "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
+      "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
+      "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
       "tdf-hq/test/TicketAdmissionMain.hs",
       "tdf-hq/test/TicketConfirmationMain.hs",
       "tdf-hq/test/TicketConfirmationSmtpMain.hs",
       "tdf-hq/test/TicketDatabaseRoutingMain.hs",
+      "tdf-hq/test/TicketManualReviewMain.hs",
       "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
       "tdf-hq/test/integration/artist_merch_runtime_schema_fixture.sql",
       "tdf-hq/test/integration/artist_self_service_fixture.sql",
@@ -2090,6 +2110,7 @@
       "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
       "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
       "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
+      "tdf-hq/test/integration/directory_event_search_http_seed.sql",
       "tdf-hq/test/integration/directory_event_search_sync.sql",
       "tdf-hq/test/integration/event_moment_reaction_cutover_postgres.sql",
       "tdf-hq/test/integration/event_operations_command_privacy_assertions.sql",
@@ -2131,6 +2152,7 @@
       "tdf-hq/test/integration/interactions/schema-fixture.sql",
       "tdf-hq/test/integration/interactions/schema-properties.sql",
       "tdf-hq/test/integration/label_project_notes_backfill_postgres.sql",
+      "tdf-hq/test/integration/ledger_posting_balance.sql",
       "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "tdf-hq/test/integration/payment_audit_fixture.sql",
       "tdf-hq/test/integration/pipeline_authorization_http.sh",
@@ -2146,6 +2168,7 @@
       "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
       "tdf-hq/test/integration/ticket_inclusive_tax.sql",
       "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
+      "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
       "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
       "tdf-hq/test/integration/ticket_tax_invoices.sql",
       "tdf-hq/test/sql/event_ingestion_boundaries.sql",
@@ -2543,7 +2566,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0606a73a2d9ce7e753f91c20009d0273bf1ea192f40d735f7c0aff0b4d531962",
+      "sha256": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2567,7 +2590,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4f78eff6d5c34b7f3ed402ad7789b638eba906ca848a145b64dd62f8e7870beb",
+      "sha256": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2579,19 +2602,19 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "99549849b9d399a3cf24884226da7683ded4855ba6d94dba296b5233875c7135",
+      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "83cb1fc70d4cd7cbebc540eeee25093b578f463d5dfb892924c6f0683707212a",
+      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "5c812f5a50e54395e87c5ecf2209cc2ec47158cc97849bb16edf394764904513",
+      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2609,7 +2632,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "2296b25573ac27eb67fc51dd996a03e816471c0fb30cecd3746d21f0b8d3792d",
+      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2841,9 +2864,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6d25c31944ebbae3",
+      "path": "functions/_middleware.js",
+      "sha256": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
-      "sha256": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
+      "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2855,7 +2884,7 @@
     {
       "id": "SURFACE-8780cd8d489d13bd",
       "path": "functions/eventos/[eventId].js",
-      "sha256": "6320247e4ff5983acd86a4a16b5bfc9c1f82a01b84cf15f1048f62ffec20afe1",
+      "sha256": "b187d6e72c55ccb34930bac8e64928470ef98def12849c046d4004a14aec2fb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3069,6 +3098,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2975771fbd868bb1",
+      "path": "scripts/__tests__/directory-event-search-http.mjs",
+      "sha256": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
       "sha256": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
@@ -3101,7 +3136,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
+      "sha256": "d5085db18bac46c0b308f66c7a0ff12c6a908f65c7716da32aa4603d26031509",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3281,7 +3316,7 @@
     {
       "id": "SURFACE-df80d476d03d210a",
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
-      "sha256": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
+      "sha256": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4157,7 +4192,7 @@
     {
       "id": "SURFACE-8cdaeb57d09457bd",
       "path": "scripts/mobile-publishing-admin-audit.sh",
-      "sha256": "549882acfda89b6af55d59a7154ee97f7b3a4c64892b80957a0182f8b684f072",
+      "sha256": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4739,7 +4774,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "0a73cbb4e293997f32dceb542087bf0c26ce63862cb7f78a4dcca8800d29c8a1",
+      "sha256": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4953,6 +4988,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5f11b620c3566a19",
+      "path": "scripts/test-event-organizer.sh",
+      "sha256": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-de843c5a9b8c5eed",
       "path": "scripts/test-event-raci-browser.sh",
       "sha256": "09d11b39dfb9ed22f8d8a500d49119e0498fa97996b211b55c61a909d8ab6574",
@@ -5049,9 +5090,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-38e572568da4fe30",
+      "path": "scripts/test-interaction-write-budget.sh",
+      "sha256": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-180b5ac69cd86e73",
       "path": "scripts/test-invitation-update-concurrency.sh",
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-057c027ca8cee02e",
+      "path": "scripts/test-invoice-worker.sh",
+      "sha256": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5103,6 +5156,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2e227af058b0eed4",
+      "path": "scripts/test-meta-redelivery.sh",
+      "sha256": "ede4ee564fb1ff86e4d4da13342ab56eca7b382e411abc41eea4d7bce247616a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d8aeda8890026d82",
       "path": "scripts/test-music-correction-concurrency.mjs",
       "sha256": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
@@ -5129,7 +5188,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "8627233be9dbef8947111d9e838ec6c85f3abb1d215d1295894bf42925fc9471",
+      "sha256": "edf8f6eeeae45dc8d3423a90d446004122d45053e93325ae28f08edb81d0a6e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5142,6 +5201,12 @@
       "id": "SURFACE-5f96370db974b8c1",
       "path": "scripts/test-music-playback-identity.mjs",
       "sha256": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f20a2491f3dcc4d3",
+      "path": "scripts/test-music-purchase.sh",
+      "sha256": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5433,6 +5498,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4c827aef16e690c3",
+      "path": "scripts/test-ticket-manual-review.sh",
+      "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c98eef3148a1eabf",
+      "path": "scripts/test-ticket-payment-gate.sh",
+      "sha256": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-75ed4534ce225e0f",
       "path": "scripts/test-trial-identity.sh",
       "sha256": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
@@ -5469,6 +5546,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-da68a6be269c4e94",
+      "path": "scripts/test-whatsapp-consent.sh",
+      "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ee9a013c20ac0030",
+      "path": "scripts/test-whatsapp-redelivery.sh",
+      "sha256": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -5489,7 +5578,7 @@
     {
       "id": "SURFACE-d71afc2bac6fdf73",
       "path": "scripts/upsert-course.mjs",
-      "sha256": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
+      "sha256": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5513,7 +5602,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "35452dda9b194775382e4853d4da56c24c589b5fc290cf78e340456c0ed9ebe8",
+      "sha256": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5621,25 +5710,25 @@
     {
       "id": "SURFACE-03e3d269984814cc",
       "path": "tdf-hq-ui/public/account/privacy-es.html",
-      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "sha256": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf83998210f0bb9e",
       "path": "tdf-hq-ui/public/account/privacy.html",
-      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "sha256": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-eaa9b5372d91a318",
       "path": "tdf-hq-ui/public/account/terms-es.html",
-      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "sha256": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ee14fa660066a784",
       "path": "tdf-hq-ui/public/account/terms.html",
-      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "sha256": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5693,7 +5782,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
+      "sha256": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5783,7 +5872,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "6c77660e4cb8a94fcd031e94d716a6dca896101cab8182f51d673e2f0d86e67c",
+      "sha256": "a01b16709a08880e3e3bf70415c50bcb5a61f2a8769cc5a261aa010a24ddd478",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6071,7 +6160,7 @@
     {
       "id": "SURFACE-20340c57830b2359",
       "path": "tdf-hq-ui/src/api/courses.ts",
-      "sha256": "8419d11c42539f59ad7d6ab0af37c4f20c5e13edde6854a1c6ee80c2fc3de836",
+      "sha256": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6227,7 +6316,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "dfc87c0f30b1a2e633d0de6517fc07625b82d431c6e15c2cfbaaa9f998ba94e4",
+      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6587,7 +6676,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "d2a41072887bfce5156ba3599c4b77828b0e88e99e3cceadbb82ee18e40e549e",
+      "sha256": "f93e1bc80e68a3be0534c12141d2745a2e0f1bb2613f7a0b7a3114052d3e068f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7049,7 +7138,7 @@
     {
       "id": "SURFACE-336a5f791a58d95b",
       "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
-      "sha256": "7693cfc93d7984a291786db9a8c4f3fdbcc9c6d4da843f16b586c241264a1938",
+      "sha256": "52245be2a87128343f4ad81495f8c0b14fab63f1189ddea09ffd8759156bf8ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7127,7 +7216,7 @@
     {
       "id": "SURFACE-b09be6a71cc01631",
       "path": "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-      "sha256": "d67f9dab1f18dc3adf25cc584f0f79d5382681686782d15542a4d4621e19ac6a",
+      "sha256": "4c21e2d3dee57873cc9951240625a5f036ad6c45a9d46c4b8e4251dc5a0a3ad9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7415,7 +7504,7 @@
     {
       "id": "SURFACE-2a696a014a007a73",
       "path": "tdf-hq-ui/src/config/appConfig.ts",
-      "sha256": "ac196e4a26b5e6f47e58cffb528467a05e6fe456a4185aef38455c19dd05bd42",
+      "sha256": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7841,7 +7930,7 @@
     {
       "id": "SURFACE-15e822b2783165c0",
       "path": "tdf-hq-ui/src/hooks/useMetaTags.test.tsx",
-      "sha256": "f28390c4989666ea551f7e6da262ebea7c79ac865e05f9157471b5f495663bb4",
+      "sha256": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7901,25 +7990,25 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
+      "sha256": "af2910c36ad0b14769548ada7416d321bc1e019b02168ad6d43279a5203e9b8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
+      "sha256": "dd0182cea8a07354f369b3392d45dd70c1483f15d5c1fd8dc0f134af0d7b0d55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "fb867054fb48979bd7868da2ee778eb7e1e5ba4e09ea46f1ba53e14881c2f4be",
+      "sha256": "498365b7aa8b9990059bbb5fc14ea259b3754df38a8df187f33e8cc99b2850bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "062904ae5ba4cb6c95ddf19507a5003d5f0bc561ac48fbe8f6eeddb8bb6e0c14",
+      "sha256": "39fa2c7f117979998b30743472893389b28ee84132ef32d9af981cecba034194",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7961,13 +8050,13 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "aa5242c86d81fd37529b80f1dd5ec507d58288fe8fc7547f80dd1530c59233e8",
+      "sha256": "9b857c212b2dc05869223845ecd988c7a812e0af0266458bb88f72cad9dc187b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
+      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8285,13 +8374,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "dce127c6cfc3b448c5fa22199f81ff4a1c71ad63dfc66928a2bd874260243b0f",
+      "sha256": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "d7fbfc076396110f24cfa7cacc218b8eb371077b3ba93fa7b88567cf44a037ed",
+      "sha256": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8363,13 +8452,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "691bb14706f89103e88df8e2895c5221feb83261c376e2c4df7b1713e3531412",
+      "sha256": "9048b67cb4596a91af804393a45c4418f2cc9ddeb005cb165d9a00c625aa7130",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "627af000b5ce8462fbe704525a25f1c77444a85877fac2d92e346cb91c9f3804",
+      "sha256": "c0ff57375a814ad7849dfc069c62794f3976e65f64503a523d99d8d239fe0e86",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8711,13 +8800,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "83752ef12c19868adab088461e0c05863b694b6a31d2246197227467501fb77b",
+      "sha256": "c79edb524886802dfbedd61fbc97614a0fe4ba4414708c2482ffa1856d2bad0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "f62ef59fb191f0e5fae2cc79186cef312b58bf7565b8d36804deb8d67df2f65e",
+      "sha256": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8759,7 +8848,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "4ce3460f1b8df9551b39d7d73a8713310d2236ccf03f68b77ff64276e2041253",
+      "sha256": "6b77c1ba4e9236b280e90664ed22590ffa8fef6b2b1e89b2dc224059be44a4ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8855,7 +8944,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "64d6270c6b48fcb9bd5af79ba337d67e45effcb9d319a02ed5dbff58926ebf63",
+      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9005,7 +9094,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "c43825034fdd3aa43d8f2b3e44c7c54cd8a86e27010ebfe729b3616e64c9e5d6",
+      "sha256": "6f2a936bad4b21eb04f3cf0ca2ea5a2d77576f7781f06f3706269ba71d6b15af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9821,19 +9910,19 @@
     {
       "id": "SURFACE-3bd1e7eea819bcf8",
       "path": "tdf-hq-ui/src/utils/checkoutStripe.ts",
-      "sha256": "6767472727b065ba0664d9f4c13536708d26cf07da64b9391170d7157c584cdd",
+      "sha256": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-827d822bd4c20ede",
       "path": "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
-      "sha256": "24430baf37b1660622a9d0830fe0066f79a57f0ce7de88381f2854a14c9cdbba",
+      "sha256": "b4a6a6e54eef828d5795ca8ffd8d30db2599429eaf6ecdfafa3bfbff2894763b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b42bb88249b14540",
       "path": "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
-      "sha256": "c95f0d906b0cb5dfe754d829bef159aaeca29f3e3ef59b37fb5fb45ab0d0ccd4",
+      "sha256": "e1363bf4bc181a089249899b5ab81cdcaae74ff61fcefa1c9d1b1bcfcc86e7dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10379,7 +10468,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "a44a71d1e7bb91042d6de1994a3b01569e223ed2d18ccb3f469bc7b1a56c25d5",
+      "sha256": "f59014eea5f86ced7ad2f5514de5910e1e8a16c00cab3163522e5c264c251c18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10439,7 +10528,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "4e9f4e21af264c007cfd5e5572c90edb97ad39ddff79d6e10f42e21a0d031ad6",
+      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12833,7 +12922,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
+      "sha256": "997394866d1a0e4950ecf1d74f4b725be668f560afcd365a99621efecbc88b9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12869,13 +12958,13 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
+      "sha256": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-48d8c4fab6aef615",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-      "sha256": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
+      "sha256": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13235,7 +13324,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "d05ee398ba993167eb69d3121e0a69475fb6ab81596ce0d0e0a4f0e6505a09e5",
+      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13349,7 +13438,7 @@
     {
       "id": "SURFACE-f215d4911e9d9bef",
       "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-      "sha256": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
+      "sha256": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13625,7 +13714,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "31d28e0d44d18fe0b559f23d7c7f20f194bacb0f7c392231d8e3c2b4b9c728b8",
+      "sha256": "d1d74828437efeedb0d91e93c8b185f33af285e758d2d3232eae61fd6345e4a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13721,7 +13810,7 @@
     {
       "id": "SURFACE-f944f6a148e07793",
       "path": "tdf-hq/src/TDF/Interactions/Server.hs",
-      "sha256": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
+      "sha256": "8472ae6cfaf2da6304c37faa268ccca8894e0399bbed23c0f41d8c65548fc27a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13745,7 +13834,7 @@
     {
       "id": "SURFACE-93b6cd6234c2c39a",
       "path": "tdf-hq/src/TDF/Invoice/Datil.hs",
-      "sha256": "ff99ae5b699a63b7ebe810d8ff4b545d40317aba4930850d34c52519f8af19da",
+      "sha256": "83703af73bc1195ce5483cf68b9afe61eb4107dc6ca72015a2f7ed86200d7eae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13859,7 +13948,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "d3a9c508ac9ef8c10abaa3bab455fcf32f205645413a69644552f4cf392aaa0f",
+      "sha256": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13889,7 +13978,7 @@
     {
       "id": "SURFACE-52b73c408ae18bc0",
       "path": "tdf-hq/src/TDF/Routes/Courses.hs",
-      "sha256": "08d0448de525d36e9556d8e7866a43098be928051eb01035bd058962c60e2c39",
+      "sha256": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13913,7 +14002,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "ea14a664aa1e0c61e8d09249eddf4ea04d1c21b5d53d7febb5c7d0cb228b8a98",
+      "sha256": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13931,7 +14020,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "6044061a7df3c8217e48c868ba172594424681ebfd8a331611bc4f8208b8f63b",
+      "sha256": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13943,7 +14032,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
+      "sha256": "97d466b4b45b9f13d1f1c1723008dbfaf651884cdaf27fcff67d7c8d03816fb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13961,7 +14050,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "f1efbfa00b21339eafe949fcde32e8d8c8ec6a38382abfcfbe6a9f39fa8a7203",
+      "sha256": "ca923ce0efbe3b8bebf51caf037d5ba99b07ba627c4188417811e79223353b8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13985,7 +14074,7 @@
     {
       "id": "SURFACE-bf94f0cb1cbb82d0",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
-      "sha256": "31a47d965f551cfd742c583718cf5227de448d2a322a062c67c8ff5512e22c6f",
+      "sha256": "e0742f56e34371946ef5ffd5ca814c768332e85be2d8c27701c5727bb9a9fc76",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13997,7 +14086,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "ea4a7830815ea5d6f35c3c7a631b95bdd13f1b0032ac64c745414f5f888b1470",
+      "sha256": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14027,7 +14116,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
+      "sha256": "ca99eb94d7a285f976b592adf8ad14b2adaf39566f304cc84c677aed5e991330",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14051,7 +14140,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "fedb4bbb119200dbfe0beca534dbb35e1792df2c6fbdef895f796ea3a16b255a",
+      "sha256": "3ebfab13b6ab66fc1811ba19eca9bc617dd026f2a0e62a055267cd5d6c10c07d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14063,7 +14152,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "d4a8d179f49b9303b0f0a0f2078984b0f846917008df31649c37d867abacf296",
+      "sha256": "3b87f68d8a54e5021dbb677658a692a96c107e626343f0e4a99a1f2b3884fab7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14075,7 +14164,7 @@
     {
       "id": "SURFACE-4f6a7b230d53af08",
       "path": "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-      "sha256": "e393b4971fd571c3f4126ddf3f52ff4e78d069b800ba13403dc7c123c005ba80",
+      "sha256": "57e716e80d57d0581a2ac90cc57e76ea31bc4d2b0f6c84b5dd457121a7b8f8be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14105,7 +14194,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
+      "sha256": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14357,7 +14446,7 @@
     {
       "id": "SURFACE-9070029de4202bc2",
       "path": "tdf-hq/src/TDF/WhatsApp/History.hs",
-      "sha256": "7088ca90378f4f0da612e0129a1cf0fbbc4c6ae0b8e635d50101b7a657da1a57",
+      "sha256": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14387,7 +14476,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "8f5069c1e08068ca34b0c95240ad8e4c7394b4f7f8c73da60cdcd27a752b72d2",
+      "sha256": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14453,13 +14542,13 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "62613a02df2340349d7a24fb0fc5f74104ae2250921e58a25ade6d5720947e76",
+      "sha256": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "256ec585c9379a9f883dced3863f1a6326b6a6d94c9637cf648e5c21ed491d24",
+      "sha256": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14537,7 +14626,7 @@
     {
       "id": "SURFACE-d181bc4924c66a49",
       "path": "tdf-hq/test/TDF/CourseIdentitySpec.hs",
-      "sha256": "dda271fddc5136622ea77685a08fc700286fc86c17a818a80cbb992a68840d9f",
+      "sha256": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14567,7 +14656,7 @@
     {
       "id": "SURFACE-2109051a71e906d5",
       "path": "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
-      "sha256": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
+      "sha256": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14607,9 +14696,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0b2762494d9e6ae1",
+      "path": "tdf-hq/test/TDF/EventOrganizerSpec.hs",
+      "sha256": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-33e5f75ed002393a",
+      "path": "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
+      "sha256": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14621,7 +14722,13 @@
     {
       "id": "SURFACE-1bf88093e2bf7bcc",
       "path": "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
-      "sha256": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
+      "sha256": "de7e62fd390a1286f6daacc67042af69b557adc1c1e8e4fa40c6f2538c32a65d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0853d48fb3fc1d84",
+      "path": "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
+      "sha256": "bff4993ffb5608afabf5cc04b6fb27d06036c61a78600334fc72800ee68379f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14634,6 +14741,18 @@
       "id": "SURFACE-14c41dc429bf98d1",
       "path": "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "sha256": "0cfaf43ff1207386bf1a360184290a96f8c7159335f51576a5dde376c9e68b2f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1b3fd699697da8c7",
+      "path": "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
+      "sha256": "e1e1dcf22068ce44f41ea985d546235c844e468cdfe35a23ff297d6d0b8782b4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7e8c0b5502e595f0",
+      "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+      "sha256": "493863cd4117580ed376fd872342880fec5e569d809fd69e87a857987b9d0d1c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14669,7 +14788,7 @@
     {
       "id": "SURFACE-ee92e76c443dc34b",
       "path": "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-      "sha256": "8e0b0c17880e71fc8aa6c5ba84df8d4f990f5196a42e697b491c789961ed4fc6",
+      "sha256": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14729,7 +14848,7 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "f30063d0ed9fc0892bcc904b2a8644d7ac6e15e024ca938ee50cee89a619dde2",
+      "sha256": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14747,7 +14866,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "a7bbaff932f0963a212e43f105bf812db42b1fba0d4c23008a4edf82069fd651",
+      "sha256": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14771,7 +14890,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "a14c4b3e6e807c783930409ce62c7ba50d027bf94efbbdcbb8285e93f833c48b",
+      "sha256": "6bfeeef8b760b15e30b1fdcbd6bd7e5b3e73a24174916fc9cf9c0736b3704bb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14793,6 +14912,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b88bd7d333ae2b44",
+      "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+      "sha256": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6a608596a0a41e90",
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
@@ -14808,6 +14933,18 @@
       "id": "SURFACE-60c6485e90430e4b",
       "path": "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "sha256": "a641f1c2e97c98891f2a295fb3ac96eb38a8790150dff92719929c6fedbd3d5a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a7aa6fe1e1854ab6",
+      "path": "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
+      "sha256": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-da468ce284927c10",
+      "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
+      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14832,6 +14969,12 @@
       "id": "SURFACE-9fc1887171a6bcfc",
       "path": "tdf-hq/test/TicketDatabaseRoutingMain.hs",
       "sha256": "8297d23c35763c3f99dfb3e4c74898e85cb99321b3b0cebcc263452b8b4dedec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-22495db6f5498450",
+      "path": "tdf-hq/test/TicketManualReviewMain.hs",
+      "sha256": "b6805c746f14039f482189a3ae4aba73e4c17748698d9778924226849bd615b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14919,9 +15062,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-dd4a469966e70938",
+      "path": "tdf-hq/test/integration/directory_event_search_http_seed.sql",
+      "sha256": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
+      "sha256": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15165,6 +15314,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6f930c6a7d3e8525",
+      "path": "tdf-hq/test/integration/ledger_posting_balance.sql",
+      "sha256": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-819a82f0c31c3d37",
       "path": "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "sha256": "47a5bebb6e41a34ee49fc03c2ca4cef20965c5d090fe53600806599e7bcc3a91",
@@ -15252,6 +15407,12 @@
       "id": "SURFACE-dc667b127650730a",
       "path": "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
       "sha256": "54f6292e7c514c4469d88e399becabb582ef6084919e27f2efa23095105273de",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ac5d073599fa02c9",
+      "path": "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
+      "sha256": "6958af8af06ccb89a3f8fdc28b17493d5d4c590da5499b56033eb1c32ea549d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15425,7 +15586,7 @@
     {
       "id": "SURFACE-34f76aa7fd7d8a7d",
       "path": "tdf-mobile/__tests__/DirectoryManage.test.tsx",
-      "sha256": "69b89cea5b7555f512d722545b940510d90f066b2a5e1e2a30d5f8efae01b887",
+      "sha256": "64c623e02b43a402d4f9cfc961a0660a20468d280550b944b6419f9afd93d82e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15575,7 +15736,7 @@
     {
       "id": "SURFACE-24e99beac8cf6857",
       "path": "tdf-mobile/__tests__/TicketCheckout.test.tsx",
-      "sha256": "47a2cfd461532f02a5dc2b2c29234fdcdeeccaac0c7e391097a517b90c354f78",
+      "sha256": "eaf60203acf718ae2b4760cadb773cf96f0d4ac0864c349a842c97b340467ddf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15605,7 +15766,7 @@
     {
       "id": "SURFACE-d17c354d94ccad58",
       "path": "tdf-mobile/__tests__/apiClient.test.ts",
-      "sha256": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
+      "sha256": "8054d64aa2c394f51a77be5398b54218f3fbb53dcb4741371a2a824f3aa40472",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15887,7 +16048,7 @@
     {
       "id": "SURFACE-f52dfd6e2d77a57f",
       "path": "tdf-mobile/app/(tabs)/directory.tsx",
-      "sha256": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
+      "sha256": "caa7f7e870394a214e7ddc4fd88b10c3ac7982bf956c54a9a47b58d55ee1a933",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16073,7 +16234,7 @@
     {
       "id": "SURFACE-73a1b649f6438e52",
       "path": "tdf-mobile/app/directory/manage.tsx",
-      "sha256": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
+      "sha256": "86c9219769a3bddefd54fa47c6aca22b60f23c8f1be86ec65414ff84defd0724",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16175,7 +16336,7 @@
     {
       "id": "SURFACE-69205bb0d640d69a",
       "path": "tdf-mobile/app/ticketCheckout.tsx",
-      "sha256": "bdc26946f5eafeb76b9765a03463052e0d0472bbdaef2dc4c840056d4f676ba2",
+      "sha256": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16523,7 +16684,7 @@
     {
       "id": "SURFACE-c2392e7f7f8aefc5",
       "path": "tdf-mobile/src/api/client.ts",
-      "sha256": "aabfd57e21b6301458c11f923c5ec5e5f8429b1bf8d0bbddd27a15cc8ddd50a3",
+      "sha256": "406ab62be2e1a562c231d0a3a296a4bd206bb483e91cd3d8a52aebffd1771312",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16553,7 +16714,7 @@
     {
       "id": "SURFACE-5cc50673dc611e52",
       "path": "tdf-mobile/src/api/events.ts",
-      "sha256": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
+      "sha256": "3d4f86fa218c3f1cebbb88b3ad828082306221a95406de93cc31318aa033fad7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16571,7 +16732,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "dfc87c0f30b1a2e633d0de6517fc07625b82d431c6e15c2cfbaaa9f998ba94e4",
+      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17417,7 +17578,7 @@
     {
       "id": "SURFACE-dd3e1fc92ab14c2d",
       "path": "tdf-mobile/src/types/index.ts",
-      "sha256": "feb82092f85f3fb7885eda7435f50f9fbc84c71535839d73d21e8ba9de6d0357",
+      "sha256": "98702db8016ac964ad114836554da03d755ca2b11ffa15a6e4a50219994401a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17623,7 +17784,7 @@
     },
     {
       "path": "IMPLEMENTATION_SUMMARY.md",
-      "sha256": "91c11103297cf7ec92b00ee6543f5dfdf87497817a7dab07d778009ad8b89f2c",
+      "sha256": "177086454456e8ccc689d03625bf987ed029035beef42fc517fafb8c7434393f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17672,7 +17833,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "b55dd35776b160c09b956c310d198f0174eb4da0373c4d4439e8a6a6cf14c648",
+      "sha256": "590b2c2fcc4858c3b8c589a9e68d3b628c90773071a838cbbc0ab7c453a4b42a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17770,7 +17931,7 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "32fa67d90a79511f17e10b61a6d6114eabe68f6111859ce47d37afe57dff5d55",
+      "sha256": "03dd8aa2436dd0d1399a14a963bb1b701d62d13cb2f5acd7cd4575fe764849f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18372,7 +18533,7 @@
     },
     {
       "path": "docs/courses/README.md",
-      "sha256": "b1ae3130c896f1f62029896cf158018bea1a2b3c067e22ecd81aada48652712e",
+      "sha256": "e7aa43be406b9c8f15dc8d162531308be2ed836c76fa2396fbfcad98662f2dca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18386,7 +18547,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "f3f513062e1098be6f4a7ff7af4e17a3e309eafc011e74fdae9062bfb2757eaf",
+      "sha256": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -18995,7 +19156,7 @@
     },
     {
       "path": "docs/events/ticket-electronic-invoices.md",
-      "sha256": "7d34ec5060aa4b40d0f11fdef77dcae5081b57e0afe628d81a843afa6fff83db",
+      "sha256": "42bd8249b44424d0902c5c2d1782f5d085719e00b87b823d25f37a1b7b473221",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19016,7 +19177,7 @@
     },
     {
       "path": "docs/events/ticket-manual-bank-transfer.md",
-      "sha256": "9f7ae131f74ae0a056b881e90b548a0a52f9c1f9d982e035f9580e09d58728e0",
+      "sha256": "318425bcbf548f3b94d7ecba99e9f1e248766c6d915d00bbe324ca5c6a723400",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19457,14 +19618,14 @@
     },
     {
       "path": "docs/mobile-app-store-submission-checklist.md",
-      "sha256": "06f840e58831f2038ac8c7f403fe6ae8e6fc0c35310185cc6325b387a7257438",
+      "sha256": "c32e333e598977aaa43fca92d7ea1e79efe86e9b3cd525426ab6e108e1dce376",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "197f55215f79c6b185f74a1271582f5142aef297f8c3ff82b8262a5c3d249a7c",
+      "sha256": "f44f84563e2e628bcb9844a72f2f9838a132cbd7703d19c145686d4794b3258f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20598,7 +20759,7 @@
     },
     {
       "path": "docs/venue-manager/domo-lender-one-pager.md",
-      "sha256": "19d0be62af7fd9cf728c34b46ea0ea12224b2d105f37cb582c170c0e1fbb7b4f",
+      "sha256": "b0492e503fa54df82da76d92fa41c87f11796760a57021bf5242eecd438667ea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20835,6 +20996,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/web/canonical-public-origin.md",
+      "sha256": "ab1b4ea784baebd1998ec47ba87c8fbdd31b1b2fa2ff9a12cb8f63708ee5661c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/event-operations/AccessCodeValidation.cfg",
       "sha256": "4a29f764763dbfba0ee6e790329799965083118660bfce5f1f16df597a3f2dca",
       "authority": "inferred",
@@ -20858,6 +21026,69 @@
     {
       "path": "formal/event-operations/AccessCodeValidationSuperficial.cfg",
       "sha256": "ec79cb02c3f008d2e109d914823841736f16aca69f3377ad30e14d3fee896217",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrant.cfg",
+      "sha256": "04d65f603d31f2a3ea6db6303ad2210452894b2629e4b1fc01a808dc6a393c17",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrant.tla",
+      "sha256": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantAdminInvite.cfg",
+      "sha256": "46c90de738c4270344fd79a72c6d0dabce9d2c86b37fe342005642c368ad07b5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantExpired.cfg",
+      "sha256": "cf8f6142f0a630e51f80e22f67273369c2b561718c906846fd1979a8c5560f5b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantNonAdmin.cfg",
+      "sha256": "a8163ae24167a2fe00adcaffeb2e03dd8bc76358449e6bea908e4ae3114397e8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantReactivate.cfg",
+      "sha256": "5662cd2dcabfb00eeadfe18fa9c509406ded9ac88d33e7a624f37ae1e7031d05",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantRebind.cfg",
+      "sha256": "bc209ff661f1afc357a7eb5be88ce641b0a5153051ca30d6b0f3cf3b96929957",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantRevokedLink.cfg",
+      "sha256": "1b4719ff202d40627b6988bac812335dedcb70dfa9ab279644b8e52c006b8bbc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/AccessGrantSelfApproval.cfg",
+      "sha256": "443e87952adacf3c30c6adeb01fb17c57d62e77b48bbf71fc140f1088a345aab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -21507,6 +21738,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/EventOrganizer.cfg",
+      "sha256": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizer.tla",
+      "sha256": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+      "sha256": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizerTrustEarlierRead.cfg",
+      "sha256": "55781bffd01b28268c218fe896d026901db6ad84803b38c89359a5e290f2b430",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+      "sha256": "f735a2ec461f4995718cd73d66940e3e81e74cb166498b239100051de506e479",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/EventStructure.als",
       "sha256": "23732513fe1c52533409a752b9e9b69933907effe13ee13d7d2cd07a6220c4c2",
       "authority": "inferred",
@@ -21647,6 +21913,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/InteractionWriteBudget.cfg",
+      "sha256": "086c31c178692802cafdd7277b1249d51366fdaff415a7b6b37b54a8a362f1c8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudget.tla",
+      "sha256": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetErrorRefunds.cfg",
+      "sha256": "70122b16cd0d9168ca44894cfcc30979bf5a7d683ce46e3f30486b58ab0964ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetOneCounter.cfg",
+      "sha256": "987e3abf110f15b562209e6d8190c8a0a9270caff51e068882fc7a04a23c9471",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetOneExtra.cfg",
+      "sha256": "e58b11517278d49a941353c7653155f4df5f57f292328a9061a1bd6fc86e60ed",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InteractionWriteBudgetUnlockedIncrement.cfg",
+      "sha256": "eb792a2cd1a29a13fdfb158b5a99a16398f01bd0b6e60ff02e3600e9c36697c8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/InvitationSafety.cfg",
       "sha256": "61505b22d7a3915f744f75b8b376137c26c4bb28da08ed56cd91e1485adaa831",
       "authority": "inferred",
@@ -21698,6 +22006,48 @@
     {
       "path": "formal/event-operations/InvoiceReceiptStaleCounter.cfg",
       "sha256": "43f890ca9776657cc95d64e615628e531999039bd2d4eec964280665e7491e72",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmission.cfg",
+      "sha256": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmission.tla",
+      "sha256": "e692d254e48b6b1104cd1e525825a946b976906ae318abe8ad29278d15478d76",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg",
+      "sha256": "ce0a27a215e1fabc85959522be05163aee7efb927dcebde6eaf063fd0343b393",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionStaleFinish.cfg",
+      "sha256": "0146a45dc8944a564e78422f32368bbe063143c339abb8b0a6b8c1d8a758750d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg",
+      "sha256": "dab915f61d964da7720b82f0197513fd4455b3f2b0b73c34cae627cf35feb2d7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
+      "sha256": "9cea081fe4f68063303cf47bdb2668186e4a65cdda284625a2e7d426b86b63e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -21773,6 +22123,76 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ManualBankTransfer.cfg",
+      "sha256": "2a2123006efe1bafa296326d6e21e9a188d6606c6798cf7cd63a7b25e995bfaa",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransfer.tla",
+      "sha256": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferExpired.cfg",
+      "sha256": "4fa0bdf12b323216307b18db6fe413419bfd94d123c06c20d5e1e7e2ec86d35b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferOutsider.cfg",
+      "sha256": "470fb0090ce08d410c7641a04eb710a49fa9a7522687427a25ad796f873a85c0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferReopen.cfg",
+      "sha256": "f9b82ac97704d11df6cf562d5839b598a95c4bd86a030be03eb2f5d7eb6c766e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferReplay.cfg",
+      "sha256": "1b20311cd381ee60da30f5cf502f6c719f5c567fbf1a9946ac3254438d4f3987",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferSecondRail.cfg",
+      "sha256": "762988bdfa80e3d295ae6d47459130fa3cef171ec42c999b8bbb58a2631ec348",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferSharedReviewer.cfg",
+      "sha256": "d51f4b99ff25f8ece76809ad892bf80b359cab852e45ed042d57ef924f11c526",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferSplitIssuance.cfg",
+      "sha256": "aa1c53fabac69ff7c060beb32088634e66ef71cee6068679d99cbf2c9e81324b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ManualBankTransferUnbounded.cfg",
+      "sha256": "4497a77c542f18aa12b6a41101a02fad477675cff3fd6c990d7a130427786baf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/MarketplaceCatalogRead.cfg",
       "sha256": "ff3cba8eea1f68fff31c447fec96b80a799900b982807069bfb45ce64be6fe8b",
       "authority": "inferred",
@@ -21824,6 +22244,97 @@
     {
       "path": "formal/event-operations/MarketplaceStorageUnsafeKey.cfg",
       "sha256": "55ca8fa62d91f10d763e85954a048a1da46bdcfad6548c07ea6b6daf29842a85",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedelivery.cfg",
+      "sha256": "cf591fb7addfe8447ece3c9ce41981e7d84a8db4efff75dd04c80cf99b8f1277",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedelivery.tla",
+      "sha256": "7002144788dc461497460daefb121e6df24d15cd958aff6fa7250cb000f007e3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg",
+      "sha256": "4d82b02dd6d3e28d462cecea8ded5df695474aced641ceec87b3eabb63e86ded",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+      "sha256": "f287a45782f040f7b03ca47d26f9e08a640cd18fd7465698ab9b90113331a865",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+      "sha256": "2aa32978ce8cf5bcf9131559d75f6f9512d2a8a7cafad20ae1d4ef5a5272cfad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlement.cfg",
+      "sha256": "1d01c4e7c22ffb65fdcd11c272eb6ffa9266ed87f46ad1493abd5b28bfb74ee5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlement.tla",
+      "sha256": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+      "sha256": "283adcf142b41fe6953e05e8560692a9525f60285ec12b1c39ca27c6899cc535",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+      "sha256": "ed7e5f9ea9215b37fd04415ae9513c21e4683ed031183bc3e50e16d910ab9db3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
+      "sha256": "87506adb35f6557b34ba036166bb36fd84f048caf2cfdef6f120c9e753f9fd68",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementNoLimit.cfg",
+      "sha256": "521403ca2a98706315a4d49c02e4a7a9e76e54cc3f5cac422c8c951e8f40adf2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementRefundedDownload.cfg",
+      "sha256": "8aacebb1b70b924393fe43cc16b0e73de2de39453d9c123832ddd8de646c84a6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+      "sha256": "ab99a166e494cd24f8d1c97a221e4217e3861fbb81923e3a0cd4a4268eabb86b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -22264,7 +22775,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ce129571c1a938f74cb2fa8b79e004fa29583954837be448c4446833a6664c83",
+      "sha256": "e31602f38ddfb988e055b03317d0033a8aea15701c4f5000984462d4254a2b62",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23145,6 +23656,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/TaxDocumentSubmission.cfg",
+      "sha256": "90948dc98ed7fcdf59b8197a42b8821d70faa31d7efe921a8a056f5b69c516c2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmission.tla",
+      "sha256": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionLostAsRejected.cfg",
+      "sha256": "0d319e281d9fb06af6c7fa9ad37015a99df7e5c85cb5608209c002a545152136",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionRetryUncertain.cfg",
+      "sha256": "daf30c9ec55b3903a912d3367705863207297955a58d862f25edb4e7664070ad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionSkipStart.cfg",
+      "sha256": "800600ee6c07703d9cf5f5080b98e4b1d130da5ae50cbcabd8ecae1fd94855ac",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TaxDocumentSubmissionUnguardedStart.cfg",
+      "sha256": "55bb957975b7464ec80f104e7ab447a23363c6771add7e1cf6904832f60ebe5e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WebOnboardingRecovery.cfg",
       "sha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca",
       "authority": "inferred",
@@ -23175,6 +23728,118 @@
     {
       "path": "formal/event-operations/WebOnboardingRecoveryStale.cfg",
       "sha256": "242146f81cb14630d5bd9aad6e9ddd630a67248c81843503e8eca34577769108",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsent.cfg",
+      "sha256": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsent.tla",
+      "sha256": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+      "sha256": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
+      "sha256": "96c5a3a384f45f1e9a6e28a19c6d1e24d6f07dce9a9ed91ec365ce9d149a03d1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg",
+      "sha256": "7a80288380d6091257f5075a9b36c3edbbfc462b15f3fd903016e935e1ea3b34",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentStaleReply.cfg",
+      "sha256": "3562ab6ee72465ea40c5dca690c1ca00ca3108f733ccc273ce605fbc2f207de7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
+      "sha256": "730b2c17cbd520071cb7eeb845b2ed2cfb43c388c6792f9ff850a8f3bbdd1ee8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
+      "sha256": "30f022a9bff35ad3e6760f3c45994fea034eb178b517b2ee4ea8e6d183422d87",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
+      "sha256": "34cc1751977ea8443e1573c240b29bdb22c2e87d89fd9e7345863af857709690",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+      "sha256": "b96a20e18c648021f6794527b13d50fefaaf40f310ffab2e5147ef7bdd80201c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedelivery.cfg",
+      "sha256": "9db8bd7a24495d762b38f20a92bdb551c9b6129b5ce8928ed678b7dc8ff1c0cb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedelivery.tla",
+      "sha256": "3b4ce1665a1f239b6ade4bbaafc9ce4dea4bb1d8a71281239081a6b632c830e1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+      "sha256": "e83c566e96cd54c2515ee5e19d39d88d12eba827090cb8798b5c806956c6456f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+      "sha256": "d6b0afaa05315513388cd6e299e1e88ee8c9f2b85e9523dfac056c0e85f889c7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+      "sha256": "68c1aece036e6d1b5eb2af04a7fa597f8a4fc976781a29efb6ed0522a28bf789",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg",
+      "sha256": "898af974ec689664240af4da2d5b54a0a9a7c415ab751d1c78e0131c6b210423",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23216,7 +23881,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "9608db1c42268b2cc12b5d126aa4b0dbd20d4977d42036eccc52bcd00f03e39d",
+      "sha256": "b07396c956f65c75fa026fdd8d5babee6aa3043689180c2dda99404d2d9e7063",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23636,14 +24301,21 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "53afed102960b8b96dfb8382bdd90e2f23b4d98d4e4e87f5481fe5eac5707f52",
+      "sha256": "cf91b1a38ca3f69bfc27d2ba6dbb84f16fc7d12912849878f088b41622458888",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/access-grant.md",
+      "sha256": "e6cf9fa209d51e97e68d4fbf92d51a46e2cd060288a5c4deca589a16b40080d9",
+      "authority": "inferred",
+      "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "d535216254f854f9bb872e6dcebce42edf9121ea581f2149e149f0fc94565c60",
+      "sha256": "822bc4afd1c4a8e35cbc83c2bee3fa37c060b798dc5c2f042cb3d819ae0a0b12",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23733,6 +24405,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-organizer-assignment.md",
+      "sha256": "71f6f3da069ad720ab63d42217a987e35857a90e294aeb107c4030e926d01fcd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/fixture-routing.md",
       "sha256": "d32d54490e8c2c32235c49367b5a75c054c7aa3f441801d6e7cf7ea72291cfbd",
       "authority": "inferred",
@@ -23756,6 +24435,13 @@
     {
       "path": "formal/system/identity-recovery.md",
       "sha256": "08ddf5bbeb66849b8383db3df14429d0ea43d8e3d193b25c6d81f0991cddfeea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/interaction-write-budget.md",
+      "sha256": "3b4d2a2df4c8a0faa2668efc68f8143414fd3bec96c772c765a1ae7ad3b688bc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23789,8 +24475,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/manual-bank-transfer.md",
+      "sha256": "1a4f886b7e309133b8e3d4137f0e5aab7ee1b10c97ba48b0c193509fbcab43e6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/messaging.md",
       "sha256": "14053fa13d1ae86436bca5ce058214b70d948df136d3932abef033b28f292416",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/meta-redelivery.md",
+      "sha256": "3b5e7f6bbfbf9b1a8c6deff5e254968884d3eb768b51e0d8e6d97fc1fb182cbc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23831,6 +24531,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-purchase-entitlement.md",
+      "sha256": "b0dabf71329d1acb7c9f41ccad34bae2da72b5df4e2010cee0ce5520c1592b28",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-command-boundary.md",
       "sha256": "b8b856db3313d417afb450cc04f38f41b7f557f2da6b092b209e25b5d0630663",
       "authority": "inferred",
@@ -23846,7 +24553,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
+      "sha256": "c43590d32b2a99a4e4c0da0fb480e3ac7cf555a3a8ed99aed666ae1e1890f916",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23916,7 +24623,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "590dca6d55d4d8a44564eb516b332d259339170d80019571ee55c2b044f3d704",
+      "sha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -23964,6 +24671,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/ticket-invoice-worker.md",
+      "sha256": "bb3eb733b9bb1985d4d6691ed73e8762c01689cb0db7cb44756abd453381b0e0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/web-cutover-correspondence.md",
       "sha256": "7d2d4a80ba8affb90817add3d27c4eaa53eae76181f9b7920de85808d47f90c9",
       "authority": "inferred",
@@ -23973,6 +24687,20 @@
     {
       "path": "formal/system/webhook-log-privacy.md",
       "sha256": "f4aad0ca7b00b52f4602aa60522282b7ada730d566b95ef9cfb14c33b67ffb17",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/whatsapp-consent.md",
+      "sha256": "cec77a010eea533269e7f7befe366e211bce252d2dc6510e69c7bc15daee5a89",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/whatsapp-redelivery.md",
+      "sha256": "511952600e257a7c455da7e149a2f4fd63dc4926674bcf29bef8db8efeb7b644",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24084,28 +24812,28 @@
     },
     {
       "path": "tdf-hq-ui/public/account/privacy-es.html",
-      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "sha256": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/account/privacy.html",
-      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "sha256": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/account/terms-es.html",
-      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "sha256": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/account/terms.html",
-      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "sha256": "dc4ca75896fb5b088626d963c59c6c7ddc4dfddcef293ae36ea7ec61221a7293",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
@@ -24231,7 +24959,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "4e9f4e21af264c007cfd5e5572c90edb97ad39ddff79d6e10f42e21a0d031ad6",
+      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -31081,6 +31809,150 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/AccessGrant.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantAdminInvite.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Admin\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantExpired.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = FALSE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantNonAdmin.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = FALSE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantReactivate.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = FALSE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantRebind.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = FALSE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantRevokedLink.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = TRUE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = FALSE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/AccessGrantSelfApproval.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CheckDistinctReviewer = FALSE",
+        "  CheckAdminReviewer = TRUE",
+        "  CheckExpiry = TRUE",
+        "  CheckLinkBinding = TRUE",
+        "  CheckLinkRevoked = TRUE",
+        "  CheckNoReactivation = TRUE",
+        "  InvitationRole = \"Artist\"",
+        "INVARIANTS TypeOK NoSelfApproval AdminApprovesGrant NoApprovalAfterExpiry SingleRedeemer RedeemedNeverRevoked InvitationNeverAdministrative NoAutomaticReactivation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/AccountDeletionAuthority.cfg",
       "declarations": [
         "SPECIFICATION Spec",
@@ -32132,6 +33004,90 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/EventOrganizer.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = TRUE",
+        "  ConditionalWrite = TRUE",
+        "  RecheckStored = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizerAnyoneClaims.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = FALSE",
+        "  ConditionalWrite = TRUE",
+        "  RecheckStored = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizerTrustEarlierRead.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = TRUE",
+        "  ConditionalWrite = TRUE",
+        "  RecheckStored = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/EventOrganizerUnconditionalWrite.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Callers = {a1, a2, u1}",
+        "  Admins = {a1, a2}",
+        "  NoOne = none",
+        "  AssignOnlyAllowed = TRUE",
+        "  ConditionalWrite = FALSE",
+        "  RecheckStored = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OrganizerStable",
+        "  OnlyAllowedAssigned",
+        "  ManagersAreOrganizer"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/ExperimentAuthority.cfg",
       "declarations": [
         "CONSTANTS Enabled = TRUE LockedEligibility = TRUE IdempotentExposure = TRUE BindAccount = TRUE",
@@ -32335,6 +33291,121 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/InteractionWriteBudget.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetErrorRefunds.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = FALSE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetOneCounter.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetOneExtra.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = FALSE",
+        "  LockedIncrement = TRUE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InteractionWriteBudgetUnlockedIncrement.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3, r4}",
+        "  Limit = 2",
+        "  LastMinute = 1",
+        "  Nobody = nobody",
+        "  KeepChargeOnError = TRUE",
+        "  ExactThreshold = TRUE",
+        "  LockedIncrement = FALSE",
+        "  CountPerMinute = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ChargeCounted",
+        "  LimitHolds",
+        "  RefusedOnlyWhenSpent"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/InvitationSafety.cfg",
       "declarations": [
         "CONSTANTS",
@@ -32432,6 +33503,116 @@
         "  IgnoreAuthorization = FALSE",
         "INVARIANTS UniqueInvoice UniqueNumber BoundReplay AuthorizedCommit",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmission.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionRetryUncertain.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionStaleFinish.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = FALSE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionUnfencedStart.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = FALSE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = TRUE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Workers = {1, 2}",
+        "  MaxLeases = 4",
+        "  MaxRetries = 1",
+        "  MarkFenced = TRUE",
+        "  FinishFenced = TRUE",
+        "  UnknownIsUncertain = FALSE",
+        "  RetryOnlyRefused = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  AtMostOneProviderDocument",
+        "  AuthorizedIsFinal",
+        "  AuthorizedIsReal"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -32545,6 +33726,213 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/ManualBankTransfer.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferExpired.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = TRUE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferOutsider.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = TRUE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferReopen.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = TRUE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = TRUE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferSecondRail.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = TRUE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferSharedReviewer.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = TRUE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferSplitIssuance.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = FALSE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = TRUE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ManualBankTransferUnbounded.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  OrigHold = 1",
+        "  HoldMinutes = 3",
+        "  Cutoff = 2",
+        "  MaxTime = 7",
+        "  SkipIndependence = FALSE",
+        "  OutsiderReview = FALSE",
+        "  ApproveAfterExpiry = FALSE",
+        "  UnboundedExtension = TRUE",
+        "  IgnoreIntentExclusion = FALSE",
+        "  ReplayEffect = FALSE",
+        "  RejectReopens = FALSE",
+        "  SplitIssuance = FALSE",
+        "INVARIANTS TypeOK IndependentApproval LiveApproval HoldBound SingleCharge NoSecondCharge TicketsNeedPayment ExpiryFinal PaidHasTickets",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/MarketplaceCatalogRead.cfg",
       "declarations": [
         "SPECIFICATION Spec",
@@ -32619,6 +34007,307 @@
         "          RequireDurableKey = FALSE",
         "CHECK_DEADLOCK FALSE",
         "INVARIANT NoDispatchWithoutDurableKey"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedelivery.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = TRUE",
+        "  KeepText = TRUE",
+        "  KeepDeletionTime = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = TRUE",
+        "  KeepText = TRUE",
+        "  KeepDeletionTime = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = FALSE",
+        "  KeepText = TRUE",
+        "  KeepDeletionTime = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Texts = {t1, t2}",
+        "  None = none",
+        "  MaxDeliveries = 3",
+        "  MaxDeletions = 2",
+        "  MaxClock = 2",
+        "  KeepReplyState = TRUE",
+        "  KeepText = FALSE",
+        "  KeepDeletionTime = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConsideredOnce",
+        "  TextKept",
+        "  NoTextAfterDeletion",
+        "  DeletionTimeKept"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlement.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "  SignFromOriginal = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  UrlsEndWithAuthorization",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = FALSE",
+        "  ActiveOnly = TRUE",
+        "  SignFromOriginal = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = FALSE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "  SignFromOriginal = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "  SignFromOriginal = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  UrlsEndWithAuthorization",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementNoLimit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = FALSE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "  SignFromOriginal = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementRefundedDownload.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = TRUE",
+        "  UpsertGrant = TRUE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = FALSE",
+        "  SignFromOriginal = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Requests = {r1, r2, r3}",
+        "  Limit = 2",
+        "  Lifetime = 2",
+        "  MaxTime = 4",
+        "  Never = 99",
+        "  RequireEvidence = TRUE",
+        "  StatusChangeOnly = FALSE",
+        "  UpsertGrant = FALSE",
+        "  EnforceLimit = TRUE",
+        "  ReplayWindow = TRUE",
+        "  ActiveOnly = TRUE",
+        "  SignFromOriginal = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  PaidNeedsEvidence",
+        "  OneEntitlement",
+        "  LimitHolds",
+        "  UrlsInsideLifetime",
+        "  ActiveWhenIssued"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -34727,6 +36416,91 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/TaxDocumentSubmission.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionLostAsRejected.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = TRUE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionRetryUncertain.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = TRUE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionSkipStart.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = TRUE",
+        "  UnguardedStart = FALSE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TaxDocumentSubmissionUnguardedStart.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  MaxTokens = 4",
+        "  MaxRetries = 2",
+        "  SkipStartMark = FALSE",
+        "  UnguardedStart = TRUE",
+        "  LostAsRejected = FALSE",
+        "  RetryUncertain = FALSE",
+        "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/WebOnboardingRecovery.cfg",
       "declarations": [
         "CONSTANTS CheckGeneration = TRUE CheckReceipt = TRUE Coalesce = TRUE",
@@ -34766,6 +36540,392 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK CurrentSessionOnly",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsent.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = FALSE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentReleasedFailure.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = FALSE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentRenewedUnsent.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentStaleReply.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = FALSE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentStaleWithdrawalClock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = FALSE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentUnboundFailure.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = FALSE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentWithdrawalReset.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = TRUE",
+        "  WithdrawalKeepsInterval = FALSE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppConsentWithdrawnReply.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxTime = 6",
+        "  ResendInterval = 3",
+        "  Window = 3",
+        "  UnsentWindow = 1",
+        "  ReplyOrderGuard = TRUE",
+        "  WithdrawalGuard = FALSE",
+        "  WithdrawalKeepsInterval = TRUE",
+        "  SettleWithdrawalInstant = TRUE",
+        "  BindFailureToClaim = TRUE",
+        "  KeepUndeliveredPending = TRUE",
+        "  ShortUnsentWindow = TRUE",
+        "  RetryKeepsInstant = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ConfirmedByOwnLaterReply",
+        "  WithdrawalWins",
+        "  DeliveredRequestsSpaced",
+        "  ConfirmedInsideWindow",
+        "  UndeliveredStaysPending"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedelivery.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryDuplicateStore.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = FALSE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryEffectAfterStore.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = FALSE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryApplies.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = FALSE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WhatsAppRedeliveryEveryDeliveryReplies.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Deliveries = {d1, d2, d3}",
+        "  Stops = {stop1, stop2}",
+        "  Enrols = {enrol1}",
+        "  MaxSubscriptions = 2",
+        "  FirstDeliveryOnly = TRUE",
+        "  UniqueStore = TRUE",
+        "  StoreWithEffect = TRUE",
+        "  ClaimReply = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  StoredOnce",
+        "  AppliedOnce",
+        "  LaterSubscriptionKept",
+        "  RepliedOnce",
+        "  StoredStopApplied"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

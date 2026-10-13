@@ -52,7 +52,9 @@ import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
+import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
@@ -617,11 +619,17 @@ import TDF.Seed
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
+import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
+import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
+import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
+import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
+import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -872,7 +880,9 @@ main = hspec $ do
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
+    EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
+    InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
         it "publishes only after five evaluable orders and at least one review" $ do
             commercialStoreScore initialCommercialFormula 4
@@ -2045,6 +2055,32 @@ main = hspec $ do
                   , CourseCheckout.EnrollmentCompleted
                   , CourseCheckout.EnrollmentExpired
                   ]
+
+    describe "event ticket payment after sales close" $ do
+        let unpaid = ["holding", "awaiting_payment", "failed"] :: [Text]
+            settled = ["processing", "paid", "refunded", "expired", "cancelled"] :: [Text]
+            instant = UTCTime (fromGregorian 2026 10 12) 0
+            later = UTCTime (fromGregorian 2026 10 12) 600
+        it "refuses to start or take a payment for an unpaid order once the event stops selling" $
+            forM_ unpaid $ \status ->
+                fmap errHTTPCode (either Just (const Nothing) (EventTicketCheckoutServer.ticketPaymentAllowed status False))
+                    `shouldBe` Just 409
+        it "lets an unpaid order be paid while the event still sells tickets" $
+            forM_ unpaid $ \status ->
+                EventTicketCheckoutServer.ticketPaymentAllowed status True `shouldSatisfy` isRight
+        it "does not gate a checkout that is already processing or paid, so a payment in flight settles" $
+            forM_ settled $ \status -> do
+                EventTicketCheckoutServer.ticketCheckoutAwaitsPayment status `shouldBe` False
+                EventTicketCheckoutServer.ticketPaymentAllowed status False `shouldSatisfy` isRight
+        it "lists no payment methods for an unpaid order whose event stopped selling" $
+            forM_ unpaid $ \status -> do
+                EventTicketCheckoutServer.ticketPaymentMethodsOffered instant status later False `shouldBe` False
+                EventTicketCheckoutServer.ticketPaymentMethodsOffered instant status later True `shouldBe` True
+        it "lists no payment methods once the hold lapsed or the order is no longer unpaid" $ do
+            EventTicketCheckoutServer.ticketPaymentMethodsOffered later "awaiting_payment" instant True `shouldBe` False
+            EventTicketCheckoutServer.ticketPaymentMethodsOffered later "awaiting_payment" later True `shouldBe` False
+            forM_ settled $ \status ->
+                EventTicketCheckoutServer.ticketPaymentMethodsOffered instant status later True `shouldBe` False
 
     describe "event ticket pricing and fulfillment invariants" $ do
         it "derives stable unguessable lookup capabilities from a server-only key" $ do
@@ -12802,6 +12838,43 @@ main = hspec $ do
                     expectationFailure
                         ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
+    describe "legacy ticket purchase terms acceptance" $ do
+        let recorded version =
+                EventMetadataServer.decodeTicketAcceptedTermsVersion
+                    ( EventMetadataServer.encodeTicketCheckoutMetadata
+                        (Just "key-1")
+                        Nothing
+                        version
+                        (EventMetadataServer.ticketPlatformFeeBreakdown 5000)
+                    )
+            decision active submitted existing =
+                either (Left . errHTTPCode) Right $
+                    EventMetadataServer.ticketTermsAcceptance active submitted existing
+
+        it "stores the accepted version with the order and reads it back" $ do
+            recorded (Just "terms-v2") `shouldBe` Just "terms-v2"
+            recorded Nothing `shouldBe` Nothing
+            EventMetadataServer.decodeTicketAcceptedTermsVersion
+                (Just "{\"checkout_idempotency_key\":\"old\"}")
+                `shouldBe` Nothing
+
+        it "requires the active version for a new order and records exactly that version" $ do
+            decision (Just "terms-v2") (Just "terms-v2") Nothing `shouldBe` Right (Just "terms-v2")
+            decision (Just "terms-v2") Nothing Nothing `shouldBe` Left 400
+            decision (Just "terms-v2") (Just "terms-v1") Nothing `shouldBe` Left 409
+            decision Nothing (Just "terms-v1") Nothing `shouldBe` Right Nothing
+            decision Nothing Nothing Nothing `shouldBe` Right Nothing
+
+        it "keeps a replay bound to the acceptance its order recorded" $ do
+            -- The policy moved on after the order was created: the retry is still that order.
+            decision (Just "terms-v3") (Just "terms-v2") (Just (Just "terms-v2"))
+                `shouldBe` Right (Just "terms-v2")
+            -- A replay cannot swap in a different acceptance, even the currently active one.
+            decision (Just "terms-v3") (Just "terms-v3") (Just (Just "terms-v2")) `shouldBe` Left 409
+            decision (Just "terms-v2") Nothing (Just (Just "terms-v2")) `shouldBe` Left 409
+            -- Orders older than this evidence have nothing to contradict.
+            decision (Just "terms-v2") (Just "terms-v2") (Just Nothing) `shouldBe` Right Nothing
+
     describe "normalizeTicketStatus" $ do
         it "preserves refund holds instead of presenting the ticket as issued" $ do
             normalizeTicketStatus (Just "refund_pending") `shouldBe` "refund_pending"
@@ -17816,10 +17889,16 @@ main = hspec $ do
     ServerAuthSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
+    WhatsAppConsentSpec.spec
+    InteractionWriteBudgetSpec.spec
+    MusicPurchaseSpec.spec
     DriveReplaySpec.spec
+    WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
+    MetaRedeliverySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
+    TicketPaymentGateSpec.spec
     MarketplaceIdentitySpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
