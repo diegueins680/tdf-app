@@ -156,6 +156,11 @@ def stored_names(spec, root=ROOT):
     renderer = re.search(rf"^{name}[ \t]+(\w+) = case \1 of\n", source, re.M)
     table = re.search(rf"^{name}[ \t]+(\w+) = lookup \1\s*\[", source, re.M)
     if table:
+        # One clause only: an earlier specific clause would parse a stored name
+        # to another constructor before the table is consulted.
+        clauses = [c for c in re.finditer(rf"^{name}[ \t]+(.*)$", source, re.M) if not c.group(1).startswith("::")]
+        if len(clauses) != 1:
+            raise RuntimeError(f"{spec['renderer']} must be a single parse-table clause")
         body = declaration_body(source, table.start())
         listed = body[body.index("[") + 1:]
         if "]" not in listed:
@@ -235,26 +240,41 @@ def target_transitions(spec, source, names):
 
 
 def relation_transitions(spec, source, names):
-    """Pairs of a membership predicate: its `where` binds
-    `transitions = Set.fromList [ (a, b), ... ]`, the only list, used as
-    `(from, to) `Set.member` transitions`; identity transitions are not read."""
-    definition = re.search(rf"^{re.escape(spec['relation'])}[ \t]+(?![^\n]*::)\w", source, re.M)
-    if not definition:
+    """Pairs of a membership predicate. The predicate's single clause must be
+    exactly `a == b || (a, b) `Set.member` transitions` (or, for string-state
+    relations, `(a == b && a `Set.member` states) || (a, b) `Set.member`
+    transitions`), and its `where` must bind `transitions = Set.fromList [ ... ]`
+    once, as the only list, of literal pairs. Identity transitions are not read."""
+    name = re.escape(spec["relation"])
+    clauses = [c for c in re.finditer(rf"^{name}[ \t]+(.*)$", source, re.M) if not c.group(1).startswith("::")]
+    if not clauses:
         raise RuntimeError(f"relation {spec['relation']} not found in {spec['file']}")
-    body = declaration_body(source, definition.start())
-    if "`Set.member` transitions" not in body:
-        raise RuntimeError(f"{spec['relation']} does not decide membership in transitions")
-    table = re.search(r"transitions\s*=\s*Set\.fromList\s*\[(.*?)\]", body, re.S)
-    if not table:
-        raise RuntimeError(f"{spec['relation']} has no transitions set")
-    following = body[table.end():].lstrip()
+    if len(clauses) != 1:
+        raise RuntimeError(f"{spec['relation']} must be a single clause")
+    body = declaration_body(source, clauses[0].start())
+    head, separator, where = body.partition("\nwhere\n" if re.search(r"^where", body, re.M) else "\n  where\n")
+    if not separator:
+        raise RuntimeError(f"{spec['relation']} has no where clause binding transitions")
+    clause = re.fullmatch(rf"{name}[ \t]+(\w+)[ \t]+(\w+)[ \t]*=\s*(.*)", head.strip(), re.S)
+    if not clause:
+        raise RuntimeError(f"{spec['relation']} is not a two-argument clause")
+    a, b, decision = clause.group(1), clause.group(2), " ".join(clause.group(3).split())
+    admitted = [f"{a} == {b} || ({a}, {b}) `Set.member` transitions",
+                f"({a} == {b} && {a} `Set.member` states) || ({a}, {b}) `Set.member` transitions"]
+    if decision not in admitted:
+        raise RuntimeError(f"{spec['relation']} does not decide membership in transitions: {decision}")
+    bindings = list(re.finditer(r"^\s+transitions\s*=\s*Set\.fromList\s*\[(.*?)\]", where, re.M | re.S))
+    if len(bindings) != 1:
+        raise RuntimeError(f"{spec['relation']} must bind transitions = Set.fromList once")
+    table = bindings[0]
+    following = where[table.end():].lstrip()
     if following and not re.match(r"[A-Za-z_]\w*'*(\s+[\w']+)*\s*(=|::|\|)", following):
         raise RuntimeError(f"{spec['relation']} transitions is not a single literal set")
     listed = table.group(1)
     if names is None:
-        pattern = r'\("(\w+)",\s*"(\w+)"\)'
+        pattern = r'\(\s*"(\w+)"\s*,\s*"(\w+)"\s*\)'
     else:
-        pattern = r"\(([A-Z]\w*),\s*([A-Z]\w*)\)"
+        pattern = r"\(\s*([A-Z]\w*)\s*,\s*([A-Z]\w*)\s*\)"
     if re.sub(pattern, "", listed).replace(",", "").strip():
         raise RuntimeError(f"{spec['relation']} transitions has an entry that is not a literal pair")
     pairs = set()

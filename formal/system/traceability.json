@@ -1023,7 +1023,7 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison, plus static comparison of ten bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items, directory profiles, claims, classifieds, applications and invitations); guards, actors and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and forty-seven database-free validator controls",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and fifty-three database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the ten bound validators' transition relations; no claim about guards, actors, effects or unbound application code.",
@@ -9565,7 +9565,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-state-machines.py": "24a6df413489588b5e1605fba4a2d68827eb909572f0cc22011e54b5a97edf0d",
+    "scripts/check-state-machines.py": "5cedbf6ad442b439f7afc2bf5a0df5a6886cbb487ea58d92aeb82769a72c7063",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -9672,7 +9672,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "28305027f371808f8d9ac862b36ec3e513255aebe23aa6e575331c5fa3d0558a",
+    "scripts/test-state-machines.py": "269c34e56fc30620fa28ff6fc60e69002ccac315785042b41f5a54a048e550d5",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -19196,7 +19196,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "24a6df413489588b5e1605fba4a2d68827eb909572f0cc22011e54b5a97edf0d",
+      "sha256": "5cedbf6ad442b439f7afc2bf5a0df5a6886cbb487ea58d92aeb82769a72c7063",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22062,7 +22062,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "28305027f371808f8d9ac862b36ec3e513255aebe23aa6e575331c5fa3d0558a",
+      "sha256": "269c34e56fc30620fa28ff6fc60e69002ccac315785042b41f5a54a048e550d5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43066,7 +43066,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5d873fd923fc7a9521b95530587e17de5cb011069296fdc6a0290ede8bbe5fe2",
+      "sourceSha256": "f9b4cb7fd76d3a58c5f35468189db8ede73de405ff60dab51247a4940edb517a",
       "definition": {
         "states": [
           "absent",

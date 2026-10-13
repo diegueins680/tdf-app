@@ -1022,7 +1022,7 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison, plus static comparison of ten bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items, directory profiles, claims, classifieds, applications and invitations); guards, actors and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and forty-seven database-free validator controls",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and fifty-three database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the ten bound validators' transition relations; no claim about guards, actors, effects or unbound application code.",

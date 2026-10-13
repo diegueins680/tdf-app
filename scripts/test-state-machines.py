@@ -242,6 +242,27 @@ def relation_controls(bindings, machines):
         target.write_text(policy.replace(edge, "      -- , (ProfileSuspended, ProfilePublished)\n      , (ProfileSuspended, ProfileArchived)\n", 1))
         expect("relation edge kept only in a comment", gate.check_code(bindings, machines, root),
                "code transitionsOnlyDeclared is [['suspended', 'published']]")
+        decision = "  fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions\n  where\n    transitions = Set.fromList\n      [ (ProfileDraft, ProfilePendingReview)"
+        assert policy.count(decision) == 1
+        target.write_text(policy.replace(decision, decision.replace("`Set.member` transitions\n", "`Set.member` transitions || toStatus == ProfileArchived\n"), 1))
+        expect("predicate with an extra disjunct", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition does not decide membership in transitions")
+        target.write_text(policy.replace(decision, decision.replace("  fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions\n  where\n", "  True\n  where\n    _member = (fromStatus, toStatus) `Set.member` transitions\n"), 1))
+        expect("membership kept only in an unused helper", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition does not decide membership in transitions")
+        target.write_text(policy.replace("allowedProfileTransition fromStatus toStatus =\n", "allowedProfileTransition ProfileArchived _ = True\nallowedProfileTransition fromStatus toStatus =\n", 1))
+        expect("specific clause before the relation clause", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition must be a single clause")
+        target.write_text(policy.replace(decision, decision.replace("    transitions = Set.fromList\n", "    transitions = Set.insert (ProfileArchived, ProfileDraft) base\n    base = Set.fromList\n"), 1))
+        expect("transitions built from a decoy set", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition must bind transitions = Set.fromList once")
+        target.write_text(policy.replace(decision, decision.replace("`Set.member` transitions\n", "`Set.member` transitions'\n").replace("    transitions = Set.fromList\n", "    transitions' = Set.insert (ProfileArchived, ProfileDraft) transitions\n    transitions = Set.fromList\n"), 1))
+        expect("predicate deciding on a primed set", gate.check_code(bindings, machines, root),
+               "allowedProfileTransition does not decide membership in transitions")
+        target.write_text(policy)
+        renderer.write_text(server.replace("parseProfileStatus value = lookup value\n", 'parseProfileStatus "suspended" = Just ProfileMerged\nparseProfileStatus value = lookup value\n', 1))
+        expect("specific clause before the parse table", gate.check_code(bindings, machines, root),
+               "parseProfileStatus must be a single parse-table clause")
         target.write_text(policy)
         mapping = '("suspended",ProfileSuspended)'
         assert server.count(mapping) == 1
@@ -257,7 +278,7 @@ def relation_controls(bindings, machines):
     del unbound["machines"][CLAIM]["code"]
     expect("required relation binding removed", gate.check_code(unbound, machines),
            f"{CLAIM}: required backend validator binding is missing")
-    return 13
+    return 19
 
 def main():
     parser = argparse.ArgumentParser()
