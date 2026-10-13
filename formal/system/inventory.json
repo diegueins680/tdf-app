@@ -13994,7 +13994,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "e443eb60fc0c680039086c462e75c9ff5b7cf4cca7210525b218d69547e38545",
+      "sha256": "8a35cdf4b3e16fd56591447c66d052356446f357c5000a873c75c1f56886e184",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14930,7 +14930,7 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "2e6a9789ac6d5804a83e4ec0677155792062f9f0b218950c3816ab6ed5d093b2",
+      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24644,7 +24644,7 @@
     },
     {
       "path": "formal/system/whatsapp-redelivery.md",
-      "sha256": "4b24b098004bafe0e07757d48c4e6705f39bb8360bb0a05dbb5f517b93b2475a",
+      "sha256": "511952600e257a7c455da7e149a2f4fd63dc4926674bcf29bef8db8efeb7b644",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
