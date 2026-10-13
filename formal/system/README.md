@@ -5,6 +5,8 @@ conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
 
+- [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.

@@ -52,6 +52,7 @@ import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
@@ -875,6 +876,7 @@ main = hspec $ do
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
+    EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do

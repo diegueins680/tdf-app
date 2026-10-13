@@ -598,6 +598,14 @@ existing payment models and HTTP contracts remain separate evidence.
     invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
     rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
 
+## Organizer assignment
+
+`EventOrganizer.tla` and four configurations check the rule in
+[event-organizer-assignment.md](../system/event-organizer-assignment.md): an event
+without an organizer is assigned at most once, only to a caller allowed to be
+assigned, and nobody manages an event whose stored organizer is another party. The
+positive model and three negative controls are mandatory in the formal runner.
+
 ## Provider retry admission
 
 `ProviderRetryAdmission.tla` and six configurations check the scoped payment retry
