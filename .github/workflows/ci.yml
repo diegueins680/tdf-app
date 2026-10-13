@@ -536,9 +536,12 @@ jobs:
           TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: |
           bash scripts/test-auth-recovery-migration.sh
+          sh scripts/test-meta-redelivery.sh
           node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-whatsapp-consent.sh
+          sh scripts/test-interaction-write-budget.sh
 
       - name: Verify single assignment of an event without an organizer
         env:

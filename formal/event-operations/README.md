@@ -522,6 +522,14 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Meta redelivery
+
+`MetaRedelivery.tla` and four configurations check the rule in
+[meta-redelivery.md](../system/meta-redelivery.md): the reply worker takes up a
+message once, a stored message keeps its text, a message deleted first never gains
+text, and a deletion keeps its first time. The positive model and three negative
+controls are mandatory in the formal runner.
+
 ## Directory favorite authority (2026-09-18)
 
 `DirectoryFavoriteAuthority` bounds one read/save request, three session occurrences,
@@ -607,6 +615,13 @@ existing payment models and HTTP contracts remain separate evidence.
     invariant counterexamples. A separate sandbox RMI denial required an approved unsandboxed
     rerun. The complete corrected suite passed; no safety assertion was weakened or omitted.
 
+## WhatsApp redelivery
+
+`WhatsAppRedelivery.tla` and five configurations check the rule in
+[whatsapp-redelivery.md](../system/whatsapp-redelivery.md): a message is stored
+once, what it asks for is applied at most once, an enrolment message is answered at
+most once, and a stored opt-out has been applied. The positive model and four
+negative controls are mandatory in the formal runner.
 ## Organizer assignment
 
 `EventOrganizer.tla` and four configurations check the rule in
@@ -638,6 +653,13 @@ Bounds, assumptions and exclusions are in `formal/system/access-grant.md`.
 single-guard negative controls are mandatory in the formal runner. Bounds, provider
 assumptions, no-fairness/no-liveness scope and runtime mapping are defined there;
 staff capture, delivery and message content are outside the model.
+## Interaction write budget
+
+`InteractionWriteBudget.tla` and five configurations check the rule in
+[interaction-write-budget.md](../system/interaction-write-budget.md): every ended
+write attempt is counted, no minute runs more writes than the limit, and an attempt
+is refused only when its own minute was spent. The positive model and four negative
+controls are mandatory in the formal runner.
 ## Ticket invoice submission
 
 `InvoiceSubmission.tla` and five configurations check the worker rules in

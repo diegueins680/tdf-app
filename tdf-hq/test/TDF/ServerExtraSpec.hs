@@ -6255,7 +6255,8 @@ spec = do
                 case stored of
                     Nothing -> expectationFailure "Expected stored Instagram message"
                     Just (Entity _ row) -> do
-                        M.instagramMessageText row `shouldBe` Just "hola de nuevo"
+                        -- A message delivered again after its deletion is not rewritten.
+                        M.instagramMessageText row `shouldBe` Just "hola"
                         M.instagramMessageDeletedAt row `shouldBe` Just deletedAt
                 length visible `shouldBe` 0
 

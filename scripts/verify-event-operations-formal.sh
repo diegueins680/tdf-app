@@ -95,6 +95,11 @@ run_negative_tlc() {
 run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandfence
 run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
+run_tlc WhatsAppRedelivery.tla WhatsAppRedelivery.cfg whatsapp-redelivery
+run_negative_tlc WhatsAppRedeliveryEveryDeliveryApplies.cfg whatsapp-redelivery-every-delivery-applies 'Invariant AppliedOnce is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryDuplicateStore.cfg whatsapp-redelivery-duplicate-store 'Invariant StoredOnce is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryEffectAfterStore.cfg whatsapp-redelivery-effect-after-store 'Invariant StoredStopApplied is violated' WhatsAppRedelivery.tla
+run_negative_tlc WhatsAppRedeliveryEveryDeliveryReplies.cfg whatsapp-redelivery-every-delivery-replies 'Invariant RepliedOnce is violated' WhatsAppRedelivery.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
 run_tlc AccessGrant.tla AccessGrant.cfg accessgrant
 run_negative_tlc AccessGrantSelfApproval.cfg accessgrantselfapproval 'Invariant NoSelfApproval is violated' AccessGrant.tla
@@ -167,6 +172,10 @@ run_tlc PrivacyDeletionWorkflow.tla PrivacyDeletionWorkflow.cfg privacy-deletion
 run_negative_tlc PrivacyDeletionEarlyClose.cfg privacy-deletion-earlyclose 'Invariant ClosureEvidence is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionDeadlineReset.cfg privacy-deletion-deadline 'Invariant FixedDeadline is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionStaleWrite.cfg privacy-deletion-stale 'Invariant NoStaleCommit is violated' PrivacyDeletionWorkflow.tla
+run_tlc MetaRedelivery.tla MetaRedelivery.cfg meta-redelivery
+run_negative_tlc MetaRedeliveryRepeatResetsReply.cfg meta-redelivery-repeat-resets-reply 'Invariant ConsideredOnce is violated' MetaRedelivery.tla
+run_negative_tlc MetaRedeliveryRepeatRewritesText.cfg meta-redelivery-repeat-rewrites-text 'Invariant TextKept is violated' MetaRedelivery.tla
+run_negative_tlc MetaRedeliveryRepeatMovesDeletion.cfg meta-redelivery-repeat-moves-deletion 'Invariant DeletionTimeKept is violated' MetaRedelivery.tla
 run_tlc SessionCacheIsolation.tla SessionCacheIsolation.cfg session-cache
 run_negative_tlc SessionCacheShared.cfg session-cache-shared "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
 run_negative_tlc SessionCacheActorReuse.cfg session-cache-actor-reuse "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
@@ -390,6 +399,11 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc InteractionWriteBudget.tla InteractionWriteBudget.cfg interaction-write-budget
+run_negative_tlc InteractionWriteBudgetErrorRefunds.cfg interaction-write-budget-error-refunds 'Invariant ChargeCounted is violated' InteractionWriteBudget.tla
+run_negative_tlc InteractionWriteBudgetOneExtra.cfg interaction-write-budget-one-extra 'Invariant LimitHolds is violated' InteractionWriteBudget.tla
+run_negative_tlc InteractionWriteBudgetUnlockedIncrement.cfg interaction-write-budget-unlocked-increment 'Invariant ChargeCounted is violated' InteractionWriteBudget.tla
+run_negative_tlc InteractionWriteBudgetOneCounter.cfg interaction-write-budget-one-counter 'Invariant RefusedOnlyWhenSpent is violated' InteractionWriteBudget.tla
 run_tlc EventOrganizer.tla EventOrganizer.cfg event-organizer
 run_negative_tlc EventOrganizerAnyoneClaims.cfg event-organizer-anyone-claims 'Invariant OnlyAllowedAssigned is violated' EventOrganizer.tla
 run_negative_tlc EventOrganizerUnconditionalWrite.cfg event-organizer-unconditional-write 'Invariant OrganizerStable is violated' EventOrganizer.tla
