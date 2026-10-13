@@ -13989,19 +13989,19 @@
       "reviewed": true
     },
     {
-      "id": "ff4edc0f8d2debecf71c",
+      "id": "1279a6ec9ef3dbb7e1c4",
       "classification": "security-system-registry",
       "disposition": "persisted-registry-with-deny-by-default-code-mirror",
       "specializedModel": "security_role, party_security_role, role_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Only recognized technical policy bindings are retained in code. Adds artist.invitation.artist (artist-invitation-redeemed, no verified email required), persisted by 2026-09-14_artist_invitation_auto_approval.sql; grants only Artist to the redeeming party with an immutable audit.",
+      "justification": "Adds account.apple.customer (apple-account-create, verified email required) beside the Google binding; grants only Customer to a verified Apple identity that explicitly creates an account with current terms, persisted by 2026-10-13_apple_sign_in_policy.sql and the catalog seed. All other 29 reviewed bindings are unchanged.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/src/TDF/Catalog/Security.hs",
         "line": 90
       },
-      "reviewBatch": "music-release-platform-sync-2026-10-07",
+      "reviewBatch": "apple-sign-in-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
         "id": "0886e6835c7f5c533d9c",
@@ -14012,6 +14012,22 @@
         "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
         "justification": "Only recognized technical policy bindings are retained in code. The persisted artist self-service policy grants only Artist for the authenticated owner, with an immutable audit and without reactivating revoked assignments.",
         "reviewed": true
+      },
+      "mergedDecision": {
+        "id": "ff4edc0f8d2debecf71c",
+        "classification": "security-system-registry",
+        "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+        "specializedModel": "security_role, party_security_role, role_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Only recognized technical policy bindings are retained in code. Adds artist.invitation.artist (artist-invitation-redeemed, no verified email required), persisted by 2026-09-14_artist_invitation_auto_approval.sql; grants only Artist to the redeeming party with an immutable audit.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq/src/TDF/Catalog/Security.hs",
+          "line": 90
+        },
+        "reviewBatch": "music-release-platform-sync-2026-10-07",
+        "reviewMethod": "successor-of-reviewed-decision"
       }
     },
     {
@@ -15641,19 +15657,19 @@
       }
     },
     {
-      "id": "155c8ba51c7e002c10d0",
+      "id": "04259f3f69ef4964793a",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+      "justification": "Ordered 203-entry manifest keeps the reviewed 202 entries unchanged and appends the additive Sign in with Apple automatic Customer policy migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "directory-artist-listings-2026-10-10",
+      "reviewBatch": "apple-sign-in-2026-10-13",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57199,19 +57215,19 @@
         ]
       },
       "mergedDecision": {
-        "id": "f185683a8f6a6532b802",
+        "id": "155c8ba51c7e002c10d0",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 200-entry manifest keeps the reviewed 199 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "directory-event-search-sync-2026-10-10",
+        "reviewBatch": "directory-artist-listings-2026-10-10",
         "reviewMethod": "successor-of-reviewed-decision"
       }
     },

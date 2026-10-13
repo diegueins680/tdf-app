@@ -9364,6 +9364,97 @@
         "classification": "PARTIAL",
         "reason": "Implemented and verified locally; production backfill and post-deploy verification pending."
       }
+    },
+    {
+      "id": "AUTH-APPLE-SIGNIN-001",
+      "title": "Sign in with Apple creates or resumes sessions only from verified Apple identity tokens",
+      "statement": "POST /login/apple verifies an Apple identity token (RS256 signature against Apple published keys, issuer, configured audiences, lifetime with 60 second skew, and nonce digest) before any database effect, then applies the same binding, linking and explicit-consent account creation rules as Google through auth_provider_identity.",
+      "authority": "App Store review guideline 4.8 rejection of TDF Mobile for offering Google login without Sign in with Apple (2026-10-13)",
+      "domain": "AUTH",
+      "actors": [
+        "Visitor",
+        "Returning user",
+        "Apple identity provider"
+      ],
+      "preconditions": [
+        "APPLE_SIGN_IN_AUDIENCES lists the iOS bundle id (default com.tdfrecords.app) and the Sign in with Apple capability is enabled for the App ID."
+      ],
+      "inputs": [
+        "Apple identity token",
+        "raw nonce",
+        "optional full name",
+        "createNewAccount, termsAccepted, termsVersion",
+        "optional linkAccount credentials"
+      ],
+      "state": {
+        "boundary": "POST /login/apple and auth_provider_identity",
+        "states": [
+          "unbound Apple subject",
+          "bound Apple subject",
+          "authenticated"
+        ]
+      },
+      "allowedTransitions": [
+        "bound Apple subject with valid token -> session",
+        "unbound subject with linkAccount password proof -> bound -> session",
+        "unbound subject with createNewAccount=true and current terms and a verified token email -> Customer/Fan account -> session"
+      ],
+      "forbiddenTransitions": [
+        "token with bad signature, issuer, audience, lifetime, nonce or algorithm yielding a session",
+        "account creation without explicit createNewAccount and current terms",
+        "account linking by email alone",
+        "account creation when the token carries no email"
+      ],
+      "effects": [
+        "Binds issuer https://appleid.apple.com and token sub to one credential under an advisory lock; records login_apple activity and account consent."
+      ],
+      "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
+      "privacy": "Apple private relay emails are stored as the primary email; tokens and nonces are never logged.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google.",
+      "idempotency": "Repeated login for a bound subject reuses the credential.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed.",
+      "recovery": "Retry, use email and password, or link an existing account.",
+      "observability": "login_apple auth activity and rejected-token warnings without token content.",
+      "source": "App Store Connect rejection notice relayed by the product owner",
+      "implementation": [
+        "tdf-hq/src/TDF/AppleSignIn.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Catalog/Integrity.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AppleSignInSpec.hs",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic RSA key pair unit tests cover verification; physical-device and Apple Developer capability verification pending.",
+      "ambiguity": [
+        "Services ID audiences for web are configurable but not exercised."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unit tests pass; the Apple capability, production audience configuration and a physical device test are owner gates."
+      },
+      "critical": true,
+      "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
+      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests.",
+      "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
+      "contract": "tdf-hq/docs/openapi/api.yaml"
     }
   ]
 }

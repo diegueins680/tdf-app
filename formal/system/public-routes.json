@@ -402,6 +402,11 @@
   },
   {
    "method": "POST",
+   "path": "/login/apple",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "POST",
    "path": "/login/google",
    "boundary": "credential-intake"
   },

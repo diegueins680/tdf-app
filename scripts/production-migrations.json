@@ -1030,6 +1030,11 @@
       "id": "2026-10-07_directory_artist_listing_backfill_apply",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql",
       "introducedBy": "116da0bad8d63e3a2db8e6b951ea37bbaedb2860"
+    },
+    {
+      "id": "2026-10-13_apple_sign_in_policy",
+      "path": "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+      "introducedBy": "161cb8666ed1e96520850df2f985dd14f4bfebdf"
     }
   ]
 }
