@@ -90,7 +90,7 @@ authorizeMusicDownload user entitlementId MusicDownloadAuthorizeRequest{..} = do
     Left "request_expired" -> throwError requestExpired
     Left message -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
     Right value -> pure value
-  signedAssetResponse asset
+  uncurry signedAssetResponseAt asset
 
 authorizeFreeMusicDownload :: AuthedUser -> Maybe Text -> MusicFreeDownloadRequest -> AppM Value
 authorizeFreeMusicDownload user edgeCountry MusicFreeDownloadRequest{..} = do
@@ -119,11 +119,15 @@ authorizeFreeMusicDownload user edgeCountry MusicFreeDownloadRequest{..} = do
     [ PersistInt64 (currentPartyId user), toPersistValue entitlementId, toPersistValue musicFreeRequestId
     , toPersistValue releaseVersionId, PersistText (UUID.toText musicFreeRequestId)
     ]
-  signedAssetResponse asset
+  uncurry signedAssetResponseAt asset
 
+-- | Authorizes one download and answers the asset together with the moment
+-- the request identifier was first authorized. A repeated identifier answers
+-- that original moment, so the caller signs a URL that expires when the first
+-- one does instead of extending access by another lifetime.
 authorizeDownloadDB
   :: Int64 -> UUID -> UUID -> UTCTime
-  -> SqlPersistT IO (Either Text AssetReference)
+  -> SqlPersistT IO (Either Text (AssetReference, UTCTime))
 authorizeDownloadDB actor entitlementId requestId now = do
   locked <- rawSql
     ("SELECT asset.storage_provider,asset.bucket_name,asset.object_key,asset.media_type,asset.byte_size,asset.sha256,entitlement.max_downloads FROM music_entitlement entitlement JOIN music_asset asset ON asset.id=entitlement.asset_id AND asset.release_version_id=entitlement.release_version_id JOIN music_public_release public ON public.release_version_id=entitlement.release_version_id WHERE entitlement.id=?::uuid AND entitlement.buyer_party_id=? AND entitlement.status='active' AND (entitlement.expires_at IS NULL OR entitlement.expires_at>NOW()) AND " <> downloadableAssetPredicate <> " FOR UPDATE OF entitlement")
@@ -132,15 +136,16 @@ authorizeDownloadDB actor entitlementId requestId now = do
   case locked of
     [(Single provider, Single bucket, Single key, Single mediaType, Single byteSize, Single sha256, Single maxDownloads)] -> do
       conflicts <- rawSql
-        "SELECT entitlement_id=?::uuid, authorized_at > ?::timestamptz - make_interval(secs => ?) \
-        \FROM music_download_event WHERE request_id=?::uuid"
+        "SELECT entitlement_id=?::uuid, authorized_at > ?::timestamptz - make_interval(secs => ?), \
+        \authorized_at FROM music_download_event WHERE request_id=?::uuid"
         [ toPersistValue entitlementId, PersistUTCTime now
         , PersistInt64 (fromIntegral downloadUrlLifetimeSeconds), toPersistValue requestId
-        ] :: SqlPersistT IO [(Single Bool, Single Bool)]
+        ] :: SqlPersistT IO [(Single Bool, Single Bool, Single UTCTime)]
+      let asset = AssetReference provider bucket key mediaType byteSize sha256
       case conflicts of
-        [(Single True, Single True)] -> pure (Right (AssetReference provider bucket key mediaType byteSize sha256))
-        [(Single True, Single False)] -> pure (Left "request_expired")
-        [(Single False, _)] -> pure (Left "request_conflict")
+        [(Single True, Single True, Single authorizedAt)] -> pure (Right (asset, authorizedAt))
+        [(Single True, Single False, _)] -> pure (Left "request_expired")
+        [(Single False, _, _)] -> pure (Left "request_conflict")
         [] -> do
           counts <- rawSql "SELECT count(*) FROM music_download_event WHERE entitlement_id=?::uuid"
             [toPersistValue entitlementId] :: SqlPersistT IO [Single Int64]
@@ -155,7 +160,7 @@ authorizeDownloadDB actor entitlementId requestId now = do
                 "INSERT INTO music_download_event(entitlement_id,request_id,authorized_at) VALUES(?::uuid,?::uuid,?) ON CONFLICT (request_id) DO NOTHING"
                 [toPersistValue entitlementId, toPersistValue requestId, PersistUTCTime now]
               pure $ if inserted == 1
-                then Right (AssetReference provider bucket key mediaType byteSize sha256)
+                then Right (asset, now)
                 else Left "request_conflict"
         _ -> pure (Left "request_conflict")
     [] -> pure (Left "not_found")
@@ -165,11 +170,15 @@ requestExpired :: ServerError
 requestExpired = err409 { errBody = "Download requestId has expired; send a new requestId" }
 
 signedAssetResponse :: AssetReference -> AppM Value
-signedAssetResponse AssetReference{..} = do
+signedAssetResponse asset = liftIO getCurrentTime >>= signedAssetResponseAt asset
+
+-- | Signs from the given moment: the URL and the reported expiry both end one
+-- lifetime after it, whenever the response is produced.
+signedAssetResponseAt :: AssetReference -> UTCTime -> AppM Value
+signedAssetResponseAt AssetReference{..} now = do
   unless (assetProvider == "s3_compatible") $
     throwError err503 { errBody = "The local private asset adapter cannot issue browser URLs" }
   signingConfig <- loadMusicS3SigningConfig
-  now <- liftIO getCurrentTime
   url <- either (const (throwError err500 { errBody = "Object storage signing configuration is invalid" })) pure
     (presignGetObject signingConfig now downloadUrlLifetimeSeconds assetBucket assetObjectKey)
   pure (object

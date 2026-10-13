@@ -15,7 +15,7 @@ import Data.List (isPrefixOf, isSuffixOf)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (UTCTime, addUTCTime, getCurrentTime)
+import Data.Time (UTCTime, addUTCTime, diffUTCTime, getCurrentTime)
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
@@ -110,6 +110,23 @@ spec = describe "music-purchase-postgresql" $ do
         download pool (offerBuyer offer) entitlement request (addUTCTime (lifetime + 1) now)
           `shouldReturn` Left "request_expired"
         downloadsOf pool entitlement `shouldReturn` 1
+
+      it "answers a repeated request with its original authorization time" $ \pool -> do
+        offer <- purchaseOffer pool
+        entitlement <- paidEntitlement pool offer "music-fixture-replay-expiry"
+        now <- getCurrentTime
+        request <- nextRandom
+        let lifetime = fromIntegral downloadUrlLifetimeSeconds
+            authorizedAt moment = fmap snd <$>
+              runSqlPool (authorizeDownloadDB (offerBuyer offer) entitlement request moment) pool
+            near expected =
+              either (const False) (\actual -> abs (diffUTCTime actual expected) < 0.001)
+        first <- authorizedAt now
+        first `shouldSatisfy` near now
+        -- Just before the window closes the replay still signs from the first
+        -- authorization, so the URL it yields expires with the original one.
+        replay <- authorizedAt (addUTCTime (lifetime - 1) now)
+        replay `shouldBe` first
 
       it "admits exactly the limit when requests arrive together" $ \pool -> do
         offer <- purchaseOffer pool
