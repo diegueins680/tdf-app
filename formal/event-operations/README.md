@@ -531,6 +531,15 @@ dispatch and eventual success/failure response; terminal quiescence is permitted
 Unsafe dispatch/receipt variants must violate their named invariants (29/63states).
 [Implementation, counterexamples and limits](../../docs/ux-ui-audit/2026-09-17/directory-entry.md).
 
+## Music entitlement and downloads
+
+`MusicEntitlement.tla` and seven configurations check the rules in
+[music-purchase-entitlement.md](../system/music-purchase-entitlement.md): paid only on
+verified evidence, one entitlement per order, the download limit, replay of a request
+identifier only inside its URL lifetime, a replayed URL that ends with the original one,
+and no URL without an active entitlement. The positive model and six negative controls
+are mandatory in the formal runner.
+
 ## Marketplace optional storage boundary (2026-09-18)
 
 `MarketplaceStorage.tla` connects UX-260917-007 to the page's optional

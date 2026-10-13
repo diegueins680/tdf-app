@@ -8068,17 +8068,26 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicEntitlement.tla",
+        "formal/event-operations/MusicEntitlement.cfg",
+        "formal/event-operations/MusicEntitlementForgedPaid.cfg",
+        "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
+        "formal/event-operations/MusicEntitlementNoLimit.cfg",
+        "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+        "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
+        "formal/event-operations/MusicEntitlementRefundedDownload.cfg"
+      ],
       "status": "specified and implemented",
       "id": "PAY-MUSIC-DOWNLOAD-001",
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, version and asset in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence marks it paid; triggers create exactly one entitlement and revoke it on refund. Both free-grant and entitled download handlers use the same downloadable-asset predicate, bounded per-request UUID limits, audit rows and short-lived URLs.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; triggers then grant exactly one entitlement and end it on refund or chargeback. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
-      "contract": "docs/music-releases/architecture-and-data-model.md",
-      "property": "A non-free download URL is issued only for an active entitlement whose order is provider-verified paid and not refunded.",
+      "contract": "formal/system/music-purchase-entitlement.md",
+      "property": "A purchase entitlement is granted once, by the paid transition of a checkout carrying bound verified evidence, and a download URL is issued only for an active entitlement of the requesting buyer within its counted limit.",
       "actors": [
         "Buyer",
         "Payment provider"
@@ -8093,13 +8102,18 @@
       ],
       "state": {
         "order": [
-          "open",
+          "pending",
+          "awaiting_payment",
           "paid",
-          "refunded"
+          "cancelled",
+          "refunded",
+          "chargeback"
         ],
         "entitlement": [
           "active",
-          "revoked"
+          "revoked",
+          "refunded",
+          "expired"
         ]
       },
       "allowedTransitions": [
@@ -8109,7 +8123,10 @@
       "forbiddenTransitions": [
         "Client-asserted payment -> paid",
         "Download of master or unavailable asset",
-        "Duplicate entitlements per order"
+        "Duplicate entitlements per order",
+        "More counted downloads than the entitlement limit",
+        "A signed URL for a request identifier whose first URL has expired",
+        "revoked or expired free grant -> active by request"
       ],
       "effects": [
         "One entitlement per paid order",
@@ -8117,27 +8134,38 @@
       ],
       "authorization": "Entitlement owner only; free grants follow the release rule.",
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
-      "concurrency": "Entitlement creation is trigger-enforced unique.",
-      "idempotency": "Repeated provider evidence and download request UUIDs are idempotent.",
-      "failure": "Unverified or failed payment leaves no entitlement.",
+      "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
+      "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
+      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs"
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "formal/event-operations/MusicEntitlement.tla",
+        "scripts/test-music-purchase.sh"
       ],
       "tests": [
-        "scripts/test-music-download-predicate.mjs"
+        "scripts/test-music-download-predicate.mjs",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "scripts/test-music-purchase.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Read-only SQL contract of the shared predicate; handler E2E not covered by this test",
-      "evidence": "Local execution only",
-      "confidence": "Low-medium: predicate contract only; no provider round-trip evidence.",
+      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
+      "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
-        "No live payment provider wiring for music_download has been verified."
+        "No live payment provider wiring for music_download has been verified.",
+        "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
+        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
+        "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
+        "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
+        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Predicate contract only; commerce disabled by default."
+        "reason": "Payment record, entitlement and download rules are modeled within bounds and exercised on PostgreSQL; provider calls are untested and several failure-path defects are open. Commerce is disabled by default and should stay disabled until they are closed."
       }
     },
     {

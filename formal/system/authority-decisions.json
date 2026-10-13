@@ -622,6 +622,19 @@
       "conflict": "The event handlers made any signed-in caller the organizer of an event without one, including from read routes and with an unconditional write, while the event-operations foundation migration records such events as owner_missing and disabled until reviewed, and the 2026-09-14 audit lists the claiming behavior as high severity to be removed.",
       "authority": "The event-operations migration rule and the audit remediation govern; claim-on-touch was a legacy compatibility behavior, never a product decision.",
       "resolution": "Organizer-only routes refuse an event without an organizer and never write. Only a strict administrator whose edit of the event is accepted is assigned, in the same locked transaction, by one conditional update whose stored result decides the outcome. Administrative routes that never assigned are unchanged. No schema change. A client surface for the assignment, a transfer route, auditing and reconciling event_operation_relationship remain open."
+    },
+    {
+      "id": "AUTHORITY-058",
+      "sources": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "docs/music-releases/architecture-and-data-model.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "PAY-MUSIC-DOWNLOAD-001 says verified provider evidence marks an order paid and grants one entitlement, and that downloads are bounded per entitlement. The music payment record omitted the merchant reference the shared checkout store requires, so every verified payment stopped with an error after the charge; a repeated download request identifier produced fresh signed URLs without limit; and a revoked free grant was reactivated by asking again.",
+      "authority": "The requirement and ADR-005 of the music release architecture govern; the three behaviors were defects in recovered, unreviewed code.",
+      "resolution": "The payment record carries the order identifier as merchant reference; a repeated request identifier is honoured only for the 300-second lifetime of its signed URL and belongs to one entitlement; a repeated free request leaves an existing grant unchanged; the commerce flag must be enabled for the checkout environment as well as the process environment. No schema change. The failure-path defects listed in formal/system/music-purchase-entitlement.md remain open and music_releases.commerce must stay disabled until they are repaired."
     }
   ]
 }
