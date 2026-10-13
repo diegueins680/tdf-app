@@ -8076,6 +8076,7 @@
         "formal/event-operations/MusicEntitlementRepeatedGrant.cfg",
         "formal/event-operations/MusicEntitlementNoLimit.cfg",
         "formal/event-operations/MusicEntitlementEndlessReplay.cfg",
+        "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg",
         "formal/event-operations/MusicEntitlementRefundedDownload.cfg"
       ],
       "status": "specified and implemented",
@@ -9561,13 +9562,14 @@
     "formal/event-operations/InvoiceSubmissionUnknownAsRefused.cfg": "9cea081fe4f68063303cf47bdb2668186e4a65cdda284625a2e7d426b86b63e3",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/ManualBankTransfer.tla": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
-    "formal/event-operations/MusicEntitlement.cfg": "9bb584b870c90e1b8b7a5c6906d16a4c365b265b88dde3a3af4626c3fa1b8755",
-    "formal/event-operations/MusicEntitlement.tla": "cde021a9e4ea3296c3c03bb0e9cff288da5902e4372e2167d5fb57a5de389cbe",
-    "formal/event-operations/MusicEntitlementEndlessReplay.cfg": "228b28627884a22c1eb59820df50401b22fa61aacb3b3375910c73b9e76ec1df",
-    "formal/event-operations/MusicEntitlementForgedPaid.cfg": "826b1c09637b2c925093221a44c217cc2eb759be141d9b8fa3e0588dff3aeb05",
-    "formal/event-operations/MusicEntitlementNoLimit.cfg": "cc6459386c6e7b121f0f5fbee0725c08b1e0828ae6fb9ee6d1c7dc1e4eb8ffed",
-    "formal/event-operations/MusicEntitlementRefundedDownload.cfg": "4a277b1deea712df5ea462cc2eef02f822d4d14c96c1c48e3326c090af6f66bf",
-    "formal/event-operations/MusicEntitlementRepeatedGrant.cfg": "c2f0f7e675a89d96650be577ff8a6587c1657b0b4b16798a4c74b16e7ed585de",
+    "formal/event-operations/MusicEntitlement.cfg": "1d01c4e7c22ffb65fdcd11c272eb6ffa9266ed87f46ad1493abd5b28bfb74ee5",
+    "formal/event-operations/MusicEntitlement.tla": "ffdbb6a435e2f2436f8bc903ba6197d955c03f5baad51cef106121157c308ddd",
+    "formal/event-operations/MusicEntitlementEndlessReplay.cfg": "283adcf142b41fe6953e05e8560692a9525f60285ec12b1c39ca27c6899cc535",
+    "formal/event-operations/MusicEntitlementForgedPaid.cfg": "ed7e5f9ea9215b37fd04415ae9513c21e4683ed031183bc3e50e16d910ab9db3",
+    "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg": "87506adb35f6557b34ba036166bb36fd84f048caf2cfdef6f120c9e753f9fd68",
+    "formal/event-operations/MusicEntitlementNoLimit.cfg": "521403ca2a98706315a4d49c02e4a7a9e76e54cc3f5cac422c8c951e8f40adf2",
+    "formal/event-operations/MusicEntitlementRefundedDownload.cfg": "8aacebb1b70b924393fe43cc16b0e73de2de39453d9c123832ddd8de646c84a6",
+    "formal/event-operations/MusicEntitlementRepeatedGrant.cfg": "ab99a166e494cd24f8d1c97a221e4217e3861fbb81923e3a0cd4a4268eabb86b",
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
@@ -9841,7 +9843,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "6bcf9b2895459353582a502a5c59b30e3bf42bfff475359bf8725364b70827c1",
+    "scripts/verify-event-operations-formal.sh": "88d5b0264fc4128ace75fdd8bfed246761e45d8fb4357fb5e341081ec0c8f666",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -16335,6 +16337,12 @@
         "relationship": "formalModels"
       }
     ],
+    "formal/event-operations/MusicEntitlementFreshReplayUrl.cfg": [
+      {
+        "requirement": "PAY-MUSIC-DOWNLOAD-001",
+        "relationship": "formalModels"
+      }
+    ],
     "formal/event-operations/MusicEntitlementRefundedDownload.cfg": [
       {
         "requirement": "PAY-MUSIC-DOWNLOAD-001",
@@ -22771,7 +22779,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "6bcf9b2895459353582a502a5c59b30e3bf42bfff475359bf8725364b70827c1",
+      "sha256": "88d5b0264fc4128ace75fdd8bfed246761e45d8fb4357fb5e341081ec0c8f666",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43567,7 +43575,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3aaf7fc9a884d9332a848c4fbbdc9e122ab45a9c0e6eb2f9b1e6273962751928",
+      "sourceSha256": "e98a88cf344b7b01db6f9163571ec9f4e549351a424a567aa6d1420391b4b53d",
       "definition": {
         "states": [
           "absent",
