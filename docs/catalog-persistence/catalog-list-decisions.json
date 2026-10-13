@@ -15187,42 +15187,6 @@
       "reviewBatch": "mobile-program-2026-10-04"
     },
     {
-      "id": "7804604c0af849751309",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item",
-      "priority": "P3-retain",
-      "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
-      "reviewed": true,
-      "previousDecision": {
-        "id": "d24fc428c18f60568996",
-        "classification": "dynamic-business-catalog",
-        "disposition": "retain-in-code",
-        "specializedModel": "navigation_item",
-        "priority": "P3-retain",
-        "risk": "Changing UI constants could break rendering or user experience.",
-        "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
-        "reviewed": true,
-        "previousDecision": {
-          "id": "f9819fa4b81bdd8f3f21",
-          "classification": "dynamic-business-catalog",
-          "disposition": "retain-in-code",
-          "specializedModel": "navigation_item",
-          "priority": "P3-retain",
-          "risk": "Changing UI constants could break rendering or user experience.",
-          "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
-          "reviewed": true
-        }
-      },
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
-        "line": 23
-      },
-      "reviewBatch": "events-nav-carousel-2026-10-08",
-      "reviewMethod": "successor-of-reviewed-decision"
-    },
-    {
       "id": "b04463685b6b720b3ca9",
       "classification": "governed-reference-data",
       "disposition": "retain-in-code",
