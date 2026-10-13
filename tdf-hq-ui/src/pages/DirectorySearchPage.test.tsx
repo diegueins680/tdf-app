@@ -502,6 +502,31 @@ describe('DirectorySearchPage', () => {
     }
   }, 15_000);
 
+  it.each(['constructor', 'toString', 'events'])('falls back to Todo for the unknown entityType %s', async (requested) => {
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const { useLocation } = await import('react-router-dom');
+    function LocationProbe() { return <span data-testid="search">{useLocation().search}</span>; }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?entityType=${requested}&cityId=${quito}`]}><DirectorySearchPage /><LocationProbe /></MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Todo');
+      expect(container.querySelector('[data-testid="search"]')?.textContent).toBe(`?cityId=${quito}`);
+      expect(searchMock.mock.calls.every(([query]) => (query as { entityType?: string }).entityType === undefined)).toBe(true);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+    }
+  });
+
   it('pushes tab changes into history so back restores the previous search', async () => {
     const quito = '22222222-2222-4222-8222-222222222222';
     const { useLocation, useNavigate } = await import('react-router-dom');

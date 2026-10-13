@@ -70,6 +70,10 @@ const resultPath = (item: DirectorySearchItem) => {
   return `/venues/${item.id}`;
 };
 
+// Own keys only: `in` would accept prototype names such as "constructor".
+const isEntityTypeKey = (value: string): value is DirectoryEntityType | 'all' =>
+  Object.prototype.hasOwnProperty.call(ENTITY_LABELS, value);
+
 // Profession, service, instrument, availability and remote filters describe
 // people and listings. The server ignores them for events and venues, so the
 // controls are hidden on those tabs (their values stay in the URL).
@@ -96,7 +100,7 @@ const parseSearchUrl = (search: string): SearchUrlState => {
   const radius = Number(params.get('radiusKm') ?? 25);
   return {
     q: params.get('q') ?? '',
-    entityType: requestedType !== null && requestedType !== 'all' && requestedType in ENTITY_LABELS
+    entityType: requestedType !== null && requestedType !== 'all' && isEntityTypeKey(requestedType)
       ? (requestedType as DirectoryEntityType)
       : 'all',
     cityId: params.get('cityId'),
@@ -174,11 +178,13 @@ export default function DirectorySearchPage() {
   const personFilters = PERSON_FILTER_KINDS.has(entityType);
 
   // User actions push a history entry, so back and forward move between
-  // searches; normalisations (default city, canonical path) replace it.
+  // searches; normalisations (default city, canonical path) replace it. In
+  // nearby mode every change replaces: the consented coordinates live only in
+  // memory, so a nearby entry restored by Back could never show its results.
   const updateSearch = (patch: Partial<SearchUrlState>, mode: 'push' | 'replace' = 'push', nearby = Boolean(coordinates)) => {
     const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby);
     if (location.pathname === '/buscar' && location.search.replace(/^\?/, '') === next) return;
-    navigate({ pathname: '/buscar', search: next }, { replace: mode === 'replace' });
+    navigate({ pathname: '/buscar', search: next }, { replace: mode === 'replace' || Boolean(coordinates) });
   };
   const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates));
   useEffect(() => {
@@ -429,7 +435,7 @@ export default function DirectorySearchPage() {
           ) : null}
 
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
-            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && value in ENTITY_LABELS) updateSearch({ entityType: value as DirectoryEntityType | 'all' }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
+            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && isEntityTypeKey(value)) updateSearch({ entityType: value }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
               {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'all')[]).map((type) => {
                 // Every tab is counted under the current filters whichever tab
                 // is selected; `all` is the mixed tab's own count.
