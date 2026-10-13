@@ -296,7 +296,10 @@ interpretDatilDocument = either (Left . T.pack) Right . A.parseEither (A.withObj
     ("AUTORIZADO", Just numberText, at)
       | T.all isDigit numberText && T.length numberText >= 10 && T.length numberText <= 49 ->
       pure (DatilAuthorized providerId numberText (at >>= parseProviderTime))
-    ("AUTORIZADO", _, _) -> pure (DatilPending providerId)
+    -- An authorization carrying a number this reader cannot accept is not pending:
+    -- the document is unreadable (uncertain on submission, slow retry on queries).
+    ("AUTORIZADO", Just _, _) -> fail "Invalid authorization number"
+    ("AUTORIZADO", Nothing, _) -> pure (DatilPending providerId)
     (state, _, _) | state `elem` ["NO AUTORIZADO", "DEVUELTO", "ERROR"] ->
       pure (DatilRejected providerId (summarize state messages))
     _ -> pure (DatilPending providerId))
