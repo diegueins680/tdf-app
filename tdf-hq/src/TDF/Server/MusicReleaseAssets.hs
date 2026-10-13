@@ -26,7 +26,7 @@ import Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..), toPersistValue)
-import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawExecuteCount, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Servant
 import System.Environment (lookupEnv)
 
@@ -156,12 +156,17 @@ authorizeDownloadDB actor entitlementId requestId now = do
               -- Another entitlement may be recording the same identifier
               -- right now; the unique identifier decides and the loser is a
               -- conflict, not an error.
-              inserted <- rawExecuteCount
-                "INSERT INTO music_download_event(entitlement_id,request_id,authorized_at) VALUES(?::uuid,?::uuid,?) ON CONFLICT (request_id) DO NOTHING"
+              -- The stored moment is answered (the column keeps
+              -- microseconds), so a replay reads back the same value.
+              inserted <- rawSql
+                "INSERT INTO music_download_event(entitlement_id,request_id,authorized_at) \
+                \VALUES(?::uuid,?::uuid,?) ON CONFLICT (request_id) DO NOTHING \
+                \RETURNING authorized_at"
                 [toPersistValue entitlementId, toPersistValue requestId, PersistUTCTime now]
-              pure $ if inserted == 1
-                then Right (asset, now)
-                else Left "request_conflict"
+                :: SqlPersistT IO [Single UTCTime]
+              pure $ case inserted of
+                [Single authorizedAt] -> Right (asset, authorizedAt)
+                _ -> Left "request_conflict"
         _ -> pure (Left "request_conflict")
     [] -> pure (Left "not_found")
     _ -> pure (Left "ambiguous_entitlement")
