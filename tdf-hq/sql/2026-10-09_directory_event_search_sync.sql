@@ -59,7 +59,10 @@ CREATE TRIGGER trg_directory_fill_venue_city_reference
   BEFORE INSERT OR UPDATE OF city, city_id ON venue
   FOR EACH ROW EXECUTE FUNCTION directory_fill_venue_city_reference();
 
--- Only HTTPS image URLs from valid event metadata are projected.
+-- The result image follows the rule of the public event detail
+-- (directory_public_rsvp_event, 2026-09-08): an HTTPS URL whose host carries
+-- no credentials, or a same-origin path. A flyer the detail page shows is
+-- therefore never a placeholder on the search card, and vice versa.
 CREATE OR REPLACE FUNCTION directory_social_event_metadata_image(event_metadata TEXT)
 RETURNS TEXT
 LANGUAGE sql
@@ -70,8 +73,71 @@ AS $$
     WHEN event_metadata IS NULL OR NOT pg_input_is_valid(event_metadata, 'jsonb') THEN NULL
     WHEN jsonb_typeof(event_metadata::jsonb) <> 'object' THEN NULL
     WHEN jsonb_typeof(event_metadata::jsonb -> 'imageUrl') <> 'string' THEN NULL
-    WHEN (event_metadata::jsonb ->> 'imageUrl') ~ '^https://[^[:space:]@]+$' THEN event_metadata::jsonb ->> 'imageUrl'
+    WHEN strpos(event_metadata::jsonb ->> 'imageUrl', chr(92)) > 0 THEN NULL
+    WHEN (event_metadata::jsonb ->> 'imageUrl') ~* '^https://[^[:space:][:cntrl:]]+$'
+      AND split_part(event_metadata::jsonb ->> 'imageUrl', '/', 3) NOT LIKE '%@%'
+      THEN event_metadata::jsonb ->> 'imageUrl'
+    WHEN (event_metadata::jsonb ->> 'imageUrl') ~ '^/[^/[:space:][:cntrl:]][^[:space:][:cntrl:]]*$'
+      THEN event_metadata::jsonb ->> 'imageUrl'
   END;
+$$;
+
+-- An event carries no genre of its own; its lineup does. The free-text genres
+-- of the artists on the bill ("techno", "Rock") map to catalog genre ids by
+-- code, slug, name or search alias, so the genre filter and the taxonomy
+-- ranking apply to events the same way they apply to profiles. Terms that do
+-- not name a catalog genre are kept only as search text.
+CREATE OR REPLACE FUNCTION directory_social_event_genre_ids(event_genres TEXT[])
+RETURNS UUID[]
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT coalesce(array_agg(DISTINCT catalog_genre.id ORDER BY catalog_genre.id), '{}'::uuid[])
+  FROM unnest(coalesce(event_genres, '{}'::text[])) AS raw(term)
+  CROSS JOIN LATERAL (SELECT nullif(directory_normalize_text(raw.term), '') AS normalized) AS needle
+  JOIN genre catalog_genre
+    ON catalog_genre.active
+   AND (
+     directory_normalize_text(catalog_genre.code) = needle.normalized
+     OR directory_normalize_text(coalesce(catalog_genre.current_slug, '')) = needle.normalized
+     OR directory_normalize_text(catalog_genre.name_es) = needle.normalized
+     OR directory_normalize_text(catalog_genre.name_en) = needle.normalized
+     OR EXISTS (
+       SELECT 1 FROM catalog_search_alias alias
+       WHERE alias.entity_id = catalog_genre.id AND alias.normalized_term = needle.normalized
+     )
+   )
+  WHERE needle.normalized IS NOT NULL;
+$$;
+
+-- The lineup's genre words and artist names, projected into the event
+-- document (genre ids and search text).
+CREATE OR REPLACE FUNCTION directory_social_event_lineup_terms(
+  target_event_id BIGINT,
+  OUT genre_terms TEXT[],
+  OUT artist_names TEXT[]
+)
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT
+    coalesce((
+      SELECT array_agg(terms.term ORDER BY terms.term)
+      FROM (
+        SELECT DISTINCT genre_term AS term
+        FROM event_artist lineup
+        JOIN social_artist_profile artist ON artist.id = lineup.artist_id
+        CROSS JOIN LATERAL unnest(coalesce(artist.genres, '{}'::text[])) AS genre_term
+        WHERE lineup.event_id = target_event_id
+          AND nullif(btrim(genre_term), '') IS NOT NULL
+      ) terms
+    ), '{}'::text[]),
+    coalesce((
+      SELECT array_agg(artist.name ORDER BY artist.name)
+      FROM event_artist lineup
+      JOIN social_artist_profile artist ON artist.id = lineup.artist_id
+      WHERE lineup.event_id = target_event_id
+    ), '{}'::text[]);
 $$;
 
 -- Event, venue and suppression writes all rewrite the same search documents
@@ -180,7 +246,7 @@ BEGIN
   END IF;
   INSERT INTO directory_search_document (
     entity_kind, entity_id, slug, title, subtitle, summary, image_url, city_id, city_name,
-    country_code, public_latitude, public_longitude, location_precision, search_text,
+    country_code, public_latitude, public_longitude, location_precision, genre_ids, search_text,
     search_vector, source_status, visibility, moderation_status, effective_at, expires_at,
     source_updated_at, source_version, sponsored
   )
@@ -189,18 +255,25 @@ BEGIN
     event.description, directory_social_event_metadata_image(source.metadata),
     event.city_id, event.city_name, event.country_code, event.public_latitude,
     event.public_longitude, 'city',
-    directory_normalize_text(concat_ws(' ', event.title, event.description, event.venue_name, event.city_name, 'evento eventos')),
-    to_tsvector('simple', directory_normalize_text(concat_ws(' ', event.title, event.description, event.venue_name, event.city_name, 'evento eventos'))),
-    'published', 'public', 'allowed', event.start_time, event.end_time, event.updated_at, 1, FALSE
+    directory_social_event_genre_ids(lineup.genre_terms),
+    directory_normalize_text(concat_ws(' ', event.title, event.description, event.venue_name, event.city_name, array_to_string(lineup.artist_names, ' '), array_to_string(lineup.genre_terms, ' '), 'evento eventos')),
+    to_tsvector('simple', directory_normalize_text(concat_ws(' ', event.title, event.description, event.venue_name, event.city_name, array_to_string(lineup.artist_names, ' '), array_to_string(lineup.genre_terms, ' '), 'evento eventos'))),
+    'published', 'public', 'allowed', event.start_time,
+    -- An event without an end time is over a day after it starts; without
+    -- this it would stay listed forever.
+    coalesce(event.end_time, event.start_time + interval '1 day'),
+    event.updated_at, 1, FALSE
   FROM directory_public_event event
   JOIN social_event source ON source.id = event.id
+  CROSS JOIN LATERAL directory_social_event_lineup_terms(event.id) lineup
   WHERE event.id = target_event_id
   ON CONFLICT (entity_kind, entity_id) DO UPDATE SET
     slug = EXCLUDED.slug, title = EXCLUDED.title, subtitle = EXCLUDED.subtitle,
     summary = EXCLUDED.summary, image_url = EXCLUDED.image_url, city_id = EXCLUDED.city_id,
     city_name = EXCLUDED.city_name, country_code = EXCLUDED.country_code,
     public_latitude = EXCLUDED.public_latitude, public_longitude = EXCLUDED.public_longitude,
-    location_precision = EXCLUDED.location_precision, search_text = EXCLUDED.search_text,
+    location_precision = EXCLUDED.location_precision, genre_ids = EXCLUDED.genre_ids,
+    search_text = EXCLUDED.search_text,
     search_vector = EXCLUDED.search_vector, source_status = EXCLUDED.source_status,
     visibility = EXCLUDED.visibility, moderation_status = EXCLUDED.moderation_status,
     effective_at = EXCLUDED.effective_at, expires_at = EXCLUDED.expires_at,
@@ -214,7 +287,8 @@ BEGIN
          directory_search_document.image_url, directory_search_document.city_id,
          directory_search_document.city_name, directory_search_document.country_code,
          directory_search_document.public_latitude, directory_search_document.public_longitude,
-         directory_search_document.location_precision, directory_search_document.search_text,
+         directory_search_document.location_precision, directory_search_document.genre_ids,
+         directory_search_document.search_text,
          directory_search_document.source_status, directory_search_document.visibility,
          directory_search_document.moderation_status, directory_search_document.effective_at,
          directory_search_document.expires_at)
@@ -222,7 +296,7 @@ BEGIN
         (EXCLUDED.slug, EXCLUDED.title, EXCLUDED.subtitle, EXCLUDED.summary,
          EXCLUDED.image_url, EXCLUDED.city_id, EXCLUDED.city_name, EXCLUDED.country_code,
          EXCLUDED.public_latitude, EXCLUDED.public_longitude, EXCLUDED.location_precision,
-         EXCLUDED.search_text, EXCLUDED.source_status, EXCLUDED.visibility,
+         EXCLUDED.genre_ids, EXCLUDED.search_text, EXCLUDED.source_status, EXCLUDED.visibility,
          EXCLUDED.moderation_status, EXCLUDED.effective_at, EXCLUDED.expires_at);
   -- The source timestamp is recorded separately, without touching the
   -- columns the alert trigger watches.
@@ -327,6 +401,51 @@ CREATE CONSTRAINT TRIGGER trg_directory_sync_external_event_search
   DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_external_event_search_trigger();
 
+-- The lineup feeds the event's genre ids and search text, so a change to the
+-- bill or to an artist's genres or name resyncs the artist's events.
+CREATE OR REPLACE FUNCTION directory_sync_event_lineup_search_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF TG_OP IN ('UPDATE', 'DELETE') THEN
+    PERFORM directory_sync_event_search(OLD.event_id);
+  END IF;
+  IF TG_OP IN ('INSERT', 'UPDATE') AND (TG_OP = 'INSERT' OR NEW.event_id IS DISTINCT FROM OLD.event_id) THEN
+    PERFORM directory_sync_event_search(NEW.event_id);
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_directory_sync_event_lineup_search ON event_artist;
+CREATE CONSTRAINT TRIGGER trg_directory_sync_event_lineup_search
+  AFTER INSERT OR UPDATE OR DELETE ON event_artist
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION directory_sync_event_lineup_search_trigger();
+
+CREATE OR REPLACE FUNCTION directory_sync_artist_events_search_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  artist_event_id BIGINT;
+BEGIN
+  FOR artist_event_id IN
+    SELECT lineup.event_id FROM event_artist lineup WHERE lineup.artist_id = NEW.id ORDER BY lineup.event_id
+  LOOP
+    PERFORM directory_sync_event_search(artist_event_id);
+  END LOOP;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_directory_sync_artist_events_search ON social_artist_profile;
+CREATE CONSTRAINT TRIGGER trg_directory_sync_artist_events_search
+  AFTER UPDATE OF genres, name ON social_artist_profile
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION directory_sync_artist_events_search_trigger();
+
 -- The full refresh now reuses the same projection, so a manual rebuild and the
 -- incremental triggers can never disagree.
 CREATE OR REPLACE FUNCTION directory_refresh_legacy_event_search()
@@ -361,6 +480,68 @@ BEGIN
   FOR target IN SELECT DISTINCT id FROM directory_public_venue LOOP
     PERFORM directory_sync_venue_search(target);
   END LOOP;
+END;
+$$;
+
+-- Operator entry point for a historical backfill or a recovery reindex. It
+-- runs the same full refresh and reports what changed, so a rerun can be
+-- audited: unchanged documents keep their version (no saved-search alert),
+-- an event never gets a second document (the primary key is the canonical
+-- id), and events whose venue city could not be resolved are counted rather
+-- than guessed. Run it as
+--   SELECT * FROM directory_event_search_reindex();
+-- and, outside a migration, disable directory_search_alert_trigger first if
+-- the indexed events must not notify saved searches.
+CREATE OR REPLACE FUNCTION directory_event_search_reindex()
+RETURNS TABLE (
+  events_examined BIGINT,
+  events_eligible BIGINT,
+  events_skipped_not_public BIGINT,
+  venues_eligible BIGINT,
+  documents_inserted BIGINT,
+  documents_updated BIGINT,
+  documents_unchanged BIGINT,
+  documents_paused BIGINT,
+  documents_deleted BIGINT,
+  events_unresolved_city BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  PERFORM directory_search_sync_lock();
+  CREATE TEMP TABLE directory_event_search_reindex_before ON COMMIT DROP AS
+    SELECT document.entity_kind, document.entity_id, document.source_version, document.source_status
+    FROM directory_search_document document
+    WHERE document.entity_kind IN ('event', 'venue');
+  PERFORM directory_refresh_legacy_event_search();
+  RETURN QUERY
+  SELECT
+    (SELECT count(*) FROM social_event),
+    (SELECT count(*) FROM directory_public_event),
+    (SELECT count(*) FROM social_event) - (SELECT count(*) FROM directory_public_event),
+    (SELECT count(*) FROM directory_public_venue),
+    (SELECT count(*) FROM directory_search_document document
+      WHERE document.entity_kind IN ('event', 'venue')
+        AND NOT EXISTS (SELECT 1 FROM directory_event_search_reindex_before before
+                        WHERE before.entity_kind = document.entity_kind AND before.entity_id = document.entity_id)),
+    (SELECT count(*) FROM directory_search_document document
+      JOIN directory_event_search_reindex_before before
+        ON before.entity_kind = document.entity_kind AND before.entity_id = document.entity_id
+      WHERE document.source_version > before.source_version),
+    (SELECT count(*) FROM directory_search_document document
+      JOIN directory_event_search_reindex_before before
+        ON before.entity_kind = document.entity_kind AND before.entity_id = document.entity_id
+      WHERE document.source_version = before.source_version
+        AND document.source_status = before.source_status),
+    (SELECT count(*) FROM directory_search_document document
+      JOIN directory_event_search_reindex_before before
+        ON before.entity_kind = document.entity_kind AND before.entity_id = document.entity_id
+      WHERE document.source_status = 'paused' AND before.source_status = 'published'),
+    (SELECT count(*) FROM directory_event_search_reindex_before before
+      WHERE NOT EXISTS (SELECT 1 FROM directory_search_document document
+                        WHERE document.entity_kind = before.entity_kind AND document.entity_id = before.entity_id)),
+    (SELECT count(*) FROM directory_public_event event WHERE event.city_id IS NULL);
+  DROP TABLE directory_event_search_reindex_before;
 END;
 $$;
 
@@ -444,7 +625,8 @@ UPDATE venue
 SET city_id = directory_resolve_city_reference(city)
 WHERE city_id IS NULL AND directory_resolve_city_reference(city) IS NOT NULL;
 
-SELECT directory_refresh_legacy_event_search();
+-- The reported counts are the backfill's audit record in the migration log.
+SELECT * FROM directory_event_search_reindex();
 
 ALTER TABLE directory_search_document ENABLE TRIGGER directory_search_alert_trigger;
 

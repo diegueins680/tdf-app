@@ -23,6 +23,13 @@ DECLARE
   retiring_city UUID;
   retiring_venue BIGINT;
   republish_search UUID;
+  catalog_genre_id UUID;
+  catalog_genre_name TEXT;
+  genre_event_id BIGINT;
+  lineup_artist_id BIGINT;
+  venueless_event_id BIGINT;
+  reindex RECORD;
+  documents_before BIGINT;
 BEGIN
   SELECT id INTO quito FROM city_reference
   WHERE directory_normalize_text(name_es) = directory_normalize_text('Quito')
@@ -261,6 +268,103 @@ BEGIN
      IS DISTINCT FROM 'paused' THEN
     RAISE EXCEPTION 'deleting a venue''s last public event left the venue document published';
   END IF;
+
+  -- 8a. The card image follows the detail page's rule: a same-origin path is
+  -- kept, an HTTPS URL carrying credentials is not.
+  INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+                            workflow_state_id, timezone, start_time, end_time, metadata,
+                            created_at, updated_at)
+  VALUES (NULL, 'Synthetic flyer night', 'Synthetic lineup', late_venue, event_type,
+          public_state, 'America/Guayaquil', now() + interval '3 days', NULL,
+          '{"isPublic": true, "imageUrl": "/assets/serve/events/synthetic-flyer.webp"}', now(), now())
+  RETURNING id INTO genre_event_id;
+  SELECT * INTO doc FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text;
+  IF doc.image_url IS DISTINCT FROM '/assets/serve/events/synthetic-flyer.webp' THEN
+    RAISE EXCEPTION 'same-origin event flyer was not projected (got %)', doc.image_url;
+  END IF;
+  -- 8b. An event without an end time expires a day after it starts instead of never.
+  IF doc.expires_at IS DISTINCT FROM (SELECT start_time + interval '1 day' FROM social_event WHERE id = genre_event_id) THEN
+    RAISE EXCEPTION 'event without end time did not get a bounded expiry (got %)', doc.expires_at;
+  END IF;
+  UPDATE social_event SET metadata = '{"isPublic": true, "imageUrl": "https://user:secret@cdn.example.test/flyer.jpg"}'
+  WHERE id = genre_event_id;
+  IF (SELECT image_url FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) IS NOT NULL THEN
+    RAISE EXCEPTION 'image URL with credentials was projected';
+  END IF;
+
+  -- 8c. The lineup's free-text genres map to catalog genre ids, so the genre
+  -- filter finds the event; artist names and unmapped genre words become
+  -- search text; changing the bill or the artist's genres resyncs the event.
+  SELECT id, name_es INTO catalog_genre_id, catalog_genre_name
+  FROM genre WHERE active ORDER BY sort_order, id LIMIT 1;
+  IF catalog_genre_id IS NULL THEN RAISE EXCEPTION 'genre catalog seed is missing'; END IF;
+  INSERT INTO social_artist_profile (name, genres, created_at, updated_at)
+  VALUES ('Synthetic Lineup Headliner', ARRAY[upper(catalog_genre_name), 'synthetic-no-such-genre'], now(), now())
+  RETURNING id INTO lineup_artist_id;
+  INSERT INTO event_artist (event_id, artist_id, role) VALUES (genre_event_id, lineup_artist_id, 'headliner');
+  SELECT * INTO doc FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text;
+  IF doc.genre_ids IS DISTINCT FROM ARRAY[catalog_genre_id] THEN
+    RAISE EXCEPTION 'lineup genres were not mapped to catalog ids (got %)', doc.genre_ids;
+  END IF;
+  IF NOT doc.search_vector @@ plainto_tsquery('simple', directory_normalize_text('synthetic-no-such-genre'))
+     OR NOT doc.search_vector @@ plainto_tsquery('simple', directory_normalize_text('Lineup Headliner')) THEN
+    RAISE EXCEPTION 'lineup words are missing from the event search text';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM directory_public_search_document
+                 WHERE entity_kind = 'event' AND entity_id = genre_event_id::text AND catalog_genre_id = ANY(genre_ids)) THEN
+    RAISE EXCEPTION 'genre filter does not find the event through the public view';
+  END IF;
+  UPDATE social_artist_profile SET genres = ARRAY['synthetic-no-such-genre'] WHERE id = lineup_artist_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
+    RAISE EXCEPTION 'changing the artist''s genres did not resync the event';
+  END IF;
+  DELETE FROM event_artist WHERE event_id = genre_event_id AND artist_id = lineup_artist_id;
+  IF (SELECT search_vector FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text)
+     @@ plainto_tsquery('simple', directory_normalize_text('Lineup Headliner')) THEN
+    RAISE EXCEPTION 'removing the artist from the bill did not resync the event';
+  END IF;
+
+  -- 8d. The operator reindex is idempotent and reports its counts: a rerun
+  -- over unchanged sources changes nothing, and an event whose venue city is
+  -- unknown is counted for review rather than guessed.
+  SELECT count(*) INTO documents_before FROM directory_search_document WHERE entity_kind IN ('event', 'venue');
+  SELECT * INTO reindex FROM directory_event_search_reindex();
+  IF reindex.documents_inserted <> 0 OR reindex.documents_updated <> 0 OR reindex.documents_deleted <> 0
+     OR reindex.documents_paused <> 0 OR reindex.documents_unchanged <> documents_before THEN
+    RAISE EXCEPTION 'reindex of unchanged sources reported changes: %', reindex;
+  END IF;
+  IF reindex.events_examined < reindex.events_eligible
+     OR reindex.events_skipped_not_public <> reindex.events_examined - reindex.events_eligible THEN
+    RAISE EXCEPTION 'reindex counts are inconsistent: %', reindex;
+  END IF;
+  INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+                            workflow_state_id, timezone, start_time, end_time, metadata,
+                            created_at, updated_at)
+  VALUES (NULL, 'Synthetic venueless event', 'Synthetic lineup', NULL, event_type,
+          public_state, 'America/Guayaquil', now() + interval '3 days', now() + interval '4 days',
+          '{"isPublic": true}', now(), now())
+  RETURNING id INTO venueless_event_id;
+  -- The trigger indexed it already (without a city); the reindex sees it unchanged
+  -- and reports the unresolved city.
+  SELECT * INTO reindex FROM directory_event_search_reindex();
+  IF reindex.documents_inserted <> 0 OR reindex.documents_updated <> 0 THEN
+    RAISE EXCEPTION 'reindex rewrote documents the triggers had already written: %', reindex;
+  END IF;
+  IF reindex.events_unresolved_city < 1 THEN
+    RAISE EXCEPTION 'event without a resolvable city was not reported: %', reindex;
+  END IF;
+  IF (SELECT city_id FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = venueless_event_id::text) IS NOT NULL THEN
+    RAISE EXCEPTION 'event without a venue was given a city';
+  END IF;
+  -- Hiding the event makes the next reindex report it as paused, once.
+  UPDATE social_event SET metadata = '{"isPublic": false}' WHERE id = venueless_event_id;
+  UPDATE directory_search_document SET source_status = 'published'
+  WHERE entity_kind = 'event' AND entity_id = venueless_event_id::text;  -- simulate a stale projection
+  SELECT * INTO reindex FROM directory_event_search_reindex();
+  IF reindex.documents_paused <> 1 THEN
+    RAISE EXCEPTION 'stale projection of a hidden event was not paused by the reindex: %', reindex;
+  END IF;
+  DELETE FROM social_event WHERE id IN (genre_event_id, venueless_event_id);
 
   -- 9. The full rebuild agrees with the incremental projection.
   PERFORM directory_refresh_legacy_event_search();
