@@ -58917,6 +58917,25 @@
         "name": "actionCopy"
       },
       "reviewBatch": "legal-disclosure-2026-10-07"
+    },
+    {
+      "id": "c2b46fc847fe0b3f1f6f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could let a non-label utm parameter reach analytics or drop a campaign tag from shared links.",
+      "justification": "The five utm_* suffixes the mobile funnel accepts as campaign tags (source, medium, campaign, content, term) are a validation allowlist mirroring the growth attribution store; the values are query-parameter names, not selectable or reportable business values, and each accepted value is still label-validated.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "mobile-growth-funnel-2026-10-13",
+      "evidence": {
+        "file": "tdf-hq-ui/src/mobile/telemetry.ts",
+        "line": 18,
+        "kind": "array",
+        "name": "CAMPAIGN_TAGS",
+        "valueCount": 5
+      }
     }
   ]
 }
