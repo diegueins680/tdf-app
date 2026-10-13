@@ -12882,7 +12882,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
+      "sha256": "997394866d1a0e4950ecf1d74f4b725be668f560afcd365a99621efecbc88b9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12918,13 +12918,13 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "4cad088b4c4cce3a5a131f3389fb57f11fc3f30db76da4fb620963f116d38d57",
+      "sha256": "3e74096722a327e273901b456ce22bb6fb8a0d97a03ed7fec0bb6cf8c3e8c919",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-48d8c4fab6aef615",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-      "sha256": "28f258a972aece5a49d89d5b64f4e2740dc71f46ce083005c9b87c9787d402e9",
+      "sha256": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15000,7 +15000,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "1f890e1d5cfdf827941cbcd1d06e0c61738517198a96b3c78686d2f55cf74967",
+      "sha256": "e864fedce03d549ed71c7e2456a4eff1e9dbf4ead52a2f8c41b4001b901ca037",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18477,7 +18477,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "fe4dc7bbfe73eb2cb386f446dfeea565796b8d22b0888c43d6eb4d714109e4e6",
+      "sha256": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

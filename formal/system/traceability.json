@@ -9388,7 +9388,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "docs/catalog-persistence/catalog-list-decisions.json": "1d6a7541058ffc9d6be1591b96bff77036b7e2ae2b84e8364d0f444a5a2e52d3",
-    "docs/directory/event-search-sync.md": "fe4dc7bbfe73eb2cb386f446dfeea565796b8d22b0888c43d6eb4d714109e4e6",
+    "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -10026,14 +10026,14 @@
     "tdf-hq/sql/2026-10-06_ticket_tax_invoices_rollback.sql": "7869e0e764b0fa8df8c442dcc949cbb59360ff92435757aa9627b69f25befa44",
     "tdf-hq/sql/2026-10-07_artist_invitation_links.sql": "b0e80b3b2dbb884460e40bef8e9c9a29fe0ef3ef3059fc998bb531fde179c3a2",
     "tdf-hq/sql/2026-10-07_artist_invitation_links_rollback.sql": "2ec77ea9545bc10cb127d2157bcf9216bd43db55569b31f23fbd4305563459c8",
-    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
+    "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql": "997394866d1a0e4950ecf1d74f4b725be668f560afcd365a99621efecbc88b9d",
     "tdf-hq/sql/2026-10-07_directory_artist_derived_listings_rollback.sql": "7ff1ed1508d2084eb2c869919f321fa1da1e9b70b122c583ca3e2a5e9dd92508",
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_apply.sql": "4c7d6b4e1c25ff363ca9fc2363f1ec5df5d1360c3ec9778e5fedf9f0d96087a0",
     "tdf-hq/sql/2026-10-07_directory_artist_listing_backfill_dry_run.sql": "ae6cd485260c488dce245901d0ededab7f0625e37cb7cfffa96cfb0d1e52ca32",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation.sql": "a3c8b65103f1e48d02a4a7cfff7e03aa453104b4e98abc66bff19f5362f0fbd4",
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
-    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "4cad088b4c4cce3a5a131f3389fb57f11fc3f30db76da4fb620963f116d38d57",
-    "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "28f258a972aece5a49d89d5b64f4e2740dc71f46ce083005c9b87c9787d402e9",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "3e74096722a327e273901b456ce22bb6fb8a0d97a03ed7fec0bb6cf8c3e8c919",
+    "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10189,7 +10189,7 @@
     "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql": "94e153abc6b0988aea61c282940760d6901e1bf740fa88b1547766bc30c3960e",
     "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
     "tdf-hq/test/integration/directory_event_search_http_seed.sql": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
-    "tdf-hq/test/integration/directory_event_search_sync.sql": "1f890e1d5cfdf827941cbcd1d06e0c61738517198a96b3c78686d2f55cf74967",
+    "tdf-hq/test/integration/directory_event_search_sync.sql": "e864fedce03d549ed71c7e2456a4eff1e9dbf4ead52a2f8c41b4001b901ca037",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
@@ -32937,7 +32937,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
+      "sha256": "997394866d1a0e4950ecf1d74f4b725be668f560afcd365a99621efecbc88b9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33009,7 +33009,7 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "4cad088b4c4cce3a5a131f3389fb57f11fc3f30db76da4fb620963f116d38d57",
+      "sha256": "3e74096722a327e273901b456ce22bb6fb8a0d97a03ed7fec0bb6cf8c3e8c919",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33021,7 +33021,7 @@
     {
       "id": "SURFACE-48d8c4fab6aef615",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-      "sha256": "28f258a972aece5a49d89d5b64f4e2740dc71f46ce083005c9b87c9787d402e9",
+      "sha256": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36719,7 +36719,7 @@
     {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "1f890e1d5cfdf827941cbcd1d06e0c61738517198a96b3c78686d2f55cf74967",
+      "sha256": "e864fedce03d549ed71c7e2456a4eff1e9dbf4ead52a2f8c41b4001b901ca037",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
