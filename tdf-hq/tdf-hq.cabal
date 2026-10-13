@@ -258,7 +258,7 @@ executable tdf-hq-exe
     TDF.Profiles.Artist
     Paths_tdf_hq
   default-language: Haskell2010
-  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints -Werror=missing-fields -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base                 >=4.14 && <5
     , aeson                >=2.0
@@ -345,6 +345,7 @@ test-suite tdf-hq-test
     TDF.CredentialLifecycleSpec
     TDF.WhatsAppConsentSpec
     TDF.InteractionWriteBudgetSpec
+    TDF.MusicPurchaseSpec
     TDF.DriveReplaySpec
     TDF.CourseIdentitySpec
     TDF.TicketPaymentGateSpec
@@ -359,7 +360,9 @@ test-suite tdf-hq-test
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
+    TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
+    TDF.InvoiceWorkerSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
