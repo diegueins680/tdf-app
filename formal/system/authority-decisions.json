@@ -599,6 +599,21 @@
       "conflict": "PRIV-WHATSAPP-001 promised at most one confirmation request per number per 24 hours and that a person can confirm by messaging SI themselves. The implementation cleared confirmation_requested_at on every opt-out and confirmation, so the unauthenticated opt-out reopened the interval and allowed unlimited requests to any number; it also cleared the pending request when the provider rejected the send, so the success page's SI button could never activate consent; simultaneous first requests for one number could fail on the unique row.",
       "authority": "The 2026-10-06 double opt-in decision (AUTHORITY-052) and the requirement statement govern; the implementation behavior was a defect, not policy.",
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
+    },
+    {
+      "id": "AUTHORITY-080",
+      "sources": [
+        "formal/system/requirements.json#SYS-STATE-001",
+        "formal/system/state-machine-bindings.json",
+        "scripts/check-state-machines.py",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs",
+        "docs/operations-control-center/formal-model.yaml"
+      ],
+      "conflict": "SYS-STATE-001 compares bound validators with declared machines, but the checker read only a literal allowedTransitions pair list and a case-form renderer in the same file, so the operations work item, whose transitions are enforced by the clause-form targets function allowedTargets with the clause-form renderer workStatusText in another module, stayed unbound: the declared operations.control-center machine (7 states, 20 transitions) was never compared with the code that enforces it.",
+      "authority": "The requirement's own rule: a bound validator's transitions, rendered to stored names, equal the declared transitions under exact deviation. The checker now reads a targets function (one literal clause per constructor, every renderer-named constructor covered) and a clause-form renderer from a named file; the operations binding is required so it cannot be dropped silently. Compared on 2026-10-13: the twenty implemented transitions equal the declared twenty; no deviation recorded. Transition guards (roles, assignee, reason, waiting classification) are outside the declared relation.",
+      "decidedOn": "2026-10-13",
+      "status": "applied"
     }
   ]
 }

@@ -50,3 +50,23 @@ A difference must equal `code.deviation` exactly. Bound: event ticket
 fulfillment, Domo quote, service booking fulfillment and marketplace rental
 fulfillment. Course enrollment is enforced in code but has no declared model;
 distribution renders states with `show` and waits on AUTHORITY-048.
+
+## Targets functions and clause renderers (AUTHORITY-080)
+
+A validator may also be a targets function, bound as `code: {file, targets,
+renderer, rendererFile?}`: one clause per source constructor returning the
+literal list of admitted targets (`allowedTargets WorkNew = [WorkSeen, ...]`).
+The renderer may be `case` form or one literal clause per constructor, in
+`rendererFile` when it lives in another module. The checker requires a clause
+for every constructor the renderer names (a wildcard or missing clause would
+hide edges), exactly one clause per constructor, literal lists only, and reads
+comment-stripped source. Bound this way: the operations work item
+(`TDF.Operations.Model.allowedTargets`, rendered by
+`TDF.Operations.Types.workStatusText`): its twenty implemented transitions equal
+the declared `operations.control-center` machine, no deviation. Thirteen
+database-free controls cover the new shape (edge removed or added, clause
+missing, doubled or non-literal, unnamed constructor, edge kept in a comment,
+renderer clause repeated, non-literal or removed, both binding kinds at once,
+targets not found, required binding removed). The guards of
+`validateTransition` (roles, assignee, reason, waiting classification) are not
+part of the declared relation and are not compared.

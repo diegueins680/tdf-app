@@ -3662,7 +3662,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
+      "sha256": "c4795fcd84e126c71b02d611532996218ccc6384d141ab2a554efc6a12c066d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5396,7 +5396,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "a6cb7d8512743f4a4523eea953ee7e8c833e883150a8755d61e5b0ead5484ae0",
+      "sha256": "0043df7980ad50c0dfd8544e8151c05a6ae2f5516f44503750d1df826b1e0d92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23965,7 +23965,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "4f71ef49d56cb44a37cae6f885bb5bd79734377a693dbd2e848c1af298e07546",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24245,7 +24245,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sha256": "ef239c10cd4c5630769feaba043bea6a6e84d1ff835f3ed9fc118ae0fe6af650",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24280,7 +24280,7 @@
     },
     {
       "path": "formal/system/state-machine-correspondence.md",
-      "sha256": "33615982db681cd6ff8d2b083d551c6b5100cae58179953b35c5cf7245263f43",
+      "sha256": "2e30c2b3583dc9cc28ebe519319c6fb23991fa9cc2d2b4048ab4d9b0addfc470",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -25,6 +25,7 @@ QUOTE = "docs/revenue-platform/formal-model.yaml#quote"
 CLAIM = "docs/music-directory/formal-model.yaml#claim"
 DISTRIBUTION = "docs/revenue-platform/formal-model.yaml#distribution"
 RENTAL = "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment"
+OPERATIONS = "docs/operations-control-center/formal-model.yaml#operations.control-center"
 
 
 def expect(name, errors, fragment):
@@ -124,11 +125,67 @@ def code_controls(bindings, machines):
     assert gate.without_haskell_comments('x = "-- {- text" -- gone\ny') == 'x = "-- {- text" \ny'
 
     unbound = copy.deepcopy(bindings)
+    targets_negative = targets_controls(bindings, machines)
     del unbound["machines"][RENTAL]["code"]
     expect("required validator binding removed", gate.check_code(unbound, machines),
            "required backend validator binding is missing")
-    return 18
+    return 18 + targets_negative
 
+
+
+def targets_controls(bindings, machines):
+    """The operations work-item binding: a targets function and a clause renderer."""
+    spec = bindings["machines"][OPERATIONS]["code"]
+    operations = machines[OPERATIONS]
+    assert gate.compare_code(OPERATIONS, spec, operations) == []
+    both = copy.deepcopy(bindings)
+    both["machines"][OPERATIONS]["code"]["validator"] = "validateTransition"
+    expect("validator and targets together", gate.check_code(both, machines), "exactly one of validator, targets")
+    renamed = copy.deepcopy(bindings)
+    renamed["machines"][OPERATIONS]["code"]["targets"] = "retiredTargets"
+    expect("targets not found", gate.check_code(renamed, machines), "targets retiredTargets not found")
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch)
+        for relative in (spec["file"], spec["rendererFile"]):
+            (root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (root / relative).write_text((gate.ROOT / relative).read_text())
+        model = (gate.ROOT / spec["file"]).read_text()
+        types = (gate.ROOT / spec["rendererFile"]).read_text()
+        target, renderer = root / spec["file"], root / spec["rendererFile"]
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = []", 1))
+        expect("edge removed from a targets clause", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['archived', 'in_progress']]")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [WorkInProgress, WorkNew]", 1))
+        expect("edge added to a targets clause", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyImplemented is [['archived', 'new']]")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]\n", "", 1))
+        expect("constructor without a targets clause", gate.check_code(bindings, machines, root),
+               "allowedTargets has no clause for WorkArchived")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [WorkInProgress]\nallowedTargets WorkArchived = [WorkNew]", 1))
+        expect("constructor with two targets clauses", gate.check_code(bindings, machines, root),
+               "allowedTargets has more than one clause for WorkArchived")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = reopenTargets", 1))
+        expect("targets clause that is not a literal list", gate.check_code(bindings, machines, root),
+               "allowedTargets has a clause that is not a literal target list")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [WorkInProgress, WorkRetired]", 1))
+        expect("target constructor without stored name", gate.check_code(bindings, machines, root),
+               "WorkRetired has no stored name")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [] -- [WorkInProgress]", 1))
+        expect("edge kept only in a comment", gate.check_code(bindings, machines, root),
+               "code transitionsOnlyDeclared is [['archived', 'in_progress']]")
+        target.write_text(model)
+        renderer.write_text(types.replace('workStatusText WorkArchived = "archived"', 'workStatusText WorkArchived = "archived"\nworkStatusText WorkArchived = "closed"', 1))
+        expect("renderer clause repeated", gate.check_code(bindings, machines, root), "workStatusText maps a constructor more than once")
+        renderer.write_text(types.replace('workStatusText WorkArchived = "archived"', 'workStatusText WorkArchived = archivedName', 1))
+        expect("renderer clause that is not a literal", gate.check_code(bindings, machines, root),
+               "workStatusText has a clause that is not a literal name")
+        renderer.write_text(types.replace('workStatusText WorkArchived = "archived"\n', '', 1))
+        expect("renderer clause removed", gate.check_code(bindings, machines, root), "WorkArchived has no stored name")
+    unbound = copy.deepcopy(bindings)
+    del unbound["machines"][OPERATIONS]["code"]
+    expect("required targets binding removed", gate.check_code(unbound, machines),
+           f"{OPERATIONS}: required backend validator binding is missing")
+    return 13
 
 def main():
     parser = argparse.ArgumentParser()

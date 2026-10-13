@@ -146,7 +146,13 @@
       "source": "docs/operations-control-center/formal-model.yaml",
       "table": "operations_work_item",
       "column": "status",
-      "decision": "docs/operations-control-center/formal-model.yaml"
+      "decision": "docs/operations-control-center/formal-model.yaml",
+      "code": {
+        "file": "tdf-hq/src/TDF/Operations/Model.hs",
+        "targets": "allowedTargets",
+        "renderer": "workStatusText",
+        "rendererFile": "tdf-hq/src/TDF/Operations/Types.hs"
+      }
     }
   },
   "unbound": {

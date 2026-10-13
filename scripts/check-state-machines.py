@@ -12,9 +12,12 @@ machine exactly, so new drift and silently repaired drift both fail.
 
 A machine may also bind the backend validator that enforces its transitions
 (`code`: Haskell file, validator and the renderer that maps constructors to
-stored state names). Both modes compare the validator's `allowedTransitions`
-list with the declared transitions under the same exact-deviation rule
-(`code.deviation`).
+stored state names). The validator holds a literal `allowedTransitions` pair
+list, or (`targets` instead of `validator`) one clause per source constructor
+returning the literal list of admitted targets; the renderer is a `case` or
+one clause per constructor, in `rendererFile` when it lives elsewhere. Both
+modes compare the implemented transitions with the declared ones under the
+same exact-deviation rule (`code.deviation`).
 
 Usage:
   check-state-machines.py --database-url URL   # compare with a migrated database
@@ -136,27 +139,84 @@ def declaration_body(source, start):
     return source[start:following.start() if following else len(source)]
 
 
-def code_transitions(spec, root=ROOT):
-    """Pairs in the validator's allowedTransitions list, as stored state names."""
-    # Comments go first so that neither a commented mapping, a commented edge nor a
-    # bracket inside a comment can stand in for live code.
-    source = without_haskell_comments((root / spec["file"]).read_text())
-    renderer = re.search(rf"^{re.escape(spec['renderer'])} (\w+) = case \1 of\n", source, re.M)
-    if not renderer:
-        raise RuntimeError(f"renderer {spec['renderer']} not found in {spec['file']}")
-    # Every branch must be exactly `Constructor -> "name"`: a prefix match would read
-    # `"lost" <> "_archived"` as "lost".
+def stored_names(spec, root=ROOT):
+    """Constructor -> stored state name from the renderer: a `case` with literal
+    branches, or one literal clause per constructor."""
+    renderer_file = spec.get("rendererFile", spec["file"])
+    source = without_haskell_comments((root / renderer_file).read_text())
+    name = re.escape(spec["renderer"])
     mappings = []
-    for branch in declaration_body(source, renderer.start()).split("\n")[1:]:
-        if not branch.strip():
-            continue
-        literal = re.fullmatch(r'\s+([A-Z]\w*)\s*->\s*"(\w+)"\s*', branch)
-        if not literal:
-            raise RuntimeError(f"{spec['renderer']} has a branch that is not a literal name: {branch.strip()}")
-        mappings.append(literal.groups())
+    renderer = re.search(rf"^{name} (\w+) = case \1 of\n", source, re.M)
+    if renderer:
+        # Every branch must be exactly `Constructor -> "name"`: a prefix match would
+        # read `"lost" <> "_archived"` as "lost".
+        for branch in declaration_body(source, renderer.start()).split("\n")[1:]:
+            if not branch.strip():
+                continue
+            literal = re.fullmatch(r'\s+([A-Z]\w*)\s*->\s*"(\w+)"\s*', branch)
+            if not literal:
+                raise RuntimeError(f"{spec['renderer']} has a branch that is not a literal name: {branch.strip()}")
+            mappings.append(literal.groups())
+    else:
+        # Clause form: every clause must be exactly `renderer Constructor = "name"`.
+        for clause in re.finditer(rf"^{name} (.*)$", source, re.M):
+            if clause.group(1).startswith("::"):
+                continue
+            literal = re.fullmatch(r'([A-Z]\w*)\s*=\s*"(\w+)"\s*', clause.group(1))
+            if not literal:
+                raise RuntimeError(f"{spec['renderer']} has a clause that is not a literal name: {clause.group(0).strip()}")
+            mappings.append(literal.groups())
+        if not mappings:
+            raise RuntimeError(f"renderer {spec['renderer']} not found in {renderer_file}")
     names = dict(mappings)
     if len(names) != len(mappings):
         raise RuntimeError(f"{spec['renderer']} maps a constructor more than once")
+    return names
+
+
+def target_transitions(spec, source, names):
+    """Pairs from a targets function: one clause `targets Constructor = [C, ...]`
+    per constructor the renderer names, each a literal constructor list."""
+    name = re.escape(spec["targets"])
+    clauses = {}
+    for clause in re.finditer(rf"^{name} (.*)$", source, re.M):
+        if clause.group(1).startswith("::"):
+            continue
+        literal = re.fullmatch(r"([A-Z]\w*)\s*=\s*\[([^\]]*)\]\s*", clause.group(1))
+        if not literal:
+            raise RuntimeError(f"{spec['targets']} has a clause that is not a literal target list: {clause.group(0).strip()}")
+        constructor, listed = literal.groups()
+        if constructor in clauses:
+            raise RuntimeError(f"{spec['targets']} has more than one clause for {constructor}")
+        if re.sub(r"[A-Z]\w*", "", listed).replace(",", "").strip():
+            raise RuntimeError(f"{spec['targets']} clause for {constructor} has an entry that is not a constructor")
+        clauses[constructor] = re.findall(r"[A-Z]\w*", listed)
+    if not clauses:
+        raise RuntimeError(f"targets {spec['targets']} not found in {spec['file']}")
+    # A constructor without its own clause would fall to a wildcard or a crash;
+    # either way its edges would be invisible here.
+    for constructor in names:
+        if constructor not in clauses:
+            raise RuntimeError(f"{spec['targets']} has no clause for {constructor}")
+    pairs = set()
+    for constructor, targets in clauses.items():
+        for state in [constructor] + targets:
+            if state not in names:
+                raise RuntimeError(f"{state} has no stored name in {spec['renderer']}")
+        pairs.update((names[constructor], names[target]) for target in targets)
+    if not pairs:
+        raise RuntimeError(f"{spec['targets']} admits no transition")
+    return pairs
+
+
+def code_transitions(spec, root=ROOT):
+    """Implemented transition pairs of the bound code, as stored state names."""
+    # Comments go first so that neither a commented mapping, a commented edge nor a
+    # bracket inside a comment can stand in for live code.
+    source = without_haskell_comments((root / spec["file"]).read_text())
+    names = stored_names(spec, root)
+    if spec.get("targets"):
+        return target_transitions(spec, source, names)
     definition = re.search(rf"^{re.escape(spec['validator'])} (?![^\n]*::)\w", source, re.M)
     if not definition:
         raise RuntimeError(f"validator {spec['validator']} not found in {spec['file']}")
@@ -209,6 +269,8 @@ REQUIRED_CODE_BINDINGS = (
     "docs/revenue-platform/formal-model.yaml#quote",
     "docs/revenue-platform/formal-model.yaml#service_booking_fulfillment",
     "docs/revenue-platform/formal-model.yaml#marketplace_rental_fulfillment",
+    # Targets-function binding reviewed under AUTHORITY-080.
+    "docs/operations-control-center/formal-model.yaml#operations.control-center",
 )
 
 
@@ -221,7 +283,9 @@ def check_code(bindings, machines, root=ROOT):
         spec = binding.get("code")
         if spec is None or machine_id not in machines:
             continue
-        missing = [f for f in ("file", "validator", "renderer") if not spec.get(f)]
+        missing = [f for f in ("file", "renderer") if not spec.get(f)]
+        if bool(spec.get("validator")) == bool(spec.get("targets")):
+            missing.append("exactly one of validator, targets")
         if missing:
             errors.append(f"{machine_id}: code binding requires {', '.join(missing)}")
             continue
