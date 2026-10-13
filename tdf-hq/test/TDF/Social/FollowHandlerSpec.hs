@@ -1073,6 +1073,7 @@ spec = describe "social event handler helpers" $ do
                             Nothing
                             Nothing
                             Nothing
+                            Nothing
                         )
                     )
                     env
