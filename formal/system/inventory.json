@@ -24063,7 +24063,7 @@
     },
     {
       "path": "formal/system/cors-boundary.md",
-      "sha256": "f38d760a8c5c331767874b7c35c91760d9b09055a7b2670f825d859a79b4da3d",
+      "sha256": "d426b708f015c87949a58f254dbbad3dbdc39aea26e92a2131e5808123a9c019",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24252,7 +24252,7 @@
     },
     {
       "path": "formal/system/private-upload-persistence.md",
-      "sha256": "f9df2f2590f3136486125ceb63a0ac6a36c329cd89d4063a6d7c34882d46a9cc",
+      "sha256": "9642bde8dc6272a601667f5eeb0c3f6d36bcce12451ea573ea5c25df93ba882b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24301,7 +24301,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f8f1695aec98af44ca94ba6a9b0550ff59bdf93cc1ab547af99cd68f6c3a062e",
+      "sha256": "c56b9c5087211c5e76ac9a5009b8310c5a989a8d1557650ca319e7c9779757b4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
