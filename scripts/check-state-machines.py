@@ -146,7 +146,7 @@ def stored_names(spec, root=ROOT):
     source = without_haskell_comments((root / renderer_file).read_text())
     name = re.escape(spec["renderer"])
     mappings = []
-    renderer = re.search(rf"^{name} (\w+) = case \1 of\n", source, re.M)
+    renderer = re.search(rf"^{name}[ \t]+(\w+) = case \1 of\n", source, re.M)
     if renderer:
         # Every branch must be exactly `Constructor -> "name"`: a prefix match would
         # read `"lost" <> "_archived"` as "lost".
@@ -159,7 +159,7 @@ def stored_names(spec, root=ROOT):
             mappings.append(literal.groups())
     else:
         # Clause form: every clause must be exactly `renderer Constructor = "name"`.
-        for clause in re.finditer(rf"^{name} (.*)$", source, re.M):
+        for clause in re.finditer(rf"^{name}[ \t]+(.*)$", source, re.M):
             if clause.group(1).startswith("::"):
                 continue
             literal = re.fullmatch(r'([A-Z]\w*)\s*=\s*"(\w+)"\s*', clause.group(1))
@@ -179,13 +179,17 @@ def target_transitions(spec, source, names):
     per constructor the renderer names, each a literal constructor list."""
     name = re.escape(spec["targets"])
     clauses = {}
-    for clause in re.finditer(rf"^{name} (.*)$", source, re.M):
+    for clause in re.finditer(rf"^{name}[ \t]+(.*)$", source, re.M):
         if clause.group(1).startswith("::"):
             continue
         literal = re.fullmatch(r"([A-Z]\w*)\s*=\s*\[([^\]]*)\]\s*", clause.group(1))
         if not literal:
             raise RuntimeError(f"{spec['targets']} has a clause that is not a literal target list: {clause.group(0).strip()}")
         constructor, listed = literal.groups()
+        # The clause must end on its line: an indented continuation (`<> more`,
+        # `++ reopenTargets`) would add edges this reader cannot see.
+        if declaration_body(source, clause.start())[clause.end() - clause.start():].strip():
+            raise RuntimeError(f"{spec['targets']} clause for {constructor} does not end on its line")
         if constructor in clauses:
             raise RuntimeError(f"{spec['targets']} has more than one clause for {constructor}")
         if re.sub(r"[A-Z]\w*", "", listed).replace(",", "").strip():

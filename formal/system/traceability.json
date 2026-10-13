@@ -1020,13 +1020,13 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison, plus static comparison of five bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items); guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and thirty-one database-free validator controls",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and thirty-four database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the five bound validators' transition relations; no claim about guards, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Nine machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
+        "At least seven machines still enforce a transition relation only in unbound application code (profile, claim, classified, application and invitation in TDF.Directory.Policy; marketplace sale fulfillment; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -9562,7 +9562,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-state-machines.py": "c4795fcd84e126c71b02d611532996218ccc6384d141ab2a554efc6a12c066d4",
+    "scripts/check-state-machines.py": "4e6087d51a5a7c8ff6b730bbd46d8ba842f7fae361fb339dddfa671c1e96e5ef",
     "scripts/ci-change-scope.mjs": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -9669,7 +9669,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-state-machines.py": "0043df7980ad50c0dfd8544e8151c05a6ae2f5516f44503750d1df826b1e0d92",
+    "scripts/test-state-machines.py": "df13cc12d9dfc4e424c0b5b0d15228c9f6ff4f00665291e7bbcdb3ae45dadadd",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -19185,7 +19185,7 @@
     {
       "id": "SURFACE-e755c6a1ab398de9",
       "path": "scripts/check-state-machines.py",
-      "sha256": "c4795fcd84e126c71b02d611532996218ccc6384d141ab2a554efc6a12c066d4",
+      "sha256": "4e6087d51a5a7c8ff6b730bbd46d8ba842f7fae361fb339dddfa671c1e96e5ef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22051,7 +22051,7 @@
     {
       "id": "SURFACE-59516e184a0cc916",
       "path": "scripts/test-state-machines.py",
-      "sha256": "0043df7980ad50c0dfd8544e8151c05a6ae2f5516f44503750d1df826b1e0d92",
+      "sha256": "df13cc12d9dfc4e424c0b5b0d15228c9f6ff4f00665291e7bbcdb3ae45dadadd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43047,7 +43047,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ef239c10cd4c5630769feaba043bea6a6e84d1ff835f3ed9fc118ae0fe6af650",
+      "sourceSha256": "41cf5aafda5e005fe87953335ad03c7a7ec18b053cd7efa8099f5326cd1f3016",
       "definition": {
         "states": [
           "absent",

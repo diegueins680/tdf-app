@@ -1019,13 +1019,13 @@
       ],
       "formalModels": [],
       "verification": "Catalog comparison, plus static comparison of five bound Haskell validators (event tickets, Domo quotes, service bookings, marketplace rentals, operations work items); guards and effects are not covered",
-      "evidence": "Gate output on the migrated CI database, twelve database negative controls and thirty-one database-free validator controls",
+      "evidence": "Gate output on the migrated CI database, twelve database negative controls and thirty-four database-free validator controls",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the four bound validators' transition lists; no claim about guards, effects or unbound application code.",
+      "confidence": "High for state sets and SQL-trigger transitions under the applied manifest and for the five bound validators' transition relations; no claim about guards, effects or unbound application code.",
       "ambiguity": [
         "Distribution and royalty statement vocabularies need a product decision before runtime is built.",
-        "Nine machines still enforce transitions only in unbound application code; distribution renders states with show and awaits the AUTHORITY-048 vocabulary decision."
+        "At least seven machines still enforce a transition relation only in unbound application code (profile, claim, classified, application and invitation in TDF.Directory.Policy; marketplace sale fulfillment; distribution, which renders states with show and awaits the AUTHORITY-048 vocabulary decision); provider event has only a terminal-status guard, and no validator was found for refund, moderation case, review or royalty statement."
       ],
       "conformance": {
         "classification": "PARTIAL",

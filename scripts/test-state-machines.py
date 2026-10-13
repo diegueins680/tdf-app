@@ -125,11 +125,10 @@ def code_controls(bindings, machines):
     assert gate.without_haskell_comments('x = "-- {- text" -- gone\ny') == 'x = "-- {- text" \ny'
 
     unbound = copy.deepcopy(bindings)
-    targets_negative = targets_controls(bindings, machines)
     del unbound["machines"][RENTAL]["code"]
     expect("required validator binding removed", gate.check_code(unbound, machines),
            "required backend validator binding is missing")
-    return 18 + targets_negative
+    return 18 + targets_controls(bindings, machines)
 
 
 
@@ -167,6 +166,15 @@ def targets_controls(bindings, machines):
         target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = reopenTargets", 1))
         expect("targets clause that is not a literal list", gate.check_code(bindings, machines, root),
                "allowedTargets has a clause that is not a literal target list")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [WorkInProgress]\n  <> [WorkNew]", 1))
+        expect("clause continued on the next line", gate.check_code(bindings, machines, root),
+               "allowedTargets clause for WorkArchived does not end on its line")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets\tWorkArchived = [WorkInProgress, WorkNew]\nallowedTargets WorkArchived = [WorkInProgress]", 1))
+        expect("tab-separated clause before the visible one", gate.check_code(bindings, machines, root),
+               "allowedTargets has more than one clause for WorkArchived")
+        target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [WorkInProgress]\nallowedTargets _ = []", 1))
+        expect("wildcard clause", gate.check_code(bindings, machines, root),
+               "allowedTargets has a clause that is not a literal target list")
         target.write_text(model.replace("allowedTargets WorkArchived = [WorkInProgress]", "allowedTargets WorkArchived = [WorkInProgress, WorkRetired]", 1))
         expect("target constructor without stored name", gate.check_code(bindings, machines, root),
                "WorkRetired has no stored name")
@@ -185,7 +193,7 @@ def targets_controls(bindings, machines):
     del unbound["machines"][OPERATIONS]["code"]
     expect("required targets binding removed", gate.check_code(unbound, machines),
            f"{OPERATIONS}: required backend validator binding is missing")
-    return 13
+    return 16
 
 def main():
     parser = argparse.ArgumentParser()
