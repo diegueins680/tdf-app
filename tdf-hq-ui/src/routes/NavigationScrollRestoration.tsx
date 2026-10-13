@@ -82,6 +82,7 @@ export default function NavigationScrollRestoration() {
       } else {
         settled = true; // Initial document refresh retains browser-native restoration.
       }
+      if (settled) persist();
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(attempt); };
     const onScroll = () => {

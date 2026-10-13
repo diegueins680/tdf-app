@@ -60,6 +60,9 @@ test('community discovery preserves query, genre and scroll through profile/hist
   await expect(page).toHaveURL(/\/directorio\/luna-12$/);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(3);
   await page.goBack();
+  // A visitor scrolls or tabs to this below-the-fold entry point after Back.
+  await expect(search.getByLabel('Buscar artistas y perfiles')).toHaveValue('Luna');
+  await page.keyboard.press('Tab');
   await page.getByRole('link', { name: 'Abrir búsqueda global' }).click();
   await expect(page.getByRole('tab', { name: 'Artistas y proyectos' })).toBeVisible();
   await page.getByRole('tab', { name: 'Artistas y proyectos' }).click();
@@ -107,7 +110,7 @@ test('protected scrolling container restores after async layout and public navig
   await expect(main).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Contactos', exact: true })).toBeVisible();
   const addContent = () => page.evaluate(() => {
-    const element = document.createElement('div'); element.style.height = '4000px'; element.textContent = 'Synthetic async list';
+    const element = document.createElement('div'); element.style.minHeight = '4000px'; element.style.flexShrink = '0'; element.textContent = 'Synthetic async list';
     document.querySelector('[data-navigation-scroll-container]').append(element);
   });
   await addContent();
