@@ -23,7 +23,9 @@ existing current-session and consent guards remain authoritative. A rejected
 send leaves no notice. List, detail and count hide notices when the thread is no
 longer readable; deleting a message makes its retained notice invisible. A notice
 contains no message excerpt, sender name or email. Its typed thread identity opens
-only a conversation returned by the recipient's authorized thread list.
+only a conversation returned by the recipient's authorized thread list. The mobile
+notification resolver is generated from the same registry and opens the canonical
+web conversation through its existing authenticated-notification screen.
 
 The additive migration drops only the verified, erroneously unique thread key,
 retains the non-unique `(thread_id,id DESC)` history index, installs an AFTER INSERT

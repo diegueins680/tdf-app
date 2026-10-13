@@ -9706,13 +9706,15 @@
         "tdf-hq-ui/src/components/notificationTarget.ts",
         "tdf-hq-ui/src/pages/ChatPage.tsx",
         "scripts/production-migrations.json",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
       ],
       "tests": [
         "scripts/test-chat-notifications.sh",
         "scripts/social/chat-notifications.sql",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
-        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx"
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts"
       ],
       "formalModels": [],
       "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
