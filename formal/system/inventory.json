@@ -171,6 +171,7 @@
       "scripts/__tests__/public-catalog-http-runtime.mjs",
       "scripts/__tests__/retired-messaging-refresher.test.mjs",
       "scripts/__tests__/sri-invoice.test.mjs",
+      "scripts/__tests__/startup-gates-postgres.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
@@ -2576,7 +2577,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+      "sha256": "22c52165d377b1dc77a73499520882a3a853cb9a687c98779823621f248f6dc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3447,6 +3448,12 @@
       "id": "SURFACE-bcdd803220771b0c",
       "path": "scripts/__tests__/sri-invoice.test.mjs",
       "sha256": "98ea9a01d47c1ca5e033f7a6ab686ccbf41b2f84e7aa213f8bd461ed2865cfee",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8599bbddd15faa14",
+      "path": "scripts/__tests__/startup-gates-postgres.mjs",
+      "sha256": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5546,7 +5553,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "5037912ac868e1161ae41df0c296a7a839fa6424f2718d3962d042798b595ea4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22467,7 +22474,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "97265617534d6a867c9a6f4152cf1aeac3964274b72905d5114c8d429a59a59b",
+      "sha256": "5fe5a92dcfce1974c4442c99fa9c2747e905bbc208d61ad5461c6fcad87e0364",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22986,6 +22993,48 @@
     {
       "path": "formal/event-operations/SnapshotReadRawLog.cfg",
       "sha256": "d8f9bf17e2630637f66a3bc94041f0bae686320853daa54585ed9744567c1675",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StartupGates.cfg",
+      "sha256": "e3f5eda4b6a1011d4c1833e16c3c3a9c3bc7417cd919b5bd27daf0a1b761c569",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StartupGates.tla",
+      "sha256": "9c8e168531e32d8fd66c08c6e0b58704ccc2f516bc4c2c6ecb690dcf0d49f4d6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/StartupGatesEitherRejected.cfg",
+      "sha256": "e5e1a9fc40d148fda964643f67d80228047b81b8dc9bb8e6da764d44287fc973",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StartupGatesMissingAccepted.cfg",
+      "sha256": "b27c55fa854977daf2534febd1f16aefb44fee9c16048a27c31b4b0bcf3c9d3f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StartupGatesRequiredUnchecked.cfg",
+      "sha256": "fe98e3e81f68e2cb507b9729aea5a45e8f3f080a5a7736470a22f2ce7a72eca5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/StartupGatesStagedAccepted.cfg",
+      "sha256": "1328c90cee0acd0a6097ebbae6048ba63d76a184d148f7e647b42dacad72f83c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -23951,7 +24000,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "a6cbbcc4c9f376e0d5e167a3c1e93f097e8cef4a995c19b948eb18bbee943ec4",
+      "sha256": "0ca10781145a18e8b6610a2b954ac74f5f058ca88f304b590ea7dc06c398ce03",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -23965,7 +24014,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "802cae5ec4bd4b0e05e21e179e176469b622a8c4e8978555005bdc63900ee3ca",
+      "sha256": "b5df3e5f0e6aacf3d75652b18d4c86b71a7dc55b3471f69a2fbf9df367f01257",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24245,7 +24294,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sha256": "b312a42d5094f8b596002ab14d395de9a8ca15c6c337c4f3638ebf306ec82981",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24274,6 +24323,13 @@
     {
       "path": "formal/system/session-query-isolation.md",
       "sha256": "2a3d72f757e9d8b5bde86bc778f0d1c9569b36c516771bb1699854d265806353",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/startup-gates.md",
+      "sha256": "326b5b7a555c0e571bc0b1387daaa134450e2bc7a70ed2493fdf2d163e10dba2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34900,6 +34956,76 @@
         "SPECIFICATION Spec",
         "INVARIANTS LogFieldsAllowlisted",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StartupGates.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  StagedRejected = TRUE",
+        "  MissingRejected = TRUE",
+        "  EitherAccepted = TRUE",
+        "  RequiredChecked = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS ApprovedStarts StartImpliesApproved"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StartupGatesEitherRejected.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  StagedRejected = TRUE",
+        "  MissingRejected = TRUE",
+        "  EitherAccepted = FALSE",
+        "  RequiredChecked = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS ApprovedStarts StartImpliesApproved"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StartupGatesMissingAccepted.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  StagedRejected = TRUE",
+        "  MissingRejected = FALSE",
+        "  EitherAccepted = TRUE",
+        "  RequiredChecked = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS ApprovedStarts StartImpliesApproved"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StartupGatesRequiredUnchecked.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  StagedRejected = TRUE",
+        "  MissingRejected = TRUE",
+        "  EitherAccepted = TRUE",
+        "  RequiredChecked = FALSE",
+        "SPECIFICATION Spec",
+        "INVARIANTS ApprovedStarts StartImpliesApproved"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/StartupGatesStagedAccepted.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  StagedRejected = FALSE",
+        "  MissingRejected = TRUE",
+        "  EitherAccepted = TRUE",
+        "  RequiredChecked = TRUE",
+        "SPECIFICATION Spec",
+        "INVARIANTS ApprovedStarts StartImpliesApproved"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
