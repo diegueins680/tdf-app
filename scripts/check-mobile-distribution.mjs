@@ -64,7 +64,7 @@ export function distributionExpiry(manifest, now, warningHours = DEFAULT_WARNING
     if (Date.parse(channel.verifiedAt) > now) throw new Error(`${platform} verifiedAt ${channel.verifiedAt} is in the future; /app hides the link until then`);
     if (channel.status !== 'public' && channel.status !== 'store_preorder' && channel.capacity !== 'available') continue;
     const hoursLeft = (Date.parse(channel.validUntil) - now) / HOUR;
-    const state = hoursLeft <= 0 ? 'expired' : hoursLeft < warningHours ? 'expiring' : 'current';
+    const state = hoursLeft <= 0 ? 'expired' : hoursLeft <= warningHours ? 'expiring' : 'current';
     findings.push({ platform, status: channel.status, validUntil: channel.validUntil, hoursLeft, state });
   }
   return findings;

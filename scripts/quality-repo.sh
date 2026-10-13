@@ -53,6 +53,7 @@ git -C "$ROOT" diff --exit-code -- \
 node --test "$ROOT/scripts/__tests__/studio-internship-audit.test.mjs"
 node --test "$ROOT/scripts/__tests__/local-api-fixture.test.mjs"
 node --test "$ROOT/scripts/__tests__/event-preview.test.mjs" "$ROOT/scripts/__tests__/ticket-page-preview.test.mjs"
+node --test "$ROOT/scripts/__tests__/app-smart-link.test.mjs"
 run_npm run verify:formal --prefix "$ROOT"
 run_npm run test:auto-loop --prefix "$ROOT"
 run_npm run test:formal --prefix "$ROOT"

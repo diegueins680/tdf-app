@@ -58919,20 +58919,21 @@
       "reviewBatch": "legal-disclosure-2026-10-07"
     },
     {
-<<<<<<< HEAD
       "id": "3762b4a9073c4dd72244",
-=======
-      "id": "22a8352d47846fdea0c9",
->>>>>>> refs/audit/live/ops/mobile-distribution-expiry-check-20261012
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-<<<<<<< HEAD
       "risk": "Replacing coarse device classes with device identifiers would expand telemetry privacy exposure.",
       "justification": "DeviceClass is a closed technical telemetry discriminator derived from Platform.isPad: phone, tablet, or unknown. It is not a business catalog or authorization input; tester feedback preserves this coarse classification without device identifiers.",
       "reviewed": true
-=======
+    },
+    {
+      "id": "22a8352d47846fdea0c9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
       "risk": "If this list drifts from the landing's distribution statuses, the read-only expiry monitor could fail on, or wrongly accept, a manifest the /app page treats differently.",
       "justification": "Validation vocabulary of the read-only Mobile distribution expiry monitor. It mirrors the status union declared in tdf-hq-ui/src/mobile/distribution.ts so the monitor rejects the manifests the landing rejects; a test compares both lists. It is not an authority for which channels exist and nothing is persisted from it.",
       "reviewed": true,
@@ -58944,7 +58945,77 @@
       },
       "reviewBatch": "mobile-distribution-expiry-check-2026-10-12",
       "reviewMethod": "manual-source-review"
->>>>>>> refs/audit/live/ops/mobile-distribution-expiry-check-20261012
+    },
+    {
+      "id": "8ea9381b405e317f5e7f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "7804604c0af849751309",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item",
+        "priority": "P3-retain",
+        "risk": "Changing UI constants could break rendering or user experience.",
+        "justification": "Reviewed public header navigation adds a single Eventos entry pointing to the canonical /social/eventos route (public agenda for visitors, events workspace for signed-in users). It holds client routes and localized labels only; event visibility and RSVP authority remain server-side.",
+        "reviewed": true,
+        "previousDecision": {
+          "id": "d24fc428c18f60568996",
+          "classification": "dynamic-business-catalog",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item",
+          "priority": "P3-retain",
+          "risk": "Changing UI constants could break rendering or user experience.",
+          "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+          "reviewed": true,
+          "previousDecision": {
+            "id": "f9819fa4b81bdd8f3f21",
+            "classification": "dynamic-business-catalog",
+            "disposition": "retain-in-code",
+            "specializedModel": "navigation_item",
+            "priority": "P3-retain",
+            "risk": "Changing UI constants could break rendering or user experience.",
+            "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+            "reviewed": true
+          }
+        },
+        "evidence": {
+          "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+          "line": 23
+        },
+        "reviewBatch": "events-nav-carousel-2026-10-08",
+        "reviewMethod": "successor-of-reviewed-decision"
+      },
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "line": 23
+      },
+      "reviewBatch": "events-nav-carousel-2026-10-08",
+      "reviewMethod": "successor-of-reviewed-decision"
+    },
+    {
+      "id": "c2b46fc847fe0b3f1f6f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could let a non-label utm parameter reach analytics or drop a campaign tag from shared links.",
+      "justification": "The five utm_* suffixes the mobile funnel accepts as campaign tags (source, medium, campaign, content, term) are a validation allowlist mirroring the growth attribution store; the values are query-parameter names, not selectable or reportable business values, and each accepted value is still label-validated.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "mobile-growth-funnel-2026-10-13",
+      "evidence": {
+        "file": "tdf-hq-ui/src/mobile/telemetry.ts",
+        "line": 18,
+        "kind": "array",
+        "name": "CAMPAIGN_TAGS",
+        "valueCount": 5
+      }
     }
   ]
 }

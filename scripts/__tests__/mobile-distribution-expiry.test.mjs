@@ -26,7 +26,7 @@ const manifest = (iosChannel, androidChannel) => ({ ios: iosChannel, android: an
 const states = value => distributionExpiry(value, now).map(finding => `${finding.platform}:${finding.state}`);
 
 test('a channel with more than the warning window left is current', () => {
-  assert.deepEqual(states(manifest(ios('2026-10-13T18:00:00Z'), android(later))), ['ios:current', 'android:current']);
+  assert.deepEqual(states(manifest(ios('2026-10-13T18:00:00.001Z'), android(later))), ['ios:current', 'android:current']);
 });
 
 test('a channel inside the warning window is expiring, each platform on its own', () => {
@@ -144,7 +144,7 @@ test('the command exits non-zero for a lapsing or invalid file and zero for a cu
 
 test('the committed manifest passes the landing invariants', () => {
   const committed = JSON.parse(readFileSync(new URL('../../tdf-hq-ui/public/mobile-distribution.json', import.meta.url), 'utf8'));
-  assert.equal(distributionExpiry(committed, Date.parse(committed.ios.verifiedAt)).length, 2);
+  assert.equal(distributionExpiry(committed, Math.max(Date.parse(committed.ios.verifiedAt), Date.parse(committed.android.verifiedAt))).length, 2);
 });
 
 test('the scheduled workflow only reads the published manifest', () => {
@@ -153,4 +153,8 @@ test('the scheduled workflow only reads the published manifest', () => {
   assert.match(workflow, /permissions:\n  contents: read\n/);
   assert.equal(workflow.match(/run: node scripts\/check-mobile-distribution\.mjs\n/g)?.length, 1);
   assert.doesNotMatch(workflow, /contents: write|git push|pull_request_target/);
+});
+
+test('warns at exactly 48 hours for the daily monitor', () => {
+  assert.deepEqual(states(manifest(ios('2026-10-13T18:00:00Z'), android(later))), ['ios:expiring', 'android:current']);
 });
