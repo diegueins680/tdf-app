@@ -5251,7 +5251,9 @@
       "property": "Validation selected for main and release; configured provider failures cannot be green.",
       "implementation": [
         "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        "datadog-ci.json"
       ],
       "tests": [
         "scripts/__tests__/ci-pipeline.test.mjs"
