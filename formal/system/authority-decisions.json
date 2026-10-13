@@ -601,6 +601,29 @@
       "resolution": "Every writer keeps the request instant; a request is invalidated by revoked_at at or after it, and a withdrawal's transaction raises revoked_at to the request instant when its clock was read earlier. A rejected send marks only its own request pending_unsent; for 1 hour from the request it stays confirmable and may be retried without changing the instant, so retries cannot extend that window. Delivered requests are at least 23 hours apart. Row creation is conflict-safe. No schema change. The 1-hour window is an engineering default pending product-owner confirmation."
     },
     {
+      "id": "AUTHORITY-056",
+      "sources": [
+        "tdf-hq/src/TDF/Invoice/Datil.hs",
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "docs/events/ticket-electronic-invoices.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-INVOICE-001 says a provider refusal becomes failed (resendable), status query failures retry, and an invoiced event cannot sell until invoicing is configured. The worker turned a refusal with a long message, an unreadable status answer or any internal error while polling into uncertain, which has no in-app recovery, and sales opened while the submission worker was switched off.",
+      "authority": "The 2026-10-06 invoicing decision and the requirement's failure rules govern; the worker behavior was a defect.",
+      "resolution": "Stored diagnostics are bounded to the column; a submitted document stays submitted through failed, refused or unreadable queries and internal errors; readiness also requires TAX_INVOICE_WORKER_ENABLED=true. No schema change. Recovery for uncertain and rejected documents remains an open product and tax decision."
+    },
+    {
+      "id": "AUTHORITY-057",
+      "sources": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+        "docs/event-operations/repository-audit-2026-09-14.md"
+      ],
+      "conflict": "The event handlers made any signed-in caller the organizer of an event without one, including from read routes and with an unconditional write, while the event-operations foundation migration records such events as owner_missing and disabled until reviewed, and the 2026-09-14 audit lists the claiming behavior as high severity to be removed.",
+      "authority": "The event-operations migration rule and the audit remediation govern; claim-on-touch was a legacy compatibility behavior, never a product decision.",
+      "resolution": "Organizer-only routes refuse an event without an organizer and never write. Only a strict administrator whose edit of the event is accepted is assigned, in the same locked transaction, by one conditional update whose stored result decides the outcome. Administrative routes that never assigned are unchanged. No schema change. A client surface for the assignment, a transfer route, auditing and reconciling event_operation_relationship remain open."
+    },
+    {
       "id": "AUTHORITY-058",
       "sources": [
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
