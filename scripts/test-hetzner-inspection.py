@@ -3,6 +3,7 @@
 import copy
 import importlib.util
 import json
+import re
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -46,6 +47,59 @@ def database():
 
 
 class Boundaries(unittest.TestCase):
+    def test_known_backend_boolean_controls_report_absence_as_well_as_presence(self):
+        # Conservative lexical discovery: names in comments may demand review,
+        # but this does not pretend to resolve Haskell values or dynamic names.
+        discovered = set()
+        for directory in ['tdf-hq/src', 'tdf-hq/app']:
+            for source in (ROOT/directory).rglob('*.hs'):
+                text = source.read_text()
+                discovered.update(re.findall(r'"([A-Z][A-Z0-9_]*(?:_ENABLED|_AUTO_PUBLISH))"', text))
+                discovered.update(re.findall(r'validateStartupBooleanFlag\s+"([A-Z][A-Z0-9_]*)"', text))
+        cors = (ROOT/'tdf-hq/src/TDF/Cors.hs').read_text()
+        for name in ['allowAllEnv', 'disableDefaultsEnv']:
+            group = re.search(rf'{name}\s*<-\s*lookupFirstNonEmptyEnv\s*\[([^]]+)\]', cors)
+            self.assertIsNotNone(group, 'CORS boolean alias discovery changed; review the collector')
+            discovered.update(re.findall(r'"([A-Z][A-Z0-9_]*)"', group[1]))
+        self.assertGreaterEqual(len(discovered), 25)
+        self.assertEqual(discovered - module.BOOLEAN_KEYS, set(),
+                         'Backend boolean controls missing from absence reporting')
+        absent = container(); absent['Config']['Env'] = ['APP_ENV=production']
+        result = module.summarize_container('api', absent)
+        self.assertEqual(result['booleanConfiguration'], {})
+        self.assertEqual(set(result['missingBooleanConfiguration']), module.BOOLEAN_KEYS)
+        for key in discovered:
+            for raw in ['true', 'false', '']:
+                with self.subTest(key=key, raw=raw):
+                    value = copy.deepcopy(absent)
+                    value['Config']['Env'].append(key + '=' + raw)
+                    result = module.summarize_container('api', value)
+                    self.assertEqual(result['booleanConfiguration'], {key: raw})
+                    self.assertNotIn(key, result['missingBooleanConfiguration'])
+        # A previously unknown suffix flag is observable when supplied, without
+        # claiming knowledge of its absence/default or leaking arbitrary values.
+        value = copy.deepcopy(absent)
+        value['Config']['Env'].append('FUTURE_WORKER_ENABLED=false')
+        self.assertEqual(module.summarize_container('api', value)['booleanConfiguration'],
+                         {'FUTURE_WORKER_ENABLED': 'false'})
+
+    def test_padded_booleans_and_cors_wildcard_preserve_raw_observations(self):
+        for key in module.BOOLEAN_KEYS:
+            values = [' true ', '\tFALSE\n', '  ', 'yes', 'OFF']
+            if key in module.CORS_BOOLEAN_KEYS:
+                values.append(' * ')
+            for raw in values:
+                with self.subTest(key=key, raw=raw):
+                    value = container(); value['Config']['Env'] = [key + '=' + raw]
+                    result = module.summarize_container('api', value)
+                    self.assertEqual(result['booleanConfiguration'], {key: raw})
+        for key, raw in [('SMTP_TLS', '*'), ('FUTURE_WORKER_ENABLED', '*'),
+                         ('ENABLE_GDPR_COMPLIANCE', SECRET), ('DISABLE_DEFAULT_CORS', SECRET),
+                         ('SMTP_TLS', ' ' * 257), ('SMTP_TLS', 'true\x00')]:
+            with self.subTest(key=key, raw=raw):
+                value = container(); value['Config']['Env'] = [key + '=' + raw]
+                with self.assertRaises(ValueError): module.summarize_container('api', value)
+
     def test_api_redacts_credentials_and_reports_unsafe_cors_honestly(self):
         result=module.summarize_container('api', container())
         self.assertNotIn(SECRET, json.dumps(result))

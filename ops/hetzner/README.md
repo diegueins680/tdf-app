@@ -43,6 +43,18 @@ changed sources invalidate the observation rather than receiving a passing recei
 Observations are sequential, not an atomic fleet snapshot. Missing flags retain
 unknown effective defaults. A successful observation is **not release readiness**.
 
+The collector reports both presence and absence for the known backend boolean
+controls, including invoice/notification/reconciliation workers, privacy,
+SMTP TLS and both CORS boolean alias sets. The repository gate conservatively
+discovers literal `*_ENABLED`/`*_AUTO_PUBLISH` names, calls to
+`validateStartupBooleanFlag`, and the two CORS alias lists in backend source;
+a newly discovered control must enter the collector's absence register.
+This lexical check does not discover computed environment names or establish
+effective behavior. Raw `false`, an empty value, and an absent variable remain
+distinct. Default and alias precedence must be evaluated against the observed
+backend revision, not the candidate's source. Unknown suffix controls are still
+reported when configured and valid; their absence cannot be inferred.
+
 ## Source and migration preparation
 
 After a clean commit, use a runtime receipt from the same collector implementation,

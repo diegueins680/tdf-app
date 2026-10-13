@@ -2926,7 +2926,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
+      "sha256": "5ae47f442f22033847fa7b7b7f1e21e1eabe73e3d600b258302c1334b416767c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5050,7 +5050,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
+      "sha256": "a224448f3cc9cacb92814c92646cc29aeb1f9d54156651bedd8dd6f287d450e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24021,7 +24021,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "1b8abf26b1f48f9d6a25c0a983b044b5afebb770c8f9ea3b8138586da29db72c",
+      "sha256": "3d09c6e4845b1188d6451cded27fa35be15116c674091659a6bc6be9d55b996f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24301,7 +24301,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "621b3586ab097e760c3f416d418b0762f5c89d5b255b6b1bf3af409617d729ee",
+      "sha256": "f8f1695aec98af44ca94ba6a9b0550ff59bdf93cc1ab547af99cd68f6c3a062e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24399,7 +24399,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "c0b4f744077846415c10d950ab37f72d55ebf955f697cc43b4e0cc326869d93d",
+      "sha256": "5effcf6ef7408fe0600e7c04c92702187a2796f579f9f9d6471a0b60f5572762",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
