@@ -530,6 +530,11 @@ jobs:
           sh scripts/test-credential-lifecycle.sh
           sh scripts/test-whatsapp-consent.sh
 
+      - name: Verify single assignment of an event without an organizer
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-organizer.sh
+
       - name: Verify checkout monetary snapshots and invalid-schema controls
         env:
           TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
