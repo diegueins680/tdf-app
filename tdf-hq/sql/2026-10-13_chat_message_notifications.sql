@@ -80,7 +80,9 @@ RETURNS boolean LANGUAGE sql STABLE AS $$
     NOT EXISTS(SELECT 1 FROM interaction_notification WHERE notification_id=notification_key)
     OR EXISTS(SELECT 1 FROM interaction_notification n JOIN interaction_notification_actor a USING(notification_id)
       WHERE n.notification_id=notification_key AND n.recipient_id=recipient
-        AND interaction_notification_allowed(n.target_id,recipient,a.actor_id,n.event_kind)
+        AND CASE WHEN n.event_kind='moderation' THEN
+          interaction_moderation_notice_allowed(n.target_id,recipient,a.actor_id,n.comment_id)
+          ELSE interaction_notification_allowed(n.target_id,recipient,a.actor_id,n.event_kind) END
         AND (n.comment_id IS NULL OR EXISTS(SELECT 1 FROM interaction_comment c WHERE c.id=n.comment_id
           AND (c.state IN ('visible','deleted') OR n.event_kind='moderation')))
         AND (n.event_kind<>'reaction' OR EXISTS(SELECT 1 FROM interaction_reaction r

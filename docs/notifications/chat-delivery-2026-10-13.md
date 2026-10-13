@@ -92,6 +92,12 @@ login redirect preservation and existing account-switch privacy. Models for the
 existing chat mutation boundary remain applicable; this work does not claim a
 new proof of email/push delivery.
 
+The runner also executes the existing interaction notification properties against
+the complete migrated schema. Audited notices about moderation of an author's own
+content retain their distinct visibility rule even after a social block; chat
+notices do not acquire that exception. A negative control using the obsolete
+interaction-only predicate must fail the moderation visibility assertion.
+
 Production rollout is pending review, required checks and the established Hetzner
 recovery procedure. Deploy the web target resolver before enabling the migration.
 Keep the additive schema and minimized notices when reverting the application;

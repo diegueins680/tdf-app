@@ -9715,7 +9715,8 @@
         "scripts/social/chat-notifications.sql",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-        "tdf-mobile/src/navigation/notificationResponses.test.ts"
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "tdf-hq/test/integration/interactions/notification-properties.sql"
       ],
       "formalModels": [],
       "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
@@ -10037,7 +10038,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
-    "scripts/test-chat-notifications.sh": "0fbfd3d9cba591f0e5113df80dd6abffae5deda94301acbbc1a5c686d2327287",
+    "scripts/test-chat-notifications.sh": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -10416,7 +10417,7 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
-    "tdf-hq/sql/2026-10-13_chat_message_notifications.sql": "b24e728909a6e8454f59860e4479914dba31bf3cfbfb688887fbaa11facb1647",
+    "tdf-hq/sql/2026-10-13_chat_message_notifications.sql": "6ea36a745b1b9a282528aab96f76dcfe10fde7eec849687ce3e57025d2909d1e",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10580,6 +10581,7 @@
     "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql": "24aaa4ff608d40f59798c622a7265cedf2da496b2df5e20e145e441e7e2ffdaa",
     "tdf-hq/test/integration/directory_event_search_http_seed.sql": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
     "tdf-hq/test/integration/directory_event_search_sync.sql": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
+    "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "a84597480d8d2b5844dfb725c8f17289bc45dbe5477426d0e13bb8a58f4da325",
     "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
@@ -18038,6 +18040,12 @@
         "requirement": "MSG-NOTIFY-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/test/integration/interactions/notification-properties.sql": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -22066,7 +22074,7 @@
     {
       "id": "SURFACE-325b7de63b17b31f",
       "path": "scripts/test-chat-notifications.sh",
-      "sha256": "0fbfd3d9cba591f0e5113df80dd6abffae5deda94301acbbc1a5c686d2327287",
+      "sha256": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33900,7 +33908,7 @@
     {
       "id": "SURFACE-08a4bdf7ae24c182",
       "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
-      "sha256": "b24e728909a6e8454f59860e4479914dba31bf3cfbfb688887fbaa11facb1647",
+      "sha256": "6ea36a745b1b9a282528aab96f76dcfe10fde7eec849687ce3e57025d2909d1e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37921,9 +37929,14 @@
     {
       "id": "SURFACE-28ff3265c4f989aa",
       "path": "tdf-hq/test/integration/interactions/notification-properties.sql",
-      "sha256": "5c167f28a91dfaa2fb057742c89c531a724126cd9178cdfa0e43d878c8a31f87",
+      "sha256": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f85498eb4c6d81a5",
@@ -42733,7 +42746,6 @@
     "SURFACE-06b18fb009ca1064",
     "SURFACE-855a59bba05a4b3d",
     "SURFACE-eafd02f6b2c8a758",
-    "SURFACE-28ff3265c4f989aa",
     "SURFACE-f85498eb4c6d81a5",
     "SURFACE-df2fcadfcd879971",
     "SURFACE-7a81570adb93f7f1",
@@ -44211,7 +44223,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "45e3c4b1f8612f57c7aab709c11aa19ff1bf2d567c4446e5b2598933f383f67b",
+      "sourceSha256": "ee0a1874fb5bd16d2c2e5d87ae490b6be0861b97e4ac6e4fa116cb24bdf0dc5d",
       "definition": {
         "states": [
           "absent",

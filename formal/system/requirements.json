@@ -9714,7 +9714,8 @@
         "scripts/social/chat-notifications.sql",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-        "tdf-mobile/src/navigation/notificationResponses.test.ts"
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
+        "tdf-hq/test/integration/interactions/notification-properties.sql"
       ],
       "formalModels": [],
       "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",

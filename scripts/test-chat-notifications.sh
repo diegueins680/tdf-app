@@ -8,3 +8,4 @@ const { disposablePostgresUrl } = await import(pathToFileURL(process.argv[3]));
 disposablePostgresUrl(process.argv[2], { ci: process.env.CI === 'true' });
 JS
 psql "$chat_test_db" -X -v ON_ERROR_STOP=1 -f "$repo_root/scripts/social/chat-notifications.sql"
+psql "$chat_test_db" -X -v ON_ERROR_STOP=1 -f "$repo_root/tdf-hq/test/integration/interactions/notification-properties.sql"

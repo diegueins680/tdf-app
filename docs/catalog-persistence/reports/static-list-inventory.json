@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-13T22:39:04.786Z",
+  "generatedAt": "2026-10-13T22:46:52.326Z",
   "repositoryRoot": ".",
   "filesScanned": 2268,
   "candidateCount": 1320,
@@ -8764,7 +8764,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 331,
+      "consumerCount": 332,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -47602,7 +47602,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -47792,9 +47792,9 @@
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-chat-notifications.sh",
         "scripts/test-identity-reconciliation.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-state-machines.py"
+        "scripts/test-service-booking-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -47848,7 +47848,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 296,
+      "consumerCount": 297,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48039,8 +48039,8 @@
         "scripts/persona-test-program.mjs",
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
-        "scripts/test-distribution-accounting-migration.sh",
-        "scripts/test-identity-reconciliation.sh"
+        "scripts/test-chat-notifications.sh",
+        "scripts/test-distribution-accounting-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -48093,7 +48093,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 356,
+      "consumerCount": 357,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48348,7 +48348,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 281,
+      "consumerCount": 282,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48542,9 +48542,9 @@
         "scripts/social/generate-model-cases.py",
         "scripts/social/read-model-tests.sql",
         "scripts/social/test-postgres.sh",
+        "scripts/test-chat-notifications.sh",
         "scripts/test-identity-reconciliation.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/ux-audit-inventory.mjs"
+        "scripts/test-service-booking-checkout-runtime-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -48598,7 +48598,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 267,
+      "consumerCount": 268,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -48786,6 +48786,7 @@
         "scripts/persona-test-program.mjs",
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
+        "scripts/test-chat-notifications.sh",
         "scripts/test-identity-reconciliation.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/ux-audit-inventory.mjs"
@@ -48840,7 +48841,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 280,
+      "consumerCount": 281,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49030,9 +49031,9 @@
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
         "scripts/social/test-postgres.sh",
+        "scripts/test-chat-notifications.sh",
         "scripts/test-identity-reconciliation.sh",
-        "scripts/test-music-release-platform-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-music-release-platform-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -49084,7 +49085,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 274,
+      "consumerCount": 275,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49275,8 +49276,8 @@
         "scripts/social/LegacyWriteSpec.hs",
         "scripts/social/generate-model-cases.py",
         "scripts/social/mutation-tests.sql",
-        "scripts/test-identity-reconciliation.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh"
+        "scripts/test-chat-notifications.sh",
+        "scripts/test-identity-reconciliation.sh"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -49328,7 +49329,7 @@
       "lines": [
         113
       ],
-      "consumerCount": 269,
+      "consumerCount": 270,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49516,6 +49517,7 @@
         "scripts/persona-test-program.mjs",
         "scripts/production-migrations.json",
         "scripts/social/generate-model-cases.py",
+        "scripts/test-chat-notifications.sh",
         "scripts/test-identity-reconciliation.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/ux-audit-inventory.mjs"
