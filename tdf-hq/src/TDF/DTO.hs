@@ -1024,6 +1024,32 @@ instance FromJSON GoogleLoginRequest where
     rejectNullOptionalFields "GoogleLoginRequest" ["onboardingIntent", "linkAccount", "createNewAccount"] value
     genericParseJSON strictDecodeOptions value
 
+-- | Name parts Apple returns only on the first authorization of an app.
+data AppleFullName = AppleFullName
+  { givenName :: Maybe Text
+  , familyName :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON AppleFullName where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+-- | POST /login/apple. Mirrors 'GoogleLoginRequest': an identity token plus the
+-- same explicit creation, linking and consent fields.
+data AppleLoginRequest = AppleLoginRequest
+  { identityToken :: Text
+  , nonce :: Maybe Text
+  , fullName :: Maybe AppleFullName
+  , createNewAccount :: Maybe Bool
+  , linkAccount :: Maybe LoginRequest
+  , marketingOptIn :: Maybe Bool
+  , termsAccepted :: Maybe Bool
+  , termsVersion :: Maybe Text
+  , onboardingIntent :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON AppleLoginRequest where
+  parseJSON value = do
+    rejectNullOptionalFields "AppleLoginRequest" ["onboardingIntent", "linkAccount", "createNewAccount", "fullName", "nonce"] value
+    genericParseJSON strictDecodeOptions value
+
 data SignupRequest = SignupRequest
   { firstName       :: Text
   , lastName        :: Text

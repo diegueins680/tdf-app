@@ -6203,6 +6203,19 @@ spec = describe "TDF.Server helpers" $ do
                     tokenValue `shouldBe` "reset-token"
                     newPasswordValue `shouldBe` "supersecret"
 
+        it "decodes the Apple login contract strictly" $ do
+            let decodeApple :: BL8.ByteString -> Either String DTO.AppleLoginRequest
+                decodeApple = eitherDecode
+            case decodeApple "{\"identityToken\":\"a.b.c\",\"nonce\":\"n\",\"fullName\":{\"givenName\":\"Ada\"},\"createNewAccount\":true}" of
+                Left decodeErr -> expectationFailure ("Expected Apple payload to decode, got: " <> decodeErr)
+                Right req -> do
+                    DTO.identityToken req `shouldBe` "a.b.c"
+                    DTO.nonce req `shouldBe` Just "n"
+            decodeApple "{\"identityToken\":\"a.b.c\",\"unexpected\":true}" `shouldSatisfy` isLeft
+            decodeApple "{\"identityToken\":\"a.b.c\",\"fullName\":{\"nickname\":\"x\"}}" `shouldSatisfy` isLeft
+            decodeApple "{\"identityToken\":\"a.b.c\",\"linkAccount\":null}" `shouldSatisfy` isLeft
+            decodeApple "{\"nonce\":\"n\"}" `shouldSatisfy` isLeft
+
         it "rejects unexpected auth keys instead of silently accepting typoed or over-posted payloads" $ do
             decodeLoginRequest
                 "{\"username\":\"ada@example.com\",\"password\":\"supersecret\",\"unexpected\":true}"
@@ -15721,6 +15734,8 @@ marketplaceTestConfig seedFlag =
         , ragEmbedBatchSize = 64
         , emailConfig = Nothing
         , googleClientId = Nothing
+        , appleSignInAudiences = Nothing
+        , appleSignInJwksUrl = "https://appleid.apple.com/auth/keys"
         , facebookAppId = Nothing
         , facebookAppSecret = Nothing
         , facebookGraphBase = "https://graph.facebook.com/v20.0"

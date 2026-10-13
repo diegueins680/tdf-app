@@ -2159,6 +2159,34 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Invalid or expired Google token
+  /login/apple:
+    post:
+      summary: Login with Apple
+      description: Verifies a Sign in with Apple identity token (RS256 against Apple's published keys, issuer, configured audiences, lifetime and nonce), sets a session cookie, and issues a session. Creates a Customer/Fan account only with explicit createNewAccount and current terms acceptance; otherwise it links with existing credentials or refuses.
+      operationId: loginWithApple
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleLoginRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          headers:
+            Set-Cookie:
+              description: Session cookie for browser-based clients.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid or expired Apple token
+        '500':
+          description: Sign in with Apple is not configured
   /signup:
     post:
       summary: Create an account
@@ -13821,6 +13849,48 @@ components:
           type: string
           maxLength: 100
           description: Version of the account terms accepted during Google signup.
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
+    AppleLoginRequest:
+      type: object
+      additionalProperties: false
+      required: [identityToken]
+      properties:
+        identityToken:
+          type: string
+          description: Apple identity token (JWT) returned by AuthenticationServices
+        nonce:
+          type: string
+          maxLength: 256
+          description: Raw nonce the client generated; the token carries its SHA-256 hex digest. Required when the token contains a nonce.
+        fullName:
+          type: object
+          additionalProperties: false
+          properties:
+            givenName:
+              type: string
+              maxLength: 100
+            familyName:
+              type: string
+              maxLength: 100
+          description: Only sent by Apple on the first authorization; used for the display name when creating an account.
+        createNewAccount:
+          type: boolean
+          description: Must be explicitly true, with current terms acceptance, to create a new account for an unbound Apple subject. Omission never creates an account.
+        linkAccount:
+          allOf:
+            - $ref: '#/components/schemas/LoginRequest'
+          description: Explicitly connect the verified Apple identity using the existing TDF account credentials. No account or permission is merged.
+        marketingOptIn:
+          type: boolean
+          description: Optional consent to receive TDF product and marketing updates when creating an account.
+        termsAccepted:
+          type: boolean
+          description: Account terms acceptance when Apple is used from signup.
+        termsVersion:
+          type: string
+          maxLength: 100
+          description: Version of the account terms accepted during Apple signup.
         onboardingIntent:
           $ref: '#/components/schemas/OnboardingIntent'
     SignupRequest:

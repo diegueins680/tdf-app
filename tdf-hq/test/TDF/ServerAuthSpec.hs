@@ -24,10 +24,19 @@ import TDF.Auth
   , resolveUsernameFromLabel
   , validateModuleAccess
   )
-import TDF.DTO (ArtistInvitationLinkCreate (..), LoginRequest (..), SignupRequest)
+import TDF.DTO (AppleFullName (..), ArtistInvitationLinkCreate (..), LoginRequest (..), SignupRequest)
+import TDF.AppleSignIn (AppleIdentity (..))
 import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
-  ( GoogleIdTokenInfo (..)
+  ( AppleProfile (..)
+  , GoogleIdTokenInfo (..)
+  , appleDisplayName
+  , appleProfileFromIdentity
+  , validateAppleAccountCreationTerms
+  , validateAppleFullName
+  , validateAppleIdentityTokenInput
+  , validateAppleNonceInput
+  , GoogleIdTokenInfo (..)
   , GoogleProfile (..)
   , recoveryWindowValid
   , normalizeAuthEmailAddress
@@ -81,6 +90,7 @@ spec = do
   passwordResetTokenSpec
   googleIdTokenInputSpec
   googleTokenInfoSpec
+  appleLoginInputSpec
   loginEmailFallbackSpec
   googleLoginEmailFallbackSpec
   passwordResetDeliverySpec
@@ -295,6 +305,8 @@ tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
       `shouldBe` Just "ada@example.com"
     resolveUsernameFromLabel "google-login:ada@example.com"
       `shouldBe` Just "ada@example.com"
+    resolveUsernameFromLabel "apple-login:apple:001.abc"
+      `shouldBe` Just "apple:001.abc"
 
   it "rejects malformed stored label usernames before session fallback rendering" $ do
     let hiddenFormat = T.singleton (chr 0x200D)
@@ -880,3 +892,40 @@ recoveryWindowSpec = describe "ID-SESSION-003 recovery expiry" $ do
     recoveryWindowValid (-1) 899 1 `shouldBe` False
     recoveryWindowValid 0 901 1 `shouldBe` False
     recoveryWindowValid (maxBound - 899) minBound maxBound `shouldBe` False
+
+appleLoginInputSpec :: Spec
+appleLoginInputSpec = describe "Sign in with Apple request handling" $ do
+  it "applies the same explicit consent rule as Google before creating an account" $ do
+    validateAppleAccountCreationTerms (Just True) (Just "tdf-account-terms-v1") `shouldBe` Right ()
+    validateAppleAccountCreationTerms Nothing (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
+    validateAppleAccountCreationTerms (Just True) Nothing `shouldSatisfy` isLeft
+    validateAppleAccountCreationTerms (Just True) (Just "other") `shouldSatisfy` isLeft
+    validateAppleAccountCreationTerms Nothing Nothing
+      `shouldBe` Left "Accept the terms and privacy policy through the signup flow before creating a Apple account"
+
+  it "validates the identity token shape and nonce before verification" $ do
+    validateAppleIdentityTokenInput " a.b.c " `shouldBe` Right "a.b.c"
+    validateAppleIdentityTokenInput "   " `shouldSatisfy` isLeft
+    validateAppleIdentityTokenInput "a.b" `shouldSatisfy` isLeft
+    validateAppleIdentityTokenInput "a.b.c d" `shouldSatisfy` isLeft
+    validateAppleIdentityTokenInput "a.b.\233" `shouldSatisfy` isLeft
+    validateAppleNonceInput " nonce-1 " `shouldBe` Right "nonce-1"
+    validateAppleNonceInput "" `shouldSatisfy` isLeft
+    validateAppleNonceInput (T.replicate 257 "n") `shouldSatisfy` isLeft
+    validateAppleNonceInput "a b" `shouldSatisfy` isLeft
+
+  it "builds display names from Apple's name, then email, then a placeholder" $ do
+    validateAppleFullName (Just (AppleFullName (Just "Ada") (Just "Lovelace"))) `shouldBe` Right (Just "Ada Lovelace")
+    validateAppleFullName Nothing `shouldBe` Right Nothing
+    validateAppleFullName (Just (AppleFullName (Just (T.replicate 101 "a")) Nothing)) `shouldSatisfy` isLeft
+    appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") (Just "Ada")) `shouldBe` "Ada"
+    appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") Nothing) `shouldBe` "a@example.com"
+    appleDisplayName (AppleProfile "i" "s" Nothing Nothing) `shouldBe` "Usuario de Apple"
+
+  it "normalizes the token email and rejects unverified or malformed emails" $ do
+    let identity email verified = AppleIdentity "sub-1" email verified True
+    fmap apEmail (appleProfileFromIdentity Nothing (identity (Just " Relay@PrivateRelay.AppleID.com ") True))
+      `shouldBe` Right (Just "relay@privaterelay.appleid.com")
+    fmap apEmail (appleProfileFromIdentity Nothing (identity Nothing False)) `shouldBe` Right Nothing
+    appleProfileFromIdentity Nothing (identity (Just "a@example.com") False) `shouldSatisfy` isLeft
+    appleProfileFromIdentity Nothing (identity (Just "not-an-email") True) `shouldSatisfy` isLeft

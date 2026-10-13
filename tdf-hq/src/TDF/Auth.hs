@@ -297,7 +297,7 @@ lockCredentialForSession credentialId = do
 -- Caller holds the Party lifecycle lock through mutation and replacement issuance.
 revokeInteractiveSessions :: PartyId -> SqlPersistT IO ()
 revokeInteractiveSessions partyKey = rawExecute
-  "UPDATE api_token SET active=false WHERE party_id=? AND active=true AND (lower(trim(label)) LIKE 'password-login:%' OR lower(trim(label)) LIKE 'google-login:%' OR lower(trim(label)) LIKE 'password-reset:%')"
+  "UPDATE api_token SET active=false WHERE party_id=? AND active=true AND (lower(trim(label)) LIKE 'password-login:%' OR lower(trim(label)) LIKE 'google-login:%' OR lower(trim(label)) LIKE 'apple-login:%' OR lower(trim(label)) LIKE 'password-reset:%')"
   [toPersistValue partyKey]
 
 loadAuthedUser :: Text -> SqlPersistT IO (Maybe AuthedUser)
@@ -360,6 +360,7 @@ resolveUsernameFromLabel rawLabel =
         attempt "password-login:"
           <|> attempt "password-reset:"
           <|> attempt "google-login:"
+          <|> attempt "apple-login:"
       nonEmpty txt =
         let stripped = T.strip txt
         in
