@@ -77,8 +77,13 @@ release process; never silently create them or send retrospective messages.
 
 ## Verification and rollout
 
-Run `TDF_CHAT_NOTIFICATION_DATABASE_URL=postgresql://127.0.0.1:PORT/NAME_test
-sh scripts/test-chat-notifications.sh` against the fully migrated synthetic fixture.
+Run against the fully migrated synthetic fixture:
+
+```sh
+TDF_CHAT_NOTIFICATION_DATABASE_URL=postgresql://127.0.0.1:PORT/NAME_test \
+  sh scripts/test-chat-notifications.sh
+```
+
 The runner rejects production/remote URL overrides. It rolls all synthetic data
 back. Assertions cover both conversation directions, atomic rollback, notification
 storage failure, foreign identity, block/consent/inactive-account privacy and
