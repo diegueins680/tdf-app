@@ -329,10 +329,48 @@ BEGIN
   IF NOT doc.search_vector @@ plainto_tsquery('simple', directory_normalize_text(catalog_genre_name)) THEN
     RAISE EXCEPTION 'canonical genre name is missing from the event search text';
   END IF;
+  -- Renaming or retiring the catalog genre itself resyncs the event.
+  UPDATE genre SET name_es = 'Synthetic Renamed Genre' WHERE id = catalog_genre_id;
+  IF NOT (SELECT search_vector FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text)
+         @@ plainto_tsquery('simple', directory_normalize_text('Synthetic Renamed Genre')) THEN
+    RAISE EXCEPTION 'renaming the catalog genre did not resync the event search text';
+  END IF;
+  UPDATE genre SET active = FALSE WHERE id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
+    RAISE EXCEPTION 'retiring the catalog genre left its id on the event';
+  END IF;
+  UPDATE genre SET active = TRUE, name_es = catalog_genre_name WHERE id = catalog_genre_id;
+  IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) IS DISTINCT FROM ARRAY[catalog_genre_id] THEN
+    RAISE EXCEPTION 'restoring the catalog genre did not resync the event';
+  END IF;
   DELETE FROM artist_genre_membership WHERE artist_id = lineup_artist_id AND genre_id = catalog_genre_id;
   IF (SELECT genre_ids FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text) <> '{}'::uuid[] THEN
     RAISE EXCEPTION 'removing the genre membership did not resync the event';
   END IF;
+
+  -- 8c'. A saved search for events that still carries a people-only filter
+  -- is notified about a new event, as /directory/search would list it.
+  INSERT INTO party (display_name, is_org, created_at) VALUES ('Synthetic stale-filter subscriber', FALSE, now())
+  RETURNING id INTO subscriber;
+  INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+  VALUES (subscriber, 'Synthetic stale-filter alert',
+          jsonb_build_object('entityType', 'event', 'cityId', quito::text,
+                             'professionId', (SELECT id::text FROM profession WHERE active ORDER BY sort_order, id LIMIT 1)),
+          repeat('f', 64), TRUE, 'instant')
+  RETURNING id INTO late_search;
+  INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+                            workflow_state_id, timezone, start_time, end_time, metadata,
+                            created_at, updated_at)
+  VALUES (NULL, 'Synthetic stale-filter night', 'Synthetic lineup', late_venue, event_type,
+          public_state, 'America/Guayaquil', now() + interval '5 days', now() + interval '5 days 3 hours',
+          '{"isPublic": true}', now(), now())
+  RETURNING id INTO venueless_event_id;
+  IF NOT EXISTS (SELECT 1 FROM directory_alert_delivery
+                 WHERE saved_search_id = late_search AND result_kind = 'event' AND result_id = venueless_event_id::text) THEN
+    RAISE EXCEPTION 'event saved search with a stale profession filter was not notified';
+  END IF;
+  DELETE FROM social_event WHERE id = venueless_event_id;
+  DELETE FROM directory_saved_search WHERE id = late_search;
   DELETE FROM event_artist WHERE event_id = genre_event_id AND artist_id = lineup_artist_id;
   IF (SELECT search_vector FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = genre_event_id::text)
      @@ plainto_tsquery('simple', directory_normalize_text('Lineup Headliner')) THEN

@@ -497,6 +497,35 @@ CREATE CONSTRAINT TRIGGER trg_directory_sync_artist_genre_events_search
   DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION directory_sync_artist_genre_events_search_trigger();
 
+-- The projection also depends on the genre catalog row itself (active flag
+-- and name), which the catalog API can retire or rename without touching any
+-- membership; such a change resyncs the events of every artist on that genre.
+CREATE OR REPLACE FUNCTION directory_sync_genre_events_search_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  genre_event_id BIGINT;
+BEGIN
+  FOR genre_event_id IN
+    SELECT DISTINCT lineup.event_id
+    FROM artist_genre_membership membership
+    JOIN event_artist lineup ON lineup.artist_id = membership.artist_id
+    WHERE membership.genre_id = NEW.id
+    ORDER BY lineup.event_id
+  LOOP
+    PERFORM directory_sync_event_search(genre_event_id);
+  END LOOP;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_directory_sync_genre_events_search ON genre;
+CREATE CONSTRAINT TRIGGER trg_directory_sync_genre_events_search
+  AFTER UPDATE OF active, name_es, name_en, code, current_slug ON genre
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION directory_sync_genre_events_search_trigger();
+
 -- The full refresh now reuses the same projection, so a manual rebuild and the
 -- incremental triggers can never disagree.
 CREATE OR REPLACE FUNCTION directory_refresh_legacy_event_search()

@@ -65,6 +65,8 @@ WHERE document.source_status = 'published'
   END;
 
 
+DROP TRIGGER IF EXISTS trg_directory_sync_genre_events_search ON genre;
+DROP FUNCTION IF EXISTS directory_sync_genre_events_search_trigger();
 DROP TRIGGER IF EXISTS trg_directory_sync_artist_genre_events_search ON artist_genre_membership;
 DROP TRIGGER IF EXISTS trg_directory_sync_artist_events_search ON social_artist_profile;
 DROP TRIGGER IF EXISTS trg_directory_sync_event_lineup_search ON event_artist;
