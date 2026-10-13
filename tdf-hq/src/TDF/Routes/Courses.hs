@@ -8,6 +8,7 @@ module TDF.Routes.Courses
   ( CourseSession(..)
   , SyllabusItem(..)
   , CourseMetadata(..)
+  , CourseCheckoutTerms(..)
   , UTMTags(..)
   , CourseRegistrationRequest(..)
   , CourseRegistrationResponse(..)
@@ -30,7 +31,7 @@ module TDF.Routes.Courses
   ) where
 
 import           Data.Char (isAlphaNum)
-import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
+import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON(toJSON), Value(..), defaultOptions, genericParseJSON, genericToJSON, (.:!))
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (Parser)
@@ -85,10 +86,21 @@ data CourseMetadata = CourseMetadata
   , syllabus       :: [SyllabusItem]
   , whatsappCtaUrl :: Text
   , landingUrl     :: Text
+  , checkoutTerms  :: Maybe CourseCheckoutTerms
+  -- ^ Terms of the approved active checkout policy, shown before the buyer accepts them.
   } deriving (Show, Generic)
 
 instance ToJSON CourseMetadata
 instance FromJSON CourseMetadata
+
+data CourseCheckoutTerms = CourseCheckoutTerms
+  { termsVersion       :: Text
+  , termsSummary       :: Text
+  , cancellationPolicy :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON CourseCheckoutTerms
+instance FromJSON CourseCheckoutTerms
 
 data UTMTags = UTMTags
   { source   :: Maybe Text
@@ -111,16 +123,25 @@ data CourseRegistrationRequest = CourseRegistrationRequest
   , howHeard  :: Maybe Text
   , utm       :: Maybe UTMTags
   , termsAccepted :: Maybe Bool
+  , acceptedTermsVersion :: Maybe Text
+  -- ^ The terms version the buyer was shown; checkout rejects a stale version.
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationRequest where
   parseJSON value = do
     rejectNullOptionalFields
       "CourseRegistrationRequest"
-      ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted"]
+      ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted", "acceptedTermsVersion"]
       value
     genericParseJSON strictObjectOptions value
-instance ToJSON CourseRegistrationRequest
+-- The encoded request is the stored identity of an idempotent registration
+-- (compared as jsonb, where an absent key and a null differ). Requests recorded
+-- before `acceptedTermsVersion` existed have no such key, so omit it when absent.
+instance ToJSON CourseRegistrationRequest where
+  toJSON request = case genericToJSON defaultOptions request of
+    Object fields | Nothing <- acceptedTermsVersion request ->
+      Object (AesonKeyMap.delete "acceptedTermsVersion" fields)
+    encoded -> encoded
 
 data CourseRegistrationResponse = CourseRegistrationResponse
   { id     :: Int64
