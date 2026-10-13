@@ -7661,14 +7661,21 @@
     },
     {
       "historicalStatus": null,
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/MusicPublication.tla",
+        "formal/event-operations/MusicPublication.cfg",
+        "formal/event-operations/MusicPublicationBatch.cfg",
+        "formal/event-operations/MusicPublicationReplacedOnly.cfg",
+        "formal/event-operations/MusicPublicationStayWithdrawn.cfg",
+        "formal/event-operations/MusicPublicationPointerStale.cfg"
+      ],
       "status": "specified and implemented",
       "id": "MEDIA-MUSIC-RELEASE-001",
       "title": "Canonical music releases with immutable approved versions",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions and only a published, in-embargo-window, territory-allowed version is public.",
-      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed",
+      "statement": "Music releases are authored as versions owned by a verified artist or authorized team. Each version moves only through music_valid_transition; approval freezes an immutable snapshot and SHA-256; correcting a published release creates a related version that references the same immutable asset bytes. Publication and withdrawal are applied by locked database functions that handle each due candidate on its own: a candidate that fails at publication is suspended with its error and the other candidates still publish; publishing a version retires every other formerly published version of its release that is still published, replacement_pending or takedown_scheduled, and reopens a withdrawn release; a failure that is transient (deadlock, serialization failure, lock timeout) leaves the candidate scheduled for the next run; the release points at the version it last published only while that version is published, suspended, replacement_pending or takedown_scheduled. Only a published, in-embargo-window, territory-allowed version is public.",
+      "authority": "Unreviewed recovered local implementation (2026-09-11..16); accepted ADR-001/ADR-003 in docs/music-releases/architecture-and-data-model.md; not yet independently reviewed or deployed; AUTHORITY-066 (scheduler isolation, retirement, reopening, pointer)",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "docs/music-releases/architecture-and-data-model.md",
       "property": "No public projection exists for a version that is not published, approved by snapshot hash and allowed in the trusted territory.",
@@ -7691,24 +7698,40 @@
       "state": {
         "version": [
           "draft",
+          "uploading",
+          "processing",
+          "validation_failed",
           "ready_for_review",
+          "in_review",
+          "changes_requested",
           "approved",
           "scheduled",
           "published",
-          "withdrawn",
-          "superseded"
+          "suspended",
+          "cancelled",
+          "replacement_pending",
+          "takedown_scheduled",
+          "withdrawn"
         ],
-        "authority": "PostgreSQL triggers and music_valid_transition"
+        "release": "published_version_id points at the version last published while it stays published, suspended, replacement_pending or takedown_scheduled, otherwise null; withdrawn_at is set while the release points at nothing after it pointed at something",
+        "authority": "PostgreSQL triggers, music_valid_transition, music_publish_due, music_withdraw_due, trg_music_release_live_version"
       },
       "allowedTransitions": [
-        "draft -> ready_for_review -> approved -> published/scheduled",
+        "draft -> ready_for_review -> in_review -> approved -> scheduled -> published (scheduler only)",
         "published -> correction version (new draft linked by correction_of_version_id)",
-        "published -> withdrawn by locked withdraw function"
+        "published -> takedown_scheduled -> withdrawn (takedown scheduler)",
+        "published/scheduled -> suspended -> approved (re-approval re-validates)",
+        "scheduled -> suspended with publication_failed audit when publication fails",
+        "publication of a version retires every other formerly published version still published, replacement_pending or takedown_scheduled through replacement_pending -> takedown_scheduled -> withdrawn; never-published and suspended versions stay",
+        "scheduled stays scheduled after a transient publication failure (SQLSTATE class 40, 55P03)"
       ],
       "forbiddenTransitions": [
         "Editing an approved snapshot in place",
         "Two simultaneously public versions of one release",
-        "Public exposure before embargo or outside allowed territory"
+        "Public exposure before embargo or outside allowed territory",
+        "One failed candidate aborting the publication or withdrawal of other candidates",
+        "A release pointing at a version that is not live",
+        "A scheduled correction of a withdrawn release that never publishes"
       ],
       "effects": [
         "Single public version per release",
@@ -7716,10 +7739,10 @@
       ],
       "authorization": "music_can(actor, artist, permission) re-checked by backend for every mutation; public reads require the public flag and territory rule.",
       "privacy": "Masters and quarantined uploads are never public; collaborator identifiers are only shown to authorized editors.",
-      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md).",
+      "concurrency": "Correction and transition requests serialize on version rows with optimistic revision checks (correction-concurrency.md). The schedulers lock candidate and release FOR UPDATE SKIP LOCKED and run each candidate in its own subtransaction. The API handler locks the version row before the release row and the scheduler the other way round, so a handler move of a pointed sibling during the same release's publication can deadlock: the victim's candidate stays scheduled and publishes on the next run.",
       "idempotency": "Correction creation and publication are idempotent per request key and locked rows.",
-      "failure": "Invalid transitions raise database errors surfaced as actionable API errors.",
-      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history.",
+      "failure": "Invalid transitions raise database errors surfaced as actionable API errors. A publication that raises a transient error (class 40, 55P03) leaves the candidate scheduled with a warning; any other failure suspends only that version and records publication_failed (SQLSTATE, message); a withdrawal that raises stays takedown_scheduled, is recorded once as withdrawal_failed unless transient, and retried next run.",
+      "recovery": "Rollback SQL exists for each migration; corrections never rewrite history. 2026-10-11_music_publication_isolation repairs release rows pointing at non-live versions and releases marked withdrawn while a version is published.",
       "observability": "Editorial notifications and audit rows per transition.",
       "implementation": [
         "tdf-hq/src/TDF/MusicRelease/Domain.hs",
@@ -7744,7 +7767,9 @@
         "tdf-hq/sql/2026-09-16_music_correction_concurrency.sql",
         "tdf-hq/sql/2026-09-16_music_correction_concurrency_rollback.sql",
         "tdf-hq/sql/2026-09-16_music_resource_graph_validation.sql",
-        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql"
+        "tdf-hq/sql/2026-09-16_music_resource_graph_validation_rollback.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+        "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
@@ -7760,18 +7785,19 @@
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/lib/music-test-database.mjs",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+        "scripts/test-music-publication.sh"
       ],
-      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script",
-      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); no CI or production evidence on current main",
-      "confidence": "Medium: extensive local evidence on a 2026-09-10 base; not re-verified against current main.",
+      "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md)",
+      "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
+      "confidence": "Medium: scheduler isolation, retirement, reopening and pointer rules are exercised on the migrated schema and model-checked in a bounded scope; authoring and public reads keep the 2026-09-16 local evidence only.",
       "ambiguity": [
-        "Migrations are not registered in scripts/production-migrations.json; deployment order is only documented in prose.",
         "Feature flags are created disabled; production enablement has no approved decision."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Recovered implementation and tests exist; CI on current main and deployment are pending."
+        "reason": "Scheduler isolation, retirement, reopening and release pointer are verified on the migrated schema (2026-10-11); authoring and public reads keep local 2026-09-16 evidence; not deployed."
       }
     },
     {
@@ -9354,13 +9380,13 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+    ".github/workflows/ci.yml": "39734a5fea03811974b88dceaebbd53f8aef40af1df770126002d4c91dcfe457",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1d6a7541058ffc9d6be1591b96bff77036b7e2ae2b84e8364d0f444a5a2e52d3",
+    "docs/catalog-persistence/catalog-list-decisions.json": "2fca45691387279415f9d0a9ceefbec892c2cce7643283beb7102155e6add4dd",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -9413,6 +9439,12 @@
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/ManualBankTransfer.tla": "6f3738481bd946119897756ac11d388d4f16455ba9b1fc07982f00d5f0320a7e",
+    "formal/event-operations/MusicPublication.cfg": "0f2e7eb66feaa82e7c285a7d3fa5f6d1cad0042fe924f97e2e29d82fa3590640",
+    "formal/event-operations/MusicPublication.tla": "f57272c493cf4e9de3701f111f3d8193fa708c02fc13b743341d0d4f60ad96a8",
+    "formal/event-operations/MusicPublicationBatch.cfg": "9235cd26521de14679cda1db53049468bd322e1a199c5ab22681cbb26d894837",
+    "formal/event-operations/MusicPublicationPointerStale.cfg": "2d5916c7039d9722e3fb586341a26e8bbd2ea1909098c51e5235700c08543866",
+    "formal/event-operations/MusicPublicationReplacedOnly.cfg": "b9dfcafb16a72ecbd82cfbb0ed0cbfdb9d8e8888ff094d91ee3a5e67078c1a81",
+    "formal/event-operations/MusicPublicationStayWithdrawn.cfg": "f5d20864b4e36d2421b54fae9dcf51606b749c1706358125f06981c522cc6bc7",
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
@@ -9603,7 +9635,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+    "scripts/production-migrations.json": "84e1d4be2c2707fcd2b1f6cd41465aab4ab7a3963551ba928b02648d0222f166",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -9642,6 +9674,7 @@
     "scripts/test-music-directory-migration.sh": "8627233be9dbef8947111d9e838ec6c85f3abb1d215d1295894bf42925fc9471",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
+    "scripts/test-music-publication.sh": "51f8af48e80f50d7043f8f301f95c994ef2dd110358013c12ef0cae8cc623417",
     "scripts/test-music-release-api-e2e.mjs": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
     "scripts/test-music-release-api-e2e.sh": "7992f50153f322952911246d1b9ce206c8d29dcccf9414427158848c962ae14f",
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
@@ -9682,7 +9715,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+    "scripts/verify-event-operations-formal.sh": "3756dfef896cff2497d9885c4ae4eb3e3949476c6f59fd777de53ef0f8fa6792",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -9998,6 +10031,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
+    "tdf-hq/sql/2026-10-11_music_publication_isolation.sql": "b3282b3da36e114d6a60458fef69f6e614977a314288d162d03f1cda1f2b4c0e",
+    "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql": "573e361d381f0c8681d27224964da3ea081722c92a4a9b178b02ec88599a35fa",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10105,12 +10140,12 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "3eb2a5cd05080a165c0e123a4d2c65ca02653a6490d1db4a8e468cc34c222cba",
+    "tdf-hq/tdf-hq.cabal": "c2a11415a40054f8f2621d8762c39b8e55600396427039c96ded91e54f792d2e",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "e4936342385eeb1295d7fb63b095caf918f2cb2f23c3ffd62ee4ea6f44512ddd",
+    "tdf-hq/test/Spec.hs": "b54f2727a0b24ed3a684d3d6fb54c52643d3884a1a8f1978f19ec1445ef20288",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10129,6 +10164,7 @@
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
     "tdf-hq/test/TDF/InvoiceDatilSpec.hs": "8bc40df2e8c0760e15a3db55c0ca95fb92d980f1970ea75030505ec63fa60da5",
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": "6022c7d5e399b47cbc0d14bb8d5bddb9544b98ce3524925585ed2efabfc7fc59",
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "49c91d515a053d17920b48228006d3c9920a888c37793d6a2ee82b73d6f3a8b9",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
@@ -15571,6 +15607,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-10-11_music_publication_isolation.sql": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": [
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
@@ -15653,6 +15701,54 @@
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/MusicPublicationSpec.hs": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-music-publication.sh": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/MusicPublication.tla": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MusicPublication.cfg": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MusicPublicationBatch.cfg": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MusicPublicationReplacedOnly.cfg": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MusicPublicationStayWithdrawn.cfg": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/MusicPublicationPointerStale.cfg": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": [
@@ -17230,7 +17326,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "e77956b314d054feeba0b9c7eecfea0acdd3fdef7663a19eb94f6f0f3eddf6de",
+      "sha256": "39734a5fea03811974b88dceaebbd53f8aef40af1df770126002d4c91dcfe457",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20169,7 +20265,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "84e1d4be2c2707fcd2b1f6cd41465aab4ab7a3963551ba928b02648d0222f166",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21601,6 +21697,18 @@
       ]
     },
     {
+      "id": "SURFACE-cd7cd8241d536125",
+      "path": "scripts/test-music-publication.sh",
+      "sha256": "51f8af48e80f50d7043f8f301f95c994ef2dd110358013c12ef0cae8cc623417",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
       "sha256": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
@@ -22319,7 +22427,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4fd7f38acd7a0368479a61049d1ee3dd8f541d638cd745895e06e2c0ead724a",
+      "sha256": "3756dfef896cff2497d9885c4ae4eb3e3949476c6f59fd777de53ef0f8fa6792",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32856,6 +32964,30 @@
       ]
     },
     {
+      "id": "SURFACE-2b565eda547a22ed",
+      "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+      "sha256": "b3282b3da36e114d6a60458fef69f6e614977a314288d162d03f1cda1f2b4c0e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c5ae06fef1855ec2",
+      "path": "tdf-hq/sql/2026-10-11_music_publication_isolation_rollback.sql",
+      "sha256": "573e361d381f0c8681d27224964da3ea081722c92a4a9b178b02ec88599a35fa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -35498,7 +35630,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "3eb2a5cd05080a165c0e123a4d2c65ca02653a6490d1db4a8e468cc34c222cba",
+      "sha256": "c2a11415a40054f8f2621d8762c39b8e55600396427039c96ded91e54f792d2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35612,7 +35744,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e4936342385eeb1295d7fb63b095caf918f2cb2f23c3ffd62ee4ea6f44512ddd",
+      "sha256": "b54f2727a0b24ed3a684d3d6fb54c52643d3884a1a8f1978f19ec1445ef20288",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36004,6 +36136,18 @@
       "sha256": "0cfaf43ff1207386bf1a360184290a96f8c7159335f51576a5dde376c9e68b2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-ec903fb64a682e18",
+      "path": "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+      "sha256": "6022c7d5e399b47cbc0d14bb8d5bddb9544b98ce3524925585ed2efabfc7fc59",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4571f0b61785302d",
@@ -41903,7 +42047,6 @@
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
-    "MEDIA-MUSIC-RELEASE-001",
     "MEDIA-MUSIC-ASSET-001",
     "MEDIA-MUSIC-DDEX-001",
     "PAY-MUSIC-DOWNLOAD-001",
@@ -43028,7 +43171,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4fbf2d3b7799ef0e814f1814836d9881828548f81fc8cef56b6f6895aa8192c9",
+      "sourceSha256": "c317da67c950839f169884531a553677af0d35491c707f42a915ed36238cc21a",
       "definition": {
         "states": [
           "absent",
