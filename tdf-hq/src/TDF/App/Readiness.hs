@@ -15,12 +15,14 @@ withinReadinessDeadline microseconds check = do
     _ -> False
 
 -- | Attempts one probe may make: the pool size of TDF.DB.makePool plus one.
--- The pool can hold up to pool-size idle connections PostgreSQL has already
--- closed (restart, failover, terminated sessions); every failed attempt
--- destroys the connection it took, so one probe discards every stale
--- connection and still has an attempt left to answer from a live one once
--- PostgreSQL is back. An unavailable database fails every attempt inside the
--- same deadline.
+-- The pool can hold up to pool-size idle connections whose sessions
+-- PostgreSQL has closed (restart, terminated backends); their first use fails
+-- at once and every failed attempt destroys the connection it took, so one
+-- probe discards every such connection and still has an attempt left to
+-- answer from a live one once PostgreSQL is back. An unavailable database
+-- fails every attempt inside the same deadline. A connection dead without a
+-- close (host gone, partition) blocks until the deadline instead, one per
+-- probe: outside this bound.
 readinessAttempts :: Int
 readinessAttempts = 11
 

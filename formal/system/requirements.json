@@ -5913,13 +5913,13 @@
       "status": "specified and implemented",
       "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
       "ambiguity": [],
-      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Attempt retry: Haskell probe tests (stale-then-live, budget exhaustion, final negative result, cancellation through retry) and two further detected mutations (single attempt, no retry); the PostgreSQL harness first leaves more idle pooled connections than it makes degraded probes, so the single recovery probe must discard the terminated connections itself (the previous code failed this on 2026-10-12). ReadinessProbe.tla: ProbeReportsDatabase over every stale count and database state for PoolSize 4; the one-attempt and pool-size budgets fail it (the model found that a budget of the pool size is one short).",
+      "verification": "Actual Haskell boundary tests and six detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof. Real PostgreSQL HTTP harness disables connections only to its nonce-owned database, terminates its sessions, requires fixed503 repeatedly, reenables connections and requires recovery. Attempt retry: Haskell probe tests (stale-then-live, budget exhaustion, final negative result, cancellation through retry) (the mutations include single attempt, no retry and cancellation swallowed in the retry; the attempt budget is bound to the pool size plus one); the PostgreSQL harness first leaves more idle pooled connections than it makes degraded probes, so the probes must discard the terminated connections within their own attempts (with one attempt per probe the recovery probe took the next terminated connection and failed, 2026-10-12). ReadinessProbe.tla: ProbeReportsDatabase over every stale count and database state for PoolSize 4; the one-attempt and pool-size budgets fail it (the model found that a budget of the pool size is one short).",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Deployed validation of the handler remains outstanding; the stale-connection recovery is fixed and checked at the Haskell, PostgreSQL-harness and model levels (AUTHORITY-078)."
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
-      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, the deadline, cancellation propagation (in the deadline and in the retry), the retry and all but one attempt."
     },
     {
       "id": "DEPLOY-CANARY-001",

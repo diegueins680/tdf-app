@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the actual readiness boundary and five source-derived negative controls."""
+"""Run the actual readiness boundary and six source-derived negative controls."""
 import hashlib
 import json
 from pathlib import Path
@@ -17,7 +17,9 @@ def verify():
     controls = [
         ('intended', [], None),
         ('no-database-probe', [("databaseReadyAttempts attempts pool = withinReadinessDeadline 2000000 $ probeUntil attempts $ do\n  rows <- runSqlPool (rawSql \"SELECT 1\" []) pool\n  pure (rows == [Single (1 :: Int)])", 'databaseReadyAttempts _ _ = pure True')], 'includes unavailable pool acquisition in the failure boundary'),
-        ('single-attempt', [('readinessAttempts = 11', 'readinessAttempts = 1')], 'probes once more than the pool holds connections'),
+        ('single-attempt', [('readinessAttempts = 11', 'readinessAttempts = 1')], 'budgets eleven attempts (pool size ten plus one; bound to TDF.DB by verify-readiness.py)'),
+        ('swallowed-cancellation-in-retry', [('import qualified Control.Exception.Safe as Safe', 'import qualified Control.Exception.Safe as Safe\nimport qualified Control.Exception as Unsafe'),
+            ('      result <- Safe.tryAny probe', '      result <- Unsafe.try probe :: IO (Either Unsafe.SomeException Bool)')], 'propagates cancellation through a retry instead of spending attempts on it'),
         ('no-retry', [('        Left _ -> probeUntil (attempts - 1) probe', '        Left _ -> pure False')], 'discards stale pooled connections and answers from the next live one'),
         ('no-deadline', [('result <- timeout microseconds (Safe.tryAny check)', 'result <- Just <$> Safe.tryAny check')], 'rejects work that exceeds its deadline'),
         ('swallowed-cancellation', [('import qualified Control.Exception.Safe as Safe', 'import qualified Control.Exception.Safe as Safe\nimport qualified Control.Exception as Unsafe'),
@@ -52,7 +54,7 @@ def verify():
     if not pool_size or not attempts or int(pool_size[1]) + 1 != int(attempts[1]):
         raise RuntimeError('Readiness attempts must be the application pool size (TDF.DB.makePool) plus one')
     return {'sourceFingerprints': {name: hashlib.sha256(content.encode()).hexdigest() for name,content in sources.items()},
-            'scope': 'Finite Haskell readiness/deadline/retry/cancellation checks, five detected code mutations and the pool-size correspondence; not whole-server conformance.',
+            'scope': 'Finite Haskell readiness/deadline/retry/cancellation checks, six detected code mutations and the pool-size correspondence; not whole-server conformance.',
             'results': results}
 
 

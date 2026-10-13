@@ -41,7 +41,7 @@ spec = describe "database readiness boundary" $ do
     withinReadinessDeadline 1000000 (throwIO PrivateFailure) `shouldReturn` False
   it "includes unavailable pool acquisition in the failure boundary" $
     databaseReady (error "PRIVATE_POOL_DETAILS") `shouldReturn` False
-  it "probes once more than the pool holds connections" $
+  it "budgets eleven attempts (pool size ten plus one; bound to TDF.DB by verify-readiness.py)" $
     readinessAttempts `shouldBe` 11
   it "discards stale pooled connections and answers from the next live one" $ do
     (probe, calls) <- staleThen 2 (pure True)

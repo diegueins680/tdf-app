@@ -28,14 +28,20 @@ def verify_readiness(run, name, port, check):
     status, body, headers = health()
     check('readiness freshly checks PostgreSQL with uncacheable success',
           status == 200 and body == {'status': 'ok', 'db': 'ok'} and headers.get('Cache-Control') == 'no-store')
-    # Six simultaneous probes leave at least six idle pooled connections: more
-    # than the degraded probes below, so the recovery probe must itself
-    # discard the connections PostgreSQL terminated (DEPLOY-READINESS-001).
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
-        statuses = [result[0] for result in executor.map(lambda _: health(), range(6))]
-    check('readiness answers simultaneous probes ' + str(statuses), statuses == [200] * 6)
-    check('readiness fixture pool holds more idle connections than the degraded probes',
-          int(maintenance("SELECT count(*) FROM pg_stat_activity WHERE datname='"+name+"' AND backend_type='client backend';")) >= 4)
+    # Bursts of simultaneous probes leave more idle pooled connections than
+    # the three degraded probes below. The fixture then terminates every
+    # session; a probe that made one attempt per request would answer 503 once
+    # per terminated connection, so the recovery probe would fail. The probes
+    # must discard the terminated connections within their own attempts
+    # (DEPLOY-READINESS-001).
+    idle = lambda: int(maintenance("SELECT count(*) FROM pg_stat_activity WHERE datname='"+name+"' AND backend_type='client backend';"))
+    for _ in range(8):
+        if idle() >= 4:
+            break
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            statuses = [result[0] for result in executor.map(lambda _: health(), range(6))]
+        check('readiness answers simultaneous probes ' + str(statuses), statuses == [200] * 6)
+    check('readiness fixture pool holds more idle connections than the degraded probes', idle() >= 4)
     try:
         maintenance('ALTER DATABASE "'+name+'" ALLOW_CONNECTIONS false;')
         check('readiness fixture disabled only its owned database connections',

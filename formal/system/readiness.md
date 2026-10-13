@@ -16,9 +16,9 @@ becoming a successful check. Private exceptions are neither rendered nor copied
 to the public response. The SQL is fixed, non-mutating and cannot be supplied by a
 caller. Each request probes anew; one success says nothing about later requests.
 
-A pool keeps idle connections PostgreSQL has already closed (restart, failover,
-terminated sessions); the first use of such a connection fails and the pool
-destroys it. One probe therefore makes up to one more attempt than the pool holds
+A pool keeps idle connections whose sessions PostgreSQL has closed (restart,
+terminated backends); the first use of such a connection fails at once and the
+pool destroys it. One probe therefore makes up to one more attempt than the pool holds
 connections (`readinessAttempts`, bound to the pool size of `TDF.DB.makePool` plus
 one by `scripts/verify-readiness.py`; the model showed that a budget of exactly
 the pool size is defeated when every connection is stale), all inside the same
@@ -27,19 +27,27 @@ answers from the first attempt that returns: a result, ready or not, is final.
 A single request after database recovery answers ready; before 2026-10-12 the
 probe made one attempt and answered 503 once per stale connection although the
 database was back (AUTHORITY-078). An unavailable database fails every attempt,
-so each probe costs at most pool-size-plus-one connection attempts.
+so each probe costs at most pool-size-plus-one connection attempts. A connection
+dead without a close (host gone, network partition; `makePool` sets no keepalive
+or connect timeout) blocks until the deadline instead, one per probe: that case
+is outside this bound and unchanged.
 
 Actual Haskell tests cover success, false results, private synchronous errors,
 unavailable pool acquisition, stale-then-live retry, attempt exhaustion, final negative results,
 real pool exhaustion and recovery, deadline expiry and cancellation (also through a retry). The source-bound
 `scripts/verify-readiness.py` also requires five broken implementations to fail:
-removed query, removed deadline, swallowed cancellation, a single attempt and no retry,
-and checks that the attempt budget equals the pool size. Handler tests traverse
+removed query, removed deadline, swallowed cancellation (in the deadline and in the retry),
+a single attempt and no retry, and checks that the attempt budget is the pool size plus one. Handler tests traverse
 the real HTTP application with a failed pool and a real SQLite query. PostgreSQL
 connection failure/recovery is also checked through the actual HTTP application:
-after six simultaneous probes have left more idle pooled connections than the degraded probes below consume,
-the owned fixture database disallows connections, terminates only its sessions,
-requires fixed503 repeatedly, then reenables connections and requires200 from one probe. The
+after bursts of simultaneous probes have left more idle pooled connections than
+the three degraded probes below, the owned fixture database disallows connections,
+terminates only its sessions, requires fixed503 repeatedly, then reenables
+connections and requires200 from one probe. With one attempt per probe each
+degraded probe consumed one terminated connection and the recovery probe failed
+on the next (CI run 38316698853); with the retry the first degraded probe's
+attempts discard every terminated connection and the recovery probe answers
+from a fresh one. The
 maintenance connection remains separate; shared PostgreSQL itself is not stopped.
 `ReadinessProbe.tla` checks the attempt budget against every stale count and database state for a pool of four (the one-attempt and pool-size budgets fail).
 The final deployed handler still requires a separate exact execution receipt. These finite tests and the bounded model are not a universal proof.
