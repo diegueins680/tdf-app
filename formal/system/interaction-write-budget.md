@@ -43,7 +43,8 @@ now charged, and so is each retry.
 
 - `formal/event-operations/InteractionWriteBudget.tla`: four attempts by one
   account over two minutes with a limit of two; an attempt begins, charges under
-  the counter row lock, runs a write that is answered or raises, and ends. 4,845
+  the lock of its own minute's counter row (attempts of different minutes overlap),
+  runs a write that is answered or raises, and ends. 7,473
   distinct states, three invariants: `ChargeCounted` (every ended attempt is in the
   stored counters), `LimitHolds` (no minute runs more writes than the limit),
   `RefusedOnlyWhenSpent` (an attempt is refused only when its own minute was
