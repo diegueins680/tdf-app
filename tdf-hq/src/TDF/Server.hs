@@ -2877,63 +2877,51 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
         else do
           case channel of
             MetaInstagram ->
-              runDB $ do
-                _ <- upsert (InstagramMessage extId
-                              sid
-                              senderName
-                              (Just body)
-                              "incoming"
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              (Just metadata)
-                              "pending"
-                              Nothing
-                              Nothing
-                              Nothing
-                              0
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              createdAt)
-                     [ InstagramMessageSenderName =. senderName
-                     , InstagramMessageText =. Just body
-                     , InstagramMessageDirection =. "incoming"
-                     , InstagramMessageMetadata =. Just metadata
-                     , InstagramMessageReplyStatus =. "pending"
-                     ]
-                pure ()
+              -- A message already stored (delivered by webhook, or read by an
+              -- earlier backfill) is left as it is.
+              runDB $ ServerExtra.storeInstagramInboundOnce
+                (InstagramMessage extId
+                    sid
+                    senderName
+                    (Just body)
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just metadata)
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    createdAt)
             MetaFacebook ->
-              runDB $ do
-                _ <- upsert (ME.FacebookMessage extId
-                              sid
-                              senderName
-                              (Just body)
-                              "incoming"
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              (Just metadata)
-                              "pending"
-                              Nothing
-                              Nothing
-                              Nothing
-                              0
-                              Nothing
-                              Nothing
-                              Nothing
-                              Nothing
-                              createdAt)
-                     [ ME.FacebookMessageSenderName =. senderName
-                     , ME.FacebookMessageText =. Just body
-                     , ME.FacebookMessageDirection =. "incoming"
-                     , ME.FacebookMessageMetadata =. Just metadata
-                     , ME.FacebookMessageReplyStatus =. "pending"
-                     ]
-                pure ()
+              runDB $ ServerExtra.storeFacebookInboundOnce
+                (ME.FacebookMessage extId
+                    sid
+                    senderName
+                    (Just body)
+                    "incoming"
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    (Just metadata)
+                    "pending"
+                    Nothing
+                    Nothing
+                    Nothing
+                    0
+                    Nothing
+                    Nothing
+                    Nothing
+                    Nothing
+                    createdAt)
           pure True
     _ -> pure False
 

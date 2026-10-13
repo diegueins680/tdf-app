@@ -9568,6 +9568,84 @@
         "classification": "PARTIAL",
         "reason": "Database effects repaired and tested; no signed HTTP test, and the reply worker, delivery updates and other Meta channels were not examined."
       }
+    },
+    {
+      "id": "MSG-META-REDELIVERY-001",
+      "title": "A repeated Instagram or Facebook message leaves the stored message as it is",
+      "domain": "MSG",
+      "statement": "A stored inbound Instagram or Facebook message keeps its text, direction, deletion and reply state however often a webhook delivers it again or a backfill reads it again; a repeat may only fill a missing sender name or advertising attribution, or metadata that lacked the receiving account, and a repeated deletion keeps its first time.",
+      "authority": "AUTHORITY-061; Meta delivers webhooks at least once, and the WhatsApp history rule that a duplicate delivery must not rewrite the stored message.",
+      "source": "formal/system/meta-redelivery.md",
+      "contract": "formal/system/meta-redelivery.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Administrator running a backfill",
+        "Reply worker"
+      ],
+      "preconditions": [
+        "Valid X-Hub-Signature-256 over the raw body (AUTH-WEBHOOK-001), or an authorized backfill"
+      ],
+      "inputs": [
+        "Provider message id, sender, text, attribution, deletion event"
+      ],
+      "state": {
+        "boundary": "instagram_message, facebook_message",
+        "authority": "PostgreSQL unique index on external_id; one insert-or-leave statement"
+      },
+      "allowedTransitions": [
+        "Message absent -> stored as pending",
+        "Stored without sender name or attribution -> filled",
+        "Stored and not deleted -> deleted at the first deletion"
+      ],
+      "forbiddenTransitions": [
+        "On hold or failed -> pending because the message was delivered or backfilled again",
+        "Stored text -> other text",
+        "Outgoing -> incoming",
+        "Deletion time -> later deletion time",
+        "Deleted before stored -> text"
+      ],
+      "effects": [
+        "One row per provider message",
+        "A repeat never returns a message to the reply worker"
+      ],
+      "authorization": "Unauthenticated webhook routes admitted only by the Meta signature; the backfill keeps its existing authorization.",
+      "privacy": "A repeat can no longer write new text into a message its sender deleted. Text stored before a deletion is still kept.",
+      "concurrency": "The store is one insert-or-leave statement on the unique index, so simultaneous first deliveries all succeed and leave one row.",
+      "idempotency": "Keyed by the provider message id.",
+      "failure": "A failed transaction stores nothing.",
+      "recovery": "Meta redelivers; a repeat is harmless.",
+      "observability": "The message row.",
+      "property": "Delivering or backfilling a stored message again changes neither its text nor its direction, deletion or reply state.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MetaRedeliverySpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "scripts/test-meta-redelivery.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MetaRedelivery.tla",
+        "formal/event-operations/MetaRedelivery.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatResetsReply.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatRewritesText.cfg",
+        "formal/event-operations/MetaRedeliveryRepeatMovesDeletion.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test of the function both webhooks call.",
+      "evidence": "formal/system/meta-redelivery.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Webhook, backfill and reply worker read; storage behaviour run locally against PostgreSQL 16 on 2026-10-11; the backfill path is covered by reading only.",
+      "ambiguity": [
+        "Whether the text of a message deleted by its sender should be erased is undecided; it is kept."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
+      }
     }
   ]
 }
