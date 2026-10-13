@@ -18,7 +18,9 @@ import System.Environment (lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Random (randomRIO)
 import Test.Hspec
-import TDF.Server (WhatsAppReceipt(..), claimWhatsAppAutoReply, receiveWhatsAppInbound, whatsAppSentRequestNote)
+import TDF.Server
+  ( WhatsAppReceipt(..), claimWhatsAppAutoReply, receiveWhatsAppInbound
+  , whatsAppCourseRegistrationAdmitted, whatsAppCourseRegistrationKey, whatsAppSentRequestNote )
 import qualified TDF.ModelsExtra as ME
 import TDF.WhatsApp.History (IncomingWhatsAppRecord(..))
 
@@ -108,6 +110,41 @@ spec = describe "whatsapp-redelivery-postgresql" $ do
           claim pool key `shouldReturn` False
           other <- deliver pool phone "m2" "inscribirme"
           claim pool (entityKey (warMessage other)) `shouldReturn` True
+
+        it "lets a redelivery finish the message whose registration filled the hourly cap" $
+          \pool -> do
+          phone <- newPhone
+          third <- deliver pool phone "m3" "inscribirme"
+          later <- deliver pool phone "m4" "inscribirme"
+          let key = entityKey (warMessage third)
+              admitted message = do
+                now <- getCurrentTime
+                runSqlPool (whatsAppCourseRegistrationAdmitted now phone message) pool
+          admitted key `shouldReturn` True
+          -- Three registrations in the hour, the third made by this message
+          -- and committed; the process stopped before the reply was claimed.
+          registrations <- runSqlPool (rawSql
+            "INSERT INTO course_registration \
+            \(course_slug,phone_e164,source,status,created_at,updated_at) \
+            \SELECT 'redelivery-spec-course',?,'whatsapp','pending_payment',now(),now() \
+            \FROM generate_series(1,3) RETURNING id" [PersistText phone]) pool
+          let lastRegistration = maximum [ident | Single ident <- registrations] :: Int64
+          runSqlPool (rawExecute
+            "INSERT INTO identity_course_registration_request \
+            \(request_scope,request_key,request_payload,registration_id) \
+            \VALUES('whatsapp-course:redelivery-spec-course',?,'{}'::jsonb,?)"
+            [PersistText (whatsAppCourseRegistrationKey key), PersistInt64 lastRegistration]) pool
+          -- The redelivery is admitted and can claim the reply; a new message
+          -- from the same sender stays refused by the cap.
+          admitted key `shouldReturn` True
+          admitted (entityKey (warMessage later)) `shouldReturn` False
+          claim pool key `shouldReturn` True
+          runSqlPool (do
+            rawExecute "DELETE FROM identity_course_registration_request WHERE registration_id = ?"
+              [PersistInt64 lastRegistration]
+            rawExecute
+              "DELETE FROM course_registration WHERE course_slug = 'redelivery-spec-course' \
+              \AND phone_e164 = ?" [PersistText phone]) pool
 
         it "gives the automatic reply to exactly one of several simultaneous callers" $ \pool -> do
           phone <- newPhone

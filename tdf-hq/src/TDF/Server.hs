@@ -1467,6 +1467,29 @@ markWhatsAppEffectsApplied now messageKey =
 -- before the reply is sent, so a message is answered at most once. A message
 -- answered before this version has no claim entry but carries its reply time,
 -- which refuses the claim too.
+-- | The idempotency key of the course registration a WhatsApp message makes.
+whatsAppCourseRegistrationKey :: Key ME.WhatsAppMessage -> Text
+whatsAppCourseRegistrationKey messageKey =
+  "whatsapp-message-" <> T.pack (show (fromSqlKey messageKey))
+
+-- | Whether a delivery of this message may reach the registration: the sender
+-- is under the hourly cap, or this message already made its registration. The
+-- second case is a redelivery after the registration committed and before the
+-- reply was claimed; it creates nothing and must still complete the reply,
+-- even when that registration was the one that filled the cap.
+whatsAppCourseRegistrationAdmitted
+  :: UTCTime -> Text -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
+whatsAppCourseRegistrationAdmitted now phone messageKey = do
+  rows <- rawSql
+    "SELECT (SELECT count(*) FROM course_registration \
+    \WHERE phone_e164 = ? AND source = 'whatsapp' AND created_at >= ?) < 3 \
+    \OR EXISTS (SELECT 1 FROM identity_course_registration_request \
+    \WHERE request_scope LIKE 'whatsapp-course:%' AND request_key = ?)"
+    [ PersistText phone, PersistUTCTime (addUTCTime (-3600) now)
+    , PersistText (whatsAppCourseRegistrationKey messageKey) ]
+    :: SqlPersistT IO [Single Bool]
+  pure (rows == [Single True])
+
 claimWhatsAppAutoReply :: UTCTime -> Key ME.WhatsAppMessage -> SqlPersistT IO Bool
 claimWhatsAppAutoReply now messageKey = do
   let messageId = T.pack (show (fromSqlKey messageKey))
@@ -1539,16 +1562,12 @@ whatsappWebhookServer =
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
-              let oneHourAgo = addUTCTime (-3600) now
-              recentCount <- liftIO $ flip runSqlPool envPool $
-                count
-                  [ ME.CourseRegistrationPhoneE164 ==. Just phone
-                  , ME.CourseRegistrationSource ==. "whatsapp"
-                  , ME.CourseRegistrationCreatedAt >=. oneHourAgo
-                  ]
-              when (recentCount < 3) $ do
+              admitted <- liftIO $ flip runSqlPool envPool $
+                whatsAppCourseRegistrationAdmitted now phone (entityKey incomingEntity)
+              when admitted $ do
                 _ <- createCourseRegistrationInScope "whatsapp-course" (productionCourseSlug envConfig)
-                  (Just ("whatsapp-message-" <> T.pack (show (fromSqlKey (entityKey incomingEntity))))) CourseRegistrationRequest
+                  (Just (whatsAppCourseRegistrationKey (entityKey incomingEntity)))
+                  CourseRegistrationRequest
                   { fullName = Nothing
                   , email = Nothing
                   , phoneE164 = Just phone

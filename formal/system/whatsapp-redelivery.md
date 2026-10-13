@@ -41,7 +41,12 @@ delivery:
 `receiveWhatsAppInbound` now stores the message and applies the opt-out and the
 consent confirmation in one transaction, only when it stored the message.
 `claimWhatsAppAutoReply` gives the reply of a message to one caller. The course
-registration still runs on every delivery, as before.
+registration still runs on every delivery, as before. The hourly limit admits a
+delivery when the sender is under three registrations or when this message already
+made its registration (`whatsAppCourseRegistrationAdmitted`): a redelivery after
+the registration committed and before the reply was claimed creates nothing and
+still completes the reply, even if that registration was the one that filled the
+limit.
 
 ### Rows stored before this version (review of 2026-10-12)
 
