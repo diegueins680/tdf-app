@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "67ee1afac203741aac5771d130a18498c4d4835a",
+  "mobileRevision": "c93df7ecc7b2aeee8bb3e9d78ddc24cb752c8e48",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -64,11 +64,8 @@
       "functions/.well-known/apple-app-site-association.js",
       "functions/.well-known/assetlinks.json.js",
       "functions/_middleware.js",
-      "functions/_shared/app-smart-link.mjs",
       "functions/_shared/event-preview.mjs",
       "functions/_shared/ticket-page.mjs",
-      "functions/descargar.js",
-      "functions/download.js",
       "functions/eventos/[eventId].js",
       "functions/eventos/[eventId]/entradas.js",
       "functions/eventos/[eventId]/orden/[orderId].js"
@@ -99,7 +96,6 @@
     ],
     "scripts": [
       "scripts/__tests__/app-routes-auth-implementation.test.mjs",
-      "scripts/__tests__/app-smart-link.test.mjs",
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-import-idempotency.test.mjs",
@@ -114,6 +110,7 @@
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/diagnose-social.test.mjs",
+      "scripts/__tests__/directory-event-search-http.mjs",
       "scripts/__tests__/disposable-postgres-url.test.mjs",
       "scripts/__tests__/event-draft-plan.test.mjs",
       "scripts/__tests__/event-operations-http-runner.test.mjs",
@@ -936,7 +933,6 @@
       "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
       "tdf-hq-ui/src/i18n/locales/pt.ts",
       "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
-      "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
       "tdf-hq-ui/src/lib/schemas.ts",
       "tdf-hq-ui/src/main.tsx",
       "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -2104,6 +2100,7 @@
       "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
       "tdf-hq/test/integration/directory_artist_listing_backfill_assertions_postgres.sql",
       "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
+      "tdf-hq/test/integration/directory_event_search_http_seed.sql",
       "tdf-hq/test/integration/directory_event_search_sync.sql",
       "tdf-hq/test/integration/event_moment_reaction_cutover_postgres.sql",
       "tdf-hq/test/integration/event_operations_command_privacy_assertions.sql",
@@ -2775,7 +2772,7 @@
     {
       "id": "SURFACE-8b406122e72d741c",
       "path": "e2e/web/mobile-program.spec.mjs",
-      "sha256": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
+      "sha256": "b611bd52c2811657f11373e7f7638875aea1d9e831919ab6fa9e0062d8e7541b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2863,12 +2860,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-f964a85d63c23100",
-      "path": "functions/_shared/app-smart-link.mjs",
-      "sha256": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
       "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
@@ -2878,18 +2869,6 @@
       "id": "SURFACE-4fa531e706dea33e",
       "path": "functions/_shared/ticket-page.mjs",
       "sha256": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-56440f78e6a65791",
-      "path": "functions/descargar.js",
-      "sha256": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-7a036f931e865b20",
-      "path": "functions/download.js",
-      "sha256": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3025,12 +3004,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-906172e6c3d5a4ef",
-      "path": "scripts/__tests__/app-smart-link.test.mjs",
-      "sha256": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-039bc8d278e3dafc",
       "path": "scripts/__tests__/artist-claim-target-runtime.mjs",
       "sha256": "6b8a18067371e2dcd80cacfad63cfbef356a708c70298a3760c5e4cc36233051",
@@ -3112,6 +3085,12 @@
       "id": "SURFACE-f80037fcad0addf2",
       "path": "scripts/__tests__/diagnose-social.test.mjs",
       "sha256": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2975771fbd868bb1",
+      "path": "scripts/__tests__/directory-event-search-http.mjs",
+      "sha256": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4335,7 +4314,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "19517f9634515081c61f094e028d6d7c11a4ba622f30b943a33491deec4dc6a2",
+      "sha256": "c1fcb1781082b346ff89d410062806daa57e01df972b0feaebe1fbeb08e7d625",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5181,7 +5160,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "8627233be9dbef8947111d9e838ec6c85f3abb1d215d1295894bf42925fc9471",
+      "sha256": "edf8f6eeeae45dc8d3423a90d446004122d45053e93325ae28f08edb81d0a6e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5763,7 +5742,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
+      "sha256": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5895,13 +5874,13 @@
     {
       "id": "SURFACE-c5154d27c146520e",
       "path": "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
-      "sha256": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
+      "sha256": "70a1323759455c593a2873dd7e70e1c127dacf288ba02d6ac2ee7c4c0b2c0d8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c2453e0acd284799",
       "path": "tdf-hq-ui/src/analytics/growthAttribution.ts",
-      "sha256": "3eae34e72a50e70261d8ff2880f1ec43dfcaeef5f963013f480f1a72a7c09789",
+      "sha256": "30d68adfb4dea8353f9212f28f9766ed6e2ff181a1d0be4bd2e6f6664732700e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6981,13 +6960,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "45cdbe0adead908a76b5c0e57df5796fb4ece7a5e1903a5b62bcf040714a8cc9",
+      "sha256": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "46a846737d313b2f4bd7c308340463839e23cc7871a95d81ccd927d7b61798fd",
+      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7083,7 +7062,7 @@
     {
       "id": "SURFACE-5db1e9afd0ec5152",
       "path": "tdf-hq-ui/src/components/SessionMenu.tsx",
-      "sha256": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
+      "sha256": "879936d6024a7bbda6db096306b7fb28ba983a47f775a1696c20cae3d5ebf7b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7935,7 +7914,7 @@
     {
       "id": "SURFACE-4349420430226168",
       "path": "tdf-hq-ui/src/i18n/index.ts",
-      "sha256": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
+      "sha256": "290ee93c32ea51d1ff32e0231c21ab0709194e3b8e5d8a8425b49527b0b91f30",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7971,13 +7950,13 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "e94787745378e10003b46f50487bf50ee63e4a2ba73e42a7b1c4ff5bdd2da60c",
+      "sha256": "af2910c36ad0b14769548ada7416d321bc1e019b02168ad6d43279a5203e9b8e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "20147e1a38b5113c531cb6b819da08776e685be8440887b3717430e76a6839e5",
+      "sha256": "dd0182cea8a07354f369b3392d45dd70c1483f15d5c1fd8dc0f134af0d7b0d55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8001,13 +7980,13 @@
     {
       "id": "SURFACE-81e227132420f964",
       "path": "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
-      "sha256": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
+      "sha256": "eb1403d40d570e350724286b3285d733c241172b8e3d0508be9c50b7c1729203",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ffb652987ca6eb6",
       "path": "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
-      "sha256": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
+      "sha256": "6a96bfd68919e74d4af52c8c3474715fe3760bc3bcbc9affaae78d863b4683f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8020,12 +7999,6 @@
       "id": "SURFACE-b354b9104200a96e",
       "path": "tdf-hq-ui/src/i18n/paymentLocales.test.ts",
       "sha256": "083abe78acc8a43c0b5dd48c64ceb365656b492a1d838b724bfb0b55f82d0d4d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-2036de947313ac6e",
-      "path": "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
-      "sha256": "4eed0d18de4e5f1299bbda26efe96b5c89a2785c5e587a27da5905ce36637f9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8043,7 +8016,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "5552f5503d43af12991039ea9250796b92b91445dea4d441c7c5a762e2100900",
+      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8085,7 +8058,7 @@
     {
       "id": "SURFACE-171c838f0fbd4380",
       "path": "tdf-hq-ui/src/mobile/telemetry.ts",
-      "sha256": "e30c3c227420f3219e1d6ac58552f2f8e4a7a6b6121bad6094541ac7ecb8af2a",
+      "sha256": "eff710d079d99c2e3e01297e4a1ebf50f4e259b2d7e2521c28fe8c5f6f86dd3d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8439,13 +8412,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "691bb14706f89103e88df8e2895c5221feb83261c376e2c4df7b1713e3531412",
+      "sha256": "9048b67cb4596a91af804393a45c4418f2cc9ddeb005cb165d9a00c625aa7130",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "627af000b5ce8462fbe704525a25f1c77444a85877fac2d92e346cb91c9f3804",
+      "sha256": "c0ff57375a814ad7849dfc069c62794f3976e65f64503a523d99d8d239fe0e86",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8931,7 +8904,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "8e0337a8f0fc24f4a5a41ca8b62dc4d9d8e625cde923ad748bce566352a00abd",
+      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12909,7 +12882,7 @@
     {
       "id": "SURFACE-a190940f0cb18e04",
       "path": "tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql",
-      "sha256": "1f47992a92e55ca630c4c7a6837e42aa1bb7cfda2c7dd8e48f3ded63e2ea2492",
+      "sha256": "997394866d1a0e4950ecf1d74f4b725be668f560afcd365a99621efecbc88b9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12945,13 +12918,13 @@
     {
       "id": "SURFACE-4414e78c99a632da",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
-      "sha256": "b0a69ca20f324386a43e80b57b4d81b906c85c91669917290707a67bb85b75e3",
+      "sha256": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-48d8c4fab6aef615",
       "path": "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
-      "sha256": "4bb43df0c6e7cc6890ea7c5ab9fcd3baa92eb7cd92c9640fe34633aa22c59c72",
+      "sha256": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14019,7 +13992,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "71c81f7009ce7b311581e39cab40f4920bd3e462ea48bd0f2ed0d90082134429",
+      "sha256": "97d466b4b45b9f13d1f1c1723008dbfaf651884cdaf27fcff67d7c8d03816fb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15019,9 +14992,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-dd4a469966e70938",
+      "path": "tdf-hq/test/integration/directory_event_search_http_seed.sql",
+      "sha256": "b00c06818bcc42e8cee4ff9101f73a2a1311cf411edb68535257a01c038dce12",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4b9b7fcb2555c26b",
       "path": "tdf-hq/test/integration/directory_event_search_sync.sql",
-      "sha256": "e566644ca31b1f15d58904e3fa6ffd79ae67fec432d1049b13e0467bf6569ec5",
+      "sha256": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15537,7 +15516,7 @@
     {
       "id": "SURFACE-34f76aa7fd7d8a7d",
       "path": "tdf-mobile/__tests__/DirectoryManage.test.tsx",
-      "sha256": "69b89cea5b7555f512d722545b940510d90f066b2a5e1e2a30d5f8efae01b887",
+      "sha256": "64c623e02b43a402d4f9cfc961a0660a20468d280550b944b6419f9afd93d82e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15999,7 +15978,7 @@
     {
       "id": "SURFACE-f52dfd6e2d77a57f",
       "path": "tdf-mobile/app/(tabs)/directory.tsx",
-      "sha256": "1ad502a562dcfa763f8db90c7ee5f5bdd44313a04e86bfe19318c87c1d845d2d",
+      "sha256": "caa7f7e870394a214e7ddc4fd88b10c3ac7982bf956c54a9a47b58d55ee1a933",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16185,7 +16164,7 @@
     {
       "id": "SURFACE-73a1b649f6438e52",
       "path": "tdf-mobile/app/directory/manage.tsx",
-      "sha256": "441730b277f743582235bb68b57a4954357a13a1066499dcec5df693f6deba3f",
+      "sha256": "86c9219769a3bddefd54fa47c6aca22b60f23c8f1be86ec65414ff84defd0724",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18498,7 +18477,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "f3f513062e1098be6f4a7ff7af4e17a3e309eafc011e74fdae9062bfb2757eaf",
+      "sha256": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19576,7 +19555,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "0278068118f80349e6f79020e12217a399ae30b9dc0a955f5e0d38dd9455e890",
+      "sha256": "f44f84563e2e628bcb9844a72f2f9838a132cbd7703d19c145686d4794b3258f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24336,7 +24315,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0a8b9b1ff6e27e9c3569848c9e11d6ffbf9e9dd0deb8de804ac3ee333214d976",
+      "sha256": "76f7fa276cdd4a5c3e9589c6adde49de1cb2a7a87c2e8468f79afbfecc3a07f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
