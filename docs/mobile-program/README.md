@@ -12,7 +12,7 @@ Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada
 
 **EAS.** `eas build:list` solo contiene builds del 18 de septiembre (producción Android 15, iOS 22): los artefactos de tienda vigentes salen de los pipelines firmados de GitHub, no de EAS Build. No hay OTA publicado (sin update groups). `eas submit:list` no devolvió JSON.
 
-**Web.** `www.tdfrecords.net/app` 200; `/.well-known/apple-app-site-association` y `assetlinks.json` 200 con team `83J23NPXG7`, bundle `com.tdfrecords.app`, package `com.tdf.records` y dos huellas. `tdf-app.pages.dev` **sigue sirviendo** `/app` y `/eventos/*` sin redirigir: el redirect del host antiguo y la migración de enlaces públicos están en [PR #508](https://github.com/diegueins680/tdf-app/pull/508) (borrador, aprobado, desactualizado respecto a main) con `TDF-mobile` #150. Este incremento no lo duplica.
+**Web.** `www.tdfrecords.net/app` 200; `/.well-known/apple-app-site-association` y `assetlinks.json` 200 con team `83J23NPXG7`, bundle `com.tdfrecords.app`, package `com.tdf.records` y dos huellas. En el momento de la auditoría `tdf-app.pages.dev` servía `/app` y `/eventos/*` sin redirigir; el redirect del host antiguo llegó después con [PR #508](https://github.com/diegueins680/tdf-app/pull/508) (fusionado el 13 de octubre, `a52d7eab5`); `TDF-mobile` #150 sigue abierto. Este incremento no lo duplica.
 
 **Pin de Mobile.** `tdf-app/main` fija `tdf-mobile` en `e1dada9b`, que es la cabeza de `TDF-mobile` #155 (sin fusionar). Cuatro commits (LegalDisclosure, tipos regenerados) existen solo en esa rama. Orden pendiente: Mobile #155 → #156 → `tdf-app` #542.
 
@@ -30,7 +30,7 @@ Auditoría sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`. Nada
 1. **Android → Open/Production:** faltan 7 opt-ins (5/12) y 14 días continuos. Acción del operador: admitir en Play Console los correos consentidos recibidos por `/app` → "Solicitar acceso" (bandeja de feedback) y, cuando el contador llegue a 12, esperar los 14 días y pulsar "Apply for production". Hasta entonces la web sigue mostrando Closed testing con solicitud.
 2. **iOS build 32 → TestFlight externo:** requiere sesión en App Store Connect (o clave API) para enviar a Beta App Review y asignarlo al grupo del enlace público. El gate previo (backend de eliminación) ya se cumplió. Acción del propietario.
 3. **iOS App Store:** resolver el rechazo (2.1 login en iPhone 17 Pro Max/iOS 27 y 4.8 Sign in with Apple) y aportar prueba física de Google OAuth. Trabajo de producto nativo, fuera de este incremento.
-4. **Dominio canónico:** fusionar #508 (+ Mobile #150) tras resincronizarlo; hasta entonces `tdf-app.pages.dev` no redirige.
+4. **Dominio canónico:** #508 se fusionó el 13 de octubre (`a52d7eab5`, con `functions/_middleware.js` que redirige `tdf-app.pages.dev` a `www.tdfrecords.net`). Falta comprobar el redirect en producción tras el despliegue y fusionar Mobile #150.
 5. **Pin de Mobile:** fusionar Mobile #155/#156 para que el pin de main sea alcanzable desde `TDF-mobile/main`.
 
 ## Analytics y privacidad — 5 de octubre, actualización posterior a las 17:00 UTC
