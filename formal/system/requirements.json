@@ -5333,7 +5333,10 @@
       "property": "Validation selected for main and release; configured provider failures cannot be green.",
       "implementation": [
         "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        "datadog-ci.json",
+        "tdf-mobile/datadog-ci.json"
       ],
       "tests": [
         "scripts/__tests__/ci-pipeline.test.mjs"
@@ -6813,10 +6816,30 @@
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
         "tdf-hq-ui/public/mobile-distribution.json",
-        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
+        ".github/workflows/check-mobile-distribution.yml",
+        "scripts/check-mobile-distribution.mjs",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+        "tdf-hq-ui/src/mobile/telemetry.ts",
+        "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
+        "tdf-hq-ui/src/components/SessionMenu.tsx",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
+        "functions/_shared/app-smart-link.mjs",
+        "functions/descargar.js",
+        "functions/download.js",
+        "tdf-hq-ui/src/analytics/growthAttribution.ts",
+        "tdf-hq-ui/src/i18n/index.ts",
+        "tdf-mobile/src/i18n/index.ts"
       ],
       "tests": [
-        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+        "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+        "scripts/__tests__/app-smart-link.test.mjs",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "e2e/web/mobile-program.spec.mjs",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
+        "tdf-mobile/src/notifications/NotificationScreen.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6838,7 +6861,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence. A daily read-only workflow reports a published store channel within 48 hours of its validUntil; it never renews the manifest. Funnel exposure (mobile_landing_viewed), entry surfaces, the /descargar and /download aliases and the shared smart link are covered by component and edge-function tests; receipt of events in PostHog remains a separate production check."
     },
     {
       "id": "OPS-INTEGRATION-001",
@@ -8476,7 +8499,8 @@
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-mobile/app/access-requests/review.tsx"
       ],
       "tests": [
         "scripts/test-artist-self-service.sh",
@@ -9643,6 +9667,164 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
+      }
+    },
+    {
+      "id": "MOB-FEEDBACK-001",
+      "title": "Consented mobile tester feedback with minimized diagnostics",
+      "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
+      "property": "ConsentedSubmission; AllowlistedDiagnostics; CoarseDeviceClass; PromptOptOut",
+      "domain": "MOB",
+      "authority": "Existing shipped client behavior; explicit traceability submitted for independent review in parent PR #542.",
+      "source": "TDF-mobile src/feedback/FeedbackEntry.tsx and metadata.ts; parent integration of Mobile #157 through #158.",
+      "contract": "formal/system/mobile-tester-feedback.md",
+      "actors": [
+        "Authenticated or anonymous tester using the existing feedback endpoint"
+      ],
+      "preconditions": [
+        "Published feedback category and severity resolve",
+        "Consent and nonempty description",
+        "Valid optional image"
+      ],
+      "inputs": [
+        "Feedback text",
+        "Consent toggle",
+        "Technical-details toggle",
+        "Optional attachment",
+        "Version, platform, locale and fixed entry surface",
+        "Coarse phone/tablet/unknown classification"
+      ],
+      "state": {
+        "form": [
+          "closed",
+          "editing",
+          "pending",
+          "succeeded",
+          "failed"
+        ],
+        "prompt": [
+          "eligible",
+          "dismissed",
+          "opted-out"
+        ]
+      },
+      "allowedTransitions": [
+        "Editing to pending only when submission controls admit it",
+        "Successful response to confirmation",
+        "Failed response retains input for retry",
+        "Prompt dismissal and opt-out suppress future prompts"
+      ],
+      "forbiddenTransitions": [
+        "Submitting through the disabled control without consent",
+        "Spreading arbitrary input properties into diagnostic metadata",
+        "Claiming successful submission before the server accepts it"
+      ],
+      "effects": [
+        "Existing feedback request with optional attachment",
+        "Minimized submission analytics after accepted response"
+      ],
+      "implementation": [
+        "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+        "tdf-mobile/src/feedback/metadata.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/TesterParticipation.test.ts",
+        "tdf-mobile/__tests__/TesterFeedback.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing implementation unit/component tests; no bounded model or universal proof claimed.",
+      "evidence": "Parent PR #542 and Mobile PR #158 current-head gate receipts; local full mobile suite 97 suites / 625 tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped client behavior covered by tests; production upload and physical-device qualification remain separate.",
+      "ambiguity": [
+        "No production feedback submission or upload was performed during this audit."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client mappings and regression tests are present; production upload and device release qualification remain external release gates."
+      },
+      "authorization": "Existing API authentication and feedback policy remain authoritative; this client mapping does not grant new backend permissions.",
+      "privacy": "The diagnostic payload uses an explicit field allowlist; device class is phone, tablet or unknown, not a device model. Free-text feedback and an optional screenshot are user supplied and are not claimed to be intrinsically anonymous.",
+      "concurrency": "React Query pending state disables repeated submission; no exactly-once server delivery claim is made.",
+      "idempotency": "Participation counters advance only after the 30-minute session interval; feedback network retries have no new server deduplication guarantee.",
+      "failure": "Failed submission preserves editable state; optional storage errors must not block navigation.",
+      "recovery": "Retry from retained form input; corrupted participation storage falls back to safe defaults.",
+      "observability": "TesterParticipation unit tests cover metadata allowlisting, coarse device class, opt-out, dismissal and corrupted storage; TesterFeedback component tests exercise the form."
+    },
+    {
+      "id": "OPS-INBOUND-CAPTURE-001",
+      "title": "Inbound messages stored by the application reach Operations once",
+      "domain": "OPS",
+      "statement": "A WhatsApp, Instagram or Facebook message that the application stores as a request from a customer produces one Operations domain event in the storing transaction, or is stored without one (with a logged warning) if the event cannot be recorded; outgoing messages, deletion records, rows more than a day old when inserted and repeated deliveries produce none.",
+      "authority": "AUTHORITY-062; Operations control center design of 2026-08-09 (inbound communication becomes a reception work item).",
+      "source": "formal/system/operations-inbound-capture.md",
+      "contract": "formal/system/operations-inbound-capture.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Operations outbox worker",
+        "Reception"
+      ],
+      "preconditions": [
+        "Message stored by the application in whats_app_message, instagram_message or facebook_message"
+      ],
+      "inputs": [
+        "Message direction, sender, provider message id, deletion and creation times"
+      ],
+      "state": {
+        "boundary": "AFTER INSERT triggers on the message tables; operations_domain_event",
+        "authority": "PostgreSQL triggers and the unique provider event index"
+      },
+      "allowedTransitions": [
+        "Inbound request stored -> one communication.<channel>.received event"
+      ],
+      "forbiddenTransitions": [
+        "Inbound request stored with the application's direction -> no event",
+        "Outgoing message, deletion record or history import -> event",
+        "Message delivered again -> second event"
+      ],
+      "effects": [
+        "One domain event and outbox entry per inbound request",
+        "A reception work item per sender and channel once projected"
+      ],
+      "authorization": "No request path; the trigger runs with the storing transaction. Reading the resulting work items follows the existing Operations read policy.",
+      "privacy": "The sender identifier (the telephone number on WhatsApp) is written to append-only event and audit rows that have no erasure path. This is the control center's existing design, exercised in production for the first time by this change.",
+      "concurrency": "The event is recorded in the storing transaction; operations_record_event resolves a duplicate provider event to the existing one.",
+      "idempotency": "Keyed by channel and provider message id; a repeated delivery inserts no row and fires no trigger.",
+      "failure": "If the event cannot be recorded the message is stored without one and a warning naming the message id is logged.",
+      "recovery": "Rollback file restores the previous functions; recorded events stay.",
+      "observability": "operations_domain_event, operations_outbox and the reception work item.",
+      "property": "At most one event per inbound request stored by the application, exactly one unless recording fails, and none for anything else.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+        "scripts/test-operations-inbound-capture.sh",
+        "scripts/lib/operations_conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/InboundCapture.tla",
+        "formal/event-operations/InboundCapture.cfg",
+        "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
+        "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
+        "formal/event-operations/InboundCaptureEveryDelivery.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated triggers, with a run against the rolled-back functions as control.",
+      "evidence": "formal/system/operations-inbound-capture.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Trigger functions, application storage and the conformance fixture read; behaviour run locally against PostgreSQL 16 on 2026-10-11. Not applied to production.",
+      "ambiguity": [
+        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
       }
     }
   ]

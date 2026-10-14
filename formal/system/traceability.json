@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "c93df7ecc7b2aeee8bb3e9d78ddc24cb752c8e48",
+  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -5334,7 +5334,10 @@
       "property": "Validation selected for main and release; configured provider failures cannot be green.",
       "implementation": [
         "tdf-mobile/.github/workflows/mobile-validate.yml",
-        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        ".github/workflows/datadog-synthetics.yml",
+        "datadog-ci.json",
+        "tdf-mobile/datadog-ci.json"
       ],
       "tests": [
         "scripts/__tests__/ci-pipeline.test.mjs"
@@ -6814,10 +6817,30 @@
         "tdf-hq-ui/public/mobile-app/support.html",
         "tdf-hq-ui/public/mobile-app/terms.html",
         "tdf-hq-ui/public/mobile-distribution.json",
-        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
+        ".github/workflows/check-mobile-distribution.yml",
+        "scripts/check-mobile-distribution.mjs",
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+        "tdf-hq-ui/src/mobile/telemetry.ts",
+        "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
+        "tdf-hq-ui/src/components/SessionMenu.tsx",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
+        "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
+        "functions/_shared/app-smart-link.mjs",
+        "functions/descargar.js",
+        "functions/download.js",
+        "tdf-hq-ui/src/analytics/growthAttribution.ts",
+        "tdf-hq-ui/src/i18n/index.ts",
+        "tdf-mobile/src/i18n/index.ts"
       ],
       "tests": [
-        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+        "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+        "scripts/__tests__/app-smart-link.test.mjs",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "e2e/web/mobile-program.spec.mjs",
+        "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
+        "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
+        "tdf-mobile/src/notifications/NotificationScreen.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6839,7 +6862,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence. A daily read-only workflow reports a published store channel within 48 hours of its validUntil; it never renews the manifest. Funnel exposure (mobile_landing_viewed), entry surfaces, the /descargar and /download aliases and the shared smart link are covered by component and edge-function tests; receipt of events in PostHog remains a separate production check."
     },
     {
       "id": "OPS-INTEGRATION-001",
@@ -8477,7 +8500,8 @@
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Profiles/Artist.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-mobile/app/access-requests/review.tsx"
       ],
       "tests": [
         "scripts/test-artist-self-service.sh",
@@ -9645,19 +9669,180 @@
         "classification": "PARTIAL",
         "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
       }
+    },
+    {
+      "id": "MOB-FEEDBACK-001",
+      "title": "Consented mobile tester feedback with minimized diagnostics",
+      "statement": "The mobile tester feedback form enables submission only with consent, nonempty text and published catalog choices. Optional diagnostics use an explicit field allowlist and coarse device class; full device model, tokens and arbitrary input fields are not spread into metadata. Prompt eligibility honors opt-out and dismissal.",
+      "property": "ConsentedSubmission; AllowlistedDiagnostics; CoarseDeviceClass; PromptOptOut",
+      "domain": "MOB",
+      "authority": "Existing shipped client behavior; explicit traceability submitted for independent review in parent PR #542.",
+      "source": "TDF-mobile src/feedback/FeedbackEntry.tsx and metadata.ts; parent integration of Mobile #157 through #158.",
+      "contract": "formal/system/mobile-tester-feedback.md",
+      "actors": [
+        "Authenticated or anonymous tester using the existing feedback endpoint"
+      ],
+      "preconditions": [
+        "Published feedback category and severity resolve",
+        "Consent and nonempty description",
+        "Valid optional image"
+      ],
+      "inputs": [
+        "Feedback text",
+        "Consent toggle",
+        "Technical-details toggle",
+        "Optional attachment",
+        "Version, platform, locale and fixed entry surface",
+        "Coarse phone/tablet/unknown classification"
+      ],
+      "state": {
+        "form": [
+          "closed",
+          "editing",
+          "pending",
+          "succeeded",
+          "failed"
+        ],
+        "prompt": [
+          "eligible",
+          "dismissed",
+          "opted-out"
+        ]
+      },
+      "allowedTransitions": [
+        "Editing to pending only when submission controls admit it",
+        "Successful response to confirmation",
+        "Failed response retains input for retry",
+        "Prompt dismissal and opt-out suppress future prompts"
+      ],
+      "forbiddenTransitions": [
+        "Submitting through the disabled control without consent",
+        "Spreading arbitrary input properties into diagnostic metadata",
+        "Claiming successful submission before the server accepts it"
+      ],
+      "effects": [
+        "Existing feedback request with optional attachment",
+        "Minimized submission analytics after accepted response"
+      ],
+      "implementation": [
+        "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+        "tdf-mobile/src/feedback/metadata.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/TesterParticipation.test.ts",
+        "tdf-mobile/__tests__/TesterFeedback.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing implementation unit/component tests; no bounded model or universal proof claimed.",
+      "evidence": "Parent PR #542 and Mobile PR #158 current-head gate receipts; local full mobile suite 97 suites / 625 tests.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped client behavior covered by tests; production upload and physical-device qualification remain separate.",
+      "ambiguity": [
+        "No production feedback submission or upload was performed during this audit."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Client mappings and regression tests are present; production upload and device release qualification remain external release gates."
+      },
+      "authorization": "Existing API authentication and feedback policy remain authoritative; this client mapping does not grant new backend permissions.",
+      "privacy": "The diagnostic payload uses an explicit field allowlist; device class is phone, tablet or unknown, not a device model. Free-text feedback and an optional screenshot are user supplied and are not claimed to be intrinsically anonymous.",
+      "concurrency": "React Query pending state disables repeated submission; no exactly-once server delivery claim is made.",
+      "idempotency": "Participation counters advance only after the 30-minute session interval; feedback network retries have no new server deduplication guarantee.",
+      "failure": "Failed submission preserves editable state; optional storage errors must not block navigation.",
+      "recovery": "Retry from retained form input; corrupted participation storage falls back to safe defaults.",
+      "observability": "TesterParticipation unit tests cover metadata allowlisting, coarse device class, opt-out, dismissal and corrupted storage; TesterFeedback component tests exercise the form."
+    },
+    {
+      "id": "OPS-INBOUND-CAPTURE-001",
+      "title": "Inbound messages stored by the application reach Operations once",
+      "domain": "OPS",
+      "statement": "A WhatsApp, Instagram or Facebook message that the application stores as a request from a customer produces one Operations domain event in the storing transaction, or is stored without one (with a logged warning) if the event cannot be recorded; outgoing messages, deletion records, rows more than a day old when inserted and repeated deliveries produce none.",
+      "authority": "AUTHORITY-062; Operations control center design of 2026-08-09 (inbound communication becomes a reception work item).",
+      "source": "formal/system/operations-inbound-capture.md",
+      "contract": "formal/system/operations-inbound-capture.md",
+      "actors": [
+        "Meta webhook delivery",
+        "Operations outbox worker",
+        "Reception"
+      ],
+      "preconditions": [
+        "Message stored by the application in whats_app_message, instagram_message or facebook_message"
+      ],
+      "inputs": [
+        "Message direction, sender, provider message id, deletion and creation times"
+      ],
+      "state": {
+        "boundary": "AFTER INSERT triggers on the message tables; operations_domain_event",
+        "authority": "PostgreSQL triggers and the unique provider event index"
+      },
+      "allowedTransitions": [
+        "Inbound request stored -> one communication.<channel>.received event"
+      ],
+      "forbiddenTransitions": [
+        "Inbound request stored with the application's direction -> no event",
+        "Outgoing message, deletion record or history import -> event",
+        "Message delivered again -> second event"
+      ],
+      "effects": [
+        "One domain event and outbox entry per inbound request",
+        "A reception work item per sender and channel once projected"
+      ],
+      "authorization": "No request path; the trigger runs with the storing transaction. Reading the resulting work items follows the existing Operations read policy.",
+      "privacy": "The sender identifier (the telephone number on WhatsApp) is written to append-only event and audit rows that have no erasure path. This is the control center's existing design, exercised in production for the first time by this change.",
+      "concurrency": "The event is recorded in the storing transaction; operations_record_event resolves a duplicate provider event to the existing one.",
+      "idempotency": "Keyed by channel and provider message id; a repeated delivery inserts no row and fires no trigger.",
+      "failure": "If the event cannot be recorded the message is stored without one and a warning naming the message id is logged.",
+      "recovery": "Rollback file restores the previous functions; recorded events stay.",
+      "observability": "operations_domain_event, operations_outbox and the reception work item.",
+      "property": "At most one event per inbound request stored by the application, exactly one unless recording fails, and none for anything else.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+        "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+        "scripts/test-operations-inbound-capture.sh",
+        "scripts/lib/operations_conformance.py",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/InboundCapture.tla",
+        "formal/event-operations/InboundCapture.cfg",
+        "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg",
+        "formal/event-operations/InboundCaptureEveryIncomingRow.cfg",
+        "formal/event-operations/InboundCaptureEveryDelivery.cfg"
+      ],
+      "verification": "Bounded TLC model with three single-guard controls; PostgreSQL test through the application's storage functions against the migrated triggers, with a run against the rolled-back functions as control.",
+      "evidence": "formal/system/operations-inbound-capture.md",
+      "status": "specified and implemented",
+      "historicalStatus": "new",
+      "critical": true,
+      "confidence": "Trigger functions, application storage and the conformance fixture read; behaviour run locally against PostgreSQL 16 on 2026-10-11. Not applied to production.",
+      "ambiguity": [
+        "Whether opt-out and consent-confirmation messages should open a reception item is undecided; they do."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repaired and tested at the database boundary; the migration is not applied in production, and the projection and reception handling were not examined."
+      }
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
+    ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+    ".github/workflows/ci.yml": "a47362a044410adae7ec5f7486714f6169b7e9d3c1e838788e88db7a8fff5ae2",
+    ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1d6a7541058ffc9d6be1591b96bff77036b7e2ae2b84e8364d0f444a5a2e52d3",
+    "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+    "docs/catalog-persistence/catalog-list-decisions.json": "4cc7efb8256892dc5796cdfee30318b8516772ff99598d07f04b9d1536f3189f",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -9669,6 +9854,7 @@
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/marketplace-cart.spec.mjs": "5b00ebfd4d2e2a4bcd3cb5ada9c06e6442c7d5e25fef286792e214e1dff8bdfa",
     "e2e/web/mobile-layout-regressions.spec.mjs": "db3505fa7e16300fac202d80cca9957d8208eb067b8f2c6c53f0e08f547411fc",
+    "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
@@ -9713,6 +9899,11 @@
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/InboundCapture.cfg": "361c77df05021a8ea3514a513f463ce6c81ad624a1e04884ba8a29d808194ff5",
+    "formal/event-operations/InboundCapture.tla": "e6e8fb2c7c16a43ccaf9faecc085e7b173faa53d68043057cb5a1688f9bace0f",
+    "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg": "9f85ed6fcb673fe53ee1787e1495f5f1f9260b2daffd339939a88f414f598020",
+    "formal/event-operations/InboundCaptureEveryDelivery.cfg": "a4db800625e51f436765321bf7b7e1e0523d4ca0e04ef2533533162ed60e3884",
+    "formal/event-operations/InboundCaptureEveryIncomingRow.cfg": "588b8e5d6f34a02521808f5eea85513c49e82337fb31730290cc9f004a71a583",
     "formal/event-operations/InteractionWriteBudget.tla": "45dce5e8395e15ce6af5134d3bdec6b98bc3b703391afd8b16bb9e680d0febcd",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/InvoiceSubmission.cfg": "f3f33e7679d0703bb496917d87741436062391fa411d0a394d89d86dce9e7ce5",
@@ -9808,8 +9999,11 @@
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
+    "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
     "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
+    "functions/descargar.js": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
+    "functions/download.js": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
     "functions/eventos/[eventId].js": "b187d6e72c55ccb34930bac8e64928470ef98def12849c046d4004a14aec2fb8",
     "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
     "functions/eventos/[eventId]/orden/[orderId].js": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
@@ -9828,11 +10022,12 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
+    "package-lock.json": "7f284510c547ce6b68aebcf02bf5be42a1c5f3a4f14c3c60b31690a85b04dd68",
     "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
     "playwright.config.mjs": "a5c8481d89b2dabcb1b8f64766c8ab17a26b00877f8c27a4f06b52f24fc99779",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
+    "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
@@ -9840,7 +10035,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
-    "scripts/__tests__/ci-pipeline.test.mjs": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
+    "scripts/__tests__/ci-pipeline.test.mjs": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -9860,6 +10055,7 @@
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "f6bb3266949645d3e7f8db366503e2d7104bbc2017da86837a9f6a7363246f02",
+    "scripts/__tests__/mobile-distribution-expiry.test.mjs": "df4e0604abc1dabbc377f14f80a2c598c1e4eaf0c638244bfe7e7b88e2d1e521",
     "scripts/__tests__/music-browser-config.test.mjs": "00aa616a3673c26cadde3cfeee232c9f1243df2ab5ac40a3f3139b7dbc536edc",
     "scripts/__tests__/music-browser-probe.test.mjs": "af085008889448379e599f52592114b6697c49e17139b9247f251c374b8b2ffb",
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
@@ -9887,6 +10083,7 @@
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
+    "scripts/check-mobile-distribution.mjs": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
     "scripts/check-state-machines.py": "911037719f679ea0242ec750c0c8a7eab19d54ce3dcc02263369cb5724125d04",
@@ -9918,7 +10115,7 @@
     "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
-    "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+    "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "5e19f18120589e2f92360da492cd5ac4c8c9ff96b2a14d2bc98e908173b7c2fb",
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
@@ -9933,12 +10130,12 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+    "scripts/production-migrations.json": "ee13a6ff16c0b24b99517271ec4ea1ab35aa61f129fb394aced2f34ca1431291",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "c1fcb1781082b346ff89d410062806daa57e01df972b0feaebe1fbeb08e7d625",
+    "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -9986,6 +10183,7 @@
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
+    "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
@@ -10018,7 +10216,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+    "scripts/verify-event-operations-formal.sh": "4211d64c8d15d09e4e0e83df781a434f1a0d675dc4d11af2cc49d9eaf4d86ba1",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10039,7 +10237,7 @@
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
-    "tdf-hq-ui/public/mobile-distribution.json": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
+    "tdf-hq-ui/public/mobile-distribution.json": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/src/App.tsx": "49dfb8767693c5919a3285d186a04c9e6ea06b4bd6adb58ee13e1cc0a806521a",
@@ -10050,6 +10248,8 @@
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "e3ec6f05fb498eaf16d186eb895f9df556e2eb955ff9abcd59a6c788f0cd3147",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "b0a09f258dbaf3070c2daa75cf5ef5c51fe884a56c7d0bed1ecf1a6961add5c8",
     "tdf-hq-ui/src/analytics/errorReporting.ts": "9b0ab8f89cb0ab815cdaf58c41a5ca0c95788534dc913b5d8623d2d8e51d918d",
+    "tdf-hq-ui/src/analytics/growthAttribution.test.ts": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
+    "tdf-hq-ui/src/analytics/growthAttribution.ts": "3eae34e72a50e70261d8ff2880f1ec43dfcaeef5f963013f480f1a72a7c09789",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
     "tdf-hq-ui/src/analytics/ticketFunnel.test.ts": "ca9c5a75a44c760c705555f424bccb37cf6c33090315360ba9089271caa68854",
     "tdf-hq-ui/src/analytics/ticketFunnel.ts": "f1cc18363c574670cae4aba3a78e3e4f4016d8e1695fd0a6afa59c7c309679c0",
@@ -10091,8 +10291,8 @@
     "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "45cdbe0adead908a76b5c0e57df5796fb4ece7a5e1903a5b62bcf040714a8cc9",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "46a846737d313b2f4bd7c308340463839e23cc7871a95d81ccd927d7b61798fd",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "faeabb8165d6d82466ee1ad48553bff51f7da9f199b86fb34ae6f8c96ec6be80",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "8ca26bdf9324376d67357d0bf94a32411d6099d02ec12a3c0d215b4067ddfd98",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
@@ -10100,6 +10300,7 @@
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
     "tdf-hq-ui/src/components/RefundManagementPanel.tsx": "ae4f42e9e999d918a31d70ebcdeace988f375846c1017ada73bcd54f8faac0f3",
     "tdf-hq-ui/src/components/RoutedRadioWidget.tsx": "b1960bdb5e3aa9063bbb8cc84805617760da09e96a5bce7d4182f9ecb5c34ef5",
+    "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "268ba22376715b857adf4fc69ed1cd31297d1a0363bd9ee89d68141f68adb3af",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "52245be2a87128343f4ad81495f8c0b14fab63f1189ddea09ffd8759156bf8ed",
@@ -10133,6 +10334,7 @@
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c8b657565b9202a541c334401dccee0fd2c0a3799b2033ca6ed57234d9c4c16f",
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "889ba68fa797185116dc3ebd3ed98b2e71d4bc2308e554c1e24ab3959d510b40",
     "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
+    "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "ea01103678a76fead8cdedfd47de04db5dde9944a2e4ed46e77fdb644484a927",
@@ -10143,9 +10345,14 @@
     "tdf-hq-ui/src/i18n/locales/en.ts": "498365b7aa8b9990059bbb5fc14ea259b3754df38a8df187f33e8cc99b2850bb",
     "tdf-hq-ui/src/i18n/locales/es.ts": "39fa2c7f117979998b30743472893389b28ee84132ef32d9af981cecba034194",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
+    "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
+    "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
+    "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts": "4eed0d18de4e5f1299bbda26efe96b5c89a2785c5e587a27da5905ce36637f9b",
     "tdf-hq-ui/src/main.tsx": "9b857c212b2dc05869223845ecd988c7a812e0af0266458bb88f72cad9dc187b",
-    "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
+    "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "a7844e2cb801a09d98e3764f370f044cbebeda40d1157b324d87934f3f096ae4",
+    "tdf-hq-ui/src/mobile/MobilePromoContent.tsx": "b7058064649a89f1ffd122b8efd28e2366ec09262adc3d124126b86699da0fd7",
+    "tdf-hq-ui/src/mobile/telemetry.ts": "e30c3c227420f3219e1d6ac58552f2f8e4a7a6b6121bad6094541ac7ecb8af2a",
     "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx": "6db6ff370e4f3d207168fdd7be610ac28c6e4a6f9f6da7e3930e9154aba2f2e6",
     "tdf-hq-ui/src/pages/AccessRequestsPage.tsx": "e91af15d7cab50fb347441fb220f365c694a43b888624582ff2314667506432c",
     "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "e8128e5d24e1540cfd8e2accbb17d74941f2867957feb3cc8edb6723dab2b541",
@@ -10179,7 +10386,7 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a4fa1f33977e120b61299d94f3b9853e220f25ddc0c854e9329fa288d120f443",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "6b77c1ba4e9236b280e90664ed22590ffa8fef6b2b1e89b2dc224059be44a4ed",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "9318e7575ff0863f7f3db00e8c9c33a15e7613855318d77412edf0fd63fd553c",
-    "tdf-hq-ui/src/pages/MobileAppPage.tsx": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
+    "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "d1a8d54d32d126980d8cac0180b6e4c03ef7f216ff74dca4084ddc6056ea8e2e",
     "tdf-hq-ui/src/pages/MusicLibraryPage.tsx": "329e773ad263a5409e3a38261da4775858977388cbd55a6f9c9838cf4955e332",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
@@ -10197,7 +10404,7 @@
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "e52cf6ae4e3350d57d9814b992df0a87d51243168ca2ba70144739893dee194e",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ec8f78d18e7f7024e5cba20a10d0bf21dee37bb033b8686598e3271a77b7683d",
-    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "ee28605ccf3ae2bf868eff32ea61c40e95a4215d62c0aea8d9500da6a9b864e2",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "92717c83b108441fcb17e04eb052b21d19a98ee85ce3cb2a1bd8794f8a8e97c1",
@@ -10259,7 +10466,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "f59014eea5f86ced7ad2f5514de5910e1e8a16c00cab3163522e5c264c251c18",
+    "tdf-hq/assets/feature-registry.json": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
     "tdf-hq/docs/openapi/api.yaml": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
     "tdf-hq/docs/openapi/directory.yaml": "03a54c333f2212d5d2d26423a0bb8e9c931c9b956cce281e01080dc06ddf950e",
@@ -10334,6 +10541,8 @@
     "tdf-hq/sql/2026-10-07_whatsapp_consent_confirmation_rollback.sql": "f834100495c992b749f5ead09605208c7a123f2935708f74f9ce1f9744ba4adf",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql": "bafc9d13e6a40650082e07b89dddbbe293713bd6a302dcc53d9ad27e780fa9eb",
     "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql": "be18726df45a30041e753ae1bc6bc40431bf0529ab2f3279d6dd027dac7353bb",
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
@@ -10442,12 +10651,12 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
+    "tdf-hq/tdf-hq.cabal": "d6b48b8e83938c3067501501dff4138ed31eaf658a24e816c770c1add97d4c69",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
+    "tdf-hq/test/Spec.hs": "1dab20fb258ca864deb64b2a4f5e00f53ccd520fa01ad06ccf486af70d406f79",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10476,6 +10685,7 @@
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
+    "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
@@ -10511,12 +10721,12 @@
     "tdf-hq/test/sql/music_playback_identity.sql": "25803e5f8fc869220771b168a80530ed4aaa34f2aa023d6fd78c369d27f0f17d",
     "tdf-hq/test/sql/music_resource_graph_validation.sql": "87506fe49731e3eacddf2814a6bec9515fec89c67811ce43568207703a746af9",
     "tdf-mobile/.github/workflows/android-release-build.yml": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
-    "tdf-mobile/.github/workflows/datadog-synthetics.yml": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
+    "tdf-mobile/.github/workflows/datadog-synthetics.yml": "76b3d379a25c9cffadfbe142a91b3a2e55fe54f6163b6547b8a8017ba341ff94",
     "tdf-mobile/.github/workflows/ios-release-build.yml": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
     "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
-    "tdf-mobile/__tests__/AuthScreen.test.tsx": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": "0bc7ae18ad4c63a898e62093c546eff91ae4c145425f308fd6672653715ea51d",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
     "tdf-mobile/__tests__/DirectoryManage.test.tsx": "64c623e02b43a402d4f9cfc961a0660a20468d280550b944b6419f9afd93d82e",
@@ -10528,6 +10738,8 @@
     "tdf-mobile/__tests__/LegalDisclosure.test.tsx": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
     "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
     "tdf-mobile/__tests__/SocialScreen.test.tsx": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
+    "tdf-mobile/__tests__/TesterFeedback.test.tsx": "6fc954f56f719da54adcc2e884cc6709939abfd53d3f10c7a8a3b10fbf31f131",
+    "tdf-mobile/__tests__/TesterParticipation.test.ts": "9563727c9da1716712235258df7baa5632be26909887496eaf7cefe8b28ce027",
     "tdf-mobile/__tests__/TicketCheckout.test.tsx": "eaf60203acf718ae2b4760cadb773cf96f0d4ac0864c349a842c97b340467ddf",
     "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
     "tdf-mobile/__tests__/apiClient.test.ts": "8054d64aa2c394f51a77be5398b54218f3fbb53dcb4741371a2a824f3aa40472",
@@ -10538,17 +10750,18 @@
     "tdf-mobile/__tests__/featureRegistry.test.ts": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
     "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
-    "tdf-mobile/__tests__/onboardingIntent.test.ts": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
+    "tdf-mobile/__tests__/onboardingIntent.test.ts": "f3bd1ea4dac3045c16eda4be404807a7bcdbcd5266efa31225baa8aac3e4c1f2",
     "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
     "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
     "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
-    "tdf-mobile/app.config.ts": "aa01e4d6dfd39732bd36a40b6682a015511a681a43021e65958c435a6c5dcd32",
-    "tdf-mobile/app.json": "e7020da3f40eb4cdaf11c78fe3a1fa9401a8837b08b28b38785746dd385ebfa1",
+    "tdf-mobile/app.config.ts": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
+    "tdf-mobile/app.json": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
     "tdf-mobile/app/(tabs)/directory.tsx": "caa7f7e870394a214e7ddc4fd88b10c3ac7982bf956c54a9a47b58d55ee1a933",
     "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
-    "tdf-mobile/app/auth.tsx": "f166e2c50d982f4bcc7ce7ac82dc49332f198fb6a4526204235f20c94f224193",
+    "tdf-mobile/app/access-requests/review.tsx": "2070fa548014b0cca20890c9e54ba557aeb3b64d1bd441b131d3a53931acc406",
+    "tdf-mobile/app/auth.tsx": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
@@ -10557,7 +10770,8 @@
     "tdf-mobile/app/reputation/consents.tsx": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
-    "tdf-mobile/package-lock.json": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
+    "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+    "tdf-mobile/package-lock.json": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
     "tdf-mobile/package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
     "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
@@ -10578,13 +10792,16 @@
     "tdf-mobile/src/components/LegalDisclosure.tsx": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
-    "tdf-mobile/src/features/featureRegistry.ts": "7cb8d8b0d9fae44aa43582dbe29561d915400c4fe8f90bba06c9a50af0d0127c",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
+    "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "002a26af650ad454a8d20027c18cbb1299ce4e78d94815a810221890908d7d1a",
+    "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
+    "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
+    "tdf-mobile/src/i18n/index.ts": "42437bc42384674d3611d372c648f7d4ff220659c15f364ed58339b725411952",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
-    "tdf-mobile/src/lib/eventSharing.test.ts": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
-    "tdf-mobile/src/lib/eventSharing.ts": "ff227899b2c3e35a886b9055bb12dc3d430d2694b6d48026d2228569ae7b697e",
+    "tdf-mobile/src/lib/eventSharing.test.ts": "24ee454071d2e4cb8191a20270e3ba52bd1f6ef8a4a9f7b981361d77e20236ac",
+    "tdf-mobile/src/lib/eventSharing.ts": "d002b76e84002b3b7c6e61169b7441e82157f7b24afb507aa45993606c4eb577",
     "tdf-mobile/src/lib/firstValueCompletion.ts": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
@@ -10594,6 +10811,7 @@
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
     "tdf-mobile/src/navigation/notificationTarget.ts": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
@@ -10728,6 +10946,10 @@
       },
       {
         "requirement": "MSG-META-REDELIVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "tests"
       }
     ],
@@ -11720,6 +11942,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "implementation"
       }
     ],
@@ -14095,6 +14321,10 @@
       {
         "requirement": "OPS-AUX-WRITE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/operations-api-schema.test.mjs": [
@@ -14220,6 +14450,24 @@
       },
       {
         "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/datadog-synthetics.yml": [
+      {
+        "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      }
+    ],
+    "datadog-ci.json": [
+      {
+        "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/datadog-ci.json": [
+      {
+        "requirement": "SYS-CI-001",
         "relationship": "implementation"
       }
     ],
@@ -15111,13 +15359,137 @@
         "relationship": "implementation"
       }
     ],
+    ".github/workflows/check-mobile-distribution.yml": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/check-mobile-distribution.mjs": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": [
       {
         "requirement": "MOB-PUBLIC-001",
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/mobile/telemetry.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/mobile/MobilePromoContent.tsx": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/SessionMenu.tsx": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/_shared/app-smart-link.mjs": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/descargar.js": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/download.js": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/analytics/growthAttribution.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/index.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/i18n/index.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/mobile/MobileApp.test.tsx": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/mobile-distribution-expiry.test.mjs": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/app-smart-link.test.mjs": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/mobile-program.spec.mjs": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/analytics/growthAttribution.test.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": [
       {
         "requirement": "MOB-PUBLIC-001",
         "relationship": "tests"
@@ -17043,6 +17415,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-mobile/app/access-requests/review.tsx": [
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-artist-self-service.sh": [
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
@@ -17501,12 +17879,6 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": [
-      {
-        "requirement": "EVT-DISCOVERY-001",
-        "relationship": "tests"
-      }
-    ],
     "tdf-hq-ui/src/routes/AppShell.test.tsx": [
       {
         "requirement": "EVT-DISCOVERY-001",
@@ -17894,6 +18266,84 @@
         "requirement": "MSG-META-REDELIVERY-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-mobile/src/feedback/FeedbackEntry.tsx": [
+      {
+        "requirement": "MOB-FEEDBACK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/feedback/metadata.ts": [
+      {
+        "requirement": "MOB-FEEDBACK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/TesterParticipation.test.ts": [
+      {
+        "requirement": "MOB-FEEDBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/TesterFeedback.test.tsx": [
+      {
+        "requirement": "MOB-FEEDBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-operations-inbound-capture.sh": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/InboundCapture.tla": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCapture.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCaptureApplicationDirectionRefused.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCaptureEveryIncomingRow.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/InboundCaptureEveryDelivery.cfg": [
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -17941,6 +18391,18 @@
       ]
     },
     {
+      "id": "SURFACE-0ad43ac6597144d2",
+      "path": ".github/workflows/check-mobile-distribution.yml",
+      "sha256": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-87abe6b969342c3c",
       "path": ".github/workflows/ci-safe-install.yml",
       "sha256": "ece2be17e5f353890f78bb06c10d649a5280f6c0dbfb7e173083c36ba6c48891",
@@ -17950,7 +18412,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
+      "sha256": "a47362a044410adae7ec5f7486714f6169b7e9d3c1e838788e88db7a8fff5ae2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17978,9 +18440,14 @@
     {
       "id": "SURFACE-ab96c3ab21cf19fc",
       "path": ".github/workflows/datadog-synthetics.yml",
-      "sha256": "5b7e4cf9d6d027848d5c0c3d8bddd300e73f64b729de8741223de7a9a3e80c3e",
+      "sha256": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cdbc3458d7b8029f",
@@ -18285,9 +18752,14 @@
     {
       "id": "SURFACE-8b406122e72d741c",
       "path": "e2e/web/mobile-program.spec.mjs",
-      "sha256": "b611bd52c2811657f11373e7f7638875aea1d9e831919ab6fa9e0062d8e7541b",
+      "sha256": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f83f10f144df17c0",
@@ -18435,6 +18907,18 @@
       ]
     },
     {
+      "id": "SURFACE-f964a85d63c23100",
+      "path": "functions/_shared/app-smart-link.mjs",
+      "sha256": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
       "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
@@ -18458,6 +18942,30 @@
       "requirements": [
         {
           "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-56440f78e6a65791",
+      "path": "functions/descargar.js",
+      "sha256": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7a036f931e865b20",
+      "path": "functions/download.js",
+      "sha256": "30b8a78e97f7a164b9804c11e2cc48e2c1c543bfe3a233a6a10bd8316ec7fdb5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
           "relationship": "implementation"
         }
       ]
@@ -18706,7 +19214,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
+      "sha256": "7f284510c547ce6b68aebcf02bf5be42a1c5f3a4f14c3c60b31690a85b04dd68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18733,6 +19241,18 @@
       "sha256": "8d4093ababdaf2a64240cfdb643d31b3968af96eb054352dc16f7e8344a52c19",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-906172e6c3d5a4ef",
+      "path": "scripts/__tests__/app-smart-link.test.mjs",
+      "sha256": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-039bc8d278e3dafc",
@@ -18843,7 +19363,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
+      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19298,6 +19818,18 @@
       "requirements": [
         {
           "requirement": "SYS-VERIFY-004",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-80d1ebf94eae3fbb",
+      "path": "scripts/__tests__/mobile-distribution-expiry.test.mjs",
+      "sha256": "df4e0604abc1dabbc377f14f80a2c598c1e4eaf0c638244bfe7e7b88e2d1e521",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
           "relationship": "tests"
         }
       ]
@@ -19878,6 +20410,18 @@
       "sha256": "f2505fab497e7f96880d22952a6863595548f6e1f6b08725cc5243708f2cec75",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-7cf4797085be81ca",
+      "path": "scripts/check-mobile-distribution.mjs",
+      "sha256": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-04e9e43c20bee09d",
@@ -20571,7 +21115,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
+      "sha256": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20600,6 +21144,10 @@
         },
         {
           "requirement": "OPS-AUX-WRITE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
           "relationship": "tests"
         }
       ]
@@ -20901,7 +21449,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6300999409604912dcacc2a9c09f9371ab60e97ba21617c69d7e3ab88b7ce70e",
+      "sha256": "ee13a6ff16c0b24b99517271ec4ea1ab35aa61f129fb394aced2f34ca1431291",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20922,6 +21470,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
           "relationship": "implementation"
         }
       ]
@@ -21012,7 +21564,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c1fcb1781082b346ff89d410062806daa57e01df972b0feaebe1fbeb08e7d625",
+      "sha256": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22527,6 +23079,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-605ec09d958d0931",
+      "path": "scripts/test-operations-inbound-capture.sh",
+      "sha256": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9649a5eac5beddfa",
       "path": "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "sha256": "1ebaa8ac0f615de08870302dbfbad60a62a98b88eb5c999be03fcf7c7018eef0",
@@ -23135,7 +23699,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
+      "sha256": "4211d64c8d15d09e4e0e83df781a434f1a0d675dc4d11af2cc49d9eaf4d86ba1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23212,6 +23776,10 @@
         },
         {
           "requirement": "MSG-META-REDELIVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
           "relationship": "tests"
         }
       ]
@@ -23521,7 +24089,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "236e2ca29094ce4a592d8b140075762b173dcc9a1211c2589e546b094b84ae53",
+      "sha256": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23744,16 +24312,26 @@
     {
       "id": "SURFACE-c5154d27c146520e",
       "path": "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
-      "sha256": "70a1323759455c593a2873dd7e70e1c127dacf288ba02d6ac2ee7c4c0b2c0d8c",
+      "sha256": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c2453e0acd284799",
       "path": "tdf-hq-ui/src/analytics/growthAttribution.ts",
-      "sha256": "30d68adfb4dea8353f9212f28f9766ed6e2ff181a1d0be4bd2e6f6664732700e",
+      "sha256": "3eae34e72a50e70261d8ff2880f1ec43dfcaeef5f963013f480f1a72a7c09789",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-056e006eae5d1a35",
@@ -25252,9 +25830,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "b97b6e4d87509304eeba07791465f397ec5196ed704b7985e192018ac3ecac31",
+      "sha256": "45cdbe0adead908a76b5c0e57df5796fb4ece7a5e1903a5b62bcf040714a8cc9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "EVT-DISCOVERY-001",
           "relationship": "tests"
@@ -25264,7 +25846,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "6c877974d6c0017c641084f402cfb8394d44a290cad71165f843d58338ac6a8c",
+      "sha256": "46a846737d313b2f4bd7c308340463839e23cc7871a95d81ccd927d7b61798fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25432,9 +26014,14 @@
     {
       "id": "SURFACE-5db1e9afd0ec5152",
       "path": "tdf-hq-ui/src/components/SessionMenu.tsx",
-      "sha256": "879936d6024a7bbda6db096306b7fb28ba983a47f775a1696c20cae3d5ebf7b8",
+      "sha256": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-52ded61d23ac18e9",
@@ -26611,9 +27198,14 @@
     {
       "id": "SURFACE-4349420430226168",
       "path": "tdf-hq-ui/src/i18n/index.ts",
-      "sha256": "290ee93c32ea51d1ff32e0231c21ab0709194e3b8e5d8a8425b49527b0b91f30",
+      "sha256": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c97910a5593293cd",
@@ -26778,16 +27370,26 @@
     {
       "id": "SURFACE-81e227132420f964",
       "path": "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
-      "sha256": "eb1403d40d570e350724286b3285d733c241172b8e3d0508be9c50b7c1729203",
+      "sha256": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7ffb652987ca6eb6",
       "path": "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
-      "sha256": "6a96bfd68919e74d4af52c8c3474715fe3760bc3bcbc9affaae78d863b4683f7",
+      "sha256": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-eb51f33c8df76f33",
@@ -26807,6 +27409,18 @@
       "sha256": "083abe78acc8a43c0b5dd48c64ceb365656b492a1d838b724bfb0b55f82d0d4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-2036de947313ac6e",
+      "path": "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts",
+      "sha256": "4eed0d18de4e5f1299bbda26efe96b5c89a2785c5e587a27da5905ce36637f9b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f2804d98461b2053",
@@ -26834,7 +27448,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "b98ef97ea79e6d3fb7ed4be859cc4ecc14d3b4850c745d6420c83c220f333a4b",
+      "sha256": "a7844e2cb801a09d98e3764f370f044cbebeda40d1157b324d87934f3f096ae4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26862,7 +27476,12 @@
       "path": "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
       "sha256": "b7058064649a89f1ffd122b8efd28e2366ec09262adc3d124126b86699da0fd7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-819b0e4031c018fe",
@@ -26888,9 +27507,14 @@
     {
       "id": "SURFACE-171c838f0fbd4380",
       "path": "tdf-hq-ui/src/mobile/telemetry.ts",
-      "sha256": "eff710d079d99c2e3e01297e4a1ebf50f4e259b2d7e2521c28fe8c5f6f86dd3d",
+      "sha256": "e30c3c227420f3219e1d6ac58552f2f8e4a7a6b6121bad6094541ac7ecb8af2a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5345e2df51ab5d67",
@@ -28120,7 +28744,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "eb6e185a4385f70b3ff6f72a2118feb10d7bc3a775a4df8f8d0d84c983eaed44",
+      "sha256": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28636,7 +29260,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "2f8b3f597521b9f4006731614af799a79e4151d3a7bd5f7ade611b9e20d254d2",
+      "sha256": "839aadb02473f36fa6650e13c588852d5bf41fae3524f6675b8a3fe509e39cb5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30353,7 +30977,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f59014eea5f86ced7ad2f5514de5910e1e8a16c00cab3163522e5c264c251c18",
+      "sha256": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33704,6 +34328,30 @@
       ]
     },
     {
+      "id": "SURFACE-672fc61c890788b0",
+      "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
+      "sha256": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1f2645f2629f4bbe",
+      "path": "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+      "sha256": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -36371,7 +37019,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
+      "sha256": "d6b48b8e83938c3067501501dff4138ed31eaf658a24e816c770c1add97d4c69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36485,7 +37133,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
+      "sha256": "1dab20fb258ca864deb64b2a4f5e00f53ccd520fa01ad06ccf486af70d406f79",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36994,6 +37642,18 @@
       "requirements": [
         {
           "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-eba437673d8ebcc8",
+      "path": "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs",
+      "sha256": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INBOUND-CAPTURE-001",
           "relationship": "tests"
         }
       ]
@@ -38047,7 +38707,7 @@
     {
       "id": "SURFACE-9000b422122afb98",
       "path": "tdf-mobile/.github/workflows/datadog-synthetics.yml",
-      "sha256": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
+      "sha256": "76b3d379a25c9cffadfbe142a91b3a2e55fe54f6163b6547b8a8017ba341ff94",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38157,7 +38817,7 @@
     {
       "id": "SURFACE-889f3ed698a5ec59",
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
-      "sha256": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
+      "sha256": "0bc7ae18ad4c63a898e62093c546eff91ae4c145425f308fd6672653715ea51d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38408,14 +39068,24 @@
       "path": "tdf-mobile/__tests__/TesterFeedback.test.tsx",
       "sha256": "6fc954f56f719da54adcc2e884cc6709939abfd53d3f10c7a8a3b10fbf31f131",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-FEEDBACK-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1ff38e07e27723ce",
       "path": "tdf-mobile/__tests__/TesterParticipation.test.ts",
-      "sha256": "d76bb123b45264ab57cc748f7532d9253563c6bce05dc2706509bf345ed0303b",
+      "sha256": "9563727c9da1716712235258df7baa5632be26909887496eaf7cefe8b28ce027",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-FEEDBACK-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4420ef07b349f29e",
@@ -38677,7 +39347,7 @@
     {
       "id": "SURFACE-7f1e3ac93d0c65d1",
       "path": "tdf-mobile/__tests__/onboardingIntent.test.ts",
-      "sha256": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
+      "sha256": "f3bd1ea4dac3045c16eda4be404807a7bcdbcd5266efa31225baa8aac3e4c1f2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38823,7 +39493,7 @@
     {
       "id": "SURFACE-c20fbacb648be9fa",
       "path": "tdf-mobile/app.config.ts",
-      "sha256": "aa01e4d6dfd39732bd36a40b6682a015511a681a43021e65958c435a6c5dcd32",
+      "sha256": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38835,7 +39505,7 @@
     {
       "id": "SURFACE-be1f54efcc2cd549",
       "path": "tdf-mobile/app.json",
-      "sha256": "e7020da3f40eb4cdaf11c78fe3a1fa9401a8837b08b28b38785746dd385ebfa1",
+      "sha256": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39000,9 +39670,14 @@
     {
       "id": "SURFACE-9ce6509ddd0f8106",
       "path": "tdf-mobile/app/access-requests/review.tsx",
-      "sha256": "396d9f55d2fc1d5b70529d4179908c8665738b8c2b4a56f1b92c3fc08ca3641c",
+      "sha256": "2070fa548014b0cca20890c9e54ba557aeb3b64d1bd441b131d3a53931acc406",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0107bafb8b438004",
@@ -39014,7 +39689,7 @@
     {
       "id": "SURFACE-4a53be70534cf501",
       "path": "tdf-mobile/app/auth.tsx",
-      "sha256": "f166e2c50d982f4bcc7ce7ac82dc49332f198fb6a4526204235f20c94f224193",
+      "sha256": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39316,6 +39991,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-0a1f4f807e673401",
+      "path": "tdf-mobile/datadog-ci.json",
+      "sha256": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-46bcfff4cdc403f3",
       "path": "tdf-mobile/docs/evidence/native-tabs-text-2026-09-18/after-geometry.json",
       "sha256": "352b4cb9cec705094c77e43dfcc561b296c7e119aa6ec16d0e093edf0dbd3522",
@@ -39493,7 +40180,7 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
+      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40258,7 +40945,7 @@
     {
       "id": "SURFACE-cccb94b8666e62c2",
       "path": "tdf-mobile/src/features/featureRegistry.ts",
-      "sha256": "7cb8d8b0d9fae44aa43582dbe29561d915400c4fe8f90bba06c9a50af0d0127c",
+      "sha256": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40270,7 +40957,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
+      "sha256": "002a26af650ad454a8d20027c18cbb1299ce4e78d94815a810221890908d7d1a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40338,16 +41025,26 @@
     {
       "id": "SURFACE-9c21dce16740790a",
       "path": "tdf-mobile/src/feedback/FeedbackEntry.tsx",
-      "sha256": "9b9581995690c81064dc08976556875d9531fb3b94c63c45c64ed7975ed81dd9",
+      "sha256": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-FEEDBACK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a5dc5289b135b90e",
       "path": "tdf-mobile/src/feedback/metadata.ts",
-      "sha256": "250f051907c2bda528bc260ce935f2ba0088b9016efbd46bbd2be7ba683787dd",
+      "sha256": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-FEEDBACK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ac457e7680793333",
@@ -40399,9 +41096,14 @@
     {
       "id": "SURFACE-e7f8e8448c62347e",
       "path": "tdf-mobile/src/i18n/index.ts",
-      "sha256": "f31c14525ae2f33ec103e45731ace45924eef74f1f087f479e69513bc97d8862",
+      "sha256": "42437bc42384674d3611d372c648f7d4ff220659c15f364ed58339b725411952",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a24ed6b998974bde",
@@ -40486,7 +41188,7 @@
     {
       "id": "SURFACE-e62dc791fa833b13",
       "path": "tdf-mobile/src/lib/eventSharing.test.ts",
-      "sha256": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
+      "sha256": "24ee454071d2e4cb8191a20270e3ba52bd1f6ef8a4a9f7b981361d77e20236ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40498,7 +41200,7 @@
     {
       "id": "SURFACE-cc97bf1990866365",
       "path": "tdf-mobile/src/lib/eventSharing.ts",
-      "sha256": "ff227899b2c3e35a886b9055bb12dc3d430d2694b6d48026d2228569ae7b697e",
+      "sha256": "d002b76e84002b3b7c6e61169b7441e82157f7b24afb507aa45993606c4eb577",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40849,9 +41551,14 @@
     {
       "id": "SURFACE-c524a39784b123fa",
       "path": "tdf-mobile/src/notifications/NotificationScreen.test.tsx",
-      "sha256": "49060534d9edf59799ef3b9d49b9a81c182df9177c0d11e4cec3410baeb1e68c",
+      "sha256": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee36105f35b640d9",
@@ -41105,7 +41812,6 @@
   "unmappedSurfaces": [
     "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-87abe6b969342c3c",
-    "SURFACE-ab96c3ab21cf19fc",
     "SURFACE-f9eb7b8efd30e406",
     "SURFACE-bd2372888f0d24a0",
     "SURFACE-fe7afb5c9c916e52",
@@ -41122,7 +41828,6 @@
     "SURFACE-f40804c1455f8bad",
     "SURFACE-acbdfac127b57e53",
     "SURFACE-d8799e5a0806f908",
-    "SURFACE-8b406122e72d741c",
     "SURFACE-1650513d8810b7f7",
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-bb80adee648c0293",
@@ -41403,8 +42108,6 @@
     "SURFACE-5869f030ade79029",
     "SURFACE-df437d6ae3884110",
     "SURFACE-27c2e340baf13c46",
-    "SURFACE-c5154d27c146520e",
-    "SURFACE-c2453e0acd284799",
     "SURFACE-056e006eae5d1a35",
     "SURFACE-72586bea3daa1f56",
     "SURFACE-ddd5bddf37a22b13",
@@ -41551,7 +42254,6 @@
     "SURFACE-a3ba5100eb601c90",
     "SURFACE-e24458b8f868963c",
     "SURFACE-dbd54bd3d14b1e80",
-    "SURFACE-5db1e9afd0ec5152",
     "SURFACE-52ded61d23ac18e9",
     "SURFACE-74bc7741839fadce",
     "SURFACE-3abf257651875b52",
@@ -41660,18 +42362,13 @@
     "SURFACE-b335212ef0158e9e",
     "SURFACE-51294f78fb44c49b",
     "SURFACE-23c5b7dd2d415a8c",
-    "SURFACE-4349420430226168",
-    "SURFACE-81e227132420f964",
-    "SURFACE-7ffb652987ca6eb6",
     "SURFACE-b354b9104200a96e",
     "SURFACE-f2804d98461b2053",
     "SURFACE-7bc3d01f19102b0f",
     "SURFACE-c466dd3a2779a06d",
-    "SURFACE-2df2e567dfc3a0a8",
     "SURFACE-819b0e4031c018fe",
     "SURFACE-b23f9529e000034e",
     "SURFACE-eacf10bd53df9292",
-    "SURFACE-171c838f0fbd4380",
     "SURFACE-5345e2df51ab5d67",
     "SURFACE-4af2046447a4d6be",
     "SURFACE-df60ccafb0de58cc",
@@ -42561,8 +43258,6 @@
     "SURFACE-fa6406a2607ba343",
     "SURFACE-64794cece32266e3",
     "SURFACE-67b7cdf4c5bfce1b",
-    "SURFACE-55f3d615ea7ca850",
-    "SURFACE-1ff38e07e27723ce",
     "SURFACE-4420ef07b349f29e",
     "SURFACE-8487f846bf4e8547",
     "SURFACE-8bd34e14602ba906",
@@ -42611,7 +43306,6 @@
     "SURFACE-ddc8c70a4c052271",
     "SURFACE-caef19a70be4f0f3",
     "SURFACE-7e2df9aff623862f",
-    "SURFACE-9ce6509ddd0f8106",
     "SURFACE-0107bafb8b438004",
     "SURFACE-9a1951f254de5d2b",
     "SURFACE-ec8ee7e5c6d5faf9",
@@ -42745,14 +43439,11 @@
     "SURFACE-499f915882243564",
     "SURFACE-f7d9103ac417db69",
     "SURFACE-44f9049b317d873e",
-    "SURFACE-9c21dce16740790a",
-    "SURFACE-a5dc5289b135b90e",
     "SURFACE-ac457e7680793333",
     "SURFACE-ae8457615b62fb27",
     "SURFACE-20f0809095655bce",
     "SURFACE-d15aa021ceb88208",
     "SURFACE-cdc665d26aa25ed8",
-    "SURFACE-e7f8e8448c62347e",
     "SURFACE-a24ed6b998974bde",
     "SURFACE-cf527443eb0b7210",
     "SURFACE-f944f2bcb4ffa17d",
@@ -42794,7 +43485,6 @@
     "SURFACE-861d18c6230228f5",
     "SURFACE-8610f72192678eb2",
     "SURFACE-96659afab4076863",
-    "SURFACE-c524a39784b123fa",
     "SURFACE-ee36105f35b640d9",
     "SURFACE-6dbac57013a27dfa",
     "SURFACE-71335eb9891aad95",
@@ -43994,7 +44684,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "83b7c45b65fedad692affcf0ab30e206fb315db77735875ac4277433860094db",
+      "sourceSha256": "cb88aadb7743144551b1b13be78584ece98b1b7e51d11cb561cf4174503eae01",
       "definition": {
         "states": [
           "absent",
@@ -66191,7 +66881,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 119,
+    "PARTIAL": 121,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

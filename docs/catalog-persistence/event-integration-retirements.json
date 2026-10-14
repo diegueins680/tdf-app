@@ -84,7 +84,7 @@
         "kind": "array",
         "name": "PUBLIC_NAV_ITEMS"
       },
-      "replacementId": "7804604c0af849751309",
+      "replacementId": "8ea9381b405e317f5e7f",
       "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence."
     },
     {
@@ -125,7 +125,7 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "66c48cc059727856b6f1",
+      "replacementId": "49d1c72ba174118670bf",
       "reason": "The 161-entry canonical generated registry retains the 159 reviewed definitions, preserves the existing admin.video-sources destination, and adds authenticated account.deletion discovery. This navigation metadata grants no permission or erasure authority. The deletion endpoint requires the matching authenticated account and a current-session transaction lock; the destination cannot be pinned, favorited or added to recents.",
       "previousReplacementId": "21babc54d68f0c44d55e",
       "currentResolution": {
@@ -656,7 +656,7 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "155c8ba51c7e002c10d0",
+      "replacementId": "5f2e374ddc077e6b8418",
       "reason": "Ordered 184-entry manifest preserves both parent migration sequences, every introduction commit and SQL byte: canonical 181 entries, invoice receipt snapshot, per-ticket refund allocation, then immutable refund request binding. Current combined rehearsal and production deployment remain independently gated; no migration is represented as applied.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
