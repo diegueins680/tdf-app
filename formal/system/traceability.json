@@ -9913,6 +9913,7 @@
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/records-thumbnails.spec.mjs",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "playwright.discovery.config.mjs",
         "tdf-hq-ui/src/api/directory.test.ts"
       ],
@@ -10928,6 +10929,7 @@
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
     "tdf-mobile/src/navigation/notificationTarget.ts": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
     "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
@@ -18616,6 +18618,12 @@
       }
     ],
     "e2e/web/records-thumbnails.spec.mjs": [
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": [
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
@@ -41988,7 +41996,12 @@
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
       "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DISCOVERY-NAV-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1d9d50d0957c7af7",
@@ -43956,7 +43969,6 @@
     "SURFACE-67d021717b413c4f",
     "SURFACE-e4d65d8b68003724",
     "SURFACE-ab2f22b78d9a1a9a",
-    "SURFACE-335f0e863443a35b",
     "SURFACE-1d9d50d0957c7af7",
     "SURFACE-861d18c6230228f5",
     "SURFACE-8610f72192678eb2",
@@ -45160,7 +45172,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0f514256ef103a798e93285925b0baae434e6052569a193788dc30f8c044a79d",
+      "sourceSha256": "1102fed1adc40fed214cbcf7f83422a3565a74dc144584966ee65f7420bca4e2",
       "definition": {
         "states": [
           "absent",
