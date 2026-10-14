@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "57e6c3f9612b5dbd0bc8a55b80b9c9a79a880677",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2612,7 +2612,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "dcc8fd888e29895195ea80467254927fb636200641f60dc6f063b841ae22fd00",
+      "sha256": "d2912b254a213356119165e325385d5b7bc91bf84cc20f873e3af53682796609",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2708,7 +2708,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
+      "sha256": "d167e740483bd29e2233ab8ae8fcd0c32c728dc6b7e9b48ff3caef694517b7c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2738,7 +2738,7 @@
     {
       "id": "SURFACE-6826ca2044602fd9",
       "path": "e2e/web/directory-entry.spec.mjs",
-      "sha256": "22d2c72a1b093462e41288a381be69708ec1a0758d5b287344eac98d0bb65f6e",
+      "sha256": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2840,7 +2840,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "48fe60d98e00d221022e7d1411e3c487037c7587deb17521b0fdc63dee71a27e",
+      "sha256": "afaaabc5ab1c3a0fd039e08d715a5ea3a4505c6e7c9931b80269e68e7de490a9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2852,7 +2852,7 @@
     {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
-      "sha256": "a4549ed31025ebf036f3a35981ca5606d66c1a6d4d4ae765308d5821ea7b54be",
+      "sha256": "7c12eb6765eca895b76294b067073a37eea95ab9a009657bb077dec75d16dbaa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16844,7 +16844,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "b0c02b20921d7a0ef3bf15f4f62a2f15bc772d1ac223ccca784b971a106eb911",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17588,7 +17588,7 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "b9a8dc89fb624e2f30f371ff4fe8a2213e2358cdb2f3aacd119071aa00dd8153",
+      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17600,7 +17600,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+      "sha256": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18666,7 +18666,7 @@
     },
     {
       "path": "docs/discovery/community-search-navigation.md",
-      "sha256": "410ceab43fb3bf4eda367cb64a86155e49178e37aa112d7432f5d781d1219729",
+      "sha256": "c27fec4ef08782d3eff6036216c14c64632782413a05ab8f9e055b3c07c821cd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
