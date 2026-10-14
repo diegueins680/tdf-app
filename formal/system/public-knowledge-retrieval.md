@@ -92,10 +92,11 @@ with no effect on this index; they do not authorize private-source indexing.
 A successful nonempty refresh replaces the entire derived index transactionally.
 An empty corpus clears it without a provider request. Provider refusal or response
 count mismatch leaves the previous index intact; insertion failure rolls back the
-delete and propagates an error. `runSqlPool` owns this transaction: the previous
-explicit pre-delete `transactionSave` caused deletion to survive a failed insert
-and was removed after the PostgreSQL regression reproduced that defect.
-Schema/model validation still precedes refresh.
+delete and propagates an error. `runSqlPool` owns commit and rollback; redundant
+manual transaction control is removed. The original transaction pattern also
+preserves rows: an initial temporary-table fixture falsely suggested otherwise
+because pool reconnection discarded its tables. Schema/model validation still
+precedes refresh.
 Historical private chunks can therefore remain until a successful refresh, but
 PRIV-RAG-001 excludes them from retrieval throughout. Source records, backups and
 provider-held historical inputs are outside this replacement operation. Query
@@ -105,8 +106,9 @@ embedding and other assistant payloads are separate privacy boundaries.
 production `refreshRagIndex` always supplies the existing `embedTexts` adapter.
 `RagIndexPrivacySpec` captures the actual payload and checks course-only persisted
 rows, empty-corpus no-call cleanup, provider refusal, count mismatch and rollback
-after a database CHECK rejects insertion. Temporary tables shadow a fully migrated
-disposable fixture; no provider call or production write is needed. Run
+after a database CHECK rejects insertion. Per-test nonce schemas shadow a fully migrated disposable fixture and retain
+rows across connection replacement; every new connection restores its search path.
+No provider call or production write is needed. Run
 `scripts/test-rag-index-privacy.sh` with `TDF_IDENTITY_HTTP_DATABASE_URL` pointing
 to that fixture. Backend CI executes the runner after migration verification.
 

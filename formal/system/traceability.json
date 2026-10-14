@@ -10564,7 +10564,7 @@
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "54c0d7967d7b21cb032d2c2c58c892a0db8763eb1cf7c2e87925b7b8f1d0f6ed",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "05b7c5e6c0a10138c825fe15140acb60126d0440ef565bea1d37700688950225",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
@@ -37187,7 +37187,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "54c0d7967d7b21cb032d2c2c58c892a0db8763eb1cf7c2e87925b7b8f1d0f6ed",
+      "sha256": "05b7c5e6c0a10138c825fe15140acb60126d0440ef565bea1d37700688950225",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

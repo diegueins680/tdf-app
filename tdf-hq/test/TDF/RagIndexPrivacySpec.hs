@@ -2,13 +2,18 @@
 module TDF.RagIndexPrivacySpec (spec) where
 
 import Control.Exception (bracket)
+import Control.Monad (void)
+import Data.String (fromString)
+import qualified Data.UUID as UUID
+import qualified Data.UUID.V4 as UUID
+import qualified Database.PostgreSQL.Simple as PG
 import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Database.Persist.Postgresql (createPostgresqlPool)
+import Database.Persist.Postgresql (createPostgresqlPoolModified)
 import Database.Persist.Sql (ConnectionPool, rawExecute, rawSql, runSqlPool, Single(..))
 import Database.PostgreSQL.Simple (SqlError, sqlState)
 import System.Environment (lookupEnv)
@@ -117,26 +122,36 @@ safeConnection value = case T.stripPrefix "postgresql://" (T.pack value) of
       && T.all (\c -> (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
                       || (c >= '0' && c <= '9') || c == '_') name
 
--- One connection per test: all application queries resolve these temporary
--- tables, which disappear on pool destruction. No shared fixture rows change.
+-- A nonce schema survives pool connection replacement on SQL errors. Each
+-- connection restores its search_path; no shared fixture rows are changed.
 withFixture :: String -> ActionWith ConnectionPool -> IO ()
-withFixture connection action = bracket
-  (runNoLoggingT (createPostgresqlPool (BS.pack connection) 1))
-  destroyAllResources $ \pool -> do
-    runSqlPool (do
-      rawExecute "CREATE TEMP TABLE course (LIKE public.course INCLUDING DEFAULTS)" []
-      rawExecute "CREATE TEMP TABLE rag_chunk (LIKE public.rag_chunk INCLUDING DEFAULTS)" []
-      rawExecute
-        "CREATE TEMP TABLE studio_brain_entry (LIKE public.studio_brain_entry INCLUDING DEFAULTS)" []
-      rawExecute
-        "INSERT INTO studio_brain_entry(title,body,active) \
-        \VALUES ('PRIVATE_TITLE','PRIVATE_STUDIO_NOTE',true)" []
-      rawExecute
-        "INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) \
-        \VALUES ('studio_brain','legacy',0,'PRIVATE_LEGACY_INDEX','{}', \
-        \('[' || repeat('0,',1535) || '1]')::vector)" []
-      ) pool
-    action pool
+withFixture connection action = do
+  suffix <- T.replace "-" "" . UUID.toText <$> UUID.nextRandom
+  let schema = "rag_index_fixture_" <> T.unpack suffix
+      query = fromString :: String -> PG.Query
+  bracket (PG.connectPostgreSQL (BS.pack connection)) PG.close $ \admin ->
+    bracket
+      (PG.execute_ admin (query ("CREATE SCHEMA " <> schema)))
+      (\_ -> void (PG.execute_ admin (query ("DROP SCHEMA " <> schema <> " CASCADE")))) $
+      \_ -> bracket
+        (runNoLoggingT (createPostgresqlPoolModified
+          (\conn -> void (PG.execute_ conn (query ("SET search_path TO " <> schema <> ", public"))))
+          (BS.pack connection) 1))
+        destroyAllResources $ \pool -> do
+          runSqlPool (do
+            rawExecute "CREATE TABLE course (LIKE public.course INCLUDING DEFAULTS)" []
+            rawExecute "CREATE TABLE rag_chunk (LIKE public.rag_chunk INCLUDING DEFAULTS)" []
+            rawExecute
+              "CREATE TABLE studio_brain_entry (LIKE public.studio_brain_entry INCLUDING DEFAULTS)" []
+            rawExecute
+              "INSERT INTO studio_brain_entry(title,body,active) \
+              \VALUES ('PRIVATE_TITLE','PRIVATE_STUDIO_NOTE',true)" []
+            rawExecute
+              "INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) \
+              \VALUES ('studio_brain','legacy',0,'PRIVATE_LEGACY_INDEX','{}', \
+              \('[' || repeat('0,',1535) || '1]')::vector)" []
+            ) pool
+          action pool
 
 publicCourse :: ConnectionPool -> IO ()
 publicCourse = runSqlPool (rawExecute
