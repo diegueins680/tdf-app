@@ -391,6 +391,10 @@ run_negative_tlc FanHubOnboardingTerminal.cfg fanhub-terminal 'Invariant Termina
 run_tlc AccessCodeValidation.tla AccessCodeValidation.cfg access-code-validation
 run_negative_tlc AccessCodeValidationStale.cfg access-code-stale 'Invariant CurrentCredential is violated' AccessCodeValidation.tla
 run_negative_tlc AccessCodeValidationSuperficial.cfg access-code-superficial 'Invariant VerifiedAccount is violated' AccessCodeValidation.tla
+run_tlc InboundCapture.tla InboundCapture.cfg inbound-capture
+run_negative_tlc InboundCaptureApplicationDirectionRefused.cfg inbound-capture-application-direction-refused 'Invariant RequestsCaptured is violated' InboundCapture.tla
+run_negative_tlc InboundCaptureEveryIncomingRow.cfg inbound-capture-every-incoming-row 'Invariant OnlyRequestsCaptured is violated' InboundCapture.tla
+run_negative_tlc InboundCaptureEveryDelivery.cfg inbound-capture-every-delivery 'Invariant CapturedOnce is violated' InboundCapture.tla
 run_tlc LiveIntakeAuthority.tla LiveIntakeAuthority.cfg live-intake-authority
 run_negative_tlc LiveIntakeAmbient.cfg live-intake-ambient 'Invariant ExplicitAuthority is violated' LiveIntakeAuthority.tla
 run_negative_tlc LiveIntakeStale.cfg live-intake-stale 'Invariant CurrentReceipt is violated' LiveIntakeAuthority.tla

@@ -622,6 +622,7 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.TicketPaymentGateSpec as TicketPaymentGateSpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
+import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
 import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
 import qualified TDF.RagIndexPrivacySpec as RagIndexPrivacySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
@@ -17888,6 +17889,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     WhatsAppConsentSpec.spec

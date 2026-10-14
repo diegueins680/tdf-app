@@ -679,6 +679,18 @@
       "conflict": "The index builder embeds private operational sources while all customer-facing retrieval callers accept only public courses. Existing behavior is not approved product intent.",
       "authority": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material.",
       "resolution": "Remove private source builders; permit only public course fields in refresh embedding payloads. Successful refresh replaces historical derived chunks, including clearing an empty corpus; failures preserve the previous index. Historical provider/backups retention remains explicit separate debt. Delegate replacement commit/rollback to the outer transaction; PostgreSQL tests use persistent isolated schemas so reconnects cannot masquerade as index data loss. The original manual transaction pattern was separately checked and did not lose rows."
+    },
+    {
+      "id": "AUTHORITY-062",
+      "sources": [
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/src/TDF/WhatsApp/History.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "scripts/lib/operations_conformance.py"
+      ],
+      "conflict": "The Operations control center captures inbound communication through triggers that accept only the directions inbound and received, while the application stores every inbound WhatsApp, Instagram and Facebook message with the direction incoming, so no inbound message has produced an Operations event; the conformance test inserted the direction inbound and passed.",
+      "authority": "The control center design governs: inbound communication becomes a reception work item. The direction literal in the triggers was a mismatch with the application, not a decision to exclude it.",
+      "resolution": "A new migration replaces the two trigger functions so that they accept incoming as well, skip deletion records and history imports, and contain a capture failure so the message is still stored; a rollback file restores the previous functions; the conformance test uses the application's direction. No table changes and no retroactive capture. Applying it in production starts opening reception work items for inbound messages, which has never happened there, and writes sender telephone numbers to append-only Operations rows."
     }
   ]
 }
