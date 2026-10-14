@@ -1,4 +1,57 @@
-# Inbound messages reach Operations — OPS-INBOUND-CAPTURE-001
+# Enabled-only inbound Operations capture — OPS-INBOUND-CAPTURE-001
+
+
+## Current authority (2026-10-13)
+
+The user explicitly chose **capture only when Operations is enabled; define
+retention before rollout**. AUTHORITY-OPS-CAPTURE-POLICY-20261013 supersedes the
+unconditional collection assumption in the historical direction repair below.
+The additive `2026-10-13_operations_inbound_capture_policy.sql` requires the default
+Operations organization to be enabled and its default branch active. The guard
+uses the same IDs as `operations_record_event`; missing context denies capture.
+It holds SHARE locks through the message transaction. If disabling commits first,
+a waiting message is stored without capture. If capture is admitted first,
+disabling waits for that transaction to commit. No flag is enabled by migration.
+Messages stored while disabled are not captured retroactively on redelivery.
+
+Provider message storage remains available. Guard/capture errors retain the
+existing contained-failure behavior; this is not exactly-once successful delivery.
+Restoring old unguarded trigger functions is not a supported policy rollback.
+Disable Operations to stop new capture; already recorded events are unchanged.
+
+**Activation is blocked pending retention policy.** Raw sender identifiers still
+enter append-only event/audit records when capture is enabled. No retention period,
+erasure/anonymization mechanism, exception or backup expiry is approved here.
+The canonical release preparation returns a machine-readable policy blocker;
+production capture cannot be activated merely because the guard merged. A rollout
+that keeps capture disabled must verify the disabled flag and installed guard
+under the deployment writer fence. Normal inbox storage has its separate policy.
+
+### Current checks and model boundary
+
+`OperationsInboundCaptureSpec` explicitly enables only the synthetic fixture for
+existing capture cases, restores the prior state, and tests disabled storage on
+all three providers plus no capture on redelivery after re-enabling. The HTTP/PG
+fixture witnesses six blocked inserts (three channels × organization/branch
+switch), then verifies no capture after disabling commits. Its reverse-order
+case proves disablement waits for an already admitted message to commit.
+
+`InboundCapture.tla` now includes a toggling enablement state and ghost admission
+at first insertion. Two message IDs, four message kinds, three deliveries and a
+boolean switch give 372 distinct states in the development run. Organization and
+branch authority are abstracted together as that switch. Capture and its held-lock
+transaction are atomic in the model. Capture failures, worker projection,
+retention, arbitrary SQL refinement, process crashes and unknown numbers of actors
+are excluded. There is no fairness or liveness claim. The new disabled-guard
+mutation violates `CaptureRespectsEnablement`; the three existing direction,
+non-request and replay controls still fail their named properties. Exact candidate
+receipts must supersede development counts before delivery.
+
+## Historical direction-repair rationale and effects
+
+The following description records why migration 2026-10-11 was introduced. Its
+unconditional wording and old three-control results are historical provenance;
+the enabled-only rule above governs the current specification.
 
 The Operations control center turns an inbound WhatsApp, Instagram or Facebook
 message into a domain event (`communication.<channel>.received`) through a trigger
@@ -7,7 +60,7 @@ per sender and channel ("message needs a response", priority high).
 
 ## Rule
 
-- A message the application stores as a request from a customer produces one
+- Subject to current enabled-only admission, a message stored as a request produces one
   Operations event, in the transaction that stores it.
 - Storing the message comes first: if the event cannot be recorded, the message is
   stored without one and PostgreSQL logs a warning naming the message id.

@@ -383,6 +383,7 @@ run_tlc AccessCodeValidation.tla AccessCodeValidation.cfg access-code-validation
 run_negative_tlc AccessCodeValidationStale.cfg access-code-stale 'Invariant CurrentCredential is violated' AccessCodeValidation.tla
 run_negative_tlc AccessCodeValidationSuperficial.cfg access-code-superficial 'Invariant VerifiedAccount is violated' AccessCodeValidation.tla
 run_tlc InboundCapture.tla InboundCapture.cfg inbound-capture
+run_negative_tlc InboundCaptureDisabled.cfg inbound-capture-disabled 'Invariant CaptureRespectsEnablement is violated' InboundCapture.tla
 run_negative_tlc InboundCaptureApplicationDirectionRefused.cfg inbound-capture-application-direction-refused 'Invariant RequestsCaptured is violated' InboundCapture.tla
 run_negative_tlc InboundCaptureEveryIncomingRow.cfg inbound-capture-every-incoming-row 'Invariant OnlyRequestsCaptured is violated' InboundCapture.tla
 run_negative_tlc InboundCaptureEveryDelivery.cfg inbound-capture-every-delivery 'Invariant CapturedOnce is violated' InboundCapture.tla
