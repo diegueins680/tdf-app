@@ -66,6 +66,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
   declared lifecycle states and SQL transitions checked against the migrated schema (SYS-STATE-001).
 - [public-route-admission.md](public-route-admission.md) and [public-routes.json](public-routes.json):
   reviewed boundary for every unauthenticated compiled route (AUTH-PUBLIC-001).
+- [operations-inbound-capture.md](operations-inbound-capture.md): inbound messages stored by the application reach Operations once; trigger direction repair, bounded model, three negative controls and PostgreSQL tests.
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
 - [dependency-security.md](dependency-security.md): known-version regression floors, scan evidence and unresolved runtime/build-tool exposure.
