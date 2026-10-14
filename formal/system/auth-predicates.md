@@ -126,3 +126,9 @@ release-artifact correspondence remain UNPROVEN. Continuous checks rerun every
 obligation on PRs, main and the weekly formal workflow; failed proof jobs block
 normal quality progression. Full requirement statuses and release blockers are
 unchanged: **BLOCKED**, with no accepted unproven critical risk.
+
+Reviewed main integration `f7068f813d85cba5d1435f9545dfd78b947d3050` adds
+`TDF.OperationsInboundCaptureSpec` to the Cabal test module list. That is the only
+change to a pinned input; authorization source, dependencies and compiler
+selection are unchanged. The manifest pin is refreshed after inspecting that
+diff, and all predicate/lemma/control obligations must run again.

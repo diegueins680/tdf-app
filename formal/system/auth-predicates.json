@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6"
+    "tdf-hq/tdf-hq.cabal": "d6b48b8e83938c3067501501dff4138ed31eaf658a24e816c770c1add97d4c69"
   },
   "obligations": [
     {
