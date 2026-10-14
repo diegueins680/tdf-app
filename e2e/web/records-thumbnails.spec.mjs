@@ -45,6 +45,7 @@ async function fixture(page, baseURL, verified) {
 test('Records handles failed images and decoded placeholders with bounded requests @critical', async ({ page, baseURL }) => {
   const requests = await fixture(page, baseURL, false);
   await page.goto('/records#releases');
+  await expect(page.getByRole('heading', { name: 'Videos recientes', exact: true })).toBeVisible();
   // Hand off initial anchor restoration to the visitor before exploring previews.
   await page.keyboard.press('Tab');
   // WebKit defers offscreen lazy images: exercise compact previews before cards.

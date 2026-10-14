@@ -14728,13 +14728,13 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "9de842d0529aa06faf6b",
+      "id": "4beaac5c476079656a0a",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+      "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
@@ -14756,7 +14756,8 @@
           "line": 15
         },
         "reviewBatch": "universal-interactions-2026-09-28"
-      }
+      },
+      "previousFingerprint": "9de842d0529aa06faf6b"
     },
     {
       "id": "108f31d1bc07c62d8551",

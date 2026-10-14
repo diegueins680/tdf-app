@@ -112,16 +112,17 @@ separate device evidence; viewport emulation does not establish those outcomes.
 
 ## Delivery evidence and remaining release gates
 
-| Requirement | Previous limitation / cause | Implementation and primary files | Evidence |
-|---|---|---|---|
-| Community search | Legacy feed catalog had no prominent query control | `CommunityDiscovery.tsx`, `useDirectorySearch.ts`, `FanHubPage.tsx` | Jest debounce/cancellation, URL filters, canonical links, error recovery; PostgreSQL matching cases |
-| Global artist search | Published directory documents omitted unmapped legacy artists; implicit city hid results | `Server/Directory.hs`, `DirectorySearchPage.tsx`, API/OpenAPI types | Real SQL ranking, privacy, band/project, pagination and facet assertions; component tests |
-| Search state preservation | Local state and unconditional URL replacement could lose history intent | Shared query cache, URL query/filter state; integrated main's URL-driven global search | Component regressions and browser discovery/history scenario |
-| New-route scroll reset | Public document and protected persistent main used different scroll roots | `NavigationScrollRestoration.tsx`, `AppShell.tsx`, `App.tsx` | Browser assertions for both scrolling roots |
-| Browser history restoration | No centralized per-entry restoration; async layout/native anchoring could override position | Bounded history-key positions, rendering observers and restoration handoff on user input | Back/Forward, refresh and async-container browser scenarios; final matrix status recorded in PR |
-| Deep-link navigation | Mount effects and generic scroll resets competed with intended anchors | Fragment precedence, late-target observers, `navigation.css` scroll margins | Delayed fragment target and 16px offset assertions |
-| Mobile/responsive compatibility | Search entry hidden in mobile menu; no narrow discovery layout | Public/header search affordances and responsive MUI cards/filters | Chromium desktop/Pixel 7/834px tablet/360px Android and iPhone 13 WebKit configurations; no physical-device claim |
-| Accessibility | Missing search landmark/status and discoverable keyboard entry | Named search form, labels, live status, retry/clear controls, bounded image geometry | Scoped axe serious/critical checks plus component/browser interactions; not a whole-site WCAG certification |
+| Requirement | Root cause / previous limitation | Implementation | Files changed | Tests | Verification |
+|---|---|---|---|---|---|
+| Community search | Legacy feed lacked prominent query controls | Debounced server search, filters, pagination and recoverable states | `CommunityDiscovery.tsx`, `useDirectorySearch.ts`, `FanHubPage.tsx` | Jest cancellation, URL filters, links, errors; PostgreSQL matching | Implemented; automatically tested locally; not production verified |
+| Global artist search | Directory documents omitted unmapped legacy artists; implicit city hid results | Shared public projection, artist category, canonical links, explicit city choice | `Server/Directory.hs`, `API/Directory.hs`, `DirectorySearchPage.tsx`, generated clients/OpenAPI | SQL ranking/privacy/band/project/pagination/facets; 26 Global Search tests | Implemented; automatically tested locally; not production verified |
+| Search state preservation | Local state and URL replacement could lose history intent | URL query/filter state and retained query pages | `useDirectorySearch.ts`, `CommunityDiscovery.tsx`, `DirectorySearchPage.tsx` | Component and browser discovery/history scenarios | Implemented; automatically tested locally |
+| New-route scroll reset | Public document and persistent AppShell main use different scroll roots | Central router policy with explicit container selection | `NavigationScrollRestoration.tsx`, `AppShell.tsx`, `App.tsx` | Browser assertions for both scroll roots | Implemented; automatically tested locally |
+| Browser history restoration | No per-entry restoration; async layout can override positions | Bounded history-key positions and rendering observers with user handoff | `NavigationScrollRestoration.tsx`, `RouteLoadingFallback.tsx` | Back/Forward, refresh and async-container scenarios | Implemented; automatically tested locally |
+| Deep-link navigation | Mount effects competed with intended anchors | Fragment precedence, late-target observation and measured header offsets | `NavigationScrollRestoration.tsx`, `navigation.css`, `PublicBranding.tsx` | Late anchors, sticky offsets, Records user-handoff regression | Implemented; automatically tested locally |
+| Mobile/responsive compatibility | Mobile search entry was hidden; no narrow discovery layout | Visible search affordances and responsive cards/filters | `PublicBranding.tsx`, `TopBar.tsx`, `CommunityDiscovery.tsx` | Desktop, Pixel 7, 834px tablet, 360px Android, iPhone WebKit; Firefox integration | Browser-emulated automation; physical devices/PWA installation unverified |
+| Accessibility | Missing search landmark, labels and result status | Named form, live status, keyboard controls, clear/retry and reserved image geometry | `CommunityDiscovery.tsx`, navigation controls, `navigation.css` | Scoped discovery axe and selected whole-page browser axe assertions | Automatically tested locally; no whole-site WCAG or unrelated form-focus certification |
+
 
 Local evidence includes actual migrated PostgreSQL query tests and a targeted
 Stack/GHC compile of the directory module. Generated API conformance and 61
@@ -168,6 +169,28 @@ https://github.com/diegueins680/TDF-mobile/pull/161. Its 97 suites / 625 tests a
 `release:check` passed locally. Expo started and returned `packager-status:running`
 on the isolated local port; it was stopped after validation. This is not a
 native-device, installed-PWA or store-release claim.
+
+The subsequent main integration preserves all 203 current-main migrations and
+appends the unchanged community index migration, for 204 entries. Mobile main's
+chat-thread notification destination is also retained; its six affected tests
+pass. Its routing allowlist successor is explicitly reviewed in the catalog
+decisions instead of silently dropping a new main feature.
+
+Broader browser integration initially passed 477 cases, skipped 22 and failed
+six. Three failures assumed an implicit Quito filter; the test now explicitly
+selects Quito and retains the URL/history assertions. Login destination and
+open-redirect rejection use separate fresh browser contexts. Storage-denial
+tests wait for the mocked suggestion response before reload. Records waits for
+the route to mount before handing anchor restoration to simulated user input.
+With clean locked dependencies, the affected rerun passed 32 of 33 cases; the
+remaining Records fixture then passed all five browser configurations after the
+mount-readiness correction. Assertions were retained, including whole-page axe
+checks, exact profile destinations, image fallback counts and request bounds.
+Borrowed dependency symlinks produced an invalid local theme/contrast run; that
+environment was replaced with a clean `npm ci` installation before this evidence.
+The dedicated discovery/navigation matrix was then rebuilt with those locked
+dependencies and passed all 20 cases across desktop, tablet, Pixel 7, 360px
+Android and iPhone WebKit configurations.
 
 Deployment also has an independent infrastructure blocker: `ops/hetzner/README.md`
 states that the guarded routine release executor remains unfinished. The retired
