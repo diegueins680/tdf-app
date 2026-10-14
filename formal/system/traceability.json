@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "f38561288398cf8aceb4df6eabe34871bc1a031e",
+  "mobileRevision": "53d252725b0b2ab6ec3033fd7c70953d0aeaa908",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {

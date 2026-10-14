@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "f38561288398cf8aceb4df6eabe34871bc1a031e",
+  "mobileRevision": "53d252725b0b2ab6ec3033fd7c70953d0aeaa908",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
