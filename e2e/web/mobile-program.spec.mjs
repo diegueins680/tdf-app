@@ -45,6 +45,10 @@ for (const width of [390, 834, 1280]) {
     await page.getByRole('button',{name:'Enviar',exact:true}).click();
     await expect(page.getByRole('status')).toContainText('Tu comentario fue recibido');
     expect(submissions.length).toBe(2);
+    // Smart link: the copy control is for everyone; the QR only for visitors on a desktop user agent.
+    await expect(page.getByRole('button',{name:'Copiar enlace',exact:true})).toBeVisible();
+    const desktop = await page.evaluate(()=>!/android|iphone|ipad|ipod/i.test(navigator.userAgent) && !(navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1));
+    await expect(page.getByRole('img',{name:'Código QR que abre tdfrecords.net/app'})).toHaveCount(desktop ? 1 : 0);
     await page.getByRole('button',{name:'English',exact:true}).click();
     await expect(page.getByRole('link',{name:'Try the beta on TestFlight'})).toBeVisible();
     await page.addScriptTag({content:axe.source});
