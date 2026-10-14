@@ -11,6 +11,8 @@ second message, including the recipient's reply. The Persistent declaration
 
 Inspected production API: `7ab344400d0878838b9b12742ca4cc5cd7f38f94`.
 Implementation base: `aa7b70d10aee0057e8db9472a6b41e97ed765006`.
+Integration refresh: `caaae454169b467d84031bea5262cea569e8bbab`; the mobile
+notification change also incorporates mobile main `1d6b439` after PR #158 merged.
 No production message bodies, addresses, credentials or account IDs are retained
 in this report. No production data or configuration was changed.
 
@@ -100,6 +102,12 @@ interaction-only predicate must fail the moderation visibility assertion.
 
 Production rollout is pending review, required checks and the established Hetzner
 recovery procedure. Deploy the web target resolver before enabling the migration.
+The current operations runbook still records the guarded release executor as an
+open obligation and retires direct `production-release.mjs` execution. Neither
+passing CI nor merging this PR authorizes an ad hoc production SQL change.
+Preserve commit ancestry when merging: the manifest's `introducedBy` references
+the implementation commit. A squash requires a reviewed provenance repair before
+release preparation; do not waive the ancestry check.
 Keep the additive schema and minimized notices when reverting the application;
 never restore the single-message UNIQUE constraint after conversations have replies.
 If the producer must be paused, disable only `chat_message_recipient_notification`
