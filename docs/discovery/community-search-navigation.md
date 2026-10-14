@@ -149,7 +149,27 @@ production tables still require the existing deployment rehearsal and lock revie
 
 Hosted CI initially rejected two stale catalog successor references; both now
 point to the 203-entry migration manifest and all six provenance tests pass
-locally. The external Datadog production-web test checks the legacy
+locally. An earlier external Datadog production-web test checked the legacy
 `tdf-app.pages.dev/` URL and received HTTP301 while expecting HTTP200. Its API
-health check passed. This external failure is not hidden or reclassified as a
-success for this PR.
+health check passed. After integrating main, Datadog, the PostgreSQL foundation,
+social persistence, UI quality, migration and production-migration checks passed
+at `a34d7a2bb25e90b13ce1ea82d0e699eab5542443`.
+
+That hosted run identified three integration corrections: keep persona and
+discovery browser artifacts as separate uploads; synchronize the mobile generated
+client with the optional search fields; and register `profileKind` in the compiled
+API declaration snapshot. The snapshot was compared with the retained artifact
+from the actual CI binary: its only difference was the new optional query
+parameter. Local CI-pipeline tests (28) and compiled-surface tests (12) pass.
+Fresh hosted checks are required for the resulting commit.
+
+The generated native client update is tracked in companion PR
+https://github.com/diegueins680/TDF-mobile/pull/161. Its 97 suites / 625 tests and
+`release:check` passed locally. Expo started and returned `packager-status:running`
+on the isolated local port; it was stopped after validation. This is not a
+native-device, installed-PWA or store-release claim.
+
+Deployment also has an independent infrastructure blocker: `ops/hetzner/README.md`
+states that the guarded routine release executor remains unfinished. The retired
+`scripts/production-release.mjs` rejects before provider or database actions.
+Preparing artifacts is not deployment; this task does not bypass that boundary.
