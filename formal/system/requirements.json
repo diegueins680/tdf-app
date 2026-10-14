@@ -3035,7 +3035,7 @@
         "Only current public course documents reach the calling assistant adapter."
       ],
       "authorization": "The assistant requires authentication and Social Inbox access (AUTHORITY-049); customer-facing adapters have no studio booking authority; a prompt instruction is not access control.",
-      "privacy": "Private historical index contents stay excluded even before reindexing. Index retention and embedding-provider sharing remain separate obligations.",
+      "privacy": "Private historical index contents stay excluded even before reindexing. PRIV-RAG-002 prohibits private material in future refresh payloads; historical provider retention remains a separate obligation.",
       "concurrency": "Ranking and per-course metadata reads share one transaction but separate statement snapshots under the modeled Read Committed assumption. A deletion committed after metadata read may precede delivery; no delivery-time linearization is claimed.",
       "idempotency": "Repeated reads of unchanged current metadata return eligible public content; ranking ties are not promised stable.",
       "failure": "Missing course rows and unsupported source kinds yield no eligible document. Existing database/provider failures retain adapter error handling.",
@@ -3054,8 +3054,8 @@
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Embedding-provider sharing, internal retention and curated conversation examples need separate privacy reconciliation.",
-        "Channel-specific provider delivery is not exercised by the anonymous HTTP fixture."
+        "Historical embedding-provider retention and curated conversation examples need separate privacy reconciliation.",
+        "Channel-specific provider delivery is not exercised by the staff-authenticated HTTP fixture."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3470,7 +3470,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7401,7 +7401,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7501,7 +7501,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7513,7 +7513,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9108,7 +9108,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -9646,6 +9646,87 @@
         "classification": "PARTIAL",
         "reason": "Storage repaired and tested; no signed HTTP or backfill-route test, and the reply worker was not changed."
       }
+    },
+    {
+      "id": "PRIV-RAG-002",
+      "title": "Public-course-only index refresh",
+      "statement": "RAG index refreshes shall send only public course document fields for embedding, atomically replace the derived index on success (including an empty corpus without a provider call), and preserve the previous index on provider or persistence failure.",
+      "domain": "PRIV",
+      "actors": [
+        "Authorized RAG administrator",
+        "Automated index refresh worker",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "The configured embedding model and database vector dimensions agree.",
+        "Course fields exposed by the public course contract are approved public material."
+      ],
+      "inputs": [
+        "Up to 50 course rows ordered by updated_at descending",
+        "Chunk size and overlap",
+        "Embedding adapter results"
+      ],
+      "state": {
+        "fields": [
+          "Captured public course documents",
+          "Provider payload",
+          "Derived rag_chunk rows",
+          "Refresh outcome"
+        ],
+        "initial": "The historical index may include private sources."
+      },
+      "allowedTransitions": [
+        "Collect public course fields, chunk and embed them.",
+        "Replace all derived index rows after a complete successful embedding response.",
+        "Clear the index without embedding when the captured corpus is empty.",
+        "Reject a failed refresh while retaining the previous index."
+      ],
+      "forbiddenTransitions": [
+        "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
+        "Report an empty refresh as successful while retaining old chunks.",
+        "Commit index deletion if replacement insertion fails."
+      ],
+      "effects": [
+        "Successful refresh removes historical private chunks from the active derived index.",
+        "Source entities are not deleted; external provider records and backups are not erased by reindexing."
+      ],
+      "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
+      "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
+      "concurrency": "One refresh captures a database read snapshot before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata.",
+      "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
+      "failure": "Model/schema mismatch and provider/count errors return Left; SQL errors propagate after transaction rollback. No success may be reported for an insertion failure.",
+      "recovery": "Retry a failed refresh. Historical private chunks remain excluded by PRIV-RAG-001 until a successful public-only refresh replaces them. No provider-side erasure guarantee is inferred.",
+      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome.",
+      "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
+      "implementation": [
+        "tdf-hq/src/TDF/RagStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/test-rag-index-privacy.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [
+        "formal/event-operations/PublicKnowledgeIndex.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Historical external provider retention/erasure requires separate evidence.",
+        "Concurrent refresh ordering and index freshness are not serialized by this change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation, bounded model and PostgreSQL regression checks are mapped; exact candidate and deployed verification remain required. Historical provider retention is outside the refresh boundary."
+      },
+      "critical": true,
+      "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
+      "property": "NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex, EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
+      "contract": "formal/system/public-knowledge-retrieval.md",
+      "verification": "Pinned TLC positive model and three named negative controls; synthetic PostgreSQL adapter-payload and transactional rollback tests, with no remote embedding calls.",
+      "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     }
   ]
 }

@@ -4,8 +4,8 @@ Customer-facing retrieval ranks course identities from the index and renders the
 current course fields. An index entry does not authorize use of its stored text.
 Historical private chunks can remain in the index; retrieval must exclude them,
 including a private-source entry whose identifier matches a public course slug.
-Index retention and disclosure to an embedding provider remain separate open
-obligations. This contract does not approve either practice.
+Future refreshes follow PRIV-RAG-002 below. Historical provider retention remains
+a separate open obligation; reindexing does not establish provider-side erasure.
 
 ## Implementation and executable checks
 
@@ -76,3 +76,57 @@ fingerprints. A passing model is bounded specification evidence; the HTTP fixtur
 is implementation evidence. Neither establishes production delivery or a complete
 refinement proof. Requirement status remains PARTIAL until the separate delivery,
 provider-sharing and retention obligations have evidence.
+
+## Public-only refresh — PRIV-RAG-002
+
+The user explicitly approved “Public courses only; stop indexing private material”
+on 2026-10-13 (AUTHORITY-RAG-PUBLIC-INDEX-20261013). That decision supersedes the
+old multi-source index builder. `buildPublicCourseDocuments` selects up to 50
+courses ordered by latest update. `courseToDoc` uses the existing public course
+fields; its dedicated document type and chunk constructor cannot select arbitrary
+private source kinds. Private booking titles, availability, campaigns, ads,
+services, rooms, resources and studio notes are no longer collected for embedding.
+The retained `RAG_AVAILABILITY_*` configuration fields are compatibility inputs
+with no effect on this index; they do not authorize private-source indexing.
+
+A successful nonempty refresh replaces the entire derived index transactionally.
+An empty corpus clears it without a provider request. Provider refusal or response
+count mismatch leaves the previous index intact; insertion failure rolls back the
+delete and propagates an error. `runSqlPool` owns this transaction: the previous
+explicit pre-delete `transactionSave` caused deletion to survive a failed insert
+and was removed after the PostgreSQL regression reproduced that defect.
+Schema/model validation still precedes refresh.
+Historical private chunks can therefore remain until a successful refresh, but
+PRIV-RAG-001 excludes them from retrieval throughout. Source records, backups and
+provider-held historical inputs are outside this replacement operation. Query
+embedding and other assistant payloads are separate privacy boundaries.
+
+`refreshRagIndexWith` exposes an embedding-adapter seam used by PostgreSQL tests;
+production `refreshRagIndex` always supplies the existing `embedTexts` adapter.
+`RagIndexPrivacySpec` captures the actual payload and checks course-only persisted
+rows, empty-corpus no-call cleanup, provider refusal, count mismatch and rollback
+after a database CHECK rejects insertion. Temporary tables shadow a fully migrated
+disposable fixture; no provider call or production write is needed. Run
+`scripts/test-rag-index-privacy.sh` with `TDF_IDENTITY_HTTP_DATABASE_URL` pointing
+to that fixture. Backend CI executes the runner after migration verification.
+
+### Refresh model and limits
+
+`PublicKnowledgeIndex.tla` models one refresh, zero or one captured public course,
+two private document classes and an initially mixed historical index. `Collect`,
+`Empty`, `Embed`, `Publish` and `Reject` represent collection, external disclosure,
+atomic publication and failure. Provider failure, malformed response and database
+rollback are abstracted by `Reject`. The model assumes atomic database replacement
+and an immutable captured corpus; it does not prove arbitrary Haskell/SQL refinement,
+field sanitization, provider retention, multi-refresh serialization, query privacy,
+crash recovery or delivery freshness. Public field classification is an explicit
+contract assumption. There is no fairness or liveness claim; stalled refreshes are
+allowed. Concurrent refreshes may publish older captured public data; retrieval
+continues to render current metadata under PRIV-RAG-001.
+
+The pinned runner checks `TypeOK`, `NoPrivateEmbedding`, `SuccessfulReplacement`,
+`FailedRefreshPreservesIndex` and `EmptySkipsProvider`. Three controlled mutations
+must fail by named invariant: private source collection (`NoPrivateEmbedding`),
+empty-corpus retention (`SuccessfulReplacement`) and destructive failure handling
+(`FailedRefreshPreservesIndex`). These are bounded model checks, supported by the
+separate PostgreSQL implementation tests, not a universal correctness proof.

@@ -488,6 +488,7 @@
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
       "scripts/test-public-routes.py",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
+      "scripts/test-rag-index-privacy.sh",
       "scripts/test-records-ingestion-runtime.sh",
       "scripts/test-records-youtube-catalog-migration.sh",
       "scripts/test-recovery-envelope.py",
@@ -2067,6 +2068,7 @@
       "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
       "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
       "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
+      "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
       "tdf-hq/test/TDF/ReadinessSpec.hs",
       "tdf-hq/test/TDF/Server/EventRelationsSpec.hs",
       "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
@@ -2590,7 +2592,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
+      "sha256": "a58bed683920f3d9754434dce3b4d39eebbce10ade635714fe3e6bfc98c10317",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5366,6 +5368,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a8d484816fb5b599",
+      "path": "scripts/test-rag-index-privacy.sh",
+      "sha256": "d7086eccde1db152d9a6b0df4d7f9c806157aed92f654b489d4e677fcfb00ce9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-29ef09e19740f877",
       "path": "scripts/test-records-ingestion-runtime.sh",
       "sha256": "19ba37a916971435d17dd5be82ba65bdfd12e0afcc15cfa0ed71db8fd82d95fd",
@@ -5602,7 +5610,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "baeba0cf3df3692e549fcae3f43aa6e74072ed655bac22356309d032220e7acb",
+      "sha256": "3a6c3561a3523ba3c92245c0bd95ff636ec721ec89c83139cb816f68b0d181c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13954,7 +13962,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
+      "sha256": "22aaeab74842969825b30b92b8084331226291c1fdc47288e1e4c9c05b743523",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14476,7 +14484,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "78127889e4f003b3b115b08cb3ce5ce63cafe235c9e6fc0866ce5877cc2a27f6",
+      "sha256": "7eae6dc74b0510f82113af2321609ade600fa528b8769ae583a2ec23319d76a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14542,7 +14550,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e52a126e5c6d2996a01083afcac2f61bf8c4f8ba45427209fe15a807137f96be",
+      "sha256": "5fff5e80d323c03f90f3b607fc14e6227007ca79aaaa6c420bbd758c792e112a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14801,6 +14809,12 @@
       "id": "SURFACE-2c52ef8d86b87df6",
       "path": "tdf-hq/test/TDF/ProviderIdentitySpec.hs",
       "sha256": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7a8c25536f4eeac3",
+      "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
+      "sha256": "54c0d7967d7b21cb032d2c2c58c892a0db8763eb1cf7c2e87925b7b8f1d0f6ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22774,6 +22788,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/PublicKnowledgeIndex.cfg",
+      "sha256": "67217d6a219577da0591c6c9c6bbb074553dfbbb3ce1744f2416831b1a8437cd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeIndex.tla",
+      "sha256": "586fa456fe002f9a286b0f541363808d9848478eb57b94c8237f693df23ad68f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeIndexEmpty.cfg",
+      "sha256": "a17ec72b73453fc199651ce83306eddbd900b9f2cffa82629125d4cd3d6cc9ff",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeIndexFailure.cfg",
+      "sha256": "01dcd33bef6d36cfff2ea450a12a6de259687e5d3d5d683306985409a8c48323",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PublicKnowledgeIndexPrivate.cfg",
+      "sha256": "c019bea1590b49b4401510fff89522bd613c68d3b4a686f743308c34b5d123c9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/PublicKnowledgeRead.cfg",
       "sha256": "5f4c43cd22e06836c95df4ee1870716346f08069dec380e5bafe73bb20cb9a9a",
       "authority": "inferred",
@@ -24357,7 +24406,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "822bc4afd1c4a8e35cbc83c2bee3fa37c060b798dc5c2f042cb3d819ae0a0b12",
+      "sha256": "5883f88fefff9e5b1c19bbcd11d54b75a16abaa16d49fb96dd6bc7e84437b2af",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24623,7 +24672,7 @@
     },
     {
       "path": "formal/system/public-knowledge-retrieval.md",
-      "sha256": "ee7092b29788457712d8fb84c814666de115225615785ef372792e5615397464",
+      "sha256": "c3b5e44e1e0ed4c52a49e7fb76caf434211d69405b34c25e8a202fd52afb9b11",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24672,7 +24721,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "14f1434fbbe3eec448cdee2285074ad8569732af76562899f57c15b1f3dace8c",
+      "sha256": "c510bebda4b4148d383f289c5c111c6c693aae46a72f7dc31b55963f1d6e1171",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -35083,6 +35132,62 @@
         "CONSTANTS RecoverUntouched = TRUE Unsafe = TRUE PriorSafe = {} InitialSafe = {}",
         "INVARIANTS NoUnsafeRestoration ModernNeverDowngrades",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeIndex.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PublicOnly = TRUE",
+        "  ClearEmpty = TRUE",
+        "  PreserveFailure = TRUE",
+        "INVARIANTS TypeOK NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeIndexEmpty.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PublicOnly = TRUE",
+        "  ClearEmpty = FALSE",
+        "  PreserveFailure = TRUE",
+        "INVARIANTS TypeOK NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeIndexFailure.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PublicOnly = TRUE",
+        "  ClearEmpty = TRUE",
+        "  PreserveFailure = FALSE",
+        "INVARIANTS TypeOK NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PublicKnowledgeIndexPrivate.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  PublicOnly = FALSE",
+        "  ClearEmpty = TRUE",
+        "  PreserveFailure = TRUE",
+        "INVARIANTS TypeOK NoPrivateEmbedding SuccessfulReplacement FailedRefreshPreservesIndex EmptySkipsProvider"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
