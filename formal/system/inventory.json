@@ -323,6 +323,7 @@
       "scripts/quality-mobile.sh",
       "scripts/quality-repo.sh",
       "scripts/quality-ui.sh",
+      "scripts/recovery-time-boundaries.py",
       "scripts/refresh-instagram-token.mjs",
       "scripts/refresh-messaging-token.mjs",
       "scripts/rehearse-hetzner-restore.mjs",
@@ -500,7 +501,9 @@
       "scripts/test-records-ingestion-runtime.sh",
       "scripts/test-records-youtube-catalog-migration.sh",
       "scripts/test-recovery-envelope.py",
+      "scripts/test-recovery-expiry-verifier.py",
       "scripts/test-recovery-files.py",
+      "scripts/test-recovery-time-postgres.sh",
       "scripts/test-recovery-tools.py",
       "scripts/test-release-journal.py",
       "scripts/test-requirement-declarations.py",
@@ -546,6 +549,7 @@
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-readiness.py",
+      "scripts/verify-recovery-expiry.py",
       "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
@@ -2625,7 +2629,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
+      "sha256": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4393,6 +4397,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-14ce85c394623bc5",
+      "path": "scripts/recovery-time-boundaries.py",
+      "sha256": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0210b80fb6caf081",
       "path": "scripts/refresh-instagram-token.mjs",
       "sha256": "22a36c1f74285c3d7cbffcdb843e592b5f173230127ae08b5a776044f9474d37",
@@ -5455,9 +5465,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8cb7488112ea1390",
+      "path": "scripts/test-recovery-expiry-verifier.py",
+      "sha256": "8ab023654d5d4a3dc7bfc5664664a69041fd1c5c82490bb377e472a5cfd121f3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-74baba1704e4a65f",
       "path": "scripts/test-recovery-files.py",
       "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4f9c68275e359475",
+      "path": "scripts/test-recovery-time-postgres.sh",
+      "sha256": "24f42f8601ea0250adcaf52903ba8ad521d501e4d897b09c169a4c19415adf52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5607,7 +5629,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
+      "sha256": "ee00ea2b1854a59f2e739e865d17278a093e7799d9f7ceb3f996627b8ff6794b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5667,7 +5689,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
+      "sha256": "c36994d7d88507f776d19db5c35c842006c31303d664e491a17175ef52f8beb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5728,6 +5750,12 @@
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
       "sha256": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bbad9cbeb80c7494",
+      "path": "scripts/verify-recovery-expiry.py",
+      "sha256": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24455,7 +24483,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "d7a2ef06d752a8786964dede68e0790c53519586f14980c45dd07d9c68e529af",
+      "sha256": "c19b690e80e85feddfb15fe48269faccbc2b716d7c8ece300c66c75f98900872",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24469,7 +24497,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "467b2312abc1743e282f5afbb43a12bbbab1c81c8f29bef7c7a8aaf6d1981fb6",
+      "sha256": "ef3b90b81bcf883f04e801ea22e0457cb09bdc52cdf51b7955451bb32de4fa7d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24783,6 +24811,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/recovery-expiry-arithmetic.md",
+      "sha256": "a52d51cfddc3e5f2e883479ee4712d9a788cf448dca22a80b82f77c1d922cb3e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/recovery-files.md",
       "sha256": "f5793eb1b059f7f2d4a7754fca1e2e60dd8d75822470fec9f423e950d5040d0b",
       "authority": "inferred",
@@ -24805,7 +24840,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d5fd8969464be53f1b6b60c03e8c2a16370cf45a38986a516eedc5caa7120992",
+      "sha256": "5a2c88aa046f54bcc9918579486d03867d089ce5610888a0bb48e7ac26d341ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

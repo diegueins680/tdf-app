@@ -122,7 +122,7 @@ archives the complete evidence even when a later check fails. Each SMT query has
 a 30-second timeout; each proof/control subprocess has a 180-second deadline. CI's
 job deadline is the outer limit. Unknown, unsupported source, timeouts and changed
 fingerprints never become PROVEN. Every run conservatively regenerates all four
-arithmetic and three authorization predicate obligations; no unsafe incremental dependency assumption is made.
+arithmetic, three authorization predicate and four recovery-time obligations; no unsafe incremental dependency assumption is made.
 
 Release decision: **BLOCKED**. Every unresolved critical requirement is enumerated
 in `release.criticalUnprovenRequirements`; accepted risks is empty. This initial
@@ -144,3 +144,11 @@ counterexamples, repair real defects, and attach fresh exact-artifact evidence.
 Re-run after relevant changes. Human risk acceptance, where allowed by the owner,
 must enumerate all accepted UNPROVEN properties and assumptions without changing
 their mathematical status.
+
+## Recovery-time evidence
+
+[Recovery expiry contracts](recovery-expiry-arithmetic.md) add four source-derived
+conditional proofs for `ID-SESSION-003`. Their separate category cannot discharge
+the full recovery transaction or implementation refinement. The PostgreSQL CI
+job also exercises the actual time CHECK over finite boundary values; those
+probes validate assumptions and remain test evidence, never universal proofs.

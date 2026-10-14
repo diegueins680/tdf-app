@@ -1526,7 +1526,7 @@
         "reason": "Candidate repair and executable checks exist; exact final candidate runtime, full gates, review and deployment remain pending."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Forgot Password Cheat Sheet; source-derived absence of baseline expiry",
-      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls",
+      "verification": "Int64 properties, actual HTTP/PostgreSQL post-lock clock checks and injection failures, bounded model with four controls; four conditional source-derived SMT time contracts with serialized replay (full transaction/refinement UNPROVEN), finite PostgreSQL boundary probes",
       "evidence": "Exact-candidate gate receipts, bounded checker logs and HTTP runner output",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens, hashes or customer details.",
@@ -1539,7 +1539,10 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/provider-rollback.test.mjs",
-        "scripts/test-auth-recovery-migration.sh"
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-recovery-expiry-verifier.py",
+        "scripts/recovery-time-boundaries.py",
+        "scripts/test-recovery-time-postgres.sh"
       ],
       "id": "ID-SESSION-003",
       "title": "Recovery challenges expire and bind the exact credential",
@@ -1584,7 +1587,9 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
         "scripts/production-release.mjs",
-        "scripts/production-migrations.json"
+        "scripts/production-migrations.json",
+        "scripts/verify-recovery-expiry.py",
+        "formal/system/recovery-expiry-arithmetic.json"
       ]
     },
     {
@@ -9842,7 +9847,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "a47362a044410adae7ec5f7486714f6169b7e9d3c1e838788e88db7a8fff5ae2",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
+    ".github/workflows/event-operations-formal.yml": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10003,6 +10008,7 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
+    "formal/system/recovery-expiry-arithmetic.json": "8c4c6a1467b8b44e1a9bf08c340e5f39df4dacb76f61b1060af6b5e0c81e2f25",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -10142,6 +10148,7 @@
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "a5041669e3881d019e35512e8b4e7febcc2ebd98ebea0d3eb05568ea9f0f83c8",
+    "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -10200,7 +10207,9 @@
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
+    "scripts/test-recovery-expiry-verifier.py": "8ab023654d5d4a3dc7bfc5664664a69041fd1c5c82490bb377e472a5cfd121f3",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
+    "scripts/test-recovery-time-postgres.sh": "24f42f8601ea0250adcaf52903ba8ad521d501e4d897b09c169a4c19415adf52",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
@@ -10216,13 +10225,13 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
+    "scripts/test-verification-report.py": "ee00ea2b1854a59f2e739e865d17278a093e7799d9f7ceb3f996627b8ff6794b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
+    "scripts/verification-report.py": "c36994d7d88507f776d19db5c35c842006c31303d664e491a17175ef52f8beb0",
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -10232,6 +10241,7 @@
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
+    "scripts/verify-recovery-expiry.py": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "09fda1a80dd1f221b5bb4521dc8d81af794bd166f67ea811a676251009a8eb1b",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
@@ -11997,6 +12007,18 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/verify-recovery-expiry.py": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/system/recovery-expiry-arithmetic.json": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-auth-recovery-migration.sh": [
       {
         "requirement": "ID-SESSION-003",
@@ -12005,6 +12027,24 @@
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "implementation"
+      }
+    ],
+    "scripts/test-recovery-expiry-verifier.py": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/recovery-time-boundaries.py": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-recovery-time-postgres.sh": [
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/RecoveryExpiry.tla": [
@@ -18494,7 +18534,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
+      "sha256": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21659,6 +21699,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-14ce85c394623bc5",
+      "path": "scripts/recovery-time-boundaries.py",
+      "sha256": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0210b80fb6caf081",
       "path": "scripts/refresh-instagram-token.mjs",
       "sha256": "22a36c1f74285c3d7cbffcdb843e592b5f173230127ae08b5a776044f9474d37",
@@ -23348,6 +23400,18 @@
       ]
     },
     {
+      "id": "SURFACE-8cb7488112ea1390",
+      "path": "scripts/test-recovery-expiry-verifier.py",
+      "sha256": "8ab023654d5d4a3dc7bfc5664664a69041fd1c5c82490bb377e472a5cfd121f3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-74baba1704e4a65f",
       "path": "scripts/test-recovery-files.py",
       "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -23355,6 +23419,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4f9c68275e359475",
+      "path": "scripts/test-recovery-time-postgres.sh",
+      "sha256": "24f42f8601ea0250adcaf52903ba8ad521d501e4d897b09c169a4c19415adf52",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
           "relationship": "tests"
         }
       ]
@@ -23625,7 +23701,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
+      "sha256": "ee00ea2b1854a59f2e739e865d17278a093e7799d9f7ceb3f996627b8ff6794b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23733,7 +23809,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
+      "sha256": "c36994d7d88507f776d19db5c35c842006c31303d664e491a17175ef52f8beb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23942,6 +24018,18 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-bbad9cbeb80c7494",
+      "path": "scripts/verify-recovery-expiry.py",
+      "sha256": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ID-SESSION-003",
+          "relationship": "implementation"
         }
       ]
     },
@@ -44782,7 +44870,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d5fd8969464be53f1b6b60c03e8c2a16370cf45a38986a516eedc5caa7120992",
+      "sourceSha256": "5a2c88aa046f54bcc9918579486d03867d089ce5610888a0bb48e7ac26d341ab",
       "definition": {
         "states": [
           "absent",

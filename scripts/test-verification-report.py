@@ -54,6 +54,10 @@ class AssuranceTests(unittest.TestCase):
         self.assertNotIn('test-verification-report.py', generation['run'])
         archive = next(s for s in steps if s.get('name') == 'Preserve formal assurance report')
         self.assertEqual(archive['if'], 'always()')
+        testing = next(s for s in steps if s.get('name') == 'Test assurance reporting and counterexample retention')
+        self.assertIn('python scripts/test-recovery-expiry-verifier.py', testing['run'])
+        database = workflow['jobs']['postgres-foundation']['steps']
+        self.assertTrue(any(s.get('run') == 'sh scripts/test-recovery-time-postgres.sh' for s in database))
 
     def test_unknown_status_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -72,6 +76,22 @@ class AssuranceTests(unittest.TestCase):
         result = report.build_report(self.requirements, self.provenance, True, 'auth failed', authorization=auth)
         counts = result['metrics']['obligationsByCategory']['source-derived-authorization-SMT']
         self.assertEqual((counts['PROVEN'], counts['REFUTED'], counts['UNPROVEN']), (0, 1, 2))
+
+    def test_recovery_proofs_do_not_promote_recovery_transaction(self):
+        contract = json.loads((ROOT/'formal/system/recovery-expiry-arithmetic.json').read_text())
+        receipt = {'executionPassed': True, 'obligations': [
+            {**o, 'status': 'PROVEN', 'artifact': o['id'] + '.smt2'} for o in contract['obligations']]}
+        result = report.build_report(self.requirements, self.provenance, True, 'passed', recovery=receipt)
+        self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-recovery-SMT']['PROVEN'], 4)
+        self.assertEqual(result['metrics']['requirements']['PROVEN'], 0)
+        self.assertTrue(all(o['status'] == 'UNPROVEN' for o in result['obligations']
+                            if o['category'] in ('implementation', 'refinement')))
+        self.assertEqual(result['release']['decision'], 'BLOCKED')
+        receipt['executionPassed'] = False
+        receipt['obligations'][0]['status'] = 'REFUTED'
+        result = report.build_report(self.requirements, self.provenance, True, 'failed', recovery=receipt)
+        counts = result['metrics']['obligationsByCategory']['source-derived-recovery-SMT']
+        self.assertEqual((counts['PROVEN'], counts['REFUTED'], counts['UNPROVEN']), (0, 1, 3))
 
     def test_real_counterexample_is_retained_and_separate_from_unknown(self):
         with tempfile.TemporaryDirectory() as tmp:
