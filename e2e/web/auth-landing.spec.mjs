@@ -107,7 +107,7 @@ test('login rejects external redirects @mobile-flow', async ({ page, baseURL }) 
   await page.getByLabel('Usuario o correo').fill('llamaestepez@gmail.com');
   await page.getByLabel('Contraseña', { exact: false }).first().fill('secreta-larga-1');
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
-  await expect(page).toHaveURL(/127\.0\.0\.1:4173\/fans$/);
+  await expect(page).toHaveURL(new URL('/fans', baseURL).href);
   await expectRenderedApp(page);
 });
 
