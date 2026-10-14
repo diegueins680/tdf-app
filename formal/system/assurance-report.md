@@ -62,7 +62,13 @@ of each transition's initialization, preservation, termination and liveness
 obligations remain UNPROVEN work. Ambiguities remain visible from the authority
 register. No blanket NOT_APPLICABLE designation is inferred from missing evidence.
 
-Four additional obligations are conditional source-derived SMT proofs: capture
+Three authorization predicate obligations are separately reported as
+`source-derived-authorization-SMT`; see [auth-predicates.md](auth-predicates.md)
+for the exact domain, three supporting cardinality lemmas, five mutation controls
+and all translation/endpoint limitations. Their seventeen SMT inputs are retained
+in `authorization/`. These do not discharge full requirements or refinement.
+
+Four additional arithmetic obligations are conditional source-derived SMT proofs: capture
 and refund safety and admission equivalence, as defined in
 [payment-arithmetic.md](payment-arithmetic.md). No finite input bound is substituted:
 the formula covers every signed Int64 value satisfying its preconditions. The
@@ -116,7 +122,7 @@ archives the complete evidence even when a later check fails. Each SMT query has
 a 30-second timeout; each proof/control subprocess has a 180-second deadline. CI's
 job deadline is the outer limit. Unknown, unsupported source, timeouts and changed
 fingerprints never become PROVEN. Every run conservatively regenerates all four
-arithmetic obligations; no unsafe incremental dependency assumption is made.
+arithmetic and three authorization predicate obligations; no unsafe incremental dependency assumption is made.
 
 Release decision: **BLOCKED**. Every unresolved critical requirement is enumerated
 in `release.criticalUnprovenRequirements`; accepted risks is empty. This initial

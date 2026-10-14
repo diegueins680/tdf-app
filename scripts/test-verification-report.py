@@ -59,6 +59,20 @@ class AssuranceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             report.count_status([{'status': 'PASS'}])
 
+    def test_authentication_predicate_proofs_do_not_promote_endpoints_or_refinement(self):
+        contract = json.loads((ROOT/'formal/system/auth-predicates.json').read_text())
+        auth = {'executionPassed': True, 'obligations': [
+            {**o, 'status': 'PROVEN', 'artifact': o['id'] + '.smt2'} for o in contract['obligations']]}
+        result = report.build_report(self.requirements, self.provenance, True, 'passed', authorization=auth)
+        self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-authorization-SMT']['PROVEN'], 3)
+        self.assertEqual(result['metrics']['requirements']['PROVEN'], 0)
+        self.assertEqual(result['release']['decision'], 'BLOCKED')
+        auth['executionPassed'] = False
+        auth['obligations'][0]['status'] = 'REFUTED'
+        result = report.build_report(self.requirements, self.provenance, True, 'auth failed', authorization=auth)
+        counts = result['metrics']['obligationsByCategory']['source-derived-authorization-SMT']
+        self.assertEqual((counts['PROVEN'], counts['REFUTED'], counts['UNPROVEN']), (0, 1, 2))
+
     def test_real_counterexample_is_retained_and_separate_from_unknown(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

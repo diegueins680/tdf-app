@@ -410,6 +410,7 @@
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
       "scripts/test-artist-self-service.sh",
+      "scripts/test-auth-predicates.py",
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-booking-conformance.py",
@@ -534,6 +535,7 @@
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
       "scripts/verification-report.py",
+      "scripts/verify-auth-predicates.py",
       "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
@@ -2619,7 +2621,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "63bd106c7d3514e7555b5ecef94b8aa818341857ecfb8db8a4ef1ca0314d31bb",
+      "sha256": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4909,6 +4911,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fc4c2b80fce6f504",
+      "path": "scripts/test-auth-predicates.py",
+      "sha256": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
       "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
@@ -5589,7 +5597,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "5d105dde1a00ca47af1a3d37ef3392bdda9b6f501f6ff9183171a974b9f4cfe4",
+      "sha256": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5649,7 +5657,13 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "2b9dbad2cd48cc35d9914706e5ae614d452f48e6e4cd691cbdeb3e1d5e57bb6c",
+      "sha256": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b79d0bcd7aa10957",
+      "path": "scripts/verify-auth-predicates.py",
+      "sha256": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24378,7 +24392,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "9f3d591d24f46439bcec5f4aa40db3e423eb53f557df7f86c9e86e9277ed334c",
+      "sha256": "b2352c72b94bbf96ce2789aff0d47b4a8a1af679d15a5993212f272b3877ca52",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24392,7 +24406,14 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "6c322bb37745bff5ee9dc3563c93b6b155488e9e15a8bf7bc0f221f833d1e2c9",
+      "sha256": "467b2312abc1743e282f5afbb43a12bbbab1c81c8f29bef7c7a8aaf6d1981fb6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/auth-predicates.md",
+      "sha256": "dbfe1262624d29b2653369665050c8e36d91ad8e1c90397e03e31d53f5ba6436",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24714,7 +24735,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "86bf21d3826a7ba770ac6a5a58fa3598fd8b92ec1ee4bf11f7fda22953edcfcf",
+      "sha256": "550f0de6b6a1967e00b7683dcb54d198682b3310ac803e6102084e40dafbe2d8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

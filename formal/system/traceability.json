@@ -1160,11 +1160,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "scripts/verify-auth-predicates.py"
       ],
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "scripts/test-auth-predicates.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1180,7 +1184,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
@@ -9763,7 +9767,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "38b5597167bd05078b17f7421f3c5d4ae5155b3ca03eeb635d938767ff8a7961",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "63bd106c7d3514e7555b5ecef94b8aa818341857ecfb8db8a4ef1ca0314d31bb",
+    ".github/workflows/event-operations-formal.yml": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10074,6 +10078,7 @@
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
+    "scripts/test-auth-predicates.py": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "54b56122e5aeaede13c58fe69214db4ef483dd4ec5cfd54c005eb20560d2c540",
     "scripts/test-booking-conformance.py": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
@@ -10130,13 +10135,14 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "5d105dde1a00ca47af1a3d37ef3392bdda9b6f501f6ff9183171a974b9f4cfe4",
+    "scripts/test-verification-report.py": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "2b9dbad2cd48cc35d9914706e5ae614d452f48e6e4cd691cbdeb3e1d5e57bb6c",
+    "scripts/verification-report.py": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
+    "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "1b022f16d9eecfc48ce8a46a413347c7b54a5ad9991c0a03fb629972d38a0794",
@@ -11563,6 +11569,52 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Auth.hs": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Models.hs": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/verify-auth-predicates.py": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/features/featureRegistry.test.ts": [
       {
         "requirement": "AUTH-REGISTRY-001",
@@ -11574,6 +11626,12 @@
       }
     ],
     "scripts/audit-feature-registry.mjs": [
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-auth-predicates.py": [
       {
         "requirement": "AUTH-REGISTRY-001",
         "relationship": "tests"
@@ -11745,32 +11803,6 @@
       {
         "requirement": "ID-ARTIST-CLAIM-001",
         "relationship": "formalModels"
-      }
-    ],
-    "tdf-hq/src/TDF/Auth.hs": [
-      {
-        "requirement": "ID-SESSION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-RADIO-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COURSE-SUBJECT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-INTAKE-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/ServerAdmin.hs": [
@@ -14602,12 +14634,6 @@
       }
     ],
     "tdf-hq/src/TDF/Invoice/Receipt.hs": [
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Models.hs": [
       {
         "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
@@ -18318,7 +18344,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "63bd106c7d3514e7555b5ecef94b8aa818341857ecfb8db8a4ef1ca0314d31bb",
+      "sha256": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22180,6 +22206,18 @@
       ]
     },
     {
+      "id": "SURFACE-fc4c2b80fce6f504",
+      "path": "scripts/test-auth-predicates.py",
+      "sha256": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
       "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
@@ -23417,7 +23455,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "5d105dde1a00ca47af1a3d37ef3392bdda9b6f501f6ff9183171a974b9f4cfe4",
+      "sha256": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23525,11 +23563,23 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "2b9dbad2cd48cc35d9914706e5ae614d452f48e6e4cd691cbdeb3e1d5e57bb6c",
+      "sha256": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b79d0bcd7aa10957",
+      "path": "scripts/verify-auth-predicates.py",
+      "sha256": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-REGISTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -34707,6 +34757,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "ID-SESSION-001",
           "relationship": "implementation"
         },
@@ -35639,6 +35693,10 @@
       "sha256": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-REGISTRY-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "PAY-INVOICE-001",
           "relationship": "implementation"
@@ -44514,7 +44572,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "86bf21d3826a7ba770ac6a5a58fa3598fd8b92ec1ee4bf11f7fda22953edcfcf",
+      "sourceSha256": "550f0de6b6a1967e00b7683dcb54d198682b3310ac803e6102084e40dafbe2d8",
       "definition": {
         "states": [
           "absent",

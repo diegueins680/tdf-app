@@ -30,6 +30,9 @@ def fingerprint(requirements):
              'scripts/verification-report.py', 'scripts/verify-payment-arithmetic.py',
              'scripts/test-payment-arithmetic-verifier.py', 'scripts/test-verification-report.py',
              '.github/workflows/event-operations-formal.yml'}
+    paths.update({'formal/system/auth-predicates.json', 'formal/system/auth-predicates.md',
+                  'scripts/verify-auth-predicates.py', 'scripts/test-auth-predicates.py'})
+    paths.update(json.loads((ROOT/'formal/system/auth-predicates.json').read_text())['reviewedSources'])
     for row in requirements:
         for field in ('implementation', 'tests', 'formalModels'):
             paths.update(row[field])
@@ -46,7 +49,7 @@ def count_status(rows):
     return {status: counts[status] for status in STATUSES}
 
 
-def build_report(requirements, provenance, arithmetic_ok, reason, refuted=()):
+def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), authorization=None):
     rows, obligations = [], []
     for req in requirements:
         # Legacy PARTIAL/PASS labels never establish a mathematical proof.
@@ -90,10 +93,21 @@ def build_report(requirements, provenance, arithmetic_ok, reason, refuted=()):
                 'limitations': 'No verified compiler/translator, caller precondition, dispatch, persistence, active payment handler, concurrency or whole-program refinement proof.',
                 'execution': reason})
             next(row for row in rows if row['requirementId'] == requirement)['obligations'].append(f'{requirement}:{kind}')
+    auth_contract = json.loads((ROOT/'formal/system/auth-predicates.json').read_text())
+    for claim in auth_contract['obligations']:
+        identity = claim['requirementId'] + ':' + claim['id']
+        actual = next((o for o in (authorization or {}).get('obligations', [])
+                       if o['id'] == claim['id']), {})
+        status = actual.get('status', 'UNPROVEN')
+        if status == 'PROVEN' and not (authorization or {}).get('executionPassed'):
+            status = 'UNPROVEN'
+        obligations.append({**claim, 'id': identity, 'status': status,
+                            'artifact': 'authorization/' + actual['artifact'] if actual.get('artifact') else None})
+        next(row for row in rows if row['requirementId'] == claim['requirementId'])['obligations'].append(identity)
     critical = [row['requirementId'] for row in rows if row['risk'] == 'P0' and row['status'] != 'PROVEN']
     return {
         'schemaVersion': 1, 'provenance': provenance,
-        'scope': 'All registered requirements classified; only capture/refund arithmetic discharged. This is not an exhaustive inventory of all behaviors or derived obligations.',
+        'scope': 'All registered requirements classified; only capture/refund arithmetic and three authorization predicates can be discharged by this runner. This is not an exhaustive inventory of all behaviors or derived obligations.',
         'requirements': rows, 'obligations': obligations,
         'metrics': {'requirements': count_status(rows),
                     'requirementsWithDeclaredAmbiguityEntries': sum(bool(row['ambiguities']) for row in rows),
@@ -173,9 +187,26 @@ def run(out, require_release):
         failed = json.loads(arithmetic_path.read_text())
         refuted = [a['id'] for a in failed.get('artifacts', [])
                    if a.get('expected') == 'unsat' and a.get('actual') == 'sat']
-    report = build_report(requirements, before, ok, reason, refuted)
+    authorization, auth_ok = None, False
+    try:
+        command = [sys.executable, 'scripts/verify-auth-predicates.py', '--output', str(out/'authorization')]
+        with (out/'authorization-execution.log').open('x') as log:
+            result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=180)
+        authorization = json.loads((out/'authorization/result.json').read_text())
+        auth_ok = result.returncode == 0 and authorization['executionPassed']
+        if not auth_ok:
+            authorization['executionPassed'] = False
+            reason += '; authorization failed: ' + str(authorization.get('error'))
+    except Exception as error:
+        reason += '; authorization incomplete: ' + str(error)
+    if fingerprint(requirements) != before:
+        ok, auth_ok, authorization, refuted = False, False, None, []
+        reason = 'Sources changed during verification; all claims stale'
+    report = build_report(requirements, before, ok, reason, refuted, authorization)
+    ok = ok and auth_ok
     report.update({'startedAt': started, 'finishedAt': datetime.now(timezone.utc).isoformat(),
                    'execution': {'passed': ok, 'reason': reason, 'python': sys.version},
+                   'supportingAlgebraLemmas': (authorization or {}).get('supportingLemmas', []),
                    'evidenceHashes': {p.relative_to(out).as_posix(): sha(p.read_bytes())
                                       for p in sorted(out.rglob('*')) if p.is_file()}})
     (out/'report.json').write_text(json.dumps(report, indent=2) + '\n')

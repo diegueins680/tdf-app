@@ -9,6 +9,8 @@ Historical green results are not current-candidate evidence.
 
 - [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
 
+- [auth-predicates.md](auth-predicates.md): three conditional authorization predicate contracts, cardinality lemmas, source mutation controls and explicit endpoint/refinement exclusions.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.
