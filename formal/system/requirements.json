@@ -9833,6 +9833,10 @@
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
         "tdf-hq-ui/src/utils/loginRouting.test.ts",
         "e2e/web/community-discovery.spec.mjs",
+        "e2e/web/directory-entry.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "e2e/web/auth-landing.spec.mjs",
+        "e2e/web/records-thumbnails.spec.mjs",
         "playwright.discovery.config.mjs",
         "tdf-hq-ui/src/api/directory.test.ts"
       ],
