@@ -7461,7 +7461,8 @@
         "scripts/test-ticket-manual-review.sh",
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
         "scripts/test-ticket-manual-review-concurrency.sh",
-        "scripts/verify-event-operations-formal.sh"
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq/test/TDF/Test/DisposablePostgres.hs"
       ],
       "formalModels": [
         "formal/event-operations/ManualBankTransfer.tla",

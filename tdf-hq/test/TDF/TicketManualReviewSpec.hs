@@ -12,7 +12,7 @@ import Control.Monad.Logger (runNoLoggingT)
 import qualified Data.ByteString.Char8 as BS
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.Int (Int64)
-import Data.List (isSuffixOf, sort, stripPrefix)
+import Data.List (sort)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -31,7 +31,7 @@ import Database.Persist.Sql (
 import System.Environment (lookupEnv)
 import System.IO.Error (ioeGetErrorString)
 import System.Timeout (timeout)
-import Text.Read (readMaybe)
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 import TDF.Server.TicketManualPayments (
   ManualReviewAction (..),
   ManualReviewer (..),
@@ -49,7 +49,13 @@ spec = describe "ticket-manual-review-postgresql" $ do
   routingOverrides <- runIO (traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"])
   made <- runIO (newIORef [])
   it "accepts only an explicit local authority or the isolated CI service" $ do
-    forM_ ["postgresql://127.0.0.1/orders_test", "postgresql://localhost:5432/orders_test"] $
+    forM_
+      [ "postgresql://127.0.0.1/orders_test"
+      , "postgresql://localhost:5432/orders_test"
+      , "postgres://localhost:5432/orders_test"
+      , "postgresql://user:pass@localhost:5432/orders_test"
+      , "postgres://user:pa%40ss@127.0.0.1:5432/orders-local_test"
+      ] $
       \connection -> safeConnection False connection `shouldBe` True
     forM_
       [ "postgresql://localhost:password@db.example/orders_test"
@@ -288,24 +294,8 @@ data Case = Case
   , buyerEmail :: Text
   }
 
--- Parse a deliberately restricted URI grammar. Credentials cannot masquerade
--- as a local host, and encoded names/query routing overrides are never accepted.
 safeConnection :: Bool -> String -> Bool
-safeConnection ci value = case stripPrefix "postgresql://" value of
-  Nothing -> False
-  Just rest -> case break (== '/') rest of
-    (authority, '/' : database) ->
-      validAuthority authority && "_test" `isSuffixOf` database
-        && all (\c -> c `elem` (['_'] ++ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9'])) database
-    _ -> False
- where
-  validAuthority authority =
-    (ci && authority == "postgres:postgres@postgres:5432")
-      || any (localAuthority authority) ["127.0.0.1", "localhost"]
-  localAuthority authority host = authority == host || case stripPrefix (host ++ ":") authority of
-    Just port | not (null port) && all (`elem` ['0' .. '9']) port ->
-      maybe False (\n -> n > 0 && n <= 65535) (readMaybe port :: Maybe Int)
-    _ -> False
+safeConnection = isDisposablePostgresUrl
 
 review :: ConnectionPool -> Case -> ManualReviewer -> ManualReviewAction -> IO (Either Text Bool)
 review pool c reviewer action = getCurrentTime >>= reviewAt pool c reviewer action
