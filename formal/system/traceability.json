@@ -10308,13 +10308,13 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "ee00ea2b1854a59f2e739e865d17278a093e7799d9f7ceb3f996627b8ff6794b",
+    "scripts/test-verification-report.py": "4021ff4a01ea32ad1e2048d29f184307e89097051e8eeb43caa7213ab74f57b0",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "c36994d7d88507f776d19db5c35c842006c31303d664e491a17175ef52f8beb0",
+    "scripts/verification-report.py": "29592427dd03952bd20517bf3e81c695e7e76fd7c97e5bbf1dcabadb05833670",
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -23873,7 +23873,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "ee00ea2b1854a59f2e739e865d17278a093e7799d9f7ceb3f996627b8ff6794b",
+      "sha256": "4021ff4a01ea32ad1e2048d29f184307e89097051e8eeb43caa7213ab74f57b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23981,7 +23981,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "c36994d7d88507f776d19db5c35c842006c31303d664e491a17175ef52f8beb0",
+      "sha256": "29592427dd03952bd20517bf3e81c695e7e76fd7c97e5bbf1dcabadb05833670",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

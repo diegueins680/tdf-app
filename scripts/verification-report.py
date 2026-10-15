@@ -11,6 +11,13 @@ import sys
 
 ROOT = Path(__file__).resolve().parent.parent
 STATUSES = ('PROVEN', 'REFUTED', 'UNPROVEN', 'NOT_APPLICABLE')
+ARITHMETIC_EXPECTATIONS = {
+    f'{name}-{kind}': expected
+    for name in ('capture', 'refund')
+    for kind, expected in (('safety', 'unsat'), ('admission', 'unsat'),
+                           ('witness-0', 'sat'), ('witness-1', 'sat'),
+                           ('legacy-counterexample', 'sat'))
+}
 
 
 def sha(data):
@@ -146,7 +153,35 @@ def render(report):
     return '\n'.join(lines)
 
 
+def replay_arithmetic(directory, artifacts):
+    import z3
+    if (len(artifacts) != len(ARITHMETIC_EXPECTATIONS)
+            or {a['id'] for a in artifacts} != set(ARITHMETIC_EXPECTATIONS)):
+        raise ValueError('Incomplete SMT input inventory')
+    replay = []
+    for artifact in artifacts:
+        expected = ARITHMETIC_EXPECTATIONS[artifact['id']]
+        if artifact['expected'] != expected:
+            raise ValueError('SMT obligation expectation mismatch: ' + artifact['id'])
+        if artifact['file'] != artifact['id'] + '.smt2':
+            raise ValueError('SMT obligation file mismatch')
+        content = (directory/artifact['file']).read_bytes()
+        if sha(content) != artifact['sha256']:
+            raise ValueError('SMT input digest mismatch')
+        solver = z3.Solver()
+        solver.set(timeout=30_000)
+        solver.from_string(content.decode())
+        result = str(solver.check())
+        if result != expected:
+            raise ValueError('SMT replay failed or unknown')
+        replay.append({'id': artifact['id'], 'result': result})
+    return replay
+
+
 def run(out, require_release):
+    out = out.resolve()
+    if out.is_relative_to(ROOT.resolve()):
+        raise ValueError('Output directory must be outside the source checkout')
     out.mkdir()  # Exclusive output; a previous run can never supply missing evidence.
     requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
     before = fingerprint(requirements)
@@ -163,25 +198,8 @@ def run(out, require_release):
                 raise ValueError(f'Command {i} failed; see execution-{i}.log')
         # Reparse serialized formulas in a fresh solver. This catches serialization
         # drift but does not remove the same solver or translator from the TCB.
-        import z3
         arithmetic = json.loads((out/'arithmetic/result.json').read_text())
-        expected_ids = {f'{name}-{kind}' for name in ('capture', 'refund')
-                        for kind in ('safety', 'admission', 'witness-0', 'witness-1', 'legacy-counterexample')}
-        artifacts = arithmetic['artifacts']
-        if len(artifacts) != 10 or {a['id'] for a in artifacts} != expected_ids:
-            raise ValueError('Incomplete SMT input inventory')
-        replay = []
-        for artifact in artifacts:
-            content = (out/'arithmetic'/artifact['file']).read_bytes()
-            if sha(content) != artifact['sha256']:
-                raise ValueError('SMT input digest mismatch')
-            solver = z3.Solver()
-            solver.set(timeout=30_000)
-            solver.from_string(content.decode())
-            result = str(solver.check())
-            if result != artifact['expected']:
-                raise ValueError('SMT replay failed or unknown')
-            replay.append({'id': artifact['id'], 'result': result})
+        replay = replay_arithmetic(out/'arithmetic', arithmetic['artifacts'])
         (out/'replay.json').write_text(json.dumps(replay, indent=2) + '\n')
         if fingerprint(requirements) != before:
             raise ValueError('Sources changed during verification')

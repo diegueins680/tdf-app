@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,6 +21,58 @@ class AssuranceTests(unittest.TestCase):
     def setUp(self):
         self.requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
         self.provenance = {'revision': 'a'*40, 'digest': 'b'*64, 'worktreeDirty': False}
+
+    def test_in_checkout_output_is_rejected_before_creating_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)/'source'
+            root.mkdir()
+            alias = Path(tmp)/'outside-link'
+            alias.symlink_to(root, target_is_directory=True)
+            with patch.object(report, 'ROOT', root):
+                for out in (root, root/'new-output', root/'nested'/'output', alias/'output'):
+                    with self.subTest(out=out), self.assertRaisesRegex(ValueError, 'outside'):
+                        report.run(out, False)
+            self.assertEqual(list(root.iterdir()), [])
+
+    def test_replay_rejects_self_consistent_relabelled_proof_formulas(self):
+        # A producer regression emits a satisfiable safety/admission formula and
+        # labels it SAT. Replaying against that self-declared expectation passed
+        # before the independent per-obligation expectation map was introduced.
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            artifacts = []
+            for identity, expected in report.ARITHMETIC_EXPECTATIONS.items():
+                content = ('(assert false)' if expected == 'unsat' else '(assert true)').encode()
+                name = identity + '.smt2'
+                (directory/name).write_bytes(content)
+                artifacts.append({'id': identity, 'file': name, 'expected': expected,
+                                  'actual': expected, 'sha256': report.sha(content)})
+            self.assertEqual(len(report.replay_arithmetic(directory, artifacts)), 10)
+            for artifact in artifacts:
+                if artifact['expected'] != 'unsat':
+                    continue
+                with self.subTest(identity=artifact['id']):
+                    file = directory/artifact['file']
+                    original = file.read_bytes()
+                    content = b'(assert true)'
+                    file.write_bytes(content)
+                    forged = [dict(a) for a in artifacts]
+                    entry = next(a for a in forged if a['id'] == artifact['id'])
+                    entry.update(expected='sat', actual='sat', sha256=report.sha(content))
+                    with self.assertRaisesRegex(ValueError, 'expectation mismatch'):
+                        report.replay_arithmetic(directory, forged)
+                    file.write_bytes(original)
+
+    def test_replay_rejects_swapped_expectations_and_duplicate_obligations(self):
+        artifacts = [{'id': identity, 'expected': expected}
+                     for identity, expected in report.ARITHMETIC_EXPECTATIONS.items()]
+        artifacts[0]['expected'], artifacts[2]['expected'] = (
+            artifacts[2]['expected'], artifacts[0]['expected'])
+        with self.assertRaisesRegex(ValueError, 'expectation mismatch'):
+            report.replay_arithmetic(Path('/unused'), artifacts)
+        artifacts[-1] = artifacts[0]
+        with self.assertRaisesRegex(ValueError, 'inventory'):
+            report.replay_arithmetic(Path('/unused'), artifacts)
 
     def test_narrow_proofs_cannot_discharge_critical_requirements(self):
         result = report.build_report(self.requirements, self.provenance, True, 'solver passed')
@@ -127,6 +180,7 @@ class AssuranceTests(unittest.TestCase):
             self.assertEqual(run.returncode, 0, run.stderr.decode())
             receipt = json.loads((target/'result.json').read_text())
             self.assertEqual(len(receipt['artifacts']), 10)
+            self.assertEqual(len(report.replay_arithmetic(target, receipt['artifacts'])), 10)
             for artifact in receipt['artifacts']:
                 data = (target/artifact['file']).read_bytes()
                 self.assertEqual(report.sha(data), artifact['sha256'])

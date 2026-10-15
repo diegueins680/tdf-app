@@ -18,7 +18,9 @@ python scripts/verification-report.py --output /absolute/another-new-directory -
 The last command exits 2 for the currently BLOCKED release. Exit 1 means failed
 execution, stale evidence, missing tooling or unsupported source. Exit 0 without
 `--require-release` means report production and its narrow proof execution worked;
-it is expressly not release approval. Output directories must not already exist.
+it is expressly not release approval. Output directories must not already exist
+and must resolve outside the source checkout, including through symlinks. This
+keeps generated evidence from changing the checkout's own dirty-state fingerprint.
 
 `report.json` is the generated obligation/traceability matrix; `report.md` renders
 it. `sources.json` hashes every registered implementation, model and test and the
@@ -28,7 +30,10 @@ Exact commit alone is insufficient for dirty-source evidence. `arithmetic/*.smt2
 are the ten exact formulas; `result.json`, `replay.json`, logs and output hashes
 preserve execution evidence. Replay with pinned `z3 -smt2 FILE.smt2` or Z3Py
 `Solver.from_string`. Four negated properties must be UNSAT; four non-vacuity
-witnesses and two legacy bug counterexamples must be SAT. No new release charge,
+witnesses and two legacy bug counterexamples must be SAT. The reporter pins that
+expectation for each obligation ID independently of the producer's receipt; a
+producer that relabels a satisfiable safety formula cannot receive a proof label.
+No new release charge,
 provider call, database write or deployment is involved.
 
 ## Scope and architecture
