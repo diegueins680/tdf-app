@@ -9409,7 +9409,7 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; genre alias add, move to another genre, change away and back, profession alias ignored, unrelated events untouched; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; genre alias add, move to another genre, change away and back, profession alias ignored, unrelated events untouched, and the migration repairing a document left stale by an alias added before the trigger existed without alerting saved searches; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
       "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test. Alias resync: local PostgreSQL 16 on a fully migrated schema on 2026-10-14 (fails without the trigger, passes with it; apply twice, rollback twice, reapply).",
       "status": "specified and implemented",
       "critical": false,
@@ -9924,7 +9924,7 @@
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/catalog-persistence/catalog-list-decisions.json": "5583c0fff02a7dfc91f37b079c9dd9f7e6eb7463bac8f2de27ad026220c17685",
-    "docs/directory/event-search-sync.md": "4baaf83817a42f9cc061215bbda5b511eaa5e08889144fc5e939d8419fc9bd45",
+    "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
@@ -10257,7 +10257,7 @@
     "scripts/test-music-correction-concurrency.mjs": "4eaa1e0ab054775eda5de94a7ad415d4268c69b0ee31b71fbabcc2efe85d977d",
     "scripts/test-music-ddex-credits.sh": "220bdee67ca10d4257ba488de067617e244479d7e30143e5eceafe4d3a0d7a71",
     "scripts/test-music-ddex-package.mjs": "b27e141ea3cb945aa4c1e4ec425f75b6da6c02bf0d662b735a7040795ead5b74",
-    "scripts/test-music-directory-migration.sh": "e4dee989de3c4aa98b47d7c24b624110eda9e60dcf63e882089ef281c27be2b3",
+    "scripts/test-music-directory-migration.sh": "116fc32a32df42b644345be744e2f1e49df5b46f9e5f6a3f257af06ac2fc000c",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-purchase.sh": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
@@ -10632,7 +10632,7 @@
     "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
-    "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql": "c5b783c6f0666bd1d9b2107765514556145626c03b807a79d61ace62b3b0a89c",
+    "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql": "345d6f8bb54a9e7bfbd8eb6109bb4568143528c5936e6ceeb81ea86a43c515da",
     "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql": "70413903f5aed0c5edd65e0ba9eea914d83d68b799ca89d4f74a2790909971c7",
     "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -23104,7 +23104,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "e4dee989de3c4aa98b47d7c24b624110eda9e60dcf63e882089ef281c27be2b3",
+      "sha256": "116fc32a32df42b644345be744e2f1e49df5b46f9e5f6a3f257af06ac2fc000c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34579,7 +34579,7 @@
     {
       "id": "SURFACE-0a1e2c9a24a81a90",
       "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
-      "sha256": "c5b783c6f0666bd1d9b2107765514556145626c03b807a79d61ace62b3b0a89c",
+      "sha256": "345d6f8bb54a9e7bfbd8eb6109bb4568143528c5936e6ceeb81ea86a43c515da",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44965,7 +44965,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f1a9b711c144099bfd1252a562c515d9327a733383d94da635d09b9d93f27c77",
+      "sourceSha256": "7686e5f114b53afb60e3feda8064c84418cd99f1dd1307aafb8be9918434f324",
       "definition": {
         "states": [
           "absent",

@@ -5256,7 +5256,7 @@
     {
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
-      "sha256": "e4dee989de3c4aa98b47d7c24b624110eda9e60dcf63e882089ef281c27be2b3",
+      "sha256": "116fc32a32df42b644345be744e2f1e49df5b46f9e5f6a3f257af06ac2fc000c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13074,7 +13074,7 @@
     {
       "id": "SURFACE-0a1e2c9a24a81a90",
       "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
-      "sha256": "c5b783c6f0666bd1d9b2107765514556145626c03b807a79d61ace62b3b0a89c",
+      "sha256": "345d6f8bb54a9e7bfbd8eb6109bb4568143528c5936e6ceeb81ea86a43c515da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18687,7 +18687,7 @@
     },
     {
       "path": "docs/directory/event-search-sync.md",
-      "sha256": "4baaf83817a42f9cc061215bbda5b511eaa5e08889144fc5e939d8419fc9bd45",
+      "sha256": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24854,7 +24854,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f1a9b711c144099bfd1252a562c515d9327a733383d94da635d09b9d93f27c77",
+      "sha256": "7686e5f114b53afb60e3feda8064c84418cd99f1dd1307aafb8be9918434f324",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
