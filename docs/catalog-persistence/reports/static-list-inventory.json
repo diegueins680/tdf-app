@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-14T01:21:35.689Z",
+  "generatedAt": "2026-10-15T05:18:16.985Z",
   "repositoryRoot": ".",
   "filesScanned": 2278,
   "candidateCount": 1323,
@@ -12431,7 +12431,7 @@
       "lines": [
         175
       ],
-      "consumerCount": 41,
+      "consumerCount": 42,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -12475,6 +12475,7 @@
         ".github/workflows/ci.yml",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/interactions/test-api.py",
+        "scripts/lib/hetzner-preparation.mjs",
         "scripts/run-music-release-worker-once.sh",
         "scripts/specification-inventory.py",
         "scripts/test-ddex-partner-legacy-compatibility.sh",

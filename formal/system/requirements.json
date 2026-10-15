@@ -2221,7 +2221,7 @@
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
       "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
-      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established.",
+      "verification": "Local boundary/negative-control tests plus safe real production inspection; no guarded deployment executor or universal proof is established. Boolean discovery includes literal parser-wrapped lookups without a naming suffix; preparation accepts collector-valid raw spellings while requiring explicitly false destructive flags. Synthetic regressions only; this does not evaluate per-handler defaults or whitespace semantics.",
       "evidence": "Exact-revision inspection receipt and repository quality-gate logs.",
       "status": "specified and implemented",
       "confidence": "High within read-only target/disclosure guard scope; routine guarded release remains unimplemented.",
@@ -2246,14 +2246,16 @@
         "scripts/production_access.py",
         "scripts/production-catalog-inventory.mjs",
         "ops/hetzner/catalog-readonly-role.sql",
-        "scripts/mail-deliverability-monitor.py"
+        "scripts/mail-deliverability-monitor.py",
+        "scripts/lib/hetzner-preparation.mjs"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-inspection.test.mjs",
         "scripts/test_production_access.py",
         "scripts/__tests__/production-catalog-inventory.test.mjs",
-        "scripts/test_mail_deliverability_monitor.py"
+        "scripts/test_mail_deliverability_monitor.py",
+        "scripts/__tests__/hetzner-preparation.test.mjs"
       ],
       "critical": false
     },

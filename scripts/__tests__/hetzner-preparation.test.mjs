@@ -117,6 +117,29 @@ test('preparation records current drift and required CORS repair without enablin
   assert.equal(plan.observedPrivateUploads, null, 'Missing observation remains unknown');
 });
 
+test('preparation accepts collector spellings without changing raw observations or enabling destructive flags', async () => {
+  for (const raw of ['yes', ' ON ', '0', ' false ', '', 'TRUE']) {
+    const args = await input();
+    args.receipt.snapshot.containers.api.booleanConfiguration.EVENT_DISCOVERY_ENABLED = raw;
+    const plan = prepareHetznerRelease(args);
+    assert.equal(plan.observedFlags.EVENT_DISCOVERY_ENABLED, raw);
+    assert.equal(plan.executionAllowed, false);
+  }
+  const args = await input();
+  args.receipt.snapshot.containers.api.booleanConfiguration.ALLOW_ALL_ORIGINS = ' * ';
+  args.receipt.snapshot.containers.api.booleanConfiguration.RUN_MIGRATIONS = ' false ';
+  assert.equal(prepareHetznerRelease(args).observedFlags.ALLOW_ALL_ORIGINS, ' * ');
+  for (const raw of ['yes', 'true', '1', 'on', '', ' ']) {
+    args.receipt.snapshot.containers.api.booleanConfiguration.RUN_MIGRATIONS = raw;
+    assert.throws(() => prepareHetznerRelease(args), /Unsafe automatic schema/);
+  }
+  args.receipt.snapshot.containers.api.booleanConfiguration.RUN_MIGRATIONS = 'false';
+  for (const raw of ['*', 'private-value', 'true\0', ' '.repeat(257)]) {
+    args.receipt.snapshot.containers.api.booleanConfiguration.EVENT_DISCOVERY_ENABLED = raw;
+    assert.throws(() => prepareHetznerRelease(args), /Invalid observed flag/);
+  }
+});
+
 test('preparation preserves missing and present upload mounts without granting deployment', async () => {
   for (const canonicalWritableBind of [false, true]) {
     const args = await input();

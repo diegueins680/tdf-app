@@ -45,11 +45,18 @@ unknown effective defaults. A successful observation is **not release readiness*
 
 The collector reports both presence and absence for the known backend boolean
 controls, including invoice/notification/reconciliation workers, privacy,
-SMTP TLS and both CORS boolean alias sets. The repository gate conservatively
+SMTP TLS, the trusted edge-country header control and both CORS boolean alias sets. The repository gate conservatively
 discovers literal `*_ENABLED`/`*_AUTO_PUBLISH` names, calls to
-`validateStartupBooleanFlag`, and the two CORS alias lists in backend source;
+`validateStartupBooleanFlag`, literal `lookupEnv` calls wrapped in `parseBool*`/
+`readBool*` within the same paragraph, and the two CORS alias lists in backend source;
 a newly discovered control must enter the collector's absence register.
-This lexical check does not discover computed environment names or establish
+The preparation step accepts the same bounded boolean spellings as the collector
+and preserves their raw values. Destructive schema flags still require an explicit
+false spelling; empty or absent values are insufficient. Wildcards are permitted
+only for CORS controls. This is lexical validation, not normalization of backend
+effective values: backend parser whitespace and default rules can differ.
+This lexical check does not discover computed environment names, arbitrary parser
+functions or cross-paragraph dataflow, or establish
 effective behavior. Raw `false`, an empty value, and an absent variable remain
 distinct. Default and alias precedence must be evaluated against the observed
 backend revision, not the candidate's source. Unknown suffix controls are still

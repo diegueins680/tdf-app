@@ -46,7 +46,24 @@ def database():
             'socialRuntime': {'enabled': False, 'activatedOnce': True, 'private': SECRET}, 'extra': SECRET}
 
 
+def discovered_boolean_controls(text):
+    """Conservative lexical shapes, not general Haskell dataflow analysis."""
+    names = set(re.findall(r'"([A-Z][A-Z0-9_]*(?:_ENABLED|_AUTO_PUBLISH))"', text))
+    names.update(re.findall(r'validateStartupBooleanFlag\s+"([A-Z][A-Z0-9_]*)"', text))
+    # A literal lookup wrapped in a boolean parser need not follow a suffix
+    # convention. Permit line wrapping, but do not cross a blank paragraph.
+    names.update(re.findall(r'\b(?:parseBool\w*|readBool\w*)\b(?:(?!\n\s*\n).)*?\blookupEnv\s+"([A-Z][A-Z0-9_]*)"', text, re.S))
+    return names
+
+
 class Boundaries(unittest.TestCase):
+    def test_boolean_parser_lookup_is_discovered_without_a_suffix(self):
+        for text in ['flag <- fmap (maybe False parseBoolean) (lookupEnv "SYNTHETIC_TRUST_HEADER")',
+                     'flag <- fmap (maybe False parseBoolean)\n  (liftIO (lookupEnv "SYNTHETIC_TRUST_HEADER"))']:
+            self.assertEqual(discovered_boolean_controls(text), {'SYNTHETIC_TRUST_HEADER'})
+        self.assertNotIn('SYNTHETIC_TRUST_HEADER', module.BOOLEAN_KEYS,
+                         'The synthetic control must exercise discovery, not a registry entry')
+
     def test_known_backend_boolean_controls_report_absence_as_well_as_presence(self):
         # Conservative lexical discovery: names in comments may demand review,
         # but this does not pretend to resolve Haskell values or dynamic names.
@@ -54,8 +71,7 @@ class Boundaries(unittest.TestCase):
         for directory in ['tdf-hq/src', 'tdf-hq/app']:
             for source in (ROOT/directory).rglob('*.hs'):
                 text = source.read_text()
-                discovered.update(re.findall(r'"([A-Z][A-Z0-9_]*(?:_ENABLED|_AUTO_PUBLISH))"', text))
-                discovered.update(re.findall(r'validateStartupBooleanFlag\s+"([A-Z][A-Z0-9_]*)"', text))
+                discovered.update(discovered_boolean_controls(text))
         cors = (ROOT/'tdf-hq/src/TDF/Cors.hs').read_text()
         for name in ['allowAllEnv', 'disableDefaultsEnv']:
             group = re.search(rf'{name}\s*<-\s*lookupFirstNonEmptyEnv\s*\[([^]]+)\]', cors)
