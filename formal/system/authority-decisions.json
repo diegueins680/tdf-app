@@ -694,6 +694,17 @@
       "conflict": "Twenty-three model lines named Index… were written as indexes, but the model language reads any such line as a uniqueness constraint. Nine of them exist as UNIQUE constraints in the production schema snapshot: one message per conversation, one WhatsApp row per contact or telephone number per instant, one course registration, receipt or follow-up per person or registration per instant, and one follow-up per reminder time. The application writes rows these forbid: a second message in a conversation, and a WhatsApp reply recorded with the timestamp of the message it answers.",
       "authority": "The application's behaviour governs: conversations hold many messages and a reply is recorded beside its message. The names, the absence of any unique-key lookup or conflict clause on these keys and the plain indexes production holds on the campaign tables under the same naming show the uniqueness was never intended.",
       "resolution": "A new migration replaces the nine constraints with plain indexes of the same names and columns, and the twenty-three lines leave the models so that a development database no longer recreates them. A rollback file restores the constraints while no stored row violates them. The identity constraints (for example the WhatsApp provider message id) are unchanged."
+    },
+    {
+      "id": "AUTHORITY-064",
+      "sources": [
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "EVT-TICKET-MANUAL-001 states that the review locks the checkout, attempt and evidence rows. The function took those locks and then committed before writing, which released them; a second concurrent reviewer read the same submitted evidence and had the write refused by the database as an error instead of being told the transfer was already decided.",
+      "authority": "The requirement governs: the review is serialized by its row locks. The database's evidence transition guard remains the last line of defence, not the means of serialization.",
+      "resolution": "The intermediate commit is removed so the locks last until the review commits. A second reviewer waits and is answered from the decided state; the buyer's concurrent writes are not covered by this. The requirement gains a direct PostgreSQL test of the review transaction, including races, and a bounded model."
     }
   ]
 }

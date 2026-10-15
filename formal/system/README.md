@@ -93,6 +93,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, five negative controls, PostgreSQL tests and the open failed-attempt cancellation defect.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
+- [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification
