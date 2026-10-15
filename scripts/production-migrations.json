@@ -1040,6 +1040,11 @@
       "id": "2026-10-11_index_declarations_not_unique",
       "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
       "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
+    },
+    {
+      "id": "2026-10-13_checkout_policy_terms_identity",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+      "introducedBy": "4880a5cd8497a822d23adf08de76d9b4c90bb862"
     }
   ]
 }
