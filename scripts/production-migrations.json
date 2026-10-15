@@ -1037,6 +1037,11 @@
       "introducedBy": "57a79d693b0607ac0b7142cc6ab6d2e7f7b2084e"
     },
     {
+      "id": "2026-10-11_index_declarations_not_unique",
+      "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
+      "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
+    },
+    {
       "id": "2026-10-13_community_search_indexes",
       "path": "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
       "introducedBy": "08f3bcf50319983193d37ccec87d1c664c8ef21d"

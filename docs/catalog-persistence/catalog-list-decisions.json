@@ -15622,19 +15622,19 @@
       }
     },
     {
-      "id": "eedc0b9f70faa05ef280",
+      "id": "61895870d9f35cb7a8a4",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Ordered 204-entry manifest preserves main’s 203 migrations including inbound capture direction, then appends the community search expression indexes with their immutable introduction. No existing SQL or introduction changes; rehearsal, review and production application remain independently gated.",
+      "justification": "Ordered 205-entry manifest preserves all 204 current-main migrations including index declaration repair, then appends the unchanged community search expression indexes with their immutable introduction. Existing SQL and introduction SHAs are preserved. Rehearsal, independent review and production application remain separately gated.",
       "reviewed": true,
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3
       },
-      "reviewBatch": "operations-inbound-capture-2026-10-11",
+      "reviewBatch": "index-declarations-2026-10-11",
       "reviewMethod": "successor-of-reviewed-decision",
       "consolidatedMainDecision": {
         "id": "a6f94215147ae155b3c9",
@@ -57180,38 +57180,54 @@
         ]
       },
       "mergedDecision": {
-        "id": "155c8ba51c7e002c10d0",
+        "id": "5f2e374ddc077e6b8418",
         "classification": "genuine-technical-constant",
         "disposition": "explicit-allowlist",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+        "justification": "Ordered 203-entry manifest keeps the reviewed 202 entries unchanged and appends the Operations inbound capture direction migration (function replacement only, no table change) with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
         "reviewed": true,
         "evidence": {
           "file": "scripts/production-migrations.json",
           "line": 3
         },
-        "reviewBatch": "directory-artist-listings-2026-10-10",
+        "reviewBatch": "operations-inbound-capture-2026-10-11",
         "reviewMethod": "successor-of-reviewed-decision",
         "mergedDecision": {
-          "id": "f185683a8f6a6532b802",
+          "id": "155c8ba51c7e002c10d0",
           "classification": "genuine-technical-constant",
           "disposition": "explicit-allowlist",
           "specializedModel": "technical_constant_allowlist",
           "priority": "P1-integrity",
           "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Ordered 200-entry manifest keeps the reviewed 199 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+          "justification": "Ordered 202-entry manifest keeps the reviewed 200 entries unchanged and appends the additive directory artist derived listings migration and its idempotent listing backfill with their introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
           "reviewed": true,
           "evidence": {
             "file": "scripts/production-migrations.json",
             "line": 3
           },
-          "reviewBatch": "directory-event-search-sync-2026-10-10",
-          "reviewMethod": "successor-of-reviewed-decision"
+          "reviewBatch": "directory-artist-listings-2026-10-10",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "mergedDecision": {
+            "id": "f185683a8f6a6532b802",
+            "classification": "genuine-technical-constant",
+            "disposition": "explicit-allowlist",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Ordered 200-entry manifest keeps the reviewed 199 entries unchanged and appends the additive directory event search sync migration with its introduction commit. Rehearsal and production application remain independently gated; no migration is represented as applied.",
+            "reviewed": true,
+            "evidence": {
+              "file": "scripts/production-migrations.json",
+              "line": 3
+            },
+            "reviewBatch": "directory-event-search-sync-2026-10-10",
+            "reviewMethod": "successor-of-reviewed-decision"
+          }
         }
       },
-      "previousFingerprint": "5f2e374ddc077e6b8418"
+      "previousFingerprint": "394e8ba1db3ead9328f2"
     },
     {
       "id": "8d92943abad9c2a47c8f",
