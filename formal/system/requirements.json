@@ -10830,7 +10830,7 @@
         "Worker/external-effect drainage and fencing are separate open release obligations."
       ],
       "property": "No new admission after listener close; bounded cooperative HTTP drain; observed failure cannot become successful process result; completed server cannot leave pending initialization.",
-      "verification": "Eight canonical Haskell supervisor/retry cases; seven real subprocess scenarios; three runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement. The canonical image workflow adds isolated Linux PID1, tested-binary/migration binding, quiescent stops and witnessed blocked public reads for both signals. Nine candidate guard tests are separate from actual image execution.",
+      "verification": "Eight canonical Haskell supervisor/retry cases; seven real subprocess scenarios; three runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement. The canonical image workflow adds isolated Linux PID1, tested-binary/migration binding, quiescent stops and witnessed blocked public reads for both signals. Eleven candidate guard tests are separate from actual image execution.",
       "evidence": "Source-bound local receipts; exact release image and deployed observations remain required.",
       "conformance": {
         "classification": "PARTIAL",

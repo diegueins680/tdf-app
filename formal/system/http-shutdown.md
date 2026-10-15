@@ -81,8 +81,9 @@ Both TERM and INT must stop an idle application with exit0 within seven observed
 seconds and restart with committed synthetic data preserved. Each signal also
 stops a real public missing-course lookup while its SQL statement is witnessed
 waiting behind an exclusive fixture lock. Explicit listener refusal is witnessed while PID1 remains alive before the lock
-is released during the grace interval; the accepted request must finish with its expected404 before successful
-process exit. The HTTP client lives in the database container's namespace so
+is released during the grace interval; the accepted request must finish with its expected404 and complete `Curso no
+encontrado` body before successful process exit. Header-only or truncated bodies,
+conflicting/incorrect Content-Length and transfer coding cannot qualify. The HTTP client lives in the database container's namespace so
 application PID1 exit cannot kill the observer prematurely. These two read cases
 do not establish graceful completion of every mutation, HTTP2, WebSocket, worker
 or external effect. `activeRequestDrainVerified` refers only to these cases.
@@ -90,6 +91,6 @@ or external effect. `activeRequestDrainVerified` refers only to these cases.
 The database has no external network, public ports or host mounts. Only nonce-owned
 labelled containers/volumes are removed; partial failures and cleanup results are
 retained. Qualification never changes production or grants release authorization.
-Nine deterministic candidate controls and the eleven shared boundary controls run
+Eleven deterministic candidate controls and the eleven shared boundary controls run
 in the repository gate; actual Linux execution remains a separate required image
 job. A passing control suite is not a passing image execution.

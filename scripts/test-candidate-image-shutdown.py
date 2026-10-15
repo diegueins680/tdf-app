@@ -110,6 +110,29 @@ class CandidateTests(unittest.TestCase):
             with self.subTest(code=code, stderr=stderr):
                 self.assertEqual(m.listener_refused(subprocess.CompletedProcess([], code, b'', stderr)), expected)
 
+    def test_complete_expected404_response_with_length_or_eof_framing(self):
+        body = b'Curso no encontrado'
+        for headers in (b'', b'Content-Length: 19\r\n'):
+            response = b'HTTP/1.0 404 Not Found\r\n'+headers+b'\r\n'+body
+            self.assertEqual(m.completed_missing_course_response(response), body)
+
+    def test_header_only_truncated_or_invalidly_framed404_never_counts_as_completion(self):
+        body = b'Curso no encontrado'
+        responses = [b'HTTP/1.0 404 Not Found\r\n\r\n',
+            b'HTTP/1.0 404 Not Found\r\n\r\nCurso no',
+            b'HTTP/1.0 404 Not Found\r\nContent-Length: 19\r\n\r\nCurso no',
+            b'HTTP/1.0 404 Not Found\r\nContent-Length: 1\r\n\r\n'+body,
+            b'HTTP/1.0 404 Not Found\r\nContent-Length: 19\r\nContent-Length: 20\r\n\r\n'+body,
+            b'HTTP/1.0 404 Not Found\r\nTransfer-Encoding: chunked\r\n\r\n'+body,
+            b'HTTP/1.0 404 Not Found\r\nContent-Length: -1\r\n\r\n'+body,
+            b'HTTP/1.0 404 Not Found\r\n folded: invalid\r\n\r\n'+body,
+            b'HTTP/1.0 404 Not Found\r\nX-Debug: invalid\nheader\r\n\r\n'+body,
+            b'HTTP/1.0 404 Not Found\r\n\r\n'+body+b'extra',
+            b'HTTP/1.0 200 OK\r\n\r\n'+body]
+        for response in responses:
+            with self.subTest(response=response), self.assertRaises(ValueError):
+                m.completed_missing_course_response(response)
+
     def test_historical_diagnostic_stays_fixed_and_cannot_take_candidate_arguments(self):
         self.assertEqual(m.base.Fixture.image, m.base.IMAGE)
         self.assertEqual(m.base.Fixture.revision, m.base.REVISION)

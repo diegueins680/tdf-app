@@ -24,6 +24,28 @@ def listener_refused(result):
     return result.returncode == 1 and b'/dev/tcp/127.0.0.1/8080: Connection refused' in result.stderr
 
 
+def completed_missing_course_response(response):
+    require(len(response) <= 65536)
+    head, separator, body = response.partition(b'\r\n\r\n')
+    require(bool(separator))
+    lines = head.split(b'\r\n')
+    status = lines[0].split(b' ', 2)
+    require(len(status) >= 2 and status[0] in (b'HTTP/1.0', b'HTTP/1.1') and status[1] == b'404')
+    lengths = []
+    for line in lines[1:]:
+        name, colon, value = line.partition(b':')
+        require(bool(colon) and re.fullmatch(rb'[A-Za-z0-9-]+', name) is not None)
+        require(all(byte == 9 or (byte >= 32 and byte != 127) for byte in value))
+        value = value.strip()
+        require(name.lower() != b'transfer-encoding')  # HTTP/1.0 close-framed request.
+        if name.lower() == b'content-length':
+            require(re.fullmatch(rb'[0-9]{1,10}', value) is not None)
+            lengths.append(int(value))
+    require(len(lengths) <= 1 and (not lengths or lengths[0] == len(body)))
+    require(body == b'Curso no encontrado')
+    return body
+
+
 class CandidateFixture(base.Fixture):
     def __init__(self, output, image, revision, binary):
         require(re.fullmatch(r'diegueins680/tdf-hq@sha256:[a-f0-9]{64}', image) is not None)
@@ -125,8 +147,7 @@ class CandidateFixture(base.Fixture):
             require(locker.returncode == 0 and not errors)
             response, errors = reader.communicate(timeout=8)
             require(reader.returncode == 0 and not errors and len(response) <= 65536)
-            head, separator, body = response.partition(b'\r\n\r\n')
-            require(separator and head.split(b'\r\n')[0].split()[1] == b'404')
+            body = completed_missing_course_response(response)
             _, errors = stopper.communicate(timeout=15)
             require(stopper.returncode == 0 and not errors)
             state = self.inspect(self.app)['State']
