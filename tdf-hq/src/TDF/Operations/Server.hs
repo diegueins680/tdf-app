@@ -970,10 +970,10 @@ replayFailureHandler original failureId command = runOperationsWrite original $ 
   unless (any (`elem` auRoles user) [Admin, Manager, StudioManager]) $ rejectCommand err403
   validateCommandMetadata (command.requestId) (command.sourceClient)
   when (T.null (T.strip (command.reason))) $ rejectCommand err422 {errBody = "Replay reason is required"}
-  -- Acquire in migration order before taking a failure row lock. These locks
+  -- Acquire in worker/migration order before taking a failure row lock. These locks
   -- keep trigger DDL out while remaining compatible with normal worker writes.
   rawExecute
-    "LOCK TABLE operations_integration_failure, operations_outbox IN ROW EXCLUSIVE MODE" []
+    "LOCK TABLE operations_outbox, operations_integration_failure IN ROW EXCLUSIVE MODE" []
   locked <- rawSql
     "SELECT organization_id::text,branch_id::text,status,retryable,provider FROM operations_integration_failure WHERE id=?::uuid FOR UPDATE"
     [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single Text, Single Bool, Single Text)]

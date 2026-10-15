@@ -6,7 +6,7 @@
 BEGIN;
 SET LOCAL lock_timeout = '10s';
 -- Keep the check and trigger removal atomic with respect to retries and workers.
-LOCK TABLE operations_integration_failure, operations_outbox IN SHARE ROW EXCLUSIVE MODE;
+LOCK TABLE operations_outbox, operations_integration_failure IN SHARE ROW EXCLUSIVE MODE;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM operations_integration_failure

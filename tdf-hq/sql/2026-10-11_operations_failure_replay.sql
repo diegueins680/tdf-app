@@ -6,8 +6,8 @@
 -- Safe to apply again: functions and triggers are replaced, repairs find nothing.
 BEGIN;
 SET LOCAL lock_timeout = '10s';
--- Match replay and rollback before changing either table's triggers.
-LOCK TABLE operations_integration_failure, operations_outbox IN SHARE ROW EXCLUSIVE MODE;
+-- Match the worker, replay and rollback before changing either table's triggers.
+LOCK TABLE operations_outbox, operations_integration_failure IN SHARE ROW EXCLUSIVE MODE;
 
 -- operations_record_event writes every event to the bootstrap organization and
 -- branch. A failure's work item belongs to the failure's tenant: this is the
