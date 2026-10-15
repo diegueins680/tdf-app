@@ -10957,7 +10957,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "fd4185d685f407ba3dc7c0775abf1221258cd6153859df68198a3f0a1d22aae8",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
-    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "726d09e3d6251b77588bafb3647b2544754febcf48cdc4a3c813425dd7267120",
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
@@ -38622,7 +38622,7 @@
     {
       "id": "SURFACE-89f49f12c8c895f1",
       "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-      "sha256": "726d09e3d6251b77588bafb3647b2544754febcf48cdc4a3c813425dd7267120",
+      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

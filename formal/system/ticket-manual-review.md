@@ -107,8 +107,12 @@ are witnessed waiting for the checkout lock. Cleanup must release the holder
 before waiting for either reviewer's cancellation, since a PostgreSQL query can
 defer cancellation while blocked on that lock. This thirteenth case checks that
 the failure returns and the checkout remains reviewable with one payment. The
-whole overlap has a 30-second deadline; a synthetic unmatched observation query
-separately checks the actual deadline path. These are harness execution checks,
+whole overlap has a 30-second deadline. A checked-in case delays observation
+completion for 60 seconds after both reviewers are witnessed waiting, exercises
+that actual deadline, and confirms cleanup leaves the checkout reviewable with
+one payment. A separate pure case rejects misleading URI authorities before
+opening any connection; the Docker service hostname is accepted only in CI.
+These are harness execution checks,
 not a liveness proof for arbitrary database failures.
 
 ## Not covered
