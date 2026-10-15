@@ -7,6 +7,12 @@ Historical green results are not current-candidate evidence.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
+- [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence and explicit blocked release decision.
+- [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.
+
+- [auth-predicates.md](auth-predicates.md): three conditional authorization predicate contracts, cardinality lemmas, source mutation controls and explicit endpoint/refinement exclusions.
+- [recovery-expiry-arithmetic.md](recovery-expiry-arithmetic.md): four conditional full-width recovery-time contracts, PostgreSQL correspondence, overflow refusal and finite database boundary probes.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.
@@ -339,6 +345,11 @@ the scheme-like campaign-label correction. It is retained by normal merge;
 PRIV-ANALYTICS-001 keeps the same serializer boundary and mapped regression suite.
 
 Invoice receipt authority and bounded verification scope: [invoice-receipts.md](invoice-receipts.md) (`PAY-INVOICE-001`). The additive migration rejects incompatible historical receipts; no automatic financial-evidence rewrite is permitted.
+
+Independent cross-solver and CPC certificate checking, its all fourteen formula obligations
+and their source/refinement limitations:
+[proof-certificates.md](proof-certificates.md). These results never discharge
+complete implementation or refinement obligations.
 
 The [release intent journal](release-journal.md) orders durable operations and rejects
 uncertain replay. It remains a library, not a guarded production executor.

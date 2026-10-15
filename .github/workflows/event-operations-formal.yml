@@ -18,7 +18,7 @@ concurrency:
 jobs:
   specification-contracts:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
         env:
@@ -55,6 +55,38 @@ jobs:
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
+      - name: Generate formal assurance and release decision
+        if: ${{ !cancelled() }}
+        run: python scripts/verification-report.py --output "${{ runner.temp }}/assurance-report"
+      - name: Test assurance reporting and counterexample retention
+        run: |
+          python scripts/test-verification-report.py
+          python scripts/test-auth-predicates.py
+          python scripts/test-recovery-expiry-verifier.py
+      - name: Build pinned independent proof checker
+        run: python scripts/install-proof-checkers.py --output "${{ runner.temp }}/proof-checkers"
+      - name: Independently check SMT inputs and CPC refutations
+        run: |
+          PROOF_CHECKER_TOOLS="${{ runner.temp }}/proof-checkers" python scripts/test-proof-certificates.py
+          python scripts/verify-proof-certificates.py --report "${{ runner.temp }}/assurance-report" --tools "${{ runner.temp }}/proof-checkers" --output "${{ runner.temp }}/proof-certificates"
+      - name: Preserve independent proof evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: proof-certificates-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/proof-certificates
+            ${{ runner.temp }}/proof-checkers/installation.json
+            ${{ runner.temp }}/proof-checkers/build.log
+          if-no-files-found: warn
+      - name: Preserve formal assurance report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: assurance-report-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/assurance-report
+          if-no-files-found: warn
+
       - name: Preserve solver result
         if: always()
         uses: actions/upload-artifact@v7
@@ -124,6 +156,9 @@ jobs:
 
       - name: Check event operations foundation migration
         run: npm run test:event-operations-foundation-migration
+
+      - name: Check recovery time constraint on isolated PostgreSQL
+        run: sh scripts/test-recovery-time-postgres.sh
 
   postgres-api:
     runs-on: ubuntu-latest
