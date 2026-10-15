@@ -1045,6 +1045,11 @@
       "id": "2026-10-13_community_search_indexes",
       "path": "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
       "introducedBy": "08f3bcf50319983193d37ccec87d1c664c8ef21d"
+    },
+    {
+      "id": "2026-10-14_directory_event_search_alias_sync",
+      "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+      "introducedBy": "7c74b3c3e14f53870ee8a09ba6fcc80bc645e251"
     }
   ]
 }
