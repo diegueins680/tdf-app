@@ -94,7 +94,7 @@ undeclared stored name unreachable). Bound and required: profile, claim,
 classified, application and invitation; on 2026-10-13 each relation equals its
 declared machine (15, 11, 22, 17 and 12 transitions), no deviation. The claim
 relation was already exhausted through HTTP under ID-CLAIM-REVIEW-001; the
-static comparison is new for all five. Nineteen database-free controls cover
+static comparison is new for all five. Twenty-one database-free controls cover
 the shape (edge removed or added, unnamed constructor, set extended, built from
 a decoy set, nested `let`/`where` shadows of `transitions`, or holding a named entry, predicate with an extra disjunct, deciding
 on a primed set or keeping membership only in a helper, a specific clause before

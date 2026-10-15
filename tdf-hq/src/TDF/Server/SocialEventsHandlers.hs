@@ -107,6 +107,8 @@ module TDF.Server.SocialEventsHandlers (
     validateArtistProfileWriteAccess,
     validateAuthenticatedPartyReference,
     validateEventDeleteAccess,
+    requireEventManager,
+    assignMissingEventOrganizer,
     validateEventDeletionCheckoutHistory,
     removeSocialEventAssets,
     suppressImportedEventMetadata,
@@ -2769,7 +2771,18 @@ socialEventsServer user =
         eventKey <- parseVisibleEventKey rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
-        managedEvent <- claimOrRequireEventManager currentPartyId envPool eventKey existing
+        -- A strict administrator may edit an event without an organizer and is
+        -- assigned as its organizer together with the accepted edit, under
+        -- the event lock; a refused edit assigns nobody.
+        let editAccess row = case cleanMaybeText (socialEventOrganizerPartyId row) of
+                Just owner
+                    | owner == currentPartyId -> Right False
+                    | otherwise -> Left eventNotOrganizerError
+                Nothing
+                    | hasStrictAdminAccess user -> Right True
+                    | otherwise -> Left eventWithoutOrganizerError
+        _ <- either throwError pure (editAccess existing)
+        let managedEvent = existing
         let dto = eudEvent
         validateEventReadOnlyProjectionOmitted dto
         requestedEventTypeId <-
@@ -2828,8 +2841,7 @@ socialEventsServer user =
             case locked of
                 Nothing -> pure (Left err404{errBody = "Event not found"})
                 Just (Entity _ currentEvent)
-                    | cleanMaybeText (socialEventOrganizerPartyId currentEvent) /= Just currentPartyId ->
-                        pure (Left err403{errBody = "Only the event organizer can manage this event"})
+                    | Left refused <- editAccess currentEvent -> pure (Left refused)
                     | socialEventWorkflowStateId currentEvent /= socialEventWorkflowStateId managedEvent
                         && (case eudWorkflowStateIdUpdate of FieldMissing -> False; _ -> True) ->
                         pure (Left err409{errBody = "Event workflow changed; reload before updating"})
@@ -2851,23 +2863,40 @@ socialEventsServer user =
                                                 }
                                             updated = proposed{socialEventMetadata =
                                                 EventDiscoveryOwnership.preserveEventOwnership currentEvent proposed}
-                                        update eventKey
-                                            [ SocialEventTitle =. socialEventTitle updated
-                                            , SocialEventDescription =. socialEventDescription updated
-                                            , SocialEventVenueId =. socialEventVenueId updated
-                                            , SocialEventTimezone =. socialEventTimezone updated
-                                            , SocialEventStartTime =. socialEventStartTime updated
-                                            , SocialEventEndTime =. socialEventEndTime updated
-                                            , SocialEventPriceCents =. socialEventPriceCents updated
-                                            , SocialEventCapacity =. socialEventCapacity updated
-                                            , SocialEventEventTypeId =. socialEventEventTypeId updated
-                                            , SocialEventWorkflowStateId =. socialEventWorkflowStateId updated
-                                            , SocialEventMetadata =. socialEventMetadata updated
-                                            , SocialEventUpdatedAt =. now
-                                            ]
-                                        deleteWhere [EventArtistEventId ==. eventKey]
-                                        forM_ artistKeys $ \artistKey -> insert_ (EventArtist eventKey artistKey Nothing)
-                                        pure (Right updated)
+                                        assigned <-
+                                            if editAccess currentEvent == Right True
+                                                then assignMissingEventOrganizer
+                                                    currentPartyId now eventKey
+                                                else pure (Right currentEvent)
+                                        case assigned of
+                                          Left refused -> pure (Left refused)
+                                          Right holder -> do
+                                           update eventKey
+                                               [ SocialEventTitle =. socialEventTitle updated
+                                               , SocialEventDescription
+                                                   =. socialEventDescription updated
+                                               , SocialEventVenueId =. socialEventVenueId updated
+                                               , SocialEventTimezone =. socialEventTimezone updated
+                                               , SocialEventStartTime
+                                                   =. socialEventStartTime updated
+                                               , SocialEventEndTime =. socialEventEndTime updated
+                                               , SocialEventPriceCents
+                                                   =. socialEventPriceCents updated
+                                               , SocialEventCapacity =. socialEventCapacity updated
+                                               , SocialEventEventTypeId
+                                                   =. socialEventEventTypeId updated
+                                               , SocialEventWorkflowStateId
+                                                   =. socialEventWorkflowStateId updated
+                                               , SocialEventMetadata =. socialEventMetadata updated
+                                               , SocialEventUpdatedAt =. now
+                                               ]
+                                           deleteWhere [EventArtistEventId ==. eventKey]
+                                           forM_ artistKeys $ \artistKey ->
+                                               insert_ (EventArtist eventKey artistKey Nothing)
+                                           pure (Right updated
+                                               { socialEventOrganizerPartyId =
+                                                   socialEventOrganizerPartyId holder
+                                               })
             ) envPool) >>= either throwError pure
         liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eventKey updatedEvent (eventArtists dto)) envPool)
             >>= either throwError pure
@@ -2917,16 +2946,11 @@ socialEventsServer user =
                                         Just owner
                                             | owner /= currentPartyId ->
                                                 pure (Left err403{errBody = "Only the event organizer can manage this event"})
-                                        owner ->
+                                        Nothing -> pure (Left eventWithoutOrganizerError)
+                                        Just _ ->
                                             case decodeStoredEventMetadata (socialEventMetadata eventRow) of
                                                 Left message -> pure (Left (storedEventMetadataServerError message))
                                                 Right existingMeta -> do
-                                                    when (isNothing owner) $
-                                                        update
-                                                            eventKey
-                                                            [ SocialEventOrganizerPartyId =. Just currentPartyId
-                                                            , SocialEventUpdatedAt =. now
-                                                            ]
                                                     -- Keep file creation and metadata publication inside
                                                     -- the event lock. Deletion either waits and removes this
                                                     -- file afterward, or commits first and makes this branch
@@ -4228,7 +4252,7 @@ socialEventsServer user =
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+        _ <- requireEventManager currentPartyId eventVal
         let tierName = T.strip (ticketTierName dto)
         when (T.null tierName) $ throwError err400{errBody = "ticket tier name is required"}
         when (ticketTierPriceCents dto < 0) $ throwError err400{errBody = "ticket tier price must be >= 0"}
@@ -4289,7 +4313,7 @@ socialEventsServer user =
         tierKey <- parseKeyOr400 "ticket tier" tierIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+        _ <- requireEventManager currentPartyId eventVal
         mTier <- liftIO $ runSqlPool (get tierKey) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         when (eventTicketTierEventId tier /= eventKey) $ throwError err400{errBody = "Ticket tier does not belong to this event"}
@@ -4579,7 +4603,7 @@ socialEventsServer user =
                     && oldStatus == "pending"
                     && newStatus == "cancelled"
         when (not buyerOwnPendingCancellation) $ do
-            _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+            _ <- requireEventManager currentPartyId eventVal
             pure ()
 
         when (oldStatus == "pending" && newStatus == "cancelled") $
@@ -6762,11 +6786,10 @@ socialEventsServer user =
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         role <- case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
-            Nothing -> do
-                managed <- claimOrRequireEventManager currentPartyId envPool eventKey eventRow
-                pure (if socialEventOrganizerPartyId managed == Just currentPartyId then "owner" else "viewer")
             Just owner | owner == currentPartyId -> pure "owner"
-            Just _ -> do
+            -- With no organizer the event has no owner role to hand out;
+            -- only its recorded logistics team keeps access.
+            _ -> do
                 mMember <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsMember eventKey currentPartyId)) envPool
                 maybe (throwError err403{errBody = "You are not on this event's logistics team"}) (pure . eventLogisticsMemberMemberRole . entityVal) mMember
         when (requireEdit && role == "viewer") $ throwError err403{errBody = "This logistics team role is read-only"}
@@ -6906,7 +6929,7 @@ socialEventsServer user =
         eventKey <- parseVisibleEventKey rawEventId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+        claimed <- requireEventManager currentPartyId eventVal
         pure (eventKey, claimed)
 
     requireRefundManagedEvent :: T.Text -> AppM (SocialEventId, SocialEvent)
@@ -6919,7 +6942,7 @@ socialEventsServer user =
             then pure (eventKey, eventVal)
             else do
                 requireEventVisibleToUser eventKey
-                claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+                claimed <- requireEventManager currentPartyId eventVal
                 pure (eventKey, claimed)
 
     requireExistingEvent :: ConnectionPool -> SocialEventId -> AppM SocialEvent
@@ -9149,18 +9172,49 @@ isEventManager currentParty eventRow =
         Nothing -> False
         Just owner -> owner == currentParty
 
-claimOrRequireEventManager :: T.Text -> ConnectionPool -> SocialEventId -> SocialEvent -> AppM SocialEvent
-claimOrRequireEventManager currentParty pool eventKey eventRow =
+eventWithoutOrganizerError :: ServerError
+eventWithoutOrganizerError =
+    err403{errBody = "This event has no organizer; \
+                    \a strict administrator must assign one by editing the event"}
+
+eventNotOrganizerError :: ServerError
+eventNotOrganizerError =
+    err403{errBody = "Only the event organizer can manage this event"}
+
+-- An event without an organizer is never taken by whoever reaches it first:
+-- organizer-only routes refuse it and write nothing.
+requireEventManager :: T.Text -> SocialEvent -> AppM SocialEvent
+requireEventManager currentParty eventRow =
     case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
         Just owner | owner == currentParty -> pure eventRow
-        Just _ -> throwError err403{errBody = "Only the event organizer can manage this event"}
-        Nothing -> do
-            now <- liftIO getCurrentTime
-            liftIO $
-                runSqlPool
-                    (update eventKey [SocialEventOrganizerPartyId =. Just currentParty, SocialEventUpdatedAt =. now])
-                    pool
-            pure eventRow{socialEventOrganizerPartyId = Just currentParty, socialEventUpdatedAt = now}
+        Just _ -> throwError eventNotOrganizerError
+        Nothing -> throwError eventWithoutOrganizerError
+
+-- The one assignment of a missing organizer. The caller has established that
+-- the party may be assigned. Whether the field is empty is judged here with the
+-- same rule as every other check (cleanMaybeText), and the update applies only
+-- while the field still holds exactly the empty value that was read, so the
+-- database decides between simultaneous callers, and the stored row, not an
+-- earlier read, decides the outcome.
+assignMissingEventOrganizer
+    :: T.Text -> UTCTime -> SocialEventId -> SqlPersistT IO (Either ServerError SocialEvent)
+assignMissingEventOrganizer party now eventKey = do
+    before <- get eventKey
+    case before of
+        Just row | isNothing (cleanMaybeText (socialEventOrganizerPartyId row)) ->
+            rawExecute
+                "UPDATE social_event SET organizer_party_id = ?, updated_at = ? \
+                \WHERE id = ? AND organizer_party_id IS NOT DISTINCT FROM ?"
+                [ toPersistValue party, toPersistValue now, toPersistValue eventKey
+                , toPersistValue (socialEventOrganizerPartyId row)
+                ]
+        _ -> pure ()
+    stored <- get eventKey
+    pure $ case stored of
+        Nothing -> Left err404{errBody = "Event not found"}
+        Just current
+            | cleanMaybeText (socialEventOrganizerPartyId current) == Just party -> Right current
+            | otherwise -> Left eventNotOrganizerError
 
 loadEventArtists :: ConnectionPool -> SocialEventId -> AppM [ArtistDTO]
 loadEventArtists pool eventKey = do
@@ -9409,7 +9463,7 @@ loadEventWorkflowProjections eventRows = do
             [PersistText EventLifecycle.socialEventWorkflowCode]
     capabilityRows <-
         rawSql
-            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
+            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','rsvp','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
             [PersistText EventLifecycle.socialEventWorkflowCode]
     let typedStateRows =
             stateRows
