@@ -349,6 +349,8 @@ run_negative_tlc CheckoutReadinessUnavailable.cfg checkout-unavailable 'Invarian
 run_negative_tlc CheckoutReadinessStale.cfg checkout-stale 'Invariant CurrentReservation is violated' CheckoutReadiness.tla
 run_negative_tlc CheckoutReadinessDuplicate.cfg checkout-duplicate 'Invariant SingleCurrentFlight is violated' CheckoutReadiness.tla
 run_tlc DriveReplay.tla DriveReplay.cfg drive-replay
+run_tlc DriveReplay.tla DriveReplayCrossFolder.cfg drive-replay-cross-folder
+run_negative_tlc DriveReplayCrossFolderObjects.cfg drive-replay-cross-folder-objects 'Invariant SingleObject is violated' DriveReplay.tla
 run_negative_tlc DriveReplayUnchecked.cfg drive-replay-unchecked 'Invariant ReuseBinds is violated' DriveReplay.tla
 run_negative_tlc DriveReplayActorIgnored.cfg drive-replay-actor-ignored 'Invariant NoForeignReuse is violated' DriveReplay.tla
 run_negative_tlc DriveReplayLegacyAdopted.cfg drive-replay-legacy-adopted 'Invariant NoLegacyAdoption is violated' DriveReplay.tla

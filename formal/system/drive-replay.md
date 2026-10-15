@@ -43,31 +43,42 @@ revocation and historical provider-object reconciliation remain separate work.
 The primary-source decisions and their limits are recorded in `research.json`.
 No real Google operation is required by this verification.
 
-## Model (2026-10-12)
+## Bounded model
 
-`formal/event-operations/DriveReplay.tla`: one idempotency key, two requests
-from two actors with two request shapes (name, MIME, folder and bytes
-abstracted as one value), a provider entry that is absent, legacy (no
-fingerprint) or bound to an actor and shape. Each request looks the entry up,
-then creates, reuses or conflicts as `uploadToDrive` does, with two
-simplifications: the folder is part of the shape (in the Haskell the lookup
-is scoped to the folder, so a same-key request for another folder misses and
-creates), and the fingerprint has no version (a version bump makes old bound
-entries conflict like legacy ones). Invariants:
-`ReuseBinds` (a reuse's entry carries the request's own shape),
-`NoForeignReuse` (and its actor), `NoLegacyAdoption`, `ConflictNoMutation`
-(objects exist only for requests that report a creation; a reuse creates
-nothing but still runs the best-effort sharing and metadata calls). Three controls
-remove one guard each: `Unchecked` (`FingerprintChecked` off: `ReuseBinds`),
-`ActorIgnored` (`ActorBound` off: `NoForeignReuse`), `LegacyAdopted`
-(`LegacyRejected` off: `NoLegacyAdoption`). A fourth configuration, `Race`,
-checks `SingleObject` (at most one provider object per key) with every guard
-on and is registered as an expected counterexample: two requests that both
-see no entry both create. That is the limitation the paragraph above records;
-the model makes it explicit rather than proving it away. 1,420 states generated, 940 distinct. Decision in
-AUTHORITY-071. The entry may start absent, legacy or bound. The model does not cover provider visibility lag, process
-death after the create, out-of-band property changes or the best-effort
-sharing and metadata calls after the decision. `DriveReplaySpec` (nine
-examples) is the execution evidence for the three guards; it passed on the
-built test binary of 2026-10-12, whose `uploadToDrive` is byte-identical to
-main's.
+`formal/event-operations/DriveReplay.tla` uses one idempotency key, two explicit
+folders in one fixed credential-visible scope, two requests, two actors and two
+content/name/MIME shapes. Provider entries are indexed by folder; each starts
+absent, legacy (no fingerprint) or bound to an actor and shape. A request looks
+up its own folder before creating, reusing or conflicting. Folder identity is
+represented by the provider namespace, separately from the remaining fingerprint
+shape. A conflict performs the lookup GET, then no create, permission or metadata
+mutation; a reuse creates no object but may still run best-effort sharing.
+
+The primary configuration checks `ReuseBinds`, `NoForeignReuse`,
+`NoLegacyAdoption` and `ConflictNoMutation`: 33,168 generated states and 21,648
+distinct states. Three guard-removal controls fail their respective reuse,
+actor and legacy invariants. `DriveReplayRace.cfg` restricts both requests to the
+same folder and still finds two creations after concurrent misses; it does not
+claim distributed exactly-once creation.
+
+`DriveReplayCrossFolder.cfg` starts both folders empty and runs the second
+request only after the first finishes, with the same actor, content and key in
+different folders. All 20 reachable states satisfy `CrossFolderCreates`: when
+both requests finish, both created an object. The separate
+`DriveReplayCrossFolderObjects.cfg` deliberately checks the false global
+single-object claim and reaches two creations, demonstrating that the positive
+terminal-state assertion is not vacuous. A local mutation that reads the first
+folder for every lookup fails `CrossFolderCreates`.
+
+These are safety checks on finite executions, without fairness or eventual
+completion claims. Bounds exclude a missing effective folder (the implementation
+then searches without a parent filter), fingerprint-version changes, credential
+visibility changes, provider visibility lag, process death after create,
+out-of-band property changes, duplicate-match lookup after both creates, and
+best-effort sharing/metadata calls after the decision. Fingerprint equality is an
+abstraction, not a cryptographic proof. Runtime correspondence is by source
+inspection of `findDriveUploadByIdempotencyKey`, not refinement.
+
+`DriveReplaySpec` remains the execution evidence for the existing handler guards.
+Its historical nine-example result from 2026-10-12 is not a new execution receipt
+for this model revision. No real Google operations are part of these checks.
