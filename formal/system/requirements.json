@@ -1844,7 +1844,9 @@
       ],
       "tests": [
         "scripts/__tests__/checkout-amount-postgres.mjs",
-        "scripts/test-marketplace-contact-identity.sh"
+        "scripts/test-marketplace-contact-identity.sh",
+        "scripts/__tests__/test-process-session.test.mjs",
+        "scripts/lib/test-process-session.mjs"
       ],
       "formalModels": [
         "formal/event-operations/CheckoutSnapshot.tla",
@@ -1853,7 +1855,7 @@
         "formal/event-operations/CheckoutSnapshotUnvalidated.cfg",
         "formal/event-operations/CheckoutSnapshotMutableTerms.cfg"
       ],
-      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls checks that the guard implies the invariants; the PostgreSQL test exercises the mechanism: fixed-snapshot cases, a header update before the append, a session that began before the checkout was created, subtransactions, upserts that insert nothing or update the header, a header and line in one statement, two negative controls and the structural check of both new triggers.",
+      "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls. 2026-10-12: CheckoutSnapshot.tla (200 states, 85 distinct) with three single-guard controls checks that the guard implies the invariants; the PostgreSQL test exercises the mechanism: fixed-snapshot cases, a header update before the append, a session that began before the checkout was created, subtransactions, upserts that insert nothing or update the header, a header and line in one statement, two negative controls and the structural check of both new triggers. Interactive PostgreSQL test sessions reject spawn errors and early exits before readiness and bound stalled waits; focused child-process tests cover those failure paths.",
       "evidence": "checkout-amount-postgres-fence.log; formal/system/checkout-snapshot.md",
       "critical": true,
       "status": "specified and implemented",

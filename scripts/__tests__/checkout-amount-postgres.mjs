@@ -4,6 +4,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { disposablePostgresUrl } from '../lib/disposable-postgres-url.mjs';
 import { buildSchemaVerificationSql } from '../lib/production-release.mjs';
+import { testProcessSession } from '../lib/test-process-session.mjs';
 
 const db = process.env.TDF_CHECKOUT_AMOUNT_DATABASE_URL;
 disposablePostgresUrl(db, { ci: process.env.CI === 'true' });
@@ -202,14 +203,7 @@ assert.equal(pass(`SELECT count(*) FROM commerce_checkout_line_item WHERE checko
 assert.equal(pass(`SELECT coalesce(current_setting('tdf.commerce_checkouts_created', true), '');`, 'setting is transaction-local'), '');
 pass(`BEGIN; ${dropFixed} ${line(fixedCheckout, '0', 3)} SET CONSTRAINTS ALL IMMEDIATE; ROLLBACK;`, 'negative control: the sum check alone admits a zero-total append');
 pass(`BEGIN; ${dropFixed} UPDATE commerce_checkout_session SET updated_at=now() WHERE id='${fixedCheckout}'; ${line(fixedCheckout, '0', 3)} SET CONSTRAINTS ALL IMMEDIATE; ROLLBACK;`, 'negative control: the sum check alone admits a zero-total append after a header update');
-const session = () => {
-  const child = spawn('psql', args, { stdio: ['pipe', 'pipe', 'pipe'] });
-  let output = '', errors = '';
-  child.stderr.on('data', data => { errors += data; });
-  const closed = new Promise((resolve, rejectPromise) => { child.on('error', rejectPromise); child.on('close', resolve); });
-  const until = marker => new Promise(resolve => { child.stdout.on('data', data => { output += data; if (output.includes(marker)) resolve(); }); });
-  return { child, closed, until, errors: () => errors };
-};
+const session = () => testProcessSession('psql', args);
 {
   // Another session's uncommitted header is not a checkout this transaction created;
   // that session still commits with its own line.

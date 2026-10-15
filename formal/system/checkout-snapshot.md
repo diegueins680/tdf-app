@@ -126,3 +126,9 @@ refused by the 2026-10-04 and 2026-08-13 rules and are not actions.
   while lines exist; a committed checkout always has lines. Not modelled.
 - `commerce_checkout_amount_boundary` and the SQLSTATE 40001 retry remain the
   2026-10-04 obligations; unchanged.
+
+The interactive PostgreSQL regression harness rejects a missing readiness marker
+when psql exits or cannot start, and terminates an owned stalled client after a
+15-second bound. Five child-process cases cover split/retained output, failed and
+successful early exits, spawn errors and timeout cleanup. This bounds test
+coordination only; it changes no checkout transaction or production timeout.
