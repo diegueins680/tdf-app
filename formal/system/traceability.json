@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "56e4f51bd10b6aa05a1e13b5c9d5c39203ea8318",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -8304,7 +8304,8 @@
         "e2e/web/music-player.spec.mjs",
         "e2e/web/music-player-native.spec.mjs",
         "e2e/web/music-player-integration.spec.mjs",
-        "e2e/web/fixtures/native-music-setup.mjs"
+        "e2e/web/fixtures/native-music-setup.mjs",
+        "tdf-mobile/src/navigation/notificationResponses.test.ts"
       ],
       "verification": "Vitest unit tests, Playwright native and integration specs against local API/PostgreSQL/S3",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md",
@@ -9519,6 +9520,115 @@
       }
     },
     {
+      "id": "AUTH-APPLE-SIGNIN-001",
+      "title": "Sign in with Apple creates or resumes sessions only from verified Apple identity tokens",
+      "statement": "POST /login/apple verifies an Apple identity token (RS256 signature against Apple published keys, issuer, configured audiences, lifetime with 60 second skew, and nonce digest) before any database effect, then applies the same binding, linking and explicit-consent account creation rules as Google through auth_provider_identity.",
+      "authority": "App Store review guideline 4.8 rejection of TDF Mobile for offering Google login without Sign in with Apple (2026-10-13)",
+      "domain": "AUTH",
+      "actors": [
+        "Visitor",
+        "Returning user",
+        "Apple identity provider"
+      ],
+      "preconditions": [
+        "APPLE_SIGN_IN_AUDIENCES lists the iOS bundle id (default com.tdfrecords.app) and the Sign in with Apple capability is enabled for the App ID."
+      ],
+      "inputs": [
+        "Apple identity token",
+        "raw nonce",
+        "optional full name",
+        "createNewAccount, termsAccepted, termsVersion",
+        "optional linkAccount credentials"
+      ],
+      "state": {
+        "boundary": "POST /login/apple and auth_provider_identity",
+        "states": [
+          "unbound Apple subject",
+          "bound Apple subject",
+          "authenticated"
+        ]
+      },
+      "allowedTransitions": [
+        "bound Apple subject with valid token -> session",
+        "unbound subject with linkAccount password proof -> bound -> session",
+        "unbound subject with createNewAccount=true and current terms and a verified token email -> Customer/Fan account -> session"
+      ],
+      "forbiddenTransitions": [
+        "token with bad signature, issuer, audience, lifetime, nonce or algorithm yielding a session",
+        "account creation without explicit createNewAccount and current terms",
+        "account linking by email alone",
+        "account creation when the token carries no email"
+      ],
+      "effects": [
+        "Binds issuer https://appleid.apple.com and token sub to one credential under an advisory lock; records login_apple activity and account consent."
+      ],
+      "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
+      "privacy": "Apple private relay emails are stored as the primary email; tokens and nonces are never logged.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google.",
+      "idempotency": "Repeated login for a bound subject reuses the credential.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed.",
+      "recovery": "Retry, use email and password, or link an existing account.",
+      "observability": "login_apple auth activity and rejected-token warnings without token content.",
+      "source": "App Store Connect rejection notice relayed by the product owner",
+      "implementation": [
+        "tdf-hq/src/TDF/AppleSignIn.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Catalog/Integrity.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "scripts/production-migrations.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/ios/TDFRecords/Info.plist",
+        "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/package.json",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/verify-ios-artifact.py",
+        "tdf-mobile/src/api/auth.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/lib/appleSignIn.ts",
+        "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AppleSignInSpec.hs",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/appleSignIn.test.ts",
+        "tdf-mobile/scripts/tests/test_ios_signing.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Synthetic RSA key pair unit tests cover verification; physical-device and Apple Developer capability verification pending.",
+      "ambiguity": [
+        "Services ID audiences for web are configurable but not exercised."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unit tests pass; the Apple capability, production audience configuration and a physical device test are owner gates."
+      },
+      "critical": true,
+      "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
+      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests.",
+      "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
+      "contract": "tdf-hq/docs/openapi/api.yaml"
+    },
+    {
       "id": "MSG-WHATSAPP-REDELIVERY-001",
       "title": "A redelivered WhatsApp message changes nothing and is not answered again",
       "domain": "MSG",
@@ -9919,7 +10029,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "6d83314a8a0329ec5e6fb69b97ddfb6ca19fc88e9a9f412a53bad68265435713",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10077,8 +10187,8 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
-    "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
+    "formal/system/compiled-api-surface.json": "b8a98690e86c277e4e6d86fac19cd70cbf4d1a41e2a71798039dddb8996a2a84",
+    "formal/system/public-routes.json": "a296dd96fe890ecabca462e169055620d7f33f5dca4ecb577f4538f379ba9f06",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -10212,7 +10322,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+    "scripts/production-migrations.json": "cca369f685fea93a883924203f1dd14dea93446db79ee0b370b7ad42e10dcad4",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
@@ -10298,7 +10408,7 @@
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
-    "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
+    "scripts/verify-cors-boundary.py": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
     "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
@@ -10348,7 +10458,7 @@
     "tdf-hq-ui/src/api/eventTickets.ts": "9fa9ad85d2c14ebedd4186f7777c34c8a411a7a2adcadcfdaa7c41a7bfcc5f32",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+    "tdf-hq-ui/src/api/generated/types.ts": "e3d22c7106f3a913d846ff6cbb2e10076274951f0d7e280e5f7599ff438c3890",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -10551,7 +10661,7 @@
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "f7cedcbd74d618503c961c98f8476d2ec4230ea62cf727ebc7bac529ab3dd250",
     "tdf-hq/config/default.env.example": "4f93f69efb3fd725dba533197e275cf70fb0d25ec2666ba9df77a428758125e9",
-    "tdf-hq/docs/openapi/api.yaml": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+    "tdf-hq/docs/openapi/api.yaml": "5336c6c094a488c3ba46ef00afab7cc71f08c7cbbdc17ae7ac2a2162e0744cc1",
     "tdf-hq/docs/openapi/directory.yaml": "03a54c333f2212d5d2d26423a0bb8e9c931c9b956cce281e01080dc06ddf950e",
     "tdf-hq/music-worker/stack.yaml": "cd8794225ff4aa9550560653e371d570074d9f6dc261c1dfd138a4aa4fc37df8",
     "tdf-hq/music-worker/tdf-music-worker.cabal": "41abf425586e0213ce6607a8208bc6b99ba46a65bc92d7adacb8b23b116d87d2",
@@ -10628,7 +10738,8 @@
     "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql": "2d33a0b6285c8425d582732d86d43420e590267d7e30d263a84d91fb5cddebfb",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql": "46d6d84cf634a1b3709246cfd45e3ffdc41472bb27123b48c444eabf288ef1c1",
     "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql": "d6b1194d6dfaf59e5f26fa2eeb7a94d9b22521a850d84ce172947a51c1927e86",
-    "tdf-hq/src/TDF/API.hs": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
+    "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql": "65870952c6fdc125a715c15b90809659314d99080f2f6cc37ea50c6a53e25c18",
+    "tdf-hq/src/TDF/API.hs": "1a8fee4d629d923f86db1856ecb0edea4eb0aada4070c65e520c5b025aea3029",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Directory.hs": "67a080190122b472c88a2a5c4a40b7e6ba89ce686a660afa8d1deb652759faef",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
@@ -10643,11 +10754,12 @@
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
-    "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+    "tdf-hq/src/TDF/AppleSignIn.hs": "901f7fea039fe6fa63f8f604f97d06475c0c74f4f35e03f585b296098b22b21b",
+    "tdf-hq/src/TDF/Auth.hs": "e8cf1f823a3a44ae258e3625ab9475d621e726c890d00dc015f27f1510a2a964",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
-    "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
-    "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
-    "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
+    "tdf-hq/src/TDF/Catalog/Integrity.hs": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
+    "tdf-hq/src/TDF/Catalog/Security.hs": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
+    "tdf-hq/src/TDF/Catalog/Seed.hs": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "b330b3fa88c6f63de6bed83991e7f2356934d02fe5f4fc390dde8865dcb341dd",
     "tdf-hq/src/TDF/Commerce/EventTickets.hs": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
     "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs": "cae8c38e8911a45373d008190602dd58c157e54bf302c9d5893c7f7e6a7a3e25",
@@ -10662,12 +10774,12 @@
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
-    "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+    "tdf-hq/src/TDF/Config.hs": "f27a8367ad24f1e44eb0cdcce5ef4beb4ea6e430aa10d169a5fb3d5ffb3300a7",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
-    "tdf-hq/src/TDF/DTO.hs": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
+    "tdf-hq/src/TDF/DTO.hs": "19fc2b4e13be45a0a0f5332c6d5cbf5ec755d2ffc49aff82b7ac651b545d8ba3",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "d1d74828437efeedb0d91e93c8b185f33af285e758d2d3232eae61fd6345e4a0",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
@@ -10695,7 +10807,7 @@
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
-    "tdf-hq/src/TDF/Server.hs": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
+    "tdf-hq/src/TDF/Server.hs": "8fedcee3b792d7c481a1a6a0105222c7ce3c05833ca44798a5da02a4c85967fb",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "df03298acdb38f7a2629492b4ca0ca18728387e6a1dc079bd6907ac9d68c8134",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -10718,7 +10830,7 @@
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
-    "tdf-hq/src/TDF/ServerAuth.hs": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
+    "tdf-hq/src/TDF/ServerAuth.hs": "263da4c61502dd4bb0da524e0ca0a7fc794baa8145e6ef489dea9bda4a866988",
     "tdf-hq/src/TDF/ServerExtra.hs": "ba415c384195ae77200926d96d85257e8654986ff64455b32ede127bc7bc42b9",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
@@ -10736,13 +10848,14 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+    "tdf-hq/tdf-hq.cabal": "377701cda1bb09d61c4c9caac78e59d128c152c5981144f740c0448d3bd9a0fe",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+    "tdf-hq/test/Spec.hs": "b3932a9b614bdc93c94e2db78a2581b0a552dfd82419085fd7a519dec7f48afb",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
+    "tdf-hq/test/TDF/AppleSignInSpec.hs": "5ebfd0b717cfa5b95af19f2252efc9b48a8fd79674b6a2cd848d0a3dad6513e1",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -10757,6 +10870,7 @@
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "6f84cd5e10c345391eebc6edeeb33cd27dff14f527ea392edfb33b611091e155",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "bf9d46cd50c4563639019e5a83a3750e5ffb27a636f236ff236d3a405b6891ec",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
@@ -10776,9 +10890,9 @@
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
-    "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs": "2971d30870f2f6cda634429f0f7d20d345041aa981899ceb66fd974d4d1db666",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
-    "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+    "tdf-hq/test/TDF/ServerSpec.hs": "0bfa435f1a242525f2b051c3787dcdddaf975b27a38755ea77020389145dff0c",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "fd4185d685f407ba3dc7c0775abf1221258cd6153859df68198a3f0a1d22aae8",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
@@ -10812,7 +10926,7 @@
     "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
-    "tdf-mobile/__tests__/AuthScreen.test.tsx": "0bc7ae18ad4c63a898e62093c546eff91ae4c145425f308fd6672653715ea51d",
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": "c013623192f3017bfaf8067fa7d368ae37b57c346fa0128b96aed2e3bec68aa7",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
     "tdf-mobile/__tests__/DirectoryManage.test.tsx": "64c623e02b43a402d4f9cfc961a0660a20468d280550b944b6419f9afd93d82e",
@@ -10829,6 +10943,7 @@
     "tdf-mobile/__tests__/TicketCheckout.test.tsx": "eaf60203acf718ae2b4760cadb773cf96f0d4ac0864c349a842c97b340467ddf",
     "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
     "tdf-mobile/__tests__/apiClient.test.ts": "8054d64aa2c394f51a77be5398b54218f3fbb53dcb4741371a2a824f3aa40472",
+    "tdf-mobile/__tests__/appleSignIn.test.ts": "d4a43f065bbeba5e59429ffdcc5a67d535e809a2bd4e9d3be6eaf12aa5a4f267",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
     "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
     "tdf-mobile/__tests__/directoryPreviewImage.test.tsx": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
@@ -10840,14 +10955,14 @@
     "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
     "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
     "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
-    "tdf-mobile/app.config.ts": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
-    "tdf-mobile/app.json": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
+    "tdf-mobile/app.config.ts": "7e8e36bb728bb9a2f3c4f9ef773e8addebbd8e4fc036c59e849057fb3f2c1a87",
+    "tdf-mobile/app.json": "d2800274db4ea7adacf3aac8acf695ca0f3b64b513fcfec4e8da83294bc37ed0",
     "tdf-mobile/app/(tabs)/directory.tsx": "caa7f7e870394a214e7ddc4fd88b10c3ac7982bf956c54a9a47b58d55ee1a933",
     "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
     "tdf-mobile/app/access-requests/review.tsx": "2070fa548014b0cca20890c9e54ba557aeb3b64d1bd441b131d3a53931acc406",
-    "tdf-mobile/app/auth.tsx": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
+    "tdf-mobile/app/auth.tsx": "2949a6f4bb4b6e7f1a28e9d376d7c4b062b8e32a426f4c73beb99ae22616f862",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
@@ -10857,18 +10972,23 @@
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "tdf-mobile/package-lock.json": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
-    "tdf-mobile/package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+    "tdf-mobile/ios/Podfile.lock": "396f4289d7affe994421e417c36603d828ef51e8b7f3df66e275647b2b74c158",
+    "tdf-mobile/ios/TDFRecords/Info.plist": "d40bbaac1da4cb28972fcd49e5fa7ad71509bbf97e1b92da09d9164a9193f937",
+    "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements": "f58047e3b53aa61d6a2b0ebdf89e42fc9e9a2c1b4878c7515826cb964cfcbe1e",
+    "tdf-mobile/package-lock.json": "8957c44f255629bc3bf2d48cdce023abf01e5647674322122f36be498e64c74a",
+    "tdf-mobile/package.json": "170b6bdb788c44a7eaf6f82f6c7af2499bee240297fefe0e6491ca0eb09f22c8",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
-    "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
+    "tdf-mobile/scripts/ios-signing.py": "9226834071568a50c61795fcdaf9c05f2b74317ef0c9d976767f525b270f48b7",
     "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
     "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
-    "tdf-mobile/scripts/tests/test_ios_signing.py": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
+    "tdf-mobile/scripts/tests/test_ios_signing.py": "813e4ccf52f8ac74b2b2ef71ae722231befef47dc7e88f5fd5e3cddcf21fa9e0",
+    "tdf-mobile/scripts/verify-ios-artifact.py": "7ca1bd0302cfd33cb4f08b0432471a0675c879194e9f661da8b242d0a034e6e9",
+    "tdf-mobile/src/api/auth.ts": "c6055384470420e8d0a626304ce85fa851b1c6f57ef5669e686eb8e5408f7a65",
     "tdf-mobile/src/api/client.ts": "406ab62be2e1a562c231d0a3a296a4bd206bb483e91cd3d8a52aebffd1771312",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "3d4f86fa218c3f1cebbb88b3ad828082306221a95406de93cc31318aa033fad7",
-    "tdf-mobile/src/api/generated/types.ts": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+    "tdf-mobile/src/api/generated/types.ts": "b33e238421ac07b46e1d810cbcf979bc735adfa1b79d8a03d937e87f596ffd8d",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -10884,6 +11004,7 @@
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/i18n/index.ts": "42437bc42384674d3611d372c648f7d4ff220659c15f364ed58339b725411952",
+    "tdf-mobile/src/lib/appleSignIn.ts": "7ee73cccb843776bc44e45717972284ac2798675cfed3fa1abaf52517b51d0ea",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
     "tdf-mobile/src/lib/eventSharing.test.ts": "24ee454071d2e4cb8191a20270e3ba52bd1f6ef8a4a9f7b981361d77e20236ac",
@@ -10891,12 +11012,14 @@
     "tdf-mobile/src/lib/firstValueCompletion.ts": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
+    "tdf-mobile/src/lib/nativeAppleAuthentication.ts": "0db06290f7287ceb4ce8d4d929987b334a45351950f2cca96b43a0d6a2183e9e",
     "tdf-mobile/src/lib/onboardingIntent.ts": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
     "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
-    "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+    "tdf-mobile/src/localization/onboardingCopy.ts": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
     "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
@@ -11319,6 +11442,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MSG-WHATSAPP-REDELIVERY-001",
         "relationship": "implementation"
       },
@@ -11358,6 +11485,10 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -11406,6 +11537,10 @@
       },
       {
         "requirement": "COURSE-ENROLL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -11511,6 +11646,10 @@
       {
         "requirement": "MKT-ARTIST-LISTING-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/api/generated/types.ts": [
@@ -11524,6 +11663,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -11663,6 +11806,10 @@
       {
         "requirement": "OPS-CLIENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "ops/hetzner/compose.production.yaml": [
@@ -11765,6 +11912,10 @@
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/Directory.hs": [
@@ -11827,6 +11978,10 @@
       {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": [
@@ -11868,6 +12023,10 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -11932,6 +12091,10 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -12035,6 +12198,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "OPS-INBOUND-CAPTURE-001",
         "relationship": "implementation"
       },
@@ -12080,6 +12247,10 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -12481,6 +12652,10 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/PaymentRecovery.tla": [
@@ -12831,6 +13006,10 @@
       {
         "requirement": "SYS-DEPENDENCY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "package.json": [
@@ -12842,6 +13021,10 @@
     "tdf-mobile/package.json": [
       {
         "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -14799,6 +14982,10 @@
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql": [
@@ -15059,6 +15246,10 @@
       {
         "requirement": "MOB-ONBOARD-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/providers/FirstRunProvider.tsx": [
@@ -15070,6 +15261,10 @@
     "tdf-mobile/__tests__/AuthScreen.test.tsx": [
       {
         "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -15281,6 +15476,10 @@
       {
         "requirement": "MOB-BUILD-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/scripts/release-check.mjs": [
@@ -15298,6 +15497,10 @@
     "tdf-mobile/scripts/tests/test_ios_signing.py": [
       {
         "requirement": "MOB-BUILD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -17349,6 +17552,12 @@
         "relationship": "tests"
       }
     ],
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-09-14_artist_invitation_auto_approval.sql": [
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
@@ -17365,11 +17574,19 @@
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Catalog/Seed.hs": [
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -17380,6 +17597,10 @@
       },
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -17901,17 +18122,29 @@
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/app.json": [
       {
         "requirement": "WEB-CANONICAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/app/auth.tsx": [
       {
         "requirement": "WEB-CANONICAL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -18264,6 +18497,78 @@
     "tdf-mobile/__tests__/DirectoryManage.test.tsx": [
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/AppleSignIn.hs": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/ios/Podfile.lock": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/ios/TDFRecords/Info.plist": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/verify-ios-artifact.py": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/auth.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/appleSignIn.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/nativeAppleAuthentication.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/AppleSignInSpec.hs": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/appleSignIn.test.ts": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
     ],
@@ -21605,7 +21910,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+      "sha256": "cca369f685fea93a883924203f1dd14dea93446db79ee0b370b7ad42e10dcad4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21626,6 +21931,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         },
         {
@@ -23855,7 +24164,7 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
+      "sha256": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25046,7 +25355,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "e3d22c7106f3a913d846ff6cbb2e10076274951f0d7e280e5f7599ff438c3890",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25067,6 +25376,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -31240,7 +31553,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "5336c6c094a488c3ba46ef00afab7cc71f08c7cbbdc17ae7ac2a2162e0744cc1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -31277,6 +31590,10 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -34552,6 +34869,18 @@
       ]
     },
     {
+      "id": "SURFACE-8e8d81abed0c441d",
+      "path": "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+      "sha256": "65870952c6fdc125a715c15b90809659314d99080f2f6cc37ea50c6a53e25c18",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -34582,7 +34911,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
+      "sha256": "1a8fee4d629d923f86db1856ecb0edea4eb0aada4070c65e520c5b025aea3029",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -34615,6 +34944,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -35045,6 +35378,18 @@
       ]
     },
     {
+      "id": "SURFACE-07df79cce83b3287",
+      "path": "tdf-hq/src/TDF/AppleSignIn.hs",
+      "sha256": "901f7fea039fe6fa63f8f604f97d06475c0c74f4f35e03f585b296098b22b21b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "sha256": "8784bd92474de4bb98246c7b13ba5db6af85b6be8718616debfa1c3cb50e4f45",
@@ -35061,7 +35406,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+      "sha256": "e8cf1f823a3a44ae258e3625ab9475d621e726c890d00dc015f27f1510a2a964",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35086,6 +35431,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -35133,11 +35482,15 @@
     {
       "id": "SURFACE-cb63116a4466dd13",
       "path": "tdf-hq/src/TDF/Catalog/Integrity.hs",
-      "sha256": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
+      "sha256": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -35152,7 +35505,7 @@
     {
       "id": "SURFACE-2a2b52cfa8ed4ee9",
       "path": "tdf-hq/src/TDF/Catalog/Security.hs",
-      "sha256": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
+      "sha256": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35162,17 +35515,25 @@
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-15f795f0e4383094",
       "path": "tdf-hq/src/TDF/Catalog/Seed.hs",
-      "sha256": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
+      "sha256": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -35493,7 +35854,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+      "sha256": "f27a8367ad24f1e44eb0cdcce5ef4beb4ea6e430aa10d169a5fb3d5ffb3300a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35506,6 +35867,10 @@
         },
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -35705,7 +36070,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
+      "sha256": "19fc2b4e13be45a0a0f5332c6d5cbf5ec755d2ffc49aff82b7ac651b545d8ba3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35714,6 +36079,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -36289,7 +36658,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
+      "sha256": "8fedcee3b792d7c481a1a6a0105222c7ce3c05833ca44798a5da02a4c85967fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36354,6 +36723,10 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         },
         {
@@ -36753,7 +37126,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
+      "sha256": "263da4c61502dd4bb0da524e0ca0a7fc794baa8145e6ef489dea9bda4a866988",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36778,6 +37151,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -37227,7 +37604,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+      "sha256": "377701cda1bb09d61c4c9caac78e59d128c152c5981144f740c0448d3bd9a0fe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37244,6 +37621,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -37341,7 +37722,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+      "sha256": "b3932a9b614bdc93c94e2db78a2581b0a552dfd82419085fd7a519dec7f48afb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37379,6 +37760,10 @@
         {
           "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -37402,6 +37787,18 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d4fe92382114526f",
+      "path": "tdf-hq/test/TDF/AppleSignInSpec.hs",
+      "sha256": "5ebfd0b717cfa5b95af19f2252efc9b48a8fd79674b6a2cd848d0a3dad6513e1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "tests"
         }
       ]
@@ -37666,9 +38063,14 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "7d90677791b58728237c0fc3f56484461ee920133b0f97ce452c2edd2a6a23e8",
+      "sha256": "6f84cd5e10c345391eebc6edeeb33cd27dff14f527ea392edfb33b611091e155",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bb5ffc20a8caf0f6",
@@ -37964,7 +38366,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
+      "sha256": "2971d30870f2f6cda634429f0f7d20d345041aa981899ceb66fd974d4d1db666",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37977,6 +38379,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "tests"
         }
       ]
@@ -38010,7 +38416,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+      "sha256": "0bfa435f1a242525f2b051c3787dcdddaf975b27a38755ea77020389145dff0c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38043,6 +38449,10 @@
         },
         {
           "requirement": "COURSE-ENROLL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "tests"
         }
       ]
@@ -39037,11 +39447,15 @@
     {
       "id": "SURFACE-889f3ed698a5ec59",
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
-      "sha256": "0bc7ae18ad4c63a898e62093c546eff91ae4c145425f308fd6672653715ea51d",
+      "sha256": "c013623192f3017bfaf8067fa7d368ae37b57c346fa0128b96aed2e3bec68aa7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "tests"
         }
       ]
@@ -39371,6 +39785,18 @@
         },
         {
           "requirement": "LEGAL-CONSENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-bf9f4dbede91e7f9",
+      "path": "tdf-mobile/__tests__/appleSignIn.test.ts",
+      "sha256": "d4a43f065bbeba5e59429ffdcc5a67d535e809a2bd4e9d3be6eaf12aa5a4f267",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "tests"
         }
       ]
@@ -39713,11 +40139,15 @@
     {
       "id": "SURFACE-c20fbacb648be9fa",
       "path": "tdf-mobile/app.config.ts",
-      "sha256": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
+      "sha256": "7e8e36bb728bb9a2f3c4f9ef773e8addebbd8e4fc036c59e849057fb3f2c1a87",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -39725,11 +40155,15 @@
     {
       "id": "SURFACE-be1f54efcc2cd549",
       "path": "tdf-mobile/app.json",
-      "sha256": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
+      "sha256": "d2800274db4ea7adacf3aac8acf695ca0f3b64b513fcfec4e8da83294bc37ed0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -39909,11 +40343,15 @@
     {
       "id": "SURFACE-4a53be70534cf501",
       "path": "tdf-mobile/app/auth.tsx",
-      "sha256": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
+      "sha256": "2949a6f4bb4b6e7f1a28e9d376d7c4b062b8e32a426f4c73beb99ae22616f862",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40400,11 +40838,15 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+      "sha256": "8957c44f255629bc3bf2d48cdce023abf01e5647674322122f36be498e64c74a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40412,11 +40854,15 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "170b6bdb788c44a7eaf6f82f6c7af2499bee240297fefe0e6491ca0eb09f22c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40506,11 +40952,15 @@
     {
       "id": "SURFACE-e35888ce8cee79f8",
       "path": "tdf-mobile/scripts/ios-signing.py",
-      "sha256": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
+      "sha256": "9226834071568a50c61795fcdaf9c05f2b74317ef0c9d976767f525b270f48b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -40542,11 +40992,15 @@
     {
       "id": "SURFACE-bfc5bd8fcf9e9e4d",
       "path": "tdf-mobile/scripts/tests/test_ios_signing.py",
-      "sha256": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
+      "sha256": "813e4ccf52f8ac74b2b2ef71ae722231befef47dc7e88f5fd5e3cddcf21fa9e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MOB-BUILD-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "tests"
         }
       ]
@@ -40554,9 +41008,14 @@
     {
       "id": "SURFACE-85dc8ac2c70e20e0",
       "path": "tdf-mobile/scripts/verify-ios-artifact.py",
-      "sha256": "67b8903a58b4c3990e9e67eef07dcdd587a1bf05946ea78dcae6dad95189b8d3",
+      "sha256": "7ca1bd0302cfd33cb4f08b0432471a0675c879194e9f661da8b242d0a034e6e9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-3aa70a7b24875247",
@@ -40596,9 +41055,14 @@
     {
       "id": "SURFACE-406527fabc5f6e84",
       "path": "tdf-mobile/src/api/auth.ts",
-      "sha256": "420e51e3ab8dca15eeb055b54a618961dedb856bdf53abb0c930eca0b11c5ad5",
+      "sha256": "c6055384470420e8d0a626304ce85fa851b1c6f57ef5669e686eb8e5408f7a65",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e8c55bfb71a219d9",
@@ -40708,7 +41172,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "b33e238421ac07b46e1d810cbcf979bc735adfa1b79d8a03d937e87f596ffd8d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40721,6 +41185,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -41333,6 +41801,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-dc8c7a4da3e2d7be",
+      "path": "tdf-mobile/src/lib/appleSignIn.ts",
+      "sha256": "7ee73cccb843776bc44e45717972284ac2798675cfed3fa1abaf52517b51d0ea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cf527443eb0b7210",
       "path": "tdf-mobile/src/lib/assertNever.ts",
       "sha256": "4826603853ee1355f224a8e5163956869fc5f9c57147aceff22ecfcdc95b4c80",
@@ -41529,6 +42009,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-6aa42015db0f0b54",
+      "path": "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
+      "sha256": "0db06290f7287ceb4ce8d4d929987b334a45351950f2cca96b43a0d6a2183e9e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d0a53a40b5d73f1e",
       "path": "tdf-mobile/src/lib/nativeGoogleSignin.ts",
       "sha256": "c63cef4f8637829caa0b0efa43b51c2b9be54b2bdc922d445657f9d4346fd0d1",
@@ -41691,11 +42183,15 @@
     {
       "id": "SURFACE-8706580fc77ee8a5",
       "path": "tdf-mobile/src/localization/onboardingCopy.ts",
-      "sha256": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
+      "sha256": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -41724,9 +42220,14 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "b9a8dc89fb624e2f30f371ff4fe8a2213e2358cdb2f3aacd119071aa00dd8153",
+      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1d9d50d0957c7af7",
@@ -41738,7 +42239,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+      "sha256": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43370,7 +43871,6 @@
     "SURFACE-e284c62e82e2c450",
     "SURFACE-57276774edbf18b9",
     "SURFACE-2b52b5009371c78c",
-    "SURFACE-6a2ebecd249230c2",
     "SURFACE-bb5ffc20a8caf0f6",
     "SURFACE-b7c5b68652826d3d",
     "SURFACE-5c7c5fe961161133",
@@ -43590,13 +44090,11 @@
     "SURFACE-2663e424dec4b0da",
     "SURFACE-0365adce5821e515",
     "SURFACE-43b48bb1049e5324",
-    "SURFACE-85dc8ac2c70e20e0",
     "SURFACE-3aa70a7b24875247",
     "SURFACE-3469b2a00ddfcab0",
     "SURFACE-837d0ebca6fefd3b",
     "SURFACE-5755b7368095cc8f",
     "SURFACE-c3ef7b9d8509d838",
-    "SURFACE-406527fabc5f6e84",
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
     "SURFACE-5bea0425bb03c75c",
@@ -43700,7 +44198,6 @@
     "SURFACE-67d021717b413c4f",
     "SURFACE-e4d65d8b68003724",
     "SURFACE-ab2f22b78d9a1a9a",
-    "SURFACE-335f0e863443a35b",
     "SURFACE-1d9d50d0957c7af7",
     "SURFACE-861d18c6230228f5",
     "SURFACE-8610f72192678eb2",
@@ -43785,7 +44282,8 @@
     "MEDIA-MUSIC-DDEX-001",
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
-    "AUTH-ENTRY-002"
+    "AUTH-ENTRY-002",
+    "AUTH-APPLE-SIGNIN-001"
   ],
   "stateMachines": [
     {
@@ -44904,7 +45402,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sourceSha256": "ba000864ba130b3a48344186339585ddb1ce04244e47aa34feaf3ff6c3683cdf",
       "definition": {
         "states": [
           "absent",
@@ -46630,6 +47128,18 @@
       "responses": [
         "200",
         "401"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /login/apple",
+      "operationId": "loginWithApple",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "401",
+        "500"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -67101,7 +67611,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 122,
+    "PARTIAL": 123,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

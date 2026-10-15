@@ -190,6 +190,7 @@ executable tdf-hq-exe
     TDF.CoursePhone
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
+    TDF.AppleSignIn
     TDF.ServerAuth
     TDF.ServerAdmin
     TDF.Server.SocialDiscovery
@@ -572,7 +573,9 @@ test-suite tdf-hq-test
     TDF.Server.TicketManualPayments
     TDF.Server.TicketTaxDocuments
     TDF.Server.TicketRefunds
+    TDF.AppleSignIn
     TDF.ServerAuth
+    TDF.AppleSignInSpec
     TDF.ServerAuthSpec
     TDF.ServerAdmin
     TDF.ServerExtra

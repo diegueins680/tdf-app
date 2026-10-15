@@ -744,6 +744,7 @@ server env =
   :<|> AuthServer.sessionServer
   :<|> AuthServer.login
   :<|> AuthServer.googleLogin
+  :<|> AuthServer.appleLogin
   :<|> AuthServer.signup
   :<|> AuthServer.changePassword
   :<|> AuthServer.authV1Server

@@ -19,6 +19,7 @@ import           System.Directory  (doesDirectoryExist)
 import           System.Environment (lookupEnv)
 import           Text.Read          (readMaybe)
 
+import           TDF.AppleSignIn    (defaultAppleAudiences, defaultAppleJwksUrl)
 import           TDF.Internationalization
   ( normalizeCurrencyCode
   , normalizeLocaleCode
@@ -80,6 +81,8 @@ data AppConfig = AppConfig
   , ragEmbedBatchSize :: Int
   , emailConfig     :: Maybe EmailConfig
   , googleClientId  :: Maybe Text
+  , appleSignInAudiences :: Maybe [Text]
+  , appleSignInJwksUrl :: Text
   , facebookAppId   :: Maybe Text
   , facebookAppSecret :: Maybe Text
   , facebookGraphBase :: Text
@@ -748,6 +751,8 @@ loadConfig = do
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
+  appleAudiencesEnv <- lookupEnv "APPLE_SIGN_IN_AUDIENCES"
+  appleJwksUrlEnv <- lookupEnv "APPLE_SIGN_IN_JWKS_URL"
   fbAppIdEnv <- lookupUniqueNamedEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
   fbAppSecretEnv <- lookupUniqueNamedEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
@@ -837,6 +842,10 @@ loadConfig = do
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
   googleClientIdVal <-
     validateConfiguredGoogleClientId googleClientIdEnv
+  appleSignInAudiencesVal <-
+    validateConfiguredAppleAudiences appleAudiencesEnv
+  appleSignInJwksUrlVal <-
+    validateConfiguredAppleJwksUrl appleJwksUrlEnv
   openAiModelVal <-
     validateConfiguredOpenAiModel openAiModelEnv
   openAiEmbedModelVal <-
@@ -1059,6 +1068,8 @@ loadConfig = do
     , ragEmbedBatchSize = ragEmbedBatchSizeVal
     , emailConfig = emailCfg
     , googleClientId = googleClientIdVal
+    , appleSignInAudiences = appleSignInAudiencesVal
+    , appleSignInJwksUrl = appleSignInJwksUrlVal
     , facebookAppId = fbAppId
     , facebookAppSecret = fbAppSecret
     , facebookGraphBase = fbGraphBase
@@ -1543,6 +1554,20 @@ validateConfiguredGoogleClientId (Just rawClientId) =
     Left msg -> fail msg
     Right clientId -> pure clientId
 
+validateConfiguredAppleAudiences :: Maybe String -> IO (Maybe [Text])
+validateConfiguredAppleAudiences Nothing = pure (Just defaultAppleAudiences)
+validateConfiguredAppleAudiences (Just rawAudiences) =
+  case normalizeConfiguredAppleAudiences "APPLE_SIGN_IN_AUDIENCES" rawAudiences of
+    Left msg -> fail msg
+    Right audiences -> pure audiences
+
+validateConfiguredAppleJwksUrl :: Maybe String -> IO Text
+validateConfiguredAppleJwksUrl Nothing = pure defaultAppleJwksUrl
+validateConfiguredAppleJwksUrl (Just rawUrl) =
+  case normalizeConfiguredAppleJwksUrl "APPLE_SIGN_IN_JWKS_URL" rawUrl of
+    Left msg -> fail msg
+    Right url -> pure url
+
 validateConfiguredGraphNodeId :: Maybe (String, String) -> IO (Maybe Text)
 validateConfiguredGraphNodeId Nothing = pure Nothing
 validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
@@ -1697,6 +1722,59 @@ normalizeConfiguredGoogleClientId envName rawClientId
         || (ch >= 'A' && ch <= 'Z')
         || (ch >= '0' && ch <= '9')
         || ch `elem` ("._-" :: String)
+
+-- | Accepted Sign in with Apple audiences (iOS bundle identifiers or Services
+-- IDs). Blank keeps the default bundle id; the literal value @disabled@ turns
+-- the endpoint off so it answers 500 instead of verifying tokens.
+normalizeConfiguredAppleAudiences :: String -> String -> Either String (Maybe [Text])
+normalizeConfiguredAppleAudiences envName rawAudiences
+  | T.null trimmed = Right (Just defaultAppleAudiences)
+  | T.toLower trimmed == "disabled" = Right Nothing
+  | T.length trimmed > 2048 =
+      Left (envName <> " must be 2048 characters or fewer")
+  | null entries = Right (Just defaultAppleAudiences)
+  | length entries > 32 =
+      Left (envName <> " must list 32 audiences or fewer")
+  | otherwise =
+      case mapM checkEntry entries of
+        Left msg -> Left msg
+        Right checked -> Right (Just (nub checked))
+  where
+    trimmed = T.strip (T.pack rawAudiences)
+    entries = filter (not . T.null) (map T.strip (T.splitOn "," trimmed))
+    checkEntry entry
+      | T.length entry > 255 =
+          Left (envName <> " entries must be 255 characters or fewer")
+      | T.any isControl entry =
+          Left (envName <> " must not contain control characters")
+      | T.any (`elem` ("/?#" :: String)) entry =
+          Left (envName <> " must not contain path, query, or fragment characters")
+      | T.any (not . isAppleAudienceChar) entry =
+          Left
+            ( envName
+                <> " entries must use only ASCII letters, digits, '.', '_' or '-'"
+            )
+      | otherwise = Right entry
+    isAppleAudienceChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-" :: String)
+
+normalizeConfiguredAppleJwksUrl :: String -> String -> Either String Text
+normalizeConfiguredAppleJwksUrl envName rawUrl
+  | T.null url = Right defaultAppleJwksUrl
+  | T.length url > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any isSpace url =
+      Left (envName <> " must not contain whitespace")
+  | T.any isControl url =
+      Left (envName <> " must not contain control characters")
+  | not ("https://" `T.isPrefixOf` url) || T.length url <= T.length "https://" =
+      Left (envName <> " must be an absolute https URL")
+  | otherwise = Right url
+  where
+    url = T.strip (T.pack rawUrl)
 
 normalizeConfiguredGraphNodeId :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredGraphNodeId envName rawNodeId

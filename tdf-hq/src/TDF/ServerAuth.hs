@@ -11,7 +11,14 @@ module TDF.ServerAuth
   ( sessionServer
   , login
   , googleLogin
+  , appleLogin
   , completeGoogleLogin
+  , completeAppleLogin
+  , completeProviderLogin
+  , ProviderLoginSpec(..)
+  , ProviderProfile(..)
+  , googleLoginSpec
+  , appleLoginSpec
   , resolveGoogleCredential
   , signup
   , changePassword
@@ -20,6 +27,9 @@ module TDF.ServerAuth
   , authV1Server
   , GoogleIdTokenInfo(..)
   , GoogleProfile(..)
+  , AppleProfile(..)
+  , appleProfileFromIdentity
+  , appleDisplayName
   , PasswordResetError
   , findReusableActiveToken
   , normalizeAuthEmailAddress
@@ -42,6 +52,11 @@ module TDF.ServerAuth
   , validateSignupDisplayName
   , validateSignupGoogleIdToken
   , validateGoogleAccountCreationTerms
+  , validateAppleAccountCreationTerms
+  , validateProviderAccountCreationTerms
+  , validateAppleIdentityTokenInput
+  , validateAppleNonceInput
+  , validateAppleFullName
   , validateSignupTermsAcceptance
   , validateOptionalSignupClaimArtistId
   , validateOptionalSignupPhone
@@ -101,8 +116,19 @@ import Network.HTTP.Types.Status (statusCode)
 import Network.HTTP.Types.URI (urlEncode)
 import Servant
 import System.IO (hPutStrLn, stderr)
+import System.IO.Unsafe (unsafePerformIO)
 
 import qualified TDF.API as Api
+import TDF.AppleSignIn
+  ( AppleIdentity (..)
+  , AppleKeyCache
+  , AppleVerification (..)
+  , appleIssuer
+  , describeAppleTokenError
+  , fetchAppleJwks
+  , newAppleKeyCache
+  , verifyAppleIdentityToken
+  )
 import TDF.Auth (
     AuthedUser (..),
     ModuleAccess (ModuleAdmin),
@@ -183,6 +209,62 @@ data GoogleProfile = GoogleProfile
   , gpName :: Maybe Text
   , gpPicture :: Maybe Text
   } deriving (Show)
+
+-- | Verified Sign in with Apple identity. Apple may omit the email (and only
+-- sends the name on the first authorization), so both are optional here.
+data AppleProfile = AppleProfile
+  { apIssuer :: Text
+  , apSubject :: Text
+  , apEmail :: Maybe Text
+  , apName :: Maybe Text
+  } deriving (Eq, Show)
+
+-- | Provider-neutral view of a verified external identity used by the shared
+-- login/link/create flow.
+data ProviderProfile = ProviderProfile
+  { ppIssuer :: Text
+  , ppSubject :: Text
+  , ppEmail :: Maybe Text
+  , ppDisplayName :: Text
+  } deriving (Eq, Show)
+
+-- | Per-provider naming for the shared external-identity login flow. Every
+-- provider shares the same binding table, lock, consent and creation rules.
+data ProviderLoginSpec = ProviderLoginSpec
+  { plsProviderLabel :: Text
+  , plsPolicyCode :: Text
+  , plsSourcePlatform :: Text
+  , plsCorrelationPrefix :: Text
+  , plsUsernamePrefix :: Text
+  , plsSessionLabelPrefix :: Text
+  , plsSignupMethod :: Text
+  , plsMissingEmailError :: Text
+  }
+
+googleLoginSpec :: ProviderLoginSpec
+googleLoginSpec = ProviderLoginSpec
+  { plsProviderLabel = "Google"
+  , plsPolicyCode = "account.google.customer"
+  , plsSourcePlatform = "google-auth"
+  , plsCorrelationPrefix = "google-account:"
+  , plsUsernamePrefix = "google:"
+  , plsSessionLabelPrefix = "google-login:"
+  , plsSignupMethod = "google"
+  , plsMissingEmailError = "El token de Google no contiene un correo válido."
+  }
+
+appleLoginSpec :: ProviderLoginSpec
+appleLoginSpec = ProviderLoginSpec
+  { plsProviderLabel = "Apple"
+  , plsPolicyCode = "account.apple.customer"
+  , plsSourcePlatform = "apple-auth"
+  , plsCorrelationPrefix = "apple-account:"
+  , plsUsernamePrefix = "apple:"
+  , plsSessionLabelPrefix = "apple-login:"
+  , plsSignupMethod = "apple"
+  , plsMissingEmailError =
+      "Apple no compartió un correo para esta cuenta. Vuelve a iniciar sesión con Apple compartiendo tu correo o crea la cuenta con correo y contraseña."
+  }
 
 data SignupDbError
   = SignupEmailExists
@@ -412,10 +494,16 @@ supportedAccountTermsVersion :: Text
 supportedAccountTermsVersion = "tdf-account-terms-v1"
 
 validateGoogleAccountCreationTerms :: Maybe Bool -> Maybe Text -> Either Text ()
-validateGoogleAccountCreationTerms (Just True) (Just version)
+validateGoogleAccountCreationTerms = validateProviderAccountCreationTerms "Google"
+
+validateAppleAccountCreationTerms :: Maybe Bool -> Maybe Text -> Either Text ()
+validateAppleAccountCreationTerms = validateProviderAccountCreationTerms "Apple"
+
+validateProviderAccountCreationTerms :: Text -> Maybe Bool -> Maybe Text -> Either Text ()
+validateProviderAccountCreationTerms _ (Just True) (Just version)
   | version == supportedAccountTermsVersion = Right ()
-validateGoogleAccountCreationTerms _ _ =
-  Left "Accept the terms and privacy policy through the signup flow before creating a Google account"
+validateProviderAccountCreationTerms providerLabel _ _ =
+  Left ("Accept the terms and privacy policy through the signup flow before creating a " <> providerLabel <> " account")
 
 normalizeAuthPhoneNumber :: Text -> Maybe Text
 normalizeAuthPhoneNumber raw =
@@ -1538,6 +1626,165 @@ googleLogin GoogleLoginRequest{..} = do
           recordAuthActivity "login_google" resp acceptedTermsVersion marketingOptIn
           withSessionCookie resp
 
+-- | Apple's signing keys are cached for the lifetime of the process and
+-- refetched when a token names a key id the cache does not hold.
+sharedAppleKeyCache :: AppleKeyCache
+sharedAppleKeyCache = unsafePerformIO newAppleKeyCache
+{-# NOINLINE sharedAppleKeyCache #-}
+
+appleLogin :: AppleLoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
+appleLogin AppleLoginRequest{..} = do
+  tokenClean <- either throwError pure (validateAppleIdentityTokenInput identityToken)
+  nonceClean <- traverse (either throwError pure . validateAppleNonceInput) nonce
+  fullNameClean <- either throwError pure (validateAppleFullName fullName)
+  acceptedTermsVersion <- either throwError pure (validateSignupTermsAcceptance termsAccepted termsVersion)
+  onboardingIntentClean <- traverse (either throwError pure . validateOnboardingIntent) onboardingIntent
+  linkAccountClean <- traverse (either throwError pure . validateLoginRequest) linkAccount
+  Env pool cfg <- ask
+  audiences <- case appleSignInAudiences cfg of
+    Nothing -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Sign in with Apple is not configured") }
+    Just configured
+      | null configured -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Sign in with Apple is not configured") }
+      | otherwise -> pure configured
+  now <- liftIO getCurrentTime
+  let verification = AppleVerification
+        { avAudiences = audiences
+        , avNow = now
+        , avExpectedNonce = nonceClean
+        }
+      fetchKeys = fetchAppleJwks sharedTlsManager (appleSignInJwksUrl cfg)
+  verified <- liftIO (verifyAppleIdentityToken sharedAppleKeyCache fetchKeys verification tokenClean)
+  case verified of
+    Left tokenError -> do
+      liftIO (LogBuf.addLog LogBuf.LogWarning ("Apple identity token rejected: " <> describeAppleTokenError tokenError))
+      throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 appleTokenRejectedMessage) }
+    Right identity ->
+      case appleProfileFromIdentity fullNameClean identity of
+        Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+        Right profile -> do
+          result <- liftIO $ flip runSqlPool pool (completeAppleLogin createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
+          case result of
+            Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
+            Right resp -> do
+              recordAuthActivity "login_apple" resp acceptedTermsVersion marketingOptIn
+              withSessionCookie resp
+
+appleTokenRejectedMessage :: Text
+appleTokenRejectedMessage = "Tu sesión de Apple es inválida o expiró."
+
+-- | Turn verified claims into the profile the shared flow stores. Apple emails
+-- (including private relay addresses) are stored as the primary email exactly
+-- like Google emails; an unverified email is rejected rather than trusted.
+appleProfileFromIdentity :: Maybe Text -> AppleIdentity -> Either Text AppleProfile
+appleProfileFromIdentity fullNameClean AppleIdentity{aiSubject, aiEmail, aiEmailVerified} = do
+  email <- case aiEmail of
+    Nothing -> Right Nothing
+    Just raw
+      | not aiEmailVerified -> Left "Tu correo de Apple debe estar verificado."
+      | otherwise ->
+          case normalizeAuthEmailAddress raw of
+            Nothing -> Left "El token de Apple no contiene un correo válido."
+            Just normalized -> Right (Just normalized)
+  Right AppleProfile
+    { apIssuer = appleIssuer
+    , apSubject = aiSubject
+    , apEmail = email
+    , apName = fullNameClean
+    }
+
+-- | Display name precedence: the name Apple shared, else the email, else a
+-- neutral placeholder the user can edit later.
+appleDisplayName :: AppleProfile -> Text
+appleDisplayName AppleProfile{apEmail, apName} =
+  fromMaybe appleFallbackDisplayName (cleanOptional apName <|> apEmail)
+
+appleFallbackDisplayName :: Text
+appleFallbackDisplayName = "Usuario de Apple"
+
+validateAppleIdentityTokenInput :: Text -> Either ServerError Text
+validateAppleIdentityTokenInput rawToken
+  | T.null token =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "Apple identityToken is required")
+        }
+  | T.length token > maxGoogleIdTokenChars =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Apple identityToken must be 4096 characters or fewer")
+        }
+  | T.any isSpace token =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "Apple identityToken must not contain whitespace")
+        }
+  | T.any isControl token =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "Apple identityToken must not contain control characters")
+        }
+  | T.any isHiddenPasswordFormattingChar token =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Apple identityToken must not contain hidden formatting characters")
+        }
+  | T.any (not . isAscii) token =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Apple identityToken must contain only ASCII characters")
+        }
+  | not (hasGoogleIdTokenShape token) =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Apple identityToken must be a JWT with three non-empty segments")
+        }
+  | not (hasGoogleIdTokenBase64UrlSegments token) =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Apple identityToken segments must contain only base64url characters")
+        }
+  | otherwise =
+      Right token
+  where
+    token = stripOuterAsciiSpaces rawToken
+
+maxAppleNonceChars :: Int
+maxAppleNonceChars = 256
+
+validateAppleNonceInput :: Text -> Either ServerError Text
+validateAppleNonceInput rawNonce
+  | T.null nonceClean =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Apple nonce must not be blank") }
+  | T.length nonceClean > maxAppleNonceChars =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Apple nonce must be 256 characters or fewer") }
+  | T.any isSpace nonceClean || T.any isControl nonceClean || T.any (not . isAscii) nonceClean =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Apple nonce must be printable ASCII without whitespace") }
+  | otherwise = Right nonceClean
+  where
+    nonceClean = stripOuterAsciiSpaces rawNonce
+
+-- | Apple only sends the name on the first authorization. Both parts are
+-- optional; unsafe or oversized parts are dropped rather than rejected so a
+-- cosmetic field never blocks sign-in.
+validateAppleFullName :: Maybe AppleFullName -> Either ServerError (Maybe Text)
+validateAppleFullName Nothing = Right Nothing
+validateAppleFullName (Just AppleFullName{givenName, familyName})
+  | maybe False ((> maxAppleNamePartChars) . T.length) givenName =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Apple givenName must be 100 characters or fewer") }
+  | maybe False ((> maxAppleNamePartChars) . T.length) familyName =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Apple familyName must be 100 characters or fewer") }
+  | otherwise =
+      let parts = mapMaybe (sanitizeGoogleProfileName . Just) (catMaybes [givenName, familyName])
+          joined = T.unwords parts
+      in Right (sanitizeGoogleProfileName (Just joined))
+
+maxAppleNamePartChars :: Int
+maxAppleNamePartChars = 100
+
 signup :: SignupRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 signup SignupRequest
   { firstName = rawFirst
@@ -2083,10 +2330,34 @@ sanitizeGoogleProfileName rawName = do
     else Nothing
 
 completeGoogleLogin :: Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} = do
+completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} =
+  completeProviderLogin googleLoginSpec creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof
+    ProviderProfile
+      { ppIssuer = gpIssuer
+      , ppSubject = gpSubject
+      , ppEmail = Just gpEmail
+      , ppDisplayName = fromMaybe gpEmail (cleanOptional gpName)
+      }
+
+completeAppleLogin :: Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> AppleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeAppleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof profile@AppleProfile{..} =
+  completeProviderLogin appleLoginSpec creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof
+    ProviderProfile
+      { ppIssuer = apIssuer
+      , ppSubject = apSubject
+      , ppEmail = apEmail
+      , ppDisplayName = appleDisplayName profile
+      }
+
+-- | Shared external-identity flow: an already bound subject gets a session, an
+-- unbound subject with password proof is linked, an unbound subject with
+-- explicit creation intent and current terms gets a Customer/Fan account, and
+-- anything else is refused before any write.
+completeProviderLogin :: ProviderLoginSpec -> Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> ProviderProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeProviderLogin ProviderLoginSpec{..} creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof ProviderProfile{..} = do
   -- Serialize one issuing-system subject across login, signup, linking and retries.
   -- A verified email is profile data, never authorization to an existing account.
-  existingResult <- resolveGoogleCredential gpIssuer gpSubject linkProof
+  existingResult <- resolveGoogleCredential ppIssuer ppSubject linkProof
   case existingResult of
     Left err -> pure (Left err)
     Right mExisting ->
@@ -2101,69 +2372,72 @@ completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent request
               sessionToken <-
                 createReusableSessionToken
                   (userCredentialPartyId cred)
-                  (Just ("google-login:" <> userCredentialUsername cred))
+                  (Just (plsSessionLabelPrefix <> userCredentialUsername cred))
               mUser <- loadAuthedUser sessionToken
               case mUser of
                 Nothing -> transactionUndo >> pure (Left "No pudimos cargar tu perfil.")
                 Just user -> pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just False }))
         Nothing ->
-          case validateGoogleAccountCreationTerms creationIntent acceptedTermsVersion of
+          case validateProviderAccountCreationTerms plsProviderLabel creationIntent acceptedTermsVersion of
             Left consentError -> pure (Left consentError)
-            Right () -> do
-              now <- liftIO getCurrentTime
-              let displayName = fromMaybe gpEmail (cleanOptional gpName)
-                  partyRecord = Party
-                    { partyLegalName = Nothing
-                    , partyDisplayName = displayName
-                    , partyIsOrg = False
-                    , partyTaxId = Nothing
-                    , partyPrimaryEmail = Just gpEmail
-                    , partyPrimaryPhone = Nothing
-                    , partyWhatsapp = Nothing
-                    , partyInstagram = Nothing
-                    , partyEmergencyContact = Nothing
-                    , partyNotes = Nothing
-                    , partyStripeCustomerId = Nothing
-                    , partyCountryCode = Nothing
-                    , partyCountryId = Nothing
-                    , partyCreatedAt = now
-                    }
-              pid <- insert partyRecord
-              policyResult <- applySecurityRoleAssignmentPolicy
-                "account.google.customer"
-                pid
-                True
-                (Just pid)
-                "google-auth"
-                ("google-account:" <> T.pack (show (fromSqlKey pid)))
-                now
-              case policyResult of
-                Left policyError -> do
-                  transactionUndo
-                  pure (Left policyError)
-                Right _ -> do
-                  ensureFanProfileIfMissing pid displayName now
-                  tempPassword <- liftIO generateTemporaryPassword
-                  hashed <- liftIO (hashPasswordText tempPassword)
-                  let providerUsername = "google:" <> gpSubject
-                  credentialId <- insert UserCredential
-                    { userCredentialPartyId = pid
-                    , userCredentialUsername = providerUsername
-                    , userCredentialPasswordHash = hashed
-                    , userCredentialActive = True
-                    }
-                  bindGoogleCredential gpIssuer gpSubject credentialId "new-account"
-                  sessionToken <-
-                    createReusableSessionToken pid (Just ("google-login:" <> providerUsername))
-                  mUser <- loadAuthedUser sessionToken
-                  case mUser of
-                    Nothing -> do
+            Right () ->
+              case ppEmail of
+                Nothing -> pure (Left plsMissingEmailError)
+                Just primaryEmail -> do
+                  now <- liftIO getCurrentTime
+                  let displayName = ppDisplayName
+                      partyRecord = Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = displayName
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just primaryEmail
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
+                        , partyCreatedAt = now
+                        }
+                  pid <- insert partyRecord
+                  policyResult <- applySecurityRoleAssignmentPolicy
+                    plsPolicyCode
+                    pid
+                    True
+                    (Just pid)
+                    plsSourcePlatform
+                    (plsCorrelationPrefix <> T.pack (show (fromSqlKey pid)))
+                    now
+                  case policyResult of
+                    Left policyError -> do
                       transactionUndo
-                      pure (Left "No pudimos cargar tu perfil.")
-                    Just user -> do
-                      recordAccountCreationConsent pid "google" supportedAccountTermsVersion marketingConsent
-                      initializeSignupOnboarding pid requestedOnboardingIntent now
-                      pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
+                      pure (Left policyError)
+                    Right _ -> do
+                      ensureFanProfileIfMissing pid displayName now
+                      tempPassword <- liftIO generateTemporaryPassword
+                      hashed <- liftIO (hashPasswordText tempPassword)
+                      let providerUsername = plsUsernamePrefix <> ppSubject
+                      credentialId <- insert UserCredential
+                        { userCredentialPartyId = pid
+                        , userCredentialUsername = providerUsername
+                        , userCredentialPasswordHash = hashed
+                        , userCredentialActive = True
+                        }
+                      bindGoogleCredential ppIssuer ppSubject credentialId "new-account"
+                      sessionToken <-
+                        createReusableSessionToken pid (Just (plsSessionLabelPrefix <> providerUsername))
+                      mUser <- loadAuthedUser sessionToken
+                      case mUser of
+                        Nothing -> do
+                          transactionUndo
+                          pure (Left "No pudimos cargar tu perfil.")
+                        Just user -> do
+                          recordAccountCreationConsent pid plsSignupMethod supportedAccountTermsVersion marketingConsent
+                          initializeSignupOnboarding pid requestedOnboardingIntent now
+                          pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
 runLogin identifier pwd = do

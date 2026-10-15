@@ -574,6 +574,8 @@ import TDF.Config
       facebookMessagingApiBase,
       facebookMessagingPageId,
       googleClientId,
+      appleSignInAudiences,
+      appleSignInJwksUrl,
       instagramAppToken,
       instagramGraphBase,
       instagramMessagingApiBase,
@@ -617,6 +619,7 @@ import TDF.Seed
     , syntheticPersonaPassword
     , syntheticPersonaSeedingAllowed
     )
+import qualified TDF.AppleSignInSpec as AppleSignInSpec
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
@@ -5330,6 +5333,30 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     googleClientId cfg `shouldBe` Nothing
+
+        it "defaults and normalizes Sign in with Apple audiences and JWKS URL" $ do
+            withEnvOverrides [] $ do
+                cfg <- loadConfig
+                appleSignInAudiences cfg `shouldBe` Just ["com.tdfrecords.app"]
+                appleSignInJwksUrl cfg `shouldBe` "https://appleid.apple.com/auth/keys"
+            withEnvOverrides
+                [ ("APPLE_SIGN_IN_AUDIENCES", Just " com.tdfrecords.app , com.tdfrecords.web,com.tdfrecords.app ")
+                , ("APPLE_SIGN_IN_JWKS_URL", Just " https://example.test/keys ") ]
+                $ do
+                    cfg <- loadConfig
+                    appleSignInAudiences cfg `shouldBe` Just ["com.tdfrecords.app", "com.tdfrecords.web"]
+                    appleSignInJwksUrl cfg `shouldBe` "https://example.test/keys"
+            withEnvOverrides [ ("APPLE_SIGN_IN_AUDIENCES", Just "disabled") ] $ do
+                cfg <- loadConfig
+                appleSignInAudiences cfg `shouldBe` Nothing
+
+        it "rejects malformed Apple Sign in settings" $ do
+            let assertInvalid name value expected =
+                    withEnvOverrides [ (name, Just value) ] $
+                        loadConfig `shouldThrow` \err -> expected `isInfixOf` show (err :: IOException)
+            assertInvalid "APPLE_SIGN_IN_AUDIENCES" "com.tdf/app" "must not contain path"
+            assertInvalid "APPLE_SIGN_IN_AUDIENCES" "com.tdf app" "ASCII letters"
+            assertInvalid "APPLE_SIGN_IN_JWKS_URL" "http://example.test/keys" "absolute https URL"
 
         it "rejects malformed Google client ids before Google login verification fallback" $ do
             let assertInvalid rawClientId expectedMessage =
@@ -17890,6 +17917,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    AppleSignInSpec.spec
     OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec

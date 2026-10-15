@@ -14,6 +14,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 FILES = ['tdf-hq/src/TDF/Cors.hs', 'tdf-hq/src/TDF/Config.hs',
+         'tdf-hq/src/TDF/AppleSignIn.hs',
          'tdf-hq/src/TDF/Internationalization.hs', 'tdf-hq/test/TDF/CorsSpec.hs',
          'tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock']
 

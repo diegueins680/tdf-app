@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "56e4f51bd10b6aa05a1e13b5c9d5c39203ea8318",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1775,6 +1775,7 @@
       "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
       "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
       "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+      "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1829,6 +1830,7 @@
       "tdf-hq/src/TDF/App/FailureBoundary.hs",
       "tdf-hq/src/TDF/App/Readiness.hs",
       "tdf-hq/src/TDF/App/StartupResponse.hs",
+      "tdf-hq/src/TDF/AppleSignIn.hs",
       "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "tdf-hq/src/TDF/Artists/Promotion.hs",
       "tdf-hq/src/TDF/Auth.hs",
@@ -2039,6 +2041,7 @@
       "tdf-hq/test/RecordsRuntimeProbe.hs",
       "tdf-hq/test/Spec.hs",
       "tdf-hq/test/TDF/APITypesSpec.hs",
+      "tdf-hq/test/TDF/AppleSignInSpec.hs",
       "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
       "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
@@ -2246,6 +2249,7 @@
       "tdf-mobile/__tests__/UserSettingsProvider.test.tsx",
       "tdf-mobile/__tests__/VCardScreen.test.tsx",
       "tdf-mobile/__tests__/apiClient.test.ts",
+      "tdf-mobile/__tests__/appleSignIn.test.ts",
       "tdf-mobile/__tests__/artistsApiGetByParty.test.ts",
       "tdf-mobile/__tests__/authConfig.test.ts",
       "tdf-mobile/__tests__/catalogAdmin.test.ts",
@@ -2484,6 +2488,7 @@
       "tdf-mobile/src/hooks/useToast.ts",
       "tdf-mobile/src/i18n/index.ts",
       "tdf-mobile/src/lib/api.ts",
+      "tdf-mobile/src/lib/appleSignIn.ts",
       "tdf-mobile/src/lib/assertNever.ts",
       "tdf-mobile/src/lib/authConfig.ts",
       "tdf-mobile/src/lib/catalogAdmin.ts",
@@ -2507,6 +2512,7 @@
       "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
       "tdf-mobile/src/lib/momentMedia.ts",
       "tdf-mobile/src/lib/momentReactionFirstValue.ts",
+      "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
       "tdf-mobile/src/lib/nativeGoogleSignin.ts",
       "tdf-mobile/src/lib/nativeStripe.tsx",
       "tdf-mobile/src/lib/nativeStripe.web.tsx",
@@ -4347,7 +4353,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+      "sha256": "cca369f685fea93a883924203f1dd14dea93446db79ee0b370b7ad42e10dcad4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5667,7 +5673,7 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
+      "sha256": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6387,7 +6393,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "e3d22c7106f3a913d846ff6cbb2e10076274951f0d7e280e5f7599ff438c3890",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10605,7 +10611,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "5336c6c094a488c3ba46ef00afab7cc71f08c7cbbdc17ae7ac2a2162e0744cc1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13069,6 +13075,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8e8d81abed0c441d",
+      "path": "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+      "sha256": "65870952c6fdc125a715c15b90809659314d99080f2f6cc37ea50c6a53e25c18",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -13095,7 +13107,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "da471ff515749f7a779913af823db71554d35d03e49935a42140f6c287f4faf8",
+      "sha256": "1a8fee4d629d923f86db1856ecb0edea4eb0aada4070c65e520c5b025aea3029",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13393,6 +13405,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-07df79cce83b3287",
+      "path": "tdf-hq/src/TDF/AppleSignIn.hs",
+      "sha256": "901f7fea039fe6fa63f8f604f97d06475c0c74f4f35e03f585b296098b22b21b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "sha256": "8784bd92474de4bb98246c7b13ba5db6af85b6be8718616debfa1c3cb50e4f45",
@@ -13407,7 +13425,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
+      "sha256": "e8cf1f823a3a44ae258e3625ab9475d621e726c890d00dc015f27f1510a2a964",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13443,7 +13461,7 @@
     {
       "id": "SURFACE-cb63116a4466dd13",
       "path": "tdf-hq/src/TDF/Catalog/Integrity.hs",
-      "sha256": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
+      "sha256": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13455,13 +13473,13 @@
     {
       "id": "SURFACE-2a2b52cfa8ed4ee9",
       "path": "tdf-hq/src/TDF/Catalog/Security.hs",
-      "sha256": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
+      "sha256": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-15f795f0e4383094",
       "path": "tdf-hq/src/TDF/Catalog/Seed.hs",
-      "sha256": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
+      "sha256": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13641,7 +13659,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+      "sha256": "f27a8367ad24f1e44eb0cdcce5ef4beb4ea6e430aa10d169a5fb3d5ffb3300a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13791,7 +13809,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "403dd7ef2125ca146960520b2689ae9d68a2e8fe5553df74a3a3bb57fe9fe1d1",
+      "sha256": "19fc2b4e13be45a0a0f5332c6d5cbf5ec755d2ffc49aff82b7ac651b545d8ba3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14103,7 +14121,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "8b1f402fc6b630beb54b713571771bdeb4db872519f01e6ca3257a68a046e89e",
+      "sha256": "8fedcee3b792d7c481a1a6a0105222c7ce3c05833ca44798a5da02a4c85967fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14289,7 +14307,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "ef2424821bcfa8d0cd2a8729dd9534a10c0c1ef39aab9ddc818d95f0896ac8a3",
+      "sha256": "263da4c61502dd4bb0da524e0ca0a7fc794baa8145e6ef489dea9bda4a866988",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14577,7 +14595,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+      "sha256": "377701cda1bb09d61c4c9caac78e59d128c152c5981144f740c0448d3bd9a0fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14643,13 +14661,19 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+      "sha256": "b3932a9b614bdc93c94e2db78a2581b0a552dfd82419085fd7a519dec7f48afb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
       "sha256": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d4fe92382114526f",
+      "path": "tdf-hq/test/TDF/AppleSignInSpec.hs",
+      "sha256": "5ebfd0b717cfa5b95af19f2252efc9b48a8fd79674b6a2cd848d0a3dad6513e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14781,7 +14805,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "7d90677791b58728237c0fc3f56484461ee920133b0f97ce452c2edd2a6a23e8",
+      "sha256": "6f84cd5e10c345391eebc6edeeb33cd27dff14f527ea392edfb33b611091e155",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14955,7 +14979,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
+      "sha256": "2971d30870f2f6cda634429f0f7d20d345041aa981899ceb66fd974d4d1db666",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14979,7 +15003,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
+      "sha256": "0bfa435f1a242525f2b051c3787dcdddaf975b27a38755ea77020389145dff0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15669,7 +15693,7 @@
     {
       "id": "SURFACE-889f3ed698a5ec59",
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
-      "sha256": "0bc7ae18ad4c63a898e62093c546eff91ae4c145425f308fd6672653715ea51d",
+      "sha256": "c013623192f3017bfaf8067fa7d368ae37b57c346fa0128b96aed2e3bec68aa7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15880,6 +15904,12 @@
       "id": "SURFACE-d17c354d94ccad58",
       "path": "tdf-mobile/__tests__/apiClient.test.ts",
       "sha256": "8054d64aa2c394f51a77be5398b54218f3fbb53dcb4741371a2a824f3aa40472",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bf9f4dbede91e7f9",
+      "path": "tdf-mobile/__tests__/appleSignIn.test.ts",
+      "sha256": "d4a43f065bbeba5e59429ffdcc5a67d535e809a2bd4e9d3be6eaf12aa5a4f267",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16125,13 +16155,13 @@
     {
       "id": "SURFACE-c20fbacb648be9fa",
       "path": "tdf-mobile/app.config.ts",
-      "sha256": "03c3cdad62c5849999885c2cce9484db210d098982139244da363ee0de0ac0db",
+      "sha256": "7e8e36bb728bb9a2f3c4f9ef773e8addebbd8e4fc036c59e849057fb3f2c1a87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-be1f54efcc2cd549",
       "path": "tdf-mobile/app.json",
-      "sha256": "d7295c5d120108165841bf0346a2173bbc48527523691cf6a1fdfefc84de6730",
+      "sha256": "d2800274db4ea7adacf3aac8acf695ca0f3b64b513fcfec4e8da83294bc37ed0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16263,7 +16293,7 @@
     {
       "id": "SURFACE-4a53be70534cf501",
       "path": "tdf-mobile/app/auth.tsx",
-      "sha256": "6952b7480d0f4d77dbf2a78a77d8ae5ec17ab91089bd26de37bd5506accd6996",
+      "sha256": "2949a6f4bb4b6e7f1a28e9d376d7c4b062b8e32a426f4c73beb99ae22616f862",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16641,13 +16671,13 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+      "sha256": "8957c44f255629bc3bf2d48cdce023abf01e5647674322122f36be498e64c74a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "170b6bdb788c44a7eaf6f82f6c7af2499bee240297fefe0e6491ca0eb09f22c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16719,7 +16749,7 @@
     {
       "id": "SURFACE-e35888ce8cee79f8",
       "path": "tdf-mobile/scripts/ios-signing.py",
-      "sha256": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
+      "sha256": "9226834071568a50c61795fcdaf9c05f2b74317ef0c9d976767f525b270f48b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16737,13 +16767,13 @@
     {
       "id": "SURFACE-bfc5bd8fcf9e9e4d",
       "path": "tdf-mobile/scripts/tests/test_ios_signing.py",
-      "sha256": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
+      "sha256": "813e4ccf52f8ac74b2b2ef71ae722231befef47dc7e88f5fd5e3cddcf21fa9e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-85dc8ac2c70e20e0",
       "path": "tdf-mobile/scripts/verify-ios-artifact.py",
-      "sha256": "67b8903a58b4c3990e9e67eef07dcdd587a1bf05946ea78dcae6dad95189b8d3",
+      "sha256": "7ca1bd0302cfd33cb4f08b0432471a0675c879194e9f661da8b242d0a034e6e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16779,7 +16809,7 @@
     {
       "id": "SURFACE-406527fabc5f6e84",
       "path": "tdf-mobile/src/api/auth.ts",
-      "sha256": "420e51e3ab8dca15eeb055b54a618961dedb856bdf53abb0c930eca0b11c5ad5",
+      "sha256": "c6055384470420e8d0a626304ce85fa851b1c6f57ef5669e686eb8e5408f7a65",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16851,7 +16881,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "b33e238421ac07b46e1d810cbcf979bc735adfa1b79d8a03d937e87f596ffd8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17311,6 +17341,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-dc8c7a4da3e2d7be",
+      "path": "tdf-mobile/src/lib/appleSignIn.ts",
+      "sha256": "7ee73cccb843776bc44e45717972284ac2798675cfed3fa1abaf52517b51d0ea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cf527443eb0b7210",
       "path": "tdf-mobile/src/lib/assertNever.ts",
       "sha256": "4826603853ee1355f224a8e5163956869fc5f9c57147aceff22ecfcdc95b4c80",
@@ -17449,6 +17485,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6aa42015db0f0b54",
+      "path": "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
+      "sha256": "0db06290f7287ceb4ce8d4d929987b334a45351950f2cca96b43a0d6a2183e9e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d0a53a40b5d73f1e",
       "path": "tdf-mobile/src/lib/nativeGoogleSignin.ts",
       "sha256": "c63cef4f8637829caa0b0efa43b51c2b9be54b2bdc922d445657f9d4346fd0d1",
@@ -17571,7 +17613,7 @@
     {
       "id": "SURFACE-8706580fc77ee8a5",
       "path": "tdf-mobile/src/localization/onboardingCopy.ts",
-      "sha256": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
+      "sha256": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17595,7 +17637,7 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "b9a8dc89fb624e2f30f371ff4fe8a2213e2358cdb2f3aacd119071aa00dd8153",
+      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17607,7 +17649,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "9956da8c71a8e300a8170d1a1107a6255337317500d65457f9da2dc2de545860",
+      "sha256": "268e351ae62df86868dfc8c0a6bb02c73315356f7b3030d79fafa9ab1a8275a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24833,7 +24875,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "ba000864ba130b3a48344186339585ddb1ce04244e47aa34feaf3ff6c3683cdf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25169,7 +25211,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "5336c6c094a488c3ba46ef00afab7cc71f08c7cbbdc17ae7ac2a2162e0744cc1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
