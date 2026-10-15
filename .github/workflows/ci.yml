@@ -539,6 +539,10 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-event-organizer.sh
+      - name: Chat recipient notifications and repeated messages
+        env:
+          TDF_CHAT_NOTIFICATION_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-chat-notifications.sh
 
       - name: Verify checkout monetary snapshots and invalid-schema controls
         env:

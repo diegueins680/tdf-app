@@ -41,9 +41,16 @@ describe('notification destination identities', () => {
   });
 });
 
-it.each(['/perfil/7', '/solicitudes-acceso?request=17', '/notificaciones/3'])('retains notification destination through an expired session: %s', (path) => {
+it.each(['/perfil/7', '/solicitudes-acceso?request=17', '/notificaciones/3', '/chat?threadId=42'])('retains notification destination through an expired session: %s', (path) => {
   const login = buildLoginRedirectPath(path);
   const redirect = new URL(login, 'https://tdf.local').searchParams.get('redirect');
   expect(redirect).toBe(path);
   expect(resolvePostAuthPath(null, ['Customer'], [], redirect)).toBe(path);
+});
+
+it('opens a chat notification by its stored thread identity', () => {
+  expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey: '42' }))).toBe('/chat?threadId=42');
+});
+it.each(['0', '-1', '1.2', '9007199254740992', 'https://evil.example', '42?partyId=5'])('rejects unsafe chat thread identity %s', (nTargetKey) => {
+  expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey }))).toBeNull();
 });

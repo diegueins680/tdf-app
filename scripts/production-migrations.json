@@ -1040,6 +1040,11 @@
       "id": "2026-10-11_index_declarations_not_unique",
       "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
       "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
+    },
+    {
+      "id": "2026-10-13_chat_message_notifications",
+      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+      "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
     }
   ]
 }

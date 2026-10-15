@@ -194,16 +194,19 @@ function ChatWorkspace() {
   const location = useLocation();
   const navigate = useNavigate();
   const myPartyId = session?.partyId ?? null;
-  const [selectedThreadId, setSelectedThreadId] = useState(() => loadSelectedThreadId(myPartyId));
+  const requestedThread = new URLSearchParams(location.search).get('threadId');
+  const [selectedThreadId, setSelectedThreadId] = useState(() => requestedThread === null
+    ? loadSelectedThreadId(myPartyId) : parsePositiveInt(requestedThread));
   const [draftByThread, setDraftByThread] = useState({} as DraftByThread);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatInput, setNewChatInput] = useState('');
   const [newChatSelection, setNewChatSelection] = useState(null as FriendOption | null);
   const [newChatError, setNewChatError] = useState(null as string | null);
   const [bannerError, setBannerError] = useState(null as string | null);
+  const [unavailableNotification, setUnavailableNotification] = useState(false);
   const [sendError, setSendError] = useState(null as string | null);
   const messagesEndRef = useRef(null as HTMLDivElement | null);
-  const requestParamConsumed = useRef(false);
+  const requestParamConsumed = useRef<string | null>(null);
   const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
@@ -233,10 +236,18 @@ function ChatWorkspace() {
     queryKey: ['chat-threads', myPartyId],
     queryFn: ChatAPI.listThreads,
     enabled: Boolean(myPartyId),
+    // Consent can change during the session provider's 30-second cache window.
+    staleTime: 0,
+    refetchOnMount: 'always',
     refetchInterval: 10_000,
   });
 
-  const threads = useMemo(() => threadsQuery.isError ? [] : threadsQuery.data ?? [], [threadsQuery.data, threadsQuery.isError]);
+  const notificationAuthorizationPending = requestedThread !== null
+    && (!threadsQuery.isFetchedAfterMount || !threadsQuery.isSuccess || threadsQuery.isFetching);
+  const threads = useMemo(
+    () => threadsQuery.isError || notificationAuthorizationPending ? [] : threadsQuery.data ?? [],
+    [notificationAuthorizationPending, threadsQuery.data, threadsQuery.isError],
+  );
   const readMap = useMemo(() => {
     void readVersion;
     return loadChatReadMap(myPartyId ?? 0);
@@ -255,21 +266,25 @@ function ChatWorkspace() {
   }, [friendProfilesQuery.data, friendsQuery.data]);
 
   useEffect(() => {
+    // A notification must not briefly open/mark another conversation as seen.
+    if (requestedThread !== null || unavailableNotification) return;
     const first = threads[0];
     if (!first) return;
     if (selectedThreadId && threads.some((t) => t.ctThreadId === selectedThreadId)) return;
     setSelectedThreadId(first.ctThreadId);
-  }, [selectedThreadId, threads]);
+  }, [requestedThread, selectedThreadId, threads, unavailableNotification]);
 
   const selectedThread: ChatThreadDTO | null = useMemo(() => {
-    if (!selectedThreadId) return null;
+    if (!selectedThreadId || unavailableNotification) return null;
+    if (requestedThread !== null && parsePositiveInt(requestedThread) !== selectedThreadId) return null;
     return threads.find((t) => t.ctThreadId === selectedThreadId) ?? null;
-  }, [selectedThreadId, threads]);
+  }, [requestedThread, selectedThreadId, threads, unavailableNotification]);
 
   const messagesQuery = useQuery({
     queryKey: ['chat-messages', myPartyId, selectedThreadId],
     queryFn: () => ChatAPI.listMessages(selectedThreadId!, { limit: 80 }),
-    enabled: selectedThread !== null && Boolean(myPartyId),
+    enabled: selectedThread !== null && Boolean(myPartyId)
+      && (requestedThread === null || parsePositiveInt(requestedThread) === selectedThreadId),
     refetchInterval: 3_000,
   });
 
@@ -325,6 +340,7 @@ function ChatWorkspace() {
       setNewChatSelection(null);
       setNewChatError(null);
       setBannerError(null);
+      setUnavailableNotification(false);
       setSelectedThreadId(thread.ctThreadId);
       await qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
     },
@@ -332,12 +348,30 @@ function ChatWorkspace() {
   });
 
   useEffect(() => {
-    if (requestParamConsumed.current) return;
+    if (requestParamConsumed.current === location.key) return;
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(location.search);
+    const rawThread = params.get('threadId');
+    if (rawThread !== null) {
+      // Wait for a fresh authorized list; a link never opens or creates a thread.
+      if (notificationAuthorizationPending) return;
+      requestParamConsumed.current = location.key;
+      navigate('/chat', { replace: true });
+      const numeric = parsePositiveInt(rawThread);
+      if (numeric === null || !threads.some((thread) => thread.ctThreadId === numeric)) {
+        setUnavailableNotification(true);
+        setSelectedThreadId(null);
+        setBannerError('La conversación de esta notificación no está disponible.');
+        return;
+      }
+      setBannerError(null);
+      setUnavailableNotification(false);
+      setSelectedThreadId(numeric);
+      return;
+    }
     const rawParty = params.get('partyId');
     if (!rawParty) return;
-    requestParamConsumed.current = true;
+    requestParamConsumed.current = location.key;
     navigate('/chat', { replace: true });
     const numeric = parsePositiveInt(rawParty);
     if (numeric == null) {
@@ -347,7 +381,7 @@ function ChatWorkspace() {
     createThreadMutation.mutate(numeric, {
       onError: (err) => setBannerError(err.message),
     });
-  }, [createThreadMutation, location.search, navigate]);
+  }, [createThreadMutation, location.key, location.search, navigate, notificationAuthorizationPending, threads]);
 
   const sendMutation = useMutation({
     mutationFn: ({ threadId, body }: { threadId: number; body: string }) => ChatAPI.sendMessage(threadId, body),
@@ -547,6 +581,8 @@ function ChatWorkspace() {
                           selected={t.ctThreadId === selectedThreadId}
                           unread={unread}
                           onSelect={(threadId) => {
+                            setUnavailableNotification(false);
+                            setBannerError(null);
                             setSelectedThreadId(threadId);
                             setSendError(null);
                           }}
