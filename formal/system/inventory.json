@@ -322,6 +322,7 @@
       "scripts/production-migrations.json",
       "scripts/production-release.mjs",
       "scripts/production_access.py",
+      "scripts/qualify-current-image-shutdown.py",
       "scripts/quality-backend.sh",
       "scripts/quality-check.sh",
       "scripts/quality-mobile.sh",
@@ -425,6 +426,7 @@
       "scripts/test-course-checkout-runtime-migration.sh",
       "scripts/test-course-identity.sh",
       "scripts/test-credential-lifecycle.sh",
+      "scripts/test-current-image-shutdown.py",
       "scripts/test-ddex-partner-legacy-compatibility.sh",
       "scripts/test-directory-artist-listings.sh",
       "scripts/test-directory-event-visibility-migration.sh",
@@ -2664,7 +2666,7 @@
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
+      "sha256": "cccf2566a55f1eb432b0359ea4b3ea7c873f96157d88a0bee9eaaf2352b4fa21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4414,6 +4416,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d9c2acee16d60d4a",
+      "path": "scripts/qualify-current-image-shutdown.py",
+      "sha256": "f768453105c37a9e5dad1cfa21362d1eca2b83094fc3931e013f0ec5285bfd16",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
       "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -4434,7 +4442,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
+      "sha256": "a701525a1028187bc17366e1163493f5d44e17df8749d67efa564817dd5b8267",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5029,6 +5037,12 @@
       "id": "SURFACE-a05d9dbe9017a8ac",
       "path": "scripts/test-credential-lifecycle.sh",
       "sha256": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f376a7082c7694cc",
+      "path": "scripts/test-current-image-shutdown.py",
+      "sha256": "f69833a344861ee42b2a9b7c1de18904cd8db6e609cc9454843547c2256244f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25295,7 +25309,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a531e546453218b32c4415816da3933368b0a6978cc1b123fe29cbeae625a056",
+      "sha256": "0249de40b667a3dc2341736d147e91376bbe9a19f4bea3508156dc34fc0b3b93",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -25421,7 +25435,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "e1efd6bf4d91e1580b12685f910396beca0a809185936133869f4946831d4f61",
+      "sha256": "e9670b6571c4000d719ace7d3d3ce204a75dcb15686829f17e30f2462c853eed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

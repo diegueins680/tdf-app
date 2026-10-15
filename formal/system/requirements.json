@@ -10,9 +10,10 @@
       "property": "admit recovery iff candidate includes the required identity implementation; unsafe prior requires verified forward recovery before any release mutation",
       "contract": "formal/system/identity-recovery.md",
       "implementation": [
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/qualify-current-image-shutdown.py"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted. Fixed-current-image synthetic SIGTERM/SIGINT observations and same-image recovery retain releaseAuthorized=false and activeRequestDrainVerified=false; these do not qualify production fencing or external outcomes.",
       "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -49,7 +50,8 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/test-current-image-shutdown.py"
       ],
       "formalModels": [
         "formal/event-operations/ProviderRollback.tla"

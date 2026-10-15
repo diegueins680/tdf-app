@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      current_image_shutdown:
+        description: Observe the fixed shipped image on synthetic isolated resources; never deploy.
+        type: boolean
+        default: false
       native_ios_run:
         description: Successful TDF-mobile simulator build run to qualify (blank skips iOS).
         type: string
@@ -196,3 +200,32 @@ jobs:
           path: /tmp/tdf-interaction-native-*.png
           if-no-files-found: ignore
           retention-days: 7
+
+  current-image-shutdown:
+    if: github.event_name == 'workflow_dispatch' && inputs.current_image_shutdown
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Fetch the exact shipped source fixtures
+        run: git fetch --no-tags --depth=1 origin 7ab344400d0878838b9b12742ca4cc5cd7f38f94
+      - name: Qualify the diagnostic guards
+        run: python3 scripts/test-current-image-shutdown.py
+      - name: Preload the exact observed image and PostgreSQL fixture
+        run: |
+          docker pull diegueins680/tdf-hq@sha256:a5e6f5e8dd1d7a267c7b00ef6d4263bf11d02dd23842fe2e5f6599c41c48545c
+          docker pull pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21
+      - name: Observe synthetic stop and recovery without production access
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/image-shutdown"
+          python3 scripts/qualify-current-image-shutdown.py "$RUNNER_TEMP/image-shutdown"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: current-image-shutdown-observations
+          path: ${{ runner.temp }}/image-shutdown/result.json
+          if-no-files-found: warn
+          retention-days: 14

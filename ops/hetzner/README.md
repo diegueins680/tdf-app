@@ -219,6 +219,32 @@ apply only reviewed pending migrations and verify health, release identity and
 critical authenticated flows before reopening traffic. Never restore an old backup
 over newer financial, audit, identity or user data to reverse an application release.
 
+## Fixed current-image shutdown diagnostic
+
+`scripts/qualify-current-image-shutdown.py NEW_EMPTY_PRIVATE_DIRECTORY` observes
+only the immutable `7ab3444` image recorded in the tool, using its packaged188
+migration bundle and synthetic fixtures. The dispatch-only `current_image_shutdown`
+input in `interaction-verification.yml` runs it on an isolated GitHub Linux host.
+It cannot target a production container, uses the fixed local Docker socket, clears
+application credentials and provider configuration, publishes no ports, and creates
+only nonce-labelled containers and volumes. PostgreSQL has no network; the test
+application shares that private namespace. The fixture initializer alone gets
+CHOWN/FOWNER for its new synthetic volumes; the application drops all capabilities.
+
+SIGTERM and SIGINT observations record duration, exit code, OOM state, recovery
+identity and preservation of committed synthetic data. SIGKILL137 remains an
+observed failure to stop normally, even though the diagnostic itself completes.
+This is **not** active-request/worker drain qualification, production recovery,
+backup custody or deployment authorization. The old exceptional stop policy must
+not be widened on the strength of these observations. Cleanup rejects foreign
+labels and uncertain inspect failures; a failed cleanup leaves evidence open.
+
+Docker documents that `stop` sends the requested signal, then SIGKILL after the
+specified timeout: [Docker stop](https://docs.docker.com/reference/cli/docker/container/stop/).
+The diagnostic distinguishes these observations instead of treating command success
+as graceful shutdown. Warp's explicit shutdown hook is a separate application
+contract: [Warp settings](https://hackage-content.haskell.org/package/warp-3.4.12/docs/src/Network.Wai.Handler.Warp.html).
+
 ## Historical material
 
 The [September28 restore/cutover plan](../../docs/archive/hetzner-restore-rehearsal-2026-09-28.md)

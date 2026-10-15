@@ -11,9 +11,10 @@
       "property": "admit recovery iff candidate includes the required identity implementation; unsafe prior requires verified forward recovery before any release mutation",
       "contract": "formal/system/identity-recovery.md",
       "implementation": [
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/qualify-current-image-shutdown.py"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted. Fixed-current-image synthetic SIGTERM/SIGINT observations and same-image recovery retain releaseAuthorized=false and activeRequestDrainVerified=false; these do not qualify production fencing or external outcomes.",
       "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -50,7 +51,8 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/__tests__/provider-rollback.test.mjs"
+        "scripts/__tests__/provider-rollback.test.mjs",
+        "scripts/test-current-image-shutdown.py"
       ],
       "formalModels": [
         "formal/event-operations/ProviderRollback.tla"
@@ -10660,7 +10662,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "f32fd8ca6c759027da38aba527706f2187b6b54a9757079f0e2a45abae1fca5d",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
-    ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
+    ".github/workflows/interaction-verification.yml": "cccf2566a55f1eb432b0359ea4b3ea7c873f96157d88a0bee9eaaf2352b4fa21",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
@@ -10988,9 +10990,10 @@
     "scripts/production-migrations.json": "4cfb306aad56cef7821d69d4a608ee2f3cfc61b29621c1f353c86f33edd79c7a",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
+    "scripts/qualify-current-image-shutdown.py": "f768453105c37a9e5dad1cfa21362d1eca2b83094fc3931e013f0ec5285bfd16",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
+    "scripts/quality-repo.sh": "a701525a1028187bc17366e1163493f5d44e17df8749d67efa564817dd5b8267",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -11012,6 +11015,7 @@
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "a9b322e5122b02b2fdf62fd0a7324cac68b73f3d41024023be71c4cd68fe7877",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
+    "scripts/test-current-image-shutdown.py": "f69833a344861ee42b2a9b7c1de18904cd8db6e609cc9454843547c2256244f0",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -11733,6 +11737,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/qualify-current-image-shutdown.py": [
+      {
+        "requirement": "SYS-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/provider-rollback.test.mjs": [
       {
         "requirement": "SYS-RELEASE-001",
@@ -11744,6 +11754,12 @@
       },
       {
         "requirement": "DEPLOY-MIGRATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-current-image-shutdown.py": [
+      {
+        "requirement": "SYS-RELEASE-001",
         "relationship": "tests"
       }
     ],
@@ -20060,7 +20076,7 @@
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
+      "sha256": "cccf2566a55f1eb432b0359ea4b3ea7c873f96157d88a0bee9eaaf2352b4fa21",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23185,6 +23201,18 @@
       ]
     },
     {
+      "id": "SURFACE-d9c2acee16d60d4a",
+      "path": "scripts/qualify-current-image-shutdown.py",
+      "sha256": "f768453105c37a9e5dad1cfa21362d1eca2b83094fc3931e013f0ec5285bfd16",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
       "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
@@ -23242,7 +23270,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
+      "sha256": "a701525a1028187bc17366e1163493f5d44e17df8749d67efa564817dd5b8267",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24202,6 +24230,18 @@
         {
           "requirement": "SYS-VERIFY-004",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f376a7082c7694cc",
+      "path": "scripts/test-current-image-shutdown.py",
+      "sha256": "f69833a344861ee42b2a9b7c1de18904cd8db6e609cc9454843547c2256244f0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-RELEASE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -46917,7 +46957,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a531e546453218b32c4415816da3933368b0a6978cc1b123fe29cbeae625a056",
+      "sourceSha256": "0249de40b667a3dc2341736d147e91376bbe9a19f4bea3508156dc34fc0b3b93",
       "definition": {
         "states": [
           "absent",
