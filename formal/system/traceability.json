@@ -10366,7 +10366,7 @@
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-automatic-migrations-production-schema.sh": "004a2b246ca39291ac3255109cfff6378d6fc3e5351cffa91c66a245d3ccc2df",
-    "scripts/test-booking-conformance.py": "4fcf7c9f31e4fe43b66bb0f0f3977586b4783b5bf39ad8262141a4649225819d",
+    "scripts/test-booking-conformance.py": "c6f8294cf0bcf25cb03be0aa86e8d24c3815139d2a9b59087b1df02d7ec33f64",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-directory-artist-listings.sh": "31a28ec3e149d950cf04a65333b80f8049869ad18bffa2653a971487542e5e0a",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -22801,7 +22801,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "4fcf7c9f31e4fe43b66bb0f0f3977586b4783b5bf39ad8262141a4649225819d",
+      "sha256": "c6f8294cf0bcf25cb03be0aa86e8d24c3815139d2a9b59087b1df02d7ec33f64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

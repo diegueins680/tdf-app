@@ -4940,7 +4940,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "4fcf7c9f31e4fe43b66bb0f0f3977586b4783b5bf39ad8262141a4649225819d",
+      "sha256": "c6f8294cf0bcf25cb03be0aa86e8d24c3815139d2a9b59087b1df02d7ec33f64",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24826,7 +24826,7 @@
     },
     {
       "path": "formal/system/music-payment-outcome.md",
-      "sha256": "67a7b0ebcbdc6e20164407479cdacbc86f8fbb3f517eacdae743bec08a633ab8",
+      "sha256": "eafdbdc97e2132a73667203224f4cba9eb985805d0eab55e95d3d24a15c75a7e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

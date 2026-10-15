@@ -145,6 +145,10 @@ try:
                  'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
                  'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'}
+    # /version permits this runtime override ahead of the compiled commit.
+    # A controlled fixture must reject files, directories and dangling symlinks.
+    if os.path.lexists('/app/COMMIT'):
+        raise RuntimeError('Fixture refuses /app/COMMIT runtime revision override')
     with (OUTPUT / 'backend.log').open('w') as log:
         server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log, env=server_env)
     for _ in range(120):
