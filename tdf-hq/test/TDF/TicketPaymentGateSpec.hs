@@ -3,7 +3,7 @@ module TDF.TicketPaymentGateSpec (spec) where
 
 import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay)
 import Control.Exception (SomeException, try)
-import Control.Monad (void)
+import Control.Monad (forM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
@@ -30,7 +30,8 @@ import TDF.Config (loadConfig)
 import TDF.DB (Env(..))
 import qualified TDF.Routes.EventTickets as Routes
 import TDF.Server.EventTicketCheckout
-  (lockTicketOrderSalesOpen, publicEventTicketsServer, ticketOrderSalesOpen, ticketSalesClosedRefusal)
+  ( lockTicketOrderSalesOpen, paypalCaptureFailureCode, publicEventTicketsServer, ticketCaptureUnverified
+  , ticketOrderSalesOpen, ticketSalesClosedRefusal, ticketUnverifiedCaptureRefusal )
 import TDF.Server.ProviderExecution (providerExecutionServer)
 
 -- | A held, unpaid ticket order must not be payable once its event stops selling
@@ -188,6 +189,56 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         fmap (const ()) outcome `shouldBe` Right ()
         takeMVar closureSaw `shouldReturn` [Single 1]
 
+      it "keeps other rails closed while a PayPal capture is unverified, until it is settled" $ \pool -> do
+        -- A capture whose request and readback both failed may have charged the
+        -- buyer. The order must not offer or start another rail until PayPal
+        -- gives a definite answer for that same attempt.
+        activateBankTransfer pool
+        order <- newOrder pool "unverified"
+        let checkout = Checkout.CheckoutReference (oCheckout order)
+            offersTransfer = either (const False) (elem "bank_transfer" . Routes.paymentMethods)
+            view = run pool (getOrder (oEvent order) (oOrder order) (Just (oToken order)))
+            setFailureCode code = runSqlPool (rawExecute
+              "UPDATE commerce_payment_attempt SET failure_code=? WHERE checkout_id=?::uuid AND provider='paypal'"
+              [PersistText code, PersistText (oCheckout order)]) pool
+        view >>= (`shouldSatisfy` offersTransfer)
+        runSqlPool (do
+          rawExecute
+            "INSERT INTO commerce_payment_attempt (id, checkout_id, provider, environment, operation, status, amount_minor,\
+            \ currency, merchant_account_ref, idempotency_key, created_at, updated_at)\
+            \ SELECT gen_random_uuid(), id, 'paypal', environment, 'capture', 'failed', total_minor, currency,\
+            \ 'synthetic-merchant', 'synthetic-capture-unverified', now(), now() FROM commerce_checkout_session WHERE id=?::uuid"
+            [PersistText (oCheckout order)]
+          rawExecute "UPDATE commerce_checkout_session SET status='failed' WHERE id=?::uuid"
+            [PersistText (oCheckout order)]) pool
+        -- A failed capture alone is not the unverified state.
+        runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` False
+        view >>= (`shouldSatisfy` offersTransfer)
+
+        setFailureCode (paypalCaptureFailureCode Nothing)
+        runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` True
+        view >>= (`shouldNotSatisfy` offersTransfer)
+        fmap Routes.orderId <$> view `shouldReturn` Right (oOrder order)
+        run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` captureUnverified)
+        transfers <- scalar pool
+          "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid AND provider='bank_transfer'"
+          [PersistText (oCheckout order)]
+        transfers `shouldBe` 0
+
+        -- Missing/ambiguous captures and refund evidence never mean no charge.
+        forM_ ["UNKNOWN", "PARTIALLY_REFUNDED", "REFUNDED", "PENDING", "VOIDED"] $ \status -> do
+          setFailureCode (paypalCaptureFailureCode (Just status))
+          runSqlPool (ticketCaptureUnverified checkout) pool `shouldReturn` True
+          view >>= (`shouldNotSatisfy` offersTransfer)
+          run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+            >>= (`shouldSatisfy` captureUnverified)
+        -- DECLINED is a nested capture status; VOIDED is an order status.
+        setFailureCode (paypalCaptureFailureCode (Just "DECLINED"))
+        runSqlPool (ticketUnverifiedCaptureRefusal checkout) pool `shouldReturn` Nothing
+        view >>= (`shouldSatisfy` offersTransfer)
+        selected <- run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order)))
+        fmap (fmap Routes.evidenceStatus . Routes.bankTransfer) selected `shouldBe` Right (Just "awaiting_evidence")
+
       it "treats an unknown or malformed ticket order as not on sale" $ \pool -> do
         runSqlPool (ticketOrderSalesOpen "999999999") pool `shouldReturn` False
         runSqlPool (ticketOrderSalesOpen "not-a-number") pool `shouldReturn` False
@@ -229,6 +280,10 @@ run pool action = do
 salesClosed :: Either ServerError a -> Bool
 salesClosed (Left err) = errHTTPCode err == 409 && "no longer on sale" `isInfixOf` BL.unpack (errBody err)
 salesClosed (Right _) = False
+
+captureUnverified :: Either ServerError a -> Bool
+captureUnverified (Left err) = errHTTPCode err == 409 && "could not be verified" `isInfixOf` BL.unpack (errBody err)
+captureUnverified (Right _) = False
 
 hostedSession :: ConnectionPool -> Order -> IO (Either ServerError ())
 hostedSession pool order = do
