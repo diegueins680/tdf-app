@@ -60,6 +60,7 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
     requiredCorsConfiguration: { ALLOW_ALL_ORIGINS: 'false', CORS_DISABLE_DEFAULTS: 'true',
       ALLOWED_ORIGINS: 'https://www.tdfrecords.net,https://tdfrecords.net' },
     remainingGates: [
+      'Fresh exact-artifact formal assurance: no refuted mandatory P0 or stale proven claim; enumerate every unproven critical obligation and require authenticated owner risk acceptance',
       'Current exact-head review, all quality gates, normal merge and post-merge CI',
       'Registry image digest and embedded version bound to merged source; compatible reviewed recovery image',
       'Exclusive release lock; recheck runtime identity, ledger, effective Compose configuration and provider/feature flags',
