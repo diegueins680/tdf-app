@@ -592,6 +592,7 @@ export default function PublicBookingPage() {
     if (!startsAtUtc) return () => window.clearTimeout(timeoutId);
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
+    setAuthoritativeQuote(null);
     setTermsAccepted(false);
     bookingIdempotency.current = null;
     const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
@@ -604,6 +605,7 @@ export default function PublicBookingPage() {
           reason?: string;
           quote?: PublicBookingQuoteDTO | null;
         } | null;
+        if (controller.signal.aborted) return;
         setAuthoritativeQuote(data?.quote ?? null);
         const isAvailable = data?.available ?? data?.isAvailable;
         if (isAvailable === false) {
@@ -618,9 +620,9 @@ export default function PublicBookingPage() {
         }
       })
       .catch((err) => {
+        if (controller.signal.aborted && !didTimeout) return;
         setAuthoritativeQuote(null);
         if (controller.signal.aborted) {
-          if (!didTimeout) return;
           setAvailabilityStatus('unknown');
           setAvailabilityNote('La verificación tardó demasiado. Reintenta o coordinamos contigo por WhatsApp.');
           return;
@@ -1705,7 +1707,9 @@ export default function PublicBookingPage() {
         value={form.serviceOfferingId}
         onChange={(e) => {
           const nextService = services.find((service) => service.id === e.target.value);
-          if (!nextService) return;
+          if (!nextService || nextService.id === form.serviceOfferingId) return;
+          setAuthoritativeQuote(null);
+          setTermsAccepted(false);
           setForm((prev) => ({
             ...prev,
             serviceOfferingId: nextService.id,

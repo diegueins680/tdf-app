@@ -9940,7 +9940,8 @@
       "forbiddenTransitions": [
         "Service selector hidden until the schedule step",
         "Service selector locked by a route preset",
-        "A second booking entry point dedicated to one service in public navigation or landing cards"
+        "A second booking entry point dedicated to one service in public navigation or landing cards",
+        "Showing or accepting the previous service quote after changing offerings; applying an obsolete availability response to the current form."
       ],
       "effects": [
         "Estimate banner and quote follow the selected offering",
@@ -9948,7 +9949,7 @@
       ],
       "authorization": "Not applicable: the public catalog endpoint is anonymous; booking authorization is unchanged.",
       "privacy": "No personal data in the redirect beyond the tracking parameters already present in the inbound URL.",
-      "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise.",
+      "concurrency": "Catalog refetches keep the visitor's selection when the offering is still active and fall back to the first active offering otherwise. Changing the service synchronously clears the previous quote and terms acceptance. New availability requests clear stale pricing; aborted responses and cancellations cannot overwrite a newer quote.",
       "idempotency": "Re-selecting the same offering is a no-op; the redirect is replace-navigation.",
       "failure": "When the public catalog is unavailable or empty the form is disabled and shows the catalog-unavailable notice on both steps.",
       "recovery": "Reloading the page refetches the catalog.",
@@ -9975,7 +9976,7 @@
         "tdf-mobile/__tests__/featureRegistry.test.ts"
       ],
       "formalModels": [],
-      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry.",
+      "verification": "Client unit tests: contact-step selector lists every mocked offering and switching updates the estimate; legacy DJ booth URL redirect preserves query and hash; public header has no DJ Booth entry. Controlled delayed availability responses verify stale quote removal and refusal of an older response; original component and removed response guard each fail the regression.",
       "evidence": "Local Jest execution (PublicBookingPage, publicRoutes, PublicBranding suites)",
       "status": "specified and implemented",
       "critical": false,

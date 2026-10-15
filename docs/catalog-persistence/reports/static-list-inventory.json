@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-15T04:00:21.089Z",
+  "generatedAt": "2026-10-15T05:17:48.331Z",
   "repositoryRoot": ".",
   "filesScanned": 2278,
   "candidateCount": 1322,
@@ -61527,7 +61527,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "bookingPayload",
-      "line": 765,
+      "line": 767,
       "values": [
         "pbFullName",
         "pbEmail",
@@ -61543,7 +61543,7 @@
       "valueCount": 10,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        765
+        767
       ],
       "consumerCount": 1,
       "backendConsumers": [
@@ -80725,7 +80725,7 @@
       "lines": [
         15167
       ],
-      "consumerCount": 226,
+      "consumerCount": 227,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -80780,6 +80780,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
         "tdf-hq-ui/src/api/bookings.ts",
@@ -80827,8 +80828,7 @@
         "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
-        "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-        "tdf-hq-ui/src/player/PlayerProvider.tsx"
+        "tdf-hq-ui/src/player/GlobalPlayer.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
