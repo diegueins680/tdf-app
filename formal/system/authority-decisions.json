@@ -741,6 +741,20 @@
       "conflict": "confirmMusicUpload binds a re-upload with the same declared SHA-256 to the existing asset row (unique on version, role, sha256) but leaves the row's quarantine object, so after a checksum-mismatch dead letter the corrected bytes were never inspected; the requirement's recovery text ('failed jobs are retried') assumed a retry could succeed.",
       "authority": "MEDIA-MUSIC-ASSET-001's statement that the worker re-downloads and recomputes the hash of the uploaded bytes, and its idempotency rule (identical input, identical result).",
       "resolution": "Decided 2026-10-12: enqueueing a processing job for an upload session re-points the session's non-promoted asset (same version, same declared hash, different object) at the session's object, resets it to uploaded, records the previous key in provenance and cancels the asset's queued, retry, running and dead-lettered jobs (the lease guard stops a cancelled run before it writes; a running final attempt left alone would dead-letter and keep the version validation_failed); promoted assets are never re-pointed; the trigger runs AFTER INSERT so a conflicting insert that creates no job changes nothing, and locks the version row first like the worker. Migration 2026-10-12_music_upload_rebind (manifest entry 203). No handler change."
+    },
+    {
+      "id": "AUTHORITY-082",
+      "sources": [
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
+        "docs/music-releases/ddex-queued-validation.md",
+        "docs/music-releases/ddex-atomic-enqueue.md",
+        "formal/system/music-ddex-export.md"
+      ],
+      "conflict": "MEDIA-MUSIC-DDEX-001 listed export states queued, rendering, validated, failed, retired and a transition 'suspended -> retired'; music_ddex_export.status allows queued, generating, validation_failed, valid, failed and nothing is ever retired. ddex-queued-validation.md promises that export failure messages contain no object keys, SQL or secrets, but mark_failed copied the last twenty lines of the worker's stderr (truncated to 1,000 characters) into the export's validation_report for every failure that was not a gate refusal, and that report is served to every release downloader.",
+      "authority": "The column CHECK constraint and the worker script for the state set; the queued-validation ADR's privacy rule and PRIV-ERROR-001 for the report.",
+      "resolution": "Decided 2026-10-13: the requirement lists the column's export states and the job statuses with the worker's transition relation; the lease guard, the two gates, valid finality, failed finality and the queued-only replay repair are the stated rules and are modelled in MusicDdexExport.tla with five single-guard controls. The worker now stores a fixed message with the error code for non-gate failures, keeps the stderr summary on the job row, and never moves a failed export back to validation_failed when a dead-lettered job is re-queued by hand; the runtime test covers both. The absence of any recovery for a dead-lettered export is recorded as an open product decision, not changed."
     }
   ]
 }
