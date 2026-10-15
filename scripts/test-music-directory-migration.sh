@@ -969,6 +969,14 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sy
 # redefines the venue projection (venue image); keep the database in release
 # order before serving searches from it.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+# A genre search alias edit resyncs the events it reaches (2026-10-14):
+# apply twice, verify, roll back, reapply and verify again.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_alias_sync.sql" >/dev/null
 
 # /directory/search over the migrated database: Eventos + city, Todo, tab
 # counts, people-only filters, lineup genre, event card fields.

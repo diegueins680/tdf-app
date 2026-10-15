@@ -9378,7 +9378,8 @@
       "effects": [
         "Search document upsert/delete",
         "Venue city_id resolution",
-        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text"
+        "Lineup genres mapped to catalog genre ids and lineup names added to the event search text",
+        "A genre search alias edit resyncs the events whose lineup legacy genre words name its old or new term, or whose document carries its genre id"
       ],
       "authorization": "Derived data only; written by database triggers on source changes.",
       "privacy": "Projection from the privacy-reviewed public views; reads still re-check the views.",
@@ -9391,6 +9392,8 @@
       "implementation": [
         "tdf-hq/sql/2026-10-09_directory_event_search_sync.sql",
         "tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql",
+        "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+        "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql",
         "scripts/production-migrations.json",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
@@ -9398,14 +9401,15 @@
       ],
       "tests": [
         "tdf-hq/test/integration/directory_event_search_sync.sql",
+        "tdf-hq/test/integration/directory_event_search_alias_sync.sql",
         "tdf-hq/test/integration/directory_event_search_http_seed.sql",
         "scripts/__tests__/directory-event-search-http.mjs",
         "scripts/test-music-directory-migration.sh",
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
-      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test.",
+      "verification": "PostgreSQL integration checks for create, edit, unsafe image, same-origin image, lineup genres, bounded expiry, private, republish, suppression, venue rename, delete, city resolution, kind words, reindex metrics and full-refresh agreement; genre alias add, move to another genre, change away and back, profession alias ignored, unrelated events untouched; rollback and reapply; HTTP checks of /directory/search (Eventos + city, Todo, tab counts, people-only filters, lineup genre, card fields) against the real API; web page tests for the deep link, tab counts, event date and history back.",
+      "evidence": "Local PostgreSQL 16 run on a fully migrated schema on 2026-10-09; CI directory migration test. Alias resync: local PostgreSQL 16 on a fully migrated schema on 2026-10-14 (fails without the trigger, passes with it; apply twice, rollback twice, reapply).",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "Exercised directly in the database; production effect verified after release.",
