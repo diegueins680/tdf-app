@@ -705,6 +705,30 @@
       "conflict": "Purchase creation returned the original order for any eligible body sharing its buyer/key, including different terms or another offer. Uniqueness alone did not bind replay semantics.",
       "authority": "formal/system/music-purchase-replay.md",
       "resolution": "Retain buyer/key uniqueness and immutable original snapshots; reject changed or incomplete bound inputs with 409 on both existing and raced reservation paths. This is a correction under the user audit, not provider activation."
+    },
+    {
+      "id": "AUTHORITY-MUSIC-MONEY-WIRE",
+      "sources": [
+        "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "formal/system/music-money-wire.md"
+      ],
+      "conflict": "BIGINT/Int64 prices and the form promise of integer amounts competed with JSON-number encoding and Number input/display conversion, which changed valid large amounts. Purchase creation did not confirm the displayed price.",
+      "authority": "formal/system/music-money-wire.md",
+      "resolution": "Preserve the full Int64 domain with safe numeric compatibility and canonical decimal text, exact display and validated positive quote; enforce the existing USD-only sale intent at backend admission. No arbitrary price cap or provider activation."
+    },
+    {
+      "id": "AUTHORITY-MUSIC-TEST-ENTRY",
+      "sources": [
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/MusicReleaseSpecMain.hs",
+        "tdf-hq/test/Spec.hs",
+        "formal/system/music-test-entrypoint.md"
+      ],
+      "conflict": "Music unit modules and a convenience runner existed, but the canonical entrypoint did not invoke them and no scripts/workflow invocation of that runner was found.",
+      "authority": "formal/system/music-test-entrypoint.md",
+      "resolution": "Register the same four unit groups in Spec.hs and require nonempty probes in backend quality. Module presence and unrelated green examples are insufficient execution evidence."
     }
   ]
 }

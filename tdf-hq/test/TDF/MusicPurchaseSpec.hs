@@ -13,6 +13,7 @@ import Data.Aeson (Value(..))
 import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.ByteString.Char8 as BS
 import Data.Either (isRight)
+import Data.Foldable (toList)
 import Data.Int (Int64)
 import Data.List (isPrefixOf, isSuffixOf)
 import Data.Pool (destroyAllResources)
@@ -25,7 +26,7 @@ import Data.UUID.V4 (nextRandom)
 import Database.Persist (toPersistValue)
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
-import Servant (Handler, ServerError(errHTTPCode))
+import Servant (Handler, ServerError(errHTTPCode), (:<|>)(..))
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.Random (randomRIO)
@@ -36,6 +37,7 @@ import TDF.Auth (AuthedUser(..), modulesForRoles)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import TDF.DB (Env(..))
 import TDF.Models (RoleEnum(Fan))
+import TDF.Server.MusicRelease (musicReleasePublicServer)
 import TDF.Server.MusicReleaseAssets
   (authorizeDownloadDB, authorizeFreeMusicDownload, downloadUrlLifetimeSeconds)
 import TDF.Server.MusicReleaseCommerce
@@ -69,12 +71,63 @@ spec = describe "music-purchase-postgresql" $ do
         other `shouldNotBe` first
         ordersOf pool offer `shouldReturn` 2
 
+      it "preserves a published price outside the JavaScript integer range" $ \pool -> do
+        offer <- offerWith pool "'purchase',TRUE,9007199254740993,'USD'"
+        slug <- runSqlPool (rawSql "SELECT canonical_slug FROM music_release WHERE id=?::uuid"
+          [toPersistValue (offerRelease offer)]) pool
+        let _ :<|> getOne :<|> _ = musicReleasePublicServer
+        case slug of
+          [Single value] -> do
+            response <- run pool (getOne value Nothing)
+            case response of
+              Right (Object fields) -> case KeyMap.lookup "availability" fields of
+                Just (Array rules) ->
+                  [KeyMap.lookup "priceMinor" rule | Object rule <- toList rules]
+                    `shouldBe` [Just (String "9007199254740993")]
+                _ -> expectationFailure "published offer has no availability"
+              other -> expectationFailure ("published price read failed: " <> show other)
+          _ -> expectationFailure "fixture release slug missing"
+
+      it "requires the exact confirmed offer before creating a purchase" $ \pool -> do
+        offer <- purchaseOffer pool
+        forM_ [("251", "USD", 409), ("250", "EUR", 409),
+               ("250.0", "USD", 400), ("0", "USD", 400),
+               ("9223372036854775808", "USD", 400), ("250", "US", 400)] $
+          \(amount, currency, expected) -> do
+            response <- run pool (createMusicPurchase (buyerOf offer)
+              (Just "music-fixture-exact-quote") Nothing
+              (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" amount currency))
+            either errHTTPCode (const 201) response `shouldBe` expected
+        ordersOf pool offer `shouldReturn` 0
+        _ <- order pool offer "music-fixture-exact-quote"
+        ordersOf pool offer `shouldReturn` 1
+
+      it "preserves a large confirmed purchase amount through its JSON response" $ \pool -> do
+        offer <- offerWith pool "'purchase',TRUE,9007199254740993,'USD'"
+        response <- run pool (createMusicPurchase (buyerOf offer)
+          (Just "music-fixture-exact-large") Nothing
+          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"
+            "9007199254740993" "USD"))
+        case response of
+          Right (Object fields) -> KeyMap.lookup "grossMinor" fields
+            `shouldBe` Just (String "9007199254740993")
+          other -> expectationFailure ("large confirmed purchase failed: " <> show other)
+        ordersOf pool offer `shouldReturn` 1
+
+      it "does not admit a sale in a currency unsupported by music content" $ \pool -> do
+        offer <- offerWith pool "'purchase',TRUE,250,'EUR'"
+        response <- run pool (createMusicPurchase (buyerOf offer)
+          (Just "music-fixture-exact-currency") Nothing
+          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" "250" "EUR"))
+        either errHTTPCode (const 201) response `shouldBe` 404
+        ordersOf pool offer `shouldReturn` 0
+
       it "refuses a purchase key replay with different accepted terms" $ \pool -> do
         offer <- purchaseOffer pool
         original <- order pool offer "music-fixture-replay-terms"
         conflict <- run pool (createMusicPurchase (buyerOf offer)
           (Just "music-fixture-replay-terms") Nothing
-          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v2"))
+          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v2" "250" "USD"))
         either errHTTPCode (const 201) conflict `shouldBe` 409
         order pool offer "music-fixture-replay-terms" `shouldReturn` original
         ordersOf pool offer `shouldReturn` 1
@@ -86,7 +139,7 @@ spec = describe "music-purchase-postgresql" $ do
         original <- order pool offer key
         forM_ [(offerRule other, "EC"), (offerRule offer, "US")] $ \(rule, territory) -> do
           conflict <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
-            (MusicPurchaseCreateRequest rule territory "fixture-terms-v1"))
+            (MusicPurchaseCreateRequest rule territory "fixture-terms-v1" "250" "USD"))
           either errHTTPCode (const 201) conflict `shouldBe` 409
         order pool offer key `shouldReturn` original
         ordersOf pool offer `shouldReturn` 1
@@ -95,9 +148,9 @@ spec = describe "music-purchase-postgresql" $ do
         offer <- purchaseOffer pool
         let key = "music-fixture-replay-normalized"
         original <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
-          (MusicPurchaseCreateRequest (offerRule offer) " ec " " fixture-terms-v1 "))
+          (MusicPurchaseCreateRequest (offerRule offer) " ec " " fixture-terms-v1 " "250" "USD"))
         replay <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
-          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"))
+          (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" "250" "USD"))
         replay `shouldBe` original
         case replay of
           Right (Object fields) -> KeyMap.lookup "grossMinor" fields `shouldBe` Just (Number 250)
@@ -120,7 +173,7 @@ spec = describe "music-purchase-postgresql" $ do
         let restore = maybe (unsetEnv "MUSIC_TRUST_CF_IPCOUNTRY")
               (setEnv "MUSIC_TRUST_CF_IPCOUNTRY") previous
             key = "music-fixture-replay-edge"
-            request = MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"
+            request = MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" "250" "USD"
         bracket_ (setEnv "MUSIC_TRUST_CF_IPCOUNTRY" "true") restore $ do
           original <- run pool (createMusicPurchase (buyerOf offer) (Just key) (Just "EC") request)
           either errHTTPCode (const 201) original `shouldBe` 201
@@ -143,7 +196,7 @@ spec = describe "music-purchase-postgresql" $ do
           let key = "music-fixture-replay-race-" <> T.pack (show attempt)
           outcomes <- within (mapConcurrently (\terms -> run pool
             (createMusicPurchase (buyerOf offer) (Just key) Nothing
-              (MusicPurchaseCreateRequest (offerRule offer) "EC" terms)))
+              (MusicPurchaseCreateRequest (offerRule offer) "EC" terms "250" "USD")))
             ["fixture-terms-v1", "fixture-terms-v2"])
           length (filter isRight outcomes) `shouldBe` 1
           [errHTTPCode err | Left err <- outcomes] `shouldBe` [409]
@@ -177,7 +230,7 @@ spec = describe "music-purchase-postgresql" $ do
                 else threadDelay 10000 >> awaitBoth pid
             requests = mapConcurrently (\terms -> run pool
               (createMusicPurchase (buyerOf offer) (Just key) Nothing
-                (MusicPurchaseCreateRequest (offerRule offer) "EC" terms)))
+                (MusicPurchaseCreateRequest (offerRule offer) "EC" terms "250" "USD")))
               ["fixture-terms-v1", "fixture-terms-v2"]
         bracket_ install cleanup $ within $ withAsync hold $ \holder -> do
           pid <- takeMVar ready
@@ -287,7 +340,7 @@ spec = describe "music-purchase-postgresql" $ do
         offer <- purchaseOffer pool
         refused <- bracket_ (setEnv "COMMERCE_CHECKOUT_ENV" "production") (unsetEnv "COMMERCE_CHECKOUT_ENV") $
           run pool (createMusicPurchase (buyerOf offer) (Just "music-fixture-production") Nothing
-            (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"))
+            (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" "250" "USD"))
         either errHTTPCode (const 200) refused `shouldBe` 503
         ordersOf pool offer `shouldReturn` 0
 
@@ -413,7 +466,7 @@ run pool action = runHandler (runReaderT action
 order :: ConnectionPool -> Offer -> Text -> IO UUID
 order pool offer key = do
   created <- run pool (createMusicPurchase (buyerOf offer) (Just key) Nothing
-    (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1"))
+    (MusicPurchaseCreateRequest (offerRule offer) "EC" "fixture-terms-v1" "250" "USD"))
   case created of
     Right (Object fields) | Just (String raw) <- KeyMap.lookup "id" fields, Just ident <- UUID.fromText raw -> pure ident
     Right other -> fail ("unexpected purchase response: " <> show other)

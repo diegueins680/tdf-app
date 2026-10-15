@@ -23,6 +23,11 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
+  purchase price, source-bound numeric SMT obligation and compatible clients.
+- [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of
+  four music unit groups, with required nonempty probes.
+
 - [music-purchase-replay.md](music-purchase-replay.md): buyer/request-bound purchase
   replay, concurrent reservation, conflict semantics and bounded negative controls.
 

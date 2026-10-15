@@ -655,6 +655,26 @@
       "decision": "adopted",
       "rationale": "Compare TDF immutable snapshot fields after unique reservation, including the concurrent loser path. Do not copy provider response caching/24-hour expiry or treat this vendor contract as a universal HTTP mandate. RFC 9110 identical-request semantics are already indexed in RES-HTTP-001.",
       "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-MUSIC-MONEY-WIRE-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc8259.html#section-6",
+      "title": "RFC8259 JSON number interoperability",
+      "recommendation": "Use interoperable integer representations; binary64 consumers cannot preserve every Int64 value as a JSON number.",
+      "applicability": "Music BIGINT prices and web Number decoding/input conversion.",
+      "decision": "adopted",
+      "rationale": "Retain exact small-number compatibility and decimal strings outside the safe range. This is a transport correction, not a business price cap.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-MUSIC-MONEY-WIRE-002",
+      "source": "https://tc39.es/ecma402/2022/#sec-formatnumerictoparts",
+      "title": "ECMA402 BigInt numeric formatting parts",
+      "recommendation": "Use BigInt-compatible Intl parts to retain exact whole units.",
+      "applicability": "USD music-price display through the signed64 monetary domain.",
+      "decision": "adopted",
+      "rationale": "Format whole units as BigInt and convert only a remainder in0..99; do not divide the whole amount as Number. Device/provider behavior remains separately verified.",
+      "verifiedAt": "2026-10-15"
     }
   ]
 }

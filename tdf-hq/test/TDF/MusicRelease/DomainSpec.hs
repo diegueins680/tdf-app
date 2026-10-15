@@ -3,9 +3,16 @@
 module TDF.MusicRelease.DomainSpec (spec) where
 
 import Data.Either (isLeft, isRight)
+import Data.Aeson (Value(..), FromJSON(parseJSON), ToJSON(toJSON), object, (.=))
+import Data.Aeson.Types (parseEither)
+import Data.Int (Int64)
 import Data.Time (UTCTime, addUTCTime)
+import Data.UUID (nil)
 import Test.Hspec
+import Test.QuickCheck (Gen, choose, forAll, withMaxSuccess)
 import TDF.MusicRelease.Domain
+import TDF.MusicRelease.Money (musicMinorUnitsJSON, parseMusicMinorUnits)
+import TDF.API.MusicRelease (MusicAvailabilityDraft(..), MusicPurchaseCreateRequest)
 
 spec :: Spec
 spec = do
@@ -90,6 +97,44 @@ spec = do
         `shouldBe` Right ()
 
   describe "money and playback access" $ do
+    it "round trips full-range Int64 money without binary64 conversion" $
+      withMaxSuccess 2000 $ forAll (choose (minBound, maxBound) :: Gen Int64) $ \amount ->
+        parseEither parseMusicMinorUnits (musicMinorUnitsJSON amount) == Right amount
+
+    it "uses decimal strings for non-interoperable JSON integer boundaries" $ do
+      musicMinorUnitsJSON 9007199254740991 `shouldBe` Number 9007199254740991
+      musicMinorUnitsJSON 9007199254740992 `shouldBe` String "9007199254740992"
+      musicMinorUnitsJSON 9007199254740993 `shouldBe` String "9007199254740993"
+      musicMinorUnitsJSON maxBound `shouldBe` String "9223372036854775807"
+      musicMinorUnitsJSON minBound `shouldBe` String "-9223372036854775808"
+
+    it "refuses unsafe numeric money and noncanonical decimal strings" $ do
+      mapM_ (\value -> parseEither parseMusicMinorUnits value `shouldSatisfy` isLeft)
+        [ Number 9007199254740992, Number 1.5
+        , String "9223372036854775808", String "-9223372036854775809"
+        , String "01", String "+1", String " 1", String "1 "
+        , String "1e2", String "0x10", String "-0", Bool True, Null
+        ]
+
+    it "round trips availability prices through their actual request codec" $
+      withMaxSuccess 1000 $ forAll (choose (0, maxBound) :: Gen Int64) $ \amount ->
+        let draft = MusicAvailabilityDraft
+              { musicAvailabilityTrackRef = Nothing
+              , musicAvailabilityTerritoryMode = "include"
+              , musicAvailabilityTerritories = ["Worldwide"]
+              , musicAvailabilityStartsAt = Nothing, musicAvailabilityEndsAt = Nothing
+              , musicAvailabilityListeningPolicy = "none", musicAvailabilityDownloadPolicy = "purchase"
+              , musicAvailabilityPurchasable = True, musicAvailabilityPriceMinor = Just amount
+              , musicAvailabilityCurrency = Just "USD", musicAvailabilityDownloadableAssetId = Just nil
+              }
+        in parseEither parseJSON (toJSON draft) == Right draft
+
+    it "does not decode a purchase request without exact price confirmation" $ do
+      let request = object ["availabilityRuleId" .= nil, "territoryCode" .= ("EC" :: String),
+            "termsVersion" .= ("fixture-terms-v1" :: String)]
+      (parseEither parseJSON request :: Either String MusicPurchaseCreateRequest)
+        `shouldSatisfy` isLeft
+
     it "uses supported ISO currency and integer minor units" $ do
       validateMoney ["USD"] True "usd" 125 `shouldBe` Right ("USD", 125)
       validateMoney ["USD"] True "USD" 0 `shouldSatisfy` isLeft

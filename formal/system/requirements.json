@@ -3468,7 +3468,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7422,7 +7422,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7522,7 +7522,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7534,7 +7534,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9130,7 +9130,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
       "failure": "An upcoming-events failure or a response that is not a list hides the carousel; an RSVP read failure leaves one-tap attendance disabled for that event. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -9910,7 +9910,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -9990,6 +9990,195 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Creation replay has executable conformance checks and bounded properties; full HTTP/session and provider lifecycle coverage remains separate and incomplete."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-MONEY-WIRE-001",
+      "title": "Preserve exact music amounts through authoring, JSON, display and purchase confirmation",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
+      "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
+      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "contract": "formal/system/music-money-wire.md",
+      "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
+      "actors": [
+        "Artist authoring an offer",
+        "Authenticated buyer",
+        "Public reader",
+        "Web and generated API clients"
+      ],
+      "preconditions": [
+        "Existing public/commerce features and authorization apply independently; no experimental activation is authorized.",
+        "Published music sale currency is USD."
+      ],
+      "inputs": [
+        "Signed Int64 wire values; nonnegative prices and positive purchase confirmation",
+        "Canonical expectedAmountMinor and expectedCurrency",
+        "Immutable published availability rule and checkout snapshot"
+      ],
+      "state": {
+        "wire": [
+          "safe numeric JSON",
+          "canonical decimal text",
+          "invalid"
+        ],
+        "purchase": [
+          "new",
+          "validated quote",
+          "eligible offer",
+          "accepted",
+          "conflict",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Safe integer -> exact numeric JSON -> unchanged minor units",
+        "Larger Int64 -> decimal text -> unchanged minor units",
+        "Matching positive quote -> existing purchase transaction",
+        "Invalid or mismatching quote -> rejection without purchase effects"
+      ],
+      "forbiddenTransitions": [
+        "Unsafe JSON number -> silently rounded price",
+        "Whole monetary value -> binary64 division for display",
+        "Mismatched amount/currency -> created order or provider action",
+        "Missing confirmation -> accepted legacy purchase"
+      ],
+      "effects": [
+        "Pure new SQL JSON function; no financial-row or historical-snapshot rewrite",
+        "Exact client input, compatible safe scalar serialization and confirmed purchase request"
+      ],
+      "authorization": "Existing buyer, feature and offer admission still apply; client price is evidence of agreement, not a pricing or authorization authority.",
+      "privacy": "Purchase data remains buyer-scoped; fixed conflicts do not echo stored or submitted monetary/customer payloads.",
+      "concurrency": "Published price and checkout financial evidence remain immutable; existing buyer/key unique reservation persists. Concurrent withdrawal eligibility and provider uncertainty are not proven by this wire obligation.",
+      "idempotency": "Purchase creation retains PAY-MUSIC-PURCHASE-REPLAY-001; unchanged confirmed inputs replay, conflicting confirmed prices fail before mutation.",
+      "failure": "Malformed/nonpositive confirmation or missing fields return400; eligible mismatching quote returns409. Unsafe legacy numeric values are refused before UI/provider effects.",
+      "recovery": "Keep additive function on rollback; preserve financial data and historical migrations. Commerce remains off across incompatible frontend/backend pairing and older-application rollback.",
+      "observability": "Exact-revision SMT, property-test, real-handler/SQL, generated-client and UI receipts; no real provider charge used for verification.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/Money.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/utils/musicMoney.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/verify-music-money-wire.py",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "tdf-hq-ui/src/utils/musicMoney.test.ts",
+        "tdf-hq-ui/src/api/musicReleases.money.test.ts",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "scripts/test-music-money-wire-verifier.py",
+        "scripts/lib/music_money_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "scripts/verify-music-money-wire.py",
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs"
+      ],
+      "verification": "Source-recognized SMT for the full signed64 numeric branch with three SAT negative controls; full-range sampled real-codec QuickCheck, explicit boundaries, PostgreSQL projection/quote and actual web adapter/form tests.",
+      "evidence": "Current execution receipts are separate artifacts, not handwritten PASS assertions.",
+      "confidence": "Medium: numeric branch mechanically verified under its stated translation; real wire/display/admission checks are empirical and property based.",
+      "ambiguity": [
+        "No whole-library, JSON-parser or whole-program refinement proof is claimed.",
+        "Provider limits/transport recovery, concurrent withdrawal, shared payment routing and activation remain separate obligations.",
+        "Other undocumented music API operations and historical-export consumers are not covered."
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "implemented but unspecified",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped codec, quote, API and property obligations have executable checks; complete provider, session, export, concurrency and deployed conformance remains separate."
+      }
+    },
+    {
+      "id": "SYS-MUSIC-TEST-ENTRY-001",
+      "title": "Execute every canonical music unit group and reject a missing group",
+      "domain": "SYS",
+      "critical": false,
+      "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
+      "authority": "User audit validation and traceability requirements",
+      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "contract": "formal/system/music-test-entrypoint.md",
+      "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
+      "actors": [
+        "Developer",
+        "CI backend quality job"
+      ],
+      "preconditions": [
+        "Stack builds the canonical test executable using the selected backend toolchain."
+      ],
+      "inputs": [
+        "Compiled Hspec test tree",
+        "Four required music-unit group names"
+      ],
+      "state": {
+        "groups": [
+          "registered",
+          "missing"
+        ],
+        "gate": [
+          "not executed",
+          "passed",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "All four nonempty groups -> successful presence probes",
+        "Any missing group -> failed backend gate"
+      ],
+      "forbiddenTransitions": [
+        "Cabal module listing alone -> test-execution claim",
+        "Green unrelated examples -> missing music group accepted"
+      ],
+      "effects": [
+        "Canonical suite executes existing specification modules; presence probes reuse the built binary."
+      ],
+      "authorization": "Local/CI verification only; no deployment or provider authorization.",
+      "privacy": "Unit fixtures and logs are synthetic; no production/customer data is required.",
+      "concurrency": "Group probes are sequential and do not start external services.",
+      "idempotency": "Repeated probes execute pure unit tests; no production state mutation.",
+      "failure": "--fail-on=empty rejects missing groups; ordinary assertion failures remain fatal.",
+      "recovery": "Restore the required registrations and rerun affected canonical tests; do not substitute standalone-runner existence.",
+      "observability": "Hspec per-group results and original-executable empty-group negative-control receipts.",
+      "implementation": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/MusicReleaseSpecMain.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [],
+      "verification": "Four real executable nonempty probes; the previous executable fails all four as empty. This is execution coverage, not a proof of test adequacy.",
+      "evidence": "Current executable logs and explicit negative-control receipts.",
+      "confidence": "High for scoped entrypoint presence; no claim of universal test reachability.",
+      "ambiguity": [
+        "Other standalone test runners require their own execution audit.",
+        "Group presence does not establish adequate assertions, providers or external integration coverage."
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "specified but missing",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four scoped groups are executed and absence is fatal; complete repository-wide test reachability and quality evidence remain broader obligations."
       }
     }
   ]

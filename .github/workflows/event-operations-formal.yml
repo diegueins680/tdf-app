@@ -37,6 +37,7 @@ jobs:
         run: |
           mkdir "${{ runner.temp }}/payment-proof"
           printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
+          printf '%s\n' '{"status":"not-executed","reason":"Money wire obligations have not executed"}' > "${{ runner.temp }}/payment-proof/music-money-wire.json"
       - name: Check specification inventory and evidence admission
         run: |
           python -m pip install -r formal/system/requirements-verification.txt
@@ -55,6 +56,11 @@ jobs:
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
+      - name: Verify exact music money encoding and negative controls
+        run: |
+          python scripts/verify-music-money-wire.py > "${{ runner.temp }}/payment-proof/music-money-wire-output.json"
+          mv "${{ runner.temp }}/payment-proof/music-money-wire-output.json" "${{ runner.temp }}/payment-proof/music-money-wire.json"
+          python scripts/test-music-money-wire-verifier.py
       - name: Preserve solver result
         if: always()
         uses: actions/upload-artifact@v7

@@ -1,3 +1,4 @@
+import { canonicalMusicMinor } from '../utils/musicMoney';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -177,7 +178,7 @@ export const musicReleaseDraftFromVersion = (version: MusicReleaseVersion): { me
       startsAt: nullableText(rule['starts_at']), endsAt: nullableText(rule['ends_at']),
       listeningPolicy: text(rule['listening_policy']) as 'none' | 'preview' | 'full',
       downloadPolicy: text(rule['download_policy']) as 'none' | 'free' | 'purchase',
-      purchasable: rule['purchasable'] === true, priceMinor: typeof rule['price_minor'] === 'number' ? rule['price_minor'] : null,
+      purchasable: rule['purchasable'] === true, priceMinor: typeof rule['price_minor'] === 'number' || typeof rule['price_minor'] === 'string' ? rule['price_minor'] : null,
       currency: nullableText(rule['currency']), downloadableAssetId: nullableText(rule['downloadable_asset_id']),
     };
   });
@@ -760,7 +761,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
             {currentVersion.assets.filter((asset) => ['master_audio','stream_audio'].includes(asset.role) && ['valid','ready'].includes(asset.processingState)).map((asset) => <MenuItem key={asset.id} value={asset.id}>{asset.originalFilename ?? asset.role} · {asset.sha256.slice(0, 12)}</MenuItem>)}
           </TextField>}
           {rule.downloadPolicy === 'purchase' && <>
-            <TextField label="Precio (unidad menor)" type="number" value={rule.priceMinor ?? ''} onChange={(event) => changeAvailability(index, { priceMinor: event.target.value === '' ? null : Number(event.target.value) })} helperText="Ej.: USD 4,99 = 499. Sin flotantes." disabled={!editable} />
+            <TextField label="Precio (unidad menor)" type="text" inputProps={{ inputMode: 'numeric' }} value={rule.priceMinor ?? ''} onChange={(event) => changeAvailability(index, { priceMinor: event.target.value === '' ? null : event.target.value })} error={rule.priceMinor !== null && canonicalMusicMinor(rule.priceMinor) === null} helperText={rule.priceMinor !== null && canonicalMusicMinor(rule.priceMinor) === null ? "Introduce unidades menores enteras exactas." : "Ej.: USD 4,99 = 499. Sin flotantes."} disabled={!editable} />
             <TextField label="Moneda ISO" value={rule.currency ?? ''} onChange={(event) => { const currency = event.target.value.toUpperCase().slice(0, 3); changeAvailability(index, { currency: currency === '' ? null : currency }); }} disabled={!editable} />
           </>}
         </Stack>

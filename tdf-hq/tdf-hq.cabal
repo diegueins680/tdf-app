@@ -140,6 +140,7 @@ executable tdf-hq-exe
     TDF.ModelsExtra
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
+    TDF.MusicRelease.Money
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
     TDF.API.MusicRelease
@@ -505,6 +506,7 @@ test-suite tdf-hq-test
     TDF.ModelsExtra
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
+    TDF.MusicRelease.Money
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.DDEX.ERN432Spec
     TDF.MusicRelease.ContentSpec
