@@ -1,6 +1,7 @@
 // Disposable worker-test databases only. Never used by the application worker.
 import assert from 'node:assert/strict';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { disposablePostgresUrl } from './disposable-postgres-url.mjs';
 
 export function disposableMusicDatabase({ database, command, env, pause = sleep }) {
   assert.match(database, /^tdf_music_worker_[0-9]{1,10}_[a-f0-9]{32}$/);
@@ -31,4 +32,23 @@ export function disposableMusicDatabase({ database, command, env, pause = sleep 
       owned = false;
     },
   };
+}
+
+// Keep ambient libpq/provider credentials out of synthetic worker processes.
+// An explicit local/CI URL selects only the server; each run still owns a fresh
+// random database and never reuses the URL's database name.
+export function musicTestEnvironment({ source, username, runtime }) {
+  const env = {
+    PATH: source.PATH, LANG: 'C', LC_ALL: 'C', TMPDIR: runtime,
+    PGHOST: '127.0.0.1', PGPORT: '5432', PGUSER: username,
+  };
+  if (source.TDF_MUSIC_WORKER_TEST_DATABASE_URL) {
+    const url = disposablePostgresUrl(source.TDF_MUSIC_WORKER_TEST_DATABASE_URL,
+      { ci: source.CI === 'true', env: source });
+    env.PGHOST = url.hostname;
+    env.PGPORT = url.port || '5432';
+    env.PGUSER = decodeURIComponent(url.username) || username;
+    if (url.password) env.PGPASSWORD = decodeURIComponent(url.password);
+  }
+  return env;
 }

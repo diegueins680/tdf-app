@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "b764d2822469d25211b5",
+      "currentId": "4ce5568ab136c5201a90",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 205,
-      "change": "Append music publication isolation to current main, preserving all 204 existing migration entries and their introduction commits.",
+      "valueCount": 206,
+      "change": "Ordered 206-entry manifest preserves the exact current main 204-entry prefix and appends publication isolation and upload rebinding. Original SQL bytes and introduction commits are retained. Application and replay passed on the synthetic production schema; production application remains separately gated.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "6bf046da23a278c36dbcd784e637ceb58963b562",

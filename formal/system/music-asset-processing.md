@@ -36,8 +36,8 @@ re-verified here; their existing tests are listed on the requirement.
   are reachable only through purchase entitlements or free grants
   (PAY-MUSIC-DOWNLOAD-001).
 
-One defect was found by the independent review of this slice and is recorded
-below, not fixed here; three further gaps follow it.
+Independent review found the re-upload defect recorded below. The consolidated
+AUTHORITY-068 migration resolves it; three further lifecycle gaps remain.
 
 ## Model
 
@@ -90,7 +90,12 @@ now lists the column sets; the values code actually writes are asset
 `uploaded`, `inspecting`, `valid`, `ready` and job `queued`, `running`,
 `retry`, `succeeded`, `dead_letter`.
 
-## Defect (recorded, not fixed here)
+## Historical defect (resolved by the consolidated re-upload migration)
+
+The following finding records the original 2026-10-12 behavior. PR #550
+adds the rebinding and cancellation trigger described in
+[music-upload-rebind.md](music-upload-rebind.md), now included here. The
+byte-identical multi-track limitation remains open.
 
 **A corrected re-upload after a checksum-mismatch dead letter is never
 inspected.** `confirmMusicUpload` inserts the asset `ON CONFLICT
@@ -122,8 +127,8 @@ the first track's asset, so the second track never gets a master.
    `process_artwork` return 1 on mismatch; `mark_failed` schedules
    `retry` with a growing delay until `max_attempts` (5) and only then
    `dead_letter`. Each retry downloads the object again. The outcome is right
-   (never promoted, version `validation_failed`), the cost is not; and because
-   of the defect above the dead letter is final for that hash.
+   (never promoted, version `validation_failed`), the cost is not. The
+   consolidated re-upload migration now permits recovery under the same hash.
 3. **A dead-lettered source asset keeps `processing_state = 'inspecting'`.**
    The worker never writes `failed`; the version state and the job carry the
    failure, the asset row does not, and the row stays in the in-flight

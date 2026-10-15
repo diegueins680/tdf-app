@@ -20,7 +20,7 @@ dead-lettered job of the version exists.
 Reproduced by the new scenario of `scripts/test-music-release-worker-runtime.mjs`
 run without the migration (the asset keeps the old key, the job dead-letters).
 
-## The fix (`tdf-hq/sql/2026-10-12_music_upload_rebind.sql`, manifest entry 203)
+## The fix (`tdf-hq/sql/2026-10-12_music_upload_rebind.sql`; identified by migration ID in the production manifest)
 
 `trg_music_rebind_upload_asset`, AFTER INSERT on `music_processing_job` for
 `inspect_audio`, `inspect_artwork` and `validate_release` (AFTER, so an
@@ -57,9 +57,9 @@ No new model: the rule is a single conditional rebinding; `MusicAssetProcessing.
 
 ## Left open
 
-- The runtime test is not a CI step (it needs PostgreSQL on 5432 and ffmpeg);
-  the migration's trigger is exercised only locally and by the automatic
-  migration test's apply/rollback.
+- The consolidated backend CI lane runs the worker runtime suite against its
+  isolated PostgreSQL service with FFmpeg. Each run creates an owned random
+  database; the optional test URL is restricted to local/CI servers.
 - Gaps 1–3 of `music-asset-processing.md` (no purge of abandoned uploads,
   mismatch retried until `max_attempts`, dead-lettered asset left
   `inspecting`) remain.
@@ -67,5 +67,36 @@ No new model: the rule is a single conditional rebinding; `MusicAssetProcessing.
   upload to the first track's asset.
 - The old quarantine object is never deleted and the old session stays
   `completed` (it still counts against the 24-hour upload quota).
-- `music-asset-processing.md` and `MusicAssetProcessing.tla` are in PR #549;
-  until it merges those references dangle.
+- The asset-processing document and bounded model from #549 are included in
+  this consolidation; their original dated evidence remains historical.
+
+## Consolidated verification (2026-10-15)
+
+The existing #548 integration retains the complete ancestry of #549 (leased
+asset processing), #550 (upload rebinding), and #570 (DDEX state and privacy
+boundaries), together with the verified #545 prerequisite. The production
+manifest keeps main `2781ddc2a3c9fd661684742550918d653afdc0cf`'s 204 entries
+unchanged and appends publication isolation and upload rebinding (206 total).
+Original SQL bytes and introduction commits are retained.
+
+Fresh local worker runs passed all 23 scenarios, including nested DDEX
+revocation and private diagnostic checks. An explicit loopback test URL also
+passed the entire suite. Removing rebinding fails the re-upload assertion;
+restoring raw stderr in the export report fails the privacy assertion; removing
+the failed-export terminal guard fails the replay assertion. These are actual
+worker/PostgreSQL checks with fault-injected transport, not S3 compatibility or
+real provider certification.
+
+The complete manifest applied and replayed against the synthetic production
+schema. Both new migrations rolled back twice and reapplied twice, followed by
+all eight publication cases passing. Rolling publication isolation back makes
+all eight cases fail. Running that negative control leaves scheduled fixture
+work: the first repaired run processes those older candidates too and fails two
+exact-count assertions; two subsequent runs and a clean rollback/reapply cycle
+pass all eight. Failed runs remain diagnostic evidence, not passing receipts.
+
+The five music models in the canonical runner passed their bounded checks and
+all 20 named negative controls produced the expected counterexamples. This
+includes the existing entitlement model; it does not establish unbounded
+correctness or implementation refinement. Production migration application,
+worker deployment, real buckets and provider qualification remain unperformed.

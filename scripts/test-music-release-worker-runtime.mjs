@@ -9,16 +9,12 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSy
 import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { disposableMusicDatabase } from './lib/music-test-database.mjs';
+import { disposableMusicDatabase, musicTestEnvironment } from './lib/music-test-database.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
 const database = `tdf_music_worker_${process.pid}_${randomUUID().replaceAll('-', '')}`;
-const env = {
-  PATH: process.env.PATH,
-  LANG: 'C', LC_ALL: 'C', TMPDIR: runtime,
-  PGHOST: '127.0.0.1', PGPORT: '5432', PGUSER: userInfo().username,
-};
+const env = musicTestEnvironment({ source: process.env, username: userInfo().username, runtime });
 let passed = 0;
 const concurrencyOnly = process.argv.includes('--concurrency-only');
 const only = process.argv.find((argument) => argument.startsWith('--only='))?.slice(7);

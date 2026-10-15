@@ -923,13 +923,14 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
@@ -10114,7 +10115,7 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "be3275747cf984e1486855ea4f09e708e4ee6daf727bd1d74c3fe05d43b04d03",
+    ".github/workflows/ci.yml": "7557aa48ee15870445dede8c8d20d7c2ba732f31bb6416fe4bd1d865209377cb",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
     ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
@@ -10122,7 +10123,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "3ff889c4ec41f5e93a9d855005be153b3496ffe78e7f6f37e2bb26b61755923a",
+    "docs/catalog-persistence/catalog-list-decisions.json": "57cc1dc5ad5cf2e72c71e24c39339bc7c87c88cf41508577b573baebc695577e",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10345,7 +10346,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "2a8fe3d9bdd52ae9c2afe37e6e52806ac7a55198d164b343fc5ac6f38d03ba0f",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
@@ -10375,7 +10376,7 @@
     "scripts/__tests__/music-linux-integration.test.mjs": "213d85d591fe49d39396fb1653cfe94dc4ba4812fcacb49068728a525725282c",
     "scripts/__tests__/music-preview-pipeline.test.mjs": "d0079ede38108f4c1a39a070a319b6ff3a5c2f1c78f3b3f6554e7dea9b678d42",
     "scripts/__tests__/music-s3-test-xml.test.mjs": "421e5f7fcaeba25c304303c9459ba2cf0a7d0f91e6de7159529c0ec5ddec7d96",
-    "scripts/__tests__/music-test-database.test.mjs": "097aa7d510a1487ed3ff7b938c737875d1ccdcd7d2229e52aefabc9d30ed237a",
+    "scripts/__tests__/music-test-database.test.mjs": "dd838d3ed7fa0d400a3a654e5849c850a43642e1961b703a6d4400080d5326c6",
     "scripts/__tests__/music-worker-build.test.mjs": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
     "scripts/__tests__/music-worker-timing.test.mjs": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
     "scripts/__tests__/music-worker-upload.test.mjs": "85b62ef8c0264b420667a9c519c86cc73aaa926f585638fb97f9b5a70751d005",
@@ -10392,6 +10393,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
@@ -10426,7 +10428,7 @@
     "scripts/lib/music-linux-integration.mjs": "094ba7f2b7910c90c357662d2883f0eb1fb46e7767f65e2cc4371a1c33f76159",
     "scripts/lib/music-playback-identity-probe.mjs": "8e4cb3c3d1de1746ec692bfeb7da4cc20921ec77c492bfa26bff6c033c07ee43",
     "scripts/lib/music-s3-test-xml.mjs": "5f144e4e5da3a6e325a0a5413ca0f9c087b48ab0f03edce8955e2313b6941df5",
-    "scripts/lib/music-test-database.mjs": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
+    "scripts/lib/music-test-database.mjs": "bb247eee144c879dab7aae4228a21ae4e9189f365fa06e3c3f50f07a5684aaff",
     "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/operations_conformance.py": "e0ff663aee7f816df7a06418223d41065d69e0681675a05f3fb6a0592e0f911a",
@@ -10495,7 +10497,7 @@
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
     "scripts/test-music-release-audio-pipeline.sh": "872c969557cc8cde9e5e135d768cfa5da60937beacb954de5ad1301c5331b8de",
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
-    "scripts/test-music-release-worker-runtime.mjs": "1cab92e6fd1a2e0686312230890baa843fe4c116bfc3c7e8f5748fd1cb02b8b7",
+    "scripts/test-music-release-worker-runtime.mjs": "4dae48715852b0f9734f9282a6806da0dfade9d9b28fc08a10b713ccaeae2da4",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
@@ -11833,6 +11835,12 @@
       }
     ],
     "docs/catalog-persistence/catalog-list-decisions.json": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/build-catalog-decisions.mjs": [
       {
         "requirement": "SYS-TRACE-001",
         "relationship": "implementation"
@@ -19053,7 +19061,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "be3275747cf984e1486855ea4f09e708e4ee6daf727bd1d74c3fe05d43b04d03",
+      "sha256": "7557aa48ee15870445dede8c8d20d7c2ba732f31bb6416fe4bd1d865209377cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19957,7 +19965,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+      "sha256": "2a8fe3d9bdd52ae9c2afe37e6e52806ac7a55198d164b343fc5ac6f38d03ba0f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20550,7 +20558,7 @@
     {
       "id": "SURFACE-74ff895c2372bf2b",
       "path": "scripts/__tests__/music-test-database.test.mjs",
-      "sha256": "097aa7d510a1487ed3ff7b938c737875d1ccdcd7d2229e52aefabc9d30ed237a",
+      "sha256": "dd838d3ed7fa0d400a3a654e5849c850a43642e1961b703a6d4400080d5326c6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20954,9 +20962,14 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "55a8004c6d3fe607a7dca57e43dccc4a45db6f3a51b2985cfe2fbea18d32226a",
+      "sha256": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c46c28b38d50337",
@@ -21718,7 +21731,7 @@
     {
       "id": "SURFACE-c379a5800de4a2de",
       "path": "scripts/lib/music-test-database.mjs",
-      "sha256": "8c55bbb8607ab1c0d229dc8485999cb8decba00b4580f1c2dec18fee62243b7a",
+      "sha256": "bb247eee144c879dab7aae4228a21ae4e9189f365fa06e3c3f50f07a5684aaff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23697,7 +23710,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "1cab92e6fd1a2e0686312230890baa843fe4c116bfc3c7e8f5748fd1cb02b8b7",
+      "sha256": "4dae48715852b0f9734f9282a6806da0dfade9d9b28fc08a10b713ccaeae2da4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42714,7 +42727,6 @@
     "SURFACE-33c36559cee9f889",
     "SURFACE-d112ef0e073bf0c4",
     "SURFACE-efc90f2c7a0252ce",
-    "SURFACE-7bc6beda98cc6e72",
     "SURFACE-3dfd6f173e84edf1",
     "SURFACE-7972d2e7d13940a5",
     "SURFACE-d79860272960ddbf",
@@ -45507,7 +45519,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1a2a105645fbac84eb5f16629f732bc238baf131ae57407873254f17a75b9dee",
+      "sourceSha256": "d4e005cdda696ac79c478edb753b008ad79e65d84f32e071faf3a726e0625d44",
       "definition": {
         "states": [
           "absent",
@@ -45537,7 +45549,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "1a2a105645fbac84eb5f16629f732bc238baf131ae57407873254f17a75b9dee",
+      "sourceSha256": "d4e005cdda696ac79c478edb753b008ad79e65d84f32e071faf3a726e0625d44",
       "definition": {
         "export": [
           "queued",

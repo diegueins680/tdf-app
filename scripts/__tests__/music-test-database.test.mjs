@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { disposableMusicDatabase } from '../lib/music-test-database.mjs';
+import { disposableMusicDatabase, musicTestEnvironment } from '../lib/music-test-database.mjs';
 const database = `tdf_music_worker_123_${'a'.repeat(32)}`;
 function fixture({ exists = false, failCreate = false } = {}) {
   const calls = []; let polls = 0;
@@ -35,4 +35,34 @@ test('rejects broad, non-test or injected database targets', () => {
     `tdf_music_worker_${'1'.repeat(40)}_${'a'.repeat(32)}`]) {
     assert.throws(() => disposableMusicDatabase({ database }));
   }
+});
+
+test('worker fixture ignores ambient libpq and provider credentials by default', () => {
+  const env = musicTestEnvironment({ source: {
+    PATH: '/test/bin', PGHOST: 'production.invalid', PGPASSWORD: 'unrelated',
+    PGSERVICE: 'production', AWS_SECRET_ACCESS_KEY: 'unrelated',
+  }, username: 'tester', runtime: '/private/synthetic' });
+  assert.deepEqual(env, { PATH: '/test/bin', LANG: 'C', LC_ALL: 'C',
+    TMPDIR: '/private/synthetic', PGHOST: '127.0.0.1', PGPORT: '5432', PGUSER: 'tester' });
+});
+test('explicit isolated CI connection never reuses the supplied database', () => {
+  const env = musicTestEnvironment({ source: { CI: 'true', PATH: '/test/bin',
+    TDF_MUSIC_WORKER_TEST_DATABASE_URL: 'postgresql://postgres:p%40ss@postgres:5432/worker_test',
+  }, username: 'root', runtime: '/tmp/synthetic' });
+  assert.equal(env.PGHOST, 'postgres'); assert.equal(env.PGUSER, 'postgres');
+  assert.equal(env.PGPASSWORD, 'p@ss'); assert.equal(env.PGDATABASE, undefined);
+});
+test('worker CI connection rejects remote, non-test and connection override targets', () => {
+  for (const value of [
+    'postgresql://postgres@production.invalid/worker_test',
+    'postgresql://postgres@localhost/production',
+    'postgresql://postgres@localhost/worker_test?host=production.invalid',
+  ]) assert.throws(() => musicTestEnvironment({ source: { CI: 'true',
+    TDF_MUSIC_WORKER_TEST_DATABASE_URL: value }, username: 'root', runtime: '/tmp/test' }));
+  assert.throws(() => musicTestEnvironment({ source: {
+    TDF_MUSIC_WORKER_TEST_DATABASE_URL: 'postgresql://postgres@postgres/worker_test',
+  }, username: 'root', runtime: '/tmp/test' }));
+  assert.throws(() => musicTestEnvironment({ source: { CI: 'true', PGHOSTADDR: '203.0.113.1',
+    TDF_MUSIC_WORKER_TEST_DATABASE_URL: 'postgresql://postgres@postgres/worker_test',
+  }, username: 'root', runtime: '/tmp/test' }));
 });
