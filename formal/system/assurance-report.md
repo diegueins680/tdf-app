@@ -113,10 +113,10 @@ serialized formula, using the same solver; it is not independent solver validati
 No new axioms or admitted theorems are introduced.
 
 The separate [CPC certificate runner](proof-certificates.md) adds CVC5 cross-checks
-of all 41 inputs and independent Ethos checks of eight formula refutations.
-Its receipt links certificate obligations to the source-derived report and keeps
-the six unsupported certificates UNPROVEN. These results do not promote complete
-requirements or refinement and do not change this report's release decision.
+of all 41 inputs and independent Ethos checks of fourteen formula obligations
+(twelve distinct inputs). Its receipt links certificate obligations to the
+source-derived report. Complete requirements and refinement remain UNPROVEN;
+this report's release decision is unchanged.
 
 Primary methodological sources: [Z3 bitvector semantics](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/),
 [Z3 satisfiability results](https://microsoft.github.io/z3guide/docs/logic/basiccommands/),
@@ -130,7 +130,9 @@ conditional on the restricted translation.
 The existing event-operations workflow runs on every PR, main push and weekly
 Monday 05:23 UTC schedule. Its specification job now produces this report and
 archives the complete evidence even when a later check fails. Each SMT query has
-a 30-second timeout; each proof/control subprocess has a 180-second deadline. CI's
+a 30-second timeout in the ordinary Z3 report; its proof/control subprocesses
+have 180-second deadlines. The separate CPC job has the longer generation and
+checker budgets documented in `proof-certificates.md`. CI's
 job deadline is the outer limit. Unknown, unsupported source, timeouts and changed
 fingerprints never become PROVEN. Every run conservatively regenerates all four
 arithmetic, three authorization predicate and four recovery-time obligations; no unsafe incremental dependency assumption is made.

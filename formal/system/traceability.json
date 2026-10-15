@@ -144,7 +144,7 @@
         "formal/system/certificate-tools.json",
         "formal/system/proof-certificates.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks eight exact formula refutations, with six other certificate obligations UNPROVEN and all source/refinement limitations retained.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained.",
       "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -9931,7 +9931,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
+    ".github/workflows/event-operations-formal.yml": "65890800da4cb60307b98907f362a1aa0730041b9ff0f5b6faacb739764fecaa",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -10095,9 +10095,9 @@
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/certificate-tools.json": "4082359a048ca64c39e40df31ee9fbf6aee35496a92ce40f2a2356478e75da44",
+    "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
-    "formal/system/proof-certificates.md": "bf02d5a72f4337080b7ff18e94da3f5b7857a3fcdb575979a76d1ac97718ca46",
+    "formal/system/proof-certificates.md": "d6e047ab17d93679b864a67809e3a9de9489ab1b90def061bd11f2900d4c80c1",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
@@ -10298,7 +10298,7 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
-    "scripts/test-proof-certificates.py": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
+    "scripts/test-proof-certificates.py": "87c9a0da68e682c20ae86e6cefed5be38d6d38f78399ad60cbcfabaf8fd300cf",
     "scripts/test-provider-retry-runtime.sh": "46885fc4a5bb30b88cba6b4f8e678745b5ef158efd56cdf7e0256751745e1526",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -10336,7 +10336,7 @@
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-payment-arithmetic.py": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
-    "scripts/verify-proof-certificates.py": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
+    "scripts/verify-proof-certificates.py": "d14c09e243b543d61169113050c73ee2fc6e11b051d2ecc4abf840afffb69899",
     "scripts/verify-readiness.py": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
     "scripts/verify-recovery-expiry.py": "9d13c03cb82102530b3163e3f0dd3893ce1ff60bddba8ff6a96bcae74fe9947d",
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
@@ -18746,7 +18746,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
+      "sha256": "65890800da4cb60307b98907f362a1aa0730041b9ff0f5b6faacb739764fecaa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23517,7 +23517,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
+      "sha256": "87c9a0da68e682c20ae86e6cefed5be38d6d38f78399ad60cbcfabaf8fd300cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24268,7 +24268,7 @@
     {
       "id": "SURFACE-d8f74623732a7a92",
       "path": "scripts/verify-proof-certificates.py",
-      "sha256": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
+      "sha256": "d14c09e243b543d61169113050c73ee2fc6e11b051d2ecc4abf840afffb69899",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45182,7 +45182,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5faf4f3c425d2d257bcdaf070b8aae51959e4ec2fa03ce83920375cfe5fbcd1b",
+      "sourceSha256": "d100615651f31d5eb501e026f6fd6609a728c7fca15c43693e548031a77ae3da",
       "definition": {
         "states": [
           "absent",
