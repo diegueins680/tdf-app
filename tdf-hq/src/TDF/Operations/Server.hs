@@ -985,6 +985,10 @@ replayFailureHandler original failureId command = runOperationsWrite original $ 
   -- Admitting any other failure would leave it in 'retrying' with no executor.
   unless (provider == "internal_outbox") $
     rejectCommand err409 {errBody = "No automatic retry exists for this failure"}
+  -- Keep trigger DDL from changing the checked set before this transaction ends.
+  -- Row-exclusive table locks remain compatible with normal worker writes.
+  rawExecute
+    "LOCK TABLE operations_outbox, operations_integration_failure IN ROW EXCLUSIVE MODE" []
   -- Replay requires re-queueing, settlement, failure reuse and work-item closure.
   -- A missing or disabled companion trigger would strand an admitted retry.
   installed <- rawSql
