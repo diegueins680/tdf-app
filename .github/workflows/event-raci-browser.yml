@@ -30,6 +30,9 @@ concurrency:
   group: event-raci-browser-${{ github.ref }}
   cancel-in-progress: true
 
+# Public-image pulls retain GitHub-hosted runners' built-in Docker Hub credentials.
+# A global login replaces those credentials and can introduce pull rate limits.
+# https://github.com/docker/login-action#Set-scopes-for-the-authentication-token
 jobs:
   real-raci-browser:
     runs-on: ubuntu-latest
