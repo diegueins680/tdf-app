@@ -1,7 +1,7 @@
 {
-  "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
   "schemaVersion": 1,
   "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+  "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
   "retirements": [
     {
       "originalDecision": {
@@ -685,6 +685,17 @@
             "index": 10
           },
           "sourceEntryCanonicalSha256": "2e8440dc6288021f5eb830bc15aa58d6e2ec4816fb801ac9f5e7c197e4bcdbb0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
+          "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+          "sourceFileSha256": "a8848a767b7035d8fdcbd2c6f2babd02c5c26e4c68cea7ce48f6b2875d61878d",
+          "sourceEntry": {
+            "index": 10
+          },
+          "sourceEntryCanonicalSha256": "419a37d8d28aad1a00e44bcd2a48def96df2b9cc6916f6e3e4f047cdf8cd0fb0",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source review retained in immutable ancestor; no recursive copying."
         }

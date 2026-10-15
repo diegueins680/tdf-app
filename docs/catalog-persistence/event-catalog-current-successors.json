@@ -1,7 +1,7 @@
 {
-  "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
   "schemaVersion": 1,
   "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
+  "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
   "successors": [
     {
       "historicalReplacementId": "91952765f2d528c2a6c6",
@@ -369,6 +369,17 @@
             "index": 8
           },
           "sourceEntryCanonicalSha256": "f1087726894f23ad090865e2c84df464c58922e9e0c92193115553281471283c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review retained in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
+          "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+          "sourceFileSha256": "7fda3bd976b24615b6e9bb29583377b445b690f882461ec8ee89324079ffc3be",
+          "sourceEntry": {
+            "index": 8
+          },
+          "sourceEntryCanonicalSha256": "67c5c29ddb63e922e8cd1af271709ba42bb63bc52e6238e069ea3c6157c3904e",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Complete source review retained in immutable ancestor; no recursive copying."
         }
