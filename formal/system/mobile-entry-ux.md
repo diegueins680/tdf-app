@@ -25,6 +25,7 @@ This contract covers web (`tdf-hq-ui`) behavior only. Backend authorization and 
 
 ## COURSE-ENROLL-001: immediate course enrollment
 - "Inscribirme" (hero, sticky mobile CTA, `?inscribirme=1`) opens the enrollment dialog in view, focused on the first missing field.
+- Closing finishes the dialog exit before removing `inscribirme` with replacement navigation; other campaign parameters survive and focus returns to the enrollment trigger. Navigation must not leave a retained modal after closing.
 - Signed-in users get account data prefilled. Guests may enroll and can sign in without losing their draft.
 - Local Ecuador phone numbers are submitted in E.164 (`+593…`).
 - Server errors appear beside the relevant field or as friendly form messages.

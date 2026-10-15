@@ -7401,12 +7401,21 @@
         "tdf-hq-ui/src/api/eventTickets.test.ts",
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review-concurrency.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
-        "formal/event-operations/ManualBankTransfer.tla"
+        "formal/event-operations/ManualBankTransfer.tla",
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
       ],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests. Additional TicketManualReviewSpec cases and its separate bounded TicketManualReview model preserve the independent reviewer-overlap evidence from PR #545; see formal/system/ticket-manual-review.md.",
       "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
@@ -8808,12 +8817,14 @@
       "allowedTransitions": [
         "CTA/sticky CTA/deep link -> dialog focused on first missing field",
         "valid submit -> received or order checkout",
-        "server field error -> message beside field"
+        "server field error -> message beside field",
+        "close -> completed dialog exit -> remove resume parameter, preserve attribution and restore trigger focus"
       ],
       "forbiddenTransitions": [
         "form discovered only by scrolling",
         "raw local phone sent as E.164",
-        "raw server text shown"
+        "raw server text shown",
+        "navigation interrupts closing and retains a modal"
       ],
       "effects": [
         "Draft preserved across login round-trip and cleared on success."
@@ -9024,34 +9035,35 @@
     },
     {
       "id": "OPS-CI-REGISTRY-001",
-      "title": "Authenticate Docker Hub pulls in CI",
+      "title": "Public CI image pulls and authenticated release publication",
       "domain": "OPS",
       "critical": false,
-      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "statement": "GitHub-hosted verification uses runner access for public test images without repository Docker Hub credential overrides. Release image publication still authenticates using repository secrets. Neither image access nor authentication bypasses tests, reviews or release admission.",
       "authority": "User authorized CI authentication on 2026-10-09",
-      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "source": "Original user authentication instruction 2026-10-09; current consolidation authorization and observed authenticated-container pull failures on 2026-10-15; GitHub Actions hosted-runner Docker Hub rate-limit documentation.",
       "contract": ".github/workflows/ci.yml",
-      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "property": "Public test pulls retain runner access; release pushes require authentication; image identities and all checks remain unchanged.",
       "actors": [
         "GitHub-hosted CI runner",
         "Repository secret administrator"
       ],
       "preconditions": [
-        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+        "Public test images on GitHub-hosted runners; publishing secrets available only to authorized release jobs."
       ],
       "inputs": [
-        "Repository secret references",
-        "Existing Docker Hub image tags and immutable digests"
+        "Existing public image tags/digests",
+        "Repository secret references for release publication"
       ],
       "state": {
         "registry": [
-          "unauthenticated",
-          "authenticated",
-          "authentication-failed"
+          "public runner access",
+          "authenticated release publication",
+          "pull or login failure"
         ]
       },
       "allowedTransitions": [
-        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+        "Pull the existing public test image using runner access, then execute every selected check.",
+        "Authenticate an authorized release publishing job before pushing its image."
       ],
       "forbiddenTransitions": [
         "Expose secret values in source or logs",
@@ -9059,14 +9071,14 @@
         "Use pull_request_target to expose secrets to fork code"
       ],
       "effects": [
-        "Authenticated test-image downloads in ephemeral CI runners"
+        "Test-image downloads and independently authorized image publication"
       ],
-      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
-      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
-      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "authorization": "Public test-image access requires no repository secret; release publication retains Docker Hub authentication and protected-main prerequisites.",
+      "privacy": "Publishing secrets remain secret references; no values are printed or committed.",
+      "concurrency": "Each job retains runner-local public access; provider availability still constrains execution.",
       "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
-      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
-      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "failure": "A failed image pull, login or test remains a failure. No exemption is treated as guaranteed image availability.",
+      "recovery": "Inspect exact job/container logs and repair access configuration; rerun all affected current-head checks.",
       "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
       "implementation": [
         ".github/workflows/build.yml",
@@ -9076,19 +9088,19 @@
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/social-verification.yml"
       ],
-      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
-      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "verification": "Parsed workflow comparison preserves image references, service configuration and test commands; current-head hosted jobs must actually pull images and execute tests.",
+      "evidence": "Current-head GitHub container initialization and downstream test results; repository CI regression tests.",
       "tests": [],
       "formalModels": [],
       "status": "specified and implemented",
-      "historicalStatus": null,
-      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "historicalStatus": "The October9 authenticated-pull policy was superseded after October15 hosted logs showed unauthenticated quota failures despite explicit Docker login.",
+      "confidence": "Source-level configuration verified; hosted pull and test completion remain independent evidence.",
       "ambiguity": [
-        "Authentication does not guarantee registry availability or unlimited pull quota."
+        "GitHub hosted-runner public-image allowance does not guarantee provider availability or successful tests."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+        "reason": "Public credential overrides removed after observed failures; fresh hosted pull and test gates remain required."
       }
     },
     {
@@ -10013,6 +10025,77 @@
         "classification": "PARTIAL",
         "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
       }
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
     }
   ],
   "sourceFingerprints": {
@@ -10020,13 +10103,13 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
-    ".github/workflows/ci.yml": "dce7e16b280501ad9839d4b2abfb90d1853310694236b8615b780252a75a49b1",
+    ".github/workflows/ci.yml": "1b90f0c707561659afbd5753c68564f97470398868a5a638a9fb503271c6af5d",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
-    ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
-    ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+    ".github/workflows/event-operations-formal.yml": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
+    ".github/workflows/event-raci-browser.yml": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
+    ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    ".github/workflows/social-verification.yml": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+    ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/catalog-persistence/catalog-list-decisions.json": "fe8f0456c673f38097474119f66854a75bfe58d4ceb7abeba3d851e9f1b62f76",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -10034,9 +10117,9 @@
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "a4349854e31b1569e6dcfb20586ae034c97e51947c5cd8921d59e88dd6ee0973",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
-    "e2e/web/auth-landing.spec.mjs": "d167e740483bd29e2233ab8ae8fcd0c32c728dc6b7e9b48ff3caef694517b7c4",
+    "e2e/web/auth-landing.spec.mjs": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
     "e2e/web/community-discovery.spec.mjs": "9fb22467b072db50eeffc2deb009c2361c21d0ac496e96a07076a9af367d6260",
-    "e2e/web/course-enrollment.spec.mjs": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+    "e2e/web/course-enrollment.spec.mjs": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
     "e2e/web/directory-entry.spec.mjs": "17d56aaa082a13e71c2442b6f09ee29b158413e9a41eb7b07969e3bee61c8c97",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
@@ -10046,6 +10129,7 @@
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "8a1ef90f2a060ff4ae4e16add3001c09280e8224e06a8d28b49c9793eefb5112",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
+    "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/persona-public.spec.mjs": "afaaabc5ab1c3a0fd039e08d715a5ea3a4505c6e7c9931b80269e68e7de490a9",
     "e2e/web/records-thumbnails.spec.mjs": "2518d0e8d4b07d25605a824d3d4464442b55464e1106433ea7faf87f40614d07",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
@@ -10163,6 +10247,12 @@
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
     "formal/event-operations/TaxDocumentSubmission.tla": "a2a0daeb79aade27ed78655323dd82af303c6742024eccfe96c710a49b749797",
+    "formal/event-operations/TicketManualReview.cfg": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76",
+    "formal/event-operations/TicketManualReview.tla": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+    "formal/event-operations/TicketManualReviewLockReleased.cfg": "6d345445daf969c94c0ba93bfcd21a892636d8ef1818d69bd06804dbfe58af8d",
+    "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg": "6ee38440ebb4d65c56a744d7aa8e4b74f9388159b5133a564d3f6d358b52da6d",
+    "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg": "3393757d152879613fe1b2dc59a6a6196d4270bc029399df77b33b6ef3f76515",
+    "formal/event-operations/TicketManualReviewSubmitterReviews.cfg": "94aa99787cade85e26b09bf56f2491f36d789ee9564322a47a43c8e7c14ceac4",
     "formal/event-operations/WhatsAppConsent.cfg": "06b8506b46b3cd789528bddd9ca9d829d7a7143669f2e960f92c45262ae17648",
     "formal/event-operations/WhatsAppConsent.tla": "c7e448565f11174bf269cc768deef9c883fa72da6fe2394aad7e3d7b0ad4d7a9",
     "formal/event-operations/WhatsAppConsentLongUnsentWindow.cfg": "ceb85813cdddb1426d695b451a3e14f44ddd86b88601928eff4e9510beb3cfea",
@@ -10405,6 +10495,7 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test-ticket-manual-review-concurrency.sh": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -10414,7 +10505,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+    "scripts/verify-event-operations-formal.sh": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10521,6 +10612,7 @@
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "aa96ec61e318204b78d66b956009449cdc80b3258bc1b65ac7f9df3d2e22a99f",
     "tdf-hq-ui/src/components/notificationTarget.ts": "8eedd6fc0b3c12ba8448053b1304fe5b9d50c3946b0b45a8b36dd6e885086a85",
+    "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "cb2e829fb4c40dfbbc9f6b7cc7b94cf40f63471a23db7df3f04bb496b4638408",
@@ -10563,8 +10655,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -10863,12 +10955,12 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+    "tdf-hq/tdf-hq.cabal": "e5275bad4402371f74bd2598fa0dcbbfbca21d804b5400d78b7982c55eeab838",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
-    "tdf-hq/test/Spec.hs": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+    "tdf-hq/test/Spec.hs": "6b987d571d9df10749ba937e43aff3a10e3d2de478474bcaf898e5b6e02a1126",
     "tdf-hq/test/TDF/APITypesSpec.hs": "d7e46d1a91f94ac5ef58708459eec210bf12e0969c621f400377d77cf1006f96",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -10908,6 +11000,7 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "fd4185d685f407ba3dc7c0775abf1221258cd6153859df68198a3f0a1d22aae8",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "f2a0749e7ab144f7007a401f706d54f4e99e6dc86b0b0d75633c2e3a40c2f56e",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
@@ -11142,6 +11235,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
@@ -16302,7 +16399,55 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/test/TDF/TicketManualReviewSpec.hs": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-ticket-manual-review-concurrency.sh": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ManualBankTransfer.tla": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReview.tla": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReview.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleased.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewSubmitterReviews.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg": [
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg": [
       {
         "requirement": "EVT-TICKET-MANUAL-001",
         "relationship": "formalModels"
@@ -18829,6 +18974,18 @@
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": [
+      {
+        "requirement": "SYS-UI-FIXTURE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/web/notification-navigation.spec.mjs": [
+      {
+        "requirement": "SYS-UI-FIXTURE-001",
+        "relationship": "implementation"
+      }
     ]
   },
   "surfaces": [
@@ -18897,7 +19054,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "dce7e16b280501ad9839d4b2abfb90d1853310694236b8615b780252a75a49b1",
+      "sha256": "1b90f0c707561659afbd5753c68564f97470398868a5a638a9fb503271c6af5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18941,7 +19098,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18969,7 +19126,7 @@
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+      "sha256": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18981,7 +19138,7 @@
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+      "sha256": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19012,7 +19169,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19095,7 +19252,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "d167e740483bd29e2233ab8ae8fcd0c32c728dc6b7e9b48ff3caef694517b7c4",
+      "sha256": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19141,7 +19298,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+      "sha256": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19310,9 +19467,14 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "c0272c3de6e41821cf0fd9512758b60cc764a1e3f7275fe7755cd9d50409ee97",
+      "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-FIXTURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8e97f033e44df926",
@@ -24069,6 +24231,18 @@
       ]
     },
     {
+      "id": "SURFACE-c24f2eb451460e6e",
+      "path": "scripts/test-ticket-manual-review-concurrency.sh",
+      "sha256": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-4c827aef16e690c3",
       "path": "scripts/test-ticket-manual-review.sh",
       "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
@@ -24255,7 +24429,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24313,6 +24487,10 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
@@ -27014,9 +27192,14 @@
     {
       "id": "SURFACE-772702b32840fda1",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
-      "sha256": "e5b8043323a2ac5f0761e78c9499552de166b072bdd4482779547e7eac586d16",
+      "sha256": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-UI-FIXTURE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e1fc722d5c6ece7f",
@@ -28511,7 +28694,7 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
+      "sha256": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28531,7 +28714,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+      "sha256": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37779,7 +37962,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+      "sha256": "e5275bad4402371f74bd2598fa0dcbbfbca21d804b5400d78b7982c55eeab838",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37893,7 +38076,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+      "sha256": "6b987d571d9df10749ba937e43aff3a10e3d2de478474bcaf898e5b6e02a1126",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38662,6 +38845,18 @@
       "requirements": [
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-89f49f12c8c895f1",
+      "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-MANUAL-001",
           "relationship": "tests"
         }
       ]
@@ -42616,7 +42811,6 @@
     "SURFACE-f40804c1455f8bad",
     "SURFACE-acbdfac127b57e53",
     "SURFACE-d8799e5a0806f908",
-    "SURFACE-1650513d8810b7f7",
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-d3c9dbc473fd46d6",
     "SURFACE-660f7078dc0b381a",
@@ -43060,7 +43254,6 @@
     "SURFACE-85bd4c6fc1a45c48",
     "SURFACE-793045e8bae5158b",
     "SURFACE-8162aa14f44a2da9",
-    "SURFACE-772702b32840fda1",
     "SURFACE-e1fc722d5c6ece7f",
     "SURFACE-388d446af04495d3",
     "SURFACE-65cbecbfc60140c5",
@@ -44288,7 +44481,8 @@
     "SURFACE-21b31fbb27b536c4"
   ],
   "untestedRequirements": [
-    "OPS-CI-REGISTRY-001"
+    "OPS-CI-REGISTRY-001",
+    "SYS-UI-FIXTURE-001"
   ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
@@ -45465,7 +45659,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "759ff4e7f580c9f14da60f82af430e4c963a1e682e98a0eb76abd1af261d05b0",
+      "sourceSha256": "d27751d2872d1f70363224139185e492a1722dd45c7fa261804455cc651681ed",
       "definition": {
         "states": [
           "absent",
@@ -67662,7 +67856,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 123,
+    "PARTIAL": 124,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

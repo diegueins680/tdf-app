@@ -521,6 +521,7 @@
       "scripts/test-ticket-confirmation-lease.py",
       "scripts/test-ticket-confirmation-smtp.py",
       "scripts/test-ticket-confirmation.sh",
+      "scripts/test-ticket-manual-review-concurrency.sh",
       "scripts/test-ticket-manual-review.sh",
       "scripts/test-ticket-payment-gate.sh",
       "scripts/test-trial-identity.sh",
@@ -2110,6 +2111,7 @@
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
       "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+      "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
       "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
@@ -2623,7 +2625,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "dce7e16b280501ad9839d4b2abfb90d1853310694236b8615b780252a75a49b1",
+      "sha256": "1b90f0c707561659afbd5753c68564f97470398868a5a638a9fb503271c6af5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2635,19 +2637,19 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "6e181c91e22bba5184ad4817457f8c3f5c75a09ba35e50509c8c31f24be46a92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+      "sha256": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+      "sha256": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2665,7 +2667,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2719,7 +2721,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "d167e740483bd29e2233ab8ae8fcd0c32c728dc6b7e9b48ff3caef694517b7c4",
+      "sha256": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2743,7 +2745,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+      "sha256": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2845,7 +2847,7 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "c0272c3de6e41821cf0fd9512758b60cc764a1e3f7275fe7755cd9d50409ee97",
+      "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5591,6 +5593,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c24f2eb451460e6e",
+      "path": "scripts/test-ticket-manual-review-concurrency.sh",
+      "sha256": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4c827aef16e690c3",
       "path": "scripts/test-ticket-manual-review.sh",
       "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
@@ -5695,7 +5703,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "e2e85a516d82961776125f38cf5afcf036d0febce75ce5ca590200fa36402027",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7453,7 +7461,7 @@
     {
       "id": "SURFACE-772702b32840fda1",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
-      "sha256": "e5b8043323a2ac5f0761e78c9499552de166b072bdd4482779547e7eac586d16",
+      "sha256": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8491,13 +8499,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
+      "sha256": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+      "sha256": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14641,7 +14649,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+      "sha256": "e5275bad4402371f74bd2598fa0dcbbfbca21d804b5400d78b7982c55eeab838",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14707,7 +14715,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+      "sha256": "6b987d571d9df10749ba937e43aff3a10e3d2de478474bcaf898e5b6e02a1126",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15086,6 +15094,12 @@
       "id": "SURFACE-ae8c576d860734fa",
       "path": "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
       "sha256": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-89f49f12c8c895f1",
+      "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23041,7 +23055,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "5dbdf812b042d3e5ff177904154bb4b88384f4794c6692d58e1ff00d1ab20369",
+      "sha256": "626ca81a97aa95d55b336ee329e011ad3351552a5a8bc943d9851ce867c289b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23964,6 +23978,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/TicketManualReview.cfg",
+      "sha256": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReview.tla",
+      "sha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewLockReleased.cfg",
+      "sha256": "6d345445daf969c94c0ba93bfcd21a892636d8ef1818d69bd06804dbfe58af8d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+      "sha256": "6ee38440ebb4d65c56a744d7aa8e4b74f9388159b5133a564d3f6d358b52da6d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg",
+      "sha256": "3393757d152879613fe1b2dc59a6a6196d4270bc029399df77b33b6ef3f76515",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+      "sha256": "94aa99787cade85e26b09bf56f2491f36d789ee9564322a47a43c8e7c14ceac4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WebOnboardingRecovery.cfg",
       "sha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca",
       "authority": "inferred",
@@ -24567,7 +24623,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7d1323244fefb6ad45da11e534b1f74a0000c94950aaf4bec50f4b4b86fd6767",
+      "sha256": "d9feacad14a17859aec1043ad7b0da5bc3bbab8a2b208e790f780bbb43bd9831",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24581,7 +24637,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e58f0ca38df1369384dff84dfe20ee0c5f270f3e65da33e7afad166815053d23",
+      "sha256": "d54a57601c21992691b7c57b9ac333f3f63155be5592d59d88f567162c9c02c2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24791,7 +24847,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "e5591040ee08cf1fad49a7c10a6349705cee350578302a0301f520e93f398509",
+      "sha256": "554ece8a8f8e6cd33acebe8c37d43c5cd6b8cc4bdab1510cd4eb9977eb44d218",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24910,7 +24966,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "759ff4e7f580c9f14da60f82af430e4c963a1e682e98a0eb76abd1af261d05b0",
+      "sha256": "d27751d2872d1f70363224139185e492a1722dd45c7fa261804455cc651681ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24960,6 +25016,20 @@
     {
       "path": "formal/system/ticket-invoice-worker.md",
       "sha256": "bb3eb733b9bb1985d4d6691ed73e8762c01689cb0db7cb44756abd453381b0e0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ticket-manual-review.md",
+      "sha256": "39eaed4619a4b6d883d5b347009dbe3802f7afa9ff944ee6bc3cf629baefadd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ui-fixture-boundaries.md",
+      "sha256": "9c01ca66e0f5be626b294bd426a91f0d349f53833af30f96a4c6ada5be1cb11d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -36943,6 +37013,114 @@
         "  RetryUncertain = FALSE",
         "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReview.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = TRUE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval",
+        "  EveryoneAnswered"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewLockReleased.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = FALSE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval",
+        "  EveryoneAnswered"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = FALSE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = FALSE",
+        "  TransitionGuard = FALSE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = TRUE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval",
+        "  EveryoneAnswered"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

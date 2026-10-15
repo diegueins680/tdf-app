@@ -369,12 +369,14 @@ describe('CourseProductionLandingPage', () => {
       const close = getDialog()?.querySelector<HTMLButtonElement>('button[aria-label="Cerrar"]');
       if (!close) throw new Error('Expected close button');
       await click(close);
+      // Query cleanup follows the completed exit, so navigation cannot
+      // interrupt the dialog transition and leave a retained modal.
+      await waitForDialogToClose();
       await waitForExpectation(() => {
         expect(text(container.querySelector('[data-testid="location-probe"]'))).toBe(
           '/curso/bateria-guillermo-diaz-abr-2026?utm_source=ig',
         );
       });
-      await waitForDialogToClose();
     } finally {
       await cleanup();
     }

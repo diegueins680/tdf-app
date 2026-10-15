@@ -7400,12 +7400,21 @@
         "tdf-hq-ui/src/api/eventTickets.test.ts",
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review-concurrency.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
-        "formal/event-operations/ManualBankTransfer.tla"
+        "formal/event-operations/ManualBankTransfer.tla",
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
       ],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests. Additional TicketManualReviewSpec cases and its separate bounded TicketManualReview model preserve the independent reviewer-overlap evidence from PR #545; see formal/system/ticket-manual-review.md.",
       "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
@@ -8807,12 +8816,14 @@
       "allowedTransitions": [
         "CTA/sticky CTA/deep link -> dialog focused on first missing field",
         "valid submit -> received or order checkout",
-        "server field error -> message beside field"
+        "server field error -> message beside field",
+        "close -> completed dialog exit -> remove resume parameter, preserve attribution and restore trigger focus"
       ],
       "forbiddenTransitions": [
         "form discovered only by scrolling",
         "raw local phone sent as E.164",
-        "raw server text shown"
+        "raw server text shown",
+        "navigation interrupts closing and retains a modal"
       ],
       "effects": [
         "Draft preserved across login round-trip and cleared on success."
@@ -9023,34 +9034,35 @@
     },
     {
       "id": "OPS-CI-REGISTRY-001",
-      "title": "Authenticate Docker Hub pulls in CI",
+      "title": "Public CI image pulls and authenticated release publication",
       "domain": "OPS",
       "critical": false,
-      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "statement": "GitHub-hosted verification uses runner access for public test images without repository Docker Hub credential overrides. Release image publication still authenticates using repository secrets. Neither image access nor authentication bypasses tests, reviews or release admission.",
       "authority": "User authorized CI authentication on 2026-10-09",
-      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "source": "Original user authentication instruction 2026-10-09; current consolidation authorization and observed authenticated-container pull failures on 2026-10-15; GitHub Actions hosted-runner Docker Hub rate-limit documentation.",
       "contract": ".github/workflows/ci.yml",
-      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "property": "Public test pulls retain runner access; release pushes require authentication; image identities and all checks remain unchanged.",
       "actors": [
         "GitHub-hosted CI runner",
         "Repository secret administrator"
       ],
       "preconditions": [
-        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+        "Public test images on GitHub-hosted runners; publishing secrets available only to authorized release jobs."
       ],
       "inputs": [
-        "Repository secret references",
-        "Existing Docker Hub image tags and immutable digests"
+        "Existing public image tags/digests",
+        "Repository secret references for release publication"
       ],
       "state": {
         "registry": [
-          "unauthenticated",
-          "authenticated",
-          "authentication-failed"
+          "public runner access",
+          "authenticated release publication",
+          "pull or login failure"
         ]
       },
       "allowedTransitions": [
-        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+        "Pull the existing public test image using runner access, then execute every selected check.",
+        "Authenticate an authorized release publishing job before pushing its image."
       ],
       "forbiddenTransitions": [
         "Expose secret values in source or logs",
@@ -9058,14 +9070,14 @@
         "Use pull_request_target to expose secrets to fork code"
       ],
       "effects": [
-        "Authenticated test-image downloads in ephemeral CI runners"
+        "Test-image downloads and independently authorized image publication"
       ],
-      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
-      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
-      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "authorization": "Public test-image access requires no repository secret; release publication retains Docker Hub authentication and protected-main prerequisites.",
+      "privacy": "Publishing secrets remain secret references; no values are printed or committed.",
+      "concurrency": "Each job retains runner-local public access; provider availability still constrains execution.",
       "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
-      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
-      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "failure": "A failed image pull, login or test remains a failure. No exemption is treated as guaranteed image availability.",
+      "recovery": "Inspect exact job/container logs and repair access configuration; rerun all affected current-head checks.",
       "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
       "implementation": [
         ".github/workflows/build.yml",
@@ -9075,19 +9087,19 @@
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/social-verification.yml"
       ],
-      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
-      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "verification": "Parsed workflow comparison preserves image references, service configuration and test commands; current-head hosted jobs must actually pull images and execute tests.",
+      "evidence": "Current-head GitHub container initialization and downstream test results; repository CI regression tests.",
       "tests": [],
       "formalModels": [],
       "status": "specified and implemented",
-      "historicalStatus": null,
-      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "historicalStatus": "The October9 authenticated-pull policy was superseded after October15 hosted logs showed unauthenticated quota failures despite explicit Docker login.",
+      "confidence": "Source-level configuration verified; hosted pull and test completion remain independent evidence.",
       "ambiguity": [
-        "Authentication does not guarantee registry availability or unlimited pull quota."
+        "GitHub hosted-runner public-image allowance does not guarantee provider availability or successful tests."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+        "reason": "Public credential overrides removed after observed failures; fresh hosted pull and test gates remain required."
       }
     },
     {
@@ -10012,6 +10024,77 @@
         "classification": "PARTIAL",
         "reason": "Implementation and local validation; hosted checks, review, merge, production and physical-device evidence are separate gates."
       }
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
     }
   ]
 }
