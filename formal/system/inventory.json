@@ -2831,7 +2831,7 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "c0272c3de6e41821cf0fd9512758b60cc764a1e3f7275fe7755cd9d50409ee97",
+      "sha256": "5d04504bd04248df9d799507bf5c6600557077e6f0128a819c30ea820b3dfef1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7439,7 +7439,7 @@
     {
       "id": "SURFACE-772702b32840fda1",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
-      "sha256": "e5b8043323a2ac5f0761e78c9499552de166b072bdd4482779547e7eac586d16",
+      "sha256": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24889,7 +24889,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "20db5589e82cf35124497819a3e101fdbca6b02569e1303bd7cf75bef004f382",
+      "sha256": "f9dfe0419e541cacb59ca81f5cfd71b96696ca5156e18f2c142cc5cf388fa0d1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -24946,6 +24946,13 @@
     {
       "path": "formal/system/ticket-manual-review.md",
       "sha256": "39eaed4619a4b6d883d5b347009dbe3802f7afa9ff944ee6bc3cf629baefadd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ui-fixture-boundaries.md",
+      "sha256": "b7909c756877211a8c41853599464e3577eb8ae30c33c30cde0a529a3df0c295",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
