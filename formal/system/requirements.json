@@ -135,7 +135,8 @@
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
-        "scripts/lib/formal-result-summary.mjs"
+        "scripts/lib/formal-result-summary.mjs",
+        "scripts/verification-report.py"
       ],
       "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
       "evidence": "formal CI source/result manifests and regression output",
@@ -172,10 +173,11 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label. The exact-candidate assurance report keeps PROVEN/REFUTED/UNPROVEN/NOT_APPLICABLE separate by evidence category; replayable arithmetic inputs cannot promote whole requirements or refinement. Release remains blocked with all critical gaps enumerated.",
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
-        "scripts/__tests__/formal-result-summary.test.mjs"
+        "scripts/__tests__/formal-result-summary.test.mjs",
+        "scripts/test-verification-report.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -1157,11 +1159,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "scripts/verify-auth-predicates.py"
       ],
       "tests": [
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "scripts/audit-feature-registry.mjs"
+        "scripts/audit-feature-registry.mjs",
+        "scripts/test-auth-predicates.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -1177,7 +1183,7 @@
       "authority": "Existing RecordsIngestion backend strict-administrator and ModuleAdmin boundary",
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
-      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation.",
+      "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN.",
       "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {

@@ -55,6 +55,21 @@ jobs:
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
+      - name: Generate formal assurance and release decision
+        if: ${{ !cancelled() }}
+        run: python scripts/verification-report.py --output "${{ runner.temp }}/assurance-report"
+      - name: Test assurance reporting and counterexample retention
+        run: |
+          python scripts/test-verification-report.py
+          python scripts/test-auth-predicates.py
+      - name: Preserve formal assurance report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: assurance-report-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/assurance-report
+          if-no-files-found: warn
+
       - name: Preserve solver result
         if: always()
         uses: actions/upload-artifact@v7

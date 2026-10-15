@@ -410,6 +410,7 @@
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
       "scripts/test-artist-self-service.sh",
+      "scripts/test-auth-predicates.py",
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-booking-conformance.py",
@@ -525,6 +526,7 @@
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
+      "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test-whatsapp-consent.sh",
@@ -534,6 +536,8 @@
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
+      "scripts/verification-report.py",
+      "scripts/verify-auth-predicates.py",
       "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
@@ -2625,7 +2629,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "7bfdebbff574d4e1e194341f8ef4cbdabaa35a2670f64532fc0f3d3dc9ee3b51",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4065,7 +4069,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
+      "sha256": "3fd7f1cbdc667677e1d6a11619976a0b44ed4897b2f196b390f28fede4f3c6fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4915,6 +4919,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fc4c2b80fce6f504",
+      "path": "scripts/test-auth-predicates.py",
+      "sha256": "c44fd9520009dc319638af969414b93745d0d02108723a8a968f1f4bc51a4646",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
       "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
@@ -5605,6 +5615,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-896ad45b385c665d",
+      "path": "scripts/test-verification-report.py",
+      "sha256": "e4e4cff068516701f429ac2a54f56108a23c36d9d54f18db2d05df94c576783d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-306ef04f302e88df",
       "path": "scripts/test-verified-experience-reviews-migration.sh",
       "sha256": "b0f35c6a469f8e3a7cc3c9db787bb73f05579eecd12219d6face386fa573e9e2",
@@ -5659,6 +5675,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3383da3a4aa57dc1",
+      "path": "scripts/verification-report.py",
+      "sha256": "4437f8dcf622b131167d948185ce5291608b6e8856bdaf74b7b04e3940d28871",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b79d0bcd7aa10957",
+      "path": "scripts/verify-auth-predicates.py",
+      "sha256": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8b6766b7ee7590fd",
       "path": "scripts/verify-checkout-money.py",
       "sha256": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
@@ -5703,7 +5731,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24490,7 +24518,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7d1323244fefb6ad45da11e534b1f74a0000c94950aaf4bec50f4b4b86fd6767",
+      "sha256": "3904965a7c411aefeaf7c9b88aa87fd88811a593785e9505c24717baabc0b1b2",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24500,6 +24528,20 @@
       "sha256": "e6cf9fa209d51e97e68d4fbf92d51a46e2cd060288a5c4deca589a16b40080d9",
       "authority": "inferred",
       "authorityBasis": "Status: bounded model and PostgreSQL regression added 2026-10-09 on base",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/assurance-report.md",
+      "sha256": "467b2312abc1743e282f5afbb43a12bbbab1c81c8f29bef7c7a8aaf6d1981fb6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/auth-predicates.md",
+      "sha256": "89599d67d730c468f3e286390d76cc967a83e6edcdfa394f0d486c08e420deb2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -24833,7 +24875,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "a902de362c768d7680d1eac446bdfcfea791d8ed4f8361f84a9aff436ae95d07",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
