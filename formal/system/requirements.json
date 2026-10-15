@@ -10251,7 +10251,8 @@
         "tdf-hq-ui/src/pages/ChatPage.tsx",
         "scripts/production-migrations.json",
         ".github/workflows/ci.yml",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/components/NotificationBell.tsx"
       ],
       "tests": [
         "scripts/test-chat-notifications.sh",

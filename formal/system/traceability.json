@@ -10252,7 +10252,8 @@
         "tdf-hq-ui/src/pages/ChatPage.tsx",
         "scripts/production-migrations.json",
         ".github/workflows/ci.yml",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/components/NotificationBell.tsx"
       ],
       "tests": [
         "scripts/test-chat-notifications.sh",
@@ -10767,6 +10768,7 @@
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
     "tdf-hq-ui/src/components/MarketplaceCartButton.tsx": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
+    "tdf-hq-ui/src/components/NotificationBell.tsx": "de77bfc9b23e3deae24c65db63d5406bd30e077aea6e56a4804d0b2de3554d28",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": "16b6e840fce5032cd7c87775aecd0921123c1c840c77c49eb3cc83cf985b5a3f",
     "tdf-hq-ui/src/components/PublicBranding.tsx": "2ce4418ebef0f36cad67bbb462c4e28f5802eb4efd0aeeb134cb9bbb156975d5",
@@ -19327,6 +19329,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/components/NotificationBell.tsx": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-chat-notifications.sh": [
       {
         "requirement": "MSG-NOTIFY-001",
@@ -26938,7 +26946,12 @@
       "path": "tdf-hq-ui/src/components/NotificationBell.tsx",
       "sha256": "de77bfc9b23e3deae24c65db63d5406bd30e077aea6e56a4804d0b2de3554d28",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-NOTIFY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-decf830c59ffbc6f",
@@ -43769,7 +43782,6 @@
     "SURFACE-38bb7b3066524a69",
     "SURFACE-df42e6ad7db6be04",
     "SURFACE-0c704471f2e1ce6c",
-    "SURFACE-90c681fa43de9fd3",
     "SURFACE-832f3518bea99b2c",
     "SURFACE-dcfb53e588a48944",
     "SURFACE-7eea28cead7a268a",
@@ -46209,7 +46221,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c8e1d1f2113f870fff606a9d6a19d9f7622d3858378a662b8003e076c1e67d5f",
+      "sourceSha256": "0af43f394f364fe59fb303e222d6fac77b07ec1193e39690aa6808960076475a",
       "definition": {
         "states": [
           "absent",
