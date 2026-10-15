@@ -193,6 +193,7 @@ test.describe('Course enrollment on a small Android phone', () => {
     await fixture(page, baseURL);
     await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
     await expectRenderedRoot(page);
+    await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     await expect(stickyBar).toBeHidden();
 
@@ -217,6 +218,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await expectRenderedRoot(page);
     const radioBar = page.getByTestId('radio-docked-bar');
     await expect(radioBar).toBeVisible({ timeout: 15_000 });
+    // The signed-in shell and radio can mount before this lazy course route.
+    // Scroll the loaded course, not the shorter shell that precedes it.
+    await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     if ((page.viewportSize()?.width ?? 0) >= 900) {

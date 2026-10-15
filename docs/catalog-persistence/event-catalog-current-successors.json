@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "394e8ba1db3ead9328f2",
+      "currentId": "a8128668e1b74b7c0ae4",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 204,
-      "change": "append 2026-10-11_index_declarations_not_unique",
+      "valueCount": 206,
+      "change": "Combine both additive music migrations after the unchanged 204-entry historical prefix; preserve both introduction commits and historical review provenance.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
@@ -50510,7 +50510,12 @@
             }
           }
         }
-      }
+      },
+      "previousCurrentIds": [
+        "394e8ba1db3ead9328f2",
+        "bab53c1be046268ad206",
+        "7f2803455cf4b4e8e6db"
+      ]
     }
   ]
 }

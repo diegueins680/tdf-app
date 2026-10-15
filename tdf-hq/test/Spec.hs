@@ -54,6 +54,7 @@ import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
+import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
 import qualified TDF.IndexDeclarationSpec as IndexDeclarationSpec
 import qualified TDF.InvoiceWorkerSpec as InvoiceWorkerSpec
 import qualified Test.QuickCheck as QC
@@ -630,6 +631,10 @@ import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
+import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
+import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
+import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
+import qualified TDF.MusicRelease.Storage.S3Spec as MusicS3Spec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
 import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
@@ -884,6 +889,7 @@ main = hspec $ do
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
     InvoiceDatilSpec.spec
+    TicketManualReviewSpec.spec
     IndexDeclarationSpec.spec
     InvoiceWorkerSpec.spec
     describe "merch commercial reputation formula v1" $ do
@@ -17896,6 +17902,11 @@ main = hspec $ do
     WhatsAppConsentSpec.spec
     InteractionWriteBudgetSpec.spec
     MusicPurchaseSpec.spec
+    describe "music release unit contracts" $ do
+      describe "music-unit-domain" MusicDomainSpec.spec
+      describe "music-unit-content" MusicContentSpec.spec
+      describe "music-unit-ddex" MusicErn432Spec.spec
+      describe "music-unit-storage" MusicS3Spec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec

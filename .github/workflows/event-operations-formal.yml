@@ -15,6 +15,9 @@ concurrency:
   group: event-operations-formal-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Public-image checks retain GitHub-hosted runners' built-in Docker Hub credentials.
+# A global login replaces those credentials and can introduce pull rate limits.
+# https://github.com/docker/login-action#Set-scopes-for-the-authentication-token
 jobs:
   specification-contracts:
     runs-on: ubuntu-latest
@@ -37,6 +40,7 @@ jobs:
         run: |
           mkdir "${{ runner.temp }}/payment-proof"
           printf '%s\n' '{"status":"not-executed","reason":"Prerequisite checks or installation have not completed"}' > "${{ runner.temp }}/payment-proof/result.json"
+          printf '%s\n' '{"status":"not-executed","reason":"Money wire obligations have not executed"}' > "${{ runner.temp }}/payment-proof/music-money-wire.json"
       - name: Check specification inventory and evidence admission
         run: |
           python -m pip install -r formal/system/requirements-verification.txt
@@ -55,6 +59,11 @@ jobs:
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
+      - name: Verify exact music money encoding and negative controls
+        run: |
+          python scripts/verify-music-money-wire.py > "${{ runner.temp }}/payment-proof/music-money-wire-output.json"
+          mv "${{ runner.temp }}/payment-proof/music-money-wire-output.json" "${{ runner.temp }}/payment-proof/music-money-wire.json"
+          python scripts/test-music-money-wire-verifier.py
       - name: Preserve solver result
         if: always()
         uses: actions/upload-artifact@v7
@@ -114,12 +123,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
 
       - name: Check event operations foundation migration
@@ -129,12 +132,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
 
       - name: Check event operations API migration
@@ -144,12 +141,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - name: Check task commit constraints and concurrent writers
         run: npm run test:event-task-commit-migration
@@ -158,12 +149,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - name: Check scoped task projection and concurrent authorization
         run: npm run test:event-task-read-migration
@@ -172,12 +157,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -191,12 +170,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -210,12 +183,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -229,12 +196,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -248,12 +209,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -267,12 +222,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Authenticate Docker Hub pulls
-        if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:

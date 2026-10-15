@@ -530,6 +530,17 @@ render, A→B→A, cache races, and persisted timestamps. The model abstracts pr
 exchange/persistence, selected-calendar identities and query-library scheduling; those
 require HTTP and component/browser conformance tests. It does not prove Google OAuth
 consent, token revocation, server authorization or arbitrary calendar handlers.
+## Music purchase replay
+
+`MusicPurchaseReplay.tla` separates lookup from reservation for two buyers, one
+key and two payloads. The intended finite graph has 4,096 distinct states and
+checks single creation and buyer/payload preservation under arbitrary retries.
+Three controls must violate `ReplayPayloadMatches`, `ReplayOwnerMatches` and
+`OneOrderPerBuyerKey` respectively. The canonical runner requires each named
+counterexample. See [music-purchase-replay.md](../system/music-purchase-replay.md)
+for the SQL/handler mapping, abstraction boundary and exclusions. These are
+safety checks without a liveness/fairness claim or universal refinement proof.
+
 ## Meta redelivery
 
 `MetaRedelivery.tla` and four configurations check the rule in
@@ -555,6 +566,12 @@ verified evidence, one entitlement per order, the download limit, replay of a re
 identifier only inside its URL lifetime, a replayed URL that ends with the original one,
 and no URL without an active entitlement. The positive model and six negative controls
 are mandatory in the formal runner.
+
+`MusicPaymentOutcome.tla` complements that download model with failed attempts,
+closed-order money and locked retry admission with durable failure quarantine. Its intended configuration and six
+named negative controls are mandatory. See
+[music-payment-outcome.md](../system/music-payment-outcome.md) for bounds, SQL and
+concurrency evidence, abstraction assumptions and provider/recovery exclusions.
 
 ## Marketplace optional storage boundary (2026-09-18)
 
@@ -646,6 +663,15 @@ model and five named negative controls are mandatory in the formal runner. Bound
 transaction/provider assumptions, no-fairness/no-liveness scope and runtime mapping
 are defined there; the model does not establish a complete checkout lifecycle.
 
+## Ticket bank transfer review
+
+`TicketManualReview.tla` and five configurations check the rule in
+[ticket-manual-review.md](../system/ticket-manual-review.md): concurrent reviewers
+of one transfer record at most one payment, keep payment and evidence consistent,
+and do not enter an error state when a review decision runs. `EveryoneAnswered`
+is a safety invariant despite its name: the model permits stuttering and has no
+fairness assumption or eventual-completion property. The two positive models
+and three negative controls are mandatory in the formal runner.
 ## Access grant boundary — AUTH-ACCESS-PROVISION-001 / AUTH-ARTIST-INVITE-001 (2026-10-09)
 
 `AccessGrant.tla` checks one reviewed access request and one personal invitation link.

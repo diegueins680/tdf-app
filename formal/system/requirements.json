@@ -7399,12 +7399,21 @@
         "tdf-hq-ui/src/api/eventTickets.test.ts",
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/ticket_manual_review_fixture.sql",
-        "scripts/test-ticket-manual-review.sh"
+        "scripts/test-ticket-manual-review.sh",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "scripts/test-ticket-manual-review-concurrency.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "formalModels": [
-        "formal/event-operations/ManualBankTransfer.tla"
+        "formal/event-operations/ManualBankTransfer.tla",
+        "formal/event-operations/TicketManualReview.tla",
+        "formal/event-operations/TicketManualReview.cfg",
+        "formal/event-operations/TicketManualReviewLockReleased.cfg",
+        "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+        "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg"
       ],
-      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests.",
+      "verification": "Actual PostgreSQL bounds, expiry, settlement after the original hold and rollback refusal; actual reviewTicketManualPayment on the production schema snapshot plus the production migration batch: denial of non-organizer staff, of an administrator owning the buyer email and of the submitter with unchanged rows; single settlement with idempotent replay; refusal after the effective hold with a reconciliation exception; rejection, re-report and approval; concurrent approve/approve/reject without database errors; injected issuance failure rolls the approval back. Bounded ManualBankTransfer model with eight mutation controls. React buyer flow and API contract tests. Additional TicketManualReviewSpec cases and its separate bounded TicketManualReview model preserve the independent reviewer-overlap evidence from PR #545; see formal/system/ticket-manual-review.md.",
       "evidence": "2026-10-09 local disposable PostgreSQL 16: scripts/test-ticket-manual-review.sh 7/7 after the fix (the concurrency case failed 3/3 before it with deadlock 40P01 or an invalid evidence transition); TLC 1.7.2 positive model and seven expected counterexamples. Those local counts predate the issuance cases; the current nine Hspec cases and eight mutation controls are evidenced by hosted CI on 5112f2ed0 (2026-10-11): backend-quality ran scripts/test-ticket-manual-review.sh 9/9, and Event operations verification ran the positive model plus the eight negative configurations, each failing on its expected invariant. A production transfer remains separate evidence.",
       "status": "specified and implemented",
       "critical": true,
@@ -8114,7 +8123,7 @@
       "title": "Music downloads only through verified purchase entitlements",
       "domain": "PAY",
       "critical": true,
-      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; triggers then grant exactly one entitlement and end it on refund or chargeback. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
+      "statement": "A music purchase order references one rule, release version and price in integer minor units and opens a commerce checkout session in the music_download domain. Only server-verified provider evidence bound to the order marks it paid; the projection settles a payable purchase and grants exactly one entitlement, ending it on refund or chargeback. Verified money for a closed purchase follows PAY-MUSIC-OUTCOME-001 and grants no entitlement. Entitled and free downloads use the same downloadable-asset predicate, count each new request identifier against the entitlement limit, answer a repeated identifier only while its signed URL is valid, and issue URLs that live 300 seconds. A free grant that was revoked is not revived by a new request.",
       "authority": "Unreviewed recovered local implementation; ADR-005 in docs/music-releases/architecture-and-data-model.md",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/architecture-and-data-model.md",
       "contract": "formal/system/music-purchase-entitlement.md",
@@ -8167,7 +8176,7 @@
       "privacy": "Purchase and download audit is visible only to the buyer and authorized staff.",
       "concurrency": "One order per buyer and idempotency key by unique constraint; entitlement creation is trigger-enforced and unique per order; download authorization holds the entitlement row lock while it counts and inserts.",
       "idempotency": "Repeated order creation and repeated recording of the same verified payment change nothing; a repeated download request identifier is answered without counting for 300 seconds and refused afterwards.",
-      "failure": "Unverified payment leaves no entitlement. A recorded provider failure cancels the order permanently and a later verified payment can still grant an entitlement on it (open defects, see contract).",
+      "failure": "Unverified payment leaves no entitlement. Payment-attempt failure does not cancel the purchase. Verified money received for a closed purchase is retained for reconciliation without reopening fulfillment under PAY-MUSIC-OUTCOME-001. Ambiguous provider transport and recovery remain open.",
       "recovery": "Refund revokes entitlement; no royalties, subscriptions or settlement.",
       "observability": "Download audit rows and checkout session events.",
       "implementation": [
@@ -8183,16 +8192,15 @@
         "scripts/test-music-purchase.sh",
         "scripts/verify-event-operations-formal.sh"
       ],
-      "verification": "Bounded TLA+ model with five negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
+      "verification": "Bounded TLA+ model with six negative controls; PostgreSQL tests of the purchase handler, verified-payment record, triggers, download authorization and flag gate, with reversion checks of the three repairs; read-only SQL contract of the shared predicate. Provider calls are not exercised.",
       "evidence": "Local TLC, PostgreSQL 16 and Hspec on 2026-10-10.",
       "confidence": "Medium for the payment record, entitlement and download rules, which run on PostgreSQL in tests; low for the provider calls and failure handling, which are untested and have open defects.",
       "ambiguity": [
         "No live payment provider wiring for music_download has been verified.",
         "Music payments bypass the shared payment runtime and the production provider switches; only the commerce flag for the checkout environment gates them.",
-        "A recorded provider failure cancels the order irreversibly while the payment may still complete, and an entitlement can end up active on a cancelled order; repair needs a trigger migration and a product decision.",
         "A failure after the provider charged leaves no reconciliation record; no webhook or reconciliation path exists for this domain.",
         "Partial refunds keep the entitlement and disputes revoke it permanently; both need a product decision.",
-        "Download limits count authorizations, not transferred bytes; one counted download gives access for just under 600 seconds."
+        "Download limits count authorizations, not transferred bytes; a replay retains the original 300-second expiry. Cross-provider admission and ambiguous transport recovery are not established."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -8806,12 +8814,14 @@
       "allowedTransitions": [
         "CTA/sticky CTA/deep link -> dialog focused on first missing field",
         "valid submit -> received or order checkout",
-        "server field error -> message beside field"
+        "server field error -> message beside field",
+        "close -> completed dialog exit -> remove resume parameter, preserve attribution and restore trigger focus"
       ],
       "forbiddenTransitions": [
         "form discovered only by scrolling",
         "raw local phone sent as E.164",
-        "raw server text shown"
+        "raw server text shown",
+        "navigation interrupts closing and retains a modal"
       ],
       "effects": [
         "Draft preserved across login round-trip and cleared on success."
@@ -9022,34 +9032,35 @@
     },
     {
       "id": "OPS-CI-REGISTRY-001",
-      "title": "Authenticate Docker Hub pulls in CI",
+      "title": "Public CI image pulls and authenticated release publication",
       "domain": "OPS",
       "critical": false,
-      "statement": "Trusted CI jobs authenticate Docker Hub image pulls with the existing repository secrets before pulling test images. Job and service containers receive credentials at initialization; reusable CI callers forward the declared credentials. Authentication does not bypass tests, reviews or release admission.",
+      "statement": "GitHub-hosted verification uses runner access for public test images without repository Docker Hub credential overrides. Release image publication still authenticates using repository secrets. Neither image access nor authentication bypasses tests, reviews or release admission.",
       "authority": "User authorized CI authentication on 2026-10-09",
-      "source": "User instruction 2026-10-09: Authenticate, following observed Docker Hub unauthenticated pull rate limits.",
+      "source": "Original user authentication instruction 2026-10-09; current consolidation authorization and observed authenticated-container pull failures on 2026-10-15; GitHub Actions hosted-runner Docker Hub rate-limit documentation.",
       "contract": ".github/workflows/ci.yml",
-      "property": "Shell pulls follow Docker login; job and service image pulls receive registry credentials; no credential literal is committed or printed.",
+      "property": "Public test pulls retain runner access; release pushes require authentication; image identities and all checks remain unchanged.",
       "actors": [
         "GitHub-hosted CI runner",
         "Repository secret administrator"
       ],
       "preconditions": [
-        "Existing DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets are valid and available to the trusted run."
+        "Public test images on GitHub-hosted runners; publishing secrets available only to authorized release jobs."
       ],
       "inputs": [
-        "Repository secret references",
-        "Existing Docker Hub image tags and immutable digests"
+        "Existing public image tags/digests",
+        "Repository secret references for release publication"
       ],
       "state": {
         "registry": [
-          "unauthenticated",
-          "authenticated",
-          "authentication-failed"
+          "public runner access",
+          "authenticated release publication",
+          "pull or login failure"
         ]
       },
       "allowedTransitions": [
-        "Available credentials -> authenticate -> pull existing test images -> execute unchanged checks"
+        "Pull the existing public test image using runner access, then execute every selected check.",
+        "Authenticate an authorized release publishing job before pushing its image."
       ],
       "forbiddenTransitions": [
         "Expose secret values in source or logs",
@@ -9057,14 +9068,14 @@
         "Use pull_request_target to expose secrets to fork code"
       ],
       "effects": [
-        "Authenticated test-image downloads in ephemeral CI runners"
+        "Test-image downloads and independently authorized image publication"
       ],
-      "authorization": "Existing repository secret access governs credentials; fork and Dependabot login steps are skipped. Protected-main review and checks remain independent.",
-      "privacy": "Pass credentials through GitHub secrets to docker/login-action or native container credentials; never copy values into source.",
-      "concurrency": "Each hosted job authenticates its own runner; registry account quotas remain shared.",
+      "authorization": "Public test-image access requires no repository secret; release publication retains Docker Hub authentication and protected-main prerequisites.",
+      "privacy": "Publishing secrets remain secret references; no values are printed or committed.",
+      "concurrency": "Each job retains runner-local public access; provider availability still constrains execution.",
       "idempotency": "Repeated runs can log in and pull the same images without changing application or production data.",
-      "failure": "Invalid available credentials fail authentication; absent fork credentials do not gain privileged access. Authenticated registry quotas and outages can still fail pulls.",
-      "recovery": "Repair or rotate repository secrets through the authorized secret store and rerun CI; do not weaken required tests.",
+      "failure": "A failed image pull, login or test remains a failure. No exemption is treated as guaranteed image availability.",
+      "recovery": "Inspect exact job/container logs and repair access configuration; rerun all affected current-head checks.",
       "observability": "GitHub login-step and container-initialization results, image-pull results and subsequent test outcomes; never secret values.",
       "implementation": [
         ".github/workflows/build.yml",
@@ -9074,19 +9085,19 @@
         ".github/workflows/interaction-verification.yml",
         ".github/workflows/social-verification.yml"
       ],
-      "verification": "Actionlint validates workflow syntax, secret declarations and reusable-workflow references. Hosted CI must verify the stored token and actual authenticated image pulls.",
-      "evidence": "Actionlint v1.7.12 local execution and exact-commit GitHub Actions login/pull logs.",
+      "verification": "Parsed workflow comparison preserves image references, service configuration and test commands; current-head hosted jobs must actually pull images and execute tests.",
+      "evidence": "Current-head GitHub container initialization and downstream test results; repository CI regression tests.",
       "tests": [],
       "formalModels": [],
       "status": "specified and implemented",
-      "historicalStatus": null,
-      "confidence": "Workflow syntax verified locally; hosted authentication requires execution with repository secrets.",
+      "historicalStatus": "The October9 authenticated-pull policy was superseded after October15 hosted logs showed unauthenticated quota failures despite explicit Docker login.",
+      "confidence": "Source-level configuration verified; hosted pull and test completion remain independent evidence.",
       "ambiguity": [
-        "Authentication does not guarantee registry availability or unlimited pull quota."
+        "GitHub hosted-runner public-image allowance does not guarantee provider availability or successful tests."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Local workflow validation passed; exact-commit hosted credential verification remains pending."
+        "reason": "Public credential overrides removed after observed failures; fresh hosted pull and test gates remain required."
       }
     },
     {
@@ -9902,6 +9913,561 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Repaired and tested at the database boundary; the migration is not applied in production and no end-to-end chat or webhook test over HTTP was added."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-PURCHASE-REPLAY-001",
+      "title": "Bind music purchase replay to its buyer and original request",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
+      "contract": "formal/system/music-purchase-replay.md",
+      "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
+      "actors": [
+        "Authenticated buyer",
+        "Concurrent request from the same or another buyer"
+      ],
+      "preconditions": [
+        "Current feature enablement, valid input and currently eligible public offer; HTTP boundary authenticates the session."
+      ],
+      "inputs": [
+        "Buyer Party ID",
+        "Idempotency-Key",
+        "Availability rule UUID",
+        "Declared country",
+        "Trusted effective country or ZZ",
+        "Terms version",
+        "Checkout environment"
+      ],
+      "state": {
+        "request": [
+          "new",
+          "looked",
+          "accepted",
+          "conflict",
+          "failed"
+        ],
+        "binding": "Immutable checkout line-item snapshot; unique purchase buyer/key"
+      },
+      "allowedTransitions": [
+        "Absent buyer/key -> one committed order/checkout/terms snapshot",
+        "Matching replay -> original order in its current state",
+        "Conflicting or incomplete evidence -> 409 without purchase effects"
+      ],
+      "forbiddenTransitions": [
+        "Changed offer, terms, country or environment -> accepted old order",
+        "Another buyer -> original buyer order",
+        "Concurrent absent-key observations -> two orders for one buyer/key"
+      ],
+      "effects": [
+        "One initial purchase transaction; no additional purchase effects on replay or conflict"
+      ],
+      "authorization": "Authenticated buyer scopes every lookup; current feature and offer admission precede receipt reuse. Session revocation is delegated to the existing HTTP boundary and is outside this model.",
+      "privacy": "No new customer data class; existing private checkout snapshot remains authoritative. Fixed conflict text does not disclose stored terms or another buyer.",
+      "concurrency": "Default PostgreSQL READ COMMITTED; unique buyer/key INSERT ON CONFLICT, then a fresh statement compares the committed winner snapshot. Higher isolation serialization failures require retry.",
+      "idempotency": "Same buyer/key and bound normalized inputs reuse one order. Missing evidence or changed bound inputs conflict. Different buyers and keys are independent.",
+      "failure": "Validation/feature/eligibility may fail before replay; binding mismatch returns 409. Database errors fail and roll back; no provider call occurs at creation.",
+      "recovery": "Retry lost responses with identical inputs/key; new requests require a new key. Preserve immutable financial and terms records. No migration or destructive rollback.",
+      "observability": "HTTP status and original purchase identity; existing checkout/terms audit only for initial creation. Exact-revision test and bounded-model receipts remain separate execution outputs.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/sql/2026-09-11_music_release_platform.sql",
+        "tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "scripts/test-music-purchase.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/MusicPurchaseReplay.tla",
+        "formal/event-operations/MusicPurchaseReplay.cfg",
+        "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+        "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+        "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg"
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "implemented but unspecified",
+      "verification": "Real-handler PostgreSQL regressions and concurrent barrier schedule; unchanged-main regression is a negative control. Bounded lookup/commit/retry model with three named invariant controls.",
+      "evidence": "Exact source-revision execution receipts are generated by validation; no historical green result certifies a later tree.",
+      "confidence": "Medium for this creation boundary; bounded model plus PostgreSQL conformance, not a global payment or session proof.",
+      "ambiguity": [
+        "Provider attempt keys still have a separate global collision domain; this repair does not change them.",
+        "Music provider recovery, partial refunds and activation remain separately unresolved.",
+        "Undocumented OpenAPI music operations remain an explicit API coverage obligation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Creation replay has executable conformance checks and bounded properties; full HTTP/session and provider lifecycle coverage remains separate and incomplete."
+      }
+    },
+    {
+      "id": "PAY-MUSIC-MONEY-WIRE-001",
+      "title": "Preserve exact music amounts through authoring, JSON, display and purchase confirmation",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
+      "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
+      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "contract": "formal/system/music-money-wire.md",
+      "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
+      "actors": [
+        "Artist authoring an offer",
+        "Authenticated buyer",
+        "Public reader",
+        "Web and generated API clients"
+      ],
+      "preconditions": [
+        "Existing public/commerce features and authorization apply independently; no experimental activation is authorized.",
+        "Published music sale currency is USD."
+      ],
+      "inputs": [
+        "Signed Int64 wire values; nonnegative prices and positive purchase confirmation",
+        "Canonical expectedAmountMinor and expectedCurrency",
+        "Immutable published availability rule and checkout snapshot"
+      ],
+      "state": {
+        "wire": [
+          "safe numeric JSON",
+          "canonical decimal text",
+          "invalid"
+        ],
+        "purchase": [
+          "new",
+          "validated quote",
+          "eligible offer",
+          "accepted",
+          "conflict",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Safe integer -> exact numeric JSON -> unchanged minor units",
+        "Larger Int64 -> decimal text -> unchanged minor units",
+        "Matching positive quote -> existing purchase transaction",
+        "Invalid or mismatching quote -> rejection without purchase effects"
+      ],
+      "forbiddenTransitions": [
+        "Unsafe JSON number -> silently rounded price",
+        "Whole monetary value -> binary64 division for display",
+        "Mismatched amount/currency -> created order or provider action",
+        "Missing confirmation -> accepted legacy purchase"
+      ],
+      "effects": [
+        "Pure new SQL JSON function; no financial-row or historical-snapshot rewrite",
+        "Exact client input, compatible safe scalar serialization and confirmed purchase request"
+      ],
+      "authorization": "Existing buyer, feature and offer admission still apply; client price is evidence of agreement, not a pricing or authorization authority.",
+      "privacy": "Purchase data remains buyer-scoped; fixed conflicts do not echo stored or submitted monetary/customer payloads.",
+      "concurrency": "Published price and checkout financial evidence remain immutable; existing buyer/key unique reservation persists. Concurrent withdrawal eligibility and provider uncertainty are not proven by this wire obligation.",
+      "idempotency": "Purchase creation retains PAY-MUSIC-PURCHASE-REPLAY-001; unchanged confirmed inputs replay, conflicting confirmed prices fail before mutation.",
+      "failure": "Malformed/nonpositive confirmation or missing fields return400; eligible mismatching quote returns409. Unsafe legacy numeric values are refused before UI/provider effects.",
+      "recovery": "Keep additive function on rollback; preserve financial data and historical migrations. Commerce remains off across incompatible frontend/backend pairing and older-application rollback.",
+      "observability": "Exact-revision SMT, property-test, real-handler/SQL, generated-client and UI receipts; no real provider charge used for verification.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/Money.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/utils/musicMoney.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/verify-music-money-wire.py",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
+        "tdf-hq-ui/src/utils/musicMoney.test.ts",
+        "tdf-hq-ui/src/api/musicReleases.money.test.ts",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "scripts/test-music-money-wire-verifier.py",
+        "scripts/lib/music_money_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-music-release-api-e2e.mjs"
+      ],
+      "formalModels": [
+        "scripts/verify-music-money-wire.py",
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs"
+      ],
+      "verification": "Source-recognized SMT for the full signed64 numeric branch with three SAT negative controls; full-range sampled real-codec QuickCheck, explicit boundaries, PostgreSQL projection/quote and actual web adapter/form tests.",
+      "evidence": "Current execution receipts are separate artifacts, not handwritten PASS assertions.",
+      "confidence": "Medium: numeric branch mechanically verified under its stated translation; real wire/display/admission checks are empirical and property based.",
+      "ambiguity": [
+        "No whole-library, JSON-parser or whole-program refinement proof is claimed.",
+        "Provider limits/transport recovery, concurrent withdrawal, shared payment routing and activation remain separate obligations.",
+        "Other undocumented music API operations and historical-export consumers are not covered."
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "implemented but unspecified",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped codec, quote, API and property obligations have executable checks; complete provider, session, export, concurrency and deployed conformance remains separate."
+      }
+    },
+    {
+      "id": "SYS-MUSIC-TEST-ENTRY-001",
+      "title": "Execute every canonical music unit group and reject a missing group",
+      "domain": "SYS",
+      "critical": false,
+      "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
+      "authority": "User audit validation and traceability requirements",
+      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "contract": "formal/system/music-test-entrypoint.md",
+      "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
+      "actors": [
+        "Developer",
+        "CI backend quality job"
+      ],
+      "preconditions": [
+        "Stack builds the canonical test executable using the selected backend toolchain."
+      ],
+      "inputs": [
+        "Compiled Hspec test tree",
+        "Four required music-unit group names"
+      ],
+      "state": {
+        "groups": [
+          "registered",
+          "missing"
+        ],
+        "gate": [
+          "not executed",
+          "passed",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "All four nonempty groups -> successful presence probes",
+        "Any missing group -> failed backend gate"
+      ],
+      "forbiddenTransitions": [
+        "Cabal module listing alone -> test-execution claim",
+        "Green unrelated examples -> missing music group accepted"
+      ],
+      "effects": [
+        "Canonical suite executes existing specification modules; presence probes reuse the built binary."
+      ],
+      "authorization": "Local/CI verification only; no deployment or provider authorization.",
+      "privacy": "Unit fixtures and logs are synthetic; no production/customer data is required.",
+      "concurrency": "Group probes are sequential and do not start external services.",
+      "idempotency": "Repeated probes execute pure unit tests; no production state mutation.",
+      "failure": "--fail-on=empty rejects missing groups; ordinary assertion failures remain fatal.",
+      "recovery": "Restore the required registrations and rerun affected canonical tests; do not substitute standalone-runner existence.",
+      "observability": "Hspec per-group results and original-executable empty-group negative-control receipts.",
+      "implementation": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/MusicReleaseSpecMain.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [],
+      "verification": "Four real executable nonempty probes; the previous executable fails all four as empty. This is execution coverage, not a proof of test adequacy.",
+      "evidence": "Current executable logs and explicit negative-control receipts.",
+      "confidence": "High for scoped entrypoint presence; no claim of universal test reachability.",
+      "ambiguity": [
+        "Other standalone test runners require their own execution audit.",
+        "Group presence does not establish adequate assertions, providers or external integration coverage."
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": "specified but missing",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Four scoped groups are executed and absence is fatal; complete repository-wide test reachability and quality evidence remain broader obligations."
+      }
+    },
+    {
+      "id": "SYS-UI-FIXTURE-001",
+      "title": "Explicit clock and document boundaries in UI regression fixtures",
+      "domain": "SYS",
+      "statement": "UI regression fixtures must distinguish debounce time and new-document loading from application behavior, while retaining assertions for cancellation, late responses, selected identities, owned notification routing and absence of unrelated writes.",
+      "authority": "Existing behavior and tests reconciled under the requested verification audit",
+      "source": "docs/party-selector.md; docs/notifications/navigation-2026-09-17.md",
+      "contract": "formal/system/ui-fixture-boundaries.md",
+      "critical": false,
+      "status": "specified and implemented",
+      "actors": [
+        "Test runner",
+        "Synthetic visitor"
+      ],
+      "preconditions": [
+        "Synthetic API fixtures; production bundle for browser checks; isolated QueryClient for selector cases."
+      ],
+      "inputs": [
+        "Search text and controlled timer progression",
+        "A real middle-click or platform modified click opening a notification tab"
+      ],
+      "state": {
+        "selector": [
+          "debouncing",
+          "requesting",
+          "selected",
+          "failed",
+          "cancelled"
+        ],
+        "newTab": [
+          "created",
+          "document loaded",
+          "owned destination rendered"
+        ]
+      },
+      "allowedTransitions": [
+        "Advance the selector clock through the real 300 ms debounce; assert no request at 299 ms.",
+        "Activate the new tab as a reader would and await its load boundary, then check the unchanged bounded application redirect and visible profile.",
+        "Reset mocked responses and timers between cases."
+      ],
+      "forbiddenTransitions": [
+        "Replace cancellation, late-response, selection or routing assertions with unconditional success.",
+        "Treat a new page event as document-load completion.",
+        "Leak a queued mock response into another test."
+      ],
+      "effects": [
+        "Synthetic UI requests and revision-bound verification evidence only."
+      ],
+      "authorization": "Fixtures do not grant production authority; notification checks retain owner-specific resolution and no access-request mutation assertions.",
+      "privacy": "Only synthetic identities and local fixture endpoints are used.",
+      "concurrency": "Selector tests retain request-abort and late-response exclusion assertions; browser checks retain original-tab location.",
+      "idempotency": "Each case starts with fresh mocks, controlled timers and query scope; repeated runs retain their individual results.",
+      "failure": "A missing result, missed cancellation, wrong destination or unexpected mutation fails the test.",
+      "recovery": "Repair the fixture or implementation from retained failure evidence, then rerun the affected and full gates.",
+      "observability": "Record exact source, passed/failed/skipped counts and browser artifacts; isolated success does not erase full-run failure.",
+      "property": "Lifecycle synchronization cannot bypass the existing behavioral assertions.",
+      "implementation": [
+        "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
+        "e2e/web/notification-navigation.spec.mjs"
+      ],
+      "verification": "Existing six selector cases, repeated notification navigation on five browser/device configurations and full UI/browser gates. Finite examples, not universal proof.",
+      "evidence": "Revision-bound Jest results and Playwright logs/traces; retained initial failures.",
+      "confidence": "Scoped test-infrastructure contract; does not establish complete selector or notification authorization correctness.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused selector checks pass; complete current-candidate web/browser gates still required."
+      },
+      "tests": [],
+      "formalModels": [],
+      "ambiguity": []
+    },
+    {
+      "id": "PAY-MUSIC-OUTCOME-001",
+      "title": "Project verified music money without reopening closed fulfillment",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "At the music_download checkout-to-purchase projection, a failed payment attempt must not cancel a pending or awaiting-payment purchase. A verified paid transition settles and grants one entitlement only for an eligible purchase. If the purchase is already cancelled, refunded or in chargeback, retain verified money, leave fulfillment closed, grant no entitlement and atomically open one provider/account/environment-bound reconciliation exception linked by checkout ID plus an idempotent audit event. A paid replay creates no additional effect. Failed or closed checkouts must deny subsequent music payment-attempt creation or replay under the checkout lock before a new provider create/capture call. Persisted attempt failure/status markers must continue denying admission and existing binding replay when a late pending or binding response reopens checkout/attempt status.",
+      "authority": "AUTHORITY-MUSIC-OUTCOME-20261015; existing distinct checkout-attempt/purchase states, ADR-005 purchase entitlement and the user mandate to repair financial contradictions rather than preserve bugs.",
+      "source": "formal/system/music-payment-outcome.md; reproduced current-main trigger counterexample on synthetic PostgreSQL17.",
+      "contract": "formal/system/music-payment-outcome.md",
+      "property": "A committed canonical music checkout projection never grants an active entitlement to a closed purchase; failed attempts leave payable fulfillment intact; verified money for closed fulfillment has a linked reconciliation record. Failed-checkout retry admission remains blocked under the same row lock.",
+      "actors": [
+        "Verified-payment recorder",
+        "Canonical checkout projection",
+        "Strict administrator reading reconciliation"
+      ],
+      "preconditions": [
+        "music_download checkout linked to its canonical purchase",
+        "Existing before-trigger validates succeeded attempt and immutable provider binding before paid",
+        "Migration refuses existing active purchase entitlements whose order is not paid",
+        "Music commerce remains disabled until separate provider runtime/recovery obligations are satisfied",
+        "Release schema verifier requires music_checkout_payment_attempt_allowed(uuid) before candidate admission"
+      ],
+      "inputs": [
+        "Checkout status transition",
+        "Bound verified provider/account/environment/resource/merchant reference",
+        "Purchase state and fixed amount/currency"
+      ],
+      "state": {
+        "purchase": [
+          "pending",
+          "awaiting_payment",
+          "paid",
+          "cancelled",
+          "refunded",
+          "chargeback"
+        ],
+        "projection": [
+          "payable",
+          "settled",
+          "closed-needs-reconciliation"
+        ],
+        "reconciliation": [
+          "open",
+          "assigned",
+          "resolved",
+          "ignored"
+        ]
+      },
+      "allowedTransitions": [
+        "Payment attempt failure -> failed checkout while purchase remains payable",
+        "Verified paid checkout + payable purchase -> paid purchase and one entitlement",
+        "Verified paid checkout + closed purchase -> unchanged closed fulfillment plus reconciliation",
+        "Refund/dispute -> end active fulfillment"
+      ],
+      "forbiddenTransitions": [
+        "Attempt failure alone -> cancelled purchase",
+        "Verified money for a closed purchase -> active entitlement",
+        "Paid replay -> duplicate entitlement or case",
+        "Unverified payment -> paid fulfillment",
+        "Failed checkout -> another provider create/capture operation via new or replayed music attempt",
+        "Late binding/pending status -> new payment or existing widget replay despite persisted failure marker"
+      ],
+      "effects": [
+        "Canonical settlement and unique entitlement when payable",
+        "Existing reconciliation exception with checkout-scoped internal reference and exact provider/resource metadata when closed",
+        "Idempotent purchase_payment_requires_review audit event",
+        "Safe known music_paid_closed_order administrative reason represented in OpenAPI and generated web/mobile clients"
+      ],
+      "authorization": "Existing verified-payment admission and immutable binding checks remain prerequisites. Reconciliation report remains strict-administrator-only; this migration grants no new privilege.",
+      "privacy": "Existing financial reconciliation/audit boundaries; no message payload, credential or new public data. The report omits merchant/provider references. Retention policy and operational resolution are separate obligations.",
+      "concurrency": "Checkout update serializes before the trigger locks the canonical purchase FOR UPDATE; exception and audit uniqueness deduplicate. Executable projection races use explicit Read Committed and witnessed PostgreSQL locks. Other isolation modes and whole provider-handler locking/recovery are not inferred.",
+      "idempotency": "Unchanged paid status returns before projection; existing entitlement, open-case fingerprint and audit idempotency indexes enforce their scoped uniqueness.",
+      "failure": "Statement or trigger error rolls back its projection transaction. Contradictory historical grants block migration for explicit review. Transport uncertainty and failed/cancelled checkout recovery remain separate unresolved P1 obligations. Fulfillment awaiting payment does not mean payment retry is admitted; failed checkout admission returns HTTP409.",
+      "recovery": "Keep the additive migration on application rollback; restoring the old function reopens the defect. Closed-order money requires authorized reconciliation; no automatic refund, reopening or provider request is introduced. Any rollback to older application code requires music commerce disabled because older handlers bypass the admission function.",
+      "observability": "commerce_reconciliation_exception, checkout-filtered administrative reconciliation report and purchase_payment_requires_review audit event.",
+      "implementation": [
+        "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/sql/music_payment_outcomes.sql",
+        "tdf-hq/test/sql/music_payment_state_fixture.sql",
+        "scripts/test-music-payment-outcomes.sh",
+        "scripts/lib/music_payment_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/MusicPaymentOutcome.tla",
+        "formal/event-operations/MusicPaymentOutcome.cfg",
+        "formal/event-operations/MusicPaymentOutcomeFailure.cfg",
+        "formal/event-operations/MusicPaymentOutcomeClosed.cfg",
+        "formal/event-operations/MusicPaymentOutcomeReview.cfg",
+        "formal/event-operations/MusicPaymentOutcomeReplay.cfg",
+        "formal/event-operations/MusicPaymentOutcomeRetry.cfg",
+        "formal/event-operations/MusicPaymentOutcomeFence.cfg"
+      ],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Eighteen PostgreSQL assertions; intended SQL function plus six controlled mutations; seven witnessed row-lock schedules; administrative HTTP linkage/denial and existing-binding replay checks; bounded TLA+ intended model and six named negative controls. Full exact-candidate gates and deployment pending.",
+      "evidence": "Working-source baseline and repair evidence recorded 2026-10-15; exact candidate receipts must be rerun and retained after final commit.",
+      "confidence": "High for the reproduced projection defect and scoped working-source SQL/model checks; production, provider transport and whole-program refinement not established.",
+      "ambiguity": [
+        "Provider runtime admission, ambiguous response reconciliation and recovery of closed checkouts remain open; feature must stay disabled.",
+        "Partial-refund entitlement and dispute-restoration product decisions remain open.",
+        "Trusted direct SQL bypassing canonical projection is outside this requirement; this is not a global database constraint on every entitlement write.",
+        "Existing music routes lack current OpenAPI/client coverage; this repair introduces no endpoint or DTO."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Canonical projection repair, executable controls and bounded model are implemented; final exact-candidate gates, combined-main delivery and provider/recovery obligations remain outstanding."
+      }
+    },
+    {
+      "id": "DEPLOY-VERSION-001",
+      "title": "Refresh backend identity through restored build caches",
+      "domain": "DEPLOY",
+      "critical": true,
+      "statement": "The canonical backend quality build must regenerate compiled Git identity for the checked-out HEAD despite restored incremental objects and unchanged Haskell source; runtime overrides cannot substitute for refreshed compiled metadata.",
+      "authority": "Derived technical requirement from observed cached metadata failure; no product activation authorization.",
+      "source": "Hosted backend job116275638317 at candidate849b and synthetic checkoutf3f5b873; formal/system/backend-version.md",
+      "contract": "formal/system/backend-version.md",
+      "property": "After Git HEAD changes without Haskell edits, canonical cached build reports the new HEAD; independently removing either required cache-layer refresh must reproduce stale identity.",
+      "actors": [
+        "Backend CI",
+        "Operator of the canonical local quality gate"
+      ],
+      "preconditions": [
+        "Repository Stack/GHC toolchain; controlled build checkout and trusted unchanged runtime fixture.",
+        "No runtime commit environment or /app/COMMIT override in the identity probe.",
+        "Canonical build has a trusted accessible Git checkout; independently bound image-packaging metadata remains a separate path."
+      ],
+      "inputs": [
+        "Git HEAD",
+        "Incremental Stack/GHC objects",
+        "Actual TDF.Version source",
+        "Repository Stack snapshot/lock"
+      ],
+      "state": {
+        "states": [
+          "cached",
+          "building",
+          "metadata_checked",
+          "failed"
+        ],
+        "initial": "cached",
+        "terminal": [
+          "metadata_checked",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "cached -> building -> metadata_checked after executable reports current HEAD",
+        "building -> failed on build, identity, cache-control or deadline failure"
+      ],
+      "forbiddenTransitions": [
+        "cached -> metadata_checked solely by runtime metadata override",
+        "Accepting stale identity after a source-identical Git HEAD change"
+      ],
+      "effects": [
+        "Refresh Git/time Template Haskell inputs during canonical build",
+        "Retain private source-bound logs and executable identity evidence"
+      ],
+      "authorization": "This gate grants no production or provider permission.",
+      "privacy": "Synthetic Git identities and private test directories only; no application data or credentials in output.",
+      "concurrency": "Probe packages and process groups are isolated; ordinary Stack dependency-cache locking is trusted. Concurrent privileged source/cache replacement is outside the fixture boundary.",
+      "idempotency": "Each test run uses a new evidence directory; existing evidence is never overwritten.",
+      "failure": "Any failed build or mismatched identity fails the gate. Negative controls require the known stale identity, not an arbitrary process failure.",
+      "recovery": "Preserve failed receipts; retry in a new directory after repair. No production rollback or schema changes.",
+      "observability": "Per-build logs, Git HEADs, returned identities, executable hash and unchanged unrelated object witness.",
+      "implementation": [
+        "tdf-hq/src/TDF/Version.hs",
+        "scripts/quality-backend.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-backend-version-rebuild.py",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "historicalStatus": null,
+      "verification": "Actual repository module compiled through Stack in a cached minimal package; README-only HEAD advance; independent Stack/GHC cache controls; final backend/HTTP gates still required.",
+      "evidence": "Current candidate receipts and hosted logs must be retained; older849b failed CI is diagnosis only.",
+      "confidence": "High for selected cache layers after actual regression; no whole-binary source attestation or universal build-system proof.",
+      "ambiguity": [
+        "Direct arbitrary developer Stack invocations without the canonical dirty flag may skip an unchanged package.",
+        "Runtime metadata can be overridden by trusted deployment configuration; those paths do not prove compiled identity."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Cache repair and executable controls implemented; exact final-candidate full backend/HTTP validation, merge and deployed identity remain required."
       }
     }
   ]

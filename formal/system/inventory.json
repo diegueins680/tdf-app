@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4c84c60a5836f7d39f18e10d34d136996bb0f63f",
+  "mobileRevision": "a30fd4f6045243c5379ce1ced2436d073f38e173",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -285,6 +285,8 @@
       "scripts/lib/music-test-database.mjs",
       "scripts/lib/music-worker-image-smoke.sh",
       "scripts/lib/music-worker-s3-probe.mjs",
+      "scripts/lib/music_money_conformance.py",
+      "scripts/lib/music_payment_conformance.py",
       "scripts/lib/openclaw-cdp.mjs",
       "scripts/lib/operations_conformance.py",
       "scripts/lib/postgres-test-database.sh",
@@ -412,6 +414,7 @@
       "scripts/test-artist-self-service.sh",
       "scripts/test-auth-recovery-migration.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
+      "scripts/test-backend-version-rebuild.py",
       "scripts/test-booking-conformance.py",
       "scripts/test-canonical-payment-lifecycle-migration.sh",
       "scripts/test-catalog-production-cutover.sh",
@@ -468,6 +471,8 @@
       "scripts/test-music-directory-contract.mjs",
       "scripts/test-music-directory-migration.sh",
       "scripts/test-music-download-predicate.mjs",
+      "scripts/test-music-money-wire-verifier.py",
+      "scripts/test-music-payment-outcomes.sh",
       "scripts/test-music-playback-identity.mjs",
       "scripts/test-music-purchase.sh",
       "scripts/test-music-release-api-e2e.mjs",
@@ -519,6 +524,7 @@
       "scripts/test-ticket-confirmation-lease.py",
       "scripts/test-ticket-confirmation-smtp.py",
       "scripts/test-ticket-confirmation.sh",
+      "scripts/test-ticket-manual-review-concurrency.sh",
       "scripts/test-ticket-manual-review.sh",
       "scripts/test-ticket-payment-gate.sh",
       "scripts/test-trial-identity.sh",
@@ -541,6 +547,7 @@
       "scripts/verify-improvement-loop.mjs",
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
+      "scripts/verify-music-money-wire.py",
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-readiness.py",
       "scripts/verify-request-failures.py",
@@ -678,6 +685,7 @@
       "tdf-hq-ui/src/api/merch.ts",
       "tdf-hq-ui/src/api/merchReputation.ts",
       "tdf-hq-ui/src/api/meta.ts",
+      "tdf-hq-ui/src/api/musicReleases.money.test.ts",
       "tdf-hq-ui/src/api/musicReleases.ts",
       "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
@@ -1302,6 +1310,8 @@
       "tdf-hq-ui/src/utils/media.ts",
       "tdf-hq-ui/src/utils/merch.test.ts",
       "tdf-hq-ui/src/utils/merch.ts",
+      "tdf-hq-ui/src/utils/musicMoney.test.ts",
+      "tdf-hq-ui/src/utils/musicMoney.ts",
       "tdf-hq-ui/src/utils/musicPreviewRange.test.ts",
       "tdf-hq-ui/src/utils/musicPreviewRange.ts",
       "tdf-hq-ui/src/utils/navigationLabels.ts",
@@ -1775,6 +1785,8 @@
       "tdf-hq/sql/2026-10-11_index_declarations_not_unique_rollback.sql",
       "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction.sql",
       "tdf-hq/sql/2026-10-11_operations_inbound_capture_direction_rollback.sql",
+      "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+      "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1932,6 +1944,7 @@
       "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
       "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
       "tdf-hq/src/TDF/MusicRelease/Domain.hs",
+      "tdf-hq/src/TDF/MusicRelease/Money.hs",
       "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
       "tdf-hq/src/TDF/Operations/API.hs",
       "tdf-hq/src/TDF/Operations/Model.hs",
@@ -2101,6 +2114,7 @@
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/StartupResponseSpec.hs",
       "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+      "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
       "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
@@ -2191,6 +2205,8 @@
       "tdf-hq/test/sql/identity_reconciliation.sql",
       "tdf-hq/test/sql/music_correction_asset_graph.sql",
       "tdf-hq/test/sql/music_ddex_operations.sql",
+      "tdf-hq/test/sql/music_payment_outcomes.sql",
+      "tdf-hq/test/sql/music_payment_state_fixture.sql",
       "tdf-hq/test/sql/music_playback_identity.sql",
       "tdf-hq/test/sql/music_resource_graph_validation.sql",
       "tdf-hq/test/sql/records_ingestion_invariants.sql",
@@ -2613,7 +2629,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
+      "sha256": "d02719a1f53c647f676a77b0b9b212f995aaaebd2269d41818d627cd3cf82a69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2625,19 +2641,19 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "829954ac2f67db8b5d24b61be4d396b90e1192e39965a5d0ac90f3bfbfc060e3",
+      "sha256": "f32fd8ca6c759027da38aba527706f2187b6b54a9757079f0e2a45abae1fca5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
+      "sha256": "1b588a1d4c4608600a98f34929a93484806c7d42bb2dca2609d8037e436f9867",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e705d7e36f8b46d9",
       "path": ".github/workflows/interaction-verification.yml",
-      "sha256": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
+      "sha256": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2655,7 +2671,7 @@
     {
       "id": "SURFACE-40da7c383a8d6b30",
       "path": ".github/workflows/social-verification.yml",
-      "sha256": "69a03b2b5c19936e53329b82ac8fcc7e000f41dbcd32f3af5462c853b3aa026b",
+      "sha256": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2709,7 +2725,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "e84ad8424c90e158616fa6a0a256d4736789660e03e5f01d2e39a32f2d30dc79",
+      "sha256": "b8bd9d35a229fa499a5f62e61d347cee842560d12579da93ffd26db5daebe919",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2727,7 +2743,7 @@
     {
       "id": "SURFACE-593f65650b716b87",
       "path": "e2e/web/course-enrollment.spec.mjs",
-      "sha256": "c5062a65db49b9f362b3af3b23af09b06f0d3838b9cf420d5ee9be029422d15a",
+      "sha256": "ba472872afceae558496077caf2525bb11b0460592851a616a7cc06cc0866b9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2829,7 +2845,7 @@
     {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
-      "sha256": "c0272c3de6e41821cf0fd9512758b60cc764a1e3f7275fe7755cd9d50409ee97",
+      "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3117,7 +3133,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "ffc80f27489ac811fd5b7e504a847436270127e3226b4e6980ccd25e92354a03",
+      "sha256": "7cd67b064f105fb39c34c3c7798c6b1031c4892bcb90edbfeb85806bbe8c8bad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4113,7 +4129,7 @@
     {
       "id": "SURFACE-3a426fa990072620",
       "path": "scripts/lib/music-api-s3-probe.mjs",
-      "sha256": "8972e841d5ff83f6abfbf8f5a51d66e64e7be1290dfa49c67e76400824ffb105",
+      "sha256": "75c5a83fb7d2e265c52147d769ba81d9dff99d6596afaa5ce661d3ca3273a95f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4165,6 +4181,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f907013f6fb607d5",
+      "path": "scripts/lib/music_money_conformance.py",
+      "sha256": "10061003159fb347c163524b3a9450c64f9553877316ece564971ba36f4a47cd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ee87483424711c8a",
+      "path": "scripts/lib/music_payment_conformance.py",
+      "sha256": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0fae219dd0862347",
       "path": "scripts/lib/openclaw-cdp.mjs",
       "sha256": "70572d87ee664731c0ac69096dd6c3eeffe46ee2a2e6635863b5e6c20c324e74",
@@ -4185,7 +4213,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "145fae7b10caa9fe2dbdec32ee6d8a688330579c666cefaba597028c4f48dd6c",
+      "sha256": "b25c91b04c00887f224f0b670f88c0190a157f8ebddb5161299bbfa3886ebcfe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4347,7 +4375,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5a2894568e5baf251a0a882438f5153dd3e703157e9c42dbb8a8bd89c13878bb",
+      "sha256": "6d5788d0b9efc8df6e2d55285abd67bffe9814da31594b923729893849e10906",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4365,7 +4393,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
+      "sha256": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4927,9 +4955,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d48fe23154c42420",
+      "path": "scripts/test-backend-version-rebuild.py",
+      "sha256": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "895089e9002ef1977890442182de0fc881b35b481257676d5879a228b14c2e8b",
+      "sha256": "ad8e8a2cb66b2d8bdec18987f8aeb5b7dd1ebdde85e9a9d97ef75cd79f9f8267",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5263,6 +5297,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-39da2413c10fff73",
+      "path": "scripts/test-music-money-wire-verifier.py",
+      "sha256": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bca3bb1c75dd07ab",
+      "path": "scripts/test-music-payment-outcomes.sh",
+      "sha256": "f529c92e471a8118013eab1c229abc7c0cc9ec64b8ac925a8ef677e9f57c02ac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5f96370db974b8c1",
       "path": "scripts/test-music-playback-identity.mjs",
       "sha256": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
@@ -5277,13 +5323,13 @@
     {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
-      "sha256": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
+      "sha256": "46c88d6264901d60a7b813fa39f950daf6f4179f94ca439e6397523281ac6eb2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6508907c85e1859b",
       "path": "scripts/test-music-release-api-e2e.sh",
-      "sha256": "7992f50153f322952911246d1b9ce206c8d29dcccf9414427158848c962ae14f",
+      "sha256": "fb56372d6b979d29e762ab609ceb779012be64efd4d152105060a9ebc559116e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5569,6 +5615,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c24f2eb451460e6e",
+      "path": "scripts/test-ticket-manual-review-concurrency.sh",
+      "sha256": "e3d3acc10c89eee0113077972d0b36d85008182275d146fdd7a06134c44f553b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-4c827aef16e690c3",
       "path": "scripts/test-ticket-manual-review.sh",
       "sha256": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
@@ -5673,7 +5725,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "71acf0278cfae8fdd1414e2d2915dee19542b56fee344c13c2a61513fda3dcc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5698,6 +5750,12 @@
       "id": "SURFACE-02ec8e917a623acf",
       "path": "scripts/verify-invoice-receipts.py",
       "sha256": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ddd3cca83ed7ca0d",
+      "path": "scripts/verify-music-money-wire.py",
+      "sha256": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6387,7 +6445,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "58f0cb7fb5299e3571ee574e3a965196883c0fab63c208f68aa20ce5bad83fd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6499,9 +6557,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-65b42af0b8c3c072",
+      "path": "tdf-hq-ui/src/api/musicReleases.money.test.ts",
+      "sha256": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "4c6c592f9a6de48f6f589e7d4bdd3fb22c5b05a8612f7ddb8cfa88bc7ac462e3",
+      "sha256": "150f499252556c86539bbbd5ec5aed68ff2c7031e5e2a6540d59fc87ecb9b917",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7431,7 +7495,7 @@
     {
       "id": "SURFACE-772702b32840fda1",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
-      "sha256": "e5b8043323a2ac5f0761e78c9499552de166b072bdd4482779547e7eac586d16",
+      "sha256": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7479,13 +7543,13 @@
     {
       "id": "SURFACE-9fb827f13f2ab951",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
-      "sha256": "51ae6b0d232085def9519c716b62c63e348f5e8920fa356d537e633048af28b5",
+      "sha256": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cc4546803ae98fba",
       "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
-      "sha256": "9544eb483c5460fde46a93e265f9bf9faf22cfa3c66eaa8e50af93adbac09fd5",
+      "sha256": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8451,13 +8515,13 @@
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
+      "sha256": "46c374c150cc8b5ec599fc597a636cf7a48973ac9ce8e2f00b255cafbd702dba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
+      "sha256": "c12dde7fb46cd996cd24a04a9195ba1f0e01faf19a2967be9ab445977047c21b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9051,13 +9115,13 @@
     {
       "id": "SURFACE-474a81a2327740d9",
       "path": "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-      "sha256": "bb372c28a1836c324343addb7ecb1d3094857d20d891286dbaf38054132ef2e5",
+      "sha256": "5cc1d83724ae007eea01926ebadcb8a532ad2f3a3a2d1ce8b689134fb75bd86f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f537d8c206de6d62",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
-      "sha256": "71e131b56818ba186b6670b6eeb21e219fbd773d08010985ee4b0e526de99086",
+      "sha256": "4dd4547567f2eeb1945a623bfeb3c57e36b78df60e2808410f7475a7005125fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9069,7 +9133,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "3f09b1e6cefe7125024fd6933e5ec46c54d41f78c8df9cb5768b3febdb0443f0",
+      "sha256": "6cd2c2fcc4a872159f4ac6e7f738aeafb7240ebbb4692c50c27eba68d4f88fcc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10243,6 +10307,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-87b80f419fbdfd01",
+      "path": "tdf-hq-ui/src/utils/musicMoney.test.ts",
+      "sha256": "de331c2360c09762bc1a2db6782135efd75a2995f84db6991409d825c4281c00",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9f13e1d451ae3a9b",
+      "path": "tdf-hq-ui/src/utils/musicMoney.ts",
+      "sha256": "c64997fe823f1aa0b583d73ca115482b8c9593802c69b9c1b1ecccb846f6230c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8d769b769a5ff971",
       "path": "tdf-hq-ui/src/utils/musicPreviewRange.test.ts",
       "sha256": "90c8840b4c1e8bdf2c9641efa7e5e75ba8182bbfc511c002f336361d065e4a7f",
@@ -10605,7 +10681,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "3fe956fbbcacbc895ceffdc219f9827282504e3eb12f56439b2577e49e4b6cdc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13069,6 +13145,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-edf54e386c610296",
+      "path": "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+      "sha256": "d80703d04d4508c3a3e0b47ffe6eb2583bc1a29e84a6b05f3f09f1afe17e2782",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-465082e284a1dd48",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "sha256": "0eaf8fd7a04836f35eae5693a709933109c4aa91b63d0eb2b5a148c2c257db94",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -13245,7 +13333,7 @@
     {
       "id": "SURFACE-a9f24603e446fa85",
       "path": "tdf-hq/src/TDF/API/MusicRelease.hs",
-      "sha256": "c6f321afe206a77a4633df54661cae3a541ca58c9aa26b62c4f8e4feebf2cc7c",
+      "sha256": "fdf3cf3710f04a251d71092cf4da21dbb1ff23541553936b24fbf2157f3b949d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14011,6 +14099,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6222784762438c9e",
+      "path": "tdf-hq/src/TDF/MusicRelease/Money.hs",
+      "sha256": "009e99d0b79677e2eb8c3c8753db3f5842b142adcebef509e1093aee27abec49",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-78e0b9a3e0b5e13e",
       "path": "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs",
       "sha256": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
@@ -14115,7 +14209,7 @@
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
       "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-      "sha256": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
+      "sha256": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14169,7 +14263,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "ed91418a104c94c9a277d28a5dfa4da9df4b0d5a31b930663eefe8e70f43cb92",
+      "sha256": "5570d29e8f02f39e838b7e94a650551f177add4f6e67389c92defdf35b067f35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14181,13 +14275,13 @@
     {
       "id": "SURFACE-56f96dfa75d0a802",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
-      "sha256": "3771062ff9562ae91973e61c41cc25c6c8afac50430933670441d314e095088c",
+      "sha256": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "92259a976c8c4e7d45c32bedb469ddb27e749319a180d4bf881cd2d3ef86a8c8",
+      "sha256": "44cc676fab692ead582f71d854211c29accd5ff61a3553ac16d9700f49caa49c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14535,7 +14629,7 @@
     {
       "id": "SURFACE-8e95ce26cbe1127d",
       "path": "tdf-hq/src/TDF/Version.hs",
-      "sha256": "f0ee9bb7f48a77bf52e52e9a0a3efb70a747b951e384c6cac4792d996ceeef48",
+      "sha256": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14577,7 +14671,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1",
+      "sha256": "823592bf3ab8334c754c60b9692f4b84e67d0fd1239e7050492d5d652b0cd7dd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14619,7 +14713,7 @@
     {
       "id": "SURFACE-bee76526856cf3d9",
       "path": "tdf-hq/test/MusicReleaseSpecMain.hs",
-      "sha256": "57bb4af0d439569765b89b0823c97c98255067280b44c4cef5b1104990306aa9",
+      "sha256": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14643,7 +14737,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c0e56807a44182f56c28791f1694a88ae2dd07b910a54940de2ea82640b90606",
+      "sha256": "2e75872d6a5e88809937161ca3d289cc88a4fc9c2ec8f90f6d33a4b4e73704f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14859,7 +14953,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "493863cd4117580ed376fd872342880fec5e569d809fd69e87a857987b9d0d1c",
+      "sha256": "dd6fa335332f1f475089b6b9b389a81124822c08d8a6d9c5b39e458a8b2d74e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14877,7 +14971,7 @@
     {
       "id": "SURFACE-935437d728311c7e",
       "path": "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
-      "sha256": "cf830a4be1747aea36eb7d5f5c4e454e2a752935e1f1d9ce598dbe37a56cbd40",
+      "sha256": "87adc6974c0b77da9983747c5900ec34687cd4c790084db30fcb521750daedb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15022,6 +15116,12 @@
       "id": "SURFACE-ae8c576d860734fa",
       "path": "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
       "sha256": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-89f49f12c8c895f1",
+      "path": "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+      "sha256": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15562,6 +15662,18 @@
       "id": "SURFACE-426c5a385e463038",
       "path": "tdf-hq/test/sql/music_ddex_operations.sql",
       "sha256": "89a95fec6d389d28987667a2e254358eed5b9c2c2cdc6e96ab4389b36377ae32",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2b7430b725eff68f",
+      "path": "tdf-hq/test/sql/music_payment_outcomes.sql",
+      "sha256": "80e711c6b9f7b6b4c9631982b34dc3a8f57140d8b6c5075aed2e2fbe419d9ec3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-54ee080f4f17ae3d",
+      "path": "tdf-hq/test/sql/music_payment_state_fixture.sql",
+      "sha256": "21419841a8180565108a8a4f2bf3e2d5b97c351ba0f4db4a5d5c3bd060cfae22",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16851,7 +16963,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "941746b68cbf81dec6165b0ced7296a6a8e34fa284ac85cad47951c0757d5b09",
+      "sha256": "58f0cb7fb5299e3571ee574e3a965196883c0fab63c208f68aa20ce5bad83fd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18344,7 +18456,7 @@
     },
     {
       "path": "docs/adr/0125-read-only-reconciliation-evidence.md",
-      "sha256": "b42c98c803addb68c1ac4d849a5b145f9476d4d4d98ad9d482c665756822375d",
+      "sha256": "ec94ac58f729086ded4c7c4450fa5e1a704a4220529f452c70310b20333a7025",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22529,6 +22641,97 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/MusicPaymentOutcome.cfg",
+      "sha256": "c3fdd9a9434145f3337fb353bf5dc945bd477c5e06faa44a0b7eafe694291814",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcome.tla",
+      "sha256": "3b5ef13a0dd15f1a5c0a5f4f2233f75ab8ece6498339ccf60c11b7205219af8b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcomeClosed.cfg",
+      "sha256": "51c84a56b70e5daba2bebaf6db45735689b4824663383fb0d23c412d16c1a813",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcomeFailure.cfg",
+      "sha256": "1e6d32e530c7039ab3816df4ec0607d77b57ffee5da9926f19bf0e63ed6af963",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcomeFence.cfg",
+      "sha256": "a5f4313226b717a14af3fbbf43c9573eac3f223fb87bf6e192a70795e82ba0b8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcomeReplay.cfg",
+      "sha256": "e5cded6e21c672f215d5361d0e90b30ccbb29724709d4e52d435e41e9f7d13a3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcomeRetry.cfg",
+      "sha256": "ca53f72290f47acad3f395a4537e178e64968c193f482436d4e9c32f07ce1d51",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPaymentOutcomeReview.cfg",
+      "sha256": "ca6f44102474c76f4c012662c5a12c21f41bb42cb83632998f94709cf07be398",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplay.cfg",
+      "sha256": "5e9dfb1ee970257c61287e1f2ddb43f340234c9b1ddf6bedc0d656c8aa5b608f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplay.tla",
+      "sha256": "564aace9809fc6b2c5b75b4f3dd265de68d1187b70b4fd5be99c89d838a9f05c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+      "sha256": "e399bb689384c94b746be13d209d8badb3a8bbae325e89825c2627fecdb3f096",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg",
+      "sha256": "ecc87a3caa99d8ed0f429eeaa2590bf26337c462dc56232921f46254926d92af",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+      "sha256": "df44977c82ee2fc30e8adee15b76dec819601b72c51f35c075e98fcb18ca2bae",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/NativeArtistFollow.cfg",
       "sha256": "dfef4ecafcf1daf1a0811e78feebd12644ca0d8561fe81c385380611b0af5c09",
       "authority": "inferred",
@@ -22964,7 +23167,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "5dbdf812b042d3e5ff177904154bb4b88384f4794c6692d58e1ff00d1ab20369",
+      "sha256": "d50912bdfa8c2caa4606978dcb76af89768e5a314dcfc8dc916ae1595e359e19",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23887,6 +24090,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/TicketManualReview.cfg",
+      "sha256": "d2188f7899d8797c5aa15a61d5d32dd5f48ff7117b93d4ed7557b152344ffe76",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReview.tla",
+      "sha256": "3ae4cd45bcca420ef17baf4ca3a7311d150ad0367b79c05a1f5cea246a65e983",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewLockReleased.cfg",
+      "sha256": "6d345445daf969c94c0ba93bfcd21a892636d8ef1818d69bd06804dbfe58af8d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+      "sha256": "6ee38440ebb4d65c56a744d7aa8e4b74f9388159b5133a564d3f6d358b52da6d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg",
+      "sha256": "3393757d152879613fe1b2dc59a6a6196d4270bc029399df77b33b6ef3f76515",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+      "sha256": "94aa99787cade85e26b09bf56f2491f36d789ee9564322a47a43c8e7c14ceac4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WebOnboardingRecovery.cfg",
       "sha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca",
       "authority": "inferred",
@@ -24490,7 +24735,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7d1323244fefb6ad45da11e534b1f74a0000c94950aaf4bec50f4b4b86fd6767",
+      "sha256": "b44783af9d7514aa4bd488a01e827967e6aa398ea1c34e494b8e8b2e3658e9a6",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24504,7 +24749,14 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e58f0ca38df1369384dff84dfe20ee0c5f270f3e65da33e7afad166815053d23",
+      "sha256": "15d680af23b83de3b12bfa20ecb3b5937fc553bb47d10053b06d346fe5636346",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/backend-version.md",
+      "sha256": "0c6493543e40f3487552d5c8a0f54f7af23dcbfab0d415904e5bd384fc95ead3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24714,7 +24966,7 @@
     },
     {
       "path": "formal/system/mobile-entry-ux.md",
-      "sha256": "e5591040ee08cf1fad49a7c10a6349705cee350578302a0301f520e93f398509",
+      "sha256": "554ece8a8f8e6cd33acebe8c37d43c5cd6b8cc4bdab1510cd4eb9977eb44d218",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24734,8 +24986,36 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-money-wire.md",
+      "sha256": "1ee2c7a4cfa15e33d33f7dcf66a6586e1248dea0630d5f2b755e518511cc57ee",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-payment-outcome.md",
+      "sha256": "eafdbdc97e2132a73667203224f4cba9eb985805d0eab55e95d3d24a15c75a7e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/music-purchase-entitlement.md",
-      "sha256": "b0dabf71329d1acb7c9f41ccad34bae2da72b5df4e2010cee0ce5520c1592b28",
+      "sha256": "1844d24d66b59d6a83a6da2c9c7b4a176d867c7f60c4dcb967b50cef35faf7f1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-purchase-replay.md",
+      "sha256": "25a4b296c843c20197fdddece83d0e1b3b981a9e392c0a59307ddf9787e99f2b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/music-test-entrypoint.md",
+      "sha256": "5e54ac29f493a52114166a56ab68c6038d5d85eaf51b1a5a4ef32c1a5f122279",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24833,14 +25113,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "ed11779b3f57b89d5bc0d6b7d465eff0eec5a7ca8e57f21a83a61ede282a09d4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3d6630e4dfe2b3c36d2f95617616e0cb602345c8e7811a1b099bce530799dc76",
+      "sha256": "aefb7169ef5d9ef6bcf7e8237b970f90f22059ba0e219c4a232016bdbd27aabf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24883,6 +25163,20 @@
     {
       "path": "formal/system/ticket-invoice-worker.md",
       "sha256": "bb3eb733b9bb1985d4d6691ed73e8762c01689cb0db7cb44756abd453381b0e0",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ticket-manual-review.md",
+      "sha256": "39eaed4619a4b6d883d5b347009dbe3802f7afa9ff944ee6bc3cf629baefadd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ui-fixture-boundaries.md",
+      "sha256": "9c01ca66e0f5be626b294bd426a91f0d349f53833af30f96a4c6ada5be1cb11d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25169,7 +25463,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "1ef1a2f421d6b24951bf0b9b91a08659788afa1d1c0a1c23ded6d869763ee9a8",
+      "sha256": "3fe956fbbcacbc895ceffdc219f9827282504e3eb12f56439b2577e49e4b6cdc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -34683,6 +34977,197 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/MusicPaymentOutcome.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  DropFailureFence = FALSE",
+        "  CancelOnFailure = FALSE",
+        "  GrantClosed = FALSE",
+        "  DropException = FALSE",
+        "  AllowFailedRetry = FALSE",
+        "  DuplicateReplay = FALSE",
+        "INVARIANTS TypeOK FailureKeepsPayable ActiveOnlyForPaidOrder ClosedMoneyNeedsReview OneEntitlement GrantNeedsEvidence NoFailedRetry NoQuarantinedRetry",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPaymentOutcomeClosed.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  DropFailureFence = FALSE",
+        "  CancelOnFailure = FALSE",
+        "  GrantClosed = TRUE",
+        "  DropException = FALSE",
+        "  AllowFailedRetry = FALSE",
+        "  DuplicateReplay = FALSE",
+        "INVARIANT ActiveOnlyForPaidOrder",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPaymentOutcomeFailure.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  DropFailureFence = FALSE",
+        "  CancelOnFailure = TRUE",
+        "  GrantClosed = FALSE",
+        "  DropException = FALSE",
+        "  AllowFailedRetry = FALSE",
+        "  DuplicateReplay = FALSE",
+        "INVARIANT FailureKeepsPayable",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPaymentOutcomeFence.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  CancelOnFailure = FALSE",
+        "  GrantClosed = FALSE",
+        "  DropException = FALSE",
+        "  DuplicateReplay = FALSE",
+        "  AllowFailedRetry = FALSE",
+        "  DropFailureFence = TRUE",
+        "INVARIANT NoQuarantinedRetry",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPaymentOutcomeReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  DropFailureFence = FALSE",
+        "  CancelOnFailure = FALSE",
+        "  GrantClosed = FALSE",
+        "  DropException = FALSE",
+        "  AllowFailedRetry = FALSE",
+        "  DuplicateReplay = TRUE",
+        "INVARIANT OneEntitlement",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPaymentOutcomeRetry.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  DropFailureFence = FALSE",
+        "  CancelOnFailure = FALSE",
+        "  GrantClosed = FALSE",
+        "  DropException = FALSE",
+        "  DuplicateReplay = FALSE",
+        "  AllowFailedRetry = TRUE",
+        "INVARIANT NoFailedRetry",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPaymentOutcomeReview.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  DropFailureFence = FALSE",
+        "  CancelOnFailure = FALSE",
+        "  GrantClosed = FALSE",
+        "  DropException = TRUE",
+        "  AllowFailedRetry = FALSE",
+        "  DuplicateReplay = FALSE",
+        "INVARIANT ClosedMoneyNeedsReview",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = TRUE",
+        "  ScopeBuyer = TRUE",
+        "  ReserveAtomically = TRUE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplayGlobalKey.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = TRUE",
+        "  ScopeBuyer = FALSE",
+        "  ReserveAtomically = TRUE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplayStaleLookup.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = TRUE",
+        "  ScopeBuyer = TRUE",
+        "  ReserveAtomically = FALSE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/MusicPurchaseReplayUnbound.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Actors = {buyer1, buyer2}",
+        "  Payloads = {payload1, payload2}",
+        "  None = none",
+        "  Shared = shared",
+        "  BindPayload = FALSE",
+        "  ScopeBuyer = TRUE",
+        "  ReserveAtomically = TRUE",
+        "INVARIANTS TypeOK OneOrderPerBuyerKey ReplayPayloadMatches ReplayOwnerMatches"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/NativeArtistFollow.cfg",
       "declarations": [
         "CHECK_DEADLOCK FALSE",
@@ -36866,6 +37351,114 @@
         "  RetryUncertain = FALSE",
         "INVARIANTS AtMostOneDocument AuthorizedHasDocument",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReview.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = TRUE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval",
+        "  EveryoneAnswered"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewLockReleased.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = FALSE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval",
+        "  EveryoneAnswered"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewLockReleasedGuarded.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = FALSE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewLockReleasedUnguarded.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = FALSE",
+        "  TransitionGuard = FALSE",
+        "  IndependentReviewer = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/TicketManualReviewSubmitterReviews.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Reviewers = {organizer, administrator, buyer}",
+        "  Submitter = buyer",
+        "  Nobody = nobody",
+        "  HoldLock = TRUE",
+        "  TransitionGuard = TRUE",
+        "  IndependentReviewer = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  OnePayment",
+        "  Consistent",
+        "  NoSelfApproval",
+        "  EveryoneAnswered"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

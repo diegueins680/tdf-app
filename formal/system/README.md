@@ -23,6 +23,15 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
+  purchase price, source-bound numeric SMT obligation and compatible clients.
+- [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of
+  four music unit groups, with required nonempty probes.
+
+- [music-purchase-replay.md](music-purchase-replay.md): buyer/request-bound purchase
+  replay, concurrent reservation, conflict semantics and bounded negative controls.
+- [backend-version.md](backend-version.md): fresh compiled metadata through restored Stack/GHC caches, actual two-build regression and independent cache-layer controls.
+
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
 
 - [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.
@@ -84,9 +93,11 @@ These checks make drift fail CI; run them before changing a mapped surface.
   them instead of maintaining another handwritten copy of their transitions.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
 - [interaction-write-budget.md](interaction-write-budget.md): the per-account interaction write charge survives every outcome of the write, including database errors; bounded model, four negative controls and PostgreSQL tests.
-- [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, five negative controls, PostgreSQL tests and the open failed-attempt cancellation defect.
+- [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, six negative controls and PostgreSQL tests.
+- [music-payment-outcome.md](music-payment-outcome.md): separate money and fulfillment outcomes, locked failed-retry quarantine, closed-order reconciliation, SQL mutations and a bounded outcome model; provider recovery and activation remain open.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
+- [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification

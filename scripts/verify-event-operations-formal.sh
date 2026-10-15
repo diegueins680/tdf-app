@@ -393,16 +393,32 @@ run_negative_tlc LiveIntakeUnpersisted.cfg live-intake-unpersisted 'Invariant Pe
 run_tlc ArtistActivation.tla ArtistActivation.cfg artist-activation
 run_negative_tlc ArtistActivationUnsafe.cfg artist-activation-unsafe 'Invariant CurrentContext is violated' ArtistActivation.tla
 run_tlc MusicEntitlement.tla MusicEntitlement.cfg music-entitlement
+run_tlc MusicPurchaseReplay.tla MusicPurchaseReplay.cfg music-purchase-replay
+run_negative_tlc MusicPurchaseReplayUnbound.cfg music-purchase-replay-unbound 'Invariant ReplayPayloadMatches is violated' MusicPurchaseReplay.tla
+run_negative_tlc MusicPurchaseReplayGlobalKey.cfg music-purchase-replay-global-key 'Invariant ReplayOwnerMatches is violated' MusicPurchaseReplay.tla
+run_negative_tlc MusicPurchaseReplayStaleLookup.cfg music-purchase-replay-stale-lookup 'Invariant OneOrderPerBuyerKey is violated' MusicPurchaseReplay.tla
 run_negative_tlc MusicEntitlementForgedPaid.cfg music-entitlement-forged-paid 'Invariant PaidNeedsEvidence is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementRepeatedGrant.cfg music-entitlement-repeated-grant 'Invariant OneEntitlement is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementNoLimit.cfg music-entitlement-no-limit 'Invariant LimitHolds is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementEndlessReplay.cfg music-entitlement-endless-replay 'Invariant UrlsInsideLifetime is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementFreshReplayUrl.cfg music-entitlement-fresh-replay-url 'Invariant UrlsEndWithAuthorization is violated' MusicEntitlement.tla
 run_negative_tlc MusicEntitlementRefundedDownload.cfg music-entitlement-refunded-download 'Invariant ActiveWhenIssued is violated' MusicEntitlement.tla
+run_tlc MusicPaymentOutcome.tla MusicPaymentOutcome.cfg music-payment-outcome
+run_negative_tlc MusicPaymentOutcomeFailure.cfg music-payment-outcome-failure 'Invariant FailureKeepsPayable is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeClosed.cfg music-payment-outcome-closed 'Invariant ActiveOnlyForPaidOrder is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeReview.cfg music-payment-outcome-review 'Invariant ClosedMoneyNeedsReview is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeReplay.cfg music-payment-outcome-replay 'Invariant OneEntitlement is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeRetry.cfg music-payment-outcome-retry 'Invariant NoFailedRetry is violated' MusicPaymentOutcome.tla
+run_negative_tlc MusicPaymentOutcomeFence.cfg music-payment-outcome-fence 'Invariant NoQuarantinedRetry is violated' MusicPaymentOutcome.tla
 run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc TicketManualReview.tla TicketManualReview.cfg ticket-manual-review
+run_tlc TicketManualReview.tla TicketManualReviewLockReleasedGuarded.cfg ticket-manual-review-lock-released-guarded
+run_negative_tlc TicketManualReviewLockReleased.cfg ticket-manual-review-lock-released 'Invariant EveryoneAnswered is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewSubmitterReviews.cfg ticket-manual-review-submitter-reviews 'Invariant NoSelfApproval is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewLockReleasedUnguarded.cfg ticket-manual-review-lock-released-unguarded 'Invariant OnePayment is violated' TicketManualReview.tla
 run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
 run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
 run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
