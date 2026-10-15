@@ -214,6 +214,7 @@ test.describe('Course enrollment on a small Android phone', () => {
     await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
     await expectRenderedRoot(page);
     await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     await expect(stickyBar).toBeHidden();
 
@@ -241,6 +242,7 @@ test.describe('Course enrollment on a small Android phone', () => {
     // The signed-in shell and radio can mount before this lazy course route.
     // Scroll the loaded course, not the shorter shell that precedes it.
     await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     if ((page.viewportSize()?.width ?? 0) >= 900) {

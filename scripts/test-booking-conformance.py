@@ -576,6 +576,15 @@ try:
     sql("UPDATE course SET title='PUBLIC_CURRENT',updated_at=now()+interval '1 minute' WHERE slug='public-conformance-course'")
     content = ' '.join(knowledge())
     check('RAG renders current public course rather than cached private text', 'PUBLIC_CURRENT' in content and all(value not in content for value in ['PRIVATE_SENTINEL', 'POISONED_CACHED_PRIVATE_TEXT', 'PUBLIC_BEFORE']))
+    # Matching a current course slug is not source authorization. Without this
+    # collision, the join alone excludes the earlier private-source fixtures.
+    sql("DELETE FROM rag_chunk WHERE source='course' AND source_id='public-conformance-course'")
+    for source in ['availability', 'studio_brain', 'campaign', 'ad', 'resource', 'service', 'unknown']:
+        rag_chunk(source, 'public-conformance-course', 'PRIVATE_COLLIDING_' + source)
+    check('non-course index entries cannot nominate a public course by matching its slug', knowledge() == [])
+    rag_chunk('course', 'public-conformance-course', 'POISONED_CACHED_PRIVATE_TEXT')
+    content = ' '.join(knowledge())
+    check('eligible course remains retrievable alongside colliding private index entries', 'PUBLIC_CURRENT' in content and 'PRIVATE_COLLIDING_' not in content)
     sql("DELETE FROM course WHERE slug='public-conformance-course'")
     check('deleted course cannot survive through stale index', knowledge() == [])
     for channel, object_name in [('facebook', 'page'), ('instagram', 'instagram')]:
