@@ -249,6 +249,7 @@
       "scripts/instagram-openclaw-cdp.mjs",
       "scripts/install-continuous-improvement-loop-launchd.sh",
       "scripts/install-flyctl.mjs",
+      "scripts/install-proof-checkers.py",
       "scripts/install-recovery-tools.py",
       "scripts/interactions/generate-mobile-shared.mjs",
       "scripts/interactions/prepare-test-database.sh",
@@ -491,6 +492,7 @@
       "scripts/test-physical-postgres-docker.py",
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
+      "scripts/test-proof-certificates.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -549,6 +551,7 @@
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
       "scripts/verify-payment-arithmetic.py",
+      "scripts/verify-proof-certificates.py",
       "scripts/verify-readiness.py",
       "scripts/verify-recovery-expiry.py",
       "scripts/verify-request-failures.py",
@@ -2633,7 +2636,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "8bd15cdecaec5dfd55474be31a5ea5a8ffa7576dc1a4ac73819f7ee5a18238b4",
+      "sha256": "a4aa1386f2eed30a5fdf15e43804c3a7d7d6621add4c1e7d52d59bf16e52169e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3954,6 +3957,12 @@
       "id": "SURFACE-14082aef6c304d37",
       "path": "scripts/install-flyctl.mjs",
       "sha256": "75c2c6f4934ff07fd6f00dec4bb2c8133047ca54c0632bea7739581871d56cdc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-37ed76fba61da70f",
+      "path": "scripts/install-proof-checkers.py",
+      "sha256": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5409,6 +5418,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8e3764761ce42dca",
+      "path": "scripts/test-proof-certificates.py",
+      "sha256": "6b0e3ef92a08c150ff50df58e761c07ecfb5aa1e06a4c0856861ae8db41b55e5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -5699,7 +5714,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "1e739093989bd5df8f88d97375b354c098068cc2feb3c55335b55bf9afe06e05",
+      "sha256": "a50488742ef8719a32fc64a4bac93d532db5a010ae0f9160857d2cb869a8462a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5754,6 +5769,12 @@
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
       "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d8f74623732a7a92",
+      "path": "scripts/verify-proof-certificates.py",
+      "sha256": "d7ece3270a02a465d61e4ea7081aa86f464abc3b6eff04367cbc2f050726d07e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24546,7 +24567,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "02eca8d8e53d2360d72d3896e3b91b584fd65e194c7e5b1716cf1e0c46fa1ba6",
+      "sha256": "b023c819ff21bac260aa466e27ea3c04c37676ebbd7ccc0535baed5bb4ff4d1e",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24560,7 +24581,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "e0419a80b79c798a514fe0aadb96b35df2ff87137c9dcf52a1a3600d2bed82eb",
+      "sha256": "f430a4799af2be718c7dd19c173c14f7cbc9ecc362325f2fba8ba4e09837120b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24860,6 +24881,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/proof-certificates.md",
+      "sha256": "bf02d5a72f4337080b7ff18e94da3f5b7857a3fcdb575979a76d1ac97718ca46",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-route-admission.md",
       "sha256": "5624b8411891a9345215f51bd08342fcc08b9f5261f1d33ba27e6884e808cef6",
       "authority": "inferred",
@@ -24917,7 +24945,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4349ba44a3abe2b44639b149474df907e0200aefd5b0dd45bf8370678b67c997",
+      "sha256": "5faf4f3c425d2d257bcdaf070b8aae51959e4ec2fa03ce83920375cfe5fbcd1b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

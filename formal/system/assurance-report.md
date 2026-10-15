@@ -108,9 +108,15 @@ Trusted: restricted Haskell source recognizer and expression translation; Python
 Z3 4.13.3, report generator, source hashes/Git, OS and hardware. Native runtime
 claims would additionally trust GHC, libraries, PostgreSQL, generated clients,
 JavaScript engines, infrastructure and external providers. No independently checked
-UNSAT certificate or compiler refinement is claimed. Fresh SMT replay checks the
+UNSAT certificate or compiler refinement is claimed by the ordinary report. Fresh SMT replay checks the
 serialized formula, using the same solver; it is not independent solver validation.
 No new axioms or admitted theorems are introduced.
+
+The separate [CPC certificate runner](proof-certificates.md) adds CVC5 cross-checks
+of all 41 inputs and independent Ethos checks of eight formula refutations.
+Its receipt links certificate obligations to the source-derived report and keeps
+the six unsupported certificates UNPROVEN. These results do not promote complete
+requirements or refinement and do not change this report's release decision.
 
 Primary methodological sources: [Z3 bitvector semantics](https://microsoft.github.io/z3guide/docs/theories/Bitvectors/),
 [Z3 satisfiability results](https://microsoft.github.io/z3guide/docs/logic/basiccommands/),
