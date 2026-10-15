@@ -9942,7 +9942,7 @@
           "Persisted messages, recipient notices and one-to-one mappings",
           "Current consent, block and account lifecycle"
         ],
-        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof."
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof."
       },
       "allowedTransitions": [
         "Authorized send atomically stores a message, notice and mapping.",
@@ -9957,7 +9957,7 @@
       "effects": [
         "Durable recipient notice; repeatable migration; no historical replay or external sends."
       ],
-      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending.",
       "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
       "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
       "implementation": [
@@ -9977,8 +9977,10 @@
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "tdf-hq/test/integration/interactions/notification-properties.sql"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
+      "formalModels": [
+        "formal/event-operations/ChatNotificationAuthorization.tla"
+      ],
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response.",
       "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."
@@ -10042,6 +10044,7 @@
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
     "formal/event-operations/ChatMutationEarlyCommit.cfg": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d",
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
+    "formal/event-operations/ChatNotificationAuthorization.tla": "0a2aa1411e180ce0ed79d3231802aa993e5d36eddb92aa096c27f6a69e9ef357",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
     "formal/event-operations/EventOrganizer.cfg": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
@@ -10380,7 +10383,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+    "scripts/verify-event-operations-formal.sh": "256a59a48da3bc1a2f7e508edad868c16050a6380e0445b8c347421c63257442",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10523,8 +10526,8 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "ce82b2d69dcb25af4b9aed03a5b0b14833670daf39a349c8dae68c47195f044d",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "34c2c1ef9e42c96b2c91bf7599176e334d16ef878c5e26d38f9bc53a2d54e82d",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "fd7bef138cb2b0569554e2dec23a0858e530447bc9ac3267e889af3bc76df7b5",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "429fa341c856d30fd9ff4cd7cd40154f88a3440ad193663170fd863adc7ae774",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "4bce007ce474b897a98bc1bb08017cc766b44bdc245a6c9948363f55fbaa2bff",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "18a22d590a4c67707df4ef87c952610622b37688c1a16da40a7542c58c928130",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
@@ -18652,6 +18655,12 @@
         "requirement": "MSG-NOTIFY-001",
         "relationship": "tests"
       }
+    ],
+    "formal/event-operations/ChatNotificationAuthorization.tla": [
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -24055,7 +24064,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "256a59a48da3bc1a2f7e508edad868c16050a6380e0445b8c347421c63257442",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28139,7 +28148,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "ce82b2d69dcb25af4b9aed03a5b0b14833670daf39a349c8dae68c47195f044d",
+      "sha256": "fd7bef138cb2b0569554e2dec23a0858e530447bc9ac3267e889af3bc76df7b5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28151,7 +28160,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "34c2c1ef9e42c96b2c91bf7599176e334d16ef878c5e26d38f9bc53a2d54e82d",
+      "sha256": "429fa341c856d30fd9ff4cd7cd40154f88a3440ad193663170fd863adc7ae774",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44013,8 +44022,7 @@
     "MEDIA-MUSIC-DDEX-001",
     "MEDIA-MUSIC-PLAYER-001",
     "SYS-WEB-SHELL-001",
-    "AUTH-ENTRY-002",
-    "MSG-NOTIFY-001"
+    "AUTH-ENTRY-002"
   ],
   "stateMachines": [
     {
@@ -45133,7 +45141,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cdf2b234d3585e3c403edf068d86c094b4a601d92a56842854830b0544d1e7fc",
+      "sourceSha256": "7d3ccc77b51d5e99684cb6c32aaab5681c6261099f80665aa32cc74c745bf2bd",
       "definition": {
         "states": [
           "absent",

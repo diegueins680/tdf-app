@@ -122,3 +122,5 @@ visibility function/mapping so block and deletion policy continue to apply.
 A historical catch-up requires a separately reviewed recipient-safe plan, not an
 unbounded backfill. Do not claim that the original recipient was notified until
 recipient-side runtime evidence establishes it.
+
+A notification link must await a successful, non-fetching thread-list response before exposing cached thread previews or message bodies, enabling message requests/composition, or marking the thread read. Pending authorization leaves the URL available for recovery. A denied fresh result does not open another conversation. The seeded-cache web regression reproduces the previous premature disclosure; the one-target `ChatNotificationAuthorization` model checks initial resolution/failure/retry with two guard-removal controls. Its bounds exclude ordinary background polling and full backend policy refinement.

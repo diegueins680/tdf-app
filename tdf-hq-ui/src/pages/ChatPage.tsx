@@ -239,7 +239,12 @@ function ChatWorkspace() {
     refetchInterval: 10_000,
   });
 
-  const threads = useMemo(() => threadsQuery.isError ? [] : threadsQuery.data ?? [], [threadsQuery.data, threadsQuery.isError]);
+  const notificationAuthorizationPending = requestedThread !== null
+    && (!threadsQuery.isSuccess || threadsQuery.isFetching);
+  const threads = useMemo(
+    () => threadsQuery.isError || notificationAuthorizationPending ? [] : threadsQuery.data ?? [],
+    [notificationAuthorizationPending, threadsQuery.data, threadsQuery.isError],
+  );
   const readMap = useMemo(() => {
     void readVersion;
     return loadChatReadMap(myPartyId ?? 0);

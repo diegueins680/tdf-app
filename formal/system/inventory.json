@@ -5688,7 +5688,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "256a59a48da3bc1a2f7e508edad868c16050a6380e0445b8c347421c63257442",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8376,13 +8376,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "ce82b2d69dcb25af4b9aed03a5b0b14833670daf39a349c8dae68c47195f044d",
+      "sha256": "fd7bef138cb2b0569554e2dec23a0858e530447bc9ac3267e889af3bc76df7b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "34c2c1ef9e42c96b2c91bf7599176e334d16ef878c5e26d38f9bc53a2d54e82d",
+      "sha256": "429fa341c856d30fd9ff4cd7cd40154f88a3440ad193663170fd863adc7ae774",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20108,7 +20108,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "7ad50c541c71695b141dc8401d6e1d311e70f4d9e601f4e35d08d44dce9b59dd",
+      "sha256": "83bfdf4333d94fd8c765d0a464ada9935d567b38cbf8abca21a0111dadae353f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21605,6 +21605,34 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ChatNotificationAuthorization.cfg",
+      "sha256": "531bf5aadfb520cc739cda4bc9aa3bd24049e79f815f89a243fa70e457854472",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationAuthorization.tla",
+      "sha256": "0a2aa1411e180ce0ed79d3231802aa993e5d36eddb92aa096c27f6a69e9ef357",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationCachedDisplay.cfg",
+      "sha256": "380587b17b7e7467336fc787c0098c5af0eef03478d7be521140da893cfab124",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatNotificationEarlyRead.cfg",
+      "sha256": "d92ba4819e648431e710898778da68eff9623d63903b052a8742747dcbd6a5b5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/CheckoutCancellation.cfg",
       "sha256": "64c93ecd5a7f8da635b2caa53786f58da9348cc531e1b56d0365e939f36e7f10",
       "authority": "inferred",
@@ -22992,7 +23020,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "5dbdf812b042d3e5ff177904154bb4b88384f4794c6692d58e1ff00d1ab20369",
+      "sha256": "2ef3e55989f21b9f3f3e06771dab1562d858fef6106aeedad48001c8eaffd897",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24861,7 +24889,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "cdf2b234d3585e3c403edf068d86c094b4a601d92a56842854830b0544d1e7fc",
+      "sha256": "7d3ccc77b51d5e99684cb6c32aaab5681c6261099f80665aa32cc74c745bf2bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32733,6 +32761,39 @@
         "  DecodeBeforeCommit = TRUE",
         "  RollbackRejected = FALSE",
         "INVARIANT RejectedLeavesNoMutation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationAuthorization.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANT RequireFreshAuthorization = TRUE",
+        "INVARIANTS NoCachedDisplay NoEarlyRead"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationCachedDisplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANT RequireFreshAuthorization = FALSE",
+        "INVARIANT NoCachedDisplay"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatNotificationEarlyRead.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANT RequireFreshAuthorization = FALSE",
+        "INVARIANT NoEarlyRead"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

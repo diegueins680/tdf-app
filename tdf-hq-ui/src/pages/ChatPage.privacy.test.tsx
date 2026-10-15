@@ -18,15 +18,17 @@ jest.unstable_mockModule('../api/social', () => ({ SocialAPI: {
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: { partyId } }) }));
 const { default: ChatPage } = await import('./ChatPage');
 const { useChatUnreadCount } = await import('../hooks/useChatUnreadCount');
+const { loadChatReadMap } = await import('../utils/chatReadState');
 const thread: ChatThreadDTO = { ctThreadId: 10, ctOtherPartyId: 2, ctOtherDisplayName: 'Private peer',
   ctLastMessage: 'Private preview', ctLastMessageAt: '2026-09-15T12:00:00Z', ctUpdatedAt: '2026-09-15T12:00:00Z' };
 const message: ChatMessageDTO = { cmId: 1, cmThreadId: 10, cmSenderPartyId: 2, cmBody: 'Private body', cmCreatedAt: '2026-09-15T12:00:00Z' };
 const clients: QueryClient[] = [];
 function CurrentLocation() { return <span data-testid="location">{useLocation().search}</span>; }
 function Unread() { const { unreadCount } = useChatUnreadCount(); return <span data-testid="badge">{unreadCount}</span>; }
-function setup(path = '/chat') {
+function setup(path = '/chat', seed?: (client: QueryClient) => void) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   clients.push(client);
+  seed?.(client);
   const tree = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><ChatPage /><Unread /><CurrentLocation /></MemoryRouter></QueryClientProvider>;
   const view = render(tree());
   return { client, ...view, refresh: () => view.rerender(tree()) };
@@ -89,6 +91,33 @@ it('opens the notification thread instead of the newest conversation without cre
   setup('/chat?threadId=10');
   await waitFor(() => expect(listMessages).toHaveBeenLastCalledWith(10, { limit: 80 }));
   expect(listMessages.mock.calls.every(([threadId]) => threadId === 10)).toBe(true);
+  expect(getOrCreateDmThread).not.toHaveBeenCalled();
+});
+it.each([true, false])('waits for fresh notification authorization before using cached messages (allowed=%s)', async (allowed) => {
+  let resolveThreads!: (threads: ChatThreadDTO[]) => void;
+  listThreads.mockReturnValue(new Promise((resolve) => { resolveThreads = resolve; }));
+  setup('/chat?threadId=10', (client) => {
+    client.setQueryData(['chat-threads', 1], [thread]);
+    client.setQueryData(['chat-messages', 1, 10], [message]);
+  });
+  await waitFor(() => expect(listThreads).toHaveBeenCalled());
+  expect(screen.queryByText('Private body')).toBeNull();
+  expect(screen.queryByText('Private preview')).toBeNull();
+  expect(listMessages).not.toHaveBeenCalled();
+  expect(loadChatReadMap(1)).toEqual({});
+  expect(screen.getByRole('button', { name: 'Enviar mensaje' }).hasAttribute('disabled')).toBe(true);
+  expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
+  await act(async () => { resolveThreads(allowed ? [thread] : []); });
+  if (allowed) {
+    await screen.findByText('Private body');
+    await waitFor(() => expect(loadChatReadMap(1)['10']).toBe(message.cmCreatedAt));
+    expect(listMessages).toHaveBeenCalledWith(10, { limit: 80 });
+  } else {
+    await screen.findByText('La conversación de esta notificación no está disponible.');
+    expect(screen.queryByText('Private body')).toBeNull();
+    expect(listMessages).not.toHaveBeenCalled();
+    expect(loadChatReadMap(1)).toEqual({});
+  }
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
 it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects an unavailable notification thread %s', async (id) => {

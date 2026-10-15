@@ -9941,7 +9941,7 @@
           "Persisted messages, recipient notices and one-to-one mappings",
           "Current consent, block and account lifecycle"
         ],
-        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof."
+        "bounds": "Synthetic PostgreSQL assertions and web tests; no universal proof. Notification model: one cached target, Boolean display/read history, no ordinary background-polling or backend-policy refinement proof."
       },
       "allowedTransitions": [
         "Authorized send atomically stores a message, notice and mapping.",
@@ -9956,7 +9956,7 @@
       "effects": [
         "Durable recipient notice; repeatable migration; no historical replay or external sends."
       ],
-      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights. A notification target cannot use cached previews, message bodies or read bookkeeping while its fresh thread-list authorization is pending.",
       "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
       "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
       "implementation": [
@@ -9976,8 +9976,10 @@
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "tdf-hq/test/integration/interactions/notification-properties.sql"
       ],
-      "formalModels": [],
-      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests.",
+      "formalModels": [
+        "formal/event-operations/ChatNotificationAuthorization.tla"
+      ],
+      "verification": "Real PostgreSQL production fixture; repeat application, mutation rollback and authorization assertions; web navigation tests. The one-target finite notification model checks pending/authorized/denied/failed/retry interleavings and two guard-removal counterexamples; React Query regressions seed stale thread and message caches and defer the actual list response.",
       "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
       "ambiguity": [
         "External email/push and offline/read receipts are tracked separately under MSG-DELIVERY-001."

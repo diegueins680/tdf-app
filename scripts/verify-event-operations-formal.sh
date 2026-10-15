@@ -215,6 +215,9 @@ run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant Revie
 run_negative_tlc SignupIdentityRebind.cfg signup-rebind 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
 run_tlc CredentialLifecycle.tla CredentialLifecycle.cfg credential-lifecycle
 run_tlc ChatMutationBoundary.tla ChatMutationBoundary.cfg chat-mutation-boundary
+run_tlc ChatNotificationAuthorization.tla ChatNotificationAuthorization.cfg chat-notification-authorization
+run_negative_tlc ChatNotificationCachedDisplay.cfg chat-notification-cached-display 'Invariant NoCachedDisplay is violated' ChatNotificationAuthorization.tla
+run_negative_tlc ChatNotificationEarlyRead.cfg chat-notification-early-read 'Invariant NoEarlyRead is violated' ChatNotificationAuthorization.tla
 run_negative_tlc ChatMutationEarlyCommit.cfg chat-mutation-early-commit 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
