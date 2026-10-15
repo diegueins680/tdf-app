@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "e5fdf59663f4c7ef26be06521dd44abc816559cc",
+  "mobileRevision": "55bd225cfbbf5444cea83bafc44ca601bcb49947",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -17394,7 +17394,7 @@
     {
       "id": "SURFACE-fd82e086c17780e7",
       "path": "tdf-mobile/src/features/interactions/DiscussionScreen.tsx",
-      "sha256": "2b0e3d1d0ce84b6dbbc0d30f38a2b3f5cab60d795f94a1e8c2f8d2726e713c85",
+      "sha256": "c5ffcacfb579a5596dc2c23aea9c642a4357b3829cfa503e9165aa89ffd8d2ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17406,7 +17406,7 @@
     {
       "id": "SURFACE-499f915882243564",
       "path": "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
-      "sha256": "25307a48e0d9a6c0ace5d569bc21515ba5a0242d639e75dc0cfa704c0e6e4c7f",
+      "sha256": "64090ddc96202f42ddd75c6e3275836eaeaa677b9eeaa89f100f7d81f4871107",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24903,7 +24903,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "8eb14132dfcdff61eecd9fda41d9ee0a8ccd4f71801ea7433d6a95c18378c530",
+      "sha256": "773454e413d10c9956ce7e72b0bda1f7a88aed38668241e2bb1038d80529af93",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-15. **System-wide",
       "kind": "requirement-candidate"
@@ -24924,7 +24924,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "90ea56868b8acad05a2eabc960a9fc8f67885cc870b8b31712b76d4381090fb4",
+      "sha256": "48024d7219b7a299235de1259e26f02184a0d38ab321b08c6996da1dc52cd4d0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25295,7 +25295,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a531e546453218b32c4415816da3933368b0a6978cc1b123fe29cbeae625a056",
+      "sha256": "ce783befbffd33ddf10230579801f4d97fafb5554e9b3e5aaa504b1e1407c8ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

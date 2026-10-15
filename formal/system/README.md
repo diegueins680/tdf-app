@@ -23,6 +23,8 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 ## Canonical package
 
+- `SOC-FOCUS-001` in [requirements.json](requirements.json): automatic exact-reply focus, native layout epochs, bounded retry and user cancellation; unchanged installed journeys remain required.
+
 - [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
   purchase price, source-bound numeric SMT obligation and compatible clients.
 - [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of

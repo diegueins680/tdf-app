@@ -809,6 +809,18 @@
       "conflict": "Runtime receipts included configured suffix flags but omitted many known absent controls, privacy/SMTP controls and alternate CORS boolean names. Silence could not establish disabled state or effective defaults.",
       "authority": "DEPLOY-OBSERVE-001 requires explicit unknowns and source-bound read-only observation.",
       "resolution": "Expand the absence register and make conservative backend literal discovery part of the existing inspection boundary gate. Preserve raw presence, empty values and absence; do not infer effective values from candidate defaults or activate any feature."
+    },
+    {
+      "id": "AUTHORITY-MOBILE-EXACT-REPLY-001",
+      "sources": [
+        "docs/interactions/implementation.md",
+        "tdf-mobile/e2e/interactions/notification-edit-delete.yaml",
+        "tdf-mobile/src/features/interactions/DiscussionScreen.tsx",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "The installed Android journey at root59b/Mobilee5 loaded reply context but left the linked reply below the viewport. A proposed manual test scroll at Mobile4185 would bypass the existing automatic-focus acceptance contract.",
+      "authority": "Existing documented automatic exact-reply focus and the original native notification journey define intended behavior; a failed implementation is not product authority.",
+      "resolution": "Supersede4185 without admitting its manual-scroll fixture. Keep the original native assertion. Repair the separately reproduced late-layout retry and stale-measurement gaps, and require fresh native artifacts/journeys before claiming the Android symptom resolved."
     }
   ]
 }

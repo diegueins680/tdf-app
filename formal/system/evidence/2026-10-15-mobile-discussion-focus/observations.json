@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "requirement": "SOC-FOCUS-001",
+  "baselineRoot": "59b0739e91ba11be3c7064edc289f27338f2206b",
+  "baselineMobile": "e5fdf59663f4c7ef26be06521dd44abc816559cc",
+  "repairMobile": "55bd225cfbbf5444cea83bafc44ca601bcb49947",
+  "baselineAndroidRun": "https://github.com/diegueins680/tdf-app/actions/runs/38744216601",
+  "baselineStatus": "failed-original-automatic-reply-visibility-assertion",
+  "renderedTests": 15,
+  "fullMobileTests": 651,
+  "nativeRepairStatus": "not-yet-verified",
+  "negativeControls": [
+    {
+      "name": "old-late-layout-failure",
+      "result": "detected-by-assertion",
+      "logSha256": "1d825bf319ec88ae7e78535848a88e902b2f330f354f04c04e967bfb97a743db"
+    },
+    {
+      "name": "removed-layout-epoch-detected",
+      "result": "detected-by-assertion",
+      "logSha256": "2231d3ed13c188f212ee145cd95393e6bb0006604b0e42aa0f0a449b3e33dad0"
+    }
+  ],
+  "supersededTestOnlyMobile": "4185da50839539b70be7a6a41ccef0e3a19a4e12",
+  "originalNativeFlowUnchanged": true,
+  "scope": "Rendered retry and stale-measurement boundaries only; not a claim about actual native failure causality, release readiness or whole-system conformance."
+}

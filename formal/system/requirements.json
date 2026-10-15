@@ -10648,6 +10648,91 @@
       "property": "For N in{4,8,16,32}, decoding repeated%FF preserves the input and makes1..8N+8 built-in decode calls; legacy0.2.2 violates that same oracle atN=32. Actual query-string7 remains callable and preserves covered query semantics.",
       "verification": "Actual-consumer Jest tests, deterministic Unicode properties, genuine old-release and unadapted-namespace controls; clean npm installation and native bundle checks.",
       "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
+    },
+    {
+      "id": "SOC-FOCUS-001",
+      "title": "Automatic exact-reply focus survives asynchronous native layout changes",
+      "statement": "A permitted comment notification destination must open its canonical context and automatically reveal the exact linked reply before announcing focus. Before user interaction, a later content-layout change must invalidate prior measurements and restart bounded focus retries; user interaction or unmount must stop automatic positioning.",
+      "domain": "SOC",
+      "critical": false,
+      "actors": [
+        "Reader opening a comment notification",
+        "Screen-reader user"
+      ],
+      "preconditions": [
+        "A valid comment destination resolves through the backend under the current actor; its reply and context remain permitted."
+      ],
+      "inputs": [
+        "Canonical comment destination and context",
+        "List and native heading/viewport measurements",
+        "Content layout events",
+        "User touch/scroll and component unmount"
+      ],
+      "state": {
+        "initial": "waiting-for-layout",
+        "terminal": [
+          "user-controlled",
+          "unmounted",
+          "stable-layout-retry-budget-exhausted"
+        ],
+        "states": [
+          "waiting-for-layout",
+          "anchoring",
+          "confirmed",
+          "layout-invalidated",
+          "user-controlled",
+          "unmounted",
+          "stable-layout-retry-budget-exhausted"
+        ]
+      },
+      "allowedTransitions": [
+        "waiting-for-layout -> anchoring after list, summary and target index exist",
+        "anchoring -> confirmed only after current native measurements place the target heading in the upper half of the viewport with room for its body",
+        "confirmed -> layout-invalidated -> anchoring on late content layout before user interaction",
+        "anchoring -> stable-layout-retry-budget-exhausted after at most120 attempts for that stable layout",
+        "any mounted state -> user-controlled on explicit user interaction; any state -> unmounted on component removal"
+      ],
+      "forbiddenTransitions": [
+        "Announce focus from an earlier layout measurement or a stale virtualized visibility token.",
+        "Stop all retries after the first temporarily unavailable measurement of a changed layout.",
+        "Continue automatic scrolling after the reader starts interacting.",
+        "Replace automatic exact-reply visibility with a manual test scroll."
+      ],
+      "effects": [
+        "Reveal the target reply, retain its parent/thread context and announce the linked comment at most once per mounted destination."
+      ],
+      "authorization": "Backend destination, context and summary remain authoritative; navigation does not grant access. Account/destination changes remount discussion state.",
+      "privacy": "Do not record comment bodies, actor identities or credentials in focus diagnostics. Verification uses synthetic fixtures.",
+      "concurrency": "Native measurements are asynchronous. A content-layout epoch invalidates callbacks from previous layouts; effects cancel old retry timers on revision changes and unmount.",
+      "idempotency": "Repeated viewability callbacks do not duplicate the accessibility announcement; repeated layout events restart only the current bounded positioning attempt.",
+      "failure": "A zero/unavailable measurement is not success. Retry within the stable-layout budget without announcing invisible content; preserve user control and existing unavailable/access-denied states.",
+      "recovery": "A later content-layout event before user interaction re-arms bounded positioning. No server mutation or rollback is involved.",
+      "observability": "Retain exact Mobile/root pins, native build/interaction run identities and source-bound rendered regression and negative-control receipts. A passing rendered test is not a native interaction pass.",
+      "source": "docs/interactions/implementation.md automatic exact-reply focus contract; original tdf-mobile/e2e/interactions/notification-edit-delete.yaml; observed Android failure at root59b/Mobilee5; AUTHORITY-MOBILE-EXACT-REPLY-001",
+      "contract": "formal/system/requirements.json",
+      "implementation": [
+        "tdf-mobile/src/features/interactions/DiscussionScreen.tsx"
+      ],
+      "tests": [
+        "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
+        "tdf-mobile/e2e/interactions/notification-edit-delete.yaml",
+        "scripts/interactions/test-native.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for the reproduced retry/stale-callback boundaries; the observed Android failure cause and native repair outcome remain unverified.",
+      "ambiguity": [
+        "The Android screenshot alone does not identify whether cancellation, native measurements or competing scroll requests caused the original failure.",
+        "Native screen-reader behavior, orientation-only changes and retry-exhaustion UX are not established by rendered regressions."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Two source-derived rendered regressions and negative controls cover late-layout retry and stale measurements; exact repaired native artifacts and unchanged installed journeys remain required."
+      },
+      "authority": "AUTHORITY-MOBILE-EXACT-REPLY-001 reconciles the documented automatic focus contract with the original native acceptance test; existing implementation failure does not redefine product intent.",
+      "property": "Automatic focus completion requires current-layout visible evidence; layout invalidation cannot strand an otherwise permitted destination after one unavailable measurement; user control cancels anchoring.",
+      "verification": "Rendered React Native tests reproduce old retry failure and detect removal of the layout-epoch guard. Fresh installed Android/iOS journeys must retain the original automatic-visibility assertion. No formal refinement proof.",
+      "evidence": "formal/system/evidence/2026-10-15-mobile-discussion-focus/observations.json"
     }
   ]
 }

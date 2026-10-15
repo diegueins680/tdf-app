@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "e5fdf59663f4c7ef26be06521dd44abc816559cc",
+  "mobileRevision": "55bd225cfbbf5444cea83bafc44ca601bcb49947",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -10649,6 +10649,91 @@
       "property": "For N in{4,8,16,32}, decoding repeated%FF preserves the input and makes1..8N+8 built-in decode calls; legacy0.2.2 violates that same oracle atN=32. Actual query-string7 remains callable and preserves covered query semantics.",
       "verification": "Actual-consumer Jest tests, deterministic Unicode properties, genuine old-release and unadapted-namespace controls; clean npm installation and native bundle checks.",
       "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
+    },
+    {
+      "id": "SOC-FOCUS-001",
+      "title": "Automatic exact-reply focus survives asynchronous native layout changes",
+      "statement": "A permitted comment notification destination must open its canonical context and automatically reveal the exact linked reply before announcing focus. Before user interaction, a later content-layout change must invalidate prior measurements and restart bounded focus retries; user interaction or unmount must stop automatic positioning.",
+      "domain": "SOC",
+      "critical": false,
+      "actors": [
+        "Reader opening a comment notification",
+        "Screen-reader user"
+      ],
+      "preconditions": [
+        "A valid comment destination resolves through the backend under the current actor; its reply and context remain permitted."
+      ],
+      "inputs": [
+        "Canonical comment destination and context",
+        "List and native heading/viewport measurements",
+        "Content layout events",
+        "User touch/scroll and component unmount"
+      ],
+      "state": {
+        "initial": "waiting-for-layout",
+        "terminal": [
+          "user-controlled",
+          "unmounted",
+          "stable-layout-retry-budget-exhausted"
+        ],
+        "states": [
+          "waiting-for-layout",
+          "anchoring",
+          "confirmed",
+          "layout-invalidated",
+          "user-controlled",
+          "unmounted",
+          "stable-layout-retry-budget-exhausted"
+        ]
+      },
+      "allowedTransitions": [
+        "waiting-for-layout -> anchoring after list, summary and target index exist",
+        "anchoring -> confirmed only after current native measurements place the target heading in the upper half of the viewport with room for its body",
+        "confirmed -> layout-invalidated -> anchoring on late content layout before user interaction",
+        "anchoring -> stable-layout-retry-budget-exhausted after at most120 attempts for that stable layout",
+        "any mounted state -> user-controlled on explicit user interaction; any state -> unmounted on component removal"
+      ],
+      "forbiddenTransitions": [
+        "Announce focus from an earlier layout measurement or a stale virtualized visibility token.",
+        "Stop all retries after the first temporarily unavailable measurement of a changed layout.",
+        "Continue automatic scrolling after the reader starts interacting.",
+        "Replace automatic exact-reply visibility with a manual test scroll."
+      ],
+      "effects": [
+        "Reveal the target reply, retain its parent/thread context and announce the linked comment at most once per mounted destination."
+      ],
+      "authorization": "Backend destination, context and summary remain authoritative; navigation does not grant access. Account/destination changes remount discussion state.",
+      "privacy": "Do not record comment bodies, actor identities or credentials in focus diagnostics. Verification uses synthetic fixtures.",
+      "concurrency": "Native measurements are asynchronous. A content-layout epoch invalidates callbacks from previous layouts; effects cancel old retry timers on revision changes and unmount.",
+      "idempotency": "Repeated viewability callbacks do not duplicate the accessibility announcement; repeated layout events restart only the current bounded positioning attempt.",
+      "failure": "A zero/unavailable measurement is not success. Retry within the stable-layout budget without announcing invisible content; preserve user control and existing unavailable/access-denied states.",
+      "recovery": "A later content-layout event before user interaction re-arms bounded positioning. No server mutation or rollback is involved.",
+      "observability": "Retain exact Mobile/root pins, native build/interaction run identities and source-bound rendered regression and negative-control receipts. A passing rendered test is not a native interaction pass.",
+      "source": "docs/interactions/implementation.md automatic exact-reply focus contract; original tdf-mobile/e2e/interactions/notification-edit-delete.yaml; observed Android failure at root59b/Mobilee5; AUTHORITY-MOBILE-EXACT-REPLY-001",
+      "contract": "formal/system/requirements.json",
+      "implementation": [
+        "tdf-mobile/src/features/interactions/DiscussionScreen.tsx"
+      ],
+      "tests": [
+        "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
+        "tdf-mobile/e2e/interactions/notification-edit-delete.yaml",
+        "scripts/interactions/test-native.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for the reproduced retry/stale-callback boundaries; the observed Android failure cause and native repair outcome remain unverified.",
+      "ambiguity": [
+        "The Android screenshot alone does not identify whether cancellation, native measurements or competing scroll requests caused the original failure.",
+        "Native screen-reader behavior, orientation-only changes and retry-exhaustion UX are not established by rendered regressions."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Two source-derived rendered regressions and negative controls cover late-layout retry and stale measurements; exact repaired native artifacts and unchanged installed journeys remain required."
+      },
+      "authority": "AUTHORITY-MOBILE-EXACT-REPLY-001 reconciles the documented automatic focus contract with the original native acceptance test; existing implementation failure does not redefine product intent.",
+      "property": "Automatic focus completion requires current-layout visible evidence; layout invalidation cannot strand an otherwise permitted destination after one unavailable measurement; user control cancels anchoring.",
+      "verification": "Rendered React Native tests reproduce old retry failure and detect removal of the layout-epoch guard. Fresh installed Android/iOS journeys must retain the original automatic-visibility assertion. No formal refinement proof.",
+      "evidence": "formal/system/evidence/2026-10-15-mobile-discussion-focus/observations.json"
     }
   ],
   "sourceFingerprints": {
@@ -10951,6 +11036,7 @@
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
+    "scripts/interactions/test-native.py": "899c8199d91af4b6dff12dc154663fefacfb3cea94c640db98d2a374d4a4af97",
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
@@ -11654,6 +11740,7 @@
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
+    "tdf-mobile/e2e/interactions/notification-edit-delete.yaml": "dac0a472bbe6e8b208bb3ccdf2a297a8f5790c4bd619aa6a0cd7ffc996056857",
     "tdf-mobile/jest.config.js": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
     "tdf-mobile/package-lock.json": "50bda772355ed38f4eacc3ac15274f64f7421616c2979328da18c7ee421b2f67",
     "tdf-mobile/package.json": "cc342409add828358cdb6fd927b5123e1972f69bd6077eddc21091ec7ab8d5f2",
@@ -11679,6 +11766,8 @@
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "002a26af650ad454a8d20027c18cbb1299ce4e78d94815a810221890908d7d1a",
+    "tdf-mobile/src/features/interactions/DiscussionScreen.tsx": "c5ffcacfb579a5596dc2c23aea9c642a4357b3829cfa503e9165aa89ffd8d2ad",
+    "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx": "64090ddc96202f42ddd75c6e3275836eaeaa677b9eeaa89f100f7d81f4871107",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -19900,6 +19989,30 @@
         "requirement": "SYS-URI-DECODE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-mobile/src/features/interactions/DiscussionScreen.tsx": [
+      {
+        "requirement": "SOC-FOCUS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx": [
+      {
+        "requirement": "SOC-FOCUS-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/e2e/interactions/notification-edit-delete.yaml": [
+      {
+        "requirement": "SOC-FOCUS-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/interactions/test-native.py": [
+      {
+        "requirement": "SOC-FOCUS-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -22424,7 +22537,12 @@
       "path": "scripts/interactions/test-native.py",
       "sha256": "899c8199d91af4b6dff12dc154663fefacfb3cea94c640db98d2a374d4a4af97",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-FOCUS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b7108336da7c8a87",
@@ -42244,7 +42362,12 @@
       "path": "tdf-mobile/e2e/interactions/notification-edit-delete.yaml",
       "sha256": "dac0a472bbe6e8b208bb3ccdf2a297a8f5790c4bd619aa6a0cd7ffc996056857",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-FOCUS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b829ff7cf22a0fcf",
@@ -43190,9 +43313,14 @@
     {
       "id": "SURFACE-fd82e086c17780e7",
       "path": "tdf-mobile/src/features/interactions/DiscussionScreen.tsx",
-      "sha256": "2b0e3d1d0ce84b6dbbc0d30f38a2b3f5cab60d795f94a1e8c2f8d2726e713c85",
+      "sha256": "c5ffcacfb579a5596dc2c23aea9c642a4357b3829cfa503e9165aa89ffd8d2ad",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-FOCUS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b17f9226e2e3f988",
@@ -43204,9 +43332,14 @@
     {
       "id": "SURFACE-499f915882243564",
       "path": "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
-      "sha256": "25307a48e0d9a6c0ace5d569bc21515ba5a0242d639e75dc0cfa704c0e6e4c7f",
+      "sha256": "64090ddc96202f42ddd75c6e3275836eaeaa677b9eeaa89f100f7d81f4871107",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-FOCUS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f7d9103ac417db69",
@@ -44162,7 +44295,6 @@
     "SURFACE-997e028a6a9a38c3",
     "SURFACE-82a0269472e8ef0e",
     "SURFACE-837e02c297524cce",
-    "SURFACE-f7cfb7f13090b47a",
     "SURFACE-b7108336da7c8a87",
     "SURFACE-4738d9e01ae03383",
     "SURFACE-596444d6be3be153",
@@ -45578,7 +45710,6 @@
     "SURFACE-989de44a8780a81d",
     "SURFACE-8c3d85e55112c564",
     "SURFACE-e7f34b7e9d35ef1a",
-    "SURFACE-26d4bbe67ba88a02",
     "SURFACE-b829ff7cf22a0fcf",
     "SURFACE-57a42acf67b568ed",
     "SURFACE-a73807f4c8a7c717",
@@ -45666,9 +45797,7 @@
     "SURFACE-58dc9c7e3bda7226",
     "SURFACE-be2be2cfc49a8dc1",
     "SURFACE-c1ccdbcd91d58796",
-    "SURFACE-fd82e086c17780e7",
     "SURFACE-b17f9226e2e3f988",
-    "SURFACE-499f915882243564",
     "SURFACE-f7d9103ac417db69",
     "SURFACE-44f9049b317d873e",
     "SURFACE-ac457e7680793333",
@@ -46917,7 +47046,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a531e546453218b32c4415816da3933368b0a6978cc1b123fe29cbeae625a056",
+      "sourceSha256": "ce783befbffd33ddf10230579801f4d97fafb5554e9b3e5aaa504b1e1407c8ab",
       "definition": {
         "states": [
           "absent",
@@ -69149,7 +69278,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 130,
+    "PARTIAL": 131,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
