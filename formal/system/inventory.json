@@ -5673,7 +5673,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cae443b5b1a1d5459a112f9a37e20a4ef6be08544c4d5673cc0b5e47df464fc6",
+      "sha256": "e54b39d12178e86092c1b0afe1ca088bd0170bf8b8cb7c20259be2270ec39629",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21815,6 +21815,62 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/DriveReplay.cfg",
+      "sha256": "4269a173b57b22ee27491b3dcb2ac14d9eb2b06a4a4a7143cf2c2a062939fec6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DriveReplay.tla",
+      "sha256": "91ad66dc2f6b14a15daaaa5a7b727bda677c1c5e3f41ccbad726f05409153dfd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/DriveReplayActorIgnored.cfg",
+      "sha256": "6238ffd18f9c31777937297fa32be1800361705a989f315e291f3b56d15e8096",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DriveReplayCrossFolder.cfg",
+      "sha256": "33a890c47fd4bf18a41cc1f868ac3788b0e364bb42e5150b435e98ab9d4c01ad",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DriveReplayCrossFolderObjects.cfg",
+      "sha256": "ef1af3c4f2c6214b876446b146e8719890987ff0593f6703ad1790fb6d4eab91",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+      "sha256": "a3fe9971114d1f19c88d5aa45c6758d40b4a1c113873f9db1cee9cea52997462",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DriveReplayRace.cfg",
+      "sha256": "20f5ac3591b3342afa3e432ce2e80c68c72259577688b2bc98d7f269b0c1050a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DriveReplayUnchecked.cfg",
+      "sha256": "2bf51aafda6d0337f8422f35052aaecfd47c55de5e63c307906cb1623a9ce491",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/EventLifecycle.cfg",
       "sha256": "acc8eb27d52d4565654f77be0fbd9eb144fa5843e2aa11f98a8ad01b76be1159",
       "authority": "inferred",
@@ -22964,7 +23020,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "5dbdf812b042d3e5ff177904154bb4b88384f4794c6692d58e1ff00d1ab20369",
+      "sha256": "38e9178f7d1f9edbd0ba93edd9abfa0b87371b2e2624d1173ca4c14e3bdb3ec6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24504,7 +24560,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e58f0ca38df1369384dff84dfe20ee0c5f270f3e65da33e7afad166815053d23",
+      "sha256": "f51f34aab6fc105db9d03900f4c4c83ab1f65deb7ad8ee7fa75ddb9e4193d218",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24588,7 +24644,7 @@
     },
     {
       "path": "formal/system/drive-replay.md",
-      "sha256": "2d6194a8c331d81e5d1499aeb980cf6e0a5f2457d35e0f8f7d84a8d7f5e6729b",
+      "sha256": "ecc2a7fcedb1a178b68e7fcdfec2bbef4f2004e1fe5351032abeff7fa4d40b99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24833,7 +24889,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ff252661644b5658486a6a0ff39ccf661f311f493eed40c1cb861e24214d26",
+      "sha256": "2daa1332dc807feb85ad1d1515de8011c7169532fe9c9e843b16af91d1438b22",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33060,6 +33116,118 @@
         "INVARIANTS AuthorizedDispatch CurrentSessionReceipt PersistedReceipt",
         "PROPERTY RequestSettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  FingerprintChecked = TRUE",
+        "  ActorBound = TRUE",
+        "  LegacyRejected = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ReuseBinds",
+        "  NoForeignReuse",
+        "  NoLegacyAdoption",
+        "  ConflictNoMutation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplayActorIgnored.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  FingerprintChecked = TRUE",
+        "  ActorBound = FALSE",
+        "  LegacyRejected = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoForeignReuse"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplayCrossFolder.cfg",
+      "declarations": [
+        "SPECIFICATION CrossFolderSpec",
+        "CONSTANTS",
+        "  FingerprintChecked = TRUE",
+        "  ActorBound = TRUE",
+        "  LegacyRejected = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ReuseBinds",
+        "  NoForeignReuse",
+        "  NoLegacyAdoption",
+        "  ConflictNoMutation",
+        "  CrossFolderCreates"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplayCrossFolderObjects.cfg",
+      "declarations": [
+        "SPECIFICATION CrossFolderSpec",
+        "CONSTANTS",
+        "  FingerprintChecked = TRUE",
+        "  ActorBound = TRUE",
+        "  LegacyRejected = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  SingleObject"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplayLegacyAdopted.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  FingerprintChecked = TRUE",
+        "  ActorBound = TRUE",
+        "  LegacyRejected = FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoLegacyAdoption"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplayRace.cfg",
+      "declarations": [
+        "SPECIFICATION SameFolderSpec",
+        "CONSTANTS",
+        "  FingerprintChecked = TRUE",
+        "  ActorBound = TRUE",
+        "  LegacyRejected = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  SingleObject"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DriveReplayUnchecked.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  FingerprintChecked = FALSE",
+        "  ActorBound = TRUE",
+        "  LegacyRejected = TRUE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  ReuseBinds"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
