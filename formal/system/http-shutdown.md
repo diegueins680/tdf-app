@@ -18,12 +18,17 @@ unfinished startup. Startup no longer needs to finish database retries before an
 already-listening server can finish stopping. Uninterruptible foreign calls can
 still delay Haskell cancellation. There is no hard global process deadline.
 
-The Haskell supervisor tests cover all four outcomes. The source-bound subprocess
+The Haskell supervisor tests cover all four outcomes. The extracted startup retry
+boundary uses `safe-exceptions` so asynchronous cancellation is never retried;
+four additional cases cover recovery, exhaustion and cancellation during an
+attempt or retry pause. The subprocess waits for a retry-attempt marker before
+stopping the process, so a plain sleep cannot conceal swallowed cancellation. The source-bound subprocess
 runner uses actual loopback HTTP, SIGTERM and SIGINT: an accepted held request
 finishes, a new connection is refused during the drain, a stuck request cannot
 fabricate success, unfinished startup is cancelled, and startup/bind failures exit
-nonzero. Two actual source mutations independently remove listener closure or the
-request grace interval and fail named assertions. No production data or provider
+nonzero. Three actual source mutations independently remove listener closure, the request
+grace interval or cancellation propagation in the retry boundary and fail named
+assertions. No production data or provider
 is involved. Run with the Stack-selected toolchain:
 
 ```sh

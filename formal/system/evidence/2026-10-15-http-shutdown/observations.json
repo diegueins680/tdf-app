@@ -4,17 +4,18 @@
   "scope": "Focused source-bound local POSIX/Warp execution and bounded model, not complete current-root backend/container/deployed qualification.",
   "sourceFingerprints": {
     "tdf-hq/src/TDF/App/Shutdown.hs": "5ccd6691f0a3427dcf46f9d1e24b85dce3f398726ea8ac6d0eb8f7b94169135f",
-    "tdf-hq/src/TDF/App/Boot.hs": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
-    "tdf-hq/test/HttpShutdownMain.hs": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
-    "tdf-hq/test/TDF/ShutdownSpec.hs": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
-    "scripts/verify-http-shutdown.py": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
+    "tdf-hq/src/TDF/App/Boot.hs": "257321c99eeee6110e8ef8fc333d7d2349d06f166d7e3220cbd8ec809f24307d",
+    "tdf-hq/test/HttpShutdownMain.hs": "1d7e97b377967d85775ffebdea5b4f50ace01af30518d33f639cd8bd4a28459a",
+    "tdf-hq/test/TDF/ShutdownSpec.hs": "77af659867ada779fe28c98cbdf7bc1652dd54ac277e86ae5f934a2ea391be61",
+    "scripts/verify-http-shutdown.py": "48aa4fdf9f5fbefb7831bb8737271eeb6bf9a9ac0561f6149ea8a5ed318386b5",
     "formal/event-operations/HttpShutdown.tla": "1b17feb0088ccb82e50fae144bed7e59d6bf0022d1503d0bfa1d553b86e35884",
     "formal/event-operations/HttpShutdown.cfg": "c483027b07479d3e14176f33d36c20b17ffa4db34bae0a0a343b5bb07a8a901f",
     "formal/event-operations/HttpShutdownOpenListener.cfg": "c4cdf620af0a20ba7b6453c9ad663c478db14fa950ebae461605e38aeb593b4f",
     "formal/event-operations/HttpShutdownEarlyAbort.cfg": "94ef4964eec37298020425b5a32a5607246d4e23c67fd1e38259a6df32590802",
-    "formal/event-operations/HttpShutdownSwallowFailure.cfg": "f588e289a650da4fa231aed6df392b2cd871050cd93a88e6846c868ae0d98f29"
+    "formal/event-operations/HttpShutdownSwallowFailure.cfg": "f588e289a650da4fa231aed6df392b2cd871050cd93a88e6846c868ae0d98f29",
+    "tdf-hq/src/TDF/App/StartupRetry.hs": "c75d46205cecff4c5f4ad886c102abd540e92f8004670e0409a03de24ba38f34"
   },
-  "supervisorExamples": 4,
+  "supervisorExamples": 8,
   "actualRuntime": [
     {
       "control": "intended",
@@ -24,7 +25,7 @@
           "scenario": "hold",
           "signal": "SIGTERM",
           "exitCode": 0,
-          "elapsedSeconds": 1.522,
+          "elapsedSeconds": 1.518,
           "acceptedRequestCompleted": true,
           "repeatedSignals": false
         },
@@ -32,7 +33,7 @@
           "scenario": "hold",
           "signal": "SIGINT",
           "exitCode": 0,
-          "elapsedSeconds": 1.521,
+          "elapsedSeconds": 1.518,
           "acceptedRequestCompleted": true,
           "repeatedSignals": false
         },
@@ -40,7 +41,7 @@
           "scenario": "hold",
           "signal": "SIGTERM",
           "exitCode": 0,
-          "elapsedSeconds": 1.518,
+          "elapsedSeconds": 1.519,
           "acceptedRequestCompleted": true,
           "repeatedSignals": true
         },
@@ -48,7 +49,7 @@
           "scenario": "stuck",
           "signal": "SIGTERM",
           "exitCode": 0,
-          "elapsedSeconds": 5.033,
+          "elapsedSeconds": 5.065,
           "acceptedRequestCompleted": false,
           "repeatedSignals": false
         },
@@ -56,7 +57,7 @@
           "scenario": "startup-wait",
           "signal": "SIGTERM",
           "exitCode": 0,
-          "elapsedSeconds": 0.017,
+          "elapsedSeconds": 0.016,
           "acceptedRequestCompleted": false,
           "repeatedSignals": false
         },
@@ -81,9 +82,14 @@
       "control": "no-request-drain",
       "status": "detected",
       "assertion": "accepted request must finish during graceful drain"
+    },
+    {
+      "control": "swallowed-startup-cancellation",
+      "status": "detected",
+      "assertion": "HTTP drain must remain bounded"
     }
   ],
-  "actualRuntimeLogSha256": "aa07769d50e00221b6c51198aa22e57637648a68980b5fd4870423e5a3f75b9d",
+  "actualRuntimeLogSha256": "0797f07e77f855b97b00285e11e970ed9a9ab7dc4af2de0b22e0e633544e6d7a",
   "boundedModel": [
     {
       "configuration": "HttpShutdown.cfg",
@@ -133,5 +139,6 @@
     "Linux PID1 immutable candidate-image qualification",
     "Worker/external-effect fencing",
     "Production rollout and observations"
-  ]
+  ],
+  "correctedReviewFinding": "Boot previously retried SomeException including cancellation. Actual retry boundary now preserves async cancellation; controlled unsafe catch mutation is detected during a witnessed retry attempt."
 }

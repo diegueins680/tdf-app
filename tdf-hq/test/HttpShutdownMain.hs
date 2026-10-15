@@ -11,6 +11,7 @@ import System.Environment (getArgs)
 import System.IO (BufferMode (LineBuffering), hSetBuffering, stdout)
 import System.Posix.Signals (Handler (Ignore), installHandler, sigINT, sigTERM)
 import TDF.App.Shutdown (runManagedWarp)
+import TDF.App.StartupRetry (retryStartup)
 
 main :: IO ()
 main = do
@@ -18,7 +19,7 @@ main = do
   [port, mode] <- getArgs
   let initialize = (case mode of
         "startup-failure" -> threadDelay 100000 >> ioError (userError "synthetic startup failure")
-        "startup-wait" -> threadDelay 30000000
+        "startup-wait" -> retryStartup 5 (\_ -> threadDelay 5000000) (putStrLn "retry-attempt-started" >> threadDelay 30000000)
         _ -> pure ()) `finally` putStrLn "startup-finished"
       settings = Warp.setBeforeMainLoop (putStrLn "listening") $
         Warp.setPort (read port) $ Warp.setHost "127.0.0.1" Warp.defaultSettings

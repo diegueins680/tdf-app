@@ -10798,13 +10798,14 @@
       "privacy": "Synthetic loopback fixtures and source hashes only; no production credentials or customer data.",
       "concurrency": "Scoped async supervision cancels the peer; completion/cancellation is cooperative. Five seconds is Warp request grace, not a hard whole-process wall-clock guarantee. Background forks are excluded.",
       "idempotency": "One atomic stop flag binds both signals to one listener close action; repeated signals are harmless during the managed scope.",
-      "failure": "Startup/listener exceptions propagate and must exit nonzero; overdue accepted work may be disconnected and must not receive fabricated success.",
+      "failure": "Startup/listener exceptions propagate and must exit nonzero; overdue accepted work may be disconnected and must not receive fabricated success. Asynchronous cancellation during a startup operation or retry pause propagates without entering another retry.",
       "recovery": "A process restart and client retry still need applicable mutation receipts/reconciliation. This requirement does not authorize retries of uncertain external effects.",
       "observability": "Bind subprocess/model results, negative controls, exact source and release image to receipts; retain failed fixture setup separately.",
       "implementation": [
         "tdf-hq/src/TDF/App/Shutdown.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/src/TDF/App/StartupRetry.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ShutdownSpec.hs",
@@ -10823,7 +10824,7 @@
         "Worker/external-effect drainage and fencing are separate open release obligations."
       ],
       "property": "No new admission after listener close; bounded cooperative HTTP drain; observed failure cannot become successful process result; completed server cannot leave pending initialization.",
-      "verification": "Four canonical Haskell supervisor cases; seven real subprocess scenarios; two runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
+      "verification": "Eight canonical Haskell supervisor/retry cases; seven real subprocess scenarios; three runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
       "evidence": "Source-bound local receipts; exact release image and deployed observations remain required.",
       "conformance": {
         "classification": "PARTIAL",

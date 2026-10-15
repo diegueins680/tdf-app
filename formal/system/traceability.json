@@ -10799,13 +10799,14 @@
       "privacy": "Synthetic loopback fixtures and source hashes only; no production credentials or customer data.",
       "concurrency": "Scoped async supervision cancels the peer; completion/cancellation is cooperative. Five seconds is Warp request grace, not a hard whole-process wall-clock guarantee. Background forks are excluded.",
       "idempotency": "One atomic stop flag binds both signals to one listener close action; repeated signals are harmless during the managed scope.",
-      "failure": "Startup/listener exceptions propagate and must exit nonzero; overdue accepted work may be disconnected and must not receive fabricated success.",
+      "failure": "Startup/listener exceptions propagate and must exit nonzero; overdue accepted work may be disconnected and must not receive fabricated success. Asynchronous cancellation during a startup operation or retry pause propagates without entering another retry.",
       "recovery": "A process restart and client retry still need applicable mutation receipts/reconciliation. This requirement does not authorize retries of uncertain external effects.",
       "observability": "Bind subprocess/model results, negative controls, exact source and release image to receipts; retain failed fixture setup separately.",
       "implementation": [
         "tdf-hq/src/TDF/App/Shutdown.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/src/TDF/App/StartupRetry.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ShutdownSpec.hs",
@@ -10824,7 +10825,7 @@
         "Worker/external-effect drainage and fencing are separate open release obligations."
       ],
       "property": "No new admission after listener close; bounded cooperative HTTP drain; observed failure cannot become successful process result; completed server cannot leave pending initialization.",
-      "verification": "Four canonical Haskell supervisor cases; seven real subprocess scenarios; two runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
+      "verification": "Eight canonical Haskell supervisor/retry cases; seven real subprocess scenarios; three runtime source mutations; bounded TLC safety/liveness with three failing controls. No universal proof or formal runtime refinement.",
       "evidence": "Source-bound local receipts; exact release image and deployed observations remain required.",
       "conformance": {
         "classification": "PARTIAL",
@@ -11268,7 +11269,7 @@
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "e3907a0a7b532de3b48ad41ed80c237803672080662bdc5be6b45923cc45f054",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
-    "scripts/verify-http-shutdown.py": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
+    "scripts/verify-http-shutdown.py": "48aa4fdf9f5fbefb7831bb8737271eeb6bf9a9ac0561f6149ea8a5ed318386b5",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -11617,11 +11618,12 @@
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "482550244d657c508ae4ac02fab442d72054ebce72f9ba7d487f69c449c0b180",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
+    "tdf-hq/src/TDF/App/Boot.hs": "257321c99eeee6110e8ef8fc333d7d2349d06f166d7e3220cbd8ec809f24307d",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "329515f872f5de476c120213d0cb2127087488333bd75803e0523aa2f20200fd",
     "tdf-hq/src/TDF/App/Shutdown.hs": "5ccd6691f0a3427dcf46f9d1e24b85dce3f398726ea8ac6d0eb8f7b94169135f",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
+    "tdf-hq/src/TDF/App/StartupRetry.hs": "c75d46205cecff4c5f4ad886c102abd540e92f8004670e0409a03de24ba38f34",
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
@@ -11718,8 +11720,8 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "1ef8179df3934d673b4784940ac2a34a7fbb2b4e7acc2c0d3f588ec4758116f6",
-    "tdf-hq/test/HttpShutdownMain.hs": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
+    "tdf-hq/tdf-hq.cabal": "2ed0d7dfa59791e9f4fe619ed4ce38187ebac11021fbdd20ae436443a8b767d1",
+    "tdf-hq/test/HttpShutdownMain.hs": "1d7e97b377967d85775ffebdea5b4f50ace01af30518d33f639cd8bd4a28459a",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
@@ -11763,7 +11765,7 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "79190c64a5cbb197d121119f5abe841e4c8a241f8fa162c9b7a6f237e67504cb",
     "tdf-hq/test/TDF/ServerSpec.hs": "80fafbc73d309a13de458342124305a8b75f0cc8adfda3c68706d2291c3f948d",
-    "tdf-hq/test/TDF/ShutdownSpec.hs": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
+    "tdf-hq/test/TDF/ShutdownSpec.hs": "77af659867ada779fe28c98cbdf7bc1652dd54ac277e86ae5f934a2ea391be61",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "fd4185d685f407ba3dc7c0775abf1221258cd6153859df68198a3f0a1d22aae8",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "2cf526501ba7c9b310916ba6ea78dfa7e2176f6421fa857ee1626e161c4cd92b",
@@ -20169,6 +20171,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/App/StartupRetry.hs": [
+      {
+        "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/ShutdownSpec.hs": [
       {
         "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
@@ -25974,7 +25982,7 @@
     {
       "id": "SURFACE-d5932c3e0804ef13",
       "path": "scripts/verify-http-shutdown.py",
-      "sha256": "c36e0ee24c717ebcfa90198069ee9f45f413b7c43f6bcfc52d83b679211b184e",
+      "sha256": "48aa4fdf9f5fbefb7831bb8737271eeb6bf9a9ac0561f6149ea8a5ed318386b5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37149,7 +37157,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "0838a2466b27229612863144d8015be08cb6cc6bb47e50ca017d2c54cc561662",
+      "sha256": "257321c99eeee6110e8ef8fc333d7d2349d06f166d7e3220cbd8ec809f24307d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -37214,6 +37222,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8a9ccdbe81b5c06a",
+      "path": "tdf-hq/src/TDF/App/StartupRetry.hs",
+      "sha256": "c75d46205cecff4c5f4ad886c102abd540e92f8004670e0409a03de24ba38f34",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-HTTP-SHUTDOWN-001",
           "relationship": "implementation"
         }
       ]
@@ -39451,7 +39471,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1ef8179df3934d673b4784940ac2a34a7fbb2b4e7acc2c0d3f588ec4758116f6",
+      "sha256": "2ed0d7dfa59791e9f4fe619ed4ce38187ebac11021fbdd20ae436443a8b767d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39515,7 +39535,7 @@
     {
       "id": "SURFACE-73f8753880263822",
       "path": "tdf-hq/test/HttpShutdownMain.hs",
-      "sha256": "c1ae9e7975f9274f66724f75991081b56ff1d58ad6794c6f0b24a7d586064e15",
+      "sha256": "1d7e97b377967d85775ffebdea5b4f50ace01af30518d33f639cd8bd4a28459a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40383,7 +40403,7 @@
     {
       "id": "SURFACE-79dd1d28011aa447",
       "path": "tdf-hq/test/TDF/ShutdownSpec.hs",
-      "sha256": "8d8b578ca04db43763f8bc6e43fd363ac55bd37a57954eed82686ff74f2eca16",
+      "sha256": "77af659867ada779fe28c98cbdf7bc1652dd54ac277e86ae5f934a2ea391be61",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47341,7 +47361,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea631443d96bd0b2b72e78e2a4f26a5d9b56607d58ed2d9b37d439765a6865ad",
+      "sourceSha256": "84ebb23d45e55ab96db2093a575b1a32a98e6f54b04a6afdd235b5d5df5c954c",
       "definition": {
         "states": [
           "absent",

@@ -8,7 +8,8 @@ module TDF.App.Boot
   ) where
 
 import Control.Concurrent (threadDelay)
-import Control.Exception (SomeException, throwIO, try)
+import Control.Exception (throwIO)
+import qualified Control.Exception.Safe as Safe
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
@@ -95,6 +96,7 @@ import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.App.StartupResponse (startupApp)
 import TDF.App.Shutdown (runManagedWarp)
+import TDF.App.StartupRetry (retryStartup)
 import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException)
 import TDF.Trials.Models (migrateTrials)
 
@@ -497,19 +499,16 @@ restoreLegacyPartyRoles roles = do
       Right () -> pure ()
 
 makePoolWithRetry :: Int -> BS.ByteString -> IO ConnectionPool
-makePoolWithRetry retries connStr = do
-  result <- try (makePool connStr) :: IO (Either SomeException ConnectionPool)
-  case result of
-    Right pool -> pure pool
-    Left err ->
-      if retries <= 0
-        then do
-          putStrLn "Failed to connect to database after retries. Crashing."
-          throwIO err
-        else do
-          putStrLn $ "DB connection failed, retrying... attempts left: " <> show retries
-          threadDelay (5 * 1000 * 1000)
-          makePoolWithRetry (retries - 1) connStr
+makePoolWithRetry retries connStr =
+  Safe.catchAny
+    (retryStartup retries beforeRetry (makePool connStr))
+    (\err -> do
+      putStrLn "Failed to connect to database after retries. Crashing."
+      throwIO err)
+  where
+    beforeRetry remaining = do
+      putStrLn $ "DB connection failed, retrying... attempts left: " <> show remaining
+      threadDelay (5 * 1000 * 1000)
 
 columnExists :: Text -> SqlPersistT IO Bool
 columnExists column = do

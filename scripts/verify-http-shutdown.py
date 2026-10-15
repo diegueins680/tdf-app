@@ -17,6 +17,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parent.parent
 MODULE = 'tdf-hq/src/TDF/App/Shutdown.hs'
 FIXTURE = 'tdf-hq/test/HttpShutdownMain.hs'
+RETRY = 'tdf-hq/src/TDF/App/StartupRetry.hs'
 
 
 def check(condition, name):
@@ -43,6 +44,8 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
         reader = threading.Thread(target=consume, daemon=True)
         reader.start()
         def until(expected):
+            if expected in lines:
+                return
             deadline = time.monotonic()+8
             while time.monotonic() < deadline:
                 try:
@@ -63,6 +66,8 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
                 check(any(expected in line for line in lines), 'fixture must fail for the intended startup or bind error')
                 return {'scenario': scenario, 'exitCode': code, 'failurePropagated': True}
             until('listening')
+            if scenario == 'startup-wait':
+                until('retry-attempt-started')
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 def request():
                     with urllib.request.urlopen(f'http://127.0.0.1:{port}/'+scenario, timeout=8) as response:
@@ -84,6 +89,10 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
                         except (ConnectionRefusedError, ConnectionResetError):
                             closed = True
                             break
+                        except TimeoutError:
+                            # A SYN already racing the close is inconclusive;
+                            # only a subsequent explicit refusal proves closure.
+                            pass
                         time.sleep(.02)
                     check(closed and process.poll() is None, 'listener must close before accepted request completes')
                     if repeat_signal:
@@ -123,12 +132,13 @@ def exercise(binary, scenario, stop_signal=signal.SIGTERM, repeat_signal=False):
 
 
 def verify():
-    sources = {p: (ROOT/p).read_bytes() for p in (MODULE, FIXTURE)}
+    sources = {p: (ROOT/p).read_bytes() for p in (MODULE, FIXTURE, RETRY)}
     controls = [('intended', None, None),
         ('listener-not-closed', ('when first closeListener', 'when first (pure ())'),
          'listener must close before accepted request completes'),
         ('no-request-drain', ('Warp.setGracefulShutdownTimeout (Just 5)', 'Warp.setGracefulShutdownTimeout (Just 0)'),
-         'accepted request must finish during graceful drain')]
+         'accepted request must finish during graceful drain'),
+        ('swallowed-startup-cancellation', None, 'HTTP drain must remain bounded')]
     reports = []
     for name, mutation, expected in controls:
         with tempfile.TemporaryDirectory(prefix='tdf-http-shutdown-') as directory:
@@ -140,6 +150,12 @@ def verify():
             local_module = work/'TDF/App/Shutdown.hs'
             local_module.parent.mkdir(parents=True)
             local_module.write_text(module)
+            retry_module = sources[RETRY].decode()
+            if name == 'swallowed-startup-cancellation':
+                retry_module = retry_module.replace('import qualified Control.Exception.Safe as Safe',
+                    'import qualified Control.Exception.Safe as Safe\nimport qualified Control.Exception as Unsafe')
+                retry_module = retry_module.replace('Safe.tryAny operation', 'Unsafe.try operation')
+            (work/'TDF/App/StartupRetry.hs').write_text(retry_module)
             fixture = work/'Main.hs'
             fixture.write_bytes(sources[FIXTURE])
             binary = work/'probe'
@@ -150,7 +166,7 @@ def verify():
             check(build.returncode == 0, 'shutdown fixture compilation failed: '+build.stderr)
             if expected:
                 try:
-                    exercise(binary, 'hold')
+                    exercise(binary, 'startup-wait' if name == 'swallowed-startup-cancellation' else 'hold')
                 except AssertionError as error:
                     check(str(error) == expected, 'negative control failed for an unrelated reason: '+str(error))
                     reports.append({'control': name, 'status': 'detected', 'assertion': expected})
