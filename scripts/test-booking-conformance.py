@@ -716,6 +716,9 @@ try:
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
 
+    from public_routes_conformance import verify_public_route_denial
+    verify_public_route_denial(ROOT, http_port, check)
+
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)
 
