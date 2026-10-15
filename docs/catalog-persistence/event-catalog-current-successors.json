@@ -347,8 +347,8 @@
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 204,
-      "change": "append 2026-10-11_index_declarations_not_unique",
+      "valueCount": 205,
+      "change": "Append only the pure exact music minor-unit JSON encoder; preserve all 204 previous migration entries, SQL bytes and introduction commits. Historical review decisions remain provenance.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "5f2e374ddc077e6b8418",
