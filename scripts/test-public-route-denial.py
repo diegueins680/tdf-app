@@ -5,8 +5,10 @@ import tempfile
 import threading
 import unittest
 import uuid
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from lib.public_routes_conformance import verify_public_route_denial
@@ -50,12 +52,15 @@ class DenialSweepTest(unittest.TestCase):
             root = Path(directory)
             (root / 'formal/system').mkdir(parents=True)
             (root / 'formal/system/public-routes.json').write_text(json.dumps({'routes': routes}))
-            with ThreadingHTTPServer(('127.0.0.1', 0), Handler) as server:
+            with HTTPServer(('127.0.0.1', 0), Handler) as server:
                 thread = threading.Thread(target=server.serve_forever, daemon=True)
                 thread.start()
                 try:
-                    verify_public_route_denial(root, server.server_port,
-                                              lambda label, ok: checks.append((label, ok)))
+                    # Reuse transport setup; every request still reaches the local server.
+                    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                    with patch('urllib.request.build_opener', return_value=opener):
+                        verify_public_route_denial(root, server.server_port,
+                                                  lambda label, ok: checks.append((label, ok)))
                 finally:
                     server.shutdown()
                     thread.join(timeout=5)

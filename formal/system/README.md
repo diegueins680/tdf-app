@@ -5,6 +5,8 @@ conformance and delivery are not yet established.** The prior audit remains in
 [history-2026-09-20.md](history-2026-09-20.md), with its original limitations.
 Historical green results are not current-candidate evidence.
 
+- [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
+
 ## Executable gates
 
 These checks make drift fail CI; run them before changing a mapped surface.
@@ -31,6 +33,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 
 - [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.
 
+- [meta-redelivery.md](meta-redelivery.md): a repeated or backfilled Instagram or Facebook message keeps its stored text, deletion and reply state; bounded model, three negative controls and PostgreSQL tests.
 - [logical-backup.md](logical-backup.md): scheduled archive source admission, private completion evidence and explicit recovery exclusions.
 
 - [mobile-query-isolation.md](mobile-query-isolation.md): shipped Mobile per-occurrence query cache isolation and actual-screen late-response regression.
@@ -63,6 +66,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
   declared lifecycle states and SQL transitions checked against the migrated schema (SYS-STATE-001).
 - [public-route-admission.md](public-route-admission.md) and [public-routes.json](public-routes.json):
   reviewed boundary for every unauthenticated compiled route (AUTH-PUBLIC-001).
+- [operations-inbound-capture.md](operations-inbound-capture.md): inbound messages stored by the application reach Operations once; trigger direction repair, bounded model, three negative controls and PostgreSQL tests.
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
 - [dependency-security.md](dependency-security.md): known-version regression floors, scan evidence and unresolved runtime/build-tool exposure.
@@ -71,15 +75,19 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [routed-read-boundaries.md](routed-read-boundaries.md): radio presence authentication and separate public/managed trial subject visibility.
 - [compiled-api-boundary.md](compiled-api-boundary.md): compiler-derived route discovery, OpenAPI correspondence and unresolved handler/codec boundaries.
 - [private-upload-persistence.md](private-upload-persistence.md): private attachment mount admission, legacy-file preservation and remaining coordinated recovery obligations.
+- [whatsapp-redelivery.md](whatsapp-redelivery.md): a redelivered WhatsApp message changes nothing and is not answered again; opt-out stored and applied in one transaction; bounded model, four negative controls and PostgreSQL tests.
+- [ticket-invoice-worker.md](ticket-invoice-worker.md): tax document submission worker rules, bounded model, four negative controls, PostgreSQL worker tests and the uncertain/rejected recovery gaps.
 - [whatsapp-consent.md](whatsapp-consent.md): double opt-in request, reply, withdrawal and undelivered-request rules with a bounded model, eight negative controls and PostgreSQL concurrency checks.
 - [access-grant.md](access-grant.md): reviewed access-request decisions, self-service correction (AUTHORITY-054), invitation-link claims, expiry repair and bounded negative controls.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
   them instead of maintaining another handwritten copy of their transitions.
 - [worker-completion.md](worker-completion.md): artist worker failure evidence, canonical target and scoped bounded completion checks.
+- [interaction-write-budget.md](interaction-write-budget.md): the per-account interaction write charge survives every outcome of the write, including database errors; bounded model, four negative controls and PostgreSQL tests.
+- [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, five negative controls, PostgreSQL tests and the open failed-attempt cancellation defect.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
-
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
+- [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
   and [identity-recovery.md](identity-recovery.md) define narrow verification
   boundaries. `formal/event-operations` and `formal/social` retain scoped
