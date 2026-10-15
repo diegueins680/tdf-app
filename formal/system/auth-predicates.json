@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "reviewedSources": {
     "tdf-hq/src/TDF/Auth.hs": "48c01b20abf00f87c301944e007e67e4dea1ba063558f5adadb8c1d9d55a30a4",
-    "tdf-hq/src/TDF/Models.hs": "dc258c58132e321fe330698b21f05d89e70edb68e001b5f0fd62e1a14c5feb89",
+    "tdf-hq/src/TDF/Models.hs": "ea779e770eecdec1391b130137642a4839e0585db40dd0ffe2dfedbd0dabcf1f",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "d6b48b8e83938c3067501501dff4138ed31eaf658a24e816c770c1add97d4c69"
+    "tdf-hq/tdf-hq.cabal": "36d9840e58a217858dda0017c6c833e46edc88ad1d512a1397873f7493f822e1"
   },
   "obligations": [
     {
