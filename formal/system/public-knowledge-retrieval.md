@@ -136,10 +136,12 @@ prove provider-side retention. That observation precedes delivery of this repair
 `PublicKnowledgeIndex.tla` models one refresh, zero or one captured public course,
 two private document classes and an initially mixed historical index. `Cleanup`, `Collect`,
 `Empty`, `Embed`, `Publish` and `Reject` represent committed legacy removal,
-collection, external disclosure, atomic public publication and failure. Provider failure, malformed response and database
+collection, external disclosure, atomic public publication and failure. Provider failure, malformed response and public-replacement
 rollback are abstracted by `Reject`; rejection before collection additionally
 represents invalid configuration after cleanup. Failed refresh preserves the original
-public subset. Freshness scheduling itself is tested in PostgreSQL, not modeled. The model assumes atomic database replacement
+public subset. Freshness scheduling and cleanup SQL failure are tested in PostgreSQL, not
+modeled. `Cleanup` models a successful committed purge; the model does not claim
+legacy removal when that database operation fails. The model assumes atomic database replacement
 and an immutable captured corpus; it does not prove arbitrary Haskell/SQL refinement,
 field sanitization, provider retention, multi-refresh serialization, query privacy,
 crash recovery or delivery freshness. Public field classification is an explicit
