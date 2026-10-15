@@ -9675,7 +9675,7 @@
     {
       "id": "PRIV-RAG-002",
       "title": "Public-course-only index refresh",
-      "statement": "RAG index refreshes shall send only public course document fields for embedding, atomically replace the derived index on success (including an empty corpus without a provider call), and preserve the previous index on provider or persistence failure.",
+      "statement": "RAG index checks and refreshes shall first remove legacy non-course derived chunks independently of freshness, embedding configuration or provider availability. Refreshes shall embed only public course fields, atomically replace the public index on success (including an empty corpus without a provider call), and preserve the previous public index on provider or persistence failure.",
       "domain": "PRIV",
       "actors": [
         "Authorized RAG administrator",
@@ -9701,27 +9701,29 @@
         "initial": "The historical index may include private sources."
       },
       "allowedTransitions": [
+        "Commit non-course derived-index cleanup before checking freshness or validating embedding configuration.",
         "Collect public course fields, chunk and embed them.",
         "Replace all derived index rows after a complete successful embedding response.",
         "Clear the index without embedding when the captured corpus is empty.",
-        "Reject a failed refresh while retaining the previous index."
+        "Reject a failed refresh while retaining the previous public index; committed legacy cleanup is not undone."
       ],
       "forbiddenTransitions": [
         "Include bookings, availability, campaigns, ads, services, resources, rooms or studio notes in refresh embedding payloads.",
         "Report an empty refresh as successful while retaining old chunks.",
-        "Commit index deletion if replacement insertion fails."
+        "Commit public-index deletion if replacement insertion fails.",
+        "Skip legacy cleanup because the index is fresh or an embedding provider/configuration is unavailable."
       ],
       "effects": [
-        "Successful refresh removes historical private chunks from the active derived index.",
+        "The next admitted worker check or administrator refresh removes legacy non-course chunks locally without a provider call; public replacement remains a separate transaction.",
         "Source entities are not deleted; external provider records and backups are not erased by reindexing."
       ],
       "authorization": "Existing administrator and worker admission remains unchanged. Index source selection is enforced in the backend, independently of retrieval guards.",
       "privacy": "Explicit product decision on 2026-10-13: public courses only; stop indexing private material. This policy concerns index refreshes, not a claim that query embeddings or other assistant provider payloads are public.",
-      "concurrency": "One refresh captures a database read snapshot before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata.",
+      "concurrency": "One refresh captures a database read snapshot before embedding and atomically replaces the index. Parallel refresh ordering/freshness is not guaranteed; all revised writers still construct only course chunks. Retrieval separately checks current course metadata. Cleanup and replacement are separate transactions. Deployment must drain old mixed-source writers; no claim covers privileged external SQL writers or rollback to the old builder.",
       "idempotency": "Repeated successful refreshes replace the derived index; provider requests may repeat and chunk identifiers/timestamps are not stable.",
-      "failure": "Model/schema mismatch and provider/count errors return Left; SQL errors propagate after transaction rollback. No success may be reported for an insertion failure.",
-      "recovery": "Retry a failed refresh. Historical private chunks remain excluded by PRIV-RAG-001 until a successful public-only refresh replaces them. No provider-side erasure guarantee is inferred.",
-      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome.",
+      "failure": "Cleanup SQL failure aborts before embedding. Model/schema mismatch and provider/count errors return Left after legacy cleanup; replacement SQL errors propagate after rollback of public replacement. A missing index table skips cleanup and fails existing schema validation.",
+      "recovery": "Retry failed public refreshes while retaining existing public chunks. Do not restore non-course chunks or roll back to a mixed-source builder. Historical backups and provider-held data require separate retention/erasure decisions.",
+      "observability": "PostgreSQL tests capture adapter payloads and persisted rows, check empty-corpus no-call behavior, provider/count refusal and SQL rollback. Existing administrator result and index statistics report refresh outcome. Aggregate source counts verify cleanup without disclosing content; tests cover a fresh index and invalid configuration before provider admission.",
       "source": "Explicit user product decision 2026-10-13: Public courses only; stop indexing private material (Recommended).",
       "implementation": [
         "tdf-hq/src/TDF/RagStore.hs"
@@ -9748,9 +9750,9 @@
       },
       "critical": true,
       "authority": "Explicit user decision 2026-10-13; AUTHORITY-RAG-PUBLIC-INDEX-20261013",
-      "property": "NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex, EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
+      "property": "NoLegacyAfterCleanup, NoPrivateEmbedding, SuccessfulReplacement, FailedRefreshPreservesIndex (public subset), EmptySkipsProvider and TypeOK in PublicKnowledgeIndex.",
       "contract": "formal/system/public-knowledge-retrieval.md",
-      "verification": "Pinned TLC positive model and three named negative controls; synthetic PostgreSQL adapter-payload and transactional rollback tests, with no remote embedding calls.",
+      "verification": "Pinned TLC positive model and four named negative controls; synthetic PostgreSQL cleanup, adapter-payload and transactional rollback tests, with no remote embedding calls.",
       "evidence": "Candidate-specific test and model receipts must be recorded; historical passes do not establish current conformance."
     },
     {
@@ -10111,7 +10113,7 @@
     "formal/event-operations/ProviderRetryAdmissionLate.cfg": "e8f74982567c8bfe974e9d7ab168d45043bbb8826a6e9b99f1805e99ee6f79d2",
     "formal/event-operations/ProviderRetryAdmissionPayload.cfg": "e45311f9c71bbcfe46171a0fba4bde38f656f8a5781fc6efbc8eb53fa86e86dd",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
-    "formal/event-operations/PublicKnowledgeIndex.tla": "586fa456fe002f9a286b0f541363808d9848478eb57b94c8237f693df23ad68f",
+    "formal/event-operations/PublicKnowledgeIndex.tla": "4eca6e7a301e36d486ed0135e966acdcbd74f8c0288a832bb9e556c88393b432",
     "formal/event-operations/PublicKnowledgeRead.tla": "112d5cf4a069ee8e7369dd62ea196058f688afee91db6233b928a9e177879f96",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
     "formal/event-operations/RefundRecovery.cfg": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
@@ -10385,7 +10387,7 @@
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "246f47ab6fd882b62ff99baed051db26b9848a7488f698e5ec8f728296b463ee",
+    "scripts/verify-event-operations-formal.sh": "7507eda28fb5eb96dca8c8f34e572035bdf4747992663e45d904adeea5098cd0",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -10777,7 +10779,7 @@
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
-    "tdf-hq/src/TDF/RagStore.hs": "22aaeab74842969825b30b92b8084331226291c1fdc47288e1e4c9c05b743523",
+    "tdf-hq/src/TDF/RagStore.hs": "dfc04bd1330ed48e742869dd0405a51028215aa10cc16131a6ed7304a2e82e4f",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "0c0754d7537d0eac338d762e02682a9969513a22b7e453ae8994f1f8b684e112",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "2c3430ee50df992170354e1a4d7ad7948a4ad3230ed1917c9580ba8578cfac8e",
@@ -10860,7 +10862,7 @@
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "db0fe1b18f5de503774821849453accc4ab9a8735336053b9e5242cf6e880ef0",
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "05b7c5e6c0a10138c825fe15140acb60126d0440ef565bea1d37700688950225",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "e8c8fc362c4fc388077c54c655b27fb45a94f1248a232588fc4a40af58b9b550",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d16351e3a58c6f1a7b907577e8eba253f7c6c8aaea0932bc9cea1754aaa48c50",
@@ -24014,7 +24016,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "246f47ab6fd882b62ff99baed051db26b9848a7488f698e5ec8f728296b463ee",
+      "sha256": "7507eda28fb5eb96dca8c8f34e572035bdf4747992663e45d904adeea5098cd0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36336,7 +36338,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "22aaeab74842969825b30b92b8084331226291c1fdc47288e1e4c9c05b743523",
+      "sha256": "dfc04bd1330ed48e742869dd0405a51028215aa10cc16131a6ed7304a2e82e4f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38067,7 +38069,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "05b7c5e6c0a10138c825fe15140acb60126d0440ef565bea1d37700688950225",
+      "sha256": "e8c8fc362c4fc388077c54c655b27fb45a94f1248a232588fc4a40af58b9b550",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45070,7 +45072,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2dd811f22ddab07ecd6af04521ae259ae7ac611004e913280761c120d10e79ed",
+      "sourceSha256": "b8684267d3aab47c3f311d0f0b9e47ea9363500579658c1dd7c9d3c5555ba185",
       "definition": {
         "states": [
           "absent",

@@ -16,7 +16,7 @@ module TDF.RagStore
   , validateEmbeddingResponseDimensions
   ) where
 
-import           Control.Monad          (forM, forM_)
+import           Control.Monad          (forM, forM_, when)
 import           Control.Exception.Safe (catchAny)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
 import           Data.ByteString.Lazy   (ByteString, toStrict)
@@ -117,6 +117,7 @@ refreshRagIndexWith
   :: ([Text] -> IO (Either Text [[Double]]))
   -> AppConfig -> ConnectionPool -> IO (Either Text Int)
 refreshRagIndexWith embed cfg pool = do
+  runSqlPool purgeLegacyRagChunks pool
   dimCheck <- validateRagEmbeddingDim cfg pool
   case dimCheck of
     Left err -> pure (Left err)
@@ -140,6 +141,8 @@ refreshRagIndexWith embed cfg pool = do
 
 ensureRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Bool)
 ensureRagIndex cfg pool = do
+  -- Privacy cleanup must not depend on index age or provider availability.
+  runSqlPool purgeLegacyRagChunks pool
   stats <- runSqlPool loadRagIndexStats pool
   now <- getCurrentTime
   let stale = case risUpdatedAt stats of
@@ -157,6 +160,14 @@ ensureRagIndex cfg pool = do
   where
     diffSeconds :: UTCTime -> UTCTime -> Double
     diffSeconds a b = realToFrac (diffUTCTime a b)
+
+-- Commit removal of obsolete derived sources independently of public refresh.
+-- A failed replacement preserves the previous public index, never legacy data.
+purgeLegacyRagChunks :: SqlPersistT IO ()
+purgeLegacyRagChunks = do
+  exists <- ragTableExists
+  when exists $
+    rawExecute "DELETE FROM rag_chunk WHERE source IS DISTINCT FROM 'course'" []
 
 retrieveRagContext :: AppConfig -> ConnectionPool -> Text -> IO [Text]
 retrieveRagContext cfg pool query = do

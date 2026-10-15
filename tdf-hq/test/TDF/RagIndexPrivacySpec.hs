@@ -19,7 +19,7 @@ import Database.PostgreSQL.Simple (SqlError, sqlState)
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Config (AppConfig(..), loadConfig)
-import TDF.RagStore (refreshRagIndexWith)
+import TDF.RagStore (ensureRagIndex, refreshRagIndexWith)
 
 spec :: Spec
 spec = describe "rag-index-privacy-postgresql" $ do
@@ -69,28 +69,62 @@ spec = describe "rag-index-privacy-postgresql" $ do
           pure (Left "unexpected adapter call")) cfg pool `shouldReturn` Right 0
         indexRows pool `shouldReturn` []
 
-      it "preserves the previous index on provider refusal" $ \pool -> do
+      it "purges legacy chunks even when the remaining public index is fresh" $ \pool -> do
+        cfg <- testConfig
+        ensureRagIndex cfg pool `shouldReturn` Right False
+        indexRows pool `shouldReturn` [("course", "PUBLIC_PREVIOUS_INDEX")]
+
+      it "purges legacy chunks before rejecting invalid embedding configuration" $ \pool -> do
+        cfg <- testConfig
+        result <- refreshRagIndexWith (\_ -> do
+          expectationFailure "Invalid configuration must not reach the provider"
+          pure (Left "unexpected adapter call"))
+          (cfg { openAiEmbedModel = "invalid-synthetic-model" }) pool
+        result `shouldSatisfy` either (const True) (const False)
+        indexRows pool `shouldReturn` [("course", "PUBLIC_PREVIOUS_INDEX")]
+
+      it "refuses provider admission when legacy cleanup fails" $ \pool -> do
         publicCourse pool
         cfg <- testConfig
         previousRows <- indexRows pool
+        called <- newIORef False
+        runSqlPool (do
+          rawExecute
+            "CREATE FUNCTION reject_cleanup() RETURNS trigger LANGUAGE plpgsql AS $$ \
+            \BEGIN RAISE EXCEPTION 'synthetic cleanup refusal'; END $$" []
+          rawExecute
+            "CREATE TRIGGER reject_cleanup BEFORE DELETE ON rag_chunk \
+            \FOR EACH ROW EXECUTE FUNCTION reject_cleanup()" []
+          ) pool
+        refreshRagIndexWith (\inputs -> do
+          writeIORef called True
+          pure (Right (vectors inputs))) cfg pool
+          `shouldThrow` (\err -> sqlState (err :: SqlError) == "P0001")
+        readIORef called `shouldReturn` False
+        indexRows pool `shouldReturn` previousRows
+
+      it "preserves the previous public index and purges legacy chunks on provider refusal" $ \pool -> do
+        publicCourse pool
+        cfg <- testConfig
+        previousRows <- filter ((== "course") . fst) <$> indexRows pool
         refreshRagIndexWith (\_ -> pure (Left "synthetic provider refusal")) cfg pool
           `shouldReturn` Left "synthetic provider refusal"
         indexRows pool `shouldReturn` previousRows
 
-      it "preserves the previous index on an incomplete embedding response" $ \pool -> do
+      it "preserves the previous public index on an incomplete embedding response" $ \pool -> do
         publicCourse pool
         cfg <- testConfig
-        previousRows <- indexRows pool
+        previousRows <- filter ((== "course") . fst) <$> indexRows pool
         refreshRagIndexWith (\_ -> pure (Right [])) cfg pool
           `shouldReturn` Left "Embedding response size mismatch"
         indexRows pool `shouldReturn` previousRows
 
-      it "rolls back index deletion when inserting a new chunk fails" $ \pool -> do
+      it "rolls back public replacement while retaining legacy cleanup on insertion failure" $ \pool -> do
         publicCourse pool
         cfg <- testConfig
-        previousRows <- indexRows pool
+        previousRows <- filter ((== "course") . fst) <$> indexRows pool
         runSqlPool (rawExecute
-          "ALTER TABLE rag_chunk ADD CONSTRAINT synthetic_refusal CHECK (source <> 'course')"
+          "ALTER TABLE rag_chunk ADD CONSTRAINT synthetic_refusal CHECK (source_id <> 'public-course')"
           []) pool
         refreshRagIndexWith (pure . Right . vectors) cfg pool
           `shouldThrow` (\err -> sqlState (err :: SqlError) == "23514")
@@ -102,7 +136,7 @@ vectors = map (const (1 : replicate 1535 0))
 testConfig :: IO AppConfig
 testConfig = do
   cfg <- loadConfig
-  pure cfg { openAiEmbedModel = "text-embedding-3-small", ragChunkWords = 1000,
+  pure cfg { openAiApiKey = Nothing, openAiEmbedModel = "text-embedding-3-small", ragChunkWords = 1000,
              ragChunkOverlap = 0 }
 
 safeConnection :: String -> Bool
@@ -149,6 +183,10 @@ withFixture connection action = do
             rawExecute
               "INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) \
               \VALUES ('studio_brain','legacy',0,'PRIVATE_LEGACY_INDEX','{}', \
+              \('[' || repeat('0,',1535) || '1]')::vector)" []
+            rawExecute
+              "INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) \
+              \VALUES ('course','previous-public',0,'PUBLIC_PREVIOUS_INDEX','{}', \
               \('[' || repeat('0,',1535) || '1]')::vector)" []
             ) pool
           action pool

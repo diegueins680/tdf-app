@@ -2,7 +2,7 @@
 (* PRIV-RAG-002: one refresh of a captured public corpus. Document identities
    abstract their fields; a historic index may already contain private data. *)
 EXTENDS Naturals, FiniteSets
-CONSTANTS PublicOnly, ClearEmpty, PreserveFailure
+CONSTANTS PublicOnly, ClearEmpty, PreserveFailure, PurgeLegacy
 VARIABLES phase, corpus, collected, emitted, index, original, outcome
 vars == <<phase, corpus, collected, emitted, index, original, outcome>>
 Public == {"course"}
@@ -10,13 +10,19 @@ Private == {"studio-note", "booking"}
 Documents == Public \cup Private
 
 Init ==
-  /\ phase = "collect"
+  /\ phase = "cleanup"
   /\ corpus \in SUBSET Public
   /\ collected = {}
   /\ emitted = {}
   /\ index = Documents
   /\ original = index
   /\ outcome = "pending"
+
+Cleanup ==
+  /\ phase = "cleanup"
+  /\ index' = IF PurgeLegacy THEN index \cap Public ELSE index
+  /\ phase' = "collect"
+  /\ UNCHANGED <<corpus, collected, emitted, original, outcome>>
 
 Collect ==
   /\ phase = "collect"
@@ -43,21 +49,22 @@ Publish ==
   /\ UNCHANGED <<corpus, collected, emitted, original>>
 
 Reject ==
-  /\ phase = "result"
+  /\ phase \in {"collect", "result"}
   /\ index' = IF PreserveFailure THEN index ELSE {}
   /\ phase' = "done" /\ outcome' = "failure"
   /\ UNCHANGED <<corpus, collected, emitted, original>>
 
-Next == Collect \/ Empty \/ Embed \/ Publish \/ Reject
+Next == Cleanup \/ Collect \/ Empty \/ Embed \/ Publish \/ Reject
 Spec == Init /\ [][Next]_vars
 TypeOK ==
-  /\ phase \in {"collect", "embed", "result", "done"}
+  /\ phase \in {"cleanup", "collect", "embed", "result", "done"}
   /\ corpus \subseteq Public
   /\ collected \subseteq Documents /\ emitted \subseteq Documents
   /\ index \subseteq Documents /\ original \subseteq Documents
   /\ outcome \in {"pending", "success", "failure"}
+NoLegacyAfterCleanup == phase # "cleanup" => index \subseteq Public
 NoPrivateEmbedding == emitted \subseteq Public
 SuccessfulReplacement == outcome = "success" => index = corpus
-FailedRefreshPreservesIndex == outcome = "failure" => index = original
+FailedRefreshPreservesIndex == outcome = "failure" => index = original \cap Public
 EmptySkipsProvider == collected = {} => emitted = {}
 ====

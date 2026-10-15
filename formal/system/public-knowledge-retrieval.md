@@ -89,36 +89,57 @@ services, rooms, resources and studio notes are no longer collected for embeddin
 The retained `RAG_AVAILABILITY_*` configuration fields are compatibility inputs
 with no effect on this index; they do not authorize private-source indexing.
 
-A successful nonempty refresh replaces the entire derived index transactionally.
+Before checking index age or validating embedding configuration, worker checks and
+administrator refreshes commit deletion of non-course derived chunks. This cleanup
+requires no provider call and cannot be skipped merely because the public index is
+fresh. Cleanup failure aborts before embedding. A missing table skips cleanup and
+retains the existing schema-validation failure. No source business record is removed.
+
+A successful nonempty refresh replaces the remaining public index transactionally.
 An empty corpus clears it without a provider request. Provider refusal or response
-count mismatch leaves the previous index intact; insertion failure rolls back the
-delete and propagates an error. `runSqlPool` owns commit and rollback; redundant
+count mismatch leaves the previous public index intact; insertion failure rolls back
+public replacement and propagates an error. The separately committed legacy cleanup
+is never restored by a failed refresh. `runSqlPool` owns commit and rollback; redundant
 manual transaction control is removed. The original transaction pattern also
 preserves rows: an initial temporary-table fixture falsely suggested otherwise
 because pool reconnection discarded its tables. Schema/model validation still
 precedes refresh.
-Historical private chunks can therefore remain until a successful refresh, but
-PRIV-RAG-001 excludes them from retrieval throughout. Source records, backups and
-provider-held historical inputs are outside this replacement operation. Query
+Historical non-course chunks are removed at the next admitted worker check or manual
+refresh even if embedding cannot succeed; PRIV-RAG-001 excludes them from retrieval
+before that check. Deployment must drain old mixed-source writers, and recovery
+must retain the public-only builder and cleanup. Privileged external SQL writes,
+old-backend rollback, source records, backups and provider-held historical inputs
+are outside this local cleanup guarantee. Query
 embedding and other assistant payloads are separate privacy boundaries.
 
 `refreshRagIndexWith` exposes an embedding-adapter seam used by PostgreSQL tests;
 production `refreshRagIndex` always supplies the existing `embedTexts` adapter.
 `RagIndexPrivacySpec` captures the actual payload and checks course-only persisted
-rows, empty-corpus no-call cleanup, provider refusal, count mismatch and rollback
+rows, fresh-index cleanup, cleanup before invalid configuration, empty-corpus
+no-call cleanup, cleanup failure preventing provider admission, provider refusal,
+count mismatch and rollback
 after a database CHECK rejects insertion. Per-test nonce schemas shadow a fully migrated disposable fixture and retain
 rows across connection replacement; every new connection restores its search path.
 No provider call or production write is needed. Run
 `scripts/test-rag-index-privacy.sh` with `TDF_IDENTITY_HTTP_DATABASE_URL` pointing
 to that fixture. Backend CI executes the runner after migration verification.
 
+A read-only [production aggregate](evidence/2026-10-15-rag-legacy-index/production-aggregate.json)
+observed backend `7ab344400d0878838b9b12742ca4cc5cd7f38f94` retaining 19 course
+and 37 non-course chunks, last refreshed on September 29. No content was read and
+no provider call was made. This demonstrates the need for cleanup independent of a
+successful embedding refresh; it does not identify the content of those chunks or
+prove provider-side retention. That observation precedes delivery of this repair.
+
 ### Refresh model and limits
 
 `PublicKnowledgeIndex.tla` models one refresh, zero or one captured public course,
-two private document classes and an initially mixed historical index. `Collect`,
-`Empty`, `Embed`, `Publish` and `Reject` represent collection, external disclosure,
-atomic publication and failure. Provider failure, malformed response and database
-rollback are abstracted by `Reject`. The model assumes atomic database replacement
+two private document classes and an initially mixed historical index. `Cleanup`, `Collect`,
+`Empty`, `Embed`, `Publish` and `Reject` represent committed legacy removal,
+collection, external disclosure, atomic public publication and failure. Provider failure, malformed response and database
+rollback are abstracted by `Reject`; rejection before collection additionally
+represents invalid configuration after cleanup. Failed refresh preserves the original
+public subset. Freshness scheduling itself is tested in PostgreSQL, not modeled. The model assumes atomic database replacement
 and an immutable captured corpus; it does not prove arbitrary Haskell/SQL refinement,
 field sanitization, provider retention, multi-refresh serialization, query privacy,
 crash recovery or delivery freshness. Public field classification is an explicit
@@ -126,9 +147,10 @@ contract assumption. There is no fairness or liveness claim; stalled refreshes a
 allowed. Concurrent refreshes may publish older captured public data; retrieval
 continues to render current metadata under PRIV-RAG-001.
 
-The pinned runner checks `TypeOK`, `NoPrivateEmbedding`, `SuccessfulReplacement`,
-`FailedRefreshPreservesIndex` and `EmptySkipsProvider`. Three controlled mutations
-must fail by named invariant: private source collection (`NoPrivateEmbedding`),
+The pinned runner checks `TypeOK`, `NoLegacyAfterCleanup`, `NoPrivateEmbedding`, `SuccessfulReplacement`,
+`FailedRefreshPreservesIndex` and `EmptySkipsProvider`. Four controlled mutations
+must fail by named invariant: skipped legacy cleanup (`NoLegacyAfterCleanup`),
+private source collection (`NoPrivateEmbedding`),
 empty-corpus retention (`SuccessfulReplacement`) and destructive failure handling
 (`FailedRefreshPreservesIndex`). These are bounded model checks, supported by the
 separate PostgreSQL implementation tests, not a universal correctness proof.
