@@ -9806,7 +9806,7 @@
       ],
       "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
       "concurrency": "Existing Party and credential locks serialize send/block. Message and notice share the database transaction; read visibility uses statement snapshot semantics.",
-      "failure": "Notification insert failure aborts the send; unavailable/foreign thread links show a generic unavailable state.",
+      "failure": "Notification insert failure aborts the send; transient list errors retain the notification target for recovery; unavailable/foreign links show a generic unavailable state and never auto-select or mark another thread read.",
       "implementation": [
         "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
         "tdf-hq/src/TDF/Models.hs",

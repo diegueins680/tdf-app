@@ -29,6 +29,12 @@ only a conversation returned by the recipient's authorized thread list. The mobi
 notification resolver is generated from the same registry and opens the canonical
 web conversation through its existing authenticated-notification screen.
 
+A transient thread-list failure retains the notification URL until a successful
+authorized list arrives. An invalid or unavailable target leaves no conversation
+selected and suppresses automatic fallback, including on later list polls. Only
+an explicit conversation choice or a new valid link leaves that unavailable state;
+unrelated conversations are neither fetched nor marked read by the failed link.
+
 The additive migration drops only the verified, erroneously unique thread key,
 retains the non-unique `(thread_id,id DESC)` history index, installs an AFTER INSERT
 producer and extends the existing inbox visibility function. A one-to-one mapping

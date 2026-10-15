@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
-import { cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import type { ChatThreadDTO, ChatMessageDTO } from '../api/types';
 configure({ asyncUtilTimeout: 15000 });
 jest.setTimeout(30000);
@@ -22,11 +22,12 @@ const thread: ChatThreadDTO = { ctThreadId: 10, ctOtherPartyId: 2, ctOtherDispla
   ctLastMessage: 'Private preview', ctLastMessageAt: '2026-09-15T12:00:00Z', ctUpdatedAt: '2026-09-15T12:00:00Z' };
 const message: ChatMessageDTO = { cmId: 1, cmThreadId: 10, cmSenderPartyId: 2, cmBody: 'Private body', cmCreatedAt: '2026-09-15T12:00:00Z' };
 const clients: QueryClient[] = [];
+function CurrentLocation() { return <span data-testid="location">{useLocation().search}</span>; }
 function Unread() { const { unreadCount } = useChatUnreadCount(); return <span data-testid="badge">{unreadCount}</span>; }
 function setup(path = '/chat') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   clients.push(client);
-  const tree = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><ChatPage /><Unread /></MemoryRouter></QueryClientProvider>;
+  const tree = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><ChatPage /><Unread /><CurrentLocation /></MemoryRouter></QueryClientProvider>;
   const view = render(tree());
   return { client, ...view, refresh: () => view.rerender(tree()) };
 }
@@ -91,8 +92,32 @@ it('opens the notification thread instead of the newest conversation without cre
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
 it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects an unavailable notification thread %s', async (id) => {
-  setup(`/chat?threadId=${encodeURIComponent(id)}`);
+  const { client } = setup(`/chat?threadId=${encodeURIComponent(id)}`);
   await screen.findByText('La conversación de esta notificación no está disponible.');
+  await waitFor(() => expect(screen.getByTestId('location').textContent).toBe(''));
+  await act(async () => { await client.refetchQueries({ queryKey: ['chat-threads', 1] }); });
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
+  expect(listMessages).not.toHaveBeenCalled();
+  expect(screen.getByTestId('badge').textContent).toBe('1');
+  expect(screen.queryByText('Private body')).toBeNull();
+  // Only an explicit choice may leave the unavailable-link state.
+  fireEvent.click(screen.getByText('Private preview'));
+  await screen.findByText('Private body');
+  expect(listMessages).toHaveBeenCalledWith(10, { limit: 80 });
+  expect(screen.queryByText('La conversación de esta notificación no está disponible.')).toBeNull();
+});
+
+it('retains a notification link through a failed list request and opens it after recovery', async () => {
+  listThreads.mockRejectedValue(new Error('Temporary network outage'));
+  const { client } = setup('/chat?threadId=10');
+  await screen.findByText('Temporary network outage');
+  expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
+  expect(listMessages).not.toHaveBeenCalled();
+  expect(screen.queryByText('La conversación de esta notificación no está disponible.')).toBeNull();
+  listThreads.mockResolvedValue([{ ...thread, ctThreadId: 20 }, thread]);
+  await act(async () => { await client.refetchQueries({ queryKey: ['chat-threads', 1] }); });
+  await screen.findByText('Private body');
+  await waitFor(() => expect(screen.getByTestId('location').textContent).toBe(''));
   expect(listMessages.mock.calls.every(([threadId]) => threadId === 10)).toBe(true);
+  expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
