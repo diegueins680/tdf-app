@@ -944,7 +944,8 @@
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
@@ -953,7 +954,7 @@
         "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Executable conformance and mutation tests; not a whole-program proof.",
+      "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
       "evidence": "Fresh candidate test receipts under formal/system/evidence or externally retained run directory.",
       "status": "specified and implemented",
       "critical": true,
@@ -10026,7 +10027,7 @@
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "24d13b9c84c0ec5a3181911d277f791100a5cea78cc56a32c97f2899f394a716",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1409353bd9705f94f3308a6a9fa36b0013031e07a5c949490f8c4929d8addff2",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c8bef184d950efde3354fe359fa60b118512e58305441f6c916921db4707236d",
     "docs/directory/event-search-sync.md": "94eff068476b169033112fb3ef858773fc84943b74b806632b200db84329f8c9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
@@ -10233,7 +10234,7 @@
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "2a8fe3d9bdd52ae9c2afe37e6e52806ac7a55198d164b343fc5ac6f38d03ba0f",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "424d49ef08021a41a87b9bef5d9d0d2b36810c9ddcdd4a37b2307f96f736945a",
@@ -10281,6 +10282,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
+    "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
@@ -11849,6 +11851,12 @@
       }
     ],
     "docs/catalog-persistence/catalog-list-decisions.json": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/build-catalog-decisions.mjs": [
       {
         "requirement": "SYS-TRACE-001",
         "relationship": "implementation"
@@ -19817,7 +19825,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+      "sha256": "2a8fe3d9bdd52ae9c2afe37e6e52806ac7a55198d164b343fc5ac6f38d03ba0f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20819,9 +20827,14 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "55a8004c6d3fe607a7dca57e43dccc4a45db6f3a51b2985cfe2fbea18d32226a",
+      "sha256": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c46c28b38d50337",
@@ -42662,7 +42675,6 @@
     "SURFACE-33c36559cee9f889",
     "SURFACE-d112ef0e073bf0c4",
     "SURFACE-efc90f2c7a0252ce",
-    "SURFACE-7bc6beda98cc6e72",
     "SURFACE-3dfd6f173e84edf1",
     "SURFACE-7972d2e7d13940a5",
     "SURFACE-d79860272960ddbf",
@@ -45458,7 +45470,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8ee4c4c16ef0b2474224311c177a250f47d3bfe3e6ff65dc281d80d85099ba6f",
+      "sourceSha256": "2691c218feaeec10d8f915931a9848f10c532aa2038de2a7ba24fa75c4ddea81",
       "definition": {
         "states": [
           "absent",

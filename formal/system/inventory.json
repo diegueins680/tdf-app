@@ -3115,7 +3115,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
+      "sha256": "2a8fe3d9bdd52ae9c2afe37e6e52806ac7a55198d164b343fc5ac6f38d03ba0f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3679,7 +3679,7 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "55a8004c6d3fe607a7dca57e43dccc4a45db6f3a51b2985cfe2fbea18d32226a",
+      "sha256": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24644,7 +24644,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "7a1e216058340a4ecf1865480e60c8038449b74640d2e66a921ab2ae695f51ee",
+      "sha256": "724203bada1b2ca9a94594918f0f54179b364223c98a867538d86a94ffddf4a3",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -25029,7 +25029,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8ee4c4c16ef0b2474224311c177a250f47d3bfe3e6ff65dc281d80d85099ba6f",
+      "sha256": "2691c218feaeec10d8f915931a9848f10c532aa2038de2a7ba24fa75c4ddea81",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

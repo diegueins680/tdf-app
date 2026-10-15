@@ -943,7 +943,8 @@
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "scripts/build-catalog-decisions.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
@@ -952,7 +953,7 @@
         "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Executable conformance and mutation tests; not a whole-program proof.",
+      "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
       "evidence": "Fresh candidate test receipts under formal/system/evidence or externally retained run directory.",
       "status": "specified and implemented",
       "critical": true,
