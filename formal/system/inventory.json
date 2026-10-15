@@ -5477,7 +5477,7 @@
     {
       "id": "SURFACE-8cb7488112ea1390",
       "path": "scripts/test-recovery-expiry-verifier.py",
-      "sha256": "8ab023654d5d4a3dc7bfc5664664a69041fd1c5c82490bb377e472a5cfd121f3",
+      "sha256": "afe155fe8ecc3616747f3c26094a952aaa9183462513831911eff4f84d6e9a3a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5489,7 +5489,7 @@
     {
       "id": "SURFACE-4f9c68275e359475",
       "path": "scripts/test-recovery-time-postgres.sh",
-      "sha256": "24f42f8601ea0250adcaf52903ba8ad521d501e4d897b09c169a4c19415adf52",
+      "sha256": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24882,7 +24882,7 @@
     },
     {
       "path": "formal/system/recovery-expiry-arithmetic.md",
-      "sha256": "2016f9aef44cd29bf0c53753d0b8de972e692b60a0932467635132ee660e7111",
+      "sha256": "664cb20d3b8ba37bb91ddd57f9a67696a35c8c4db220ddfa484d380ca97f3cdf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -18,11 +18,16 @@ docker run --rm -d --name "$test_container" \
   postgres:16.10-alpine@sha256:029660641a0cfc575b14f336ba448fb8a75fd595d42e1fa316b9fb4378742297 >/dev/null
 owned=true
 attempt=0
-until docker exec "$test_container" pg_isready -U postgres -d recovery_time_test >/dev/null 2>&1; do
+# The bootstrap server accepts Unix sockets, then stops before final startup.
+# Query the same TCP endpoint used by the probes so bootstrap cannot look ready.
+until docker exec -e PGPASSWORD=recovery-time-fixture "$test_container" \
+  psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d recovery_time_test \
+  -qAtc 'SELECT 1' >/dev/null 2>&1; do
   attempt=$((attempt + 1))
   test "$attempt" -lt 30 || { docker logs "$test_container" >&2; exit 1; }
   sleep 1
 done
-docker exec -i "$test_container" psql -X -v ON_ERROR_STOP=1 -U postgres -d recovery_time_test \
+docker exec -i -e PGPASSWORD=recovery-time-fixture "$test_container" \
+  psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d recovery_time_test \
   < "$probe_dir/probes.sql"
 echo "Finite PostgreSQL recovery-time probes passed; generated SQL: $probe_dir/probes.sql"

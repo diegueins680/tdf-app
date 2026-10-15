@@ -2,7 +2,9 @@
 """Verifier regression controls; tests are not universal implementation proofs."""
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -112,6 +114,52 @@ class RecoveryProofTests(unittest.TestCase):
                 receipt = json.loads((Path(tmp)/name/'result.json').read_text())
                 self.assertFalse(receipt['executionPassed'])
                 self.assertTrue(all(o['status']=='UNPROVEN' for o in receipt['obligations']))
+
+    def test_database_runner_waits_past_socket_only_bootstrap(self):
+        # The official image's temporary server has listen_addresses=''. Simulate
+        # it accepting sockets before shutdown, with TCP only ready on retry.
+        script = (ROOT/'scripts/test-recovery-time-postgres.sh').read_text()
+        script = '\n'.join('repo_root=' + shlex.quote(str(ROOT))
+                           if line.startswith('repo_root=') else line
+                           for line in script.splitlines()) + '\n'
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            docker = folder/'docker'
+            docker.write_text('#!' + sys.executable + '\n' + '''
+import json, os, pathlib, sys
+args = sys.argv[1:]
+state = pathlib.Path(os.environ['FIXTURE_STATE'])
+calls = json.loads(state.read_text()) if state.exists() else []
+calls.append(args)
+state.write_text(json.dumps(calls))
+if args[0] in ('run', 'rm', 'logs'): sys.exit(0)
+assert args[0] == 'exec', args
+tcp = '-h' in args and args[args.index('-h') + 1] == '127.0.0.1'
+probe = '-qAtc' in args or 'pg_isready' in args
+if probe:
+    attempts = sum('-qAtc' in call or 'pg_isready' in call for call in calls)
+    sys.exit(0 if not tcp or attempts >= 2 else 1)
+# A socket connects to bootstrap, which is now stopping. TCP reaches final DB.
+assert 'psql' in args
+assert 'PGPASSWORD=recovery-time-fixture' in args
+sys.stdin.read()
+sys.exit(0 if tcp else 2)
+''')
+            docker.chmod(0o700)
+            env = {**os.environ, 'PATH': str(folder) + os.pathsep + os.environ['PATH'],
+                   'FIXTURE_STATE': str(folder/'calls.json')}
+            for socket_only in (False, True):
+                state = folder/'calls.json'
+                state.write_text('[]')
+                candidate = folder/'runner.sh'
+                candidate.write_text(script.replace('-h 127.0.0.1', '') if socket_only else script)
+                result = subprocess.run(['sh', str(candidate)], env=env, capture_output=True,
+                                        text=True, timeout=30)
+                self.assertEqual(result.returncode, 2 if socket_only else 0, result.stderr)
+                calls = json.loads(state.read_text())
+                probes = [call for call in calls if '-qAtc' in call or 'pg_isready' in call]
+                self.assertEqual(len(probes), 1 if socket_only else 2)
+                self.assertEqual(sum(call[0] == 'rm' for call in calls), 1)
 
 
 if __name__ == '__main__':

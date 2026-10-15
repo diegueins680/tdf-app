@@ -10290,9 +10290,9 @@
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
-    "scripts/test-recovery-expiry-verifier.py": "8ab023654d5d4a3dc7bfc5664664a69041fd1c5c82490bb377e472a5cfd121f3",
+    "scripts/test-recovery-expiry-verifier.py": "afe155fe8ecc3616747f3c26094a952aaa9183462513831911eff4f84d6e9a3a",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
-    "scripts/test-recovery-time-postgres.sh": "24f42f8601ea0250adcaf52903ba8ad521d501e4d897b09c169a4c19415adf52",
+    "scripts/test-recovery-time-postgres.sh": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
@@ -23574,7 +23574,7 @@
     {
       "id": "SURFACE-8cb7488112ea1390",
       "path": "scripts/test-recovery-expiry-verifier.py",
-      "sha256": "8ab023654d5d4a3dc7bfc5664664a69041fd1c5c82490bb377e472a5cfd121f3",
+      "sha256": "afe155fe8ecc3616747f3c26094a952aaa9183462513831911eff4f84d6e9a3a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23598,7 +23598,7 @@
     {
       "id": "SURFACE-4f9c68275e359475",
       "path": "scripts/test-recovery-time-postgres.sh",
-      "sha256": "24f42f8601ea0250adcaf52903ba8ad521d501e4d897b09c169a4c19415adf52",
+      "sha256": "34703ff50f843b680b065aaf1538092c77ed56c8385865676cf8b8ef922f2d73",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
