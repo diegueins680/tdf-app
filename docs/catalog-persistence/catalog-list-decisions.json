@@ -14517,13 +14517,13 @@
       "reviewBatch": "universal-interactions-2026-09-28"
     },
     {
-      "id": "1a20aae8bb74a6df248f",
+      "id": "2a0d6d57a51e35d91376",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+      "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
@@ -14545,7 +14545,8 @@
           "line": 14
         },
         "reviewBatch": "universal-interactions-2026-09-28"
-      }
+      },
+      "previousFingerprint": "1a20aae8bb74a6df248f"
     },
     {
       "id": "e2d91c3b81ac18393c38",

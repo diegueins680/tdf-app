@@ -196,3 +196,25 @@ Deployment also has an independent infrastructure blocker: `ops/hetzner/README.m
 states that the guarded routine release executor remains unfinished. The retired
 `scripts/production-release.mjs` rejects before provider or database actions.
 Preparing artifacts is not deployment; this task does not bypass that boundary.
+
+## October 14 continuation
+
+Hosted CI for `fa349d854` completed with all 3,236 UI tests across 294 suites,
+488 browser journeys (22 skipped), ten rollout checks and all 20 discovery
+cases passing. Backend, API-contract and production-migration checks passed.
+Mobile quality rejected notification-generator drift: Mobile main already
+contained chat_thread while this parent’s canonical web resolver did not. The
+web resolver now preserves that merged behavior, validates positive safe thread
+IDs and uses the fixed chat fallback. Generator equality, both generated API
+clients and 35 notification/navigation component tests pass locally.
+
+Main PR544’s index-declaration repair is integrated. The unchanged community
+index migration follows main’s 204 entries, for 205 total. The actual release
+contract loader validated all 205 at `59da704e48e89dd80a95671f724c46ccdbbee1c9`,
+including community introduction `08f3bcf50319983193d37ccec87d1c664c8ef21d`.
+Fresh CI/review is required after the integration push. No candidate deployment
+or production feature verification is claimed.
+
+The continuation also passes 67 catalog/release-helper tests. Read-only production
+availability checks on October 14 (local time) returned HTTP200 for `/fans` and
+`/buscar`; these remain checks of the existing release, not this candidate.
