@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real session/HTTP/database checks; accepts only an isolated local test server."""
 import json, os, pathlib, subprocess, time, urllib.error, urllib.parse, urllib.request, uuid
+from conflict_probe import request_after_conflict
 base = os.environ.get('TDF_INTERACTION_TEST_BASE', 'http://127.0.0.1:18128')
 database = os.environ['TDF_INTERACTION_TEST_DATABASE']
 assert urllib.parse.urlparse(base).hostname in ('127.0.0.1', 'localhost') and database.startswith('tdf_interaction_')
@@ -10,15 +11,18 @@ actors = [actor_base + i for i in range(3)]
 tokens = {actor: str(uuid.uuid4()) + str(uuid.uuid4()) for actor in actors}
 def sql(statement):
     return subprocess.check_output(['psql','-X','-v','ON_ERROR_STOP=1','-d',database,'-Atq'], input=statement, text=True).strip()
-def request(actor, path, data=None, method=None, status=200):
+def request(actor, path, data=None, method=None, status=200, retry_conflicts=False):
     headers = {'Content-Type':'application/json'}
     if actor: headers['Authorization'] = 'Bearer ' + tokens[actor]
     req = urllib.request.Request(base+path, data=None if data is None else json.dumps(data).encode(), headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=30) as response:
-            code, body = response.status, response.read().decode()
-    except urllib.error.HTTPError as error:
-        code, body = error.code, error.read().decode()
+    if retry_conflicts:
+        code, body = request_after_conflict(req)
+    else:
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                code, body = response.status, response.read().decode()
+        except urllib.error.HTTPError as error:
+            code, body = error.code, error.read().decode()
     assert code in (status if isinstance(status, tuple) else (status,)), f'{req.get_method()} {path}: expected {status}, got {code}: {body[:300]}'
     if isinstance(status, tuple): return code
     return json.loads(body) if body and code < 400 else body
@@ -34,8 +38,8 @@ sql(f"INSERT INTO fan_club(id,artist_party_id,name) VALUES({actors[0]},{actors[0
 post=request(actors[0],f'/fans/me/clubs/{actors[0]}/posts',{'fcpReqTitle':'API publication','fcpReqContent':'A real HTTP test post','fcpReqMediaUrls':[],'fcpReqParentId':None})
 identity=f"/interactions/targets/club_post/{post['fcpId']}"
 summary=request(actors[1],identity); target=summary['id']
-def command(actor, payload, key=None, status=200):
-    return request(actor,f'/interactions/targets/{target}/commands',{'requestKey':key or str(uuid.uuid4()),'command':payload},status=status)
+def command(actor, payload, key=None, status=200, retry_conflicts=False):
+    return request(actor,f'/interactions/targets/{target}/commands',{'requestKey':key or str(uuid.uuid4()),'command':payload},status=status,retry_conflicts=retry_conflicts)
 # Reuse the actual scoped party selector and stable party IDs, with live privacy.
 sql(f"INSERT INTO social_v2_preference(party_id,discoverable) VALUES({actors[0]},true),({actors[2]},true) ON CONFLICT(party_id) DO UPDATE SET discoverable=true;")
 search=f'/parties/search?context=interaction_mention&scopeId={target}&q=API&limit=20'
@@ -291,6 +295,63 @@ assert not any(n.get('nTargetKey')==reply['id'] for n in request(actors[1],'/fan
 # Unblock and prove a revoked bearer cannot replay a previously accepted request.
 state=request(actors[0],f'/interactions/blocks/{actors[1]}')
 request(actors[0],f'/interactions/blocks/{actors[1]}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')
+# Exercise the actual SQL-error→HTTP503 contract, exact replay binding and
+# session revocation in this invocation's disposable database only. Preserve the
+# original function bytes and restore them even if the synthetic check fails.
+from unittest.mock import patch
+original_command = sql("SELECT pg_get_functiondef('interaction_command(bigint,uuid,uuid,jsonb)'::regprocedure);")
+probe_nonce = uuid.uuid4().hex
+probe_function = 'tdf_probe_command_' + probe_nonce
+probe_table = 'tdf_probe_conflict_' + probe_nonce
+assert len(probe_function) < 63 and len(probe_table) < 63
+alias_command = original_command.replace('CREATE OR REPLACE FUNCTION public.interaction_command(', 'CREATE FUNCTION public.' + probe_function + '(', 1)
+assert alias_command != original_command
+created_probe = False
+created_probe_table = False
+installed_probe = False
+try:
+    sql(alias_command)
+    created_probe = True
+    sql(f"CREATE TABLE {probe_table}(request_id uuid PRIMARY KEY, force_conflict boolean NOT NULL);")
+    created_probe_table = True
+    sql(f"""CREATE OR REPLACE FUNCTION public.interaction_command(actor bigint,target uuid,request_id uuid,payload jsonb)
+      RETURNS jsonb LANGUAGE plpgsql AS $probe$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM {probe_table} probe WHERE probe.request_id=$3 AND probe.force_conflict) THEN
+          RAISE EXCEPTION 'Synthetic transaction conflict' USING ERRCODE='40001';
+        END IF;
+        RETURN public.{probe_function}($1,$2,$3,$4);
+      END $probe$;""")
+    installed_probe = True
+    real_urlopen = urllib.request.urlopen
+    for revoke, final_status, expected_charge in [(False,403,2),(True,401,1)]:
+        probe_key = str(uuid.uuid4())
+        sql(f"INSERT INTO {probe_table} VALUES ('{probe_key}',true);")
+        budget_sql = f"SELECT COALESCE(sum(count),0) FROM directory_rate_limit WHERE scope='interaction:write' AND subject_hash=encode(digest('{actors[1]}','sha256'),'hex')"
+        before_charge = int(sql(budget_sql))
+        seen_requests = []
+        def observe_probe(sent, timeout):
+            seen_requests.append((sent.full_url,sent.data,sent.get_header('Authorization')))
+            try:
+                return real_urlopen(sent, timeout=timeout)
+            except urllib.error.HTTPError as error:
+                if error.code == 503 and len(seen_requests) == 1:
+                    sql(f"UPDATE {probe_table} SET force_conflict=false WHERE request_id='{probe_key}';")
+                    if revoke: sql(f"UPDATE api_token SET active=false WHERE token='{tokens[actors[1]]}';")
+                raise
+        with patch.object(urllib.request,'urlopen',side_effect=observe_probe):
+            command(actors[1],{'operation':'comment.remove','commentId':reply['id'],'expectedVersion':1,'reason':'Synthetic unauthorized retry'},
+                    key=probe_key,status=final_status,retry_conflicts=True)
+        assert len(seen_requests)==2 and seen_requests[0]==seen_requests[1], 'Conflict recovery changed actor/resource/payload/key'
+        assert int(sql(budget_sql))-before_charge==expected_charge, 'Conflict/revocation attempt charges did not match the savepoint contract'
+        if revoke: sql(f"UPDATE api_token SET active=true WHERE token='{tokens[actors[1]]}';")
+finally:
+    if installed_probe: sql(original_command)
+    if created_probe: sql(f"DROP FUNCTION public.{probe_function}(bigint,uuid,uuid,jsonb);")
+    if created_probe_table: sql(f"DROP TABLE {probe_table};")
+    sql(f"UPDATE api_token SET active=true WHERE token='{tokens[actors[1]]}';")
+assert sql("SELECT pg_get_functiondef('interaction_command(bigint,uuid,uuid,jsonb)'::regprocedure);") == original_command, 'Synthetic function wrapper was not restored exactly'
+print('PASS actual SQL-conflict replay binding, charged attempts and revocation during retry')
 # Rejected moderation attempts must consume the same per-account write budget.
 # The real limiter uses fixed calendar-minute buckets. A burst crossing the
 # minute boundary can legitimately receive 90 denials in each of two buckets
@@ -299,7 +360,7 @@ request(actors[0],f'/interactions/blocks/{actors[1]}',{'blockRequestKey':str(uui
 limited=False
 budget_probe_started=time.monotonic()
 for attempt in range(181):
-    result=command(actors[1],{'operation':'comment.remove','commentId':reply['id'],'expectedVersion':1,'reason':'Synthetic unauthorized attempt'},status=(403,429))
+    result=command(actors[1],{'operation':'comment.remove','commentId':reply['id'],'expectedVersion':1,'reason':'Synthetic unauthorized attempt'},status=(403,429),retry_conflicts=True)
     if result==429:
         limited=True
         break

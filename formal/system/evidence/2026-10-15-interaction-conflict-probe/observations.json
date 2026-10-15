@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "requirement": "SOC-ABUSE-001",
+  "scope": "Fresh focused acceptance-driver execution against the previously qualified59b binary with byte-identical backend source; not a full-current-root gate or proof of the original deadlock cause.",
+  "driverFingerprints": {
+    "scripts/interactions/test-api.py": "2018462abf67b2a932ec41679b1b1e023b2637c5be0c5a50954aa546a2b4bffe",
+    "scripts/interactions/conflict_probe.py": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
+    "scripts/test-interaction-conflict-probe.py": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a"
+  },
+  "backendRevision": "59b0739e91ba11be3c7064edc289f27338f2206b",
+  "backendSha256": "a60acef061f128f610e439962cc1d140938b8ab421da735476548a05b11b5456",
+  "backendSourceTree": "a66d9bc9eedeac184b2cc11145b9b3a8a490738e",
+  "currentBackendSourceTreeMatches": true,
+  "helperTests": 7,
+  "focusedActualHttp": "passed",
+  "forcedSqlState": "40001",
+  "conflictThen403Charges": 2,
+  "conflictThenRevoked401Charges": 1,
+  "requestBinding": "same actual actor/resource/payload/key on both wire attempts",
+  "originalFunctionDefinitionRestoredExactly": true,
+  "focusedLogSha256": "fe340d08f6429a5390c4f3491e2506e79e1b68b6695dcea6d74fd8f58ab10361",
+  "negativeControls": [
+    {
+      "control": "false503success",
+      "status": "detected-by-named-assertion",
+      "exitCode": 1,
+      "witness": "test_permanent503_never_becomes_success",
+      "logSha256": "2d9daee7d6a16c307e8bcd0524c1555a74f58aa97066a94013042b64668f5f7d"
+    },
+    {
+      "control": "changed-payload",
+      "status": "detected-by-named-assertion",
+      "exitCode": 1,
+      "witness": "test_retries_preserve_exact_actor_resource_payload_and_key",
+      "logSha256": "0d7b3167108fde3f7cd405edbc7c97a2bba73d26f2b65e5bb06fc552a88c0019"
+    }
+  ],
+  "olderIOSRun": "https://github.com/diegueins680/tdf-app/actions/runs/38748999721",
+  "remaining": [
+    "Fresh final-root canonical backend gate and native journeys",
+    "Actual deadlock/serialization-schedule reproduction"
+  ]
+}

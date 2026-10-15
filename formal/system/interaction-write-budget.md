@@ -65,6 +65,22 @@ now charged, and so is each retry.
 - `scripts/interactions/test-api.py` (existing): through HTTP, commands refused by
   authorization exhaust the budget and the stored counter is exactly 91.
 
+## Isolated HTTP conflict recovery
+
+The burst acceptance probe uses at most three transport attempts within five
+seconds for a declared transaction-conflict response. It reuses one request,
+including actor credentials, target, payload and request key. Only a final403 or429
+counts toward the probe;503 is never accepted as an authorization denial.
+Unknown503 metadata, permanent conflicts,401, other errors and transport failures
+remain failures. Other HTTP acceptance boundaries do not opt into this recovery.
+Each retry remains subject to the real write budget and its original exact91
+threshold and calendar-window checks.
+
+Seven local helper regressions cover this boundary. Controlled source mutations
+that return a permanent503 as success or change the payload fail named assertions.
+The observed older iOS failure establishes an unexpected503 at the probe; it does
+not establish which of the backend's declared conflict classes caused it.
+
 ## Limits
 
 - The model is bounded (four attempts, two minutes, limit two) and checks safety
@@ -82,8 +98,14 @@ now charged, and so is each retry.
   still undoes the charge. No input that reaches these paths is known.
 - The model represents the repair as one boolean guard; it says nothing about the
   savepoint mechanism, and its attempts always commit.
-- The tests call `chargedInteractionWrite` directly. Nothing tests that the HTTP
-  boundary commits after a raised write, and no test produces a deadlock.
+- The direct Haskell tests are supplemented by an isolated HTTP scenario that
+  temporarily wraps the command function with a controlled SQLSTATE40001 failure.
+  The real HTTP boundary returns its declared empty503/Retry-After1/no-store
+  response, then retries the same request bytes and reaches403 with two committed
+  attempt charges. Revoking the session between those requests instead yields401
+  and only the first charge. The original function is restored byte-for-byte and
+  owned probe objects are removed. This injects an error class; it does not
+  reproduce a real PostgreSQL deadlock or serialization anomaly.
 - The window is a fixed calendar minute, so up to 180 writes can run within a few
   seconds across a minute boundary. `interaction_command` separately refuses more
   than 30 new commands per account in a rolling minute.

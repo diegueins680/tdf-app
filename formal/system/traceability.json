@@ -7088,7 +7088,7 @@
       "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
       "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute; the row stays locked until the attempt's transaction ends.",
       "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
-      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge.",
+      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge. A retryable SQL conflict is not a successful authorization denial. The existing charged-write savepoint may preserve the attempt charge while rolling back the command; retries remain subject to the same exact quota. Its declared retryable503 cannot count as an authorization/conformance success.",
       "recovery": "The next database calendar-minute bucket has its own budget.",
       "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
       "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; tdf-hq/src/TDF/Interactions/Server.hs; scripts/interactions/test-api.py",
@@ -7102,12 +7102,14 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-http.sh",
         "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
-        "scripts/test-interaction-write-budget.sh"
+        "scripts/test-interaction-write-budget.sh",
+        "scripts/interactions/conflict_probe.py",
+        "scripts/test-interaction-conflict-probe.py"
       ],
       "formalModels": [
         "formal/event-operations/InteractionWriteBudget.tla"
       ],
-      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter.",
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter. The isolated burst probe retries only the exact empty503/Retry-After1/no-store transaction-conflict contract, for at most3 attempts within5seconds, reusing identical actor/resource/payload/requestKey. Only final403/429 counts; permanent or unrecognized503, revoked401 and other failures remain failures.",
       "evidence": "formal/system/interaction-write-budget.md",
       "status": "specified and implemented",
       "critical": true,
@@ -11033,7 +11035,8 @@
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
-    "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
+    "scripts/interactions/conflict_probe.py": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
+    "scripts/interactions/test-api.py": "2018462abf67b2a932ec41679b1b1e023b2637c5be0c5a50954aa546a2b4bffe",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
     "scripts/interactions/test-native.py": "899c8199d91af4b6dff12dc154663fefacfb3cea94c640db98d2a374d4a4af97",
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
@@ -11075,7 +11078,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "af305931a332a74c49e747b34636e3d959421de6df19f1b0cfc27f324701d489",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
+    "scripts/quality-repo.sh": "99aa84578d04f94ac02c36889f84d2e3b5ed791097ec2b527eeba33c0b41bd2d",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/run-music-release-worker-once.sh": "9674d11b9ae0f8932047a35db3fc77908d65bc46b5a495425d2bc8a1758ba625",
@@ -11103,6 +11106,7 @@
     "scripts/test-hetzner-inspection.py": "12cae0007775a3520c9b9cf276e16ebe97ee00a0128ba733dcab4d37dd59779a",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-index-declarations.sh": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
+    "scripts/test-interaction-conflict-probe.py": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a",
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
@@ -16752,6 +16756,18 @@
       }
     ],
     "scripts/test-interaction-write-budget.sh": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/interactions/conflict_probe.py": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-interaction-conflict-probe.py": [
       {
         "requirement": "SOC-ABUSE-001",
         "relationship": "tests"
@@ -22473,6 +22489,18 @@
       ]
     },
     {
+      "id": "SURFACE-98737e247fca427b",
+      "path": "scripts/interactions/conflict_probe.py",
+      "sha256": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-865e33190c6c6efa",
       "path": "scripts/interactions/generate-mobile-shared.mjs",
       "sha256": "1cfcc5965e1fb8159a2ef6b9d9181ee8950e61e3eb0a09bcccd1c288f23f5550",
@@ -22489,7 +22517,7 @@
     {
       "id": "SURFACE-c6b247cfc6b5135b",
       "path": "scripts/interactions/test-api.py",
-      "sha256": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
+      "sha256": "2018462abf67b2a932ec41679b1b1e023b2637c5be0c5a50954aa546a2b4bffe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23359,7 +23387,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
+      "sha256": "99aa84578d04f94ac02c36889f84d2e3b5ed791097ec2b527eeba33c0b41bd2d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24578,6 +24606,18 @@
       "requirements": [
         {
           "requirement": "DATA-INDEX-DECLARATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-12364ce4d0705b8d",
+      "path": "scripts/test-interaction-conflict-probe.py",
+      "sha256": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
           "relationship": "tests"
         }
       ]
@@ -47045,7 +47085,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2ba3c454f56cb33ba248c5960bc1a63a62252f288d39e82787eec8879e65b796",
+      "sourceSha256": "6f9c8a6170fae641aacd81768d345eb596eb63779188834b68d0dda314eb9b7e",
       "definition": {
         "states": [
           "absent",

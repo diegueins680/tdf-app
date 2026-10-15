@@ -821,6 +821,18 @@
       "conflict": "The installed Android journey at root59b/Mobilee5 loaded reply context but left the linked reply below the viewport. A proposed manual test scroll at Mobile4185 would bypass the existing automatic-focus acceptance contract.",
       "authority": "Existing documented automatic exact-reply focus and the original native notification journey define intended behavior; a failed implementation is not product authority.",
       "resolution": "Supersede4185 without admitting its manual-scroll fixture. Keep the original native assertion. Repair the separately reproduced late-layout retry and stale-measurement gaps, and require fresh native artifacts/journeys before claiming the Android symptom resolved."
+    },
+    {
+      "id": "AUTHORITY-INTERACTION-CONFLICT-PROBE-001",
+      "sources": [
+        "tdf-hq/src/TDF/Interactions/Server.hs",
+        "scripts/interactions/test-api.py",
+        "formal/system/interaction-write-budget.md",
+        "formal/system/requirements.json"
+      ],
+      "conflict": "The isolated abuse-budget HTTP probe required every intermediate response to be403/429, while the existing backend explicitly maps transaction conflicts to an empty503 with Retry-After1 and no-store. An older final-root iOS run failed at that intermediate response before native assertions.",
+      "authority": "The source-derived transaction-error contract and the original exact per-account quota/authorization requirement both apply;503 is not an authorization success.",
+      "resolution": "Retry only the exact declared response with one unchanged actor/resource/payload/requestKey, at most3 attempts within5seconds, and still require final403/429 and the persisted exact91 threshold. Permanent/unrecognized503 and other failures must fail. Verify the real SQL-error HTTP path, savepoint charges and revocation between retries on an owned fixture, retaining the original native assertions."
     }
   ]
 }

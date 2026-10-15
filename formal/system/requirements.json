@@ -7087,7 +7087,7 @@
       "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
       "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute; the row stays locked until the attempt's transaction ends.",
       "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
-      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge.",
+      "failure": "Domain rejection and database errors preserve the committed budget; a NUL escape refused by jsonb returns 400; quota exhaustion returns 429. A transaction that cannot commit cannot keep its charge. A retryable SQL conflict is not a successful authorization denial. The existing charged-write savepoint may preserve the attempt charge while rolling back the command; retries remain subject to the same exact quota. Its declared retryable503 cannot count as an authorization/conformance success.",
       "recovery": "The next database calendar-minute bucket has its own budget.",
       "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
       "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; tdf-hq/src/TDF/Interactions/Server.hs; scripts/interactions/test-api.py",
@@ -7101,12 +7101,14 @@
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-http.sh",
         "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
-        "scripts/test-interaction-write-budget.sh"
+        "scripts/test-interaction-write-budget.sh",
+        "scripts/interactions/conflict_probe.py",
+        "scripts/test-interaction-conflict-probe.py"
       ],
       "formalModels": [
         "formal/event-operations/InteractionWriteBudget.tla"
       ],
-      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter.",
+      "verification": "Bounded TLC model with four single-guard controls; PostgreSQL test of the charge against the migrated limiter, including raised writes and simultaneous attempts; isolated real HTTP/PostgreSQL test of 429 and the exact persisted counter. The isolated burst probe retries only the exact empty503/Retry-After1/no-store transaction-conflict contract, for at most3 attempts within5seconds, reusing identical actor/resource/payload/requestKey. Only final403/429 counts; permanent or unrecognized503, revoked401 and other failures remain failures.",
       "evidence": "formal/system/interaction-write-budget.md",
       "status": "specified and implemented",
       "critical": true,

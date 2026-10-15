@@ -251,6 +251,7 @@
       "scripts/install-continuous-improvement-loop-launchd.sh",
       "scripts/install-flyctl.mjs",
       "scripts/install-recovery-tools.py",
+      "scripts/interactions/conflict_probe.py",
       "scripts/interactions/generate-mobile-shared.mjs",
       "scripts/interactions/prepare-test-database.sh",
       "scripts/interactions/test-api.py",
@@ -455,6 +456,7 @@
       "scripts/test-hetzner-restore.py",
       "scripts/test-identity-reconciliation.sh",
       "scripts/test-index-declarations.sh",
+      "scripts/test-interaction-conflict-probe.py",
       "scripts/test-interaction-write-budget.sh",
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-invoice-worker.sh",
@@ -3988,6 +3990,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-98737e247fca427b",
+      "path": "scripts/interactions/conflict_probe.py",
+      "sha256": "b46f55c43ec551f9e395fa01bca31a3ff677f261ebbb0b74a794f6892a3934a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-865e33190c6c6efa",
       "path": "scripts/interactions/generate-mobile-shared.mjs",
       "sha256": "1cfcc5965e1fb8159a2ef6b9d9181ee8950e61e3eb0a09bcccd1c288f23f5550",
@@ -4002,7 +4010,7 @@
     {
       "id": "SURFACE-c6b247cfc6b5135b",
       "path": "scripts/interactions/test-api.py",
-      "sha256": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
+      "sha256": "2018462abf67b2a932ec41679b1b1e023b2637c5be0c5a50954aa546a2b4bffe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4434,7 +4442,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0a33416b65425b8f55b85d20283b362de3603b3c1c3ebfbdd2c153fc2190f329",
+      "sha256": "99aa84578d04f94ac02c36889f84d2e3b5ed791097ec2b527eeba33c0b41bd2d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5209,6 +5217,12 @@
       "id": "SURFACE-7842f199f23fca5a",
       "path": "scripts/test-index-declarations.sh",
       "sha256": "bd129975bdc1be9ecbfbca2d6879dd608253d73dfec93f34da8626cbaf407c86",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-12364ce4d0705b8d",
+      "path": "scripts/test-interaction-conflict-probe.py",
+      "sha256": "22ef61fc7719c537ab733ef7e74bc6d1f2199320cd41c45034eb20e070431f3a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24924,7 +24938,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "48024d7219b7a299235de1259e26f02184a0d38ab321b08c6996da1dc52cd4d0",
+      "sha256": "cfbc781a51117a3174c29e92a1d6e1a16a3711f0cab1023b62b1e399f8e30c0e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25064,7 +25078,7 @@
     },
     {
       "path": "formal/system/interaction-write-budget.md",
-      "sha256": "3b4d2a2df4c8a0faa2668efc68f8143414fd3bec96c772c765a1ae7ad3b688bc",
+      "sha256": "4faf3b18c49f145b1f09ae2b12cccc0089c8e8175d6dc6913fed21c055f819c4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25295,7 +25309,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2ba3c454f56cb33ba248c5960bc1a63a62252f288d39e82787eec8879e65b796",
+      "sha256": "6f9c8a6170fae641aacd81768d345eb596eb63779188834b68d0dda314eb9b7e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
