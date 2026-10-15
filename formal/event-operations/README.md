@@ -681,3 +681,11 @@ controls are mandatory in the formal runner.
 persisted submission mark, lease-fenced results and administrator resend. The positive
 model and four negative controls are mandatory in the formal runner. Bounds, provider
 assumptions and the recovery gaps found are stated there.
+
+## Public knowledge retrieval
+
+`PublicKnowledgeRead.tla` models PRIV-RAG-001 with one course, two metadata values
+and course/private source classes. The shared runner requires the positive model
+and all four named negative controls. See
+[the canonical retrieval contract](../system/public-knowledge-retrieval.md) for
+statement-snapshot assumptions, source/HTTP mappings and delivery exclusions.

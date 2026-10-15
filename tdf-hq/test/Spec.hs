@@ -625,6 +625,7 @@ import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.OperationsInboundCaptureSpec as OperationsInboundCaptureSpec
 import qualified TDF.MetaRedeliverySpec as MetaRedeliverySpec
+import qualified TDF.RagIndexPrivacySpec as RagIndexPrivacySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
 import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
 import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
@@ -17900,6 +17901,7 @@ main = hspec $ do
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
     MetaRedeliverySpec.spec
+    RagIndexPrivacySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec
     TicketPaymentGateSpec.spec

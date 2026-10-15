@@ -193,6 +193,10 @@ test.describe('Course enrollment on a small Android phone', () => {
     await fixture(page, baseURL);
     await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
     await expectRenderedRoot(page);
+    // The shell can render before the lazy course route. Scroll only after
+    // the course controls exist, otherwise scrolling the shell is a no-op.
+    await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     await expect(stickyBar).toBeHidden();
 
@@ -217,6 +221,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await expectRenderedRoot(page);
     const radioBar = page.getByTestId('radio-docked-bar');
     await expect(radioBar).toBeVisible({ timeout: 15_000 });
+    // Radio belongs to the shell and does not establish course readiness.
+    await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     if ((page.viewportSize()?.width ?? 0) >= 900) {
