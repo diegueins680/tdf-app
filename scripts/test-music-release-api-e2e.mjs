@@ -672,6 +672,8 @@ const purchase = await request('/music/purchases', {
     availabilityRuleId,
     territoryCode: 'US',
     termsVersion: 'music-download-e2e-v1',
+    expectedAmountMinor: '250',
+    expectedCurrency: 'USD',
   },
 });
 const repeatedPurchase = await request('/music/purchases', {
@@ -684,6 +686,8 @@ const repeatedPurchase = await request('/music/purchases', {
     availabilityRuleId,
     territoryCode: 'US',
     termsVersion: 'music-download-e2e-v1',
+    expectedAmountMinor: '250',
+    expectedCurrency: 'USD',
   },
 });
 assert.equal(repeatedPurchase.id, purchase.id);

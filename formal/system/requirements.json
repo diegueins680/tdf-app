@@ -10083,7 +10083,9 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "scripts/test-music-money-wire-verifier.py",
         "scripts/lib/music_money_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-music-release-api-e2e.mjs"
       ],
       "formalModels": [
         "scripts/verify-music-money-wire.py",

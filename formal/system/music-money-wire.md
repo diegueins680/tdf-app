@@ -90,6 +90,10 @@ or real payment is needed for this verification.
   tests check exact submitted values, formatting, invalid legacy responses and
   an authored price through the actual form. Exact-revision receipts distinguish
   working fixtures from a canonical migration rehearsal.
+- The broader music API/media integration fixture also applies the new encoder
+  migration and sends exact confirmation on initial purchase and replay. Its
+  previous selected-migration setup failed the first private version GET with500;
+  this setup failure is not a passing monetary semantic negative control.
 - The OpenAPI declaration documents purchase POST/GET and the generated client
   types are used by the web adapter. Other undocumented music operations remain
   a separate API completeness obligation.

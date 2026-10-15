@@ -10084,7 +10084,9 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "scripts/test-music-money-wire-verifier.py",
         "scripts/lib/music_money_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-music-release-api-e2e.mjs"
       ],
       "formalModels": [
         "scripts/verify-music-money-wire.py",
@@ -10541,8 +10543,8 @@
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
     "scripts/test-music-purchase.sh": "881cf0f42840cc2e2fff2fdba60ddc661d791e40d2f8749a2bf9da326beb309c",
-    "scripts/test-music-release-api-e2e.mjs": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
-    "scripts/test-music-release-api-e2e.sh": "7992f50153f322952911246d1b9ce206c8d29dcccf9414427158848c962ae14f",
+    "scripts/test-music-release-api-e2e.mjs": "6cb0b0a202da491ef34f7b4454f064985a84a434528a753fe5e6c43d1b57ba77",
+    "scripts/test-music-release-api-e2e.sh": "ad2fddf35b44f483be2a28b90b6614b8c2da7c92ec113f436733fffe4c5b4b88",
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
     "scripts/test-music-release-audio-pipeline.sh": "872c969557cc8cde9e5e135d768cfa5da60937beacb954de5ad1301c5331b8de",
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
@@ -17005,11 +17007,19 @@
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-music-release-api-e2e.sh": [
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
         "relationship": "tests"
       }
     ],
@@ -23687,11 +23697,15 @@
     {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
-      "sha256": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
+      "sha256": "6cb0b0a202da491ef34f7b4454f064985a84a434528a753fe5e6c43d1b57ba77",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MUSIC-MONEY-WIRE-001",
           "relationship": "tests"
         }
       ]
@@ -23699,11 +23713,15 @@
     {
       "id": "SURFACE-6508907c85e1859b",
       "path": "scripts/test-music-release-api-e2e.sh",
-      "sha256": "7992f50153f322952911246d1b9ce206c8d29dcccf9414427158848c962ae14f",
+      "sha256": "ad2fddf35b44f483be2a28b90b6614b8c2da7c92ec113f436733fffe4c5b4b88",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-MUSIC-MONEY-WIRE-001",
           "relationship": "tests"
         }
       ]
@@ -45640,7 +45658,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "45f1814532fe2f31d62a11967df4a0b8c4a8f1be62dba391070ca51ca163791e",
+      "sourceSha256": "505baa0f5d2af28bc47a5f9bcfbd62a6a7aca02930724a67204f2c2156950c52",
       "definition": {
         "states": [
           "absent",

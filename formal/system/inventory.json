@@ -5297,13 +5297,13 @@
     {
       "id": "SURFACE-d3a3e80fe4c29da0",
       "path": "scripts/test-music-release-api-e2e.mjs",
-      "sha256": "d274550778546e305a56c41b06e2190134c18f4ce5529f3c32c375dd7d193e40",
+      "sha256": "6cb0b0a202da491ef34f7b4454f064985a84a434528a753fe5e6c43d1b57ba77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6508907c85e1859b",
       "path": "scripts/test-music-release-api-e2e.sh",
-      "sha256": "7992f50153f322952911246d1b9ce206c8d29dcccf9414427158848c962ae14f",
+      "sha256": "ad2fddf35b44f483be2a28b90b6614b8c2da7c92ec113f436733fffe4c5b4b88",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24826,7 +24826,7 @@
     },
     {
       "path": "formal/system/music-money-wire.md",
-      "sha256": "14520d489bdf75dc83931a47095f14e1c4ea6d92ea3017f897d5668a09047251",
+      "sha256": "74e19f78799a497638f6b9c5c2e61467c0184baa4f6c2464c22c9ed53e510f07",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24945,7 +24945,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "45f1814532fe2f31d62a11967df4a0b8c4a8f1be62dba391070ca51ca163791e",
+      "sha256": "505baa0f5d2af28bc47a5f9bcfbd62a6a7aca02930724a67204f2c2156950c52",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
