@@ -1028,63 +1028,6 @@
       "reviewed": true
     },
     {
-      "id": "b925d71997a7d98258c3",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "payments-consolidation-20261015",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 207,
-        "consumerCount": 73,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      },
-      "supersededReviews": [
-        {
-          "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "a50d74a8b7dbee030ef7d867262d7eed50c8c14422ceefc89d0b6acf1597596b",
-          "sourceEntry": {
-            "id": "9dce5d95daef05f9ac10"
-          },
-          "sourceEntryCanonicalSha256": "98a2c24d34028bf1f299417e77e67ecd64552a69ae592c331b5ba411844db331",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
-        },
-        {
-          "sourceRevision": "a35d7783fb2f4f3d6e01f9ff5577ae5ad8d04f1a",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "eea239c6ae133b24e5c81497f194f84a8905e923c67df0cb99ca59267f6d8a06",
-          "sourceEntry": {
-            "id": "5644619a65c0da1913cb"
-          },
-          "sourceEntryCanonicalSha256": "e164d59d908bcce2788048c92192a376317103ede51197d8dadf85d7bd4292ab",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
-        },
-        {
-          "sourceRevision": "d5ce51ef1c884ce21bc7fd4799d9c1b8feec5cce",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "04f6c14f27d77cd5c42588ff8492808bd34f12aed670437dcf448dfab0b8416d",
-          "sourceEntry": {
-            "id": "b56d062e6b3f7b338cff"
-          },
-          "sourceEntryCanonicalSha256": "6adaaa1a87f2bc723b28ea7512f6436de7a9aab32df7327838a3a4cf40d80fa5",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Complete source decision and nested provenance retained in immutable ancestor; no recursive duplication."
-        }
-      ]
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -2232,10 +2175,10 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "React Query key segments are client cache mechanics and do not enumerate business values.",
+      "justification": "React Query key segments are client cache mechanics and do not enumerate business values. Same three keys as reviewed decision 79e7466c1f722b842262, moved unchanged from EventRsvpControls.tsx to a module the shell carousel can share.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "line": 2,
@@ -2245,7 +2188,31 @@
         "consumerCount": 24,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "1c608b378ca85918019d"
+          },
+          "sourceEntryCanonicalSha256": "653b016fff9a84868f3e27a92948ba059a67c1636dab20ad95430ab1c5890e68",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "1c608b378ca85918019d"
+          },
+          "sourceEntryCanonicalSha256": "495b5f5a252fcb489989d231599009d9f61448286a68b3571a1baffdcca08e07",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "63df59ecea7ce2e19b5f",
@@ -10720,12 +10687,12 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "line": 85,
@@ -10735,7 +10702,31 @@
         "consumerCount": 21,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "6f23d79c58cb6df8789b"
+          },
+          "sourceEntryCanonicalSha256": "b52255140128fa2ec5471117a439a07aade7fe065fc67e6505009936b31913f2",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "6f23d79c58cb6df8789b"
+          },
+          "sourceEntryCanonicalSha256": "c95fa0fc58b6a73a7e8510191ec9dc72ea85a9f72c583ab30f4faac53f4d6654",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "114692b809a9da30f431",
@@ -11654,12 +11645,12 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "line": 26,
@@ -11669,7 +11660,31 @@
         "consumerCount": 15,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "1fc12a91554dc9bed3fa"
+          },
+          "sourceEntryCanonicalSha256": "ce738b4b558615760c2e498c6388e46b048e618d326a16f6bcda1a935f8c7f86",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "1fc12a91554dc9bed3fa"
+          },
+          "sourceEntryCanonicalSha256": "8d937aa270faa6fdc8f5989e0a8e751f4da15b790194076d4b7ceec25ae87608",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "d3d44acab2b7f88cec12",
@@ -12069,12 +12084,12 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 795,
@@ -12084,7 +12099,31 @@
         "consumerCount": 14,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "7a90f90edc7d99b665c5"
+          },
+          "sourceEntryCanonicalSha256": "ee63211d0b714f10a636b6731e38ca30dde6e808106713c6f84ed42113db6c09",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "7a90f90edc7d99b665c5"
+          },
+          "sourceEntryCanonicalSha256": "9d8a422e39d2d470f1c5d0ab73d798edf10ed4af1f38b05f87f4aec942bd6c6e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "0584fd1cdd2f0412dc5e",
@@ -12135,12 +12174,12 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "line": 831,
@@ -12150,7 +12189,31 @@
         "consumerCount": 11,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "3a40512bc891a8863306"
+          },
+          "sourceEntryCanonicalSha256": "9108605f74f60cdcf7502309f1f0c5d4e54af658f83e987c8ca8294607d5bf2f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "3a40512bc891a8863306"
+          },
+          "sourceEntryCanonicalSha256": "e8b883146acd346d9114b3e82b37d5814dfbfaafb17dbd6207caafa211e34e33",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "03bd8c923949ec3ef986",
@@ -12819,12 +12882,12 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 60,
@@ -12836,19 +12899,43 @@
         "similarCandidateIds": [
           "1e7d1d67096faa181b55"
         ]
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "aaa716ca68fa3cb0b09b"
+          },
+          "sourceEntryCanonicalSha256": "e52d544f1a23c10805e0ec4697fc46e7bcec932ed2ec3d8a510077e40332d2ff",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "aaa716ca68fa3cb0b09b"
+          },
+          "sourceEntryCanonicalSha256": "489471b12184cc23f28eb542b7cee7240e60430156954d62d6bab14fc7d60246",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "65992320958643fcd97a",
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 64,
@@ -12860,7 +12947,31 @@
           "204695f88339a363dbac"
         ],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "65992320958643fcd97a"
+          },
+          "sourceEntryCanonicalSha256": "fe06b9339f31c93a8ef7b241db87ea8954184c2abee5d404142ce5c772a6195b",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "65992320958643fcd97a"
+          },
+          "sourceEntryCanonicalSha256": "06d284917958fe2342325bcfe49a9297b2da7c4fe5bfb07f23f52380c72f121c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "d9b9d4ae8c44ebb790f8",
@@ -12889,12 +13000,12 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 78,
@@ -12904,7 +13015,31 @@
         "consumerCount": 13,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "6c4dac47f8f0aa7ae2f7"
+          },
+          "sourceEntryCanonicalSha256": "1e6149d6f234c7b6e0b501aa977b24ae2de78b5da54d4cfa0580968de44caff8",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "6c4dac47f8f0aa7ae2f7"
+          },
+          "sourceEntryCanonicalSha256": "f494b62870c712d04db5dfd4115775eb6a7f6704394f4222eb84cab7a8715e74",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "e7bcfcc68efa32ce3d27",
@@ -13087,12 +13222,12 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "external_provider, external_provider_code",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 197,
@@ -13102,7 +13237,31 @@
         "consumerCount": 12,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "c7c992c00a1accaa7929"
+          },
+          "sourceEntryCanonicalSha256": "8d22497154c04040ca1e12e3f617f6f6ec708734558776c0ce2e95fac52313bb",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "c7c992c00a1accaa7929"
+          },
+          "sourceEntryCanonicalSha256": "584e323c296d441ca122d17917a722e06d3a2b1e26edd0247a5d152269648b54",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "12effa2c1dd246df4a13",
@@ -13307,12 +13466,12 @@
       "classification": "governed-reference-data",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
+      "priority": "P2-schema-history",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true,
-      "reviewMethod": "deterministic-policy-v3",
-      "reviewBatch": "deterministic-policy-v3",
+      "reviewMethod": "restored-source-specific-review",
+      "reviewBatch": "payments-repair-20261015",
       "evidence": {
         "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "line": 355,
@@ -13322,7 +13481,31 @@
         "consumerCount": 15,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
-      }
+      },
+      "supersededReviews": [
+        {
+          "sourceRevision": "2781ddc2a3c9fd661684742550918d653afdc0cf",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "9408df83dedf4b4bebc3374479e7975e5cddee7aba235c53e2b7228210f102b2",
+          "sourceEntry": {
+            "id": "94ef7a0afcd84f143948"
+          },
+          "sourceEntryCanonicalSha256": "5d1d1c15d3b85e91e6b72af71ea8477c742b123feb65d65fe054a1de81cd5433",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        },
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "94ef7a0afcd84f143948"
+          },
+          "sourceEntryCanonicalSha256": "9f6600b75b670153ff54e578192c17354c08955588d413910465c9d57c708d8e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     },
     {
       "id": "e2c83a9bd2f76bf304f0",
@@ -17497,6 +17680,41 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Migration order, immutable ancestry and checksums govern persisted consent and payment state.",
+      "justification": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
+      "reviewed": true,
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 207,
+        "consumerCount": 73,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      },
+      "id": "627709d9858d72128d2f",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "payments-repair-20261015",
+      "supersededReviews": [
+        {
+          "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+          "sourceEntry": {
+            "id": "b925d71997a7d98258c3"
+          },
+          "sourceEntryCanonicalSha256": "ac4a765b99a58d3822b254948aa19ff4266f0cc6fe23c1e67fc37000a41c1696",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+        }
+      ]
     }
   ]
 }

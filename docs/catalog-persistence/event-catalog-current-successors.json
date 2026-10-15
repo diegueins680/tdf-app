@@ -343,12 +343,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "b925d71997a7d98258c3",
+      "currentId": "627709d9858d72128d2f",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 207,
-      "change": "The ordered 207-entry manifest preserves the exact main204 prefix, followed by ledger integrity, immutable checkout lines and terms identity. Original introduction commits remain ancestors. The unmerged terms migration is repaired to fence writers through atomic preflight/trigger installation; its revised checksum requires current-candidate review. No production application is implied.",
+      "valueCount": 208,
+      "change": "Ordered208 manifest preserves the exact previous207 entries and appends historical terms identity. Original migration bytes remain unchanged. All208 entries applied and replayed on a fresh synthetic production schema; course/event history controls passed. Retain this additive guard across application rollback. No production application is implied.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "171b80c2def40a52e1613982b2d4ec6d6aac4707",
