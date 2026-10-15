@@ -25064,7 +25064,7 @@
     },
     {
       "path": "formal/system/state-machine-correspondence.md",
-      "sha256": "d93be7c14661871d37576555cfef1c2732d497c5a1f9c7f888a5e4aaa1b2c62e",
+      "sha256": "086f91891d8de4da293d03694f16682786509582f8e64972cf6df13da41de68c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

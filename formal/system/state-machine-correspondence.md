@@ -34,7 +34,8 @@ AUTHORITY-048 records them as reviewed SPECIFICATION AMBIGUITY.
 
 State sets, SQL-trigger transitions and bound Haskell validators are checked
 (sections below). Machines whose Haskell transition relation is still unbound
-need separate evidence (for example `TDF.Directory.Policy` for directory claims). Guards, actors and side effects
+need separate evidence. The directory claim relation is bound by the membership
+checks described below; its guards, actors and side effects
 are not checked. A matching CHECK constraint does not prove every writer is legal.
 `PAY-INVOICE-001` is abstract receipt presence and is explicitly unbound.
 
