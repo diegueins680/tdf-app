@@ -81,9 +81,16 @@ def verify_music_money(sql, request, check, actor, root):
         status, body = request('/music/purchases', token='fixture-money-buyer')
         check('music owner HTTP list preserves exact amount', status == 200 and len(json.loads(body)) == 1 and
               json.loads(body)[0]['id'] == purchase['id'] and json.loads(body)[0]['grossMinor'] == '9007199254740993')
+        check('music unpaid HTTP purchase creates no provider attempt',
+              sql("SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id='" + purchase['checkoutId'] + "'") == '0')
         check('music unpaid HTTP purchase grants no download entitlement',
               sql("SELECT count(*) FROM music_entitlement WHERE purchase_order_id='" + purchase['id'] + "'") == '0')
     finally:
         for flag in flags:
             sql("UPDATE revenue_feature_flag SET enabled=" + ('true' if flag['enabled'] else 'false') +
                 " WHERE environment='sandbox' AND flag_key='" + flag['key'] + "'")
+    restored = json.loads(sql("SELECT json_agg(json_build_object('key',flag_key,'enabled',enabled)) "
+        "FROM revenue_feature_flag WHERE environment='sandbox' AND flag_key IN "
+        "('music_releases.public','music_releases.commerce')"))
+    check('music sandbox controls restored to their original values',
+          sorted(restored, key=lambda row: row['key']) == sorted(flags, key=lambda row: row['key']))
