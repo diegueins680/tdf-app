@@ -38,6 +38,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Initialize arithmetic execution receipt
+        if: ${{ !cancelled() }}
         timeout-minutes: 1
         run: |
           mkdir "${{ runner.temp }}/payment-proof"

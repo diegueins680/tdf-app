@@ -2636,7 +2636,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "9d89714e5405826e72d4539c472653b5cbe5bea4f66b35b9305fe3c1658f83a8",
+      "sha256": "6cc5ba6bf686982fd3f746535aafa4b96fdcb144a9a35947dc87596df6e43065",
       "semanticConformance": "not-established-by-discovery"
     },
     {

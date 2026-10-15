@@ -9931,7 +9931,7 @@
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci.yml": "bd53987b42af93029c3f3b71ccfe800bf631678b7c299eb078834a60e3a5c0b3",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "9d89714e5405826e72d4539c472653b5cbe5bea4f66b35b9305fe3c1658f83a8",
+    ".github/workflows/event-operations-formal.yml": "6cc5ba6bf686982fd3f746535aafa4b96fdcb144a9a35947dc87596df6e43065",
     ".github/workflows/event-raci-browser.yml": "715cafffb6119710e64bcf24cbeeb8cdb206fd3ae298d281adc73b55d527f8e6",
     ".github/workflows/interaction-verification.yml": "778c76fd9db69fff803902999b91346b117ced0c953c6f9e54c82acda151e021",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -18746,7 +18746,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "9d89714e5405826e72d4539c472653b5cbe5bea4f66b35b9305fe3c1658f83a8",
+      "sha256": "6cc5ba6bf686982fd3f746535aafa4b96fdcb144a9a35947dc87596df6e43065",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
