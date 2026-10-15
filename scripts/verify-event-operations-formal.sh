@@ -285,6 +285,9 @@ run_tlc WorkerCompletionEvidence.tla WorkerCompletionEvidence.cfg worker-complet
 expect_counterexample WorkerCompletionEvidenceFailed.cfg CompletedHasNoFailedItems worker-completion-failed WorkerCompletionEvidence.tla
 expect_counterexample WorkerCompletionEvidenceUnacknowledged.cfg SuccessfulReturnHasEvidence worker-completion-unacknowledged WorkerCompletionEvidence.tla
 run_tlc ProviderRetryAdmission.tla ProviderRetryAdmission.cfg provider-retry-admission
+run_tlc DiscoveryFallbackPrivacy.tla DiscoveryFallbackPrivacy.cfg discovery-fallback-privacy
+expect_counterexample DiscoveryFallbackPrivacyPrivateSubject.cfg FallbackRequiresNoAuthority discovery-private-subject DiscoveryFallbackPrivacy.tla
+expect_counterexample DiscoveryFallbackPrivacyIgnoredLink.cfg FallbackRequiresNoAuthority discovery-ignored-link DiscoveryFallbackPrivacy.tla
 expect_counterexample ProviderRetryAdmissionAmbiguous.cfg OneLiveIntent provider-retry-ambiguous ProviderRetryAdmission.tla
 expect_counterexample ProviderRetryAdmissionDuplicate.cfg ImmutableKey provider-retry-duplicate ProviderRetryAdmission.tla
 expect_counterexample ProviderRetryAdmissionPayload.cfg BoundReplay provider-retry-payload ProviderRetryAdmission.tla
@@ -403,6 +406,11 @@ run_tlc ArtistClaimKind.tla ArtistClaimKind.cfg artist-claim-kind
 run_negative_tlc ArtistClaimKindUnsafe.cfg artist-claim-kind-unsafe 'Invariant OnlyArtist is violated' ArtistClaimKind.tla
 run_tlc ArtistClaimTarget.tla ArtistClaimTarget.cfg artist-claim-target
 run_negative_tlc ArtistClaimTargetUnsafe.cfg artist-claim-target-unsafe 'Invariant UniqueTarget is violated' ArtistClaimTarget.tla
+run_tlc TicketManualReview.tla TicketManualReview.cfg ticket-manual-review
+run_tlc TicketManualReview.tla TicketManualReviewLockReleasedGuarded.cfg ticket-manual-review-lock-released-guarded
+run_negative_tlc TicketManualReviewLockReleased.cfg ticket-manual-review-lock-released 'Invariant EveryoneAnswered is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewSubmitterReviews.cfg ticket-manual-review-submitter-reviews 'Invariant NoSelfApproval is violated' TicketManualReview.tla
+run_negative_tlc TicketManualReviewLockReleasedUnguarded.cfg ticket-manual-review-lock-released-unguarded 'Invariant OnePayment is violated' TicketManualReview.tla
 run_tlc IndexDeclaration.tla IndexDeclaration.cfg index-declaration
 run_negative_tlc IndexDeclarationKeyUnique.cfg index-declaration-key-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla
 run_negative_tlc IndexDeclarationKeyTimeUnique.cfg index-declaration-key-time-unique 'Invariant NothingNewRefused is violated' IndexDeclaration.tla

@@ -15,6 +15,9 @@ on:
         default: ''
 permissions:
   contents: read
+# Public-image pulls retain GitHub-hosted runners' built-in Docker Hub credentials.
+# A global login replaces those credentials and can introduce pull rate limits.
+# https://github.com/docker/login-action#Set-scopes-for-the-authentication-token
 jobs:
   postgres-properties:
     runs-on: ubuntu-latest
@@ -22,9 +25,6 @@ jobs:
     services:
       postgres:
         image: pgvector/pgvector:pg17
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: local-ci-only
