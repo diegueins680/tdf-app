@@ -10672,7 +10672,6 @@
       "state": {
         "initial": "waiting-for-layout",
         "terminal": [
-          "user-controlled",
           "unmounted"
         ],
         "states": [
@@ -47046,7 +47045,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "893b9d0b42718ec114a9c2fa3fca23732220035f1b45cce5fbc55e58cf3535d3",
+      "sourceSha256": "2ba3c454f56cb33ba248c5960bc1a63a62252f288d39e82787eec8879e65b796",
       "definition": {
         "states": [
           "absent",

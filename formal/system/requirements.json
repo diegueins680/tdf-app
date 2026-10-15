@@ -10671,7 +10671,6 @@
       "state": {
         "initial": "waiting-for-layout",
         "terminal": [
-          "user-controlled",
           "unmounted"
         ],
         "states": [
