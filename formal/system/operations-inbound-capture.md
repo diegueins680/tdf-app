@@ -47,6 +47,15 @@ mutation violates `CaptureRespectsEnablement`; the three existing direction,
 non-request and replay controls still fail their named properties. Exact candidate
 receipts must supersede development counts before delivery.
 
+The lock design follows [PostgreSQL17 row-lock semantics](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS):
+`FOR KEY SHARE` would not fence a non-key boolean update, whereas `FOR SHARE`
+does. The concrete races exercise READ COMMITTED behavior; error rollback can
+release the capture block's locks because its event effects were also rolled back.
+The [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#disposal-of-logs)
+supports explicit disposal rules for records and copies, but supplies no approved
+TDF duration. `research.json` records both applicability decisions separately from
+the test evidence.
+
 ## Historical direction-repair rationale and effects
 
 The following description records why migration 2026-10-11 was introduced. Its

@@ -1295,6 +1295,42 @@ BEGIN
     RAISE EXCEPTION 'A ticketing index definition is missing or invalid';
   END IF;
 
+  -- Persistent reads a capitalised "Index..." model line as UNIQUE; the
+  -- 2026-10-11 migration replaced nine such constraints with plain indexes.
+  -- Its rollback restores the constraints while the ledger keeps the entry,
+  -- so a release must see the plain indexes themselves.
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('chat_message', 'index_chat_message_thread', '(thread_id)'),
+        ('course_registration', 'index_course_registration_party', '(party_id, created_at)'),
+        ('course_registration_follow_up', 'index_course_registration_follow_up_next', '(next_follow_up_at)'),
+        ('course_registration_follow_up', 'index_course_registration_follow_up_party', '(party_id, created_at)'),
+        ('course_registration_follow_up', 'index_course_registration_follow_up_registration', '(registration_id, created_at)'),
+        ('course_registration_receipt', 'index_course_registration_receipt_party', '(party_id, created_at)'),
+        ('course_registration_receipt', 'index_course_registration_receipt_registration', '(registration_id, created_at)'),
+        ('whats_app_message', 'index_whats_app_message_party', '(party_id, created_at)'),
+        ('whats_app_message', 'index_whats_app_message_phone', '(phone_e164, created_at)')
+    ) AS expected(table_name, index_name, definition_fragment)
+    LEFT JOIN pg_class AS relation
+      ON relation.oid = ('public.' || expected.table_name)::regclass
+    LEFT JOIN pg_class AS index_relation
+      ON index_relation.relnamespace = 'public'::regnamespace
+     AND index_relation.relname = expected.index_name
+     AND index_relation.relkind = 'i'
+    LEFT JOIN pg_index AS actual
+      ON actual.indrelid = relation.oid
+     AND actual.indexrelid = index_relation.oid
+    WHERE actual.indexrelid IS NULL
+       OR actual.indisunique
+       OR NOT actual.indisvalid
+       OR NOT actual.indisready
+       OR position(lower(expected.definition_fragment) IN lower(pg_get_indexdef(actual.indexrelid))) = 0
+  ) THEN
+    RAISE EXCEPTION 'A declared index is unique, missing or invalid';
+  END IF;
+
   FOREACH discovery_table IN ARRAY ARRAY[
     'external_venue_ref',
     'external_artist_ref',
