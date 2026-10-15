@@ -263,12 +263,22 @@ def relation_transitions(spec, source, names):
                 f"({a} == {b} && {a} `Set.member` states) || ({a}, {b}) `Set.member` transitions"]
     if decision not in admitted:
         raise RuntimeError(f"{spec['relation']} does not decide membership in transitions: {decision}")
-    bindings = list(re.finditer(r"^\s+transitions\s*=\s*Set\.fromList\s*\[(.*?)\]", where, re.M | re.S))
-    if len(bindings) != 1:
+    # Haskell layout fixes the where-block's declaration column at its first
+    # lexeme. A nested let/where can shadow `transitions`; its table must never
+    # stand in for the binding actually used by the membership predicate.
+    where = where.expandtabs(8)
+    first = re.search(r"^( *)(\S)", where, re.M)
+    if first is None or not first.group(1):
         raise RuntimeError(f"{spec['relation']} must bind transitions = Set.fromList once")
-    table = bindings[0]
-    following = where[table.end():].lstrip()
-    if following and not re.match(r"[A-Za-z_]\w*'*(\s+[\w']+)*\s*(=|::|\|)", following):
+    indent = len(first.group(1))
+    starts = list(re.finditer(rf"^ {{{indent}}}\S", where, re.M))
+    blocks = [where[start.start():starts[i + 1].start() if i + 1 < len(starts) else len(where)]
+              for i, start in enumerate(starts)]
+    bindings = [block for block in blocks if re.match(r"transitions(?:\s|=)", block.lstrip())]
+    table = re.match(r"\s*transitions\s*=\s*Set\.fromList\s*\[(.*?)\]", bindings[0], re.S) if len(bindings) == 1 else None
+    if table is None:
+        raise RuntimeError(f"{spec['relation']} must bind transitions = Set.fromList once")
+    if bindings[0][table.end():].strip():
         raise RuntimeError(f"{spec['relation']} transitions is not a single literal set")
     listed = table.group(1)
     if names is None:

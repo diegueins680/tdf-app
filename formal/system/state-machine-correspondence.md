@@ -83,7 +83,7 @@ The directory machines are enforced by membership predicates in
 in the `where`), bound as `code: {file, relation, renderer, rendererFile?}`. The
 checker requires the predicate to be a single clause whose decision is exactly
 one of the two admitted shapes, its `where` to bind `transitions = Set.fromList`
-once as a single literal list of pairs, and the renderer to be a single
+once at the direct `where` declaration column as a single literal list of pairs, and the renderer to be a single
 parse-table clause `name value = lookup value [("stored", Constructor), ...]`
 (no stored name mapped twice) or `identity` when the pairs are string literals
 (the claim relation). Identity transitions (`from == to`) are not declared and
@@ -96,7 +96,7 @@ declared machine (15, 11, 22, 17 and 12 transitions), no deviation. The claim
 relation was already exhausted through HTTP under ID-CLAIM-REVIEW-001; the
 static comparison is new for all five. Nineteen database-free controls cover
 the shape (edge removed or added, unnamed constructor, set extended, built from
-a decoy set or holding a named entry, predicate with an extra disjunct, deciding
+a decoy set, nested `let`/`where` shadows of `transitions`, or holding a named entry, predicate with an extra disjunct, deciding
 on a primed set or keeping membership only in a helper, a specific clause before
 the relation or before the parse table, edge kept in a comment, parse table
 doubled, non-literal or missing an entry, identity renderer on constructor

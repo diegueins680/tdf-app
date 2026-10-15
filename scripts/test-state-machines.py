@@ -256,6 +256,29 @@ def relation_controls(bindings, machines):
         target.write_text(policy.replace(decision, decision.replace("    transitions = Set.fromList\n", "    transitions = Set.insert (ProfileArchived, ProfileDraft) base\n    base = Set.fromList\n"), 1))
         expect("transitions built from a decoy set", gate.check_code(bindings, machines, root),
                "allowedProfileTransition must bind transitions = Set.fromList once")
+        original = "    transitions = Set.fromList\n"
+        # The real binding adds an undeclared edge, while an unused helper's
+        # nested binding contains the old literal table. Both layouts compiled
+        # by Haskell must be rejected rather than certified from that decoy.
+        for layout, replacement in (
+            ("nested let", "    transitions = Set.insert (ProfileArchived, ProfileDraft) baseTransitions\n"
+             "    baseTransitions = Set.empty\n"
+             "    helper =\n        let\n          transitions = Set.fromList\n"),
+            ("nested where", "    transitions = Set.insert (ProfileArchived, ProfileDraft) baseTransitions\n"
+             "    baseTransitions = Set.empty\n"
+             "    helper = transitions\n      where\n        transitions = Set.fromList\n"),
+        ):
+            start = policy.index(original, policy.index("allowedProfileTransition fromStatus"))
+            end = policy.index("      ]", start) + len("      ]")
+            table = policy[start:end]
+            nested = table.replace(original, replacement, 1)
+            # Keep the literal list inside the nested declaration's layout.
+            nested = nested.replace("\n      [", "\n            [").replace("\n      ,", "\n            ,").replace("\n      ]", "\n            ]")
+            if layout == "nested let":
+                nested += "\n        in transitions"
+            target.write_text(policy[:start] + nested + policy[end:])
+            expect(f"shadowed transitions in {layout}", gate.check_code(bindings, machines, root),
+                   "allowedProfileTransition must bind transitions = Set.fromList once")
         target.write_text(policy.replace(decision, decision.replace("`Set.member` transitions\n", "`Set.member` transitions'\n").replace("    transitions = Set.fromList\n", "    transitions' = Set.insert (ProfileArchived, ProfileDraft) transitions\n    transitions = Set.fromList\n"), 1))
         expect("predicate deciding on a primed set", gate.check_code(bindings, machines, root),
                "allowedProfileTransition does not decide membership in transitions")
@@ -278,7 +301,7 @@ def relation_controls(bindings, machines):
     del unbound["machines"][CLAIM]["code"]
     expect("required relation binding removed", gate.check_code(unbound, machines),
            f"{CLAIM}: required backend validator binding is missing")
-    return 19
+    return 21
 
 def main():
     parser = argparse.ArgumentParser()
