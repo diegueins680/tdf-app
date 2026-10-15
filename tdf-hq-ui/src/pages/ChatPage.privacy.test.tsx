@@ -146,7 +146,8 @@ it.each(['ordinary poll', 'previous notification'])('ignores late authorization 
   }
   await waitFor(() => expect(listThreads.mock.calls.length).toBe(baseline + 1));
   fireEvent.click(screen.getByRole('button', { name: 'Open chat notification' }));
-  await waitFor(() => expect(listThreads.mock.calls.length).toBe(baseline + 2));
+  // A ten-second background poll must not stand in for navigation admission.
+  await waitFor(() => expect(listThreads.mock.calls.length).toBe(baseline + 2), { timeout: 2000 });
   await act(async () => { resolveOld([thread]); });
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();

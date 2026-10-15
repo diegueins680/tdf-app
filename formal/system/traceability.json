@@ -10839,7 +10839,7 @@
     "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "bd951b0908f4119090aa09a19715d47abd62803e6fe31c36cf9e2fb171e757d4",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4b3d8da80b27fb4fadefbc5a1209b596d875bb6b40b24b7a0dc37a55e9c37e9d",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "7b661f0e8c6cbb733179415914ec1782e5cccf89556ba0ac039aa7bde4536d6f",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "557a22077b926d96abded74447abf5868f3ebc33a176af7cdb3ea8729dc57839",
     "tdf-hq-ui/src/pages/ChatPage.tsx": "4338589839f88107cedcf55b9f0285cc4752b44be77492c1e441b835261ddc91",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -29036,7 +29036,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "7b661f0e8c6cbb733179415914ec1782e5cccf89556ba0ac039aa7bde4536d6f",
+      "sha256": "557a22077b926d96abded74447abf5868f3ebc33a176af7cdb3ea8729dc57839",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
