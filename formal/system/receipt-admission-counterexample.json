@@ -1,0 +1,18 @@
+{
+  "type": "synthetic-producer-fault-control",
+  "actualApplicationDefectEstablished": false,
+  "revision": "2d8a99bf51bacd08a69f25673beeef95259aa70c",
+  "sourceDigest": "fd1d133d5fdc1c922bf74275aaaed080457ca69634fdcab18cc0e8f956b00c60",
+  "reporterExitCode": 0,
+  "reportedProofExecutionPassed": true,
+  "incorrectlyAdmittedAuthorizationProofs": 3,
+  "formula": "(assert true)\n(check-sat)\n",
+  "expectedNegatedContractResult": "unsat",
+  "actualFormulaResult": "sat",
+  "release": "BLOCKED",
+  "requirementId": "SYS-VERIFY-002",
+  "faultModel": "The producer exits zero, claims PROVEN and supplies a matching hash, while its serialized negated contract is SAT. The controlled fixture changes only producer output, not application source.",
+  "regressionControl": "scripts/test-verification-report.py:AssuranceTests.test_producer_false_pass_is_refuted_by_report_replay",
+  "correctedBehavior": "Reporter returns failure; the rechecked SAT negated contract is REFUTED within the synthetic encoding; other authorization claims and supporting lemmas are UNPROVEN. No application-level refutation follows.",
+  "evidenceScope": "Synthetic evidence-admission counterexample, not a production authorization defect or a translation/compiler proof."
+}

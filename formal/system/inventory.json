@@ -5639,7 +5639,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "4021ff4a01ea32ad1e2048d29f184307e89097051e8eeb43caa7213ab74f57b0",
+      "sha256": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5699,7 +5699,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "29592427dd03952bd20517bf3e81c695e7e76fd7c97e5bbf1dcabadb05833670",
+      "sha256": "1e739093989bd5df8f88d97375b354c098068cc2feb3c55335b55bf9afe06e05",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24546,7 +24546,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "94190f8a0733867ae7de2504b25c016ef603e89c13be2b1afb104c4b6cef58c1",
+      "sha256": "02eca8d8e53d2360d72d3896e3b91b584fd65e194c7e5b1716cf1e0c46fa1ba6",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -24560,7 +24560,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "1d016471b98416772f8a7cf06c9edf7c94adb66db0aef324a9342a0a33623930",
+      "sha256": "e0419a80b79c798a514fe0aadb96b35df2ff87137c9dcf52a1a3600d2bed82eb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24874,6 +24874,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/receipt-admission.md",
+      "sha256": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/recovery-envelope.md",
       "sha256": "6af6d997db007dffac3bb59e306e2469285f214b184ad58f230f5f9646d1fe9d",
       "authority": "inferred",
@@ -24910,7 +24917,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c5528de05ef0b8891e29a8c8a39d55b3ef7c8fb27a806adc127befededc31c08",
+      "sha256": "4349ba44a3abe2b44639b149474df907e0200aefd5b0dd45bf8370678b67c997",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

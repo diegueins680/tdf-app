@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Regression controls for assurance-category separation and replay artifacts."""
+from contextlib import nullcontext
 import importlib.util
 import json
 from pathlib import Path
@@ -21,6 +22,165 @@ class AssuranceTests(unittest.TestCase):
     def setUp(self):
         self.requirements = json.loads((ROOT/'formal/system/requirements.json').read_text())['requirements']
         self.provenance = {'revision': 'a'*40, 'digest': 'b'*64, 'worktreeDirty': False}
+
+    def synthetic_receipt(self, name, directory):
+        suite = report.SUITES[name]
+        directory.mkdir()
+        contract = json.loads((ROOT/suite['contract']).read_text())
+        files = {p: report.sha((ROOT/p).read_bytes()) for p in set(contract['reviewedSources']) | {
+            suite['contract'], suite['script'], 'formal/system/requirements.json'}}
+        provenance = {**self.provenance, 'files': files}
+        source = {**provenance, 'files': dict(files),
+                  'digest': report.sha(json.dumps(files, sort_keys=True).encode())}
+        artifacts = []
+        for identity, expected in suite['expectations'].items():
+            content = b'(assert false)' if expected == 'unsat' else b'(assert true)'
+            (directory/(identity + '.smt2')).write_bytes(content)
+            artifacts.append({'id': identity, 'file': identity + '.smt2',
+                              'expected': expected, 'actual': expected,
+                              'sha256': report.sha(content)})
+        rows = lambda ids: [{'id': i, 'status': 'PROVEN', 'artifact': i + '.smt2'} for i in ids]
+        return {'executionPassed': True, 'provenance': source, 'artifacts': artifacts,
+                'obligations': rows(suite['claims']), 'supportingLemmas': rows(suite['lemmas'])}, provenance
+
+    def test_authorization_and_recovery_require_consumer_admission(self):
+        for name in report.SUITES:
+            with tempfile.TemporaryDirectory() as tmp:
+                directory = Path(tmp)/name
+                receipt, provenance = self.synthetic_receipt(name, directory)
+                # A producer's PROVEN text alone does not satisfy the replay gate.
+                result = report.build_report(self.requirements, provenance, False, 'producer only',
+                                             **{name: receipt})
+                self.assertEqual(sum(o['status'] == 'PROVEN' for o in result['obligations']), 0)
+                admitted = report.admit_receipt(name, directory, receipt, provenance, 0)
+                self.assertTrue(admitted['executionPassed'])
+                self.assertTrue(admitted['replayPassed'])
+                replay = json.loads((Path(tmp)/(name + '-replay.json')).read_text())
+                self.assertEqual(len(replay), len(report.SUITES[name]['expectations']))
+                self.assertTrue(all(r['expected'] == r['result'] for r in replay))
+
+    def test_relabelled_authorization_and_recovery_claims_are_rejected(self):
+        for name, suite in report.SUITES.items():
+            for identity, expected in suite['expectations'].items():
+                if expected != 'unsat':
+                    continue
+                with self.subTest(suite=name, obligation=identity), tempfile.TemporaryDirectory() as tmp:
+                    directory = Path(tmp)/name
+                    receipt, provenance = self.synthetic_receipt(name, directory)
+                    content = b'(assert true)'
+                    (directory/(identity + '.smt2')).write_bytes(content)
+                    row = next(a for a in receipt['artifacts'] if a['id'] == identity)
+                    row.update(expected='sat', actual='sat', sha256=report.sha(content))
+                    with self.assertRaisesRegex(ValueError, 'expectation mismatch'):
+                        report.admit_receipt(name, directory, receipt, provenance, 0)
+
+    def test_failed_witness_unknown_and_failed_producer_never_promote_claims(self):
+        import z3
+        for name, suite in report.SUITES.items():
+            for mode in ('witness', 'unknown', 'failed-exit', 'string-boolean', 'false-refutation', 'producer-error'):
+                with self.subTest(suite=name, mode=mode), tempfile.TemporaryDirectory() as tmp:
+                    directory = Path(tmp)/name
+                    receipt, provenance = self.synthetic_receipt(name, directory)
+                    if mode == 'witness':
+                        identity = next(i for i, expected in suite['expectations'].items() if expected == 'sat')
+                        content = b'(assert false)'
+                        (directory/(identity + '.smt2')).write_bytes(content)
+                        next(a for a in receipt['artifacts'] if a['id'] == identity)['sha256'] = report.sha(content)
+                    if mode == 'string-boolean':
+                        receipt['executionPassed'] = 'true'
+                    if mode == 'producer-error':
+                        receipt['error'] = 'Producer reported a failure despite its success flag'
+                    if mode == 'false-refutation':
+                        receipt['obligations'][0]['status'] = 'REFUTED'
+                    with patch.object(z3.Solver, 'check', return_value=z3.unknown) if mode == 'unknown' else nullcontext():
+                        admitted = report.admit_receipt(name, directory, receipt, provenance,
+                                                        1 if mode == 'failed-exit' else 0)
+                    self.assertFalse(admitted['executionPassed'])
+                    self.assertTrue(all(r['status'] == 'UNPROVEN' for r in
+                                        admitted['obligations'] + admitted['supportingLemmas']))
+
+    def test_receipt_sources_and_artifact_inventory_fail_closed(self):
+        import copy
+        for name in report.SUITES:
+            for mode in ('revision', 'dirty', 'missing-source', 'source-hash', 'extra-source',
+                         'digest', 'hash', 'missing', 'duplicate', 'path', 'symlink'):
+                with self.subTest(suite=name, mode=mode), tempfile.TemporaryDirectory() as tmp:
+                    directory = Path(tmp)/name
+                    receipt, provenance = self.synthetic_receipt(name, directory)
+                    if mode == 'revision': receipt['provenance']['revision'] = 'wrong'
+                    if mode == 'dirty': receipt['provenance']['worktreeDirty'] = True
+                    if mode == 'missing-source': receipt['provenance']['files'] = {}
+                    if mode == 'source-hash':
+                        first = next(iter(receipt['provenance']['files']))
+                        receipt['provenance']['files'][first] = 'wrong'
+                    if mode == 'extra-source': receipt['provenance']['files']['unknown-source'] = None
+                    if mode in ('missing-source', 'source-hash', 'extra-source'):
+                        receipt['provenance']['digest'] = report.sha(
+                            json.dumps(receipt['provenance']['files'], sort_keys=True).encode())
+                    if mode == 'digest': receipt['provenance']['digest'] = 'wrong'
+                    if mode == 'hash': receipt['artifacts'][0]['sha256'] = 'wrong'
+                    if mode == 'missing': receipt['artifacts'].pop()
+                    if mode == 'duplicate': receipt['artifacts'][-1] = copy.deepcopy(receipt['artifacts'][0])
+                    if mode == 'path': receipt['artifacts'][0]['file'] = '../outside.smt2'
+                    if mode == 'symlink':
+                        target = directory/receipt['artifacts'][0]['file']
+                        outside = Path(tmp)/'outside.smt2'
+                        outside.write_bytes(target.read_bytes())
+                        target.unlink()
+                        target.symlink_to(outside)
+                    with self.assertRaises(ValueError):
+                        report.admit_receipt(name, directory, receipt, provenance, 0)
+
+    def test_producer_false_pass_is_refuted_by_report_replay(self):
+        # Preserve a SAT negated contract even when producer exit/status/hash text
+        # are self-consistent and claim success. All other suites stay separate.
+        original = report.subprocess.run
+        def producer_fault(command, **kwargs):
+            result = original(command, **kwargs)
+            if 'scripts/verify-auth-predicates.py' in command:
+                directory = Path(command[command.index('--output') + 1])
+                receipt = json.loads((directory/'result.json').read_text())
+                content = '(assert true)\n(check-sat)\n'
+                (directory/'strict-admin.smt2').write_text(content)
+                artifact = next(a for a in receipt['artifacts'] if a['id'] == 'strict-admin')
+                artifact['sha256'] = report.sha(content.encode())
+                (directory/'result.json').write_text(json.dumps(receipt))
+            return result
+        with tempfile.TemporaryDirectory() as tmp, patch.object(report.subprocess, 'run', producer_fault):
+            output = Path(tmp)/'report'
+            self.assertEqual(report.run(output, False), 1)
+            result = json.loads((output/'report.json').read_text())
+            categories = result['metrics']['obligationsByCategory']
+            self.assertEqual(categories['source-derived-authorization-SMT'],
+                             {'PROVEN': 0, 'REFUTED': 1, 'UNPROVEN': 2, 'NOT_APPLICABLE': 0})
+            self.assertEqual(categories['source-derived-SMT']['PROVEN'], 4)
+            self.assertEqual(categories['source-derived-recovery-SMT']['PROVEN'], 4)
+            self.assertTrue(all(row['status'] == 'UNPROVEN' for row in result['supportingAlgebraLemmas']))
+            self.assertFalse(result['execution']['passed'])
+            self.assertFalse(result['release']['executionAllowed'])
+            replay = json.loads((output/'authorization-replay.json').read_text())
+            self.assertEqual(next(r['result'] for r in replay if r['id'] == 'strict-admin'), 'sat')
+
+    def test_producer_false_refutation_requires_fresh_sat_counterexample(self):
+        original = report.subprocess.run
+        def producer_fault(command, **kwargs):
+            result = original(command, **kwargs)
+            if 'scripts/verify-payment-arithmetic.py' in command:
+                directory = Path(command[command.index('--output') + 1])
+                receipt = json.loads((directory/'result.json').read_text())
+                receipt['executionPassed'] = False
+                next(a for a in receipt['artifacts'] if a['id'] == 'capture-safety')['actual'] = 'sat'
+                (directory/'result.json').write_text(json.dumps(receipt))
+                return subprocess.CompletedProcess(command, 1)
+            return result
+        with tempfile.TemporaryDirectory() as tmp, patch.object(report.subprocess, 'run', producer_fault):
+            output = Path(tmp)/'report'
+            self.assertEqual(report.run(output, False), 1)
+            result = json.loads((output/'report.json').read_text())
+            self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-SMT'],
+                             {'PROVEN': 0, 'REFUTED': 0, 'UNPROVEN': 4, 'NOT_APPLICABLE': 0})
+            replay = json.loads((output/'arithmetic-counterexample-replay.json').read_text())
+            self.assertEqual(next(r['result'] for r in replay if r['id'] == 'capture-safety'), 'unsat')
 
     def test_in_checkout_output_is_rejected_before_creating_evidence(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -118,7 +278,7 @@ class AssuranceTests(unittest.TestCase):
 
     def test_authentication_predicate_proofs_do_not_promote_endpoints_or_refinement(self):
         contract = json.loads((ROOT/'formal/system/auth-predicates.json').read_text())
-        auth = {'executionPassed': True, 'obligations': [
+        auth = {'executionPassed': True, 'replayPassed': True, 'obligations': [
             {**o, 'status': 'PROVEN', 'artifact': o['id'] + '.smt2'} for o in contract['obligations']]}
         result = report.build_report(self.requirements, self.provenance, True, 'passed', authorization=auth)
         self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-authorization-SMT']['PROVEN'], 3)
@@ -132,7 +292,7 @@ class AssuranceTests(unittest.TestCase):
 
     def test_recovery_proofs_do_not_promote_recovery_transaction(self):
         contract = json.loads((ROOT/'formal/system/recovery-expiry-arithmetic.json').read_text())
-        receipt = {'executionPassed': True, 'obligations': [
+        receipt = {'executionPassed': True, 'replayPassed': True, 'obligations': [
             {**o, 'status': 'PROVEN', 'artifact': o['id'] + '.smt2'} for o in contract['obligations']]}
         result = report.build_report(self.requirements, self.provenance, True, 'passed', recovery=receipt)
         self.assertEqual(result['metrics']['obligationsByCategory']['source-derived-recovery-SMT']['PROVEN'], 4)
@@ -166,7 +326,11 @@ class AssuranceTests(unittest.TestCase):
             self.assertEqual((claim['id'], claim['expected'], claim['actual']), ('capture-safety', 'unsat', 'sat'))
             self.assertTrue(claim['model'])
             self.assertTrue((target/claim['file']).is_file())
-            matrix = report.build_report(self.requirements, self.provenance, False, 'counterexample', ['capture-safety'])
+            replay = report.replay_smt(target, receipt['artifacts'], report.ARITHMETIC_EXPECTATIONS,
+                                       complete=False)
+            refuted = [row['id'] for row in replay if row['expected'] == 'unsat' and row['result'] == 'sat']
+            self.assertIn('capture-safety', refuted)
+            matrix = report.build_report(self.requirements, self.provenance, False, 'counterexample', refuted)
             self.assertEqual(next(o['status'] for o in matrix['obligations'] if o['id'] == 'SYS-MONEY-001:safety'), 'REFUTED')
             self.assertEqual(matrix['metrics']['obligationsByCategory']['source-derived-SMT']['PROVEN'], 0)
             self.assertFalse(matrix['release']['executionAllowed'])

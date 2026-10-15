@@ -19,6 +19,41 @@ ARITHMETIC_EXPECTATIONS = {
                            ('legacy-counterexample', 'sat'))
 }
 
+# These inventories are defined by the consumer, independently of producer labels.
+AUTHORIZATION_CLAIMS = ('strict-admin', 'module-access', 'ingestion-admission')
+AUTHORIZATION_LEMMAS = ('cardinality-nonnegative', 'cardinality-zero', 'cardinality-sum')
+RECOVERY_CLAIMS = ('window-equivalence', 'schema-correspondence',
+                   'issuance-admission', 'issuance-exact')
+SUITES = {
+    'authorization': {
+        'contract': 'formal/system/auth-predicates.json',
+        'script': 'scripts/verify-auth-predicates.py',
+        'claims': AUTHORIZATION_CLAIMS, 'lemmas': AUTHORIZATION_LEMMAS,
+        'expectations': {
+            **{identity: 'unsat' for identity in AUTHORIZATION_CLAIMS + AUTHORIZATION_LEMMAS},
+            **{f'{identity}-witness-{value}': 'sat' for identity in AUTHORIZATION_CLAIMS
+               for value in ('true', 'false')},
+            **{'control-' + identity: 'sat' for identity in
+               ('drop-coherence', 'admit-operational-role', 'allow-zero-identity',
+                'drop-module-grant', 'module-implies-admin')},
+        },
+    },
+    'recovery': {
+        'contract': 'formal/system/recovery-expiry-arithmetic.json',
+        'script': 'scripts/verify-recovery-expiry.py',
+        'claims': RECOVERY_CLAIMS, 'lemmas': (),
+        'expectations': {
+            **{identity: 'unsat' for identity in RECOVERY_CLAIMS},
+            **{f'witness-{issued}-{offset}': 'sat' for issued in (0, 2**63 - 1 - 900)
+               for offset in (0, 899)},
+            'witness-overflow-rejection': 'sat',
+            **{'control-' + identity: 'sat' for identity in
+               ('inclusive-deadline', 'future-issuance', 'validator-lifetime',
+                'database-lifetime', 'issuance-lifetime')},
+        },
+    },
+}
+
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
@@ -113,7 +148,8 @@ def build_report(requirements, provenance, arithmetic_ok, reason, refuted=(), au
             actual = next((o for o in (receipt or {}).get('obligations', [])
                            if o['id'] == claim['id']), {})
             status = actual.get('status', 'UNPROVEN')
-            if status == 'PROVEN' and not (receipt or {}).get('executionPassed'):
+            if status == 'PROVEN' and not ((receipt or {}).get('executionPassed') is True
+                                           and (receipt or {}).get('replayPassed') is True):
                 status = 'UNPROVEN'
             obligations.append({**claim, 'id': identity, 'status': status,
                                 'artifact': name + '/' + actual['artifact'] if actual.get('artifact') else None})
@@ -153,29 +189,90 @@ def render(report):
     return '\n'.join(lines)
 
 
-def replay_arithmetic(directory, artifacts):
+def replay_smt(directory, artifacts, expectations, complete=True):
     import z3
-    if (len(artifacts) != len(ARITHMETIC_EXPECTATIONS)
-            or {a['id'] for a in artifacts} != set(ARITHMETIC_EXPECTATIONS)):
+    identities = [a['id'] for a in artifacts]
+    if (len(identities) != len(set(identities)) or not set(identities) <= set(expectations)
+            or (complete and set(identities) != set(expectations))):
         raise ValueError('Incomplete SMT input inventory')
     replay = []
     for artifact in artifacts:
-        expected = ARITHMETIC_EXPECTATIONS[artifact['id']]
+        expected = expectations[artifact['id']]
         if artifact['expected'] != expected:
             raise ValueError('SMT obligation expectation mismatch: ' + artifact['id'])
         if artifact['file'] != artifact['id'] + '.smt2':
             raise ValueError('SMT obligation file mismatch')
-        content = (directory/artifact['file']).read_bytes()
+        path = directory/artifact['file']
+        if path.is_symlink():
+            raise ValueError('SMT artifact must be retained directly, not a symlink')
+        content = path.read_bytes()
         if sha(content) != artifact['sha256']:
             raise ValueError('SMT input digest mismatch')
         solver = z3.Solver()
         solver.set(timeout=30_000)
         solver.from_string(content.decode())
-        result = str(solver.check())
-        if result != expected:
-            raise ValueError('SMT replay failed or unknown')
-        replay.append({'id': artifact['id'], 'result': result})
+        result = solver.check()
+        replay.append({'id': artifact['id'], 'expected': expected, 'result': str(result),
+                       'model': str(solver.model()) if result == z3.sat else None,
+                       'reasonUnknown': solver.reason_unknown() if result == z3.unknown else None})
     return replay
+
+
+def replay_arithmetic(directory, artifacts):
+    replay = replay_smt(directory, artifacts, ARITHMETIC_EXPECTATIONS)
+    if any(row['result'] != row['expected'] for row in replay):
+        raise ValueError('SMT replay failed or unknown')
+    return replay
+
+
+def admit_receipt(name, directory, receipt, provenance, exit_code):
+    """Replay every obligation/control before admitting any producer proof label."""
+    suite = SUITES[name]
+    source = receipt['provenance']
+    if (source['revision'] != provenance['revision']
+            or source['worktreeDirty'] is not provenance['worktreeDirty']):
+        raise ValueError('Receipt revision or dirty-state mismatch')
+    contract = json.loads((ROOT/suite['contract']).read_text())
+    files = source['files']
+    if source.get('digest') != sha(json.dumps(files, sort_keys=True).encode()):
+        raise ValueError('Receipt source digest mismatch')
+    required = set(contract['reviewedSources']) | {
+        suite['contract'], suite['script'], 'formal/system/requirements.json'}
+    if (not required <= set(files)
+            or any(provenance['files'].get(path) != digest
+                   for path, digest in contract['reviewedSources'].items())
+            or any(path not in provenance['files'] or provenance['files'][path] != digest
+                   for path, digest in files.items())):
+        raise ValueError('Receipt source fingerprint mismatch')
+    if set(suite['claims']) != {row['id'] for row in contract['obligations']}:
+        raise ValueError('Contract obligation inventory mismatch')
+
+    def rows_for(field, identities):
+        rows = receipt.get(field, [])
+        if len(rows) != len(identities) or {row['id'] for row in rows} != set(identities):
+            raise ValueError('Receipt obligation inventory mismatch: ' + field)
+        for row in rows:
+            if row['status'] not in STATUSES or row.get('artifact') != row['id'] + '.smt2':
+                raise ValueError('Receipt obligation status or artifact mismatch')
+        return rows
+
+    claims = rows_for('obligations', suite['claims'])
+    lemmas = rows_for('supportingLemmas', suite['lemmas'])
+    replay = replay_smt(directory, receipt['artifacts'], suite['expectations'])
+    (directory.parent/(name + '-replay.json')).write_text(json.dumps(replay, indent=2) + '\n')
+    results = {row['id']: row['result'] for row in replay}
+    replay_passed = all(row['result'] == row['expected'] for row in replay)
+    passed = (exit_code == 0 and receipt.get('executionPassed') is True
+              and receipt.get('error') is None and replay_passed
+              and all(row['status'] == 'PROVEN' for row in claims + lemmas))
+    # Report status is derived from fresh replay. Producer text cannot create
+    # PROVEN or REFUTED evidence without a corresponding checked formula.
+    def classified(rows):
+        return [{**row, 'status': 'REFUTED' if results[row['id']] == 'sat'
+                 else 'PROVEN' if passed else 'UNPROVEN'} for row in rows]
+    return {**receipt, 'executionPassed': bool(passed), 'replayPassed': replay_passed,
+            'obligations': classified(claims), 'supportingLemmas': classified(lemmas),
+            'error': receipt.get('error') or (None if passed else 'Producer or consumer replay failed')}
 
 
 def run(out, require_release):
@@ -199,6 +296,8 @@ def run(out, require_release):
         # Reparse serialized formulas in a fresh solver. This catches serialization
         # drift but does not remove the same solver or translator from the TCB.
         arithmetic = json.loads((out/'arithmetic/result.json').read_text())
+        if arithmetic.get('executionPassed') is not True or arithmetic.get('error') is not None:
+            raise ValueError('Arithmetic producer did not report successful execution')
         replay = replay_arithmetic(out/'arithmetic', arithmetic['artifacts'])
         (out/'replay.json').write_text(json.dumps(replay, indent=2) + '\n')
         if fingerprint(requirements) != before:
@@ -209,9 +308,15 @@ def run(out, require_release):
     refuted = []
     arithmetic_path = out/'arithmetic/result.json'
     if not ok and arithmetic_path.is_file() and fingerprint(requirements) == before:
-        failed = json.loads(arithmetic_path.read_text())
-        refuted = [a['id'] for a in failed.get('artifacts', [])
-                   if a.get('expected') == 'unsat' and a.get('actual') == 'sat']
+        try:
+            failed = json.loads(arithmetic_path.read_text())
+            replay = replay_smt(out/'arithmetic', failed.get('artifacts', []),
+                                ARITHMETIC_EXPECTATIONS, complete=False)
+            (out/'arithmetic-counterexample-replay.json').write_text(json.dumps(replay, indent=2) + '\n')
+            refuted = [row['id'] for row in replay
+                       if row['expected'] == 'unsat' and row['result'] == 'sat']
+        except Exception as error:
+            reason += '; arithmetic counterexample replay incomplete: ' + str(error)
     receipts, runs = {}, []
     for name, script in (('authorization', 'verify-auth-predicates.py'),
                          ('recovery', 'verify-recovery-expiry.py')):
@@ -221,8 +326,8 @@ def run(out, require_release):
             with (out/(name + '-execution.log')).open('x') as log:
                 result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=180)
             receipt = json.loads((out/name/'result.json').read_text())
-            passed = result.returncode == 0 and receipt['executionPassed']
-            receipt['executionPassed'] = bool(passed)
+            receipt = admit_receipt(name, out/name, receipt, before, result.returncode)
+            passed = receipt['executionPassed']
             receipts[name] = receipt
             if not passed:
                 reason += '; ' + name + ' failed: ' + str(receipt.get('error'))

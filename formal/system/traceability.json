@@ -137,9 +137,10 @@
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
         "scripts/lib/formal-result-summary.mjs",
-        "scripts/verification-report.py"
+        "scripts/verification-report.py",
+        "formal/system/receipt-admission.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence.",
       "evidence": "formal CI source/result manifests and regression output",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -178,7 +179,8 @@
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
         "scripts/__tests__/formal-result-summary.test.mjs",
-        "scripts/test-verification-report.py"
+        "scripts/test-verification-report.py",
+        "formal/system/receipt-admission-counterexample.json"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -10090,6 +10092,8 @@
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "38b4facf50a265a1e1ff1d777457b0991dd9be59a8e670c90b8b21783eff1362",
     "formal/system/public-routes.json": "d271d9f0c5fdac247d69d956269b835d8691640d29d36afdd8ce199b00abe30d",
+    "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
+    "formal/system/receipt-admission.md": "576c96dec2b58b447a96e047a1aad93f02f8c1b6bd589f5ee130be230215b0dd",
     "formal/system/recovery-expiry-arithmetic.json": "e08bf9b4373381ab605521aabe7e5dfe2d30a6b2e3709e9a8de7f3aad7ffcc6f",
     "formal/system/state-machine-bindings.json": "33b63d2076dc6bf55f812bd12b8eadd93cd9aa1a85966ca38ddadb1ca5b45655",
     "functions/_middleware.js": "e8538bfb793c23aa2d1e140e6f8801cc3ef0400b4aea41da1eff5b5fea043869",
@@ -10308,13 +10312,13 @@
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "a7b477af17cfacd18b6926a90d3620bf238ebb4a40945eabaae7cb7850d6a7dd",
-    "scripts/test-verification-report.py": "4021ff4a01ea32ad1e2048d29f184307e89097051e8eeb43caa7213ab74f57b0",
+    "scripts/test-verification-report.py": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
-    "scripts/verification-report.py": "29592427dd03952bd20517bf3e81c695e7e76fd7c97e5bbf1dcabadb05833670",
+    "scripts/verification-report.py": "1e739093989bd5df8f88d97375b354c098068cc2feb3c55335b55bf9afe06e05",
     "scripts/verify-auth-predicates.py": "84f9dbce47785aeb5af711b039cb1555a587dab44f16e0b576f462fe1f6d80b5",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
@@ -11115,6 +11119,12 @@
         "relationship": "implementation"
       }
     ],
+    "formal/system/receipt-admission.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
@@ -11128,6 +11138,12 @@
       }
     ],
     "scripts/test-verification-report.py": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "formal/system/receipt-admission-counterexample.json": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -23873,7 +23889,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "4021ff4a01ea32ad1e2048d29f184307e89097051e8eeb43caa7213ab74f57b0",
+      "sha256": "7d5cc2790447231cc8e0fbfe35db445fc31e7485df9e4ed03e4ce120545ac2c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23981,7 +23997,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "29592427dd03952bd20517bf3e81c695e7e76fd7c97e5bbf1dcabadb05833670",
+      "sha256": "1e739093989bd5df8f88d97375b354c098068cc2feb3c55335b55bf9afe06e05",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45090,7 +45106,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c5528de05ef0b8891e29a8c8a39d55b3ef7c8fb27a806adc127befededc31c08",
+      "sourceSha256": "4349ba44a3abe2b44639b149474df907e0200aefd5b0dd45bf8370678b67c997",
       "definition": {
         "states": [
           "absent",

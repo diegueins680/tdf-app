@@ -136,9 +136,10 @@
         "scripts/verify-system-evidence.mjs",
         ".github/workflows/event-operations-formal.yml",
         "scripts/lib/formal-result-summary.mjs",
-        "scripts/verification-report.py"
+        "scripts/verification-report.py",
+        "formal/system/receipt-admission.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence.",
       "evidence": "formal CI source/result manifests and regression output",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -177,7 +178,8 @@
       "tests": [
         "scripts/__tests__/verification-evidence.test.mjs",
         "scripts/__tests__/formal-result-summary.test.mjs",
-        "scripts/test-verification-report.py"
+        "scripts/test-verification-report.py",
+        "formal/system/receipt-admission-counterexample.json"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",

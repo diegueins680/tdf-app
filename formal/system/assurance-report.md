@@ -157,3 +157,14 @@ conditional proofs for `ID-SESSION-003`. Their separate category cannot discharg
 the full recovery transaction or implementation refinement. The PostgreSQL CI
 job also exercises the actual time CHECK over finite boundary values; those
 probes validate assumptions and remain test evidence, never universal proofs.
+
+## Receipt admission and replay
+
+[Receipt admission](receipt-admission.md) specifies the consumer boundary for all
+41 SMT inputs. Authorization and recovery require independent consumer expectation
+inventories, source/manifest correspondence, fresh solver replay, complete witnesses
+and controls, and successful producer execution before PROVEN labels are admitted.
+Supporting lemmas are downgraded with failed suites. Arithmetic REFUTED labels also
+require a fresh SAT replay of a retained negated contract, including partial failed
+suites. Raw producer text alone cannot establish those report statuses. This still
+trusts translation and Z3; same-solver replay is not an independent certificate.
